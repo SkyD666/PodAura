@@ -28,13 +28,17 @@ import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,11 +65,11 @@ import com.skyd.anivu.model.preference.appearance.DateStylePreference
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.anivu.model.preference.appearance.TextFieldStylePreference
 import com.skyd.anivu.model.preference.appearance.ThemePreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.local.LocalAmoledDarkMode
 import com.skyd.anivu.ui.local.LocalDarkMode
@@ -341,6 +345,7 @@ fun Palettes(
                         context.activity.recreate()
                     }
                 },
+                contentDescription = { ThemePreference.toDisplayName(context, t) },
                 accents = remember(u) {
                     listOf(
                         TonalPalette.from(u.primary),
@@ -358,6 +363,7 @@ fun SelectableMiniPalette(
     modifier: Modifier = Modifier,
     selected: Boolean,
     onClick: () -> Unit,
+    contentDescription: () -> String,
     accents: List<TonalPalette>,
 ) {
     Surface(
@@ -365,49 +371,60 @@ fun SelectableMiniPalette(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.inverseOnSurface,
     ) {
-        Surface(
-            modifier = Modifier
-                .clickable { onClick() }
-                .padding(12.dp)
-                .size(50.dp),
-            shape = CircleShape,
-            color = Color(accents[0].tone(60)),
+        TooltipBox(
+            modifier = modifier,
+            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+            tooltip = {
+                PlainTooltip {
+                    Text(contentDescription())
+                }
+            },
+            state = rememberTooltipState()
         ) {
-            Box {
-                Surface(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .offset((-25).dp, 25.dp),
-                    color = Color(accents[1].tone(85)),
-                ) {}
-                Surface(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .offset(25.dp, 25.dp),
-                    color = Color(accents[2].tone(75)),
-                ) {}
-                val animationSpec = spring<Float>(stiffness = Spring.StiffnessMedium)
-                AnimatedVisibility(
-                    visible = selected,
-                    enter = scaleIn(animationSpec) + fadeIn(animationSpec),
-                    exit = scaleOut(animationSpec) + fadeOut(animationSpec),
-                ) {
-                    Box(
+            Surface(
+                modifier = Modifier
+                    .clickable(onClick = onClick)
+                    .padding(12.dp)
+                    .size(50.dp),
+                shape = CircleShape,
+                color = Color(accents[0].tone(60)),
+            ) {
+                Box {
+                    Surface(
                         modifier = Modifier
-                            .padding(10.dp)
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
+                            .size(50.dp)
+                            .offset((-25).dp, 25.dp),
+                        color = Color(accents[1].tone(85)),
+                    ) {}
+                    Surface(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .offset(25.dp, 25.dp),
+                        color = Color(accents[2].tone(75)),
+                    ) {}
+                    val animationSpec = spring<Float>(stiffness = Spring.StiffnessMedium)
+                    AnimatedVisibility(
+                        visible = selected,
+                        enter = scaleIn(animationSpec) + fadeIn(animationSpec),
+                        exit = scaleOut(animationSpec) + fadeOut(animationSpec),
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Checked",
+                        Box(
                             modifier = Modifier
-                                .padding(8.dp)
-                                .size(16.dp),
-                            tint = MaterialTheme.colorScheme.surface
-                        )
+                                .padding(10.dp)
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = "Checked",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(16.dp),
+                                tint = MaterialTheme.colorScheme.surface
+                            )
+                        }
                     }
                 }
             }

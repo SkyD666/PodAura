@@ -25,8 +25,9 @@ object ThemePreference : BasePreference<String> {
     const val RED = "Red"
     const val GREEN = "Green"
     const val PURPLE = "Purple"
+    const val MAHIRO = "Mahiro"
 
-    val basicValues = arrayOf(BLUE, PINK, YELLOW, RED, GREEN, PURPLE)
+    val basicValues = arrayOf(BLUE, PINK, YELLOW, RED, GREEN, PURPLE, MAHIRO)
 
     val values: Array<String>
         get() {
@@ -65,6 +66,7 @@ object ThemePreference : BasePreference<String> {
         RED -> context.getString(R.string.theme_red)
         GREEN -> context.getString(R.string.theme_green)
         PURPLE -> context.getString(R.string.theme_purple)
+        MAHIRO -> context.getString(R.string.theme_mahiro)
         else -> context.getString(R.string.unknown)
     }
 
@@ -76,8 +78,9 @@ object ThemePreference : BasePreference<String> {
         PINK -> Color(0xFFFF7AA3)
         YELLOW -> Color(0xFFFABE03)
         RED -> Color(0xFFB90037)
-        GREEN -> Color(0xFF406836)
-        PURPLE -> Color(0xFF65558F)
+        GREEN -> Color(0xFF3F975B)
+        PURPLE -> Color(0xFF7E6195)
+        MAHIRO  -> Color(0xFFEAD4CE)
         else -> Color(0xFF006EBE)
     }
 }

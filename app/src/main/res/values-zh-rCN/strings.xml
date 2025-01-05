@@ -133,11 +133,12 @@
     <string name="appearance_screen_description">配置主题、外观等</string>
     <string name="theme_dynamic">动态主题</string>
     <string name="theme_pink">波奇</string>
-    <string name="theme_green">绿帽绿</string>
+    <string name="theme_green">古明地恋</string>
     <string name="theme_blue">山田凉</string>
     <string name="theme_yellow">虹夏</string>
     <string name="theme_red">喜多</string>
-    <string name="theme_purple">基佬紫</string>
+    <string name="theme_purple">刻晴</string>
+    <string name="theme_mahiro">真寻</string>
     <string name="player_config_screen_appearance_category">外观</string>
     <string name="player_config_screen_show_85s_button">+85s 按钮</string>
     <string name="player_config_screen_show_85s_button_description">在播放进度条上方显示 +85s 按钮</string>

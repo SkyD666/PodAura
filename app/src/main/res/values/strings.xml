@@ -138,11 +138,12 @@
     <string name="appearance_screen_description">Configure theme, appearance</string>
     <string name="theme_dynamic">Dynamic</string>
     <string name="theme_pink">Bocchi</string>
-    <string name="theme_green">Green</string>
+    <string name="theme_green">Komeiji Koishi</string>
     <string name="theme_blue">Ryo</string>
     <string name="theme_yellow">Nijika</string>
     <string name="theme_red">Kita</string>
-    <string name="theme_purple">Purple</string>
+    <string name="theme_purple">Keqing</string>
+    <string name="theme_mahiro">Mahiro</string>
     <string name="player_forward_85s" translatable="false">+85s</string>
     <string name="player_config_screen_appearance_category">Appearance</string>
     <string name="player_config_screen_show_85s_button">+85s button</string>
