@@ -60,12 +60,12 @@ class MediaSessionManager(
         return with(mediaMetadataBuilder) {
             putText(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
             // put even if it's null to reset any previous art
-            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, thumbnail)
+            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, thumbnail ?: mediaThumbnail)
             putText(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
             putLong(
                 MediaMetadataCompat.METADATA_KEY_DURATION,
                 (duration * 1000).takeIf { it > 0 } ?: -1)
-            putText(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+            putText(MediaMetadataCompat.METADATA_KEY_TITLE, title.orEmpty().ifBlank { mediaTitle })
             build()
         }
     }
@@ -120,7 +120,9 @@ class MediaSessionManager(
         is PlayerEvent.Shuffle -> old.copy(shuffle = value)
         is PlayerEvent.Speed -> old.copy(speed = value)
         is PlayerEvent.SubtitleTrackChanged -> old.copy(subtitleTrackId = trackId)
+        is PlayerEvent.MediaThumbnail -> old.copy(mediaThumbnail = value)
         is PlayerEvent.Thumbnail -> old.copy(thumbnail = value)
+        is PlayerEvent.MediaTitle -> old.copy(mediaTitle = value)
         is PlayerEvent.Title -> old.copy(title = value)
         is PlayerEvent.VideoOffsetX -> old.copy(offsetX = value)
         is PlayerEvent.VideoOffsetY -> old.copy(offsetY = value)
@@ -162,9 +164,11 @@ class MediaSessionManager(
             }
 
             is PlayerEvent.Idling,
+            is PlayerEvent.MediaTitle,
             is PlayerEvent.Title,
             is PlayerEvent.Artist,
             is PlayerEvent.Album,
+            is PlayerEvent.MediaThumbnail,
             is PlayerEvent.Thumbnail -> {
                 mediaSession.setMetadata(newState.buildMediaMetadata())
             }

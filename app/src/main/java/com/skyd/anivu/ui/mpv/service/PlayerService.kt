@@ -111,7 +111,7 @@ class PlayerService : Service() {
 
         override fun eventProperty(property: String, value: String) {
             when (property) {
-                "media-title" -> sendEvent(PlayerEvent.Title(value))
+                "media-title" -> sendEvent(PlayerEvent.MediaTitle(value))
             }
         }
 
@@ -127,7 +127,7 @@ class PlayerService : Service() {
                     sendEvent(PlayerEvent.FileLoaded)
                     sendEvent(PlayerEvent.Paused(player.paused))
                     loadLastPosition().invokeOnCompletion {
-                        sendEvent(PlayerEvent.Thumbnail(player.thumbnail))
+                        sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
                     }
                 }
 
@@ -220,9 +220,13 @@ class PlayerService : Service() {
                     savePosition()  // Save last media position
                     uri = command.uri
                     command.uri.resolveUri(this@PlayerService)?.let { loadFile(it) }
+                    sendEvent(PlayerEvent.Title(""))
+                    sendEvent(PlayerEvent.Thumbnail(null))
                 }
             }
 
+            is PlayerCommand.SetTitle -> sendEvent(PlayerEvent.Title(command.title))
+            is PlayerCommand.SetThumbnail -> sendEvent(PlayerEvent.Thumbnail(command.thumbnail))
             PlayerCommand.Destroy -> stopSelf()
             is PlayerCommand.Paused -> {
                 if (!command.paused) {

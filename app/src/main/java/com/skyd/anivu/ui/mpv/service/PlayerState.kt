@@ -26,6 +26,8 @@ data class PlayerState(
     val pausedForCache: Boolean = false,
     val shuffle: Boolean = false,
     val idling: Boolean = true,
+    val mediaTitle: String? = null,
     val title: String? = null,
+    val mediaThumbnail: Bitmap? = null,
     val thumbnail: Bitmap? = null,
 )

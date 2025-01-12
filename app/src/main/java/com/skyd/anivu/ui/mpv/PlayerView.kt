@@ -18,6 +18,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.Bitmap
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.collectIn
 import com.skyd.anivu.ui.component.OnLifecycleEvent
@@ -54,11 +55,12 @@ fun PlayerViewRoute(
     service: PlayerService?,
     uri: Uri,
     title: String? = null,
+    thumbnail: Bitmap? = null,
     onBack: () -> Unit,
     onSaveScreenshot: (File) -> Unit,
 ) {
     if (service != null) {
-        PlayerView(service, uri, title, onBack, onSaveScreenshot)
+        PlayerView(service, uri, title, thumbnail, onBack, onSaveScreenshot)
     }
 }
 
@@ -67,6 +69,7 @@ fun PlayerView(
     service: PlayerService,
     uri: Uri,
     title: String? = null,
+    thumbnail: Bitmap? = null,
     onBack: () -> Unit,
     onSaveScreenshot: (File) -> Unit,
 ) {
@@ -89,11 +92,6 @@ fun PlayerView(
     var subtitleTrackDialogState by remember { mutableStateOf(SubtitleTrackDialogState.initial) }
     var audioTrackDialogState by remember { mutableStateOf(AudioTrackDialogState.initial) }
     var speedDialogState by remember { mutableStateOf(SpeedDialogState.initial) }
-    LaunchedEffect(title) {
-        if (title != null) {
-            playState = playState.copyIfNecessary(title = title)
-        }
-    }
     LaunchedEffect(playState.speed) {
         speedDialogState = speedDialogState.copy(currentSpeed = playState.speed)
     }
@@ -184,7 +182,8 @@ fun PlayerView(
                 duration = state.duration.toInt(),
                 currentPosition = state.position.toInt(),
                 speed = state.speed,
-                mediaTitle = state.title.orEmpty()
+                mediaTitle = state.mediaTitle.orEmpty(),
+                title = state.title.orEmpty(),
             )
             transformState = transformState.copyIfNecessary(
                 videoRotate = state.rotate,
@@ -226,6 +225,16 @@ fun PlayerView(
     LaunchedEffect(uri) {
         service.addObserver(playerObserver)
         service.onCommand(PlayerCommand.SetUri(uri))
+    }
+    LaunchedEffect(title) {
+        if (title != null) {
+            service.onCommand(PlayerCommand.SetTitle(title))
+        }
+    }
+    LaunchedEffect(thumbnail) {
+        if (thumbnail != null) {
+            service.onCommand(PlayerCommand.SetThumbnail(thumbnail))
+        }
     }
 
     val inPipMode = rememberIsInPipMode()

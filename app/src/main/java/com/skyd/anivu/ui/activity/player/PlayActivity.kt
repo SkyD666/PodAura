@@ -39,12 +39,19 @@ class PlayActivity : BaseComposeActivity() {
     companion object {
         const val VIDEO_URI_KEY = "videoUri"
         const val VIDEO_TITLE_KEY = "videoTitle"
+        const val VIDEO_THUMBNAIL_KEY = "videoThumbnail"
 
-        fun play(activity: Activity, uri: Uri, title: String? = null) {
+        fun play(
+            activity: Activity,
+            uri: Uri,
+            title: String? = null,
+            thumbnail: String? = null,
+        ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
                     putExtra(VIDEO_URI_KEY, uri)
                     putExtra(VIDEO_TITLE_KEY, title)
+                    putExtra(VIDEO_THUMBNAIL_KEY, thumbnail)
                 }
             )
         }
@@ -119,11 +126,13 @@ class PlayActivity : BaseComposeActivity() {
             }
             val uri by viewModel.uri.collectAsStateWithLifecycle()
             val title by viewModel.title.collectAsStateWithLifecycle()
+            val thumbnail by viewModel.thumbnail.collectAsStateWithLifecycle()
             if (uri != Uri.EMPTY) {
                 PlayerViewRoute(
                     service = if (serviceBound) service else null,
                     uri = uri,
                     title = title,
+                    thumbnail = thumbnail,
                     onBack = { finish() },
                     onSaveScreenshot = {
                         picture = it

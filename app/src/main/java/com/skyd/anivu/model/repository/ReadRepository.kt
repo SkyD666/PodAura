@@ -9,6 +9,7 @@ import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.Const.TEMP_PICTURES_DIR
 import com.skyd.anivu.ext.copyToClipboard
 import com.skyd.anivu.ext.deleteDirs
+import com.skyd.anivu.ext.getImage
 import com.skyd.anivu.ext.imageLoaderBuilder
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.ext.share
@@ -40,28 +41,16 @@ class ReadRepository @Inject constructor(
 
     fun downloadImage(url: String, title: String?): Flow<Unit> {
         return flow {
-            val request = ImageRequest.Builder(appContext)
-                .data(url)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .build()
-            val imageLoader = appContext.imageLoaderBuilder().build()
-            when (val result = imageLoader.execute(request)) {
-                is ErrorResult -> throw result.throwable
-                is SuccessResult -> {
-                    imageLoader.diskCache!!.openSnapshot(url).use { snapshot ->
-                        val imageFile = snapshot!!.data.toFile()
-                        val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-                        imageFile.savePictureToMediaStore(
-                            context = appContext,
-                            mimetype = format.toMimeType(),
-                            fileName = (title.orEmpty().ifEmpty {
-                                url.substringAfterLast('/')
-                            } + "_" + Random.nextInt()).validateFileName() + format.toString(),
-                            autoDelete = false,
-                        )
-                    }
-                }
-            }
+            val imageFile = appContext.imageLoaderBuilder().build().getImage(appContext, url)!!
+            val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
+            imageFile.savePictureToMediaStore(
+                context = appContext,
+                mimetype = format.toMimeType(),
+                fileName = (title.orEmpty().ifEmpty {
+                    url.substringAfterLast('/')
+                } + "_" + Random.nextInt()).validateFileName() + format.toString(),
+                autoDelete = false,
+            )
             emit(Unit)
         }.flowOn(Dispatchers.IO)
     }

@@ -390,7 +390,12 @@ private fun Content(
         }
     }
     MediaRow(articleWithFeed = articleState.article, onPlay = { url ->
-        PlayActivity.play(context.activity, uri = Uri.parse(url), title = article.article.title)
+        PlayActivity.play(
+            activity = context.activity,
+            uri = Uri.parse(url),
+            title = article.article.title,
+            thumbnail = article.media?.image ?: articleState.article.feed.icon,
+        )
     })
     HtmlText(
         modifier = Modifier.padding(horizontal = 16.dp),

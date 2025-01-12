@@ -6,13 +6,14 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
 import com.skyd.anivu.ui.mpv.MPVPlayer.Track
-import com.skyd.anivu.ui.mpv.service.PlayerState
 import java.io.File
 
 sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
     data class Detach(val surface: Surface) : PlayerCommand
     data class SetUri(val uri: Uri) : PlayerCommand
+    data class SetTitle(val title: String) : PlayerCommand
+    data class SetThumbnail(val thumbnail: Bitmap) : PlayerCommand
     data object Destroy : PlayerCommand
     data class Paused(val paused: Boolean, val uri: Uri?) : PlayerCommand
     data object PlayOrPause : PlayerCommand
@@ -34,6 +35,7 @@ sealed interface PlayerEvent {
     data class Idling(val value: Boolean) : PlayerEvent
     data class Position(val value: Long) : PlayerEvent
     data class Duration(val value: Long) : PlayerEvent
+    data class MediaTitle(val value: String) : PlayerEvent
     data class Title(val value: String) : PlayerEvent
     data class Paused(val value: Boolean) : PlayerEvent
     data class PausedForCache(val value: Boolean) : PlayerEvent
@@ -57,5 +59,6 @@ sealed interface PlayerEvent {
     data class PlaylistCount(val value: Int) : PlayerEvent
     data class Artist(val value: String) : PlayerEvent
     data class Album(val value: String) : PlayerEvent
+    data class MediaThumbnail(val value: Bitmap?) : PlayerEvent
     data class Thumbnail(val value: Bitmap?) : PlayerEvent
 }

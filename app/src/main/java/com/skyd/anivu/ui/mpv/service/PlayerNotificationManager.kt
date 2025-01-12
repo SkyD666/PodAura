@@ -121,7 +121,7 @@ class PlayerNotificationManager(
     }
 
     private fun NotificationCompat.Builder.setContentTitle() = apply {
-        setContentTitle(playerState.value.title)
+        setContentTitle(playerState.value.run { title.orEmpty().ifBlank { mediaTitle } })
     }
 
     private fun NotificationCompat.Builder.setContentText() = apply {
@@ -140,7 +140,7 @@ class PlayerNotificationManager(
     }
 
     private fun NotificationCompat.Builder.setThumbnail() = apply {
-        playerState.value.thumbnail?.also {
+        playerState.value.run { thumbnail ?: mediaThumbnail }?.also {
             setLargeIcon(it)
             setColorized(true)
             // scale thumbnail to a single color in two steps
