@@ -1,1 +1,1 @@
-All-in-one app for RSS, BitTorrent dl & play
+All-in-one Android podcast app for RSS, media dl & play

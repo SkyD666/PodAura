@@ -49,6 +49,14 @@ android {
         }
     }
 
+    // https://github.com/SkyD666/PodAura/issues/59#issuecomment-2597764128
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+
     splits {
         abi {
             // Enables building multiple APKs per ABI.

@@ -1,4 +1,4 @@
-AniVu，一個集 RSS 訂閱與更新、BitTorrent下載、影片播放為一體的工具。
+PodAura，一個集 RSS 訂閱與更新、BitTorrent下載、影片播放為一體的工具。
 使用 MVI 架構，完全採用 Material You 設計風格。使用 Android View 和 Jetpack Compose 混合開發。  
 <h3>💡 主要功能</h3>
 <ol>
