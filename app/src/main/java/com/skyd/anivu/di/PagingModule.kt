@@ -12,6 +12,8 @@ import javax.inject.Singleton
 object PagingModule {
     @Provides
     @Singleton
-    fun providePagingConfig(): PagingConfig =
-        PagingConfig(pageSize = 20, enablePlaceholders = false)
+    // enablePlaceholders must be true
+    fun providePagingConfig(): PagingConfig = PagingConfig(
+        pageSize = 20, enablePlaceholders = true
+    )
 }

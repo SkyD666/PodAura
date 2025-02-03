@@ -612,6 +612,102 @@ private fun SwipeBackgroundContent(
     }
 }
 
+@Composable
+fun Article1ItemPlaceholder() {
+    val color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                MaterialTheme.colorScheme.surfaceColorAtElevation(
+                    LocalAbsoluteTonalElevation.current +
+                            LocalArticleItemTonalElevation.current.dp
+                )
+            )
+            .fillMaxWidth(),
+    ) {
+        Row(modifier = Modifier.height(IntrinsicSize.Max)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(top = 12.dp)
+                    .padding(horizontal = 15.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 3.dp)
+                        .fillMaxWidth(0.7f)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.3f)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(color)
+                )
+                Spacer(modifier = Modifier.height(7.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color)
+                )
+            }
+        }
+
+        // Bottom row
+        Row(
+            modifier = Modifier.padding(start = 15.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(22.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 6.dp)
+                    .fillMaxWidth(0.3f)
+                    .height(15.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(color)
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .padding(6.dp),
+                imageVector = Icons.Outlined.Favorite,
+                tint = color,
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Icon(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .padding(6.dp),
+                imageVector = Icons.Outlined.Drafts,
+                tint = color,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
 private fun swipeAction(
     articleSwipeAction: String,
     navController: NavController,

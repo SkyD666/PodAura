@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,9 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -57,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +68,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -71,17 +76,20 @@ import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedViewBean
-import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
-import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
-import com.skyd.anivu.ui.component.EmptyPlaceholder
+import com.skyd.anivu.ui.component.ErrorPlaceholder
+import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
+import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
+import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalSearchItemMinWidth
 import com.skyd.anivu.ui.local.LocalSearchListTonalElevation
 import com.skyd.anivu.ui.local.LocalSearchTopBarTonalElevation
 import com.skyd.anivu.ui.screen.article.Article1Item
+import com.skyd.anivu.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
+import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
 import kotlinx.coroutines.launch
 import java.io.Serializable
 
@@ -207,41 +215,23 @@ fun SearchScreen(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPaddings ->
         when (val searchResultState = uiState.searchResultState) {
-            is SearchResultState.Failed -> Unit
+            is SearchResultState.Failed -> ErrorPlaceholder(
+                modifier = Modifier.sizeIn(maxHeight = 200.dp),
+                text = searchResultState.msg,
+                contentPadding = innerPaddings
+            )
+
             SearchResultState.Init,
             SearchResultState.Loading -> CircularProgressPlaceholder(contentPadding = innerPaddings)
 
-            is SearchResultState.Success -> {
-                val result = searchResultState.result.collectAsLazyPagingItems()
-                if (result.itemCount > 0) {
-                    SearchResultList(
-                        result = result,
-                        listState = searchResultListState,
-                        onFavorite = { articleWithFeed, favorite ->
-                            dispatch(
-                                SearchIntent.Favorite(
-                                    articleId = articleWithFeed.articleWithEnclosure.article.articleId,
-                                    favorite = favorite,
-                                )
-                            )
-                        },
-                        onRead = { articleWithFeed, read ->
-                            dispatch(
-                                SearchIntent.Read(
-                                    articleId = articleWithFeed.articleWithEnclosure.article.articleId,
-                                    read = read,
-                                )
-                            )
-                        },
-                        contentPadding = innerPaddings + PaddingValues(
-                            top = 4.dp,
-                            bottom = 4.dp + fabHeight,
-                        ),
-                    )
-                } else {
-                    EmptyPlaceholder(contentPadding = innerPaddings)
-                }
-            }
+            is SearchResultState.Success -> SuccessContent(
+                searchResultState = searchResultState,
+                searchResultListState = searchResultListState,
+                searchDomain = searchDomain,
+                dispatch = dispatch,
+                innerPaddings = innerPaddings,
+                fabHeight = fabHeight,
+            )
         }
 
         WaitingDialog(visible = uiState.loadingDialog)
@@ -258,13 +248,59 @@ fun SearchScreen(
 }
 
 @Composable
+private fun SuccessContent(
+    searchResultState: SearchResultState.Success,
+    searchResultListState: LazyGridState,
+    searchDomain: SearchDomain,
+    dispatch: (SearchIntent) -> Unit,
+    innerPaddings: PaddingValues,
+    fabHeight: Dp,
+) {
+    val result = searchResultState.result.collectAsLazyPagingItems()
+    PagingRefreshStateIndicator(
+        lazyPagingItems = result,
+        abnormalContent = { Box(modifier = Modifier.padding(innerPaddings)) { it() } },
+    ) {
+        SearchResultList(
+            listState = searchResultListState,
+            contentPadding = innerPaddings + PaddingValues(
+                top = 4.dp,
+                bottom = 4.dp + fabHeight
+            ),
+        ) {
+            @Suppress("UNCHECKED_CAST")
+            when (searchDomain) {
+                SearchDomain.Feed -> feedItems(result as LazyPagingItems<FeedViewBean>)
+                is SearchDomain.Article -> articleItems(
+                    result = result as LazyPagingItems<ArticleWithFeed>,
+                    onFavorite = { articleWithFeed, favorite ->
+                        dispatch(
+                            SearchIntent.Favorite(
+                                articleId = articleWithFeed.articleWithEnclosure.article.articleId,
+                                favorite = favorite,
+                            )
+                        )
+                    },
+                    onRead = { articleWithFeed, read ->
+                        dispatch(
+                            SearchIntent.Read(
+                                articleId = articleWithFeed.articleWithEnclosure.article.articleId,
+                                read = read,
+                            )
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SearchResultList(
     modifier: Modifier = Modifier,
-    result: LazyPagingItems<Any>,
     listState: LazyGridState,
-    onFavorite: (ArticleWithFeed, Boolean) -> Unit,
-    onRead: (ArticleWithFeed, Boolean) -> Unit,
     contentPadding: PaddingValues,
+    items: LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
         modifier = modifier,
@@ -273,22 +309,33 @@ private fun SearchResultList(
         contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items(
-            count = result.itemCount,
-            key = { index ->
-                when (val item = result[index]) {
-                    is ArticleWithFeed -> item.articleWithEnclosure.article.articleId
-                    is FeedViewBean -> item.feed.url
-                    else -> item.hashCode()
-                }
-            },
-        ) { index ->
-            when (val item = result[index]) {
-                is FeedViewBean -> Feed1Item(item)
-                is ArticleWithFeed -> Article1Item(item, onFavorite = onFavorite, onRead = onRead)
-                else -> Unit
-            }
+    ) { items() }
+}
+
+private fun LazyGridScope.feedItems(result: LazyPagingItems<FeedViewBean>) {
+    items(
+        count = result.itemCount,
+        key = result.itemKey { it.feed.url },
+    ) { index ->
+        when (val item = result[index]) {
+            is FeedViewBean -> Feed1Item(item)
+            null -> Feed1ItemPlaceholder()
+        }
+    }
+}
+
+private fun LazyGridScope.articleItems(
+    result: LazyPagingItems<ArticleWithFeed>,
+    onFavorite: (ArticleWithFeed, Boolean) -> Unit,
+    onRead: (ArticleWithFeed, Boolean) -> Unit,
+) {
+    items(
+        count = result.itemCount,
+        key = result.itemKey { it.articleWithEnclosure.article.articleId },
+    ) { index ->
+        when (val item = result[index]) {
+            is ArticleWithFeed -> Article1Item(item, onFavorite = onFavorite, onRead = onRead)
+            null -> Article1ItemPlaceholder()
         }
     }
 }

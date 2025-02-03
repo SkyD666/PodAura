@@ -23,8 +23,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Refresh
@@ -65,6 +63,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -74,13 +73,13 @@ import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.ArticleSort
+import com.skyd.anivu.ui.component.BackIcon
+import com.skyd.anivu.ui.component.CircularProgressPlaceholder
+import com.skyd.anivu.ui.component.ErrorPlaceholder
+import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.BackIcon
-import com.skyd.anivu.ui.component.CircularProgressPlaceholder
-import com.skyd.anivu.ui.component.EmptyPlaceholder
-import com.skyd.anivu.ui.component.ErrorPlaceholder
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
@@ -92,7 +91,6 @@ import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
 import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 
@@ -409,7 +407,10 @@ private fun ArticleList(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     contentPadding: PaddingValues,
 ) {
-    if (articles.itemCount > 0) {
+    PagingRefreshStateIndicator(
+        lazyPagingItems = articles,
+        abnormalContent = { Box(modifier = Modifier.padding(contentPadding)) { it() } },
+    ) {
         LazyVerticalGrid(
             modifier = modifier.fillMaxSize(),
             columns = GridCells.Adaptive(LocalArticleItemMinWidth.current.dp),
@@ -420,7 +421,7 @@ private fun ArticleList(
         ) {
             items(
                 count = articles.itemCount,
-                key = { index -> (articles[index] as ArticleWithFeed).articleWithEnclosure.article.articleId },
+                key = articles.itemKey { it.articleWithEnclosure.article.articleId },
             ) { index ->
                 when (val item = articles[index]) {
                     is ArticleWithFeed -> Article1Item(
@@ -428,13 +429,10 @@ private fun ArticleList(
                         onFavorite = onFavorite,
                         onRead = onRead,
                     )
+
+                    null -> Article1ItemPlaceholder()
                 }
             }
         }
-    } else {
-        EmptyPlaceholder(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
-            contentPadding = contentPadding,
-        )
     }
 }

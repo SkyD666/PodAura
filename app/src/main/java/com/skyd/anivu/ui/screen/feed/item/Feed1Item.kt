@@ -7,12 +7,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -164,6 +169,67 @@ private fun FeedNumberBadge(feedView: FeedViewBean) {
         Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))) {
             unreadCountContent?.invoke(this)
             allCountContent?.invoke(this)
+        }
+    }
+}
+
+@Composable
+fun Feed1ItemPlaceholder(
+    visible: Boolean = true,
+    selected: Boolean = false,
+    inGroup: Boolean = false,
+    isEnd: Boolean = false,
+) {
+    val color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(
+                    if (inGroup) {
+                        if (isEnd) RoundedCornerShape(0.dp, 0.dp, SHAPE_CORNER_DP, SHAPE_CORNER_DP)
+                        else RectangleShape
+                    } else {
+                        RoundedCornerShape(12.dp)
+                    }
+                )
+                .background(
+                    MaterialTheme.colorScheme.secondary.copy(
+                        alpha = if (selected) 0.15f else 0.1f
+                    )
+                )
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .padding(bottom = if (inGroup && isEnd) 6.dp else 0.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 3.dp)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.align(Alignment.CenterVertically)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(15.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(color)
+                )
+            }
         }
     }
 }
