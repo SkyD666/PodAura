@@ -3,10 +3,8 @@ package com.skyd.anivu.ext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.buffer
@@ -79,13 +77,11 @@ fun <T> Flow<Flow<T>>.flattenFirst(): Flow<T> = channelFlow {
 }
 
 // collect with lifecycle
-fun <T> Flow<T>.collectIn(
+suspend fun <T> Flow<T>.collectIn(
     lifecycleOwner: LifecycleOwner,
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
     action: suspend (T) -> Unit = {},
-): Job = lifecycleOwner.lifecycleScope.launch {
-    flowWithLifecycle(lifecycleOwner.lifecycle, minActiveState).collect(action)
-}
+) = flowWithLifecycle(lifecycleOwner.lifecycle, minActiveState).collect(action)
 
 fun <T> Flow<T>.sampleWithoutFirst(timeoutMillis: Long) = merge(
     take(1), drop(1).sample(timeoutMillis)
