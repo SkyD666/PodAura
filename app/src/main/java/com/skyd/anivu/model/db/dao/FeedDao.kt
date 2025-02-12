@@ -161,6 +161,10 @@ interface FeedDao {
     suspend fun getFeedsNotInGroup(groupIds: List<String>): List<FeedViewBean>
 
     @Transaction
+    @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL")
+    fun getFeedsInDefaultGroup(): Flow<List<FeedViewBean>>
+
+    @Transaction
     @Query(
         """
             SELECT * FROM $FEED_VIEW_NAME
@@ -183,10 +187,29 @@ interface FeedDao {
     fun getAllFeedUrl(): List<String>
 
     @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.MUTE_COLUMN} = 0")
+    fun getAllUnmutedFeedUrl(): List<String>
+
+    @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} LIKE :url")
     fun containsByUrl(url: String): Int
 
     @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.CUSTOM_ICON_COLUMN} LIKE :customIcon")
     fun containsByCustomIcon(customIcon: String): Int
+
+    @Transaction
+    @Query(
+        "UPDATE $FEED_TABLE_NAME SET ${FeedBean.MUTE_COLUMN} = :mute " +
+                "WHERE ${FeedBean.URL_COLUMN} = :feedUrl"
+    )
+    suspend fun muteFeed(feedUrl: String, mute: Boolean): Int
+
+    @Transaction
+    @Query(
+        "UPDATE $FEED_TABLE_NAME SET ${FeedBean.MUTE_COLUMN} = :mute " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
+    )
+    suspend fun muteFeedsInGroup(groupId: String?, mute: Boolean): Int
 }

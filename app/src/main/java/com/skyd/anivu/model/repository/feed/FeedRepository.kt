@@ -16,10 +16,12 @@ import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
+import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -37,16 +39,17 @@ class FeedRepository @Inject constructor(
 ) : BaseRepository() {
     fun requestGroupAnyList(): Flow<List<Any>> = combine(
         groupDao.getGroupWithFeeds(),
-        groupDao.getGroupIds(),
-    ) { groupList, groupIds ->
-        groupList to feedDao.getFeedsNotInGroup(groupIds)
-    }.map { (groupList, defaultFeeds) ->
+        feedDao.getFeedsInDefaultGroup(),
+        appContext.dataStore.data.map {
+            it[HideMutedFeedPreference.key] ?: HideMutedFeedPreference.default
+        }.distinctUntilChanged()
+    ) { groupList, defaultFeeds, hideMute ->
         mutableListOf<Any>().apply {
             add(GroupVo.DefaultGroup)
-            addAll(defaultFeeds)
+            addAll(defaultFeeds.run { if (hideMute) filter { !it.feed.mute } else this })
             reorderGroupRepository.sortGroupWithFeed(groupList).forEach { group ->
                 add(group.group.toVo())
-                addAll(group.feeds)
+                addAll(group.feeds.run { if (hideMute) filter { !it.feed.mute } else this })
             }
         }
     }.flowOn(Dispatchers.IO)
@@ -228,6 +231,15 @@ class FeedRepository @Inject constructor(
 
     fun readAllInFeed(feedUrl: String): Flow<Int> = flow {
         emit(articleDao.readAllInFeed(feedUrl))
+    }.flowOn(Dispatchers.IO)
+
+    fun muteFeed(feedUrl: String, mute: Boolean): Flow<Int> = flow {
+        emit(feedDao.muteFeed(feedUrl, mute))
+    }.flowOn(Dispatchers.IO)
+
+    fun muteFeedsInGroup(groupId: String?, mute: Boolean): Flow<Int> = flow {
+        val realGroupId = if (groupId == GroupVo.DefaultGroup.groupId) null else groupId
+        emit(feedDao.muteFeedsInGroup(realGroupId, mute))
     }.flowOn(Dispatchers.IO)
 }
 

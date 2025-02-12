@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Pin
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Tonality
@@ -33,17 +34,20 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.feed.TonalElevationPreferenceUtil
-import com.skyd.anivu.ui.component.PodAuraIconButton
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
 import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
 import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
+import com.skyd.anivu.ui.local.LocalHideMutedFeed
 
 
 const val FEED_STYLE_SCREEN_ROUTE = "feedStyleScreen"
@@ -113,6 +117,20 @@ fun FeedStyleScreen() {
                         )
                     },
                     onClick = { expandFeedNumberBadgeMenu = true }
+                )
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                    text = stringResource(id = R.string.feed_style_screen_hide_muted_feed),
+                    checked = LocalHideMutedFeed.current,
+                    onCheckedChange = {
+                        HideMutedFeedPreference.put(
+                            context = context,
+                            scope = scope,
+                            value = it,
+                        )
+                    }
                 )
             }
         }

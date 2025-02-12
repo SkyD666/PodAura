@@ -185,7 +185,7 @@
     <string name="feed_screen_delete_group_warning">Delete the \"%s\" group and all the feeds and articles it contains</string>
     <string name="feed_screen_delete_feed_warning">Delete the feed and articles it contains</string>
     <string name="feed_screen_rss_title">Title</string>
-    <string name="feed_style_screen_name">Feed screen</string>
+    <string name="feed_style_screen_name">Feed screen style</string>
     <string name="feed_style_screen_group_list_category">Group list</string>
     <string name="appearance_screen_style_category">Common style</string>
     <string name="appearance_screen_screen_style_category">Screen style</string>
@@ -267,11 +267,11 @@
     <string name="article_screen_filter_clear_all_filter">Clear all filters</string>
     <string name="tonal_elevation">Tonal elevation</string>
     <string name="feed_style_screen_top_bar_category">Top bar</string>
-    <string name="article_style_screen_name">Article screen</string>
+    <string name="article_style_screen_name">Article screen style</string>
     <string name="article_style_screen_top_bar_category">Top bar</string>
     <string name="article_style_screen_article_list_category">Article list</string>
     <string name="article_style_screen_article_item_category">Article item</string>
-    <string name="search_style_screen_name">Search screen</string>
+    <string name="search_style_screen_name">Search screen style</string>
     <string name="search_style_screen_top_bar_category">Top bar</string>
     <string name="search_style_screen_search_list_category">Search list</string>
     <string name="read_all">Read all</string>
@@ -335,7 +335,7 @@
     <string name="data_screen_clear_play_history_warning">Sure to delete playback history?</string>
     <string name="data_screen_clear_play_history_success">Deleted %d items</string>
     <string name="folder">Folder</string>
-    <string name="media_style_screen_name">Media screen</string>
+    <string name="media_style_screen_name">Media screen style</string>
     <string name="media_style_screen_media_list_category">Media list</string>
     <string name="media_style_screen_media_list_show_thumbnail">Show thumbnails</string>
     <string name="media_style_screen_media_list_show_group_tab">Show group tab</string>
@@ -347,7 +347,7 @@
     <string name="player_config_screen_show_progress_indicator">Progress indicator</string>
     <string name="read_screen_text_size">Text size</string>
     <string name="download_no_notification_permission_tip">Notification permission has not been granted so the download cannot work</string>
-    <string name="read_style_screen_name">Read screen</string>
+    <string name="read_style_screen_name">Read screen style</string>
     <string name="read_style_screen_top_bar_category">Top bar</string>
     <string name="read_style_screen_content_category">Content</string>
     <string name="auto_delete_article_screen_keep_unread">Preserve unread</string>
@@ -385,6 +385,12 @@
     <string name="behavior_screen_media_screen_category">Media library</string>
     <string name="behavior_screen_media_file_filter">File filter</string>
     <string name="behavior_screen_media_file_filter_placeholder">Filename regex</string>
+    <string name="feed_screen_mute_feed">Mute</string>
+    <string name="feed_screen_mute_all_feeds">Mute all</string>
+    <string name="feed_screen_unmute_feed">Unmute</string>
+    <string name="feed_screen_unmute_all_feeds">Unmute all</string>
+    <string name="feed_screen_feed_muted">Muted</string>
+    <string name="feed_style_screen_hide_muted_feed">Hide muted feeds</string>
     <plurals name="import_opml_result">
         <item quantity="one">Imported %d item, takes %.2f seconds</item>
         <item quantity="other">Imported %d items, takes %.2f seconds</item>

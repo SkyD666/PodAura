@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.outlined.Add
@@ -70,8 +72,8 @@ import com.skyd.anivu.ext.readable
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.ui.component.PodAuraIconButton
-import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
+import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalNavController
@@ -87,6 +89,7 @@ fun EditFeedSheet(
     groups: List<GroupVo>,
     onReadAll: (String) -> Unit,
     onRefresh: (String) -> Unit,
+    onMute: (String, Boolean) -> Unit,
     onClear: (String) -> Unit,
     onDelete: (String) -> Unit,
     onUrlChange: (String) -> Unit,
@@ -131,8 +134,10 @@ fun EditFeedSheet(
             // Options
             OptionArea(
                 sortXmlArticlesOnUpdate = feed.sortXmlArticlesOnUpdate,
+                mute = feed.mute,
                 onReadAll = { onReadAll(feed.url) },
                 onRefresh = { onRefresh(feed.url) },
+                onMuteChanged = { onMute(feed.url, it) },
                 onClear = { onClear(feed.url) },
                 onDelete = {
                     onDelete(feed.url)
@@ -357,13 +362,15 @@ private fun LinkArea(link: String, onLinkClick: () -> Unit) {
 
 @Composable
 internal fun OptionArea(
-    deleteEnabled: Boolean = true,
     deleteWarningText: String = stringResource(id = R.string.feed_screen_delete_feed_warning),
     sortXmlArticlesOnUpdate: Boolean? = null,
+    mute: Boolean? = null,
     onReadAll: () -> Unit,
     onRefresh: () -> Unit,
+    onMuteChanged: ((Boolean) -> Unit)? = null,
+    onMuteAll: ((Boolean) -> Unit)? = null,
     onClear: () -> Unit,
-    onDelete: () -> Unit,
+    onDelete: (() -> Unit)?,
     onSortXmlArticlesOnUpdateChanged: ((Boolean) -> Unit)? = null,
     onEditRequestHeaders: (() -> Unit)? = null,
 ) {
@@ -392,12 +399,31 @@ internal fun OptionArea(
             text = stringResource(id = R.string.refresh),
             onClick = onRefresh,
         )
+        if (onMuteChanged != null && mute != null) {
+            SheetChip(
+                icon = if (mute) Icons.AutoMirrored.Outlined.VolumeUp else Icons.AutoMirrored.Outlined.VolumeOff,
+                text = stringResource(id = if (mute) R.string.feed_screen_unmute_feed else R.string.feed_screen_mute_feed),
+                onClick = { onMuteChanged(!mute) },
+            )
+        }
+        if (onMuteAll != null) {
+            SheetChip(
+                icon = Icons.AutoMirrored.Outlined.VolumeOff,
+                text = stringResource(id = R.string.feed_screen_mute_all_feeds),
+                onClick = { onMuteAll(true) },
+            )
+            SheetChip(
+                icon = Icons.AutoMirrored.Outlined.VolumeUp,
+                text = stringResource(id = R.string.feed_screen_unmute_all_feeds),
+                onClick = { onMuteAll(false) },
+            )
+        }
         SheetChip(
             icon = Icons.Outlined.ClearAll,
             text = stringResource(id = R.string.clear),
             onClick = { openClearWarningDialog = true },
         )
-        if (deleteEnabled) {
+        if (onDelete != null) {
             SheetChip(
                 icon = Icons.Outlined.Delete,
                 iconTint = MaterialTheme.colorScheme.onError,
@@ -442,7 +468,7 @@ internal fun OptionArea(
         text = deleteWarningText,
         onDismissRequest = { openDeleteWarningDialog = false },
         onDismiss = { openDeleteWarningDialog = false },
-        onConfirm = onDelete,
+        onConfirm = { onDelete?.invoke() },
     )
 }
 

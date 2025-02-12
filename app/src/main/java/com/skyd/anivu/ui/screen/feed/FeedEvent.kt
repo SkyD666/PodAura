@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.feed
 
 import com.skyd.anivu.base.mvi.MviSingleEvent
-import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 
@@ -63,5 +62,15 @@ sealed interface FeedEvent : MviSingleEvent {
     sealed interface ReadAllResultEvent : FeedEvent {
         data class Success(val feeds: List<FeedViewBean>) : ReadAllResultEvent
         data class Failed(val msg: String) : ReadAllResultEvent
+    }
+
+    sealed interface MuteFeedResultEvent : FeedEvent {
+        data class Success(val mute: Boolean) : MuteFeedResultEvent
+        data class Failed(val msg: String) : MuteFeedResultEvent
+    }
+
+    sealed interface MuteFeedsInGroupResultEvent : FeedEvent {
+        data object Success : MuteFeedsInGroupResultEvent
+        data class Failed(val msg: String) : MuteFeedsInGroupResultEvent
     }
 }

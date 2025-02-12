@@ -178,7 +178,7 @@
     <string name="feed_screen_delete_group_warning">删除“%s”分组及其所有订阅和文章</string>
     <string name="feed_screen_delete_feed_warning">删除当前订阅及其所有文章</string>
     <string name="feed_screen_rss_title">标题</string>
-    <string name="feed_style_screen_name">订阅页面</string>
+    <string name="feed_style_screen_name">订阅页面样式</string>
     <string name="feed_style_screen_group_list_category">分组列表</string>
     <string name="appearance_screen_style_category">通用样式</string>
     <string name="appearance_screen_screen_style_category">页面样式</string>
@@ -260,11 +260,11 @@
     <string name="article_screen_filter_clear_all_filter">清除所有过滤</string>
     <string name="tonal_elevation">色调高程</string>
     <string name="feed_style_screen_top_bar_category">标题栏</string>
-    <string name="article_style_screen_name">文章页面</string>
+    <string name="article_style_screen_name">文章页面样式</string>
     <string name="article_style_screen_top_bar_category">标题栏</string>
     <string name="article_style_screen_article_list_category">文章列表</string>
     <string name="article_style_screen_article_item_category">文章项</string>
-    <string name="search_style_screen_name">搜索页面</string>
+    <string name="search_style_screen_name">搜索页面样式</string>
     <string name="search_style_screen_top_bar_category">标题栏</string>
     <string name="search_style_screen_search_list_category">搜索列表</string>
     <string name="read_all">阅读所有</string>
@@ -328,7 +328,7 @@
     <string name="data_screen_clear_play_history_warning">确定删除播放历史？</string>
     <string name="data_screen_clear_play_history_success">已删除 %d 项</string>
     <string name="folder">文件夹</string>
-    <string name="media_style_screen_name">媒体页面</string>
+    <string name="media_style_screen_name">媒体页面样式</string>
     <string name="media_style_screen_media_list_category">媒体列表</string>
     <string name="media_style_screen_media_list_show_thumbnail">显示预览图</string>
     <string name="media_style_screen_media_list_show_group_tab">显示组选项卡</string>
@@ -340,7 +340,7 @@
     <string name="player_config_screen_show_progress_indicator">进度指示</string>
     <string name="read_screen_text_size">文字大小</string>
     <string name="download_no_notification_permission_tip">未授权通知权限，无法下载</string>
-    <string name="read_style_screen_name">阅读页面</string>
+    <string name="read_style_screen_name">阅读页面样式</string>
     <string name="read_style_screen_top_bar_category">标题栏</string>
     <string name="read_style_screen_content_category">文章内容</string>
     <string name="auto_delete_article_screen_keep_unread">保留未读</string>
@@ -364,6 +364,12 @@
     <string name="player_notification_channel_name">播放器</string>
     <string name="player_notification_channel_description">播放器通知栏控制</string>
     <string name="player_config_screen_background_play">后台播放</string>
+    <string name="expend">展开</string>
+    <string name="collapse">收起</string>
+    <string name="feed_number_badge_unread">未读</string>
+    <string name="feed_number_badge_all">所有</string>
+    <string name="feed_style_screen_number_badge">文章数指示类型</string>
+    <string name="feed_number_badge_unread_all">未读与所有</string>
     <string name="media_screen_style">样式</string>
     <string name="media_display_filter_video">视频</string>
     <string name="media_display_filter_audio">音频</string>
@@ -372,6 +378,12 @@
     <string name="behavior_screen_media_screen_category">媒体库</string>
     <string name="behavior_screen_media_file_filter">文件过滤</string>
     <string name="behavior_screen_media_file_filter_placeholder">文件名正则</string>
+    <string name="feed_screen_mute_feed">静音</string>
+    <string name="feed_screen_mute_all_feeds">静音</string>
+    <string name="feed_screen_unmute_feed">取消静音</string>
+    <string name="feed_screen_unmute_all_feeds">取消静音</string>
+    <string name="feed_screen_feed_muted">已静音</string>
+    <string name="feed_style_screen_hide_muted_feed">隐藏静音的订阅</string>
     <plurals name="import_opml_result">
         <item quantity="other">导入了 %d 项，花费 %.2f 秒</item>
     </plurals>

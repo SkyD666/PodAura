@@ -228,4 +228,38 @@ internal sealed interface FeedPartialStateChange {
         data class Failed(val msg: String) : FeedList
         data object Loading : FeedList
     }
+
+    sealed interface MuteFeed : FeedPartialStateChange {
+        override fun reduce(oldState: FeedState): FeedState {
+            return when (this) {
+                is Success -> oldState.copy(
+                    loadingDialog = false,
+                )
+
+                is Failed -> oldState.copy(
+                    loadingDialog = false,
+                )
+            }
+        }
+
+        data class Success(val mute: Boolean) : MuteFeed
+        data class Failed(val msg: String) : MuteFeed
+    }
+
+    sealed interface MuteFeedsInGroup : FeedPartialStateChange {
+        override fun reduce(oldState: FeedState): FeedState {
+            return when (this) {
+                is Success -> oldState.copy(
+                    loadingDialog = false,
+                )
+
+                is Failed -> oldState.copy(
+                    loadingDialog = false,
+                )
+            }
+        }
+
+        data object Success : MuteFeedsInGroup
+        data class Failed(val msg: String) : MuteFeedsInGroup
+    }
 }

@@ -181,7 +181,7 @@
     <string name="feed_screen_delete_group_warning">"%s" grubunu ve içindeki tüm akışları ve makaleleri sil</string>
     <string name="feed_screen_delete_feed_warning">Bu akışı ve içindeki makaleleri sil</string>
     <string name="feed_screen_rss_title">Başlık</string>
-    <string name="feed_style_screen_name">Akış ekranı</string>
+    <string name="feed_style_screen_name">Akış ekranı stili</string>
     <string name="feed_style_screen_group_list_category">Grup listesi</string>
     <string name="appearance_screen_style_category">Genel stil</string>
     <string name="appearance_screen_screen_style_category">Ekran stili</string>
@@ -263,11 +263,11 @@
     <string name="article_screen_filter_clear_all_filter">Tüm filtreleri temizle</string>
     <string name="tonal_elevation">Ton yükseltme</string>
     <string name="feed_style_screen_top_bar_category">Üst çubuk</string>
-    <string name="article_style_screen_name">Makale ekranı</string>
+    <string name="article_style_screen_name">Makale ekranı stili</string>
     <string name="article_style_screen_top_bar_category">Üst çubuk</string>
     <string name="article_style_screen_article_list_category">Makale listesi</string>
     <string name="article_style_screen_article_item_category">Makale öğesi</string>
-    <string name="search_style_screen_name">Arama ekranı</string>
+    <string name="search_style_screen_name">Arama ekranı stili</string>
     <string name="search_style_screen_top_bar_category">Üst çubuk</string>
     <string name="search_style_screen_search_list_category">Arama listesi</string>
     <string name="read_all">Tümünü oku</string>
@@ -331,7 +331,7 @@
     <string name="data_screen_clear_play_history_warning">Oynatma geçmişini silmek istediğinizden emin misiniz?</string>
     <string name="data_screen_clear_play_history_success">%d öğe silindi</string>
     <string name="folder">Klasör</string>
-    <string name="media_style_screen_name">Medya ekranı</string>
+    <string name="media_style_screen_name">Medya ekranı stili</string>
     <string name="media_style_screen_media_list_category">Medya listesi</string>
     <string name="media_style_screen_media_list_show_thumbnail">Küçük resimleri göster</string>
     <string name="media_style_screen_media_list_show_group_tab">Grup sekmesini göster</string>
@@ -343,7 +343,7 @@
     <string name="player_config_screen_show_progress_indicator">İlerleme göstergesi</string>
     <string name="read_screen_text_size">Metin boyutu</string>
     <string name="download_no_notification_permission_tip">Bildirim izni verilmediği için indirme çalışmıyor</string>
-    <string name="read_style_screen_name">Okuma ekranı</string>
+    <string name="read_style_screen_name">Okuma ekranı stili</string>
     <string name="read_style_screen_top_bar_category">Üst çubuk</string>
     <string name="read_style_screen_content_category">İçerik</string>
     <string name="auto_delete_article_screen_keep_unread">Okunmamışları koru</string>

@@ -35,6 +35,7 @@ fun EditGroupSheet(
     groups: List<GroupVo>,
     onReadAll: (String) -> Unit,
     onRefresh: (String) -> Unit,
+    onMuteAll: (String, Boolean) -> Unit,
     onClear: (String) -> Unit,
     onDelete: (String) -> Unit,
     onNameChange: (String) -> Unit,
@@ -63,18 +64,20 @@ fun EditGroupSheet(
 
             // Options
             OptionArea(
-                // Default group cannot be deleted
-                deleteEnabled = !group.isDefaultGroup(),
                 deleteWarningText = stringResource(
                     id = R.string.feed_screen_delete_group_warning,
                     group.name,
                 ),
                 onReadAll = { onReadAll(group.groupId) },
                 onRefresh = { onRefresh(group.groupId) },
+                onMuteAll = { onMuteAll(group.groupId, it) },
                 onClear = { onClear(group.groupId) },
-                onDelete = {
-                    onDelete(group.groupId)
-                    onDismissRequest()
+                // Default group cannot be deleted
+                onDelete = if (group.isDefaultGroup()) null else {
+                    {
+                        onDelete(group.groupId)
+                        onDismissRequest()
+                    }
                 },
             )
             Spacer(modifier = Modifier.height(12.dp))

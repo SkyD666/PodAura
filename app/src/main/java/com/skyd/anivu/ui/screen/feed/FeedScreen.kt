@@ -93,6 +93,7 @@ import com.skyd.anivu.ui.screen.feed.item.Group1Item
 import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
+import com.skyd.anivu.ui.screen.settings.appearance.feed.FEED_STYLE_SCREEN_ROUTE
 import kotlinx.coroutines.android.awaitFrame
 import java.util.UUID
 
@@ -294,6 +295,8 @@ private fun FeedList(
                 is FeedEvent.ReadAllResultEvent.Failed -> event.msg.showToast()
                 is FeedEvent.ClearFeedArticlesResultEvent.Failed -> event.msg.showToast()
                 is FeedEvent.ClearGroupArticlesResultEvent.Failed -> event.msg.showToast()
+                is FeedEvent.MuteFeedResultEvent.Failed -> event.msg.showToast()
+                is FeedEvent.MuteFeedsInGroupResultEvent.Failed -> event.msg.showToast()
 
                 is FeedEvent.EditFeedResultEvent.Success -> {
                     if (openEditFeedDialog != null) openEditFeedDialog = event.feed
@@ -305,6 +308,12 @@ private fun FeedList(
 
                 is FeedEvent.ClearFeedArticlesResultEvent.Success -> {
                     if (openEditFeedDialog != null) openEditFeedDialog = event.feed
+                }
+
+                is FeedEvent.MuteFeedResultEvent.Success -> {
+                    openEditFeedDialog = openEditFeedDialog?.let { feedView ->
+                        feedView.copy(feed = feedView.feed.copy(mute = event.mute))
+                    }
                 }
 
                 is FeedEvent.ReadAllResultEvent.Success -> if (openEditFeedDialog != null) {
@@ -327,7 +336,9 @@ private fun FeedList(
                 FeedEvent.CreateGroupResultEvent.Success,
                 FeedEvent.MoveFeedsToGroupResultEvent.Success,
                 FeedEvent.ClearGroupArticlesResultEvent.Success,
+                FeedEvent.MuteFeedsInGroupResultEvent.Success,
                 FeedEvent.DeleteGroupResultEvent.Success -> Unit
+
             }
         }
 
@@ -360,6 +371,7 @@ private fun FeedList(
                 groups = groups,
                 onReadAll = { dispatch(FeedIntent.ReadAllInFeed(it)) },
                 onRefresh = { dispatch(FeedIntent.RefreshFeed(it)) },
+                onMute = { feedUrl, mute -> dispatch(FeedIntent.MuteFeed(feedUrl, mute)) },
                 onClear = { dispatch(FeedIntent.ClearFeedArticles(it)) },
                 onDelete = { dispatch(FeedIntent.RemoveFeed(it)) },
                 onUrlChange = {
@@ -425,6 +437,9 @@ private fun FeedList(
                 groups = groups,
                 onReadAll = { dispatch(FeedIntent.ReadAllInGroup(it)) },
                 onRefresh = { dispatch(FeedIntent.RefreshGroupFeed(it)) },
+                onMuteAll = { groupId, mute ->
+                    dispatch(FeedIntent.MuteFeedsInGroup(groupId, mute))
+                },
                 onClear = { dispatch(FeedIntent.ClearGroupArticles(it)) },
                 onDelete = { dispatch(FeedIntent.DeleteGroup(it)) },
                 onNameChange = {
@@ -640,6 +655,13 @@ private fun MoreMenu(
             onClick = {
                 onDismissRequest()
                 navController.navigate(REORDER_GROUP_SCREEN_ROUTE)
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.feed_style_screen_name)) },
+            onClick = {
+                onDismissRequest()
+                navController.navigate(FEED_STYLE_SCREEN_ROUTE)
             },
         )
     }

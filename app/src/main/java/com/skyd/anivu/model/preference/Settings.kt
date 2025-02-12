@@ -24,6 +24,7 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -91,6 +92,7 @@ import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalHardwareDecode
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
+import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
@@ -160,6 +162,7 @@ data class Settings(
     val readContentTonalElevation: Float = ReadContentTonalElevationPreference.default,
     val readTopBarTonalElevation: Float = ReadTopBarTonalElevationPreference.default,
     val feedNumberBadge: Int = FeedNumberBadgePreference.default,
+    val hideMutedFeed: Boolean = HideMutedFeedPreference.default,
     // Update
     val ignoreUpdateVersion: Long = IgnoreUpdateVersionPreference.default,
     // Behavior
@@ -240,6 +243,7 @@ fun SettingsProvider(
         LocalReadContentTonalElevation provides settings.readContentTonalElevation,
         LocalReadTopBarTonalElevation provides settings.readTopBarTonalElevation,
         LocalFeedNumberBadge provides settings.feedNumberBadge,
+        LocalHideMutedFeed provides settings.hideMutedFeed,
         // Update
         LocalIgnoreUpdateVersion provides settings.ignoreUpdateVersion,
         // Behavior

@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,8 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyd.anivu.R
 import com.skyd.anivu.ext.readable
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
@@ -101,6 +106,13 @@ fun Feed1Item(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (feed.mute) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                            contentDescription = stringResource(R.string.feed_screen_feed_muted),
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                     FeedNumberBadge(data)
                 }
                 val description = rememberSaveable(feed.customDescription, feed.description) {

@@ -113,6 +113,18 @@ class FeedViewModel @Inject constructor(
                 is FeedPartialStateChange.ReadAll.Failed ->
                     FeedEvent.ReadAllResultEvent.Failed(change.msg)
 
+                is FeedPartialStateChange.MuteFeed.Success ->
+                    FeedEvent.MuteFeedResultEvent.Success(change.mute)
+
+                is FeedPartialStateChange.MuteFeed.Failed ->
+                    FeedEvent.MuteFeedResultEvent.Failed(change.msg)
+
+                is FeedPartialStateChange.MuteFeedsInGroup.Success ->
+                    FeedEvent.MuteFeedsInGroupResultEvent.Success
+
+                is FeedPartialStateChange.MuteFeedsInGroup.Failed ->
+                    FeedEvent.MuteFeedsInGroupResultEvent.Failed(change.msg)
+
                 else -> return@onEach
             }
             sendEvent(event)
@@ -245,6 +257,18 @@ class FeedViewModel @Inject constructor(
                     FeedPartialStateChange.MoveFeedsToGroup.Success
                 }.startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.MoveFeedsToGroup.Failed(it.message.toString()) }
+            },
+            filterIsInstance<FeedIntent.MuteFeed>().flatMapConcat { intent ->
+                feedRepo.muteFeed(intent.feedUrl, intent.mute).map {
+                    FeedPartialStateChange.MuteFeed.Success(intent.mute)
+                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
+                    .catchMap { FeedPartialStateChange.MuteFeed.Failed(it.message.toString()) }
+            },
+            filterIsInstance<FeedIntent.MuteFeedsInGroup>().flatMapConcat { intent ->
+                feedRepo.muteFeedsInGroup(intent.groupId, intent.mute).map {
+                    FeedPartialStateChange.MuteFeedsInGroup.Success
+                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
+                    .catchMap { FeedPartialStateChange.MuteFeedsInGroup.Failed(it.message.toString()) }
             },
         )
     }

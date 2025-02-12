@@ -33,4 +33,6 @@ sealed interface FeedIntent : MviIntent {
     data class DeleteGroup(val groupId: String) : FeedIntent
     data class RenameGroup(val groupId: String, val name: String) : FeedIntent
     data class MoveFeedsToGroup(val fromGroupId: String, val toGroupId: String) : FeedIntent
+    data class MuteFeedsInGroup(val groupId: String, val mute: Boolean) : FeedIntent
+    data class MuteFeed(val feedUrl: String, val mute: Boolean) : FeedIntent
 }
