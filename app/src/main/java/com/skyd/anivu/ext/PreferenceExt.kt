@@ -19,7 +19,7 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -93,7 +93,6 @@ fun Preferences.toSettings(): Settings {
         readContentTonalElevation = ReadContentTonalElevationPreference.fromPreferences(this),
         readTopBarTonalElevation = ReadTopBarTonalElevationPreference.fromPreferences(this),
         feedNumberBadge = FeedNumberBadgePreference.fromPreferences(this),
-        hideMutedFeed = HideMutedFeedPreference.fromPreferences(this),
 
         // Update
         ignoreUpdateVersion = IgnoreUpdateVersionPreference.fromPreferences(this),
@@ -104,6 +103,7 @@ fun Preferences.toSettings(): Settings {
         articleSwipeLeftAction = ArticleSwipeLeftActionPreference.fromPreferences(this),
         articleSwipeRightAction = ArticleSwipeRightActionPreference.fromPreferences(this),
         hideEmptyDefault = HideEmptyDefaultPreference.fromPreferences(this),
+        hideMutedFeed = HideMutedFeedPreference.fromPreferences(this),
         pickImageMethod = PickImageMethodPreference.fromPreferences(this),
         mediaFileFilter = MediaFileFilterPreference.fromPreferences(this),
 

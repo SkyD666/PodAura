@@ -390,7 +390,10 @@
     <string name="feed_screen_unmute_feed">Unmute</string>
     <string name="feed_screen_unmute_all_feeds">Unmute all</string>
     <string name="feed_screen_feed_muted">Muted</string>
-    <string name="feed_style_screen_hide_muted_feed">Hide muted feeds</string>
+    <string name="feed_screen_feed_unmuted">Unmuted</string>
+    <string name="behavior_screen_feed_screen_hide_muted_feed">Hide muted feeds</string>
+    <string name="mute_feed_screen_name">Manage mute</string>
+    <string name="mute_feed_screen_tip">Muted subscriptions can be hidden on the feed screen and won\'t sync automatically</string>
     <plurals name="import_opml_result">
         <item quantity="one">Imported %d item, takes %.2f seconds</item>
         <item quantity="other">Imported %d items, takes %.2f seconds</item>

@@ -83,13 +83,11 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {
             is GroupListState.Failed,
             GroupListState.Init -> Unit
 
-            is GroupListState.Success -> {
-                GroupList(
-                    contentPadding = paddingValues,
-                    groupListState = groupListState,
-                    dispatcher = dispatcher,
-                )
-            }
+            is GroupListState.Success -> GroupList(
+                contentPadding = paddingValues,
+                groupListState = groupListState,
+                dispatcher = dispatcher,
+            )
         }
 
         MviEventListener(viewModel.singleEvent) { event ->

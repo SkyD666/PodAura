@@ -80,6 +80,8 @@ import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_DEEP_LINK_DATA
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.download.DownloadScreen
 import com.skyd.anivu.ui.screen.download.openDownloadScreen
+import com.skyd.anivu.ui.screen.feed.mute.MUTE_FEED_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.mute.MuteFeedScreen
 import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupScreen
 import com.skyd.anivu.ui.screen.feed.requestheaders.FEED_URL_KEY
@@ -292,6 +294,7 @@ private fun MainNavHost() {
         composable(route = PROXY_SCREEN_ROUTE) { ProxyScreen() }
         composable(route = TRANSMISSION_SCREEN_ROUTE) { TransmissionScreen() }
         composable(route = UPDATE_NOTIFICATION_SCREEN_ROUTE) { UpdateNotificationScreen() }
+        composable(route = MUTE_FEED_SCREEN_ROUTE) { MuteFeedScreen() }
         composable(
             route = "$REQUEST_HEADERS_SCREEN_ROUTE/{$FEED_URL_KEY}",
             arguments = listOf(

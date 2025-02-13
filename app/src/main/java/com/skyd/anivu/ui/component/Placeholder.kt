@@ -33,9 +33,9 @@ fun EmptyPlaceholder(
 
 @Composable
 fun ErrorPlaceholder(
-    modifier: Modifier = Modifier,
     text: String,
     contentPadding: PaddingValues = PaddingValues(),
+    modifier: Modifier = Modifier,
 ) {
     AnimatedPlaceholder(
         modifier = modifier,
@@ -99,8 +99,8 @@ fun WithTextPlaceholder(
 
 @Composable
 fun CircularProgressPlaceholder(
-    modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
+    modifier: Modifier = Modifier,
 ) {
     BasePlaceholder(
         modifier = modifier,

@@ -383,7 +383,10 @@
     <string name="feed_screen_unmute_feed">取消静音</string>
     <string name="feed_screen_unmute_all_feeds">取消静音</string>
     <string name="feed_screen_feed_muted">已静音</string>
-    <string name="feed_style_screen_hide_muted_feed">隐藏静音的订阅</string>
+    <string name="feed_screen_feed_unmuted">未静音</string>
+    <string name="behavior_screen_feed_screen_hide_muted_feed">隐藏静音的订阅</string>
+    <string name="mute_feed_screen_name">管理静音订阅</string>
+    <string name="mute_feed_screen_tip">被静音的订阅可以在订阅页中被隐藏且不会自动同步</string>
     <plurals name="import_opml_result">
         <item quantity="other">导入了 %d 项，花费 %.2f 秒</item>
     </plurals>

@@ -183,6 +183,10 @@ interface FeedDao {
     fun getFeedList(sql: SupportSQLiteQuery): List<FeedViewBean>
 
     @Transaction
+    @Query("SELECT * FROM $FEED_TABLE_NAME")
+    fun getAllFeedList(): Flow<List<FeedBean>>
+
+    @Transaction
     @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME")
     fun getAllFeedUrl(): List<String>
 

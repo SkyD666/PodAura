@@ -24,7 +24,7 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -162,7 +162,6 @@ data class Settings(
     val readContentTonalElevation: Float = ReadContentTonalElevationPreference.default,
     val readTopBarTonalElevation: Float = ReadTopBarTonalElevationPreference.default,
     val feedNumberBadge: Int = FeedNumberBadgePreference.default,
-    val hideMutedFeed: Boolean = HideMutedFeedPreference.default,
     // Update
     val ignoreUpdateVersion: Long = IgnoreUpdateVersionPreference.default,
     // Behavior
@@ -171,6 +170,7 @@ data class Settings(
     val articleSwipeLeftAction: String = ArticleSwipeLeftActionPreference.default,
     val articleSwipeRightAction: String = ArticleSwipeRightActionPreference.default,
     val hideEmptyDefault: Boolean = HideEmptyDefaultPreference.default,
+    val hideMutedFeed: Boolean = HideMutedFeedPreference.default,
     val pickImageMethod: String = PickImageMethodPreference.default,
     val mediaFileFilter: String = MediaFileFilterPreference.default,
     // RSS
@@ -243,7 +243,6 @@ fun SettingsProvider(
         LocalReadContentTonalElevation provides settings.readContentTonalElevation,
         LocalReadTopBarTonalElevation provides settings.readTopBarTonalElevation,
         LocalFeedNumberBadge provides settings.feedNumberBadge,
-        LocalHideMutedFeed provides settings.hideMutedFeed,
         // Update
         LocalIgnoreUpdateVersion provides settings.ignoreUpdateVersion,
         // Behavior
@@ -252,6 +251,7 @@ fun SettingsProvider(
         LocalArticleSwipeLeftAction provides settings.articleSwipeLeftAction,
         LocalArticleSwipeRightAction provides settings.articleSwipeRightAction,
         LocalHideEmptyDefault provides settings.hideEmptyDefault,
+        LocalHideMutedFeed provides settings.hideMutedFeed,
         LocalPickImageMethod provides settings.pickImageMethod,
         LocalMediaFileFilter provides settings.mediaFileFilter,
         // rss

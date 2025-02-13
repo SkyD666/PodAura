@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.preference.appearance.feed
+package com.skyd.anivu.model.preference.behavior.feed
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences

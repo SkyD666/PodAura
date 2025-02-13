@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.SwipeLeft
 import androidx.compose.material.icons.outlined.SwipeRight
@@ -36,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
@@ -55,6 +57,7 @@ import com.skyd.anivu.ui.local.LocalArticleSwipeRightAction
 import com.skyd.anivu.ui.local.LocalArticleTapAction
 import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
+import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
 
 
@@ -100,6 +103,21 @@ fun BehaviorScreen() {
                     checked = LocalHideEmptyDefault.current,
                     onCheckedChange = {
                         HideEmptyDefaultPreference.put(
+                            context = context,
+                            scope = scope,
+                            value = it,
+                        )
+                    }
+                )
+            }
+
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                    text = stringResource(id = R.string.behavior_screen_feed_screen_hide_muted_feed),
+                    checked = LocalHideMutedFeed.current,
+                    onCheckedChange = {
+                        HideMutedFeedPreference.put(
                             context = context,
                             scope = scope,
                             value = it,

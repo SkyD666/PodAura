@@ -10,13 +10,14 @@ import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.isLocal
 import com.skyd.anivu.ext.isNetwork
 import com.skyd.anivu.ext.put
+import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
-import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -53,6 +54,10 @@ class FeedRepository @Inject constructor(
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    fun requestAllFeedList(): Flow<List<FeedBean>> = feedDao.getAllFeedList()
+        .map { list -> list.sortedBy { it.title } }
+        .flowOn(Dispatchers.IO)
 
     fun clearGroupArticles(groupId: String): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId

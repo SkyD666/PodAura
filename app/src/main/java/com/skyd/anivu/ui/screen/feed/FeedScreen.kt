@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Sort
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RssFeed
@@ -90,6 +91,7 @@ import com.skyd.anivu.ui.screen.article.ArticleScreen
 import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Group1Item
+import com.skyd.anivu.ui.screen.feed.mute.MUTE_FEED_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
@@ -655,6 +657,19 @@ private fun MoreMenu(
             onClick = {
                 onDismissRequest()
                 navController.navigate(REORDER_GROUP_SCREEN_ROUTE)
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.mute_feed_screen_name)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                onDismissRequest()
+                navController.navigate(MUTE_FEED_SCREEN_ROUTE)
             },
         )
         DropdownMenuItem(

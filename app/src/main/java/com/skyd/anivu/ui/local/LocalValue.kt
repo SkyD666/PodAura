@@ -20,7 +20,7 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.appearance.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -109,7 +109,6 @@ val LocalReadContentTonalElevation =
 val LocalReadTopBarTonalElevation =
     compositionLocalOf { ReadTopBarTonalElevationPreference.default }
 val LocalFeedNumberBadge = compositionLocalOf { FeedNumberBadgePreference.default }
-val LocalHideMutedFeed = compositionLocalOf { HideMutedFeedPreference.default }
 
 // Update
 val LocalIgnoreUpdateVersion = compositionLocalOf { IgnoreUpdateVersionPreference.default }
@@ -120,6 +119,7 @@ val LocalArticleTapAction = compositionLocalOf { ArticleTapActionPreference.defa
 val LocalArticleSwipeLeftAction = compositionLocalOf { ArticleSwipeLeftActionPreference.default }
 val LocalArticleSwipeRightAction = compositionLocalOf { ArticleSwipeRightActionPreference.default }
 val LocalHideEmptyDefault = compositionLocalOf { HideEmptyDefaultPreference.default }
+val LocalHideMutedFeed = compositionLocalOf { HideMutedFeedPreference.default }
 val LocalPickImageMethod = compositionLocalOf { PickImageMethodPreference.default }
 val LocalMediaFileFilter = compositionLocalOf { MediaFileFilterPreference.default }
 
