@@ -1,19 +1,17 @@
 PodAura，一個集 RSS 訂閱與更新、BitTorrent下載、影片播放為一體的工具。
 使用 MVI 架構，完全採用 Material You 設計風格。使用 Android View 和 Jetpack Compose 混合開發。  
 <h3>💡 主要功能</h3>
-<ol>
-<li><strong>訂閱</strong> RSS、<strong>更新</strong> RSS、<strong>閱讀</strong> RSS</li>
-<li><strong>自動更新 RSS 訂閱</strong></li>
-<li><strong>下載</strong> RSS 文章中的 <strong>BT 種子或磁力連結</strong>附件（enclosure 標籤）</li>
-<li>已下載<strong>檔案做種</strong></li>
-<li><strong>播放</strong>已下載的<strong>影片檔案</strong></li>
-<li><strong>更改播放速度</strong>，設定<strong>音軌</strong>、<strong>字幕軌</strong>等</li>
-<li><strong>雙指旋轉縮放影片畫面</strong>、<strong>長按</strong>影片<strong>倍速播放</strong></li>
-<li><strong>滑動</strong>調整<strong>音量</strong>、<strong>螢幕亮度和播放位置</strong></li>
-<li>支援<strong>搜尋已獲取的 RSS 訂閱或文章</strong></li>
-<li><strong>播放</strong>手機中的<strong>其他影片</strong></li>
-<li>支援<strong>自訂 MPV</strong> 播放器</li>
-<li>支援透過 <strong>OPML 匯入和匯出</strong>訂閱</li>
-<li>支援<strong>深色模式</strong></li>
-<li>......</li>
-</ol>
+* <strong>訂閱</strong> RSS、<strong>更新</strong> RSS、<strong>閱讀</strong> RSS
+* <strong>自動更新 RSS 訂閱</strong>
+* <strong>下載</strong> RSS 文章中的 <strong>BT 種子或磁力連結</strong>附件（enclosure 標籤）
+* 已下載<strong>檔案做種</strong>
+* <strong>播放</strong>已下載的<strong>影片檔案</strong>
+* <strong>更改播放速度</strong>，設定<strong>音軌</strong>、<strong>字幕軌</strong>等
+* <strong>雙指旋轉縮放影片畫面</strong>、<strong>長按</strong>影片<strong>倍速播放</strong>
+* <strong>滑動</strong>調整<strong>音量</strong>、<strong>螢幕亮度和播放位置</strong>
+* 支援<strong>搜尋已獲取的 RSS 訂閱或文章</strong>
+* <strong>播放</strong>手機中的<strong>其他影片</strong>
+* 支援<strong>自訂 MPV</strong> 播放器
+* 支援透過 <strong>OPML 匯入和匯出</strong>訂閱
+* 支援<strong>深色模式</strong>
+* ......
