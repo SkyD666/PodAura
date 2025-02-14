@@ -33,6 +33,7 @@ import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.PeerInfoBean
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
+import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.anivu.model.repository.download.DownloadRepository
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManagerIntent
@@ -40,6 +41,7 @@ import com.skyd.anivu.model.service.HttpService
 import com.skyd.anivu.ui.activity.MainActivity
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_DEEP_LINK_DATA
 import com.skyd.anivu.util.uniqueInt
+import com.skyd.downloader.notification.NotificationConst
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -51,12 +53,16 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.libtorrent4j.AlertListener
+import org.libtorrent4j.AnnounceEntry
 import org.libtorrent4j.SessionManager
 import org.libtorrent4j.SessionParams
 import org.libtorrent4j.TorrentHandle
 import org.libtorrent4j.TorrentInfo
 import org.libtorrent4j.TorrentStatus
+import org.libtorrent4j.alerts.AddTorrentAlert
 import org.libtorrent4j.alerts.Alert
+import org.libtorrent4j.alerts.DhtAnnounceAlert
+import org.libtorrent4j.alerts.DhtBootstrapAlert
 import org.libtorrent4j.alerts.FileErrorAlert
 import org.libtorrent4j.alerts.FileRenamedAlert
 import org.libtorrent4j.alerts.MetadataReceivedAlert
@@ -334,6 +340,10 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
 
     private fun onAlert(continuation: CancellableContinuation<Unit>, alert: Alert<*>) {
         when (alert) {
+            is AddTorrentAlert -> {
+                addTrackers(alert.handle())
+            }
+
             is SaveResumeDataAlert -> {
                 serializeResumeData(id.toString(), alert.params())
             }
@@ -475,6 +485,12 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
                     }
                 }
             }
+        }
+    }
+
+    private fun addTrackers(handle: TorrentHandle) {
+        applicationContext.dataStore.getOrDefault(TorrentTrackersPreference).forEach { track ->
+            handle.addTracker(AnnounceEntry(track))
         }
     }
 

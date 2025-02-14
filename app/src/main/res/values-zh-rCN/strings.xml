@@ -83,7 +83,7 @@
     <string name="transmission_screen_transmission_behavior_category">行为</string>
     <string name="transmission_screen_seeding_when_complete">自动做种</string>
     <string name="transmission_screen_seeding_when_complete_description">下载完成后自动做种</string>
-    <string name="transmission_screen_proxy_category">代理</string>
+    <string name="transmission_screen_config_category">配置</string>
     <string name="proxy_screen_name">代理</string>
     <string name="proxy_screen_description">配置代理服务器地址、端口、账号等</string>
     <string name="proxy_mode_auto">自动</string>
@@ -387,6 +387,17 @@
     <string name="behavior_screen_feed_screen_hide_muted_feed">隐藏静音的订阅</string>
     <string name="mute_feed_screen_name">管理静音订阅</string>
     <string name="mute_feed_screen_tip">被静音的订阅可以在订阅页中被隐藏且不会自动同步</string>
+    <string name="transmission_screen_default_torrent_trackers">默认追踪器</string>
+    <string name="transmission_screen_edit_torrent_trackers_tips">每一行为一个追踪器</string>
+    <string name="transmission_screen_torrent_dht_bootstraps">DHT 引导节点</string>
+    <string name="transmission_screen_edit_torrent_dht_bootstraps_tips">每个节点可以用英文逗号或回车分隔，留空表示使用默认节点</string>
+    <string name="transmission_screen_torrent_dht_bootstraps_default_description">使用默认节点</string>
+    <plurals name="transmission_screen_default_torrent_trackers_description">
+        <item quantity="other">%d 个追踪器</item>
+    </plurals>
+    <plurals name="transmission_screen_torrent_dht_bootstraps_description">
+        <item quantity="other">%d 个节点</item>
+    </plurals>
     <plurals name="import_opml_result">
         <item quantity="other">导入了 %d 项，花费 %.2f 秒</item>
     </plurals>

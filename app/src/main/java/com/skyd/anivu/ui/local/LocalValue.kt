@@ -20,7 +20,6 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -36,6 +35,7 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionP
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -66,6 +66,8 @@ import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
+import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
 
 val LocalNavController = compositionLocalOf<NavHostController> {
     error("LocalNavController not initialized!")
@@ -167,3 +169,5 @@ val LocalProxyHostname = compositionLocalOf { ProxyHostnamePreference.default }
 val LocalProxyPort = compositionLocalOf { ProxyPortPreference.default }
 val LocalProxyUsername = compositionLocalOf { ProxyUsernamePreference.default }
 val LocalProxyPassword = compositionLocalOf { ProxyPasswordPreference.default }
+val LocalTorrentTrackers = compositionLocalOf { TorrentTrackersPreference.default }
+val LocalTorrentDhtBootstraps = compositionLocalOf { TorrentDhtBootstrapsPreference.default }

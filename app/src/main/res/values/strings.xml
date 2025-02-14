@@ -87,7 +87,7 @@
     <string name="transmission_screen_transmission_behavior_category">Behavior</string>
     <string name="transmission_screen_seeding_when_complete">Auto seeding</string>
     <string name="transmission_screen_seeding_when_complete_description">Auto seeding when download is complete</string>
-    <string name="transmission_screen_proxy_category">Proxy</string>
+    <string name="transmission_screen_config_category">Config</string>
     <string name="proxy_screen_name">Proxy</string>
     <string name="proxy_screen_description">Configure proxy server address, port, account, etc</string>
     <string name="proxy_mode_auto">Auto</string>
@@ -394,6 +394,19 @@
     <string name="behavior_screen_feed_screen_hide_muted_feed">Hide muted feeds</string>
     <string name="mute_feed_screen_name">Manage mute</string>
     <string name="mute_feed_screen_tip">Muted subscriptions can be hidden on the feed screen and won\'t sync automatically</string>
+    <string name="transmission_screen_default_torrent_trackers">Default trackers</string>
+    <string name="transmission_screen_edit_torrent_trackers_tips">Each line represents a tracker</string>
+    <string name="transmission_screen_torrent_dht_bootstraps">DHT bootstrap nodes</string>
+    <string name="transmission_screen_edit_torrent_dht_bootstraps_tips">Each node can be separated by a comma or a newline, leaving it empty means using the default nodes</string>
+    <string name="transmission_screen_torrent_dht_bootstraps_default_description">Use default nodes</string>
+    <plurals name="transmission_screen_default_torrent_trackers_description">
+        <item quantity="one">%d tracker</item>
+        <item quantity="other">%d trackers</item>
+    </plurals>
+    <plurals name="transmission_screen_torrent_dht_bootstraps_description">
+        <item quantity="one">%d node</item>
+        <item quantity="other">%d nodes</item>
+    </plurals>
     <plurals name="import_opml_result">
         <item quantity="one">Imported %d item, takes %.2f seconds</item>
         <item quantity="other">Imported %d items, takes %.2f seconds</item>

@@ -20,6 +20,7 @@ import com.skyd.anivu.model.preference.proxy.ProxyPortPreference
 import com.skyd.anivu.model.preference.proxy.ProxyTypePreference
 import com.skyd.anivu.model.preference.proxy.ProxyUsernamePreference
 import com.skyd.anivu.model.preference.proxy.UseProxyPreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManagerIntent
 import kotlinx.coroutines.runBlocking
@@ -136,6 +137,14 @@ internal fun initProxySettings(context: Context, settings: SettingsPack): Settin
         settings_pack.int_types.proxy_port.swigValue(),
         proxyPort
     ).run {
+        val dhtBootstrapNodes = dataStore.getOrDefault(TorrentDhtBootstrapsPreference)
+            .joinToString(",")
+        if (dhtBootstrapNodes.isNotBlank()) {
+            setString(settings_pack.string_types.dht_bootstrap_nodes.swigValue(), dhtBootstrapNodes)
+        } else {
+            this
+        }
+    }.run {
         if (proxyUsername.isBlank() || proxyPassword.isBlank()) {
             clear(settings_pack.string_types.proxy_username.swigValue())
             clear(settings_pack.string_types.proxy_password.swigValue())

@@ -187,15 +187,15 @@ class MainActivity : BaseComposeActivity() {
         val data = intent.data
 
         listOf(
-            OpenDownloadIntentHandler {
-                openDownloadScreen(navController = navController)
-            },
             UrlDownloadIntentHandler { downloadUrl ->
                 openDownloadScreen(
                     navController = navController,
                     downloadLink = downloadUrl,
                     mimetype = data?.type,
                 )
+            },
+            OpenDownloadIntentHandler {
+                openDownloadScreen(navController = navController)
             },
             ImportOpmlIntentHandler { opmlUrl ->
                 openImportOpmlScreen(

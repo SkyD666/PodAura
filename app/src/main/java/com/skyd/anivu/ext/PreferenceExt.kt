@@ -65,6 +65,8 @@ import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
+import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
 
 fun Preferences.toSettings(): Settings {
     return Settings(
@@ -146,5 +148,7 @@ fun Preferences.toSettings(): Settings {
         proxyPort = ProxyPortPreference.fromPreferences(this),
         proxyUsername = ProxyUsernamePreference.fromPreferences(this),
         proxyPassword = ProxyPasswordPreference.fromPreferences(this),
+        torrentTrackers = TorrentTrackersPreference.fromPreferences(this),
+        torrentDhtBootstraps = TorrentDhtBootstrapsPreference.fromPreferences(this),
     )
 }

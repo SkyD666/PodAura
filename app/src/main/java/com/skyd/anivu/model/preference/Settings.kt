@@ -24,7 +24,6 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -40,6 +39,7 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionP
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -70,6 +70,8 @@ import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
+import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.anivu.ui.local.LocalAmoledDarkMode
 import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
 import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
@@ -131,6 +133,8 @@ import com.skyd.anivu.ui.local.LocalShowArticlePullRefresh
 import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
 import com.skyd.anivu.ui.local.LocalTheme
+import com.skyd.anivu.ui.local.LocalTorrentDhtBootstraps
+import com.skyd.anivu.ui.local.LocalTorrentTrackers
 import com.skyd.anivu.ui.local.LocalUseAutoDelete
 import com.skyd.anivu.ui.local.LocalUseProxy
 import kotlinx.coroutines.Dispatchers
@@ -207,6 +211,8 @@ data class Settings(
     val proxyPort: Int = ProxyPortPreference.default,
     val proxyUsername: String = ProxyUsernamePreference.default,
     val proxyPassword: String = ProxyPasswordPreference.default,
+    val torrentTrackers: Set<String> = TorrentTrackersPreference.default,
+    val torrentDhtBootstraps: Set<String> = TorrentDhtBootstrapsPreference.default,
 )
 
 @Composable
@@ -288,6 +294,8 @@ fun SettingsProvider(
         LocalProxyPort provides settings.proxyPort,
         LocalProxyUsername provides settings.proxyUsername,
         LocalProxyPassword provides settings.proxyPassword,
+        LocalTorrentTrackers provides settings.torrentTrackers,
+        LocalTorrentDhtBootstraps provides settings.torrentDhtBootstraps,
     ) {
         content()
     }

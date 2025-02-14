@@ -83,7 +83,7 @@
     <string name="transmission_screen_transmission_behavior_category">行為</string>
     <string name="transmission_screen_seeding_when_complete">自動做種</string>
     <string name="transmission_screen_seeding_when_complete_description">下載完成後自動做種</string>
-    <string name="transmission_screen_proxy_category">代理</string>
+    <string name="transmission_screen_config_category">配置</string>
     <string name="proxy_screen_name">代理</string>
     <string name="proxy_screen_description">配置代理伺服器地址、埠、帳號等</string>
     <string name="proxy_mode_auto">自動</string>
