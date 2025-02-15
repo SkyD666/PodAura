@@ -41,6 +41,9 @@ import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePr
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
@@ -150,6 +153,8 @@ val LocalBackgroundPlay = compositionLocalOf { BackgroundPlayPreference.default 
 
 // Data
 val LocalUseAutoDelete = compositionLocalOf { UseAutoDeletePreference.default }
+val LocalAutoDeleteArticleUseBefore =
+    compositionLocalOf { AutoDeleteArticleUseBeforePreference.default }
 val LocalAutoDeleteArticleFrequency =
     compositionLocalOf { AutoDeleteArticleFrequencyPreference.default }
 val LocalAutoDeleteArticleBefore = compositionLocalOf { AutoDeleteArticleBeforePreference.default }
@@ -157,6 +162,10 @@ val LocalAutoDeleteArticleKeepUnread =
     compositionLocalOf { AutoDeleteArticleKeepUnreadPreference.default }
 val LocalAutoDeleteArticleKeepFavorite =
     compositionLocalOf { AutoDeleteArticleKeepFavoritePreference.default }
+val LocalAutoDeleteArticleUseMaxCount =
+    compositionLocalOf { AutoDeleteArticleUseMaxCountPreference.default }
+val LocalAutoDeleteArticleMaxCount =
+    compositionLocalOf { AutoDeleteArticleMaxCountPreference.default }
 val LocalOpmlExportDir = compositionLocalOf { OpmlExportDirPreference.default }
 val LocalMediaLibLocation = compositionLocalOf { MediaLibLocationPreference.default }
 

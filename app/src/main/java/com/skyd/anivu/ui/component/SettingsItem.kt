@@ -29,6 +29,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -137,11 +138,11 @@ fun SliderSettingsItem(
 
 @Composable
 fun SwitchSettingsItem(
-    imageVector: ImageVector?,
+    checked: Boolean,
     text: String,
+    imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    checked: Boolean = false,
     enabled: Boolean = true,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
@@ -158,11 +159,11 @@ fun SwitchSettingsItem(
 
 @Composable
 fun SwitchSettingsItem(
-    painter: Painter?,
+    checked: Boolean,
     text: String,
+    painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    checked: Boolean = false,
     enabled: Boolean = true,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
@@ -187,6 +188,69 @@ fun SwitchSettingsItem(
             onCheckedChange = onCheckedChange,
             interactionSource = interactionSource
         )
+    }
+}
+
+
+@Composable
+fun SwitchBaseSettingsItem(
+    checked: Boolean,
+    text: String,
+    imageVector: ImageVector?,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
+    onCheckedChange: ((Boolean) -> Unit)?,
+) {
+    SwitchBaseSettingsItem(
+        checked = checked,
+        text = text,
+        painter = imageVector?.let { rememberVectorPainter(image = it) },
+        modifier = modifier,
+        description = description,
+        enabled = enabled,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        extraContent = extraContent,
+        onCheckedChange = onCheckedChange,
+    )
+}
+
+@Composable
+fun SwitchBaseSettingsItem(
+    checked: Boolean,
+    text: String,
+    painter: Painter?,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
+    onCheckedChange: ((Boolean) -> Unit)?,
+) {
+    BaseSettingsItem(
+        modifier = modifier,
+        icon = painter,
+        text = text,
+        descriptionText = description,
+        enabled = enabled,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        extraContent = extraContent,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            VerticalDivider(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Switch(
+                checked = checked,
+                enabled = enabled,
+                onCheckedChange = onCheckedChange,
+            )
+        }
     }
 }
 

@@ -19,7 +19,6 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPre
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
-import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
@@ -35,11 +34,15 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionP
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
@@ -132,10 +135,13 @@ fun Preferences.toSettings(): Settings {
 
         // Data
         useAutoDelete = UseAutoDeletePreference.fromPreferences(this),
+        autoDeleteArticleUseBefore = AutoDeleteArticleUseBeforePreference.fromPreferences(this),
         autoDeleteArticleFrequency = AutoDeleteArticleFrequencyPreference.fromPreferences(this),
         autoDeleteArticleBefore = AutoDeleteArticleBeforePreference.fromPreferences(this),
         autoDeleteArticleKeepUnread = AutoDeleteArticleKeepUnreadPreference.fromPreferences(this),
         autoDeleteArticleKeepFavorite = AutoDeleteArticleKeepFavoritePreference.fromPreferences(this),
+        autoDeleteArticleUseMaxCount = AutoDeleteArticleUseMaxCountPreference.fromPreferences(this),
+        autoDeleteArticleMaxCount = AutoDeleteArticleMaxCountPreference.fromPreferences(this),
         opmlExportDir = OpmlExportDirPreference.fromPreferences(this),
         mediaLibLocation = MediaLibLocationPreference.fromPreferences(this),
 

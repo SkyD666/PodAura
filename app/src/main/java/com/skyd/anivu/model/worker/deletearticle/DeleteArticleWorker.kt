@@ -9,6 +9,9 @@ import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseMaxCountPreference
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -29,17 +32,28 @@ class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
 
     override suspend fun doWork(): Result {
         runCatching {
-            hiltEntryPoint.articleDao.deleteArticleBefore(
-                timestamp = System.currentTimeMillis() - applicationContext.dataStore.getOrDefault(
-                    AutoDeleteArticleBeforePreference
-                ),
-                keepUnread = applicationContext.dataStore.getOrDefault(
-                    AutoDeleteArticleKeepUnreadPreference
-                ),
-                keepFavorite = applicationContext.dataStore.getOrDefault(
-                    AutoDeleteArticleKeepFavoritePreference
-                ),
-            )
+            val dataStore = applicationContext.dataStore
+            val keepUnread = dataStore.getOrDefault(AutoDeleteArticleKeepUnreadPreference)
+            val keepFavorite = dataStore.getOrDefault(AutoDeleteArticleKeepFavoritePreference)
+            val useBefore = dataStore.getOrDefault(AutoDeleteArticleUseBeforePreference)
+            if (useBefore) {
+                hiltEntryPoint.articleDao.deleteArticleBefore(
+                    timestamp = System.currentTimeMillis() - dataStore.getOrDefault(
+                        AutoDeleteArticleBeforePreference
+                    ),
+                    keepUnread = keepUnread,
+                    keepFavorite = keepFavorite,
+                )
+            }
+            val useMaxCount = dataStore.getOrDefault(AutoDeleteArticleUseMaxCountPreference)
+            val maxCount = dataStore.getOrDefault(AutoDeleteArticleMaxCountPreference)
+            if (useMaxCount && maxCount > 1) {
+                hiltEntryPoint.articleDao.deleteArticleExceed(
+                    count = maxCount,
+                    keepUnread = keepUnread,
+                    keepFavorite = keepFavorite,
+                )
+            }
         }.onFailure { return Result.failure() }
         return Result.success()
     }

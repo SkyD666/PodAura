@@ -45,6 +45,9 @@ import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePr
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
@@ -84,6 +87,9 @@ import com.skyd.anivu.ui.local.LocalAutoDeleteArticleBefore
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleFrequency
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepFavorite
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepUnread
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleMaxCount
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseBefore
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseMaxCount
 import com.skyd.anivu.ui.local.LocalBackgroundPlay
 import com.skyd.anivu.ui.local.LocalDarkMode
 import com.skyd.anivu.ui.local.LocalDateStyle
@@ -196,10 +202,13 @@ data class Settings(
     val backgroundPlay: Boolean = BackgroundPlayPreference.default,
     // Data
     val useAutoDelete: Boolean = UseAutoDeletePreference.default,
+    val autoDeleteArticleUseBefore: Boolean = AutoDeleteArticleUseBeforePreference.default,
     val autoDeleteArticleFrequency: Long = AutoDeleteArticleFrequencyPreference.default,
     val autoDeleteArticleBefore: Long = AutoDeleteArticleBeforePreference.default,
     val autoDeleteArticleKeepUnread: Boolean = AutoDeleteArticleKeepUnreadPreference.default,
     val autoDeleteArticleKeepFavorite: Boolean = AutoDeleteArticleKeepFavoritePreference.default,
+    val autoDeleteArticleUseMaxCount: Boolean = AutoDeleteArticleUseMaxCountPreference.default,
+    val autoDeleteArticleMaxCount: Int = AutoDeleteArticleMaxCountPreference.default,
     val opmlExportDir: String = OpmlExportDirPreference.default,
     val mediaLibLocation: String = MediaLibLocationPreference.default,
     // Transmission
@@ -260,7 +269,7 @@ fun SettingsProvider(
         LocalHideMutedFeed provides settings.hideMutedFeed,
         LocalPickImageMethod provides settings.pickImageMethod,
         LocalMediaFileFilter provides settings.mediaFileFilter,
-        // rss
+        // Rss
         LocalRssSyncFrequency provides settings.rssSyncFrequency,
         LocalRssSyncWifiConstraint provides settings.rssSyncWifiConstraint,
         LocalRssSyncChargingConstraint provides settings.rssSyncChargingConstraint,
@@ -279,10 +288,13 @@ fun SettingsProvider(
         LocalBackgroundPlay provides settings.backgroundPlay,
         // Data
         LocalUseAutoDelete provides settings.useAutoDelete,
+        LocalAutoDeleteArticleUseBefore provides settings.autoDeleteArticleUseBefore,
         LocalAutoDeleteArticleFrequency provides settings.autoDeleteArticleFrequency,
         LocalAutoDeleteArticleBefore provides settings.autoDeleteArticleBefore,
         LocalAutoDeleteArticleKeepUnread provides settings.autoDeleteArticleKeepUnread,
         LocalAutoDeleteArticleKeepFavorite provides settings.autoDeleteArticleKeepFavorite,
+        LocalAutoDeleteArticleUseMaxCount provides settings.autoDeleteArticleUseMaxCount,
+        LocalAutoDeleteArticleMaxCount provides settings.autoDeleteArticleMaxCount,
         LocalOpmlExportDir provides settings.opmlExportDir,
         LocalMediaLibLocation provides settings.mediaLibLocation,
         // Transmission

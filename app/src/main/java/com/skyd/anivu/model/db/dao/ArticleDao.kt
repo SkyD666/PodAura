@@ -149,6 +149,27 @@ interface ArticleDao {
     ): Int
 
     @Transaction
+    @Query(
+        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+                "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
+                "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0) AND " +
+                "(" +
+                "  ${ArticleBean.UPDATE_AT_COLUMN} IS NULL OR (" +
+                "    SELECT COUNT(*) " +
+                "    FROM $ARTICLE_TABLE_NAME AS a2 " +
+                "    WHERE " +
+                "      a2.${ArticleBean.FEED_URL_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.FEED_URL_COLUMN} AND " +
+                "      a2.${ArticleBean.UPDATE_AT_COLUMN} > $ARTICLE_TABLE_NAME.${ArticleBean.UPDATE_AT_COLUMN}" +
+                "  ) >= :count" +
+                ")"
+    )
+    suspend fun deleteArticleExceed(
+        count: Int,
+        keepUnread: Boolean = true,
+        keepFavorite: Boolean = true,
+    ): Int
+
+    @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class, EnclosureBean::class])
     fun getArticlePagingSource(sql: SupportSQLiteQuery): PagingSource<Int, ArticleWithFeed>
 
