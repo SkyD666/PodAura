@@ -102,7 +102,9 @@ interface ArticleDao {
             // Update modules
             val media = articleWithEnclosure.media
             if (media != null) {
-                hiltEntryPoint.rssModuleDao.insertIfNotExistRssMediaBean(media)
+                hiltEntryPoint.rssModuleDao.insertIfNotExistRssMediaBean(
+                    media.copy(articleId = newArticle.articleId)
+                )
             }
 
             hiltEntryPoint.enclosureDao.insertListIfNotExist(

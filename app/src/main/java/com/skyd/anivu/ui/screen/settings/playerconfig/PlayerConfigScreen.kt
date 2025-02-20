@@ -49,12 +49,12 @@ import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.anivu.model.preference.player.PlayerShow85sButtonPreference
 import com.skyd.anivu.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.anivu.model.preference.player.PlayerShowScreenshotButtonPreference
-import com.skyd.anivu.ui.component.PodAuraIconButton
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
 import com.skyd.anivu.ui.local.LocalBackgroundPlay
@@ -105,6 +105,7 @@ fun PlayerConfigScreen() {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.Speaker,
                     text = stringResource(id = R.string.player_config_screen_background_play),
+                    description = stringResource(id = R.string.player_config_screen_background_play_description),
                     checked = LocalBackgroundPlay.current,
                     onCheckedChange = {
                         BackgroundPlayPreference.put(
@@ -169,23 +170,9 @@ fun PlayerConfigScreen() {
             }
             item {
                 SwitchSettingsItem(
-                    imageVector = Icons.Outlined.FastForward,
-                    text = stringResource(id = R.string.player_config_screen_show_85s_button),
-                    description = stringResource(id = R.string.player_config_screen_show_85s_button_description),
-                    checked = LocalPlayerShow85sButton.current,
-                    onCheckedChange = {
-                        PlayerShow85sButtonPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
-                )
-            }
-            item {
-                SwitchSettingsItem(
                     imageVector = Icons.Outlined.PhotoCamera,
                     text = stringResource(id = R.string.player_config_screen_show_screenshot_button),
+                    description = stringResource(id = R.string.player_config_screen_show_screenshot_button_description),
                     checked = LocalPlayerShowScreenshotButton.current,
                     onCheckedChange = {
                         PlayerShowScreenshotButtonPreference.put(
@@ -200,9 +187,25 @@ fun PlayerConfigScreen() {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.Timelapse,
                     text = stringResource(id = R.string.player_config_screen_show_progress_indicator),
+                    description = stringResource(id = R.string.player_config_screen_show_progress_indicator_description),
                     checked = LocalPlayerShowProgressIndicator.current,
                     onCheckedChange = {
                         PlayerShowProgressIndicatorPreference.put(
+                            context = context,
+                            scope = scope,
+                            value = it,
+                        )
+                    }
+                )
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.Outlined.FastForward,
+                    text = stringResource(id = R.string.player_config_screen_show_85s_button),
+                    description = stringResource(id = R.string.player_config_screen_show_85s_button_description),
+                    checked = LocalPlayerShow85sButton.current,
+                    onCheckedChange = {
+                        PlayerShow85sButtonPreference.put(
                             context = context,
                             scope = scope,
                             value = it,

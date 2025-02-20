@@ -145,7 +145,7 @@
     <string name="theme_purple">Keqing</string>
     <string name="theme_mahiro">Mahiro</string>
     <string name="player_forward_85s" translatable="false">+85s</string>
-    <string name="player_config_screen_appearance_category">Appearance</string>
+    <string name="player_config_screen_appearance_category">Fullscreen appearance</string>
     <string name="player_config_screen_show_85s_button">+85s button</string>
     <string name="player_config_screen_show_85s_button_description">Show +85s button above the progress bar</string>
     <string name="dark_mode_light">Light</string>
@@ -405,6 +405,9 @@
     <string name="auto_delete_article_screen_option_category">Option</string>
     <string name="auto_delete_article_screen_no_strategy_tip">No strategy is enabled; the auto-delete feature is inactive</string>
     <string name="auto_delete_article_screen_strategy_tip">Articles will be deleted if they meet any strategy and not meet the keep options</string>
+    <string name="player_config_screen_show_progress_indicator_description">Display a progress indicator on the fullscreen player</string>
+    <string name="player_config_screen_background_play_description">Continue playback when the player page is in the background or destroyed</string>
+    <string name="player_config_screen_show_screenshot_button_description">Display a screenshot button on the fullscreen player</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>
