@@ -39,6 +39,8 @@ class MediaSessionManager(
     var state: Int = PlaybackStateCompat.STATE_NONE
         private set
 
+    private val customMediaDataMap = mutableMapOf<String, CustomMediaData>()
+
     private fun initMediaSession(): MediaSessionCompat {
         /*
             https://developer.android.com/guide/topics/media-apps/working-with-a-media-session
@@ -51,6 +53,18 @@ class MediaSessionManager(
         return session
     }
 
+    private fun putCustomMediaData(path: String, customMediaData: CustomMediaData) {
+        val oldData = customMediaDataMap[path]
+        var currentData = customMediaData
+        if (oldData != null) {
+            currentData = CustomMediaData(
+                title = customMediaData.title ?: oldData.title,
+                thumbnail = customMediaData.thumbnail ?: oldData.thumbnail,
+            )
+        }
+        customMediaDataMap[path] = currentData
+    }
+
     override fun onCommand(command: PlayerEvent) {
         eventFlow.trySend(command)
     }
@@ -60,12 +74,17 @@ class MediaSessionManager(
         return with(mediaMetadataBuilder) {
             putText(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
             // put even if it's null to reset any previous art
-            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, thumbnail ?: mediaThumbnail)
+            putBitmap(
+                MediaMetadataCompat.METADATA_KEY_ART,
+                customMediaData?.thumbnail ?: mediaThumbnail
+            )
             putText(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
             putLong(
                 MediaMetadataCompat.METADATA_KEY_DURATION,
                 (duration * 1000).takeIf { it > 0 } ?: -1)
-            putText(MediaMetadataCompat.METADATA_KEY_TITLE, title.orEmpty().ifBlank { mediaTitle })
+            putText(
+                MediaMetadataCompat.METADATA_KEY_TITLE,
+                customMediaData?.title.orEmpty().ifBlank { mediaTitle })
             build()
         }
     }
@@ -105,13 +124,13 @@ class MediaSessionManager(
         is PlayerEvent.Album -> old.copy(album = value)
         is PlayerEvent.AllAudioTracks -> old.copy(audioTracks = tracks)
         is PlayerEvent.AllSubtitleTracks -> old.copy(subtitleTracks = tracks)
+        is PlayerEvent.AllVideoTracks -> old.copy(videoTracks = tracks)
         is PlayerEvent.Artist -> old.copy(artist = value)
         is PlayerEvent.AudioTrackChanged -> old.copy(audioTrackId = trackId)
         is PlayerEvent.Buffer -> old.copy(buffer = bufferDuration)
         is PlayerEvent.Duration -> old.copy(duration = value)
         is PlayerEvent.Idling -> old.copy(idling = value)
         is PlayerEvent.Paused -> old.copy(paused = value)
-        PlayerEvent.EndFile -> old.copy(paused = true)
         is PlayerEvent.PausedForCache -> old.copy(pausedForCache = value)
         is PlayerEvent.PlaylistCount -> old.copy(playlistCount = value)
         is PlayerEvent.PlaylistPosition -> old.copy(playlistPosition = value)
@@ -120,17 +139,25 @@ class MediaSessionManager(
         is PlayerEvent.Shuffle -> old.copy(shuffle = value)
         is PlayerEvent.Speed -> old.copy(speed = value)
         is PlayerEvent.SubtitleTrackChanged -> old.copy(subtitleTrackId = trackId)
+        is PlayerEvent.VideoTrackChanged -> old.copy(videoTrackId = trackId)
         is PlayerEvent.MediaThumbnail -> old.copy(mediaThumbnail = value)
-        is PlayerEvent.Thumbnail -> old.copy(thumbnail = value)
         is PlayerEvent.MediaTitle -> old.copy(mediaTitle = value)
-        is PlayerEvent.Title -> old.copy(title = value)
         is PlayerEvent.VideoOffsetX -> old.copy(offsetX = value)
         is PlayerEvent.VideoOffsetY -> old.copy(offsetY = value)
         is PlayerEvent.Zoom -> old.copy(zoom = value)
-        is PlayerEvent.PlaybackRestart,
-        is PlayerEvent.FileLoaded -> old.copy(mediaLoaded = true)
+        is PlayerEvent.PlaybackRestart -> old.copy(mediaLoaded = true)
+        is PlayerEvent.FileLoaded -> old.copy(
+            mediaLoaded = true,
+            path = path,
+            customMediaData = customMediaDataMap[path],
+        )
 
-        is PlayerEvent.EndFile -> old.copy(mediaLoaded = false)
+        is PlayerEvent.EndFile -> old.copy(paused = true, mediaLoaded = false)
+        is PlayerEvent.CustomData -> {
+            putCustomMediaData(path, value)
+            old.copy(customMediaData = customMediaDataMap[path])
+        }
+
         else -> old
     }
 
@@ -165,11 +192,10 @@ class MediaSessionManager(
 
             is PlayerEvent.Idling,
             is PlayerEvent.MediaTitle,
-            is PlayerEvent.Title,
             is PlayerEvent.Artist,
             is PlayerEvent.Album,
             is PlayerEvent.MediaThumbnail,
-            is PlayerEvent.Thumbnail -> {
+            is PlayerEvent.CustomData -> {
                 mediaSession.setMetadata(newState.buildMediaMetadata())
             }
 

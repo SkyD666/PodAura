@@ -51,9 +51,6 @@ val Context.tryWindow: Window?
         return null
     }
 
-val Context.screenIsLand: Boolean
-    get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
 fun Context.getAppVersionName(): String {
     var appVersionName = ""
     try {

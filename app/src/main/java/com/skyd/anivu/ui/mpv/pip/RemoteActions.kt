@@ -10,7 +10,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import com.skyd.anivu.R
-import com.skyd.anivu.ui.mpv.controller.state.PlayState
+import com.skyd.anivu.ui.mpv.component.state.PlayState
 
 
 // Constant for broadcast receiver

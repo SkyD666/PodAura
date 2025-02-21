@@ -61,7 +61,7 @@
     <string name="article_screen_search_article">搜尋文章</string>
     <string name="feed_screen_search_feed">搜尋訂閱</string>
     <string name="read_screen_open_browser">在瀏覽器中開啟</string>
-    <string name="play_activity_label">播放</string>
+    <string name="play_activity_label">PodAura 播放器</string>
     <string name="failed_msg">操作失敗：%s</string>
     <string name="success_time_msg">操作成功：耗時 %.2f 秒</string>
     <string name="open_with">開啟方式</string>

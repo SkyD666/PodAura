@@ -65,7 +65,7 @@
     <string name="article_screen_search_article">Search articles</string>
     <string name="feed_screen_search_feed">Search feeds</string>
     <string name="read_screen_open_browser">Open in browser</string>
-    <string name="play_activity_label">Play</string>
+    <string name="play_activity_label">PodAura Player</string>
     <string name="failed_msg">Failed: %s</string>
     <string name="success_time_msg">Success: takes %.2fs</string>
     <string name="open_with">Open with</string>
@@ -408,6 +408,8 @@
     <string name="player_config_screen_show_progress_indicator_description">Display a progress indicator on the fullscreen player</string>
     <string name="player_config_screen_background_play_description">Continue playback when the player page is in the background or destroyed</string>
     <string name="player_config_screen_show_screenshot_button_description">Display a screenshot button on the fullscreen player</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="exit_fullscreen">Exit fullscreen</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>

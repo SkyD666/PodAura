@@ -29,12 +29,7 @@ interface MediaPlayHistoryDao {
     suspend fun deleteAllMediaPlayHistory(): Int
 
     @Transaction
-    @Query(
-        """
-        SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME
-        WHERE ${MediaPlayHistoryBean.PATH_COLUMN} = :path
-        """
-    )
+    @Query("SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME WHERE ${MediaPlayHistoryBean.PATH_COLUMN} = :path")
     fun getMediaPlayHistory(path: String): MediaPlayHistoryBean?
 
     @Transaction

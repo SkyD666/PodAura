@@ -158,9 +158,7 @@
             android:exported="true"
             android:label="@string/play_activity_label"
             android:launchMode="singleTask"
-            android:screenOrientation="userLandscape"
-            android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.PodAura.Player">
+            android:supportsPictureInPicture="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 

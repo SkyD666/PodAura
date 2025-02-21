@@ -1,23 +1,24 @@
 package com.skyd.anivu.ui.mpv
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
 import com.skyd.anivu.ui.mpv.MPVPlayer.Track
+import com.skyd.anivu.ui.mpv.service.CustomMediaData
 import java.io.File
 
 sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
     data class Detach(val surface: Surface) : PlayerCommand
-    data class SetUri(val uri: Uri) : PlayerCommand
-    data class SetTitle(val title: String) : PlayerCommand
-    data class SetThumbnail(val thumbnail: Bitmap) : PlayerCommand
+    data class SetPath(
+        val path: String, val title: String? = null, val thumbnail: Bitmap? = null
+    ) : PlayerCommand
+
     data object Destroy : PlayerCommand
-    data class Paused(val paused: Boolean, val uri: Uri?) : PlayerCommand
+    data class Paused(val paused: Boolean) : PlayerCommand
     data object PlayOrPause : PlayerCommand
-    data class SeekTo(val position: Int) : PlayerCommand
+    data class SeekTo(val position: Long) : PlayerCommand
     data class Rotate(val rotate: Int) : PlayerCommand
     data class Zoom(val zoom: Float) : PlayerCommand
     data class VideoOffset(val offset: Offset) : PlayerCommand
@@ -36,12 +37,12 @@ sealed interface PlayerEvent {
     data class Position(val value: Long) : PlayerEvent
     data class Duration(val value: Long) : PlayerEvent
     data class MediaTitle(val value: String) : PlayerEvent
-    data class Title(val value: String) : PlayerEvent
+    data class CustomData(val path: String, val value: CustomMediaData) : PlayerEvent
     data class Paused(val value: Boolean) : PlayerEvent
     data class PausedForCache(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent
     data object EndFile : PlayerEvent
-    data object FileLoaded : PlayerEvent
+    data class FileLoaded(val path: String?) : PlayerEvent
     data object PlaybackRestart : PlayerEvent
     data class Zoom(val value: Float) : PlayerEvent
     data class VideoOffsetX(val value: Float) : PlayerEvent
@@ -50,6 +51,8 @@ sealed interface PlayerEvent {
     data class Speed(val value: Float) : PlayerEvent
     data class AllSubtitleTracks(val tracks: List<Track>) : PlayerEvent
     data class SubtitleTrackChanged(val trackId: Int) : PlayerEvent
+    data class AllVideoTracks(val tracks: List<Track>) : PlayerEvent
+    data class VideoTrackChanged(val trackId: Int) : PlayerEvent
     data class AllAudioTracks(val tracks: List<Track>) : PlayerEvent
     data class AudioTrackChanged(val trackId: Int) : PlayerEvent
     data class Buffer(val bufferDuration: Int) : PlayerEvent
@@ -60,5 +63,4 @@ sealed interface PlayerEvent {
     data class Artist(val value: String) : PlayerEvent
     data class Album(val value: String) : PlayerEvent
     data class MediaThumbnail(val value: Bitmap?) : PlayerEvent
-    data class Thumbnail(val value: Bitmap?) : PlayerEvent
 }

@@ -15,7 +15,7 @@ import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
-import com.skyd.anivu.ui.mpv.controller.bar.toDurationString
+import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_DOUBLE
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_FLAG
@@ -91,6 +91,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         MPVLib.setOptionString("save-position-on-quit", "no")
         // would crash before the surface is attached
         MPVLib.setOptionString("force-window", "no")
+        MPVLib.setOptionString("vo", "null")
         // "no" wouldn't work and "yes" is not intended by the UI
         MPVLib.setOptionString("idle", "yes")
         MPVLib.setPropertyString("sub-fonts-dir", fontDir)
@@ -119,7 +120,6 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         MPVLib.setOptionString("display-fps-override", refreshRate.toString())
         MPVLib.setOptionString("video-sync", "audio")
 
-        MPVLib.setOptionString("vo", vo)
         MPVLib.setOptionString("gpu-context", "android")
         MPVLib.setOptionString("opengl-es", "yes")
         MPVLib.setOptionString(
@@ -232,7 +232,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         }
     }
 
-    data class Track(val trackId: Int, val name: String)
+    data class Track(val trackId: Int, val name: String, val isAlbumArt: Boolean)
 
     private var tracks = mapOf<String, MutableList<Track>>(
         "audio" to mutableListOf(),
@@ -258,28 +258,9 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
     }
 
     fun loadTracks() {
-        for (list in tracks.values) {
-            list.clear()
-            // pseudo-track to allow disabling audio/subs
-            list.add(Track(-1, context.getString(R.string.track_off)))
-        }
-        val count = MPVLib.getPropertyInt("track-list/count") ?: 0
-        // Note that because events are async, properties might disappear at any moment
-        // so use ?: continue instead of !!
-        for (i in 0 until count) {
-            val type = MPVLib.getPropertyString("track-list/$i/type") ?: continue
-            if (!tracks.containsKey(type)) {
-                Log.w(TAG, "Got unknown track type: $type")
-                continue
-            }
-            val mpvId = MPVLib.getPropertyInt("track-list/$i/id") ?: continue
-            val lang = MPVLib.getPropertyString("track-list/$i/lang")
-            val title = MPVLib.getPropertyString("track-list/$i/title")
-
-            tracks.getValue(type).add(
-                Track(trackId = mpvId, name = getTrackDisplayName(mpvId, lang, title))
-            )
-        }
+        loadTrack("sub")
+        loadTrack("audio")
+        loadTrack("video")
     }
 
     fun loadSubtitleTrack() = loadTrack("sub")
@@ -288,7 +269,13 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
     private fun loadTrack(trackType: String) {
         tracks[trackType]!!.apply {
             clear()
-            add(Track(-1, context.getString(R.string.track_off)))
+            add(
+                Track(
+                    trackId = -1,
+                    name = context.getString(R.string.track_off),
+                    isAlbumArt = false,
+                )
+            )
         }
         val count = MPVLib.getPropertyInt("track-list/count")
         // Note that because events are async, properties might disappear at any moment
@@ -299,9 +286,14 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
                 val mpvId = MPVLib.getPropertyInt("track-list/$i/id") ?: continue
                 val lang = MPVLib.getPropertyString("track-list/$i/lang")
                 val title = MPVLib.getPropertyString("track-list/$i/title")
+                val isAlbumArt = MPVLib.getPropertyBoolean("track-list/$i/albumart")
 
                 tracks.getValue(type).add(
-                    Track(trackId = mpvId, name = getTrackDisplayName(mpvId, lang, title))
+                    Track(
+                        trackId = mpvId,
+                        name = getTrackDisplayName(mpvId, lang, title),
+                        isAlbumArt = isAlbumArt,
+                    )
                 )
             }
         }
@@ -342,11 +334,15 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
     // Property getters/setters
     val filename: String?
         get() = MPVLib.getPropertyString("filename")
+    val path: String?
+        get() = MPVLib.getPropertyString("path")
     val mediaTitle: String?
         get() = MPVLib.getPropertyString("media-title")
     var paused: Boolean
         get() = MPVLib.getPropertyBoolean("pause")
         set(paused) = MPVLib.setPropertyBoolean("pause", paused)
+    val playlistCount: Int
+        get() = MPVLib.getPropertyInt("playlist-count") ?: 0
     val isIdling: Boolean
         get() = MPVLib.getPropertyBoolean("idle-active")
     val eofReached: Boolean
@@ -502,6 +498,10 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         MPVLib.command(arrayOf("loadfile", filePath))
     }
 
+    fun playlistPrev() {
+        MPVLib.command(arrayOf("playlist-prev"))
+    }
+
     fun stop() {
         MPVLib.command(arrayOf("stop"))
     }
@@ -543,7 +543,8 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
 
     fun screenshot(onSaveScreenshot: (File) -> Unit) {
         val format = "jpg"
-        val filename = "$filename-(${timePos.toDurationString(splitter = "-")})-${Random.nextInt()}"
+        val filename =
+            "$filename-(${timePos.toLong().toDurationString(splitter = "-")})-${Random.nextInt()}"
         MPVLib.setOptionString("screenshot-format", format)
         MPVLib.setOptionString("screenshot-template", filename)
         MPVLib.command(arrayOf("screenshot"))

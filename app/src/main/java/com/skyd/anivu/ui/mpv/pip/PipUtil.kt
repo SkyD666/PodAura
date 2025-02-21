@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.util.Log
+import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -27,15 +28,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.toRect
 import androidx.core.util.Consumer
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ui.mpv.controller.state.PlayState
-import com.skyd.anivu.ui.mpv.controller.state.PlayStateCallback
+import com.skyd.anivu.ui.mpv.component.state.PlayState
+import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 
 @Composable
 internal fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
     val currentShouldEnterPipMode by rememberUpdatedState(newValue = shouldEnterPipMode)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.S
-    ) {
+    if (Build.VERSION.SDK_INT in Build.VERSION_CODES.O..<Build.VERSION_CODES.S) {
         val context = LocalContext.current
         DisposableEffect(context) {
             val activity = context.activity as ComponentActivity
@@ -56,11 +55,13 @@ internal fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
 @Composable
 internal fun Modifier.pipParams(
     context: Context,
-    shouldEnterPipMode: Boolean,
+    autoEnterPipMode: Boolean,
+    isVideo: Boolean,
     playState: PlayState,
 ): Modifier = run {
     var builder by remember { mutableStateOf<PictureInPictureParams.Builder?>(null) }
     val currentPlayState by rememberUpdatedState(playState)
+    val currentAutoEnterPipMode by rememberUpdatedState(autoEnterPipMode)
     val setActionsAndApplyBuilder: (PictureInPictureParams.Builder) -> Unit = remember {
         { builder ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -71,7 +72,10 @@ internal fun Modifier.pipParams(
                     ),
                 )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    builder.setAutoEnterEnabled(shouldEnterPipMode)
+                    builder.setAutoEnterEnabled(currentAutoEnterPipMode)
+                    if (!isVideo) {
+                        builder.setSeamlessResizeEnabled(false)
+                    }
                 }
                 context.activity.setPictureInPictureParams(builder.build())
             }
@@ -86,15 +90,13 @@ internal fun Modifier.pipParams(
         onGloballyPositioned { layoutCoordinates ->
             (builder ?: PictureInPictureParams.Builder()).let { b ->
                 builder = b
-                if (shouldEnterPipMode) {
-                    b.setSourceRectHint(
-                        layoutCoordinates
-                            .boundsInWindow()
-                            .toAndroidRectF()
-                            .toRect()
-                    )
+                val rect = layoutCoordinates.boundsInWindow()
+                b.setSourceRectHint(rect.toAndroidRectF().toRect())
+                if (!rect.isEmpty && rect.width / rect.height in 0.42..<2.4) {
+                    b.setAspectRatio(Rational(rect.width.toInt(), rect.height.toInt()))
                 }
                 setActionsAndApplyBuilder(b)
+
             }
         }
     } else this

@@ -61,7 +61,7 @@
     <string name="article_screen_search_article">搜索文章</string>
     <string name="feed_screen_search_feed">搜索订阅</string>
     <string name="read_screen_open_browser">在浏览器中打开</string>
-    <string name="play_activity_label">播放</string>
+    <string name="play_activity_label">PodAura 播放器</string>
     <string name="failed_msg">操作失败：%s</string>
     <string name="success_time_msg">操作成功：耗时 %.2f 秒</string>
     <string name="open_with">打开方式</string>
@@ -401,6 +401,8 @@
     <string name="player_config_screen_show_progress_indicator_description">在全屏播放器上显示进度指示条</string>
     <string name="player_config_screen_background_play_description">当播放页面位于后台或销毁后仍能继续播放</string>
     <string name="player_config_screen_show_screenshot_button_description">在全屏播放器上显示截图按钮</string>
+    <string name="fullscreen">全屏</string>
+    <string name="exit_fullscreen">退出全屏</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="other">%d 个追踪器</item>
     </plurals>

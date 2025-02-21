@@ -17,7 +17,7 @@ internal fun Uri.resolveUri(context: Context): String? {
         "file" -> path
         "content" -> openContentFd(context)
         "http", "https", "rtmp", "rtmps", "rtp", "rtsp",
-        "mms", "mmst", "mmsh", "tcp", "udp", "lavf" -> this.toString()
+        "mms", "mmst", "mmsh", "tcp", "udp", "lavf", "fd" -> this.toString()
 
         else -> null
     }

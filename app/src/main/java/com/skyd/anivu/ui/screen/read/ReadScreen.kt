@@ -608,7 +608,9 @@ private fun MediaCover(
                 mutableStateOf(if (context.isWifi() && enclosure.isVideo) enclosure.url else cover)
             }
             PodAuraImage(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .widthIn(min = 200.dp),
                 imageLoader = rememberPodAuraImageLoader(
                     listener = object : EventListener() {
                         override fun onError(request: ImageRequest, result: ErrorResult) {

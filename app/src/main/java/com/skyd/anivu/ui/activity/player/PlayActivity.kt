@@ -21,7 +21,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
 import com.skyd.anivu.ext.dataStore
@@ -29,9 +32,13 @@ import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.ui.component.showToast
+import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerViewRoute
 import com.skyd.anivu.ui.mpv.copyAssetsForMpv
 import com.skyd.anivu.ui.mpv.service.PlayerService
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -75,10 +82,22 @@ class PlayActivity : BaseComposeActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerServiceBinder
             this@PlayActivity.service = binder.getService().apply {
-                if (uri != Uri.EMPTY && viewModel.uri.value == Uri.EMPTY) {
-                    viewModel.uri.tryEmit(uri)
+                if (!playerState.value.path.isNullOrBlank() && viewModel.currentPath.value.isNullOrBlank()) {
+                    viewModel.currentPath.tryEmit(playerState.value.path)
+                }
+                lifecycleScope.launch {
+                    combine(
+                        viewModel.currentPath,
+                        viewModel.title,
+                        viewModel.thumbnail,
+                    ) { currentPath, title, thumbnail ->
+                        if (currentPath != null) {
+                            onCommand(PlayerCommand.SetPath(currentPath, title, thumbnail))
+                        }
+                    }.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect()
                 }
             }
+
             serviceBound = true
         }
 
@@ -124,15 +143,10 @@ class PlayActivity : BaseComposeActivity() {
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
             }
-            val uri by viewModel.uri.collectAsStateWithLifecycle()
-            val title by viewModel.title.collectAsStateWithLifecycle()
-            val thumbnail by viewModel.thumbnail.collectAsStateWithLifecycle()
-            if (uri != Uri.EMPTY) {
+            val path by viewModel.currentPath.collectAsStateWithLifecycle()
+            if (path != null) {
                 PlayerViewRoute(
                     service = if (serviceBound) service else null,
-                    uri = uri,
-                    title = title,
-                    thumbnail = thumbnail,
                     onBack = { finish() },
                     onSaveScreenshot = {
                         picture = it
