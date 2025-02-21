@@ -37,6 +37,7 @@ data class PlayerState(
 }
 
 data class CustomMediaData(
+    val articleId: String? = null,
     val title: String? = null,
     val thumbnail: Bitmap? = null,
 )

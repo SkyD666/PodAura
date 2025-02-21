@@ -93,6 +93,8 @@ import com.skyd.anivu.ui.screen.filepicker.FILE_PICKER_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.filepicker.FilePickerScreen
 import com.skyd.anivu.ui.screen.filepicker.PATH_KEY
 import com.skyd.anivu.ui.screen.filepicker.PICK_FOLDER_KEY
+import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.history.HistoryScreen
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_PATH_KEY
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.media.sub.SubMediaScreenRoute
@@ -279,6 +281,7 @@ private fun MainNavHost() {
         composable(route = SEARCH_STYLE_SCREEN_ROUTE) { SearchStyleScreen() }
         composable(route = BEHAVIOR_SCREEN_ROUTE) { BehaviorScreen() }
         composable(route = AUTO_DELETE_SCREEN_ROUTE) { AutoDeleteScreen() }
+        composable(route = HISTORY_SCREEN_ROUTE) { HistoryScreen() }
         composable(route = EXPORT_OPML_SCREEN_ROUTE) { ExportOpmlScreen() }
         composable(
             route = IMPORT_OPML_SCREEN_ROUTE,

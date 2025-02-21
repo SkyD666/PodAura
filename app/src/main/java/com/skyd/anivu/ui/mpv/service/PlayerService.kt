@@ -20,7 +20,6 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
-import com.skyd.anivu.model.bean.MediaPlayHistoryBean
 import com.skyd.anivu.model.repository.PlayerRepository
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
@@ -125,6 +124,14 @@ class PlayerService : Service() {
 
                 MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
                     currentPath = player.path
+                    currentPath?.let { currentPath ->
+                        scope.launch {
+                            playerRepo.insertPlayHistory(
+                                path = currentPath,
+                                articleId = sessionManager.getCustomMediaData(currentPath)?.articleId
+                            ).collect()
+                        }
+                    }
                     sendEvent(PlayerEvent.FileLoaded(currentPath))
                     sendEvent(PlayerEvent.Paused(player.paused))
                     loadLastPosition(currentPath).invokeOnCompletion {
@@ -226,6 +233,7 @@ class PlayerService : Service() {
                     PlayerEvent.CustomData(
                         path = command.path,
                         value = CustomMediaData(
+                            articleId = command.articleId,
                             title = command.title,
                             thumbnail = command.thumbnail,
                         )
@@ -317,9 +325,7 @@ class PlayerService : Service() {
     private fun savePosition(path: String?) = if (path != null) {
         val position = sessionManager.playerState.value.position * 1000L
         scope.launch {
-            playerRepo.updatePlayHistory(
-                MediaPlayHistoryBean(path = path, lastPlayPosition = position)
-            ).collect()
+            playerRepo.updateLastPlayPosition(path = path, lastPlayPosition = position).collect()
         }
     } else Job().apply { complete() }
 

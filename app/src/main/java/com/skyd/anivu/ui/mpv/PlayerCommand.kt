@@ -12,7 +12,10 @@ sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
     data class Detach(val surface: Surface) : PlayerCommand
     data class SetPath(
-        val path: String, val title: String? = null, val thumbnail: Bitmap? = null
+        val path: String,
+        val articleId: String? = null,
+        val title: String? = null,
+        val thumbnail: Bitmap? = null,
     ) : PlayerCommand
 
     data object Destroy : PlayerCommand

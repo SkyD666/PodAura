@@ -203,6 +203,7 @@ fun Uri.findFile(contentResolver: ContentResolver, name: String): Uri? {
 }
 
 fun Uri.isLocal(): Boolean = toString().startsWith("/") ||
+        toString().startsWith("fd://") ||
         URLUtil.isFileUrl(toString()) ||
         URLUtil.isContentUrl(toString())
 

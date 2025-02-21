@@ -163,6 +163,7 @@ private fun EnclosureItem(
                         PlayActivity.play(
                             context.activity,
                             uri = Uri.parse(enclosure.url),
+                            articleId = article.article.articleId,
                             title = article.article.title,
                         )
                     } catch (e: Exception) {
@@ -209,6 +210,7 @@ private fun LinkEnclosureItem(
                         PlayActivity.play(
                             context.activity,
                             uri = Uri.parse(enclosure.link),
+                            articleId = article.article.articleId,
                             title = article.article.title,
                         )
                     } catch (e: Exception) {

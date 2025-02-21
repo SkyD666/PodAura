@@ -58,11 +58,16 @@ class MediaSessionManager(
         var currentData = customMediaData
         if (oldData != null) {
             currentData = CustomMediaData(
+                articleId = customMediaData.articleId ?: oldData.articleId,
                 title = customMediaData.title ?: oldData.title,
                 thumbnail = customMediaData.thumbnail ?: oldData.thumbnail,
             )
         }
         customMediaDataMap[path] = currentData
+    }
+
+    fun getCustomMediaData(path: String): CustomMediaData? {
+        return customMediaDataMap[path]
     }
 
     override fun onCommand(command: PlayerEvent) {

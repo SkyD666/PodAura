@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.bean
+package com.skyd.anivu.model.bean.history
 
 import android.os.Parcelable
 import androidx.room.ColumnInfo
@@ -19,9 +19,15 @@ data class MediaPlayHistoryBean(
     val path: String,
     @ColumnInfo(name = LAST_PLAY_POSITION_COLUMN)
     val lastPlayPosition: Long,
+    @ColumnInfo(name = LAST_TIME_COLUMN)
+    val lastTime: Long,
+    @ColumnInfo(name = ARTICLE_ID_COLUMN)
+    val articleId: String?,
 ) : BaseBean, Parcelable {
     companion object {
         const val PATH_COLUMN = "path"
         const val LAST_PLAY_POSITION_COLUMN = "lastPlayPosition"
+        const val LAST_TIME_COLUMN = "lastTime"
+        const val ARTICLE_ID_COLUMN = "articleId"
     }
 }

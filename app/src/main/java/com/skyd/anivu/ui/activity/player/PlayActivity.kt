@@ -45,18 +45,21 @@ import java.io.File
 class PlayActivity : BaseComposeActivity() {
     companion object {
         const val VIDEO_URI_KEY = "videoUri"
+        const val ARTICLE_ID_KEY = "articleId"
         const val VIDEO_TITLE_KEY = "videoTitle"
         const val VIDEO_THUMBNAIL_KEY = "videoThumbnail"
 
         fun play(
             activity: Activity,
             uri: Uri,
+            articleId: String? = null,
             title: String? = null,
             thumbnail: String? = null,
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
                     putExtra(VIDEO_URI_KEY, uri)
+                    putExtra(ARTICLE_ID_KEY, articleId)
                     putExtra(VIDEO_TITLE_KEY, title)
                     putExtra(VIDEO_THUMBNAIL_KEY, thumbnail)
                 }
@@ -88,11 +91,19 @@ class PlayActivity : BaseComposeActivity() {
                 lifecycleScope.launch {
                     combine(
                         viewModel.currentPath,
+                        viewModel.articleId,
                         viewModel.title,
                         viewModel.thumbnail,
-                    ) { currentPath, title, thumbnail ->
+                    ) { currentPath, articleId, title, thumbnail ->
                         if (currentPath != null) {
-                            onCommand(PlayerCommand.SetPath(currentPath, title, thumbnail))
+                            onCommand(
+                                PlayerCommand.SetPath(
+                                    path = currentPath,
+                                    articleId = articleId,
+                                    title = title,
+                                    thumbnail = thumbnail,
+                                )
+                            )
                         }
                     }.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect()
                 }

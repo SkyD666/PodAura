@@ -16,7 +16,9 @@ import com.skyd.anivu.ext.share
 import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.ext.validateFileName
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
+import com.skyd.anivu.model.bean.history.ReadHistoryBean
 import com.skyd.anivu.model.db.dao.ArticleDao
+import com.skyd.anivu.model.db.dao.ReadHistoryDao
 import com.skyd.anivu.util.image.ImageFormatChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import java.io.File
 import javax.inject.Inject
 import kotlin.random.Random
@@ -32,10 +35,19 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class ReadRepository @Inject constructor(
     private val articleDao: ArticleDao,
+    private val readHistoryDao: ReadHistoryDao,
 ) : BaseRepository() {
     fun requestArticleWithFeed(articleId: String): Flow<ArticleWithFeed?> {
         return articleDao.getArticleWithFeed(articleId = articleId)
             .filterNotNull()
+            .onEach {
+                readHistoryDao.updateReadHistory(
+                    ReadHistoryBean(
+                        articleId = articleId,
+                        lastTime = System.currentTimeMillis(),
+                    )
+                )
+            }
             .flowOn(Dispatchers.IO)
     }
 

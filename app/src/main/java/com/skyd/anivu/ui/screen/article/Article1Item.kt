@@ -329,27 +329,33 @@ private fun Article1ItemContent(
                 modifier = Modifier.padding(start = 15.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FeedIcon(
-                    data = data.feed,
-                    size = 22.dp
-                )
-
-                val feedName =
-                    data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
-                if (feedName.isNotBlank()) {
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = 6.dp)
-                            .weight(1f),
-                        text = feedName,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                Row(
+                    modifier = Modifier.clickable {
+                        openArticleScreen(
+                            navController = navController,
+                            feedUrls = listOf(data.feed.url),
+                        )
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FeedIcon(
+                        data = data.feed,
+                        size = 22.dp
                     )
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
+                    val feedName =
+                        data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
+                    if (feedName.isNotBlank()) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 6.dp),
+                            text = feedName,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.weight(1f))
 
                 val isFavorite = articleWithEnclosure.article.isFavorite
                 val isRead = articleWithEnclosure.article.isRead
@@ -747,7 +753,7 @@ private fun tapAction(
     }
 }
 
-private fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {
+fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {
     openReadScreen(
         navController = navController,
         articleId = data.article.articleId,

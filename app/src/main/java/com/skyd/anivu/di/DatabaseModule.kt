@@ -10,6 +10,7 @@ import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.db.dao.MediaPlayHistoryDao
+import com.skyd.anivu.model.db.dao.ReadHistoryDao
 import com.skyd.anivu.model.db.dao.RssModuleDao
 import com.skyd.anivu.model.db.dao.SearchDomainDao
 import com.skyd.anivu.model.db.dao.SessionParamsDao
@@ -58,6 +59,10 @@ object DatabaseModule {
     @Singleton
     fun provideSessionParamsDao(database: AppDatabase): SessionParamsDao =
         database.sessionParamsDao()
+
+    @Provides
+    @Singleton
+    fun provideReadHistoryDao(database: AppDatabase): ReadHistoryDao = database.readHistoryDao()
 
     @Provides
     @Singleton

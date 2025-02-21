@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SwapVert
@@ -58,6 +59,7 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.about.ABOUT_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.download.openDownloadScreen
+import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.SETTINGS_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
 
@@ -168,35 +170,43 @@ private fun getMoreBeanList(
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
-            title = context.getString(R.string.download_screen_name),
-            icon = Icons.Outlined.Download,
+            title = context.getString(R.string.history_screen_name),
+            icon = Icons.Outlined.History,
             iconTint = colorScheme.onPrimary,
             shape = RoundedCornerStarShape,
             shapeColor = colorScheme.primary,
+            action = { navController.navigate(HISTORY_SCREEN_ROUTE) },
+        ),
+        MoreBean(
+            title = context.getString(R.string.download_screen_name),
+            icon = Icons.Outlined.Download,
+            iconTint = colorScheme.onSecondary,
+            shape = RoundedCornerStarShape,
+            shapeColor = colorScheme.secondary,
             action = { openDownloadScreen(navController) },
         ),
         MoreBean(
             title = context.getString(R.string.import_export_screen_name),
             icon = Icons.Outlined.SwapVert,
-            iconTint = colorScheme.onSecondary,
+            iconTint = colorScheme.onTertiary,
             shape = CloverShape,
-            shapeColor = colorScheme.secondary,
+            shapeColor = colorScheme.tertiary,
             action = { navController.navigate(IMPORT_EXPORT_SCREEN_ROUTE) },
         ),
         MoreBean(
             title = context.getString(R.string.settings_screen_name),
             icon = Icons.Outlined.Settings,
-            iconTint = colorScheme.onTertiary,
+            iconTint = colorScheme.onPrimary,
             shape = SquircleShape,
-            shapeColor = colorScheme.tertiary,
+            shapeColor = colorScheme.primary,
             action = { navController.navigate(SETTINGS_SCREEN_ROUTE) },
         ),
         MoreBean(
             title = context.getString(R.string.about_screen_name),
             icon = Icons.Outlined.Info,
-            iconTint = colorScheme.onPrimary,
+            iconTint = colorScheme.onSecondary,
             shape = CurlyCornerShape(amp = with(density) { 1.6.dp.toPx() }, count = 10),
-            shapeColor = colorScheme.primary,
+            shapeColor = colorScheme.secondary,
             action = { navController.navigate(ABOUT_SCREEN_ROUTE) }
         ),
     )

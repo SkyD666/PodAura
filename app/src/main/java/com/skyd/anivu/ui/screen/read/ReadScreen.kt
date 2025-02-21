@@ -393,6 +393,7 @@ private fun Content(
         PlayActivity.play(
             activity = context.activity,
             uri = Uri.parse(url),
+            articleId = article.article.articleId,
             title = article.article.title,
             thumbnail = article.media?.image ?: articleState.article.feed.icon,
         )

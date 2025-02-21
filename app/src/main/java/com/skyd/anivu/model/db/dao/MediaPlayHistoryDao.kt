@@ -6,8 +6,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.skyd.anivu.model.bean.MEDIA_PLAY_HISTORY_TABLE_NAME
-import com.skyd.anivu.model.bean.MediaPlayHistoryBean
+import com.skyd.anivu.model.bean.history.MEDIA_PLAY_HISTORY_TABLE_NAME
+import com.skyd.anivu.model.bean.history.MediaPlayHistoryBean
+import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 
 @Dao
 interface MediaPlayHistoryDao {
@@ -33,8 +34,8 @@ interface MediaPlayHistoryDao {
     fun getMediaPlayHistory(path: String): MediaPlayHistoryBean?
 
     @Transaction
-    @Query("SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME")
-    fun getMediaPlayHistoryList(): PagingSource<Int, MediaPlayHistoryBean>
+    @Query("SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME ORDER BY ${MediaPlayHistoryBean.LAST_TIME_COLUMN} DESC")
+    fun getMediaPlayHistoryList(): PagingSource<Int, MediaPlayHistoryWithArticle>
 
     @Transaction
     @Query(

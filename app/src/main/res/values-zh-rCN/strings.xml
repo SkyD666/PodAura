@@ -403,6 +403,11 @@
     <string name="player_config_screen_show_screenshot_button_description">在全屏播放器上显示截图按钮</string>
     <string name="fullscreen">全屏</string>
     <string name="exit_fullscreen">退出全屏</string>
+    <string name="history_screen_read">浏览</string>
+    <string name="history_screen_media_play">媒体播放</string>
+    <string name="history_screen_name">历史记录</string>
+    <string name="history_screen_last_seen">上次看到 %s</string>
+    <string name="history_screen_file_not_exists">文件不存在</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="other">%d 个追踪器</item>
     </plurals>

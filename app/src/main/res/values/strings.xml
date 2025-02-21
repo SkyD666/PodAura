@@ -410,6 +410,11 @@
     <string name="player_config_screen_show_screenshot_button_description">Display a screenshot button on the fullscreen player</string>
     <string name="fullscreen">Fullscreen</string>
     <string name="exit_fullscreen">Exit fullscreen</string>
+    <string name="history_screen_read">Read</string>
+    <string name="history_screen_media_play">Media playback</string>
+    <string name="history_screen_name">History</string>
+    <string name="history_screen_last_seen">Last seen %s</string>
+    <string name="history_screen_file_not_exists">File not exists</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>

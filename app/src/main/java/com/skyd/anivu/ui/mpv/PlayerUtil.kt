@@ -13,7 +13,7 @@ import java.io.IOException
 import java.io.InputStream
 
 internal fun Uri.resolveUri(context: Context): String? {
-    val filepath = when (scheme) {
+    var filepath = when (scheme) {
         "file" -> path
         "content" -> openContentFd(context)
         "http", "https", "rtmp", "rtmps", "rtp", "rtsp",
@@ -24,6 +24,9 @@ internal fun Uri.resolveUri(context: Context): String? {
 
     if (filepath == null) {
         Log.e("resolveUri", "unknown scheme: $scheme")
+        if (scheme == null && path?.startsWith("/") == true) {
+            filepath = path
+        }
     }
     return filepath
 }
