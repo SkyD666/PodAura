@@ -5,22 +5,23 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
 import com.skyd.anivu.ui.mpv.MPVPlayer.Track
-import com.skyd.anivu.ui.mpv.service.CustomMediaData
+import com.skyd.anivu.ui.mpv.service.PlaylistBean
 import java.io.File
 
 sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
     data class Detach(val surface: Surface) : PlayerCommand
-    data class SetPath(
-        val path: String,
-        val articleId: String? = null,
-        val title: String? = null,
-        val thumbnail: Bitmap? = null,
+
+    data class LoadList(
+        val playlist: List<PlaylistBean>,
+        val startPath: String? = null,
     ) : PlayerCommand
 
     data object Destroy : PlayerCommand
     data class Paused(val paused: Boolean) : PlayerCommand
     data object PlayOrPause : PlayerCommand
+    data object PreviousMedia : PlayerCommand
+    data object NextMedia : PlayerCommand
     data class SeekTo(val position: Long) : PlayerCommand
     data class Rotate(val rotate: Int) : PlayerCommand
     data class Zoom(val zoom: Float) : PlayerCommand
@@ -31,7 +32,12 @@ sealed interface PlayerCommand {
     data class Screenshot(val onSaveScreenshot: (File) -> Unit) : PlayerCommand
     data class AddSubtitle(val filePath: String) : PlayerCommand
     data class AddAudio(val filePath: String) : PlayerCommand
+    data class Shuffle(val shuffle: Boolean) : PlayerCommand
+    data class PlayFileInPlaylist(val path: String) : PlayerCommand
+    data object CycleLoop : PlayerCommand
 }
+
+enum class LoopMode { LoopPlaylist, LoopFile, None }
 
 sealed interface PlayerEvent {
     data object ServiceDestroy : PlayerEvent
@@ -40,12 +46,12 @@ sealed interface PlayerEvent {
     data class Position(val value: Long) : PlayerEvent
     data class Duration(val value: Long) : PlayerEvent
     data class MediaTitle(val value: String) : PlayerEvent
-    data class CustomData(val path: String, val value: CustomMediaData) : PlayerEvent
+    data class Playlist(val newPlaylist: LinkedHashMap<String, PlaylistBean>) : PlayerEvent
     data class Paused(val value: Boolean) : PlayerEvent
     data class PausedForCache(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent
     data object EndFile : PlayerEvent
-    data class FileLoaded(val path: String?) : PlayerEvent
+    data class StartFile(val path: String?) : PlayerEvent
     data object PlaybackRestart : PlayerEvent
     data class Zoom(val value: Float) : PlayerEvent
     data class VideoOffsetX(val value: Float) : PlayerEvent
@@ -59,10 +65,9 @@ sealed interface PlayerEvent {
     data class AllAudioTracks(val tracks: List<Track>) : PlayerEvent
     data class AudioTrackChanged(val trackId: Int) : PlayerEvent
     data class Buffer(val bufferDuration: Int) : PlayerEvent
-    data class Shuffle(val value: Boolean) : PlayerEvent
-    data class Loop(val value: Int) : PlayerEvent
+    data class Shuffle(val shuffle: Boolean) : PlayerEvent
+    data class Loop(val mode: LoopMode) : PlayerEvent
     data class PlaylistPosition(val value: Int) : PlayerEvent
-    data class PlaylistCount(val value: Int) : PlayerEvent
     data class Artist(val value: String) : PlayerEvent
     data class Album(val value: String) : PlayerEvent
     data class MediaThumbnail(val value: Bitmap?) : PlayerEvent

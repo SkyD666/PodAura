@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Feed
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -48,7 +50,10 @@ import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
+import com.skyd.anivu.ui.screen.read.openReadScreen
 import java.io.File
 
 @Composable
@@ -58,13 +63,13 @@ fun MediaPlayHistoryItem(
 ) {
     val context = LocalContext.current
     val articleWithEnclosure = data.article?.articleWithEnclosure
+    val path = data.mediaPlayHistoryBean.path
     val fileName = rememberSaveable(data) {
-        articleWithEnclosure?.article?.title
-            ?: data.mediaPlayHistoryBean.path.substringAfterLast("/")
+        articleWithEnclosure?.article?.title ?: path.substringAfterLast("/")
     }
-    val isLocal = Uri.parse(data.mediaPlayHistoryBean.path).isLocal()
-    val localNotExists = remember(data.mediaPlayHistoryBean.path) {
-        isLocal && !File(data.mediaPlayHistoryBean.path).exists()
+    val isLocal = Uri.parse(path).isLocal()
+    val mediaExists = remember(path) {
+        !isLocal || (path.startsWith("fd://") && isFdFileExists(path) || File(path).exists())
     }
     val articleThumbnail = articleWithEnclosure?.media?.image ?: data.article?.feed?.icon
     Row(
@@ -72,22 +77,25 @@ fun MediaPlayHistoryItem(
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.secondary.copy(0.1f))
             .clickable {
-                if (localNotExists) {
+                if (!mediaExists) {
                     return@clickable
                 }
-                PlayActivity.play(
-                    activity = context.activity,
-                    uri = if (isLocal) {
-                        Uri.fromFile(File(data.mediaPlayHistoryBean.path))
-                    } else {
-                        Uri.parse(data.mediaPlayHistoryBean.path)
-                    },
-                    articleId = articleWithEnclosure?.article?.articleId,
-                    title = articleWithEnclosure?.article?.title,
-                    thumbnail = articleThumbnail,
-                )
+                if (isLocal) {
+                    PlayActivity.play(
+                        activity = context.activity,
+                        startFilePath = path,
+                        files = listOf(path),
+                    )
+                } else {
+                    PlayActivity.play(
+                        activity = context.activity,
+                        articleId = articleWithEnclosure?.article?.articleId,
+                        url = path,
+                    )
+                }
             }
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(vertical = 6.dp)
+            .padding(start = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         var showThumbnail by remember(data) { mutableStateOf(true) }
@@ -102,17 +110,11 @@ fun MediaPlayHistoryItem(
             ) {
                 PodAuraImage(
                     modifier = Modifier.fillMaxSize(),
-                    model = remember(data.mediaPlayHistoryBean.path) {
+                    model = remember(path) {
                         ImageRequest.Builder(context)
                             .diskCachePolicy(CachePolicy.ENABLED)
                             .memoryCachePolicy(CachePolicy.ENABLED)
-                            .data(
-                                if (showLocalFileThumbnail) {
-                                    data.mediaPlayHistoryBean.path
-                                } else {
-                                    articleThumbnail
-                                }
-                            )
+                            .data(if (showLocalFileThumbnail) path else articleThumbnail)
                             .crossfade(true)
                             .build()
                     },
@@ -130,19 +132,22 @@ fun MediaPlayHistoryItem(
         Column {
             Text(
                 text = fileName,
-                modifier = Modifier.padding(top = 6.dp),
+                modifier = Modifier.padding(top = 6.dp, end = 16.dp),
                 maxLines = 3,
                 style = MaterialTheme.typography.titleSmall,
             )
-            if (localNotExists) {
+            if (!mediaExists) {
                 Text(
-                    text = stringResource(R.string.history_screen_file_not_exists),
+                    text = stringResource(R.string.history_screen_media_not_exists),
                     modifier = Modifier.padding(top = 3.dp),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.error,
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 val lastPlayPosition = data.mediaPlayHistoryBean.lastPlayPosition
                 Text(
                     modifier = Modifier
@@ -171,18 +176,44 @@ fun MediaPlayHistoryItem(
                         maxLines = 1,
                     )
                 }
-                Icon(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onDelete(data) }
-                        .padding(6.dp),
+                ActionIconButton(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = stringResource(id = R.string.delete),
+                    onClick = { onDelete(data) },
                 )
+                if (articleWithEnclosure != null) {
+                    val navController = LocalNavController.current
+                    ActionIconButton(
+                        imageVector = Icons.AutoMirrored.Outlined.Feed,
+                        contentDescription = stringResource(id = R.string.read_screen_name),
+                        onClick = {
+                            openReadScreen(
+                                navController = navController,
+                                articleId = articleWithEnclosure.article.articleId,
+                            )
+                        },
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ActionIconButton(
+    imageVector: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+) {
+    Icon(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .padding(5.5.dp),
+        imageVector = imageVector,
+        contentDescription = contentDescription,
+    )
 }
 
 @Composable

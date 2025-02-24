@@ -8,9 +8,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -21,13 +27,13 @@ import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import com.skyd.anivu.ui.mpv.component.playlist.Playlist
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.pip.manualEnterPictureInPictureMode
 import com.skyd.anivu.ui.mpv.port.controller.Controller
 import com.skyd.anivu.ui.mpv.port.controller.SmallController
-import com.skyd.anivu.ui.mpv.service.PlayerService
 
 
 @Composable
@@ -40,6 +46,9 @@ internal fun PortraitPlayerView(
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val playlistSheetState = rememberModalBottomSheetState()
+    var showPlaylistSheet by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             PodAuraTopBar(
@@ -60,32 +69,54 @@ internal fun PortraitPlayerView(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(horizontal = 30.dp),
+                .padding(paddingValues),
         ) {
-            MediaArea(playState = playState, playerContent = playerContent)
+            MediaArea(
+                playState = playState,
+                modifier = Modifier.padding(horizontal = 30.dp),
+                playerContent = playerContent,
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
-            Titles(playState = playState)
+            Titles(
+                playState = playState,
+                modifier = Modifier.padding(horizontal = 30.dp),
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
             ProgressBar(
                 playState = playState,
                 playStateCallback = playStateCallback,
+                modifier = Modifier.padding(horizontal = 30.dp),
             )
 
             Spacer(modifier = Modifier.height(3.dp))
             Controller(
                 playState = playState,
                 playStateCallback = playStateCallback,
+                modifier = Modifier.padding(horizontal = 22.dp),
             )
 
             Spacer(modifier = Modifier.height(20.dp))
             SmallController(
-                enabled = playState.mediaLoaded,
                 playState = playState,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
+                onOpenPlaylist = { showPlaylistSheet = true },
+                modifier = Modifier.padding(horizontal = 30.dp),
             )
+        }
+
+        if (showPlaylistSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showPlaylistSheet = false },
+                sheetState = playlistSheetState
+            ) {
+                Playlist(
+                    currentPlay = playState.path,
+                    playlist = remember(playState) { playState.playlist.values.toList() },
+                    onPlay = { playStateCallback.onPlayFileInPlaylist(it.path) },
+                )
+            }
         }
     }
 }

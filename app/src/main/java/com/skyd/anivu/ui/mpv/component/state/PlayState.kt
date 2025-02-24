@@ -16,7 +16,7 @@ data class PlayState(
         )
     }
 
-    val mediaLoaded = state.mediaLoaded
+    val mediaLoaded = state.mediaStarted
     val audioTrackId = state.audioTrackId
     val subtitleTrackId = state.subtitleTrackId
     val videoTrackId = state.videoTrackId
@@ -28,22 +28,27 @@ data class PlayState(
     val audioTracks = state.audioTracks
     val subtitleTracks = state.subtitleTracks
     val buffer = state.buffer
-    val artist = state.artist
+    val mediaArtist = state.artist
     val album = state.album
     val position = state.position
     val duration = state.duration
     val rotate = state.rotate
     val playlistPosition = state.playlistPosition
-    val playlistCount = state.playlistCount
+    val playlistFirst = state.playlistFirst
+    val playlistLast = state.playlistLast
     val paused = state.paused
     val pausedForCache = state.pausedForCache
     val shuffle = state.shuffle
+    val loop = state.loop
     val idling = state.idling
     val mediaTitle = state.mediaTitle
     val title = state.customMediaData?.title
     val mediaThumbnail = state.mediaThumbnail
     val thumbnail = state.customMediaData?.thumbnail
+    val artist = state.customMediaData?.artist
     val isVideo = state.isVideo
+    val playlist = state.playlist
+    val path = state.path
 }
 
 @Immutable
@@ -52,4 +57,9 @@ data class PlayStateCallback(
     val onPlayOrPause: () -> Unit,
     val onSeekTo: (position: Long) -> Unit,
     val onSpeedChanged: (Float) -> Unit,
+    val onPreviousMedia: () -> Unit,
+    val onNextMedia: () -> Unit,
+    val onCycleLoop: () -> Unit,
+    val onShuffle: (Boolean) -> Unit,
+    val onPlayFileInPlaylist: (String) -> Unit,
 )

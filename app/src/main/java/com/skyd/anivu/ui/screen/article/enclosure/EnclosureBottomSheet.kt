@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.article.enclosure
 
 import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +36,7 @@ import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.LinkEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
+import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.anivu.model.repository.download.DownloadStarter
@@ -66,7 +66,7 @@ fun EnclosureBottomSheet(
     onDismissRequest: () -> Unit,
     sheetState: SheetState = rememberModalBottomSheetState(),
     dataList: List<Any>,
-    article: ArticleWithEnclosureBean,
+    article: ArticleWithFeed,
 ) {
     val context = LocalContext.current
     val onDownload: (Any) -> Unit = remember {
@@ -126,10 +126,11 @@ fun EnclosureBottomSheet(
 @Composable
 private fun EnclosureItem(
     enclosure: EnclosureBean,
-    article: ArticleWithEnclosureBean,
+    article: ArticleWithFeed,
     onDownload: (EnclosureBean) -> Unit,
 ) {
     val context = LocalContext.current
+    val articleWithEnclosure = article.articleWithEnclosure
 
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
@@ -162,9 +163,8 @@ private fun EnclosureItem(
                     try {
                         PlayActivity.play(
                             context.activity,
-                            uri = Uri.parse(enclosure.url),
-                            articleId = article.article.articleId,
-                            title = article.article.title,
+                            articleId = articleWithEnclosure.article.articleId,
+                            url = enclosure.url
                         )
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -185,10 +185,11 @@ private fun EnclosureItem(
 @Composable
 private fun LinkEnclosureItem(
     enclosure: LinkEnclosureBean,
-    article: ArticleWithEnclosureBean,
+    article: ArticleWithFeed,
     onDownload: (LinkEnclosureBean) -> Unit,
 ) {
     val context = LocalContext.current
+    val articleWithEnclosure = article.articleWithEnclosure
     val isMagnetOrTorrent = rememberSaveable {
         enclosure.link.startsWith("magnet:") ||
                 Regex("^(http|https)://.*\\.torrent$").matches(enclosure.link)
@@ -209,9 +210,8 @@ private fun LinkEnclosureItem(
                     try {
                         PlayActivity.play(
                             context.activity,
-                            uri = Uri.parse(enclosure.link),
-                            articleId = article.article.articleId,
-                            title = article.article.title,
+                            articleId = articleWithEnclosure.article.articleId,
+                            url = enclosure.link,
                         )
                     } catch (e: Exception) {
                         e.printStackTrace()

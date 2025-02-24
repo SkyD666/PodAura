@@ -1,26 +1,22 @@
 package com.skyd.anivu.ui.mpv.service
 
 import android.app.Application
-import android.app.ForegroundServiceStartNotAllowedException
-import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ServiceInfo
 import android.media.AudioManager
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
-import com.skyd.anivu.model.repository.PlayerRepository
+import com.skyd.anivu.model.repository.player.PlayerRepository
+import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerEvent
@@ -50,6 +46,7 @@ class PlayerService : Service() {
     private val sessionManager = MediaSessionManager(appContext, createMediaSessionCallback())
     private val notificationManager = PlayerNotificationManager(appContext, sessionManager)
     val playerState get() = sessionManager.playerState
+    private val customMediaDataMap = linkedMapOf<String, CustomMediaData>()
 
     private val observers = mutableSetOf<Observer>()
 
@@ -69,6 +66,13 @@ class PlayerService : Service() {
                 )
 
                 "speed" -> sendEvent(PlayerEvent.Speed(player.playbackSpeed.toFloat()))
+                "playlist" -> {
+                    val playlistMap = player.loadPlaylist().associateWith { path ->
+                        PlaylistBean(path, customMediaDataMap[path] ?: CustomMediaData())
+                    }
+                    sendEvent(PlayerEvent.Playlist(LinkedHashMap(playlistMap)))
+                }
+
                 "track-list" -> {
                     player.loadTracks()
                     sendEvent(PlayerEvent.AllSubtitleTracks(player.subtitleTrack))
@@ -77,7 +81,14 @@ class PlayerService : Service() {
                 }
 
                 "demuxer-cache-duration" -> sendEvent(PlayerEvent.Buffer(player.demuxerCacheDuration.toInt()))
-                "loop-file", "loop-playlist" -> Unit//sendEvent(PlayerEvent.Buffer(player.getRepeat()))
+                "loop-file", "loop-playlist" -> sendEvent(
+                    PlayerEvent.Loop(
+                        if (player.loopPlaylist) LoopMode.LoopPlaylist
+                        else if (player.loopOne) LoopMode.LoopFile
+                        else LoopMode.None
+                    )
+                )
+
                 "metadata" -> {
                     sendEvent(PlayerEvent.Artist(player.artist))
                     sendEvent(PlayerEvent.Album(player.album))
@@ -93,7 +104,6 @@ class PlayerService : Service() {
                 "duration" -> sendEvent(PlayerEvent.Duration(value))
                 "video-rotate" -> sendEvent(PlayerEvent.Rotate(value.toFloat()))
                 "playlist-pos" -> sendEvent(PlayerEvent.PlaylistPosition(value.toInt()))
-                "playlist-count" -> sendEvent(PlayerEvent.PlaylistCount(value.toInt()))
             }
         }
 
@@ -116,6 +126,20 @@ class PlayerService : Service() {
         override fun event(eventId: Int) {
             when (eventId) {
                 MPVLib.mpvEventId.MPV_EVENT_SEEK -> sendEvent(PlayerEvent.Seek)
+                MPVLib.mpvEventId.MPV_EVENT_START_FILE -> {
+                    savePosition(currentPath)
+                    currentPath = player.path
+                    currentPath?.let { currentPath ->
+                        scope.launch {
+                            playerRepo.insertPlayHistory(
+                                path = currentPath,
+                                articleId = customMediaDataMap[currentPath]?.articleId
+                            ).collect()
+                        }
+                    }
+                    sendEvent(PlayerEvent.StartFile(currentPath))
+                }
+
                 MPVLib.mpvEventId.MPV_EVENT_END_FILE -> {
                     sendEvent(PlayerEvent.EndFile)
                     savePosition(currentPath)
@@ -123,16 +147,6 @@ class PlayerService : Service() {
                 }
 
                 MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
-                    currentPath = player.path
-                    currentPath?.let { currentPath ->
-                        scope.launch {
-                            playerRepo.insertPlayHistory(
-                                path = currentPath,
-                                articleId = sessionManager.getCustomMediaData(currentPath)?.articleId
-                            ).collect()
-                        }
-                    }
-                    sendEvent(PlayerEvent.FileLoaded(currentPath))
                     sendEvent(PlayerEvent.Paused(player.paused))
                     loadLastPosition(currentPath).invokeOnCompletion {
                         sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
@@ -163,6 +177,9 @@ class PlayerService : Service() {
             playerNotificationReceiver,
             IntentFilter().apply {
                 addAction(PLAY_ACTION)
+                addAction(PREVIOUS_ACTION)
+                addAction(NEXT_ACTION)
+                addAction(LOOP_ACTION)
                 addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
                 addAction(CLOSE_ACTION)
             },
@@ -198,7 +215,7 @@ class PlayerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        startForeground(notificationManager.notificationBuilder.build())
+        notificationManager.startForegroundService(this)
         return START_NOT_STICKY
     }
 
@@ -223,22 +240,20 @@ class PlayerService : Service() {
         when (command) {
             is PlayerCommand.Attach -> command.surfaceHolder.addCallback(this)
             is PlayerCommand.Detach -> command.surface.release()
-            is PlayerCommand.SetPath -> {
-                if (command.path != player.path) {
-                    savePosition(player.path).invokeOnCompletion {
-                        loadFile(command.path)
-                    }  // Save last media position
-                }
-                sendEvent(
-                    PlayerEvent.CustomData(
-                        path = command.path,
-                        value = CustomMediaData(
-                            articleId = command.articleId,
-                            title = command.title,
-                            thumbnail = command.thumbnail,
-                        )
+            is PlayerCommand.LoadList -> {
+                // Necessary and should be the first,
+                // because custom data needs to be stored before MPV_EVENT_FILE_LOADED
+//                sendEvent(PlayerEvent.Playlist(command.playlist))
+                customMediaDataMap.clear()
+                customMediaDataMap.putAll(command.playlist.map { it.path to it.customMediaData })
+                if (command.playlist.size == 1 && command.startPath == command.playlist[0].path) {
+                    loadFile(command.playlist[0].path)
+                } else {
+                    loadList(
+                        files = command.playlist.map { it.path },
+                        startFile = command.startPath
                     )
-                )
+                }
             }
 
             PlayerCommand.Destroy -> stopSelf()
@@ -254,6 +269,8 @@ class PlayerService : Service() {
             }
 
             PlayerCommand.PlayOrPause -> cyclePause()
+            PlayerCommand.PreviousMedia -> playlistPrev()
+            PlayerCommand.NextMedia -> playlistNext()
             is PlayerCommand.SeekTo -> seek(command.position.coerceIn(0L..duration).toInt())
             is PlayerCommand.Rotate -> rotate(command.rotate)
             is PlayerCommand.Zoom -> zoom(command.zoom)
@@ -268,26 +285,17 @@ class PlayerService : Service() {
             is PlayerCommand.Screenshot -> screenshot(onSaveScreenshot = command.onSaveScreenshot)
             is PlayerCommand.AddSubtitle -> addSubtitle(command.filePath)
             is PlayerCommand.AddAudio -> addAudio(command.filePath)
-        }
-    }
-
-    private fun startForeground(notification: Notification) {
-        try {
-            ServiceCompat.startForeground(
-                this, PlayerNotificationManager.NOTIFICATION_ID, notification,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                } else {
-                    0
-                },
-            )
-        } catch (e: Exception) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                e is ForegroundServiceStartNotAllowedException
-            ) {
-                // App not in a valid state to start foreground service (e.g. started from bg)
-                e.printStackTrace()
+            is PlayerCommand.Shuffle -> shuffle(command.shuffle)
+            is PlayerCommand.CycleLoop -> {
+                val entries = LoopMode.entries
+                when (entries[(playerState.value.loop.ordinal + 1) % entries.size]) {
+                    LoopMode.LoopPlaylist -> loopPlaylist()
+                    LoopMode.LoopFile -> loopFile()
+                    LoopMode.None -> loopNo()
+                }
             }
+
+            is PlayerCommand.PlayFileInPlaylist -> playFileInPlaylist(command.path)
         }
     }
 
@@ -309,7 +317,7 @@ class PlayerService : Service() {
         override fun onSetRepeatMode(repeatMode: Int) = Unit
 
         override fun onSetShuffleMode(shuffleMode: Int) {
-            player.changeShuffle(false, shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
+            player.shuffle(shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
         }
     }
 
@@ -323,7 +331,7 @@ class PlayerService : Service() {
     } else Job().apply { complete() }
 
     private fun savePosition(path: String?) = if (path != null) {
-        val position = sessionManager.playerState.value.position * 1000L
+        val position = playerState.value.position * 1000L
         scope.launch {
             playerRepo.updateLastPlayPosition(path = path, lastPlayPosition = position).collect()
         }
@@ -338,6 +346,9 @@ class PlayerService : Service() {
                     onCommand(PlayerCommand.Paused(true))
 
                 PLAY_ACTION -> onCommand(PlayerCommand.PlayOrPause)
+                PREVIOUS_ACTION -> onCommand(PlayerCommand.PreviousMedia)
+                NEXT_ACTION -> onCommand(PlayerCommand.NextMedia)
+                LOOP_ACTION -> onCommand(PlayerCommand.CycleLoop)
                 CLOSE_ACTION -> {
                     onCommand(PlayerCommand.Destroy)
                     context?.sendBroadcast(Intent(FINISH_PLAY_ACTIVITY_ACTION))
@@ -351,6 +362,9 @@ class PlayerService : Service() {
 
         const val PLAY_ACTION = BuildConfig.APPLICATION_ID + ".PlayerPlay"
         const val CLOSE_ACTION = BuildConfig.APPLICATION_ID + ".PlayerClose"
+        const val PREVIOUS_ACTION = BuildConfig.APPLICATION_ID + ".PlayerPrevious"
+        const val NEXT_ACTION = BuildConfig.APPLICATION_ID + ".PlayerNext"
+        const val LOOP_ACTION = BuildConfig.APPLICATION_ID + ".PlayerLoop"
         const val FINISH_PLAY_ACTIVITY_ACTION = BuildConfig.APPLICATION_ID + ".FinishPlayActivity"
 
         fun createIntent(context: Context, action: String): PendingIntent {

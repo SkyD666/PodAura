@@ -216,6 +216,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
             Property("video-pan-y", MPV_FORMAT_DOUBLE),
             Property("speed", MPV_FORMAT_DOUBLE),
             Property("demuxer-cache-duration", MPV_FORMAT_DOUBLE),
+            Property("playlist"),
             Property("playlist-pos", MPV_FORMAT_INT64),
             Property("playlist-count", MPV_FORMAT_INT64),
             Property("video-format"),
@@ -292,22 +293,19 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
                     Track(
                         trackId = mpvId,
                         name = getTrackDisplayName(mpvId, lang, title),
-                        isAlbumArt = isAlbumArt,
+                        isAlbumArt = isAlbumArt ?: false,
                     )
                 )
             }
         }
     }
 
-    data class PlaylistItem(val index: Int, val filename: String, val title: String?)
-
-    fun loadPlaylist(): MutableList<PlaylistItem> {
-        val playlist = mutableListOf<PlaylistItem>()
+    fun loadPlaylist(): MutableList<String> {
+        val playlist = mutableListOf<String>()
         val count = MPVLib.getPropertyInt("playlist-count")!!
         for (i in 0 until count) {
             val filename = MPVLib.getPropertyString("playlist/$i/filename")!!
-            val title = MPVLib.getPropertyString("playlist/$i/title")
-            playlist.add(PlaylistItem(index = i, filename = filename, title = title))
+            playlist.add(filename)
         }
         return playlist
     }
@@ -343,12 +341,23 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         set(paused) = MPVLib.setPropertyBoolean("pause", paused)
     val playlistCount: Int
         get() = MPVLib.getPropertyInt("playlist-count") ?: 0
+    var playlistPos: Int
+        get() = MPVLib.getPropertyInt("playlist-pos") ?: -1
+        set(value) = MPVLib.setPropertyInt("playlist-pos", value)
     val isIdling: Boolean
         get() = MPVLib.getPropertyBoolean("idle-active")
     val eofReached: Boolean
         get() = MPVLib.getPropertyBoolean("eof-reached")
     val keepOpen: Boolean
         get() = MPVLib.getPropertyBoolean("keep-open") ?: false
+
+    val shuffle: Boolean
+        get() = MPVLib.getPropertyBoolean("shuffle") ?: false
+
+    val loopPlaylist: Boolean
+        get() = MPVLib.getPropertyString("loop-playlist") in arrayOf("inf", "force")
+    val loopOne: Boolean
+        get() = MPVLib.getPropertyString("loop-file") in arrayOf("inf")
 
     val duration: Int
         get() = MPVLib.getPropertyInt("duration") ?: 0
@@ -443,63 +452,89 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
     fun cyclePause() {
         if (keepOpen && eofReached) {
             seek(0)
-        } else {
+        } else if (!isIdling) {
             MPVLib.command(arrayOf("cycle", "pause"))
+        } else if (playlistCount > 0) {
+            playMediaAtIndex(playlistCount - 1)
         }
     }
 
-    fun cycleAudio() = MPVLib.command(arrayOf("cycle", "audio"))
-    fun cycleSub() = MPVLib.command(arrayOf("cycle", "sub"))
     fun cycleHwdec() = MPVLib.command(arrayOf("cycle-values", "hwdec", "auto", "no"))
 
-    fun cycleSpeed() {
-        val speeds = arrayOf(0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0)
-        val currentSpeed = playbackSpeed
-        val index = speeds.indexOfFirst { it > currentSpeed }
-        playbackSpeed = speeds[if (index == -1) 0 else index]
+    fun loopPlaylist() {
+        MPVLib.setPropertyString("loop-playlist", "inf")
+        MPVLib.setPropertyString("loop-file", "no")
     }
 
-    fun getRepeat(): Int {
-        return when (MPVLib.getPropertyString("loop-playlist") +
-                MPVLib.getPropertyString("loop-file")) {
-            "noinf" -> 2
-            "infno" -> 1
-            else -> 0
-        }
+    fun loopFile() {
+        MPVLib.setPropertyString("loop-playlist", "no")
+        MPVLib.setPropertyString("loop-file", "inf")
     }
 
-    fun cycleRepeat() {
-        when (val state = getRepeat()) {
-            0, 1 -> {
-                MPVLib.setPropertyString("loop-playlist", if (state == 1) "no" else "inf")
-                MPVLib.setPropertyString("loop-file", if (state == 1) "inf" else "no")
-            }
-
-            2 -> MPVLib.setPropertyString("loop-file", "no")
-        }
+    fun loopNo() {
+        MPVLib.setPropertyString("loop-playlist", "no")
+        MPVLib.setPropertyString("loop-file", "no")
     }
 
-    fun getShuffle(): Boolean {
-        return MPVLib.getPropertyBoolean("shuffle")
-    }
-
-    fun changeShuffle(cycle: Boolean, value: Boolean = true) {
+    fun shuffle(newShuffle: Boolean) {
         // Use the 'shuffle' property to store the shuffled state, since changing
         // it at runtime doesn't do anything.
-        val state = getShuffle()
-        val newState = if (cycle) state.xor(value) else value
-        if (state == newState)
-            return
-        MPVLib.command(arrayOf(if (newState) "playlist-shuffle" else "playlist-unshuffle"))
-        MPVLib.setPropertyBoolean("shuffle", newState)
+        val current = shuffle
+        if (current == newShuffle) return
+        MPVLib.command(arrayOf(if (newShuffle) "playlist-shuffle" else "playlist-unshuffle"))
+        MPVLib.setPropertyBoolean("shuffle", newShuffle)
     }
 
     fun loadFile(filePath: String) {
-        MPVLib.command(arrayOf("loadfile", filePath))
+        if (path != filePath) {
+            MPVLib.command(arrayOf("loadfile", filePath))
+        }
+        paused = false
+    }
+
+    fun loadList(files: List<String>, startFile: String?) {
+        val realFiles = files.filter { it.isNotBlank() }
+        if (realFiles.isNotEmpty()) {
+            val index = if (startFile == null) 0
+            else realFiles.indexOf(startFile).takeIf { it >= 0 } ?: 0
+
+            val currentPlaylist = loadPlaylist()
+            if (currentPlaylist.size != realFiles.size ||
+                currentPlaylist.zip(realFiles).any { (old, new) -> old != new }
+            ) {
+                val playlistFile = File(Const.MPV_CACHE_DIR, "playlist")
+                if (playlistFile.exists() || playlistFile.createNewFile()) {
+                    playlistFile.writeText(realFiles.joinToString("\n"))
+                    MPVLib.command(arrayOf("loadlist", playlistFile.path, "replace"))
+                    MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+                }
+            } else if (path != startFile && playlistCount > 0) {
+                MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+            }
+            paused = false
+        }
     }
 
     fun playlistPrev() {
-        MPVLib.command(arrayOf("playlist-prev"))
+        if (isIdling && playlistCount > 1) {
+            playMediaAtIndex(playlistCount - 2)
+        } else {
+            MPVLib.command(arrayOf("playlist-prev"))
+        }
+        paused = false
+    }
+
+    fun playlistNext() {
+        MPVLib.command(arrayOf("playlist-next"))
+        paused = false
+    }
+
+    fun playFileInPlaylist(path: String) {
+        val index = loadPlaylist().indexOf(path)
+        if (index >= 0 && playlistPos != index) {
+            MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+            paused = false
+        }
     }
 
     fun stop() {
@@ -539,6 +574,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
             -1 -> MPVLib.command(arrayOf("playlist-play-index", "current"))
             else -> MPVLib.command(arrayOf("playlist-play-index", index.toString()))
         }
+        paused = false
     }
 
     fun screenshot(onSaveScreenshot: (File) -> Unit) {

@@ -96,6 +96,11 @@ fun PlayerView(
                 service.onCommand(PlayerCommand.SeekTo(it))
             },
             onSpeedChanged = { service.onCommand(PlayerCommand.SetSpeed(it)) },
+            onPreviousMedia = { service.onCommand(PlayerCommand.PreviousMedia) },
+            onNextMedia = { service.onCommand(PlayerCommand.NextMedia) },
+            onCycleLoop = { service.onCommand(PlayerCommand.CycleLoop) },
+            onShuffle = { service.onCommand(PlayerCommand.Shuffle(it)) },
+            onPlayFileInPlaylist = { service.onCommand(PlayerCommand.PlayFileInPlaylist(it)) }
         )
     }
 
@@ -117,7 +122,7 @@ fun PlayerView(
 
     LaunchedEffect(playerState) {
         playState = playState.copy(
-            isPlaying = !playerState.paused && playerState.mediaLoaded,
+            isPlaying = !playerState.paused && playerState.mediaStarted,
             state = playerState,
         )
     }
@@ -132,7 +137,7 @@ fun PlayerView(
 
     val inPipMode = rememberIsInPipMode()
     val autoPip = LocalPlayerAutoPip.current
-    val shouldEnterPipMode = autoPip && playerState.mediaLoaded && playState.isPlaying
+    val shouldEnterPipMode = autoPip && playerState.mediaStarted && playState.isPlaying
     PipListenerPreAPI12(shouldEnterPipMode = shouldEnterPipMode)
 
     LifecycleStartEffect(Unit) {

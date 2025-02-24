@@ -82,6 +82,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
                 val listContentPadding = PaddingValues(
                     start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                     end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                    bottom = paddingValues.calculateBottomPadding(),
                 ) + PaddingValues(horizontal = 12.dp, vertical = 12.dp)
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })

@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.read
 
-import android.net.Uri
 import android.text.format.DateUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -285,7 +284,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                         EnclosureBottomSheet(
                             onDismissRequest = { openEnclosureBottomSheet = null },
                             dataList = openEnclosureBottomSheet.orEmpty(),
-                            article = articleState.article.articleWithEnclosure,
+                            article = articleState.article,
                         )
                     }
                 }
@@ -392,10 +391,8 @@ private fun Content(
     MediaRow(articleWithFeed = articleState.article, onPlay = { url ->
         PlayActivity.play(
             activity = context.activity,
-            uri = Uri.parse(url),
             articleId = article.article.articleId,
-            title = article.article.title,
-            thumbnail = article.media?.image ?: articleState.article.feed.icon,
+            url = url,
         )
     })
     HtmlText(

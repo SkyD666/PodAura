@@ -1,11 +1,13 @@
 package com.skyd.anivu.ui.mpv.service
 
 import coil3.Bitmap
+import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 
 
 data class PlayerState(
-    val mediaLoaded: Boolean = false,
+    val playlist: LinkedHashMap<String, PlaylistBean> = linkedMapOf(),
+    val mediaStarted: Boolean = false,
     val path: String? = null,
     val audioTrackId: Int = 0,
     val subtitleTrackId: Int = 0,
@@ -24,20 +26,17 @@ data class PlayerState(
     val duration: Long = 0L,
     val rotate: Float = 0f,
     val playlistPosition: Int = -1,
-    val playlistCount: Int = 0,
     val paused: Boolean = true,
     val pausedForCache: Boolean = false,
     val shuffle: Boolean = false,
+    val loop: LoopMode = LoopMode.None,
     val idling: Boolean = true,
     val mediaTitle: String? = null,
     val mediaThumbnail: Bitmap? = null,
-    val customMediaData: CustomMediaData? = null,
 ) {
+    val customMediaData: CustomMediaData? = playlist[path]?.customMediaData
     val isVideo = videoTracks.any { it.trackId >= 0 && !it.isAlbumArt }
+    val playlistFirst = playlistPosition == 0 && playlist.isNotEmpty() || playlist.size == 1
+    val playlistLast = playlistPosition == playlist.size - 1 ||
+            playlist.size == 1 || playlistPosition == -1
 }
-
-data class CustomMediaData(
-    val articleId: String? = null,
-    val title: String? = null,
-    val thumbnail: Bitmap? = null,
-)

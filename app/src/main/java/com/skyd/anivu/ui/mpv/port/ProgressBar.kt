@@ -27,6 +27,7 @@ import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 internal fun ProgressBar(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
+    modifier: Modifier = Modifier,
 ) {
     var sliderValue by rememberSaveable {
         mutableFloatStateOf(playState.position.toFloat())
@@ -35,7 +36,7 @@ internal fun ProgressBar(
     if (!valueIsChanging && !playState.isSeeking && sliderValue != playState.position.toFloat()) {
         sliderValue = playState.position.toFloat()
     }
-    Column {
+    Column(modifier = modifier) {
         Slider(
             modifier = Modifier.fillMaxWidth(1f),
             value = sliderValue,

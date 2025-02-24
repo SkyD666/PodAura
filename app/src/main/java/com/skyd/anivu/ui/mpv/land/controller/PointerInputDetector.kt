@@ -159,6 +159,8 @@ internal fun Modifier.detectControllerGestures(
         return this
     }
 
+    val currentPlayState by rememberUpdatedState(newValue = playState)
+
     val safeGestures by rememberUpdatedState(newValue = WindowInsets.safeGestures.toRect())
     var pointerStartX by rememberSaveable { mutableFloatStateOf(0f) }
     var pointerStartY by rememberSaveable { mutableFloatStateOf(0f) }
@@ -253,7 +255,7 @@ internal fun Modifier.detectControllerGestures(
                 if (inSystemBarArea(context, safeGestures, it.x, it.y)) {
                     return@onHorizontalDragStart
                 }
-                seekTimePreviewStartPosition = playState().position
+                seekTimePreviewStartPosition = currentPlayState().position
                 seekTimePreviewPositionDelta = 0
                 onShowSeekTimePreview(true)
             },

@@ -8,17 +8,20 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import java.io.File
 
-suspend fun ImageLoader.getImage(context: Context, url: String): File? {
+suspend fun ImageLoader.getImage(context: Context, url: String): File? = try {
     val request = ImageRequest.Builder(context)
         .data(url)
         .diskCachePolicy(CachePolicy.ENABLED)
         .build()
     when (execute(request)) {
-        is ErrorResult -> return null
+        is ErrorResult -> null
         is SuccessResult -> {
             diskCache!!.openSnapshot(url).use { snapshot ->
-                return snapshot!!.data.toFile()
+                snapshot!!.data.toFile()
             }
         }
     }
+} catch (e: Exception) {
+    e.printStackTrace()
+    null
 }

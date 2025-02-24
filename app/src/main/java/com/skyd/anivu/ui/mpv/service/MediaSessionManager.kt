@@ -1,10 +1,14 @@
 package com.skyd.anivu.ui.mpv.service
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.collection.LruCache
+import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.PlayerEvent
+import com.skyd.anivu.ui.mpv.createThumbnail
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -13,6 +17,8 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MediaSessionManager(
     private val context: Context,
@@ -39,8 +45,6 @@ class MediaSessionManager(
     var state: Int = PlaybackStateCompat.STATE_NONE
         private set
 
-    private val customMediaDataMap = mutableMapOf<String, CustomMediaData>()
-
     private fun initMediaSession(): MediaSessionCompat {
         /*
             https://developer.android.com/guide/topics/media-apps/working-with-a-media-session
@@ -53,35 +57,28 @@ class MediaSessionManager(
         return session
     }
 
-    private fun putCustomMediaData(path: String, customMediaData: CustomMediaData) {
-        val oldData = customMediaDataMap[path]
-        var currentData = customMediaData
-        if (oldData != null) {
-            currentData = CustomMediaData(
-                articleId = customMediaData.articleId ?: oldData.articleId,
-                title = customMediaData.title ?: oldData.title,
-                thumbnail = customMediaData.thumbnail ?: oldData.thumbnail,
-            )
-        }
-        customMediaDataMap[path] = currentData
-    }
-
-    fun getCustomMediaData(path: String): CustomMediaData? {
-        return customMediaDataMap[path]
-    }
-
     override fun onCommand(command: PlayerEvent) {
         eventFlow.trySend(command)
     }
 
-    private fun PlayerState.buildMediaMetadata(): MediaMetadataCompat {
+    private var thumbnailCache = LruCache<String, Bitmap>(maxSize = 2)
+    private suspend fun PlayerState.buildMediaMetadata(): MediaMetadataCompat {
         // TODO could provide: genre, num_tracks, track_number, year
         return with(mediaMetadataBuilder) {
             putText(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
+            var customThumbnail = thumbnailCache[customMediaData?.thumbnail.orEmpty()]
+            if (customThumbnail == null) {
+                val newThumb = withContext(Dispatchers.IO) {
+                    createThumbnail(customMediaData?.thumbnail)
+                }
+                if (newThumb != null) {
+                    thumbnailCache.put(customMediaData?.thumbnail.orEmpty(), newThumb)
+                    customThumbnail = newThumb
+                }
+            }
             // put even if it's null to reset any previous art
             putBitmap(
-                MediaMetadataCompat.METADATA_KEY_ART,
-                customMediaData?.thumbnail ?: mediaThumbnail
+                MediaMetadataCompat.METADATA_KEY_ART, customThumbnail ?: mediaThumbnail
             )
             putText(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
             putLong(
@@ -96,7 +93,7 @@ class MediaSessionManager(
 
     private fun PlayerState.buildPlaybackState(): PlaybackStateCompat {
         state = when {
-            idling || position < 0 || duration <= 0 || playlistCount == 0 -> {
+            idling || position < 0 || duration <= 0 || playlist.isEmpty() -> {
                 PlaybackStateCompat.STATE_NONE
             }
 
@@ -108,9 +105,8 @@ class MediaSessionManager(
                 PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_PAUSE or
                 PlaybackStateCompat.ACTION_SET_REPEAT_MODE
-        if (duration > 0)
-            actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
-        if (playlistCount > 1) {
+        if (duration > 0) actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
+        if (playlist.isNotEmpty()) {
             // we could be very pedantic here but it's probably better to either show both or none
             actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
                     PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
@@ -137,11 +133,11 @@ class MediaSessionManager(
         is PlayerEvent.Idling -> old.copy(idling = value)
         is PlayerEvent.Paused -> old.copy(paused = value)
         is PlayerEvent.PausedForCache -> old.copy(pausedForCache = value)
-        is PlayerEvent.PlaylistCount -> old.copy(playlistCount = value)
         is PlayerEvent.PlaylistPosition -> old.copy(playlistPosition = value)
         is PlayerEvent.Position -> old.copy(position = value)
         is PlayerEvent.Rotate -> old.copy(rotate = value)
-        is PlayerEvent.Shuffle -> old.copy(shuffle = value)
+        is PlayerEvent.Shuffle -> old.copy(shuffle = shuffle)
+        is PlayerEvent.Loop -> old.copy(loop = mode)
         is PlayerEvent.Speed -> old.copy(speed = value)
         is PlayerEvent.SubtitleTrackChanged -> old.copy(subtitleTrackId = trackId)
         is PlayerEvent.VideoTrackChanged -> old.copy(videoTrackId = trackId)
@@ -150,18 +146,10 @@ class MediaSessionManager(
         is PlayerEvent.VideoOffsetX -> old.copy(offsetX = value)
         is PlayerEvent.VideoOffsetY -> old.copy(offsetY = value)
         is PlayerEvent.Zoom -> old.copy(zoom = value)
-        is PlayerEvent.PlaybackRestart -> old.copy(mediaLoaded = true)
-        is PlayerEvent.FileLoaded -> old.copy(
-            mediaLoaded = true,
-            path = path,
-            customMediaData = customMediaDataMap[path],
-        )
-
-        is PlayerEvent.EndFile -> old.copy(paused = true, mediaLoaded = false)
-        is PlayerEvent.CustomData -> {
-            putCustomMediaData(path, value)
-            old.copy(customMediaData = customMediaDataMap[path])
-        }
+        is PlayerEvent.PlaybackRestart -> old.copy(mediaStarted = true)
+        is PlayerEvent.StartFile -> old.copy(mediaStarted = true, path = path)
+        is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
+        is PlayerEvent.Playlist -> old.copy(playlist = newPlaylist)
 
         else -> old
     }
@@ -169,15 +157,15 @@ class MediaSessionManager(
     private fun PlayerEvent.updateMediaSession(newState: PlayerState) {
         when (this) {
             is PlayerEvent.Shuffle -> mediaSession.setShuffleMode(
-                if (value) PlaybackStateCompat.SHUFFLE_MODE_ALL
+                if (shuffle) PlaybackStateCompat.SHUFFLE_MODE_ALL
                 else PlaybackStateCompat.SHUFFLE_MODE_NONE
             )
 
             is PlayerEvent.Loop -> mediaSession.setRepeatMode(
-                when (value) {
-                    2 -> PlaybackStateCompat.REPEAT_MODE_ONE
-                    1 -> PlaybackStateCompat.REPEAT_MODE_ALL
-                    else -> PlaybackStateCompat.REPEAT_MODE_NONE
+                when (mode) {
+                    LoopMode.LoopPlaylist -> PlaybackStateCompat.REPEAT_MODE_ALL
+                    LoopMode.LoopFile -> PlaybackStateCompat.REPEAT_MODE_ONE
+                    LoopMode.None -> PlaybackStateCompat.REPEAT_MODE_NONE
                 }
             )
 
@@ -185,14 +173,10 @@ class MediaSessionManager(
             is PlayerEvent.EndFile,
             is PlayerEvent.Speed,
             is PlayerEvent.Position,
-            is PlayerEvent.PlaylistCount,
+            is PlayerEvent.Duration,
             is PlayerEvent.PausedForCache -> {
                 mediaSession.setPlaybackState(newState.buildPlaybackState())
-            }
-
-            is PlayerEvent.Duration -> {
-                mediaSession.setPlaybackState(newState.buildPlaybackState())
-                mediaSession.setMetadata(newState.buildMediaMetadata())
+                scope.launch { mediaSession.setMetadata(newState.buildMediaMetadata()) }
             }
 
             is PlayerEvent.Idling,
@@ -200,8 +184,8 @@ class MediaSessionManager(
             is PlayerEvent.Artist,
             is PlayerEvent.Album,
             is PlayerEvent.MediaThumbnail,
-            is PlayerEvent.CustomData -> {
-                mediaSession.setMetadata(newState.buildMediaMetadata())
+            is PlayerEvent.StartFile -> {
+                scope.launch { mediaSession.setMetadata(newState.buildMediaMetadata()) }
             }
 
             is PlayerEvent.PlaylistPosition -> Unit

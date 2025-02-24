@@ -19,7 +19,7 @@ fun ProgressIndicator(modifier: Modifier = Modifier, playState: () -> PlayState)
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         label = "playerProgressIndicatorAnimate"
     )
-    Log.e("TAG", "ProgressIndicator: $animatedProgress", )
+    Log.e("TAG", "ProgressIndicator: $animatedProgress")
     LinearProgressIndicator(
         modifier = Modifier
             .fillMaxWidth()

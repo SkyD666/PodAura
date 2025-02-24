@@ -407,7 +407,7 @@
     <string name="history_screen_media_play">媒体播放</string>
     <string name="history_screen_name">历史记录</string>
     <string name="history_screen_last_seen">上次看到 %s</string>
-    <string name="history_screen_file_not_exists">文件不存在</string>
+    <string name="history_screen_media_not_exists">媒体不存在</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="other">%d 个追踪器</item>
     </plurals>

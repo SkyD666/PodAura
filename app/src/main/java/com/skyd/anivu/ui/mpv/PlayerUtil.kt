@@ -2,10 +2,16 @@ package com.skyd.anivu.ui.mpv
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import com.skyd.anivu.appContext
 import com.skyd.anivu.config.Const
+import com.skyd.anivu.ext.getImage
+import com.skyd.anivu.ext.imageLoaderBuilder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -65,6 +71,57 @@ fun findRealPath(fd: Int): String? {
         ins?.close()
     }
     return null
+}
+
+fun isFdFileExists(fdPath: String): Boolean {
+    var pfd: ParcelFileDescriptor? = null
+    var inputStream: InputStream? = null
+    return try {
+        val fd = fdPath.substringAfterLast("fd://").toInt()
+        pfd = ParcelFileDescriptor.fromFd(fd)
+        inputStream = FileInputStream(pfd.fileDescriptor)
+        inputStream.read() != -1
+    } catch (e: IOException) {
+        e.printStackTrace()
+        false
+    } finally {
+        inputStream?.close()
+        pfd?.close()
+    }
+}
+
+suspend fun createThumbnail(thumbnailPath: String?): Bitmap? {
+    thumbnailPath ?: return null
+    return appContext.imageLoaderBuilder().build()
+        .getImage(appContext, thumbnailPath)
+        ?.inputStream()
+        ?.use { BitmapFactory.decodeStream(it) }
+}
+
+fun getMediaMetadata(filePaths: List<String>): Map<String, Map<String, Any?>> {
+    val retriever = MediaMetadataRetriever()
+    val result = mutableMapOf<String, Map<String, Any?>>()
+    filePaths.forEach { filePath ->
+        try {
+            with(retriever) {
+                setDataSource(filePath)
+                val metadata = mutableMapOf<String, Any?>()
+                metadata["title"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                metadata["artist"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+                metadata["album"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
+                metadata["duration"] =
+                    extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+                metadata["albumArt"] = embeddedPicture?.let {
+                    BitmapFactory.decodeByteArray(it, 0, it.size)
+                }
+                result[filePath] = metadata
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    retriever.release()
+    return result
 }
 
 fun copyAssetsForMpv(context: Context) {

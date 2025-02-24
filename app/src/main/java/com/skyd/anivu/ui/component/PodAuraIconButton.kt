@@ -110,9 +110,9 @@ fun PodAuraIconButton(
 
 @Composable
 fun PodAuraIconButton(
-    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     imageVector: ImageVector,
+    modifier: Modifier = Modifier,
     tint: Color? = null,
     style: PodAuraIconButtonStyle = PodAuraIconButtonStyle.Normal,
     contentDescription: String? = null,
@@ -139,12 +139,14 @@ fun PodAuraIconButton(
 fun PodAuraIconToggleButton(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    imageVector: ImageVector,
     modifier: Modifier = Modifier,
+    tint: Color? = null,
+    contentDescription: String? = null,
+    rotate: Float = 0f,
     enabled: Boolean = true,
     colors: IconToggleButtonColors = IconButtonDefaults.iconToggleButtonColors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    contentDescription: String? = null,
-    content: @Composable () -> Unit
 ) {
     val iconButton: @Composable (modifier: Modifier) -> Unit = {
         IconToggleButton(
@@ -154,7 +156,14 @@ fun PodAuraIconToggleButton(
             enabled = enabled,
             colors = colors,
             interactionSource = interactionSource,
-            content = content,
+            content = {
+                Icon(
+                    modifier = Modifier.rotate(rotate),
+                    imageVector = imageVector,
+                    tint = tint ?: LocalContentColor.current,
+                    contentDescription = contentDescription,
+                )
+            },
         )
     }
     if (contentDescription.isNullOrEmpty()) {

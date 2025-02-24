@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.mpv.land.controller.bar
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,14 +17,20 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.rounded.ClosedCaption
 import androidx.compose.material.icons.rounded.FullscreenExit
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.RepeatOne
+import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -45,13 +50,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.portOrientation
+import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.mpv.component.ControllerIconButton
+import com.skyd.anivu.ui.mpv.component.ControllerIconToggleButton
+import com.skyd.anivu.ui.mpv.component.ControllerTextButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
@@ -68,6 +74,7 @@ fun BottomBar(
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onRestartAutoHideControllerRunnable: () -> Unit,
+    onOpenPlaylist: () -> Unit,
 ) {
     val context = LocalContext.current
     val playStateValue = playState()
@@ -162,45 +169,74 @@ fun BottomBar(
                 imageVector = if (playStateValue.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 contentDescription = stringResource(if (playStateValue.isPlaying) R.string.pause else R.string.play),
             )
+            // Previous button
+            ControllerIconButton(
+                enabled = !playStateValue.playlistFirst,
+                onClick = playStateCallback.onPreviousMedia,
+                imageVector = Icons.Rounded.SkipPrevious,
+                contentDescription = stringResource(R.string.skip_previous),
+            )
+            // Next button
+            ControllerIconButton(
+                enabled = !playStateValue.playlistLast,
+                onClick = playStateCallback.onNextMedia,
+                imageVector = Icons.Rounded.SkipNext,
+                contentDescription = stringResource(R.string.skip_next),
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
             // Speed button
-            Text(
-                modifier = Modifier
-                    .padding(horizontal = 3.dp)
-                    .clip(CircleShape)
-                    .height(45.dp)
-                    .clickable(enabled = enabled(), onClick = {
-                        onDialogVisibilityChanged.onSpeedDialog(true)
-                    })
-                    .padding(9.dp)
-                    .animateContentSize()
-                    // For vertical centering
-                    .wrapContentHeight(),
+            ControllerTextButton(
                 text = "${String.format(Locale.getDefault(), "%.2f", playStateValue.speed)}x",
-                style = MaterialTheme.typography.labelLarge,
-                fontSize = TextUnit(16f, TextUnitType.Sp),
-                textAlign = TextAlign.Center,
-                color = Color.White,
+                colors = ButtonDefaults.textButtonColors().copy(
+                    contentColor = Color.White,
+                    disabledContentColor = Color.White.copy(alpha = 0.6f),
+                ),
+                enabled = enabled(),
+                onClick = { onDialogVisibilityChanged.onSpeedDialog(true) },
+            )
+            // Playlist button
+            ControllerIconButton(
+                onClick = onOpenPlaylist,
+                imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                contentDescription = stringResource(R.string.playlist),
+            )
+            // Shuffle button
+            ControllerIconToggleButton(
+                enabled = enabled(),
+                checked = playStateValue.shuffle,
+                onCheckedChange = playStateCallback.onShuffle,
+                imageVector = Icons.Rounded.Shuffle,
+                contentDescription = stringResource(R.string.shuffle_playlist),
+            )
+            // Loop button
+            ControllerIconToggleButton(
+                enabled = enabled(),
+                checked = playStateValue.loop != LoopMode.None,
+                onCheckedChange = { playStateCallback.onCycleLoop() },
+                imageVector = when (playStateValue.loop) {
+                    LoopMode.LoopPlaylist, LoopMode.None -> Icons.Rounded.Repeat
+                    LoopMode.LoopFile -> Icons.Rounded.RepeatOne
+                },
+                contentDescription = stringResource(R.string.loop_playlist_mode),
             )
             // Audio track button
-            BarIconButton(
+            ControllerIconButton(
                 enabled = enabled(),
                 onClick = { onDialogVisibilityChanged.onAudioTrackDialog(true) },
                 imageVector = Icons.Rounded.MusicNote,
                 contentDescription = stringResource(R.string.player_audio_track),
             )
             // Subtitle track button
-            BarIconButton(
+            ControllerIconButton(
                 enabled = enabled(),
                 onClick = { onDialogVisibilityChanged.onSubtitleTrackDialog(true) },
                 imageVector = Icons.Rounded.ClosedCaption,
                 contentDescription = stringResource(R.string.player_subtitle_track),
             )
             // To portrait
-            BarIconButton(
-                enabled = enabled(),
+            ControllerIconButton(
                 onClick = { context.activity.portOrientation() },
                 imageVector = Icons.Rounded.FullscreenExit,
                 contentDescription = stringResource(R.string.exit_fullscreen),

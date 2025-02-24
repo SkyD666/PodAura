@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
+import com.skyd.anivu.ui.mpv.component.ControllerIconButton
 import com.skyd.anivu.ui.mpv.land.controller.ControllerBarGray
 import com.skyd.anivu.ui.mpv.pip.manualEnterPictureInPictureMode
 
@@ -83,7 +84,7 @@ internal fun TopBar(
             maxLines = 1,
         )
         Spacer(modifier = Modifier.width(3.dp))
-        BarIconButton(
+        ControllerIconButton(
             modifier = Modifier.padding(2.dp),
             onClick = { context.activity.manualEnterPictureInPictureMode() },
             imageVector = Icons.Outlined.PictureInPictureAlt,

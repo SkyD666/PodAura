@@ -414,7 +414,13 @@
     <string name="history_screen_media_play">Media playback</string>
     <string name="history_screen_name">History</string>
     <string name="history_screen_last_seen">Last seen %s</string>
-    <string name="history_screen_file_not_exists">File not exists</string>
+    <string name="history_screen_media_not_exists">Media not exists</string>
+    <string name="skip_previous">Skip previous</string>
+    <string name="skip_next">Skip next</string>
+    <string name="shuffle_playlist">Shuffle playlist</string>
+    <string name="loop_playlist_mode">Loop playlist mode</string>
+    <string name="playing">Playing</string>
+    <string name="playlist">Playlist</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>

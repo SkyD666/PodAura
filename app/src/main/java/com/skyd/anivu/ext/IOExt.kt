@@ -207,6 +207,11 @@ fun Uri.isLocal(): Boolean = toString().startsWith("/") ||
         URLUtil.isFileUrl(toString()) ||
         URLUtil.isContentUrl(toString())
 
+fun String.isLocalFile(): Boolean = startsWith("/") ||
+        startsWith("fd://") ||
+        URLUtil.isFileUrl(this) ||
+        URLUtil.isContentUrl(this)
+
 fun Uri.isNetwork(): Boolean = URLUtil.isNetworkUrl(toString())
 
 fun InputStream.saveTo(target: File): Long {

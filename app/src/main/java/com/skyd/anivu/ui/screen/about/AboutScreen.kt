@@ -374,7 +374,7 @@ private fun ButtonArea() {
                 color = MaterialTheme.colorScheme.primaryContainer,
                 shape = CurlyCornerShape(
                     amp = with(LocalDensity.current) { 1.dp.toPx() },
-                    count = 10
+                    count = 10f
                 ),
             ),
             contentAlignment = Alignment.Center

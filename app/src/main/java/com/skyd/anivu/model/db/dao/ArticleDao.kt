@@ -15,6 +15,7 @@ import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
+import com.skyd.anivu.model.bean.article.ENCLOSURE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.anivu.model.bean.feed.FeedBean
@@ -182,12 +183,47 @@ interface ArticleDao {
 
     @Transaction
     @Query(
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    fun getArticleListByIds(articleIds: List<String>): List<ArticleWithFeed>
+
+    @Transaction
+    @Query(
         """
         SELECT * FROM $ARTICLE_TABLE_NAME 
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId
         """
     )
     fun getArticleWithEnclosures(articleId: String): Flow<ArticleWithEnclosureBean?>
+
+    @Transaction
+    @Query(
+        "WITH temp_target(feed_url, update_time) AS (SELECT ${ArticleBean.FEED_URL_COLUMN}, ${ArticleBean.DATE_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId), " +
+                "temp_enclosure(enclosure_count) AS (SELECT COUNT(1) FROM $ENCLOSURE_TABLE_NAME WHERE ${EnclosureBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN}) " +
+                "SELECT * FROM ( " +
+                "    SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "    WHERE ${ArticleBean.FEED_URL_COLUMN} = (SELECT feed_url FROM temp_target) AND " +
+                "       (SELECT enclosure_count FROM temp_enclosure) > 0 AND " +
+                "       (${ArticleBean.DATE_COLUMN} > (SELECT update_time FROM temp_target) " +
+                "           OR (${ArticleBean.DATE_COLUMN} = (SELECT update_time FROM temp_target) AND ${ArticleBean.ARTICLE_ID_COLUMN} > :articleId)) " +
+                "    ORDER BY ${ArticleBean.DATE_COLUMN} DESC, ${ArticleBean.ARTICLE_ID_COLUMN} DESC " +
+                "    LIMIT :neighborCount " +
+                ") " +
+                "UNION ALL " +
+                "SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId " +
+                "UNION ALL " +
+                "SELECT * FROM ( " +
+                "    SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "    WHERE ${ArticleBean.FEED_URL_COLUMN} = (SELECT feed_url FROM temp_target) AND " +
+                "       (SELECT enclosure_count FROM temp_enclosure) > 0 AND " +
+                "       (${ArticleBean.DATE_COLUMN} < (SELECT update_time FROM temp_target) " +
+                "           OR (${ArticleBean.DATE_COLUMN} = (SELECT update_time FROM temp_target) AND ${ArticleBean.ARTICLE_ID_COLUMN} < :articleId)) " +
+                "    ORDER BY ${ArticleBean.DATE_COLUMN} DESC, ${ArticleBean.ARTICLE_ID_COLUMN} DESC " +
+                "    LIMIT :neighborCount " +
+                ");"
+    )
+    fun getArticlesForPlaylist(articleId: String, neighborCount: Int = 50): List<ArticleWithFeed>
 
     @Transaction
     @Query(

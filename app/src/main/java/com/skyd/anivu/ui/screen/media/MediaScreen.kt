@@ -70,6 +70,7 @@ import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
+import com.skyd.anivu.ui.mpv.resolveUri
 import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.anivu.ui.screen.filepicker.openFilePicker
 import com.skyd.anivu.ui.screen.media.list.GroupInfo
@@ -104,7 +105,14 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
         if (result.pickFolder) {
             MediaLibLocationPreference.put(context, this, result.result)
         } else {
-            PlayActivity.play(activity = context.activity, uri = File(result.result).toUri())
+            val url = File(result.result).toUri().resolveUri(context)
+            if (url != null) {
+                PlayActivity.play(
+                    activity = context.activity,
+                    startFilePath = url,
+                    files = listOf(url),
+                )
+            }
         }
     }
 

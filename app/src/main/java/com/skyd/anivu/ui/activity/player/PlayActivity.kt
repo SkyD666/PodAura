@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.activity.player
 
+import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.ComponentName
@@ -7,10 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,9 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
@@ -36,32 +34,40 @@ import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerViewRoute
 import com.skyd.anivu.ui.mpv.copyAssetsForMpv
 import com.skyd.anivu.ui.mpv.service.PlayerService
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import java.io.File
 
 
 class PlayActivity : BaseComposeActivity() {
     companion object {
-        const val VIDEO_URI_KEY = "videoUri"
+        const val START_FILE_KEY = "startFile"
+        const val FILES_KEY = "files"
         const val ARTICLE_ID_KEY = "articleId"
-        const val VIDEO_TITLE_KEY = "videoTitle"
-        const val VIDEO_THUMBNAIL_KEY = "videoThumbnail"
+        const val URL_KEY = "url"
 
         fun play(
             activity: Activity,
-            uri: Uri,
-            articleId: String? = null,
-            title: String? = null,
-            thumbnail: String? = null,
+            articleId: String?,
+            url: String,
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(VIDEO_URI_KEY, uri)
                     putExtra(ARTICLE_ID_KEY, articleId)
-                    putExtra(VIDEO_TITLE_KEY, title)
-                    putExtra(VIDEO_THUMBNAIL_KEY, thumbnail)
+                    putExtra(URL_KEY, url)
+                }
+            )
+        }
+
+        fun play(
+            activity: Activity,
+            startFilePath: String,
+            files: List<String>,
+        ) {
+            activity.startActivity(
+                Intent(activity, PlayActivity::class.java).apply {
+                    putExtra(START_FILE_KEY, startFilePath)
+                    putStringArrayListExtra(FILES_KEY, ArrayList(files))
                 }
             )
         }
@@ -84,28 +90,22 @@ class PlayActivity : BaseComposeActivity() {
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerServiceBinder
-            this@PlayActivity.service = binder.getService().apply {
-                if (!playerState.value.path.isNullOrBlank() && viewModel.currentPath.value.isNullOrBlank()) {
-                    viewModel.currentPath.tryEmit(playerState.value.path)
+            if (this@PlayActivity.isDestroyed) {
+                unbindService(this)
+                if (!dataStore.getOrDefault(BackgroundPlayPreference)) {
+                    binder.getService().stopSelf()
+                    return
                 }
-                lifecycleScope.launch {
-                    combine(
-                        viewModel.currentPath,
-                        viewModel.articleId,
-                        viewModel.title,
-                        viewModel.thumbnail,
-                    ) { currentPath, articleId, title, thumbnail ->
-                        if (currentPath != null) {
-                            onCommand(
-                                PlayerCommand.SetPath(
-                                    path = currentPath,
-                                    articleId = articleId,
-                                    title = title,
-                                    thumbnail = thumbnail,
-                                )
-                            )
-                        }
-                    }.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED).collect()
+            }
+            this@PlayActivity.service = binder.getService()
+            lifecycleScope.launch {
+                viewModel.mediaInfos.filter { it.first != null }.collect { (path, playlist) ->
+                    this@PlayActivity.service.onCommand(
+                        PlayerCommand.LoadList(
+                            playlist = playlist,
+                            startPath = path,
+                        )
+                    )
                 }
             }
 
@@ -146,7 +146,7 @@ class PlayActivity : BaseComposeActivity() {
 
         val serviceIntent = Intent(this, PlayerService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
-        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE)
+        bindService(serviceIntent, connection, BIND_AUTO_CREATE)
 
         setContentBase {
             DisposableEffect(Unit) {
@@ -154,17 +154,14 @@ class PlayActivity : BaseComposeActivity() {
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
             }
-            val path by viewModel.currentPath.collectAsStateWithLifecycle()
-            if (path != null) {
-                PlayerViewRoute(
-                    service = if (serviceBound) service else null,
-                    onBack = { finish() },
-                    onSaveScreenshot = {
-                        picture = it
-                        saveScreenshot()
-                    },
-                )
-            }
+            PlayerViewRoute(
+                service = if (serviceBound) service else null,
+                onBack = { finish() },
+                onSaveScreenshot = {
+                    picture = it
+                    saveScreenshot()
+                },
+            )
         }
     }
 
@@ -182,7 +179,7 @@ class PlayActivity : BaseComposeActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             picture.savePictureToMediaStore(this)
         } else {
-            requestPermissionLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 

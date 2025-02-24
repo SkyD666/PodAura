@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +45,7 @@ import com.skyd.anivu.ui.component.rememberSystemUiController
 import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
 import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
 import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
+import com.skyd.anivu.ui.mpv.component.playlist.Playlist
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.DialogState
@@ -111,6 +114,9 @@ internal fun PlayerController(
     var backwardRippleStartControllerOffset by remember { mutableStateOf(Offset.Zero) }
 
     var isLongPressing by remember { mutableStateOf(false) }
+
+    var showPlaylistSheet by remember { mutableStateOf(false) }
+    val playlistSheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(dialogState.subtitleTrackDialogState()) {
         if (dialogState.subtitleTrackDialogState().show) cancelAutoHideControllerRunnable()
@@ -213,6 +219,7 @@ internal fun PlayerController(
                 transformStateCallback = transformStateCallback,
                 onScreenshot = onScreenshot,
                 onRestartAutoHideControllerRunnable = restartAutoHideControllerRunnable,
+                onOpenPlaylist = { showPlaylistSheet = true },
             )
 
             if (LocalPlayerShowProgressIndicator.current && !showController) {
@@ -253,20 +260,35 @@ internal fun PlayerController(
                 }
                 LongPressSpeedPreview(speed = { playState().speed })
             }
+        }
+    }
 
-            val systemUiController = rememberSystemUiController()
-            LaunchedEffect(
-                dialogState.speedDialogState().show,
-                dialogState.subtitleTrackDialogState().show,
-                dialogState.audioTrackDialogState().show,
-            ) {
-                delay(200)
-                with(systemUiController) {
-                    isSystemBarsVisible = false
-                    systemBarsBehavior =
-                        WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-            }
+    if (showPlaylistSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showPlaylistSheet = false },
+            sheetState = playlistSheetState
+        ) {
+            val playStateValue = playState()
+            Playlist(
+                currentPlay = playStateValue.path,
+                playlist = remember(playStateValue) { playStateValue.playlist.values.toList() },
+                onPlay = { playStateCallback.onPlayFileInPlaylist(it.path) },
+            )
+        }
+    }
+
+    val systemUiController = rememberSystemUiController()
+    LaunchedEffect(
+        dialogState.speedDialogState().show,
+        dialogState.subtitleTrackDialogState().show,
+        dialogState.audioTrackDialogState().show,
+        showPlaylistSheet,
+    ) {
+        delay(200)
+        with(systemUiController) {
+            isSystemBarsVisible = false
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 }
@@ -283,6 +305,7 @@ private fun AutoHiddenBox(
     transformStateCallback: TransformStateCallback,
     onScreenshot: () -> Unit,
     onRestartAutoHideControllerRunnable: () -> Unit,
+    onOpenPlaylist: () -> Unit,
 ) {
     Box {
         AnimatedVisibility(
@@ -305,6 +328,7 @@ private fun AutoHiddenBox(
                     playState = playState,
                     onDialogVisibilityChanged = onDialogVisibilityChanged,
                     onRestartAutoHideControllerRunnable = onRestartAutoHideControllerRunnable,
+                    onOpenPlaylist = onOpenPlaylist,
                 )
 
                 if (LocalPlayerShowScreenshotButton.current) {

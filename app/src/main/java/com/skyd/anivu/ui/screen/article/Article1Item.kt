@@ -189,7 +189,7 @@ fun Article1Item(
         EnclosureBottomSheet(
             onDismissRequest = { openEnclosureBottomSheet = null },
             dataList = openEnclosureBottomSheet.orEmpty(),
-            article = data.articleWithEnclosure,
+            article = data,
         )
     }
 }

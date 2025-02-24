@@ -34,7 +34,6 @@ import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.plus
-import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.ui.activity.player.PlayActivity
@@ -104,10 +103,12 @@ internal fun MediaList(
                             list = listState.list,
                             groups = uiState.groups,
                             groupInfo = groupInfo,
-                            onPlay = {
+                            onPlay = { media ->
                                 PlayActivity.play(
                                     context.activity,
-                                    it.file.toUri(context)
+                                    startFilePath = media.file.path,
+                                    files = listState.list.filter { it.isMedia }
+                                        .map { it.file.path },
                                 )
                             },
                             onOpenDir = {

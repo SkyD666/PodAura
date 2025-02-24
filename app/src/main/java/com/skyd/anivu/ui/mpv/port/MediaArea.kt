@@ -29,11 +29,12 @@ import com.skyd.anivu.ui.mpv.component.state.PlayState
 @Composable
 internal fun MediaArea(
     playState: PlayState,
+    modifier: Modifier = Modifier,
     playerContent: @Composable () -> Unit,
 ) {
     val isVideo = playState.isVideo
     Box(
-        modifier = Modifier
+        modifier = modifier
             .padding(6.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
@@ -48,7 +49,7 @@ internal fun MediaArea(
 }
 
 @Composable
-private fun Thumbnail(thumbnail: Bitmap?) {
+private fun Thumbnail(thumbnail: Any?) {
     var imageLoadFailed by rememberSaveable(thumbnail) { mutableStateOf(thumbnail == null) }
     val modifier = Modifier
         .aspectRatio(1f)

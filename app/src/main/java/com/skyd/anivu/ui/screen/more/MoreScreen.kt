@@ -53,6 +53,7 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.shape.CloverShape
 import com.skyd.anivu.ui.component.shape.CurlyCornerShape
+import com.skyd.anivu.ui.component.shape.PolygonShape
 import com.skyd.anivu.ui.component.shape.RoundedCornerStarShape
 import com.skyd.anivu.ui.component.shape.SquircleShape
 import com.skyd.anivu.ui.local.LocalNavController
@@ -173,7 +174,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.history_screen_name),
             icon = Icons.Outlined.History,
             iconTint = colorScheme.onPrimary,
-            shape = RoundedCornerStarShape,
+            shape = PolygonShape(sides = 8),
             shapeColor = colorScheme.primary,
             action = { navController.navigate(HISTORY_SCREEN_ROUTE) },
         ),
@@ -205,7 +206,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.about_screen_name),
             icon = Icons.Outlined.Info,
             iconTint = colorScheme.onSecondary,
-            shape = CurlyCornerShape(amp = with(density) { 1.6.dp.toPx() }, count = 10),
+            shape = CurlyCornerShape(amp = with(density) { 1.6.dp.toPx() }, count = 10f),
             shapeColor = colorScheme.secondary,
             action = { navController.navigate(ABOUT_SCREEN_ROUTE) }
         ),
