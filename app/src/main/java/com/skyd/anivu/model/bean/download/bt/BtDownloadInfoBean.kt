@@ -28,6 +28,8 @@ data class BtDownloadInfoBean(
     val link: String,
     @ColumnInfo(name = NAME_COLUMN)
     val name: String,
+    @ColumnInfo(name = PATH_COLUMN)
+    val path: String,
     @ColumnInfo(name = DOWNLOAD_DATE_COLUMN)
     var downloadDate: Long,
     @ColumnInfo(name = SIZE_COLUMN)
@@ -64,6 +66,7 @@ data class BtDownloadInfoBean(
     companion object {
         const val LINK_COLUMN = "link"
         const val NAME_COLUMN = "name"
+        const val PATH_COLUMN = "path"
         const val DOWNLOAD_DATE_COLUMN = "downloadDate"
         const val SIZE_COLUMN = "size"
         const val PROGRESS_COLUMN = "progress"

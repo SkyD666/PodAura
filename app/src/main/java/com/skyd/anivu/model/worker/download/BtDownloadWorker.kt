@@ -89,6 +89,7 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     private lateinit var torrentLinkUuid: String
     private lateinit var torrentLink: String
+    private var saveDir = File(applicationContext.dataStore.getOrDefault(MediaLibLocationPreference))
     private var progress: Float = 0f
     private var name: String? = null
     private var description: String? = null
@@ -101,6 +102,7 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
 
     private fun initData(): Boolean = runBlocking {
         torrentLinkUuid = inputData.getString(TORRENT_LINK_UUID) ?: return@runBlocking false
+        inputData.getString(SAVE_DIR)?.let { saveDir = File(it) }
         BtDownloadManager.apply {
             torrentLink = getDownloadLinkByUuid(torrentLinkUuid) ?: return@runBlocking false
             name = getDownloadName(link = torrentLink)
@@ -118,12 +120,11 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
             }
             if (!initData()) return@withContext Result.failure()
             updateNotification()
-            val saveDir =
-                File(applicationContext.dataStore.getOrDefault(MediaLibLocationPreference))
             // 如果数据库中没有下载信息，就添加新的下载信息（为新下载任务添加信息）
             addNewDownloadInfoToDbIfNotExists(
                 link = torrentLink,
                 name = name,
+                path = saveDir.path,
                 progress = progress,
                 size = sessionManager.stats().totalDownload(),
                 downloadRequestId = id.toString(),
@@ -525,6 +526,7 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
         const val TAG = "DownloadTorrentWorker"
         const val STATE = "state"
         const val TORRENT_LINK_UUID = "torrentLinkUuid"
+        const val SAVE_DIR = "saveDir"
         const val CHANNEL_ID = "downloadTorrent"
 
         @EntryPoint

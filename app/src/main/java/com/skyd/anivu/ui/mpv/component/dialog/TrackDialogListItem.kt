@@ -17,9 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 
 @Composable
@@ -41,7 +40,7 @@ internal fun TrackDialogListItem(
             modifier = Modifier.weight(1f),
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            fontSize = TextUnit(16f, TextUnitType.Sp),
+            fontSize = 16.sp,
         )
         Spacer(modifier = Modifier.width(12.dp))
         if (imageVector != null) {

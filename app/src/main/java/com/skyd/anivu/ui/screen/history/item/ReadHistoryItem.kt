@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -193,6 +194,7 @@ fun ReadHistoryItem(
                     .padding(6.dp),
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = stringResource(id = R.string.delete),
+                tint = LocalContentColor.current.copy(alpha = 0.75f),
             )
         }
     }

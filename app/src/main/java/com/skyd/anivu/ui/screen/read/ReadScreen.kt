@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -104,11 +105,13 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.html.HtmlText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
+import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
 import com.skyd.anivu.ui.local.LocalReadTextSize
 import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
+import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.util.ShareUtil
 import java.util.Locale
 
@@ -131,6 +134,7 @@ fun openReadScreen(
 fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
+    val navController = LocalNavController.current
 
     val snackbarHostState = remember { SnackbarHostState() }
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
@@ -218,6 +222,15 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                             }
                         },
                         onReadTextSizeClick = { openReadTextSizeSliderDialog = true },
+                        onOpenArticleScreen = {
+                            val articleState = uiState.articleState
+                            if (articleState is ArticleState.Success) {
+                                openArticleScreen(
+                                    navController = navController,
+                                    feedUrls = listOf(articleState.article.feed.url),
+                                )
+                            }
+                        },
                     )
                 }
             )
@@ -389,7 +402,7 @@ private fun Content(
         }
     }
     MediaRow(articleWithFeed = articleState.article, onPlay = { url ->
-        PlayActivity.play(
+        PlayActivity.playArticleList(
             activity = context.activity,
             articleId = article.article.articleId,
             url = url,
@@ -425,6 +438,7 @@ private fun MoreMenu(
     onDismissRequest: () -> Unit,
     onOpenInBrowserClick: () -> Unit,
     onReadTextSizeClick: () -> Unit,
+    onOpenArticleScreen: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         DropdownMenuItem(
@@ -451,6 +465,19 @@ private fun MoreMenu(
             onClick = {
                 onDismissRequest()
                 onReadTextSizeClick()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.read_screen_open_article_screen)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.RssFeed,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                onDismissRequest()
+                onOpenArticleScreen()
             },
         )
     }

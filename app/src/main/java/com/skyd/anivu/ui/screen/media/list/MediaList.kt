@@ -42,6 +42,7 @@ import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
 import com.skyd.anivu.ui.screen.media.sub.openSubMediaScreen
+import com.skyd.anivu.ui.screen.read.openReadScreen
 
 class GroupInfo(
     val group: MediaGroupBean,
@@ -56,6 +57,7 @@ internal fun MediaList(
     contentPadding: PaddingValues = PaddingValues(),
     fabPadding: PaddingValues = PaddingValues(),
     path: String,
+    isSubList: Boolean,
     groupInfo: GroupInfo? = null,
     viewModel: MediaListViewModel = hiltViewModel(key = path + groupInfo?.group)
 ) {
@@ -74,6 +76,7 @@ internal fun MediaList(
             startWith = MediaListIntent.Init(
                 path = path,
                 group = groupInfo?.group,
+                isSubList = isSubList,
                 version = groupInfo?.version,
             )
         )
@@ -104,18 +107,22 @@ internal fun MediaList(
                             groups = uiState.groups,
                             groupInfo = groupInfo,
                             onPlay = { media ->
-                                PlayActivity.play(
+                                PlayActivity.playMediaList(
                                     context.activity,
-                                    startFilePath = media.file.path,
-                                    files = listState.list.filter { it.isMedia }
-                                        .map { it.file.path },
+                                    startMediaPath = media.file.path,
+                                    mediaList = listState.list.filter { it.isMedia }.map {
+                                        PlayActivity.PlayMediaListItem(
+                                            path = it.file.path,
+                                            articleId = it.articleId,
+                                            title = it.displayName,
+                                            thumbnail = it.feedBean?.customIcon
+                                                ?: it.feedBean?.icon,
+                                        )
+                                    },
                                 )
                             },
                             onOpenDir = {
-                                openSubMediaScreen(
-                                    navController = navController,
-                                    path = it.file.path
-                                )
+                                openSubMediaScreen(navController = navController, media = it)
                             },
                             onRename = { oldMedia, newName ->
                                 dispatch(MediaListIntent.RenameFile(oldMedia.file, newName))
@@ -169,6 +176,7 @@ private fun MediaList(
     onRemove: (MediaBean) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    val navController = LocalNavController.current
     var openEditMediaDialog by rememberSaveable {
         mutableStateOf<MediaBean?>(null, policy = referentialEqualityPolicy())
     }
@@ -215,6 +223,16 @@ private fun MediaList(
                 openCreateGroupDialog = true
                 createGroupDialogGroup = ""
             },
+            onOpenArticle = videoBean.articleWithEnclosure?.let {
+                {
+                    it.articleId?.let { articleId ->
+                        openReadScreen(
+                            navController = navController,
+                            articleId = articleId,
+                        )
+                    }
+                }
+            }
         )
     }
 

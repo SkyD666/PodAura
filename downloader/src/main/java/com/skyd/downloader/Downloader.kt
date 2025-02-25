@@ -4,13 +4,16 @@ import android.app.Application
 import androidx.work.WorkManager
 import com.skyd.downloader.db.DatabaseInstance
 import com.skyd.downloader.db.DownloadEntity
+import com.skyd.downloader.download.DownloadEvent
 import com.skyd.downloader.download.DownloadManager
 import com.skyd.downloader.download.DownloadRequest
 import com.skyd.downloader.download.DownloadTask.Companion.ETAG_HEADER
 import com.skyd.downloader.net.RetrofitInstance
 import com.skyd.downloader.util.FileUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.withContext
 
 class Downloader private constructor(
@@ -172,6 +175,8 @@ class Downloader private constructor(
     suspend fun getAllDownloads() = downloadManager.getAllDownloads()
 
     companion object {
+        fun observeEvent() = DownloadEvent.eventFlow
+
         @Volatile
         private var instance: Downloader? = null
 

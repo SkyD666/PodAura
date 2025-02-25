@@ -62,9 +62,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.copy
 import com.skyd.anivu.ext.openBrowser
@@ -553,7 +552,7 @@ internal fun SheetChip(
                 modifier = Modifier.padding(horizontal = 6.dp),
                 text = text,
                 style = MaterialTheme.typography.labelLarge,
-                fontSize = TextUnit(15f, TextUnitType.Sp),
+                fontSize = 15.sp,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

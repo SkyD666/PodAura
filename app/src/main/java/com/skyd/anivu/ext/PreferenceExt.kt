@@ -35,6 +35,10 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreferen
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -111,6 +115,10 @@ fun Preferences.toSettings(): Settings {
         hideMutedFeed = HideMutedFeedPreference.fromPreferences(this),
         pickImageMethod = PickImageMethodPreference.fromPreferences(this),
         mediaFileFilter = MediaFileFilterPreference.fromPreferences(this),
+        mediaListSortAsc = MediaListSortAscPreference.fromPreferences(this),
+        mediaSubListSortAsc = MediaSubListSortAscPreference.fromPreferences(this),
+        mediaListSortBy = MediaListSortByPreference.fromPreferences(this),
+        mediaSubListSortBy = MediaSubListSortByPreference.fromPreferences(this),
 
         // RSS
         rssSyncFrequency = RssSyncFrequencyPreference.fromPreferences(this),

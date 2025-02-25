@@ -276,6 +276,7 @@ internal fun addNewDownloadInfoToDbIfNotExists(
     forceAdd: Boolean = false,
     link: String,
     name: String?,
+    path: String,
     progress: Float,
     size: Long,
     downloadRequestId: String,
@@ -293,6 +294,7 @@ internal fun addNewDownloadInfoToDbIfNotExists(
                         .toDecodedUrl()
                         .validateFileName()
                 },
+                path = path,
                 downloadDate = System.currentTimeMillis(),
                 size = size,
                 progress = progress,

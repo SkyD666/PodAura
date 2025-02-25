@@ -161,7 +161,7 @@ private fun EnclosureItem(
             PodAuraIconButton(
                 onClick = {
                     try {
-                        PlayActivity.play(
+                        PlayActivity.playArticleList(
                             context.activity,
                             articleId = articleWithEnclosure.article.articleId,
                             url = enclosure.url
@@ -208,7 +208,7 @@ private fun LinkEnclosureItem(
             PodAuraIconButton(
                 onClick = {
                     try {
-                        PlayActivity.play(
+                        PlayActivity.playArticleList(
                             context.activity,
                             articleId = articleWithEnclosure.article.articleId,
                             url = enclosure.link,

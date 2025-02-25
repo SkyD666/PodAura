@@ -9,7 +9,14 @@ import com.skyd.anivu.ext.validateFileName
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
+import com.skyd.anivu.model.db.dao.ArticleDao
+import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
+import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +37,13 @@ import javax.inject.Inject
 
 class MediaRepository @Inject constructor(
     private val json: Json,
+    private val feedDao: FeedDao,
+    private val articleDao: ArticleDao,
 ) : BaseRepository() {
 
     companion object {
-        private const val FOLDER_INFO_JSON_NAME = "info.json"
-        private const val OLD_MEDIA_LIB_JSON_NAME = "group.json"
+        const val FOLDER_INFO_JSON_NAME = "info.json"
+        const val OLD_MEDIA_LIB_JSON_NAME = "group.json"
         const val MEDIA_LIB_JSON_NAME = "MediaLib.json"
 
         private val mediaLibJsons = LruCache<String, MediaLibJson>(maxSize = 5)
@@ -59,11 +68,19 @@ class MediaRepository @Inject constructor(
     }
 
     private fun getOrReadMediaLibJson(path: String): MediaLibJson {
-        return mediaLibJsons[path] ?: run {
+        val existFiles: (String) -> List<File> = { p ->
+            File(p).listFiles().orEmpty().toMutableList().filter { it.exists() }
+        }
+        return mediaLibJsons[path]?.apply {
+            files.appendFiles(existFiles(path))
+        } ?: run {
             val jsonFile = File(path, MEDIA_LIB_JSON_NAME)
-            parseMediaLibJson(jsonFile)?.also {
-                mediaLibJsons.put(path, it)
-            } ?: MediaLibJson(files = mutableListOf()).apply { mediaLibJsons.put(path, this) }
+            parseMediaLibJson(jsonFile)?.also { json ->
+                json.files.appendFiles(existFiles(path))
+                mediaLibJsons.put(path, json)
+            } ?: MediaLibJson(
+                files = mutableListOf<FileJson>().appendFiles(existFiles(path))
+            ).apply { mediaLibJsons.put(path, this) }
         }
     }
 
@@ -89,15 +106,22 @@ class MediaRepository @Inject constructor(
     }
 
     private fun MutableList<FileJson>.appendFiles(
-        files: List<File>, fileJsonBuild: (File) -> FileJson = {
+        files: List<File>,
+        fileJsonBuild: (File) -> FileJson = {
             FileJson(
                 fileName = it.name,
                 groupName = null,
                 isFile = it.isFile,
                 displayName = null,
+                articleId = null,
+                articleLink = null,
+                articleGuid = null,
+                feedUrl = null,
             )
-        }
+        },
     ) = apply {
+        if (files.isEmpty()) return@apply
+        removeIf { !File(files[0].parentFile, it.fileName).exists() }
         files.forEach { file ->
             if (file.name.equals(FOLDER_INFO_JSON_NAME, true) ||
                 file.name.equals(MEDIA_LIB_JSON_NAME, true)
@@ -108,6 +132,28 @@ class MediaRepository @Inject constructor(
                 add(fileJsonBuild(file))
             }
         }
+    }
+
+    // Try fix wrong articleId
+    private suspend fun tryFixWrongArticleId(
+        path: String,
+        mediaLibJson: MediaLibJson,
+    ) {
+        mediaLibJson.files.forEach { json ->
+            if (json.articleId?.let { articleDao.exists(it) > 0 } != true) {
+                val feedUrl = json.feedUrl
+                if (feedUrl != null) {
+                    val newArticleId = articleDao.queryArticleByGuid(
+                        json.articleGuid, feedUrl
+                    )?.articleId ?: articleDao.queryArticleByLink(
+                        json.articleLink, feedUrl
+                    )?.articleId
+
+                    json.articleId = newArticleId
+                }
+            }
+        }
+        writeMediaLibJson(path, mediaLibJson)
     }
 
     fun requestGroups(path: String): Flow<List<MediaGroupBean>> {
@@ -125,40 +171,91 @@ class MediaRepository @Inject constructor(
         emit(Unit)
     }
 
-    fun requestFiles(path: String, group: MediaGroupBean?): Flow<List<MediaBean>> {
-        return combine(
-            refreshFiles.map {
-                val fileJsons = getOrReadMediaLibJson(path).files.appendFiles(
-                    File(path).listFiles().orEmpty().toMutableList().filter { it.exists() }
-                )
-                val videoList = (if (group == null) fileJsons else {
-                    val groupName = if (group.isDefaultGroup()) null else group.name
-                    fileJsons.filter { it.groupName == groupName }
-                }).mapNotNull {
-                    val file = File(path, it.fileName)
+    fun requestFiles(
+        path: String,
+        group: MediaGroupBean?,
+        isSubList: Boolean = false,
+    ): Flow<List<MediaBean>> = combine(
+        refreshFiles.map {
+            val mediaLibJson = getOrReadMediaLibJson(path)
+            tryFixWrongArticleId(path, mediaLibJson)
+
+            val fileJsons = mediaLibJson.files
+            val videoList = (if (group == null) fileJsons else {
+                val groupName = if (group.isDefaultGroup()) null else group.name
+                fileJsons.filter { it.groupName == groupName }
+            }).let { jsons ->
+                val articleMap = articleDao.getArticleListByIds(
+                    jsons.mapNotNull { it.articleId }
+                ).associateBy { it.articleWithEnclosure.article.articleId }
+
+                val feedMap = feedDao.getFeedsIn(
+                    jsons.mapNotNull { it.feedUrl }
+                ).associateBy { it.feed.url }
+
+                jsons.mapNotNull { fileJson ->
+                    val file = File(path, fileJson.fileName)
                     if (file.exists()) {
+                        val fileCount = if (file.isDirectory) {
+                            runCatching { file.list()?.size }.getOrNull()?.run {
+                                this - listOf(
+                                    File(file, MEDIA_LIB_JSON_NAME).exists(),
+                                    File(file, FOLDER_INFO_JSON_NAME).exists(),
+                                ).count { it }
+                            } ?: 0
+                        } else 0
+
                         MediaBean(
-                            displayName = it.displayName,
+                            displayName = fileJson.displayName,
                             file = file,
+                            fileCount = fileCount,
+                            articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
+                            feedBean = feedMap[fileJson.feedUrl]?.feed
+                                ?: articleMap[fileJson.articleId]?.feed,
                         )
                     } else null
                 }
-                videoList.toMutableList().apply {
-                    fastFirstOrNull { it.name.equals(FOLDER_INFO_JSON_NAME, true) }
-                        ?.let { remove(it) }
-                    fastFirstOrNull { it.name.equals(MEDIA_LIB_JSON_NAME, true) }
-                        ?.let { remove(it) }
-                }
-            },
-            appContext.dataStore.data.map {
-                it[MediaFileFilterPreference.key] ?: MediaFileFilterPreference.default
-            }.distinctUntilChanged()
-        ) { videoList, displayFilter ->
-            videoList.filter {
-                runCatching { it.file.name.matches(Regex(displayFilter)) }.getOrNull() == true
             }
+            videoList.toMutableList().apply {
+                fastFirstOrNull { it.name.equals(FOLDER_INFO_JSON_NAME, true) }
+                    ?.let { remove(it) }
+                fastFirstOrNull { it.name.equals(MEDIA_LIB_JSON_NAME, true) }
+                    ?.let { remove(it) }
+            }
+        },
+        appContext.dataStore.data.map {
+            it[MediaFileFilterPreference.key] ?: MediaFileFilterPreference.default
+        }.distinctUntilChanged(),
+    ) { videoList, displayFilter ->
+        videoList.filter {
+            runCatching { it.file.name.matches(Regex(displayFilter)) }.getOrNull() == true
         }
-    }
+    }.combine(
+        appContext.dataStore.data.map {
+            if (isSubList) {
+                it[MediaSubListSortByPreference.key] ?: MediaSubListSortByPreference.default
+            } else {
+                it[MediaListSortByPreference.key] ?: MediaListSortByPreference.default
+            }
+        }.distinctUntilChanged(),
+    ) { list, sortBy ->
+        when (sortBy) {
+            BaseMediaListSortByPreference.Date -> list.sortedBy { it.date }
+            BaseMediaListSortByPreference.Name -> list.sortedBy { it.displayName ?: it.name }
+            BaseMediaListSortByPreference.FileCount -> list.sortedBy { it.fileCount }
+            else -> list.sortedBy { it.displayName ?: it.name }
+        }
+    }.combine(
+        appContext.dataStore.data.map {
+            if (isSubList) {
+                it[MediaSubListSortAscPreference.key] ?: MediaSubListSortAscPreference.default
+            } else {
+                it[MediaListSortAscPreference.key] ?: MediaListSortAscPreference.default
+            }
+        }.distinctUntilChanged(),
+    ) { list, sortAsc ->
+        if (sortAsc) list else list.reversed()
+    }.flowOn(Dispatchers.IO)
 
     fun deleteFile(file: File): Flow<Boolean> {
         return flow {
@@ -200,6 +297,133 @@ class MediaRepository @Inject constructor(
             emit(mediaBean.copy(displayName = displayName))
         }.flowOn(Dispatchers.IO)
     }
+
+    fun addNewFile(
+        file: File,
+        groupName: String?,
+        articleId: String?,
+        displayName: String?,
+    ): Flow<Boolean> = flow {
+        if (!file.exists()) {
+            emit(false)
+            return@flow
+        }
+        val group = groupName?.let { MediaGroupBean(name = it) } ?: MediaGroupBean.DefaultMediaGroup
+
+        val realGroupName = if (group.isDefaultGroup()) null else group.name
+        val realArticleId = articleId.takeIf { !it.isNullOrBlank() }
+        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() }
+        val article = articleId?.let { articleDao.getArticleWithFeed(it).first() }
+        val articleLink = article?.articleWithEnclosure?.article?.link
+        val articleGuid = article?.articleWithEnclosure?.article?.guid
+        val feedUrl = article?.feed?.url
+
+        val path = file.parentFile!!.path
+        var mediaLibJson = getOrReadMediaLibJson(path = path)
+        if (realGroupName != null && !mediaLibJson.allGroups.contains(realGroupName)) {
+            createGroup(path, group).first()
+            mediaLibJson = getOrReadMediaLibJson(path = path)
+        }
+        val index = mediaLibJson.files.indexOfFirst { it.fileName == file.name }
+        if (index >= 0) {
+            mediaLibJson.files[index].groupName = realGroupName
+            mediaLibJson.files[index].articleId = realArticleId
+            mediaLibJson.files[index].displayName = realDisplayName
+            mediaLibJson.files[index].articleLink = articleLink
+            mediaLibJson.files[index].articleGuid = articleGuid
+            mediaLibJson.files[index].feedUrl = feedUrl
+        } else {
+            mediaLibJson.files.add(
+                FileJson(
+                    fileName = file.name,
+                    groupName = realGroupName,
+                    isFile = file.isFile,
+                    displayName = realDisplayName,
+                    articleId = realArticleId,
+                    articleLink = articleLink,
+                    articleGuid = articleGuid,
+                    feedUrl = feedUrl,
+                )
+            )
+        }
+        writeMediaLibJson(path = path, mediaLibJson)
+
+        emit(true)
+    }.flowOn(Dispatchers.IO)
+
+    fun getFolder(
+        parentFile: File,
+        groupName: String?,
+        feedUrl: String?,
+        displayName: String?,
+    ): Flow<File> = flow {
+        val path = parentFile.path
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
+        val existed = mediaLibJson.files.firstOrNull {
+            it.feedUrl == feedUrl && !it.isFile
+        }
+        if (existed != null) {
+            emit(File(parentFile, existed.fileName))
+            return@flow
+        }
+        val newFolder = File(
+            parentFile,
+            "${displayName?.validateFileName(100)} - ${System.currentTimeMillis()}"
+        )
+        createFolder(
+            file = newFolder,
+            groupName = groupName,
+            feedUrl = feedUrl,
+            displayName = displayName,
+        ).first()
+        emit(newFolder)
+    }.flowOn(Dispatchers.IO)
+
+    private fun createFolder(
+        file: File,
+        groupName: String?,
+        feedUrl: String?,
+        displayName: String?,
+    ): Flow<Boolean> = flow {
+        if (file.exists() || !file.mkdirs()) {
+            emit(false)
+            return@flow
+        }
+        val group = groupName?.let { MediaGroupBean(name = it) } ?: MediaGroupBean.DefaultMediaGroup
+
+        val realGroupName = if (group.isDefaultGroup()) null else group.name
+        val realFeedUrl = feedUrl.takeIf { !it.isNullOrBlank() }
+        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() }
+
+        val path = file.parentFile!!.path
+        var mediaLibJson = getOrReadMediaLibJson(path = path)
+        if (realGroupName != null && !mediaLibJson.allGroups.contains(realGroupName)) {
+            createGroup(path, group).first()
+            mediaLibJson = getOrReadMediaLibJson(path = path)
+        }
+        val index = mediaLibJson.files.indexOfFirst { it.fileName == file.name && !it.isFile }
+        if (index >= 0) {
+            mediaLibJson.files[index].groupName = realGroupName
+            mediaLibJson.files[index].feedUrl = realFeedUrl
+            mediaLibJson.files[index].displayName = realDisplayName
+        } else {
+            mediaLibJson.files.add(
+                FileJson(
+                    fileName = file.name,
+                    groupName = realGroupName,
+                    isFile = file.isFile,
+                    displayName = realDisplayName,
+                    articleId = null,
+                    feedUrl = realFeedUrl,
+                    articleLink = null,
+                    articleGuid = null,
+                )
+            )
+        }
+        writeMediaLibJson(path = path, mediaLibJson)
+
+        emit(true)
+    }.flowOn(Dispatchers.IO)
 
     fun createGroup(path: String, group: MediaGroupBean): Flow<Unit> = flow {
         if (group.isDefaultGroup()) {
@@ -279,6 +503,10 @@ class MediaRepository @Inject constructor(
                         groupName = group.name,
                         isFile = mediaBean.file.isFile,
                         displayName = mediaBean.displayName,
+                        articleId = mediaBean.articleId,
+                        articleLink = mediaBean.articleWithEnclosure?.article?.link,
+                        articleGuid = mediaBean.articleWithEnclosure?.article?.guid,
+                        feedUrl = mediaBean.feedBean?.url,
                     )
                 )
             }
@@ -311,6 +539,10 @@ class MediaRepository @Inject constructor(
                             groupName = to.name,
                             isFile = it.isFile,
                             displayName = null,
+                            articleId = null,
+                            articleLink = null,
+                            articleGuid = null,
+                            feedUrl = null,
                         )
                     }
                 )
@@ -349,6 +581,14 @@ class MediaRepository @Inject constructor(
         var isFile: Boolean = false,
         @SerialName("displayName")
         var displayName: String? = null,
+        @SerialName("articleId")
+        var articleId: String? = null,
+        @SerialName("articleLink")
+        var articleLink: String? = null,
+        @SerialName("articleGuid")
+        var articleGuid: String? = null,
+        @SerialName("feedUrl")
+        var feedUrl: String? = null,
     )
 
     @Serializable

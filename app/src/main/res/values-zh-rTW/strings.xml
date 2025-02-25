@@ -268,7 +268,7 @@
     <string name="article_style_screen_pull_refresh">下拉重新整理</string>
     <string name="article_style_screen_pull_refresh_description">啟用下拉更新</string>
     <string name="article_style_screen_top_bar_refresh_description">在標題欄顯示刷新按鈕</string>
-    <string name="article_screen_sort">排序</string>
+    <string name="sort">排序</string>
     <string name="article_screen_sort_date_asc">最舊</string>
     <string name="article_screen_sort_date_desc">最新</string>
     <string name="article_screen_sort_title_asc">A 到 Z</string>

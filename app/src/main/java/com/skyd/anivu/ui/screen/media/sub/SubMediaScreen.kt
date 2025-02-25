@@ -1,7 +1,9 @@
 package com.skyd.anivu.ui.screen.media.sub
 
+import android.os.Bundle
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -9,51 +11,61 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.popBackStackWithLifecycle
-import com.skyd.anivu.ext.toEncodedUrl
+import com.skyd.anivu.model.bean.MediaBean
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
+import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
+import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.screen.media.SortMediaDialog
 import com.skyd.anivu.ui.screen.media.list.MediaList
 
 
 const val SUB_MEDIA_SCREEN_ROUTE = "subMediaScreen"
-const val SUB_MEDIA_SCREEN_PATH_KEY = "path"
+const val SUB_MEDIA_SCREEN_MEDIA_KEY = "media"
 
 fun openSubMediaScreen(
     navController: NavController,
-    path: String,
+    media: MediaBean,
     navOptions: NavOptions? = null,
 ) {
     navController.navigate(
-        "$SUB_MEDIA_SCREEN_ROUTE/${path.toEncodedUrl(allow = null)}",
+        SUB_MEDIA_SCREEN_ROUTE,
+        Bundle().apply {
+            putSerializable(SUB_MEDIA_SCREEN_MEDIA_KEY, media)
+        },
         navOptions = navOptions,
     )
 }
 
 @Composable
-fun SubMediaScreenRoute(path: String?) {
+fun SubMediaScreenRoute(media: MediaBean?) {
     val navController = LocalNavController.current
-    if (path.isNullOrBlank()) {
+    if (media == null || !media.file.exists() || !media.isDir) {
         PodAuraDialog(
             icon = {
                 Icon(imageVector = Icons.Outlined.WarningAmber, contentDescription = null)
             },
             title = { Text(text = stringResource(id = R.string.warning)) },
-            text = {
-                Text(
-                    text = stringResource(
-                        id = R.string.sub_media_screen_path_illegal, path.toString()
-                    )
-                )
-            },
+            text = { Text(text = stringResource(id = R.string.sub_media_screen_path_illegal)) },
             confirmButton = {
                 TextButton(onClick = { navController.popBackStackWithLifecycle() }) {
                     Text(text = stringResource(id = R.string.exit))
@@ -61,13 +73,17 @@ fun SubMediaScreenRoute(path: String?) {
             },
         )
     } else {
-        SubMediaScreen(path)
+        SubMediaScreen(media)
     }
 }
 
 @Composable
-private fun SubMediaScreen(path: String) {
+private fun SubMediaScreen(media: MediaBean) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             PodAuraTopBar(
@@ -76,17 +92,35 @@ private fun SubMediaScreen(path: String) {
                 title = {
                     Text(
                         modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
-                        text = path.substringAfterLast("/"),
+                        text = media.displayName ?: media.name,
                         maxLines = 1,
                     )
                 },
+                actions = {
+                    PodAuraIconButton(
+                        onClick = { showSortMediaDialog = true },
+                        imageVector = Icons.AutoMirrored.Outlined.Sort,
+                        contentDescription = stringResource(id = R.string.sort),
+                    )
+                }
             )
         }
     ) { paddingValues ->
         MediaList(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
-            path = path,
+            path = media.file.path,
+            isSubList = true,
         )
     }
+
+    SortMediaDialog(
+        visible = showSortMediaDialog,
+        onDismissRequest = { showSortMediaDialog = false },
+        sortByValues = MediaSubListSortByPreference.values,
+        sortBy = LocalMediaSubListSortBy.current,
+        sortAsc = LocalMediaSubListSortAsc.current,
+        onSortBy = { MediaSubListSortByPreference.put(context, scope, it) },
+        onSortAsc = { MediaSubListSortAscPreference.put(context, scope, it) },
+    )
 }

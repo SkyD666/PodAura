@@ -20,7 +20,12 @@ fun <T : Any> PagingRefreshStateIndicator(
 ) {
     when (lazyPagingItems.loadState.refresh) {
         is LoadState.Error -> abnormalContent(errorContent)
-        LoadState.Loading -> abnormalContent(loadingContent)
+        LoadState.Loading -> if (lazyPagingItems.itemCount > 0) {
+            content()
+        } else {
+            abnormalContent(loadingContent)
+        }
+
         is LoadState.NotLoading -> if (lazyPagingItems.itemCount > 0) {
             content()
         } else {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.MoreVert
@@ -59,6 +60,8 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.model.bean.MediaGroupBean
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
@@ -67,6 +70,8 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import com.skyd.anivu.ui.local.LocalMediaListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaListSortBy
 import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
@@ -100,6 +105,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
     val pagerState = rememberPagerState(pageCount = { uiState.groups.size })
     var openEditGroupDialog by rememberSaveable { mutableStateOf<MediaGroupBean?>(value = null) }
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
+    var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
 
     ListenToFilePicker { result ->
         if (result.pickFolder) {
@@ -107,10 +113,17 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
         } else {
             val url = File(result.result).toUri().resolveUri(context)
             if (url != null) {
-                PlayActivity.play(
+                PlayActivity.playMediaList(
                     activity = context.activity,
-                    startFilePath = url,
-                    files = listOf(url),
+                    startMediaPath = url,
+                    mediaList = listOf(
+                        PlayActivity.PlayMediaListItem(
+                            path = url,
+                            articleId = null,
+                            title = null,
+                            thumbnail = null,
+                        )
+                    ),
                 )
             }
         }
@@ -152,16 +165,20 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                         contentDescription = stringResource(id = R.string.data_screen_media_lib_location),
                     )
                     PodAuraIconButton(
-                        onClick = { dispatch(MediaIntent.Refresh(path)) },
-                        imageVector = Icons.Outlined.Refresh,
-                        contentDescription = stringResource(id = R.string.refresh),
+                        onClick = { showSortMediaDialog = true },
+                        imageVector = Icons.AutoMirrored.Outlined.Sort,
+                        contentDescription = stringResource(id = R.string.sort),
                     )
                     PodAuraIconButton(
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(R.string.more),
                     )
-                    MoreMenu(expanded = openMoreMenu, onDismissRequest = { openMoreMenu = false })
+                    MoreMenu(
+                        expanded = openMoreMenu,
+                        onDismissRequest = { openMoreMenu = false },
+                        onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
+                    )
                 }
             )
         },
@@ -252,6 +269,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                         fabPadding = PaddingValues(bottom = fabHeight),
                         path = path,
+                        isSubList = false,
                         groupInfo = GroupInfo(
                             group = uiState.groups[index].first,
                             version = uiState.groups[index].second,
@@ -317,7 +335,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                     snackbarHostState.showSnackbar(event.msg)
 
                 is MediaEvent.EditGroupResultEvent.Success -> {
-                    dispatch(MediaIntent.Refresh(path = path))
+                    dispatch(MediaIntent.RefreshGroup(path = path))
                     if (openEditGroupDialog != null) openEditGroupDialog = event.group
                 }
 
@@ -325,10 +343,20 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 is MediaEvent.DeleteGroupResultEvent.Success,
                 is MediaEvent.ChangeFileGroupResultEvent.Success,
                 is MediaEvent.MoveFilesToGroupResultEvent.Success ->
-                    dispatch(MediaIntent.Refresh(path = path))
+                    dispatch(MediaIntent.RefreshGroup(path = path))
             }
         }
     }
+
+    SortMediaDialog(
+        visible = showSortMediaDialog,
+        onDismissRequest = { showSortMediaDialog = false },
+        sortByValues = MediaListSortByPreference.values,
+        sortBy = LocalMediaListSortBy.current,
+        sortAsc = LocalMediaListSortAsc.current,
+        onSortBy = { MediaListSortByPreference.put(context, scope, it) },
+        onSortAsc = { MediaListSortAscPreference.put(context, scope, it) },
+    )
 
     WaitingDialog(visible = uiState.loadingDialog)
 }
@@ -358,9 +386,20 @@ internal fun CreateGroupDialog(
 private fun MoreMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     val navController = LocalNavController.current
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.media_screen_refresh_group)) },
+            leadingIcon = {
+                Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
+            },
+            onClick = {
+                onRefresh()
+                onDismissRequest()
+            },
+        )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.media_screen_style)) },
             leadingIcon = {

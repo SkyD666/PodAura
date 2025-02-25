@@ -8,6 +8,7 @@ import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
 sealed interface BtDownloadManagerIntent : MviIntent {
     data class UpdateDownloadInfo(val btDownloadInfoBean: BtDownloadInfoBean) :
         BtDownloadManagerIntent
+
     data class UpdateSessionParams(
         val link: String,
         val sessionStateData: ByteArray,
@@ -33,6 +34,7 @@ sealed interface BtDownloadManagerIntent : MviIntent {
 
     data class UpdateDownloadProgress(val link: String, val progress: Float) :
         BtDownloadManagerIntent
+
     data class UpdateDownloadState(
         val link: String,
         val downloadState: DownloadState,

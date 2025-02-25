@@ -36,9 +36,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.EventListener
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
@@ -116,19 +115,23 @@ fun Media1Item(
                     contentDescription = null
                 )
             }
-            if (data.isMedia && LocalMediaShowThumbnail.current) {
+            val articleWithEnclosure = data.articleWithEnclosure
+            val feed = data.feedBean
+            val image = articleWithEnclosure?.media?.image ?: feed?.icon ?: data.file.path
+            if (image != null && LocalMediaShowThumbnail.current) {
                 if (showThumbnail) {
                     PodAuraImage(
                         modifier = Modifier.fillMaxSize(),
-                        model = remember(data.file.path) {
+                        model = remember(image) {
                             ImageRequest.Builder(context)
                                 .diskCachePolicy(CachePolicy.ENABLED)
                                 .memoryCachePolicy(CachePolicy.ENABLED)
-                                .data(data.file.path)
+                                .data(image)
                                 .crossfade(true)
                                 .build()
                         },
-                        imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
+                        imageLoader = rememberPodAuraImageLoader(listener = object :
+                            EventListener() {
                             override fun onError(request: ImageRequest, result: ErrorResult) {
                                 showThumbnail = false
                             }
@@ -144,15 +147,19 @@ fun Media1Item(
         }
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(
-                text = if (data.displayName.isNullOrBlank()) {
-                    fileNameWithoutExtension
-                } else {
-                    data.displayName
-                },
-                maxLines = 3,
-                style = MaterialTheme.typography.titleSmall,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (data.displayName.isNullOrBlank()) {
+                        fileNameWithoutExtension
+                    } else {
+                        data.displayName
+                    },
+                    modifier = Modifier.weight(1f),
+                    maxLines = 3,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                MediaFolderNumberBadge(mediaBean = data)
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (fileExtension.isNotBlank()) {
@@ -244,6 +251,25 @@ private fun TagText(text: String) {
             .padding(horizontal = 4.dp),
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        fontSize = TextUnit(10f, TextUnitType.Sp),
+        fontSize = 10.sp,
     )
+}
+
+@Composable
+private fun MediaFolderNumberBadge(mediaBean: MediaBean) {
+    if (mediaBean.fileCount > 0) {
+        Row {
+            Spacer(modifier = Modifier.width(6.dp))
+            Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))) {
+                Text(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                        .padding(horizontal = 3.dp),
+                    text = mediaBean.fileCount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
+        }
+    }
 }

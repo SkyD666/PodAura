@@ -4,13 +4,28 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import com.skyd.anivu.R
+import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
+import com.skyd.anivu.model.db.dao.ArticleDao
+import com.skyd.anivu.model.db.dao.EnclosureDao
+import com.skyd.anivu.model.repository.MediaRepository
 import com.skyd.downloader.Downloader
 import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadEntity
+import com.skyd.downloader.download.Event
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.io.File
 
 class DownloadManager private constructor(context: Context) {
     private val downloader = Downloader.init(
@@ -67,6 +82,40 @@ class DownloadManager private constructor(context: Context) {
     )
 
     companion object {
+        private val scope = CoroutineScope(Dispatchers.IO)
+
+        @EntryPoint
+        @InstallIn(SingletonComponent::class)
+        interface WorkerEntryPoint {
+            val enclosureDao: EnclosureDao
+            val articleDao: ArticleDao
+            val mediaRepository: MediaRepository
+        }
+
+        private val hiltEntryPoint = EntryPointAccessors.fromApplication(
+            appContext, WorkerEntryPoint::class.java
+        )
+
+        fun listenDownloadEvent() = scope.launch {
+            Downloader.observeEvent().collect { event ->
+                when (event) {
+                    is Event.Remove -> Unit
+                    is Event.Success -> with(hiltEntryPoint) {
+                        val articleId = enclosureDao.getMediaArticleId(event.entity.url)
+                        if (articleId != null) {
+                            val article = articleDao.getArticleWithFeed(articleId).first()
+                            mediaRepository.addNewFile(
+                                file = File(event.entity.path, event.entity.fileName),
+                                groupName = null,
+                                articleId = articleId,
+                                displayName = article?.articleWithEnclosure?.article?.title
+                            ).collect()
+                        }
+                    }
+                }
+            }
+        }
+
         @Volatile
         private var instance: DownloadManager? = null
 

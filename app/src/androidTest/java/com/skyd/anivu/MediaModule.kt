@@ -139,7 +139,11 @@ class MediaModule {
         assertTrue(mediaRepository.requestGroups(path).first().run {
             size == 2 && get(1).name == "TestGroup"
         })
-        mediaRepository.changeMediaGroup(path, MediaBean(file = file1), group).first()
+        mediaRepository.changeMediaGroup(
+            path,
+            MediaBean(file = file1, articleWithEnclosure = null, feedBean = null),
+            group
+        ).first()
         assertTrue(mediaRepository.requestFiles(path, group).first().first().file == file1)
     }
 
@@ -245,7 +249,10 @@ class MediaModule {
         })
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         val displayName = ":/*-\\`~"
-        mediaRepository.setFileDisplayName(MediaBean(file = file2), displayName).first()
+        mediaRepository.setFileDisplayName(
+            MediaBean(file = file2, articleWithEnclosure = null, feedBean = null),
+            displayName
+        ).first()
         assertNotNull(mediaRepository.requestFiles(path, group).first()
             .firstOrNull { it.displayName == displayName })
     }
@@ -437,7 +444,7 @@ class MediaModule {
         db = AppDatabase.getInstance(context)
         db.clearAllTables()
 
-        mediaRepository = MediaRepository(json)
+        mediaRepository = MediaRepository(json, db.feedDao(), db.articleDao())
         filePickerRepository = FilePickerRepository()
     }
 

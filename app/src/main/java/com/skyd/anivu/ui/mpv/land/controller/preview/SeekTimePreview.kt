@@ -12,9 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skyd.anivu.ui.mpv.land.controller.ControllerLabelGray
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 
@@ -35,20 +34,20 @@ internal fun BoxScope.SeekTimePreview(
                 .coerceIn(0..duration())
                 .toDurationString(),
             style = MaterialTheme.typography.labelLarge,
-            fontSize = TextUnit(18f, TextUnitType.Sp),
+            fontSize = 18.sp,
             color = Color.White,
         )
         Text(
             modifier = Modifier.padding(horizontal = 6.dp),
             text = "/",
             style = MaterialTheme.typography.labelLarge,
-            fontSize = TextUnit(18f, TextUnitType.Sp),
+            fontSize = 18.sp,
             color = Color.White,
         )
         Text(
             text = duration().toDurationString(),
             style = MaterialTheme.typography.labelLarge,
-            fontSize = TextUnit(18f, TextUnitType.Sp),
+            fontSize = 18.sp,
             color = Color.White,
         )
     }

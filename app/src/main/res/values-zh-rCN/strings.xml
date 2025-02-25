@@ -236,6 +236,7 @@
     <string name="feed_screen_rss_description_hint">点击设置描述</string>
     <string name="feed_screen_rss_description">描述</string>
     <string name="refresh">刷新</string>
+    <string name="media_screen_refresh_group">更新组</string>
     <string name="feed_options">选项</string>
     <string name="pick_image_method_pick_visual_media">照片选择器（%s）</string>
     <string name="pick_image_method_open_document">来自文档（%s）</string>
@@ -272,7 +273,7 @@
     <string name="article_style_screen_pull_refresh">下拉刷新</string>
     <string name="article_style_screen_pull_refresh_description">启用下拉刷新</string>
     <string name="article_style_screen_top_bar_refresh_description">在标题栏上显示刷新按钮</string>
-    <string name="article_screen_sort">排序</string>
+    <string name="sort">排序</string>
     <string name="article_screen_sort_date_asc">最旧</string>
     <string name="article_screen_sort_date_desc">最新</string>
     <string name="article_screen_sort_title_asc">A 到 Z</string>
@@ -301,7 +302,7 @@
     <string name="min_width_dp">最小宽度（dp）</string>
     <string name="search_style_screen_search_item_category">搜索项</string>
     <string name="empty_tip_1">空空如也~</string>
-    <string name="sub_media_screen_path_illegal">非法路径：%s</string>
+    <string name="sub_media_screen_path_illegal">非法媒体</string>
     <string name="player_config_screen_auto_pip">自动画中画</string>
     <string name="player_config_screen_auto_pip_description">当回到桌面或显示最近任务时，切换到画中画模式</string>
     <string name="player_picture_in_picture">画中画</string>
@@ -408,6 +409,19 @@
     <string name="history_screen_name">历史记录</string>
     <string name="history_screen_last_seen">上次看到 %s</string>
     <string name="history_screen_media_not_exists">媒体不存在</string>
+    <string name="skip_previous">播放上一个</string>
+    <string name="skip_next">播放下一个</string>
+    <string name="shuffle_playlist">播放列表乱序</string>
+    <string name="loop_playlist_mode">循环模式</string>
+    <string name="playing">播放中</string>
+    <string name="playlist">播放列表</string>
+    <string name="read_screen_open_article_screen">查看此订阅</string>
+    <string name="sort_date">日期</string>
+    <string name="sort_name">名称</string>
+    <string name="descending">降序</string>
+    <string name="ascending">升序</string>
+    <string name="sort_file_count">子文件数</string>
+    <string name="history_screen_local_file">本地</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="other">%d 个追踪器</item>
     </plurals>

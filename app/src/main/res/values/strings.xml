@@ -243,6 +243,7 @@
     <string name="feed_screen_rss_description_hint">Click to set a description</string>
     <string name="feed_screen_rss_description">Description</string>
     <string name="refresh">Refresh</string>
+    <string name="media_screen_refresh_group">Refresh group</string>
     <string name="feed_options">Options</string>
     <string name="pick_image_method_pick_visual_media">Photo picker (%s)</string>
     <string name="pick_image_method_open_document">From document (%s)</string>
@@ -279,7 +280,7 @@
     <string name="article_style_screen_pull_refresh">Pull refresh</string>
     <string name="article_style_screen_pull_refresh_description">Enable pull to refresh</string>
     <string name="article_style_screen_top_bar_refresh_description">Show Refresh button on top bar</string>
-    <string name="article_screen_sort">Sort</string>
+    <string name="sort">Sort</string>
     <string name="article_screen_sort_date_asc">Oldest</string>
     <string name="article_screen_sort_date_desc">Newest</string>
     <string name="article_screen_sort_title_asc">A to Z</string>
@@ -308,7 +309,7 @@
     <string name="min_width_dp">Min width (dp)</string>
     <string name="search_style_screen_search_item_category">Search item</string>
     <string name="empty_tip_1">Nothing</string>
-    <string name="sub_media_screen_path_illegal">Illegal path: %s</string>
+    <string name="sub_media_screen_path_illegal">Illegal media</string>
     <string name="player_config_screen_auto_pip">Auto PIP</string>
     <string name="player_config_screen_auto_pip_description">Switch to PiP mode if the Home or Recents button is pressed</string>
     <string name="player_picture_in_picture">Picture in picture</string>
@@ -421,6 +422,13 @@
     <string name="loop_playlist_mode">Loop playlist mode</string>
     <string name="playing">Playing</string>
     <string name="playlist">Playlist</string>
+    <string name="read_screen_open_article_screen">View this feed</string>
+    <string name="sort_date">Date</string>
+    <string name="sort_name">Name</string>
+    <string name="descending">Descending</string>
+    <string name="ascending">Ascending</string>
+    <string name="sort_file_count">File count</string>
+    <string name="history_screen_local_file">Local</string>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>

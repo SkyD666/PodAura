@@ -130,6 +130,7 @@ internal class DownloadWorker(
 
             downloadNotificationManager?.sendDownloadSuccessNotification(totalLength)
 
+            downloadDao.find(id)?.let { DownloadEvent.sendEvent(Event.Success(it)) }
             Result.success()
         } catch (e: Exception) {
             scope.launch {
@@ -148,6 +149,7 @@ internal class DownloadWorker(
                         downloadNotificationManager?.sendDownloadCancelledNotification()
                     }
                 } else {
+                    e.printStackTrace()
                     var downloadEntity = downloadDao.find(id)
                     if (downloadEntity != null) {
                         downloadEntity = downloadEntity.copy(

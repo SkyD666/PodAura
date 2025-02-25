@@ -57,6 +57,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
 import com.skyd.anivu.ext.toDecodedUrl
 import com.skyd.anivu.ext.type
+import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.ui.activity.intenthandler.ImportOpmlIntentHandler
 import com.skyd.anivu.ui.activity.intenthandler.OpenDownloadIntentHandler
 import com.skyd.anivu.ui.activity.intenthandler.UrlDownloadIntentHandler
@@ -95,7 +96,7 @@ import com.skyd.anivu.ui.screen.filepicker.PATH_KEY
 import com.skyd.anivu.ui.screen.filepicker.PICK_FOLDER_KEY
 import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.history.HistoryScreen
-import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_PATH_KEY
+import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_MEDIA_KEY
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.media.sub.SubMediaScreenRoute
 import com.skyd.anivu.ui.screen.read.ARTICLE_ID_KEY
@@ -357,14 +358,15 @@ private fun MainNavHost() {
             } ?: SearchDomain.Feed
             SearchScreen(searchDomain = searchDomain)
         }
-        composable(
-            route = "$SUB_MEDIA_SCREEN_ROUTE/{$SUB_MEDIA_SCREEN_PATH_KEY}",
-            arguments = listOf(navArgument(SUB_MEDIA_SCREEN_PATH_KEY) {
-                type = NavType.StringType
-            }),
-        ) {
+        composable(route = SUB_MEDIA_SCREEN_ROUTE) {
             SubMediaScreenRoute(
-                path = it.arguments?.getString(SUB_MEDIA_SCREEN_PATH_KEY)?.toDecodedUrl()
+                media = it.arguments?.let { arguments ->
+                    BundleCompat.getSerializable(
+                        arguments,
+                        SUB_MEDIA_SCREEN_MEDIA_KEY,
+                        MediaBean::class.java
+                    )
+                }
             )
         }
     }

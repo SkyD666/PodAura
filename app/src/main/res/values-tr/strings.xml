@@ -275,7 +275,7 @@
     <string name="article_style_screen_pull_refresh">Aşağı çekerek yenile</string>
     <string name="article_style_screen_pull_refresh_description">Aşağı kaydırarak yenilemeyi etkinleştir</string>
     <string name="article_style_screen_top_bar_refresh_description">Üst çubukta Yenile düğmesini göster</string>
-    <string name="article_screen_sort">Sırala</string>
+    <string name="sort">Sırala</string>
     <string name="article_screen_sort_date_asc">En eski</string>
     <string name="article_screen_sort_date_desc">En yeni</string>
     <string name="article_screen_sort_title_asc">A\'dan Z\'ye</string>
@@ -304,7 +304,7 @@
     <string name="min_width_dp">Minimum genişlik (dp)</string>
     <string name="search_style_screen_search_item_category">Arama öğesi</string>
     <string name="empty_tip_1">Hiçbir şey yok</string>
-    <string name="sub_media_screen_path_illegal">Geçersiz yol: %s</string>
+    <string name="sub_media_screen_path_illegal">Geçersiz yol</string>
     <string name="player_config_screen_auto_pip">Otomatik PIP</string>
     <string name="player_config_screen_auto_pip_description">Ana Ekran veya Son Kullanılanlar düğmesine basıldığında PiP moduna geç</string>
     <string name="player_picture_in_picture">Resim içinde resim</string>

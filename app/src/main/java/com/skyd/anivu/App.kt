@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
+import com.skyd.anivu.model.repository.download.DownloadManager
 import com.skyd.anivu.model.worker.deletearticle.listenerDeleteArticleFrequency
 import com.skyd.anivu.model.worker.rsssync.listenerRssSyncConfig
 import com.skyd.anivu.util.CrashHandler
@@ -24,6 +25,7 @@ class App : Application() {
 
         listenerRssSyncConfig(this)
         listenerDeleteArticleFrequency(this)
+        DownloadManager.listenDownloadEvent()
     }
 }
 

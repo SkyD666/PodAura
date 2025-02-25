@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Feed
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Badge
@@ -62,6 +63,7 @@ fun EditMediaSheet(
     onDelete: (MediaBean) -> Unit,
     onGroupChange: (MediaGroupBean) -> Unit,
     openCreateGroupDialog: () -> Unit,
+    onOpenArticle: ((MediaBean) -> Unit)?,
 ) {
     val context = LocalContext.current
 
@@ -88,6 +90,7 @@ fun EditMediaSheet(
                     onDelete(mediaBean)
                     onDismissRequest()
                 },
+                onOpenArticle = onOpenArticle?.let { { it(mediaBean) } },
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -174,6 +177,7 @@ internal fun OptionArea(
     onRenameClicked: (() -> Unit)? = null,
     onSetFileDisplayNameClicked: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
+    onOpenArticle: (() -> Unit)? = null,
 ) {
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -217,6 +221,13 @@ internal fun OptionArea(
                     iconBackgroundColor = MaterialTheme.colorScheme.error,
                     text = stringResource(id = R.string.delete),
                     onClick = { openDeleteWarningDialog = true },
+                )
+            }
+            if (onOpenArticle != null) {
+                SheetChip(
+                    icon = Icons.AutoMirrored.Outlined.Feed,
+                    text = stringResource(id = R.string.read_screen_name),
+                    onClick = onOpenArticle,
                 )
             }
         }

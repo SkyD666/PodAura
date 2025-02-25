@@ -1,12 +1,13 @@
 package com.skyd.anivu.ui.screen.history.item
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Feed
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +33,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.EventListener
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
@@ -43,7 +47,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ext.isLocal
+import com.skyd.anivu.ext.isLocalFile
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.anivu.ui.activity.player.PlayActivity
@@ -67,11 +71,10 @@ fun MediaPlayHistoryItem(
     val fileName = rememberSaveable(data) {
         articleWithEnclosure?.article?.title ?: path.substringAfterLast("/")
     }
-    val isLocal = Uri.parse(path).isLocal()
+    val isLocal = path.isLocalFile()
     val mediaExists = remember(path) {
         !isLocal || (path.startsWith("fd://") && isFdFileExists(path) || File(path).exists())
     }
-    val articleThumbnail = articleWithEnclosure?.media?.image ?: data.article?.feed?.icon
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -81,13 +84,20 @@ fun MediaPlayHistoryItem(
                     return@clickable
                 }
                 if (isLocal) {
-                    PlayActivity.play(
+                    PlayActivity.playMediaList(
                         activity = context.activity,
-                        startFilePath = path,
-                        files = listOf(path),
+                        startMediaPath = path,
+                        mediaList = listOf(
+                            PlayActivity.PlayMediaListItem(
+                                path = path,
+                                articleId = articleWithEnclosure?.article?.articleId,
+                                title = null,
+                                thumbnail = null,
+                            )
+                        ),
                     )
                 } else {
-                    PlayActivity.play(
+                    PlayActivity.playArticleList(
                         activity = context.activity,
                         articleId = articleWithEnclosure?.article?.articleId,
                         url = path,
@@ -98,10 +108,10 @@ fun MediaPlayHistoryItem(
             .padding(start = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        var showThumbnail by remember(data) { mutableStateOf(true) }
-        val showLocalFileThumbnail = LocalMediaShowThumbnail.current && isLocal
-        val showArticleThumbnail = !isLocal && articleThumbnail != null
-        if (showThumbnail && (showLocalFileThumbnail || showArticleThumbnail)) {
+        val feed = data.article?.feed
+        val image = articleWithEnclosure?.media?.image ?: feed?.icon ?: path
+        var showThumbnail by remember(image) { mutableStateOf(true) }
+        if (showThumbnail && LocalMediaShowThumbnail.current) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -110,11 +120,11 @@ fun MediaPlayHistoryItem(
             ) {
                 PodAuraImage(
                     modifier = Modifier.fillMaxSize(),
-                    model = remember(path) {
+                    model = remember(image) {
                         ImageRequest.Builder(context)
                             .diskCachePolicy(CachePolicy.ENABLED)
                             .memoryCachePolicy(CachePolicy.ENABLED)
-                            .data(if (showLocalFileThumbnail) path else articleThumbnail)
+                            .data(image)
                             .crossfade(true)
                             .build()
                     },
@@ -136,14 +146,7 @@ fun MediaPlayHistoryItem(
                 maxLines = 3,
                 style = MaterialTheme.typography.titleSmall,
             )
-            if (!mediaExists) {
-                Text(
-                    text = stringResource(R.string.history_screen_media_not_exists),
-                    modifier = Modifier.padding(top = 3.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
+            TagRow(isLocal = isLocal, mediaExists = mediaExists)
             Row(
                 modifier = Modifier.padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -200,6 +203,35 @@ fun MediaPlayHistoryItem(
 }
 
 @Composable
+private fun TagRow(isLocal: Boolean, mediaExists: Boolean) {
+    val tagRow: List<@Composable RowScope.() -> Unit> = buildList {
+        if (isLocal) {
+            add {
+                TagText(text = stringResource(R.string.history_screen_local_file))
+            }
+        }
+        if (!mediaExists) {
+            add {
+                TagText(
+                    text = stringResource(R.string.history_screen_media_not_exists),
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+    }
+    if (tagRow.isNotEmpty()) {
+        Row(
+            modifier = Modifier.padding(top = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            tagRow.forEach { it() }
+        }
+    }
+}
+
+@Composable
 private fun ActionIconButton(
     imageVector: ImageVector,
     contentDescription: String?,
@@ -207,12 +239,32 @@ private fun ActionIconButton(
 ) {
     Icon(
         modifier = Modifier
-            .size(34.dp)
+            .size(30.dp)
             .clip(CircleShape)
             .clickable(onClick = onClick)
-            .padding(5.5.dp),
+            .padding(3.dp),
         imageVector = imageVector,
         contentDescription = contentDescription,
+        tint = LocalContentColor.current.copy(alpha = 0.75f)
+    )
+}
+
+@Composable
+private fun TagText(
+    modifier: Modifier = Modifier,
+    text: String,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = Color.Unspecified,
+) {
+    Text(
+        modifier = modifier
+            .clip(RoundedCornerShape(3.dp))
+            .background(containerColor)
+            .padding(horizontal = 4.dp, vertical = 0.6.dp),
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        fontSize = 12.sp,
+        color = contentColor,
     )
 }
 

@@ -40,6 +40,10 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreferen
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -104,8 +108,12 @@ import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
+import com.skyd.anivu.ui.local.LocalMediaListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaListSortBy
 import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavigationBarLabel
 import com.skyd.anivu.ui.local.LocalOpmlExportDir
 import com.skyd.anivu.ui.local.LocalParseLinkTagAsEnclosure
@@ -183,6 +191,10 @@ data class Settings(
     val hideMutedFeed: Boolean = HideMutedFeedPreference.default,
     val pickImageMethod: String = PickImageMethodPreference.default,
     val mediaFileFilter: String = MediaFileFilterPreference.default,
+    val mediaListSortAsc: Boolean = MediaListSortAscPreference.default,
+    val mediaSubListSortAsc: Boolean = MediaSubListSortAscPreference.default,
+    val mediaListSortBy: String = MediaListSortByPreference.default,
+    val mediaSubListSortBy: String = MediaSubListSortByPreference.default,
     // RSS
     val rssSyncFrequency: Long = RssSyncFrequencyPreference.default,
     val rssSyncWifiConstraint: Boolean = RssSyncWifiConstraintPreference.default,
@@ -269,6 +281,10 @@ fun SettingsProvider(
         LocalHideMutedFeed provides settings.hideMutedFeed,
         LocalPickImageMethod provides settings.pickImageMethod,
         LocalMediaFileFilter provides settings.mediaFileFilter,
+        LocalMediaListSortAsc provides settings.mediaListSortAsc,
+        LocalMediaSubListSortAsc provides settings.mediaSubListSortAsc,
+        LocalMediaListSortBy provides settings.mediaListSortBy,
+        LocalMediaSubListSortBy provides settings.mediaSubListSortBy,
         // Rss
         LocalRssSyncFrequency provides settings.rssSyncFrequency,
         LocalRssSyncWifiConstraint provides settings.rssSyncWifiConstraint,

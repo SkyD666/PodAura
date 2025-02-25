@@ -31,9 +31,8 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skyd.anivu.ui.component.shape.ForwardRippleShape
 import kotlin.math.sqrt
 
@@ -106,7 +105,7 @@ fun ForwardRipple(
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge,
-                fontSize = TextUnit(18f, TextUnitType.Sp),
+                fontSize = 18.sp,
                 color = Color.White,
             )
         }

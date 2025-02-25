@@ -21,6 +21,7 @@ import androidx.work.workDataOf
 import com.google.accompanist.permissions.rememberPermissionState
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.longestCommonPrefix
 import com.skyd.anivu.ext.sampleWithoutFirst
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean.DownloadState
@@ -28,11 +29,15 @@ import com.skyd.anivu.model.bean.download.bt.DownloadLinkUuidMapBean
 import com.skyd.anivu.model.bean.download.bt.PeerInfoBean
 import com.skyd.anivu.model.bean.download.bt.SessionParamsBean
 import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
+import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.DownloadInfoDao
+import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.db.dao.SessionParamsDao
 import com.skyd.anivu.model.db.dao.TorrentFileDao
+import com.skyd.anivu.model.repository.MediaRepository
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager.BtDownloadWorkStarter
 import com.skyd.anivu.model.worker.download.BtDownloadWorker
+import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.SAVE_DIR
 import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.TORRENT_LINK_UUID
 import com.skyd.anivu.model.worker.download.getWhatPausedState
 import com.skyd.anivu.model.worker.download.updateDownloadState
@@ -60,6 +65,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.libtorrent4j.TorrentStatus
+import java.io.File
 import java.util.UUID
 
 object BtDownloadManager {
@@ -69,6 +75,9 @@ object BtDownloadManager {
         val downloadInfoDao: DownloadInfoDao
         val sessionParamsDao: SessionParamsDao
         val torrentFileDao: TorrentFileDao
+        val enclosureDao: EnclosureDao
+        val articleDao: ArticleDao
+        val mediaRepository: MediaRepository
     }
 
     private val hiltEntryPoint = EntryPointAccessors.fromApplication(
@@ -93,15 +102,18 @@ object BtDownloadManager {
     }
 
     fun interface BtDownloadWorkStarter {
-        fun start(torrentLink: String, requestId: String?)
+        fun start(torrentLink: String, saveDir: String, requestId: String?)
     }
 
     @Composable
     fun rememberBtDownloadWorkStarter(): BtDownloadWorkStarter {
         val context = LocalContext.current
         var currentTorrentLink: String? by rememberSaveable { mutableStateOf(null) }
+        var currentSaveDir: String? by rememberSaveable { mutableStateOf(null) }
         var currentRequestId: String? by rememberSaveable { mutableStateOf(null) }
-        val starter = { download(context, currentTorrentLink!!, currentRequestId) }
+        val starter = {
+            download(context, currentTorrentLink!!, currentSaveDir!!, currentRequestId)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val storagePermissionState = rememberPermissionState(
                 Manifest.permission.POST_NOTIFICATIONS
@@ -114,22 +126,28 @@ object BtDownloadManager {
                 }
             }
             return remember {
-                BtDownloadWorkStarter { torrentLink, requestId ->
+                BtDownloadWorkStarter { torrentLink, saveDir, requestId ->
                     currentTorrentLink = torrentLink
+                    currentSaveDir = saveDir
                     currentRequestId = requestId
                     storagePermissionState.launchPermissionRequest()
                 }
             }
         } else {
             return remember {
-                BtDownloadWorkStarter { torrentLink, requestId ->
-                    download(context, torrentLink, requestId)
+                BtDownloadWorkStarter { torrentLink, saveDir, requestId ->
+                    download(context, torrentLink, saveDir, requestId)
                 }
             }
         }
     }
 
-    fun download(context: Context, torrentLink: String, requestId: String? = null) {
+    fun download(
+        context: Context,
+        torrentLink: String,
+        saveDir: String,
+        requestId: String? = null
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     context, Manifest.permission.POST_NOTIFICATIONS
@@ -140,8 +158,7 @@ object BtDownloadManager {
             }
         }
         scope.launch {
-            var torrentLinkUuid =
-                getDownloadUuidByLink(torrentLink)
+            var torrentLinkUuid = getDownloadUuidByLink(torrentLink)
             if (torrentLinkUuid == null) {
                 torrentLinkUuid = UUID.randomUUID().toString()
                 setDownloadLinkUuidMap(
@@ -155,7 +172,7 @@ object BtDownloadManager {
             val workRequest = OneTimeWorkRequestBuilder<BtDownloadWorker>()
                 .run { if (requestId != null) setId(UUID.fromString(requestId)) else this }
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                .setInputData(workDataOf(TORRENT_LINK_UUID to torrentLinkUuid))
+                .setInputData(workDataOf(TORRENT_LINK_UUID to torrentLinkUuid, SAVE_DIR to saveDir))
                 .build()
 
             WorkManager.getInstance(context).apply {
@@ -291,6 +308,9 @@ object BtDownloadManager {
                     )
                     if (result > 0) {
                         updateDownloadInfoMap(intent.link) { copy(downloadState = intent.downloadState) }
+                        if (intent.downloadState == DownloadState.Completed) {
+                            addFileToMediaLibrary(intent.link)
+                        }
                     }
                 }.catch { it.printStackTrace() },
 
@@ -496,5 +516,25 @@ object BtDownloadManager {
         checkDownloadInfoMapInitialized()
         downloadInfoMap.remove(link)
         updateFlow()
+    }
+
+    private suspend fun addFileToMediaLibrary(link: String) {
+        val torrents = torrentFileDao.getTorrentFilesByLink(link)
+        val savePathDir = torrents.map { it.path }.longestCommonPrefix()
+        val needsAdd = torrents.map { File(it.path) }.filter { it.parent == savePathDir }
+        needsAdd.forEach { file ->
+            with(hiltEntryPoint) {
+                val articleId = enclosureDao.getMediaArticleId(link)
+                if (articleId != null) {
+                    val article = articleDao.getArticleWithFeed(articleId).first()
+                    mediaRepository.addNewFile(
+                        file = file,
+                        groupName = null,
+                        articleId = articleId,
+                        displayName = article?.articleWithEnclosure?.article?.title
+                    ).collect()
+                }
+            }
+        }
     }
 }

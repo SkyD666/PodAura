@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
@@ -165,6 +164,7 @@ internal class DownloadManager(
             deleteDownloadFileIfExists(path, fileName)
         }
         removeNotification(context, id)
+        downloadDao.find(id)?.let { DownloadEvent.sendEvent(Event.Remove(it)) }
         downloadDao.remove(id)
     }
 
@@ -178,6 +178,7 @@ internal class DownloadManager(
                 deleteDownloadFileIfExists(path, fileName)
             }
             removeNotification(context, it.id)
+            DownloadEvent.sendEvent(Event.Remove(it))
         }
         downloadDao.deleteAll()
     }
@@ -191,8 +192,9 @@ internal class DownloadManager(
             if (path != null && fileName != null && deleteFile) {
                 deleteDownloadFileIfExists(path, fileName)
             }
-            downloadDao.remove(it.id)
             removeNotification(context, it.id)
+            DownloadEvent.sendEvent(Event.Remove(it))
+            downloadDao.remove(it.id)
         }
     }
 

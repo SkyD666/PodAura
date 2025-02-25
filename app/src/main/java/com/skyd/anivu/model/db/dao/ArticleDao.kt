@@ -199,6 +199,13 @@ interface ArticleDao {
 
     @Transaction
     @Query(
+        "SELECT COUNT(1) FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId"
+    )
+    fun exists(articleId: String): Int
+
+    @Transaction
+    @Query(
         "WITH temp_target(feed_url, update_time) AS (SELECT ${ArticleBean.FEED_URL_COLUMN}, ${ArticleBean.DATE_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId), " +
                 "temp_enclosure(enclosure_count) AS (SELECT COUNT(1) FROM $ENCLOSURE_TABLE_NAME WHERE ${EnclosureBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN}) " +
                 "SELECT * FROM ( " +

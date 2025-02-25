@@ -165,7 +165,6 @@ private fun ReadHistoryList(
     }
 }
 
-// todo: download file with article info
 @Composable
 private fun MediaPlayHistoryList(
     historyList: LazyPagingItems<MediaPlayHistoryWithArticle>,

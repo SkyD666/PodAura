@@ -59,7 +59,7 @@ class MediaListViewModel @Inject constructor(
         return merge(
             filterIsInstance<MediaListIntent.Init>().flatMapConcat { intent ->
                 combine(
-                    mediaRepo.requestFiles(path = intent.path, intent.group),
+                    mediaRepo.requestFiles(path = intent.path, intent.group, intent.isSubList),
                     mediaRepo.requestGroups(path = intent.path),
                 ) { files, groups ->
                     MediaListPartialStateChange.MediaListResult.Success(

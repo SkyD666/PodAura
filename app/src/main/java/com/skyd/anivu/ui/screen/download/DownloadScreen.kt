@@ -260,6 +260,7 @@ private fun BtDownloadList(
                     onResume = { video ->
                         btDownloadWorkStarter.start(
                             torrentLink = video.link,
+                            saveDir = video.path,
                             requestId = video.downloadRequestId,
                         )
                     },

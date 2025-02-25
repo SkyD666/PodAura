@@ -11,7 +11,7 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
+import android.os.Parcelable
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,17 +36,27 @@ import com.skyd.anivu.ui.mpv.copyAssetsForMpv
 import com.skyd.anivu.ui.mpv.service.PlayerService
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import java.io.File
 
 
 class PlayActivity : BaseComposeActivity() {
+    @Parcelize
+    data class PlayMediaListItem(
+        val path: String,
+        val articleId: String?,
+        // If articleId is invalid, use the following fields
+        val title: String?,
+        val thumbnail: String?,
+    ) : Parcelable
+
     companion object {
-        const val START_FILE_KEY = "startFile"
-        const val FILES_KEY = "files"
+        const val START_MEDIA_KEY = "startMedia"
+        const val MEDIA_LIST_KEY = "mediaList"
         const val ARTICLE_ID_KEY = "articleId"
         const val URL_KEY = "url"
 
-        fun play(
+        fun playArticleList(
             activity: Activity,
             articleId: String?,
             url: String,
@@ -59,15 +69,15 @@ class PlayActivity : BaseComposeActivity() {
             )
         }
 
-        fun play(
+        fun playMediaList(
             activity: Activity,
-            startFilePath: String,
-            files: List<String>,
+            startMediaPath: String,
+            mediaList: List<PlayMediaListItem>,
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(START_FILE_KEY, startFilePath)
-                    putStringArrayListExtra(FILES_KEY, ArrayList(files))
+                    putExtra(START_MEDIA_KEY, startMediaPath)
+                    putParcelableArrayListExtra(MEDIA_LIST_KEY, ArrayList(mediaList))
                 }
             )
         }

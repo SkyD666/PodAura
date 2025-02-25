@@ -39,6 +39,7 @@ import com.skyd.anivu.model.db.migration.Migration14To15
 import com.skyd.anivu.model.db.migration.Migration15To16
 import com.skyd.anivu.model.db.migration.Migration16To17
 import com.skyd.anivu.model.db.migration.Migration17To18
+import com.skyd.anivu.model.db.migration.Migration18To19
 import com.skyd.anivu.model.db.migration.Migration1To2
 import com.skyd.anivu.model.db.migration.Migration2To3
 import com.skyd.anivu.model.db.migration.Migration3To4
@@ -67,7 +68,7 @@ const val APP_DATA_BASE_FILE_NAME = "app.db"
         RssMediaBean::class,
     ],
     views = [FeedViewBean::class],
-    version = 18,
+    version = 19,
 )
 @TypeConverters(
     value = [CategoriesConverter::class, RequestHeadersConverter::class]
@@ -94,7 +95,7 @@ abstract class AppDatabase : RoomDatabase() {
             Migration5To6(), Migration6To7(), Migration7To8(), Migration8To9(),
             Migration9To10(), Migration10To11(), Migration11To12(), Migration12To13(),
             Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
-            Migration17To18(),
+            Migration17To18(), Migration18To19()
         )
 
         fun getInstance(context: Context): AppDatabase {
