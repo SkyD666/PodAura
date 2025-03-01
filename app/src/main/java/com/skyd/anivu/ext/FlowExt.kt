@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.buffer
@@ -86,3 +87,16 @@ suspend fun <T> Flow<T>.collectIn(
 fun <T> Flow<T>.sampleWithoutFirst(timeoutMillis: Long) = merge(
     take(1), drop(1).sample(timeoutMillis)
 )
+
+/**
+ * Like PV operation in semaphore, but we do V first and then P
+ */
+suspend infix fun Channel<Unit>.vThenP(receiveChannel: Channel<Unit>): Channel<Unit> {
+    send(Unit)
+    return receiveChannel
+}
+
+suspend infix fun Channel<Unit>.on(block: () -> Unit) {
+    block()
+    receive()
+}

@@ -17,4 +17,12 @@ data class ArticleWithFeed(
     var articleWithEnclosure: ArticleWithEnclosureBean,
     @Relation(parentColumn = ArticleBean.FEED_URL_COLUMN, entityColumn = FeedBean.URL_COLUMN)
     var feed: FeedBean,
-) : Serializable, Parcelable
+) : Serializable, Parcelable {
+    fun getThumbnail(): String? {
+        return articleWithEnclosure.media?.image ?: feed.customIcon ?: feed.icon
+    }
+
+    fun getArtist(): String? {
+        return articleWithEnclosure.article.author.orEmpty().ifEmpty { feed.title }
+    }
+}

@@ -63,13 +63,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.popBackStackWithLifecycle
+import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.ArticleSort
@@ -409,7 +409,7 @@ private fun ArticleList(
 ) {
     PagingRefreshStateIndicator(
         lazyPagingItems = articles,
-        abnormalContent = { Box(modifier = Modifier.padding(contentPadding)) { it() } },
+        placeholderPadding = contentPadding,
     ) {
         LazyVerticalGrid(
             modifier = modifier.fillMaxSize(),
@@ -421,7 +421,7 @@ private fun ArticleList(
         ) {
             items(
                 count = articles.itemCount,
-                key = articles.itemKey { it.articleWithEnclosure.article.articleId },
+                key = articles.safeItemKey { it.articleWithEnclosure.article.articleId },
             ) { index ->
                 when (val item = articles[index]) {
                     is ArticleWithFeed -> Article1Item(

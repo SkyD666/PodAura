@@ -17,7 +17,7 @@ class PlayerRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
 ) : BaseRepository() {
-    fun insertPlayHistory(path: String, articleId: String?): Flow<Unit> {
+    fun insertPlayHistory(path: String, duration: Long, articleId: String?): Flow<Unit> {
         return flow {
             val realArticleId = articleId?.takeIf {
                 articleDao.exists(it) > 0
@@ -25,11 +25,13 @@ class PlayerRepository @Inject constructor(
 
             val old = mediaPlayHistoryDao.getMediaPlayHistory(path)
             val currentHistory = old?.copy(
+                duration = duration,
                 lastTime = System.currentTimeMillis(),
                 articleId = realArticleId,
             ) ?: MediaPlayHistoryBean(
                 path = path,
-                lastPlayPosition = 0,
+                duration = duration,
+                lastPlayPosition = 0L,
                 lastTime = System.currentTimeMillis(),
                 articleId = realArticleId,
             )

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">Feed</string>
-    <string name="media_screen_name">Media</string>
+    <string name="media_screen_name">Local Media</string>
     <string name="more_screen_name">More</string>
     <string name="add">Add</string>
     <string name="feed_screen_rss_url">RSS URL</string>
@@ -415,7 +415,7 @@
     <string name="history_screen_media_play">Media playback</string>
     <string name="history_screen_name">History</string>
     <string name="history_screen_last_seen">Last seen %s</string>
-    <string name="history_screen_media_not_exists">Media not exists</string>
+    <string name="media_not_exists">Media not exists</string>
     <string name="skip_previous">Skip previous</string>
     <string name="skip_next">Skip next</string>
     <string name="shuffle_playlist">Shuffle playlist</string>
@@ -427,8 +427,19 @@
     <string name="sort_name">Name</string>
     <string name="descending">Descending</string>
     <string name="ascending">Ascending</string>
-    <string name="sort_file_count">File count</string>
+    <string name="sort_item_count">Item count</string>
     <string name="history_screen_local_file">Local</string>
+    <string name="playlist_screen_name">Playlist</string>
+    <string name="playlist_screen_add_a_playlist">Add a playlist</string>
+    <string name="playlist_screen_delete_playlist_warning">Delete? This cannot be undone</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="sort_manual">Manual</string>
+    <string name="sort_create_time">Create time</string>
+    <string name="created_on">Created on %s</string>
+    <plurals name="playlist_screen_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="one">%d tracker</item>
         <item quantity="other">%d trackers</item>

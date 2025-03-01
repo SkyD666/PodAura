@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">订阅</string>
-    <string name="media_screen_name">媒体</string>
+    <string name="media_screen_name">本地媒体</string>
     <string name="more_screen_name">更多</string>
     <string name="add">添加</string>
     <string name="feed_screen_rss_url">RSS 订阅链接</string>
@@ -408,7 +408,7 @@
     <string name="history_screen_media_play">媒体播放</string>
     <string name="history_screen_name">历史记录</string>
     <string name="history_screen_last_seen">上次看到 %s</string>
-    <string name="history_screen_media_not_exists">媒体不存在</string>
+    <string name="media_not_exists">媒体不存在</string>
     <string name="skip_previous">播放上一个</string>
     <string name="skip_next">播放下一个</string>
     <string name="shuffle_playlist">播放列表乱序</string>
@@ -420,8 +420,18 @@
     <string name="sort_name">名称</string>
     <string name="descending">降序</string>
     <string name="ascending">升序</string>
-    <string name="sort_file_count">子文件数</string>
+    <string name="sort_item_count">子项数</string>
     <string name="history_screen_local_file">本地</string>
+    <string name="playlist_screen_name">播放列表</string>
+    <string name="playlist_screen_add_a_playlist">添加一个播放列表</string>
+    <string name="playlist_screen_delete_playlist_warning">确定删除？操作不可逆</string>
+    <string name="add_to_playlist">添加到播放列表</string>
+    <string name="sort_manual">手动</string>
+    <string name="sort_create_time">创建时间</string>
+    <string name="created_on">创建于 %s</string>
+    <plurals name="playlist_screen_item_count">
+        <item quantity="other">%d 项</item>
+    </plurals>
     <plurals name="transmission_screen_default_torrent_trackers_description">
         <item quantity="other">%d 个追踪器</item>
     </plurals>

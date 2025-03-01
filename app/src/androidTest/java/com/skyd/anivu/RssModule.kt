@@ -18,6 +18,7 @@ import com.skyd.anivu.model.db.AppDatabase
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
+import com.skyd.anivu.model.db.dao.ReadHistoryDao
 import com.skyd.anivu.model.repository.ArticleRepository
 import com.skyd.anivu.model.repository.ArticleSort
 import com.skyd.anivu.model.repository.ReadRepository
@@ -78,6 +79,7 @@ class RssModule {
     private lateinit var groupDao: GroupDao
     private lateinit var feedDao: FeedDao
     private lateinit var articleDao: ArticleDao
+    private lateinit var readHistoryDao: ReadHistoryDao
     private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
     private lateinit var reorderGroupRepository: ReorderGroupRepository
     private lateinit var feedRepository: FeedRepository
@@ -873,13 +875,14 @@ class RssModule {
         groupDao = db.groupDao()
         feedDao = db.feedDao()
         articleDao = db.articleDao()
+        readHistoryDao = db.readHistoryDao()
 
         reorderGroupRepository = ReorderGroupRepository(groupDao)
         feedRepository =
             FeedRepository(groupDao, feedDao, articleDao, reorderGroupRepository, rssHelper)
         articleRepository = ArticleRepository(feedDao, articleDao, rssHelper, pagingConfig)
         searchRepository = SearchRepository(feedDao, articleDao, pagingConfig)
-        readRepository = ReadRepository(articleDao)
+        readRepository = ReadRepository(articleDao, readHistoryDao)
         requestHeadersRepository = RequestHeadersRepository(feedDao)
     }
 

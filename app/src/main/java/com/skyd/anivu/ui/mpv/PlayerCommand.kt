@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.mpv.MPVPlayer.Track
-import com.skyd.anivu.ui.mpv.service.PlaylistBean
 import java.io.File
 
 sealed interface PlayerCommand {
@@ -13,8 +13,12 @@ sealed interface PlayerCommand {
     data class Detach(val surface: Surface) : PlayerCommand
 
     data class LoadList(
-        val playlist: List<PlaylistBean>,
+        val playlist: List<PlaylistMediaWithArticleBean>,
         val startPath: String? = null,
+    ) : PlayerCommand
+
+    data class RemoveMediaFromPlaylist(
+        val playlist: List<PlaylistMediaWithArticleBean>,
     ) : PlayerCommand
 
     data object Destroy : PlayerCommand
@@ -46,7 +50,11 @@ sealed interface PlayerEvent {
     data class Position(val value: Long) : PlayerEvent
     data class Duration(val value: Long) : PlayerEvent
     data class MediaTitle(val value: String) : PlayerEvent
-    data class Playlist(val newPlaylist: LinkedHashMap<String, PlaylistBean>) : PlayerEvent
+    data class Playlist(
+        val playlistId: String,
+        val newPlaylist: LinkedHashMap<String, PlaylistMediaWithArticleBean>
+    ) : PlayerEvent
+
     data class Paused(val value: Boolean) : PlayerEvent
     data class PausedForCache(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent

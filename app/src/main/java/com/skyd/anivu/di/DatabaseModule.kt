@@ -15,6 +15,8 @@ import com.skyd.anivu.model.db.dao.RssModuleDao
 import com.skyd.anivu.model.db.dao.SearchDomainDao
 import com.skyd.anivu.model.db.dao.SessionParamsDao
 import com.skyd.anivu.model.db.dao.TorrentFileDao
+import com.skyd.anivu.model.db.dao.playlist.PlaylistDao
+import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -77,6 +79,15 @@ object DatabaseModule {
     @Singleton
     fun provideArticleNotificationRuleDao(database: AppDatabase): ArticleNotificationRuleDao =
         database.articleNotificationRuleDao()
+
+    @Provides
+    @Singleton
+    fun providePlaylistDao(database: AppDatabase): PlaylistDao = database.playlistDao()
+
+
+    @Provides
+    @Singleton
+    fun providePlaylistItemDao(database: AppDatabase): PlaylistMediaDao = database.playlistItemDao()
 
     @Provides
     @Singleton

@@ -45,7 +45,6 @@ import com.skyd.anivu.ui.component.rememberSystemUiController
 import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
 import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
 import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
-import com.skyd.anivu.ui.mpv.component.playlist.Playlist
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.DialogState
@@ -62,6 +61,7 @@ import com.skyd.anivu.ui.mpv.land.controller.preview.SeekTimePreview
 import com.skyd.anivu.ui.mpv.land.controller.preview.VolumePreview
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
+import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlinx.coroutines.delay
 
 
@@ -269,10 +269,12 @@ internal fun PlayerController(
             sheetState = playlistSheetState
         ) {
             val playStateValue = playState()
-            Playlist(
-                currentPlay = playStateValue.path,
+            PlaylistMediaList(
+                currentPlaylistId = playStateValue.playlistId,
+                currentPlay = playStateValue.currentMedia,
                 playlist = remember(playStateValue) { playStateValue.playlist.values.toList() },
-                onPlay = { playStateCallback.onPlayFileInPlaylist(it.path) },
+                onPlay = { playStateCallback.onPlayFileInPlaylist(it.playlistMediaBean.url) },
+                onDelete = { playStateCallback.onRemoveFromPlaylist(it) },
             )
         }
     }

@@ -141,7 +141,7 @@ class MediaModule {
         })
         mediaRepository.changeMediaGroup(
             path,
-            MediaBean(file = file1, articleWithEnclosure = null, feedBean = null),
+            MediaBean(file = file1, fileCount = 0, articleWithEnclosure = null, feedBean = null),
             group
         ).first()
         assertTrue(mediaRepository.requestFiles(path, group).first().first().file == file1)
@@ -250,7 +250,7 @@ class MediaModule {
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         val displayName = ":/*-\\`~"
         mediaRepository.setFileDisplayName(
-            MediaBean(file = file2, articleWithEnclosure = null, feedBean = null),
+            MediaBean(file = file2, fileCount = 0, articleWithEnclosure = null, feedBean = null),
             displayName
         ).first()
         assertNotNull(mediaRepository.requestFiles(path, group).first()

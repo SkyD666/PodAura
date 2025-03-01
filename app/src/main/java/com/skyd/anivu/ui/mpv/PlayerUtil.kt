@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
@@ -96,32 +95,6 @@ suspend fun createThumbnail(thumbnailPath: String?): Bitmap? {
         .getImage(appContext, thumbnailPath)
         ?.inputStream()
         ?.use { BitmapFactory.decodeStream(it) }
-}
-
-fun getMediaMetadata(filePaths: List<String>): Map<String, Map<String, Any?>> {
-    val retriever = MediaMetadataRetriever()
-    val result = mutableMapOf<String, Map<String, Any?>>()
-    filePaths.forEach { filePath ->
-        try {
-            with(retriever) {
-                setDataSource(filePath)
-                val metadata = mutableMapOf<String, Any?>()
-                metadata["title"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
-                metadata["artist"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
-                metadata["album"] = extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
-                metadata["duration"] =
-                    extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
-                metadata["albumArt"] = embeddedPicture?.let {
-                    BitmapFactory.decodeByteArray(it, 0, it.size)
-                }
-                result[filePath] = metadata
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-    retriever.release()
-    return result
 }
 
 fun copyAssetsForMpv(context: Context) {

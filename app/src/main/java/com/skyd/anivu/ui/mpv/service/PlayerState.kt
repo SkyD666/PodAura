@@ -1,12 +1,14 @@
 package com.skyd.anivu.ui.mpv.service
 
 import coil3.Bitmap
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 
 
 data class PlayerState(
-    val playlist: LinkedHashMap<String, PlaylistBean> = linkedMapOf(),
+    val playlistId: String = "",
+    val playlist: LinkedHashMap<String, PlaylistMediaWithArticleBean> = linkedMapOf(),
     val mediaStarted: Boolean = false,
     val path: String? = null,
     val audioTrackId: Int = 0,
@@ -34,7 +36,7 @@ data class PlayerState(
     val mediaTitle: String? = null,
     val mediaThumbnail: Bitmap? = null,
 ) {
-    val customMediaData: CustomMediaData? = playlist[path]?.customMediaData
+    val currentMedia = playlist[path]
     val isVideo = videoTracks.any { it.trackId >= 0 && !it.isAlbumArt }
     val playlistFirst = playlistPosition == 0 && playlist.isNotEmpty() || playlist.size == 1
     val playlistLast = playlistPosition == playlist.size - 1 ||

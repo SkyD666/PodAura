@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.mpv.port
 
-import android.graphics.Bitmap
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -25,6 +24,7 @@ import coil3.request.ImageRequest
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.mpv.component.state.PlayState
+import com.skyd.anivu.util.coil.localmedia.LocalMediaFetcher
 
 @Composable
 internal fun MediaArea(
@@ -43,7 +43,7 @@ internal fun MediaArea(
         if (isVideo) {
             Box(modifier = Modifier.height(200.dp)) { playerContent() }
         } else {
-            Thumbnail(playState.thumbnail ?: playState.mediaThumbnail)
+            Thumbnail(playState.thumbnail ?: playState.mediaThumbnail ?: playState.thumbnailAny)
         }
     }
 }
@@ -62,11 +62,14 @@ private fun Thumbnail(thumbnail: Any?) {
         PodAuraImage(
             modifier = modifier,
             model = thumbnail,
-            imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
-                override fun onError(request: ImageRequest, result: ErrorResult) {
-                    imageLoadFailed = true
-                }
-            }),
+            imageLoader = rememberPodAuraImageLoader(
+                listener = object : EventListener() {
+                    override fun onError(request: ImageRequest, result: ErrorResult) {
+                        imageLoadFailed = true
+                    }
+                },
+                components = { add(LocalMediaFetcher.Factory()) },
+            ),
             contentScale = ContentScale.Crop,
         )
     }

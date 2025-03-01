@@ -200,7 +200,7 @@ class PlayerNotificationManager(
 
     private fun NotificationCompat.Builder.setContentTitle() = apply {
         setContentTitle(playerState.value.run {
-            customMediaData?.title.orEmpty().ifBlank { mediaTitle }
+            currentMedia?.title.orEmpty().ifBlank { mediaTitle }
         })
     }
 
@@ -221,9 +221,12 @@ class PlayerNotificationManager(
 
     private suspend fun NotificationCompat.Builder.setThumbnail() = apply {
         playerState.value.run {
-            withContext(Dispatchers.IO) {
-                createThumbnail(customMediaData?.thumbnail)
-            } ?: mediaThumbnail
+            val thumbnailAny = currentMedia?.thumbnailAny
+            if (thumbnailAny is String) {
+                withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) } ?: mediaThumbnail
+            } else {
+                mediaThumbnail
+            }
         }?.also {
             setLargeIcon(it)
             setColorized(true)

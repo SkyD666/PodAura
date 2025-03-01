@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.mpv.component.state
 
 import androidx.compose.runtime.Immutable
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.mpv.service.PlayerState
 
 data class PlayState(
@@ -16,6 +17,10 @@ data class PlayState(
         )
     }
 
+    val playlistId = state.playlistId
+    val playlist = state.playlist
+    val currentMedia = state.currentMedia
+    val path = state.path
     val mediaLoaded = state.mediaStarted
     val audioTrackId = state.audioTrackId
     val subtitleTrackId = state.subtitleTrackId
@@ -42,13 +47,12 @@ data class PlayState(
     val loop = state.loop
     val idling = state.idling
     val mediaTitle = state.mediaTitle
-    val title = state.customMediaData?.title
+    val title = currentMedia?.title
     val mediaThumbnail = state.mediaThumbnail
-    val thumbnail = state.customMediaData?.thumbnail
-    val artist = state.customMediaData?.artist
+    val thumbnailAny = currentMedia?.thumbnailAny
+    val thumbnail = currentMedia?.thumbnail
+    val artist = currentMedia?.artist
     val isVideo = state.isVideo
-    val playlist = state.playlist
-    val path = state.path
 }
 
 @Immutable
@@ -62,4 +66,5 @@ data class PlayStateCallback(
     val onCycleLoop: () -> Unit,
     val onShuffle: (Boolean) -> Unit,
     val onPlayFileInPlaylist: (String) -> Unit,
+    val onRemoveFromPlaylist: (List<PlaylistMediaWithArticleBean>) -> Unit,
 )

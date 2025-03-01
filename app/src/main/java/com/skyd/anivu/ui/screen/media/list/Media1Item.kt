@@ -184,7 +184,6 @@ fun Media1Item(
                     modifier = Modifier
                         .padding(start = 12.dp)
                         .basicMarquee()
-                        .widthIn(min = 40.dp)
                         .alignByBaseline(),
                     text = remember(data) { data.date.toDateTimeString(context = context) },
                     style = MaterialTheme.typography.labelMedium,

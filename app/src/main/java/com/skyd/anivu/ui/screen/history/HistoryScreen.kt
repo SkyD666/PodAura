@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.history
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -34,10 +33,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
+import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -138,7 +137,7 @@ private fun ReadHistoryList(
 ) {
     PagingRefreshStateIndicator(
         lazyPagingItems = historyList,
-        abnormalContent = { Box(modifier = Modifier.padding(contentPadding)) { it() } },
+        placeholderPadding = contentPadding,
     ) {
         LazyColumn(
             modifier = Modifier
@@ -149,7 +148,7 @@ private fun ReadHistoryList(
         ) {
             items(
                 count = historyList.itemCount,
-                key = historyList.itemKey { it.readHistoryBean.articleId },
+                key = historyList.safeItemKey { it.readHistoryBean.articleId },
             ) { index ->
                 val data = historyList[index]
                 if (data == null) {
@@ -174,7 +173,7 @@ private fun MediaPlayHistoryList(
 ) {
     PagingRefreshStateIndicator(
         lazyPagingItems = historyList,
-        abnormalContent = { Box(modifier = Modifier.padding(contentPadding)) { it() } },
+        placeholderPadding = contentPadding,
     ) {
         LazyColumn(
             modifier = Modifier
@@ -185,7 +184,7 @@ private fun MediaPlayHistoryList(
         ) {
             items(
                 count = historyList.itemCount,
-                key = historyList.itemKey { it.mediaPlayHistoryBean.path },
+                key = historyList.safeItemKey { it.mediaPlayHistoryBean.path },
             ) { index ->
                 val data = historyList[index]
                 if (data == null) {

@@ -26,16 +26,17 @@ import com.skyd.anivu.R
 import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.model.bean.MediaBean
+import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
+import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
 import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.screen.media.SortMediaDialog
 import com.skyd.anivu.ui.screen.media.list.MediaList
 
 
@@ -114,7 +115,7 @@ private fun SubMediaScreen(media: MediaBean) {
         )
     }
 
-    SortMediaDialog(
+    SortDialog(
         visible = showSortMediaDialog,
         onDismissRequest = { showSortMediaDialog = false },
         sortByValues = MediaSubListSortByPreference.values,
@@ -122,5 +123,7 @@ private fun SubMediaScreen(media: MediaBean) {
         sortAsc = LocalMediaSubListSortAsc.current,
         onSortBy = { MediaSubListSortByPreference.put(context, scope, it) },
         onSortAsc = { MediaSubListSortAscPreference.put(context, scope, it) },
+        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(context, it) },
+        onSortByIcon = { BaseMediaListSortByPreference.toIcon(it) },
     )
 }

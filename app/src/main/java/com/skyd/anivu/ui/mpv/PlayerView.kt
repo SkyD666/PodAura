@@ -100,7 +100,8 @@ fun PlayerView(
             onNextMedia = { service.onCommand(PlayerCommand.NextMedia) },
             onCycleLoop = { service.onCommand(PlayerCommand.CycleLoop) },
             onShuffle = { service.onCommand(PlayerCommand.Shuffle(it)) },
-            onPlayFileInPlaylist = { service.onCommand(PlayerCommand.PlayFileInPlaylist(it)) }
+            onPlayFileInPlaylist = { service.onCommand(PlayerCommand.PlayFileInPlaylist(it)) },
+            onRemoveFromPlaylist = { service.onCommand(PlayerCommand.RemoveMediaFromPlaylist(it)) }
         )
     }
 
@@ -236,7 +237,7 @@ private fun PipContent(
         )
     } else {
         PodAuraImage(
-            model = playState.thumbnail ?: playState.mediaThumbnail,
+            model = playState.thumbnailAny ?: playState.mediaThumbnail,
             modifier = Modifier
                 .pipParams(
                     context = LocalContext.current,

@@ -19,3 +19,10 @@ operator fun PaddingValues.plus(other: PaddingValues): PaddingValues = PaddingVa
 
 @Composable
 operator fun PaddingValues.plus(other: Dp): PaddingValues = this + PaddingValues(other)
+
+@Composable
+fun PaddingValues.topPaddingRemoved(): PaddingValues = PaddingValues(
+    bottom = calculateBottomPadding(),
+    start = calculateStartPadding(LocalLayoutDirection.current),
+    end = calculateEndPadding(LocalLayoutDirection.current),
+)

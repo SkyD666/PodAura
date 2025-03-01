@@ -39,6 +39,10 @@ import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -119,7 +123,10 @@ fun Preferences.toSettings(): Settings {
         mediaSubListSortAsc = MediaSubListSortAscPreference.fromPreferences(this),
         mediaListSortBy = MediaListSortByPreference.fromPreferences(this),
         mediaSubListSortBy = MediaSubListSortByPreference.fromPreferences(this),
-
+        playlistSortAsc = PlaylistSortAscPreference.fromPreferences(this),
+        playlistMediaSortAsc = PlaylistMediaSortAscPreference.fromPreferences(this),
+        playlistSortBy = PlaylistSortByPreference.fromPreferences(this),
+        playlistMediaSortBy = PlaylistMediaSortByPreference.fromPreferences(this),
         // RSS
         rssSyncFrequency = RssSyncFrequencyPreference.fromPreferences(this),
         rssSyncWifiConstraint = RssSyncWifiConstraintPreference.fromPreferences(this),

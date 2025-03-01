@@ -40,6 +40,10 @@ import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -135,6 +139,10 @@ val LocalMediaListSortAsc = compositionLocalOf { MediaListSortAscPreference.defa
 val LocalMediaSubListSortAsc = compositionLocalOf { MediaSubListSortAscPreference.default }
 val LocalMediaListSortBy = compositionLocalOf { MediaListSortByPreference.default }
 val LocalMediaSubListSortBy = compositionLocalOf { MediaSubListSortByPreference.default }
+val LocalPlaylistSortAsc = compositionLocalOf { PlaylistSortAscPreference.default }
+val LocalPlaylistMediaSortAsc = compositionLocalOf { PlaylistMediaSortAscPreference.default }
+val LocalPlaylistSortBy = compositionLocalOf { PlaylistSortByPreference.default }
+val LocalPlaylistMediaSortBy = compositionLocalOf { PlaylistMediaSortByPreference.default }
 
 // RSS
 val LocalRssSyncFrequency = compositionLocalOf { RssSyncFrequencyPreference.default }

@@ -17,6 +17,8 @@ data class MediaPlayHistoryBean(
     @PrimaryKey
     @ColumnInfo(name = PATH_COLUMN)
     val path: String,
+    @ColumnInfo(name = DURATION_COLUMN)
+    val duration: Long,
     @ColumnInfo(name = LAST_PLAY_POSITION_COLUMN)
     val lastPlayPosition: Long,
     @ColumnInfo(name = LAST_TIME_COLUMN)
@@ -26,6 +28,7 @@ data class MediaPlayHistoryBean(
 ) : BaseBean, Parcelable {
     companion object {
         const val PATH_COLUMN = "path"
+        const val DURATION_COLUMN = "duration"
         const val LAST_PLAY_POSITION_COLUMN = "lastPlayPosition"
         const val LAST_TIME_COLUMN = "lastTime"
         const val ARTICLE_ID_COLUMN = "articleId"

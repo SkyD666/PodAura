@@ -27,13 +27,13 @@ import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.mpv.component.playlist.Playlist
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.pip.manualEnterPictureInPictureMode
 import com.skyd.anivu.ui.mpv.port.controller.Controller
 import com.skyd.anivu.ui.mpv.port.controller.SmallController
+import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
 
 
 @Composable
@@ -111,10 +111,12 @@ internal fun PortraitPlayerView(
                 onDismissRequest = { showPlaylistSheet = false },
                 sheetState = playlistSheetState
             ) {
-                Playlist(
-                    currentPlay = playState.path,
+                PlaylistMediaList(
+                    currentPlaylistId = playState.playlistId,
+                    currentPlay = playState.currentMedia,
                     playlist = remember(playState) { playState.playlist.values.toList() },
-                    onPlay = { playStateCallback.onPlayFileInPlaylist(it.path) },
+                    onPlay = { playStateCallback.onPlayFileInPlaylist(it.playlistMediaBean.url) },
+                    onDelete = { playStateCallback.onRemoveFromPlaylist(it) },
                 )
             }
         }

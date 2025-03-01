@@ -99,6 +99,9 @@ import com.skyd.anivu.ui.screen.history.HistoryScreen
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_MEDIA_KEY
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.media.sub.SubMediaScreenRoute
+import com.skyd.anivu.ui.screen.playlist.medialist.PLAYLIST_ID_KEY
+import com.skyd.anivu.ui.screen.playlist.medialist.PLAYLIST_MEDIA_LIST_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListScreen
 import com.skyd.anivu.ui.screen.read.ARTICLE_ID_KEY
 import com.skyd.anivu.ui.screen.read.READ_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.read.ReadScreen
@@ -300,10 +303,17 @@ private fun MainNavHost() {
         composable(route = UPDATE_NOTIFICATION_SCREEN_ROUTE) { UpdateNotificationScreen() }
         composable(route = MUTE_FEED_SCREEN_ROUTE) { MuteFeedScreen() }
         composable(
+            route = "$PLAYLIST_MEDIA_LIST_SCREEN_ROUTE/{$PLAYLIST_ID_KEY}",
+            arguments = listOf(navArgument(PLAYLIST_ID_KEY) { type = NavType.StringType }),
+        ) {
+            val arguments = it.arguments
+            if (arguments != null) {
+                PlaylistMediaListScreen(arguments.getString(PLAYLIST_ID_KEY)!!.toDecodedUrl())
+            }
+        }
+        composable(
             route = "$REQUEST_HEADERS_SCREEN_ROUTE/{$FEED_URL_KEY}",
-            arguments = listOf(
-                navArgument(FEED_URL_KEY) { type = NavType.StringType },
-            ),
+            arguments = listOf(navArgument(FEED_URL_KEY) { type = NavType.StringType }),
         ) {
             val arguments = it.arguments
             if (arguments != null) {

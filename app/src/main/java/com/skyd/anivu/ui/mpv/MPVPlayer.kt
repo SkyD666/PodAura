@@ -515,6 +515,16 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         }
     }
 
+    fun removeFromList(files: List<String>) {
+        val currentList = loadPlaylist()
+        files.forEach { file ->
+            val index = currentList.indexOfFirst { it == file }
+            if (index != -1) {
+                MPVLib.command(arrayOf("playlist-remove", index.toString()))
+            }
+        }
+    }
+
     fun playlistPrev() {
         if (isIdling && playlistCount > 1) {
             playMediaAtIndex(playlistCount - 2)

@@ -66,27 +66,27 @@ class MediaSessionManager(
         // TODO could provide: genre, num_tracks, track_number, year
         return with(mediaMetadataBuilder) {
             putText(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
-            var customThumbnail = thumbnailCache[customMediaData?.thumbnail.orEmpty()]
-            if (customThumbnail == null) {
-                val newThumb = withContext(Dispatchers.IO) {
-                    createThumbnail(customMediaData?.thumbnail)
-                }
-                if (newThumb != null) {
-                    thumbnailCache.put(customMediaData?.thumbnail.orEmpty(), newThumb)
-                    customThumbnail = newThumb
+            val thumbnail = currentMedia?.thumbnail
+            var customThumbnail: Bitmap? = null
+            if (thumbnail != null) {
+                customThumbnail = thumbnailCache[thumbnail]
+                if (customThumbnail == null) {
+                    val newThumb = withContext(Dispatchers.IO) { createThumbnail(thumbnail) }
+                    if (newThumb != null) {
+                        thumbnailCache.put(thumbnail, newThumb)
+                        customThumbnail = newThumb
+                    }
                 }
             }
             // put even if it's null to reset any previous art
-            putBitmap(
-                MediaMetadataCompat.METADATA_KEY_ART, customThumbnail ?: mediaThumbnail
-            )
+            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, customThumbnail ?: mediaThumbnail)
             putText(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
             putLong(
                 MediaMetadataCompat.METADATA_KEY_DURATION,
                 (duration * 1000).takeIf { it > 0 } ?: -1)
             putText(
                 MediaMetadataCompat.METADATA_KEY_TITLE,
-                customMediaData?.title.orEmpty().ifBlank { mediaTitle })
+                currentMedia?.title.orEmpty().ifBlank { mediaTitle })
             build()
         }
     }
@@ -149,7 +149,7 @@ class MediaSessionManager(
         is PlayerEvent.PlaybackRestart -> old.copy(mediaStarted = true)
         is PlayerEvent.StartFile -> old.copy(mediaStarted = true, path = path)
         is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
-        is PlayerEvent.Playlist -> old.copy(playlist = newPlaylist)
+        is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
 
         else -> old
     }

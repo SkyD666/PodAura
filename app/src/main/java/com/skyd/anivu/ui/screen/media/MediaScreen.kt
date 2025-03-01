@@ -60,6 +60,7 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.model.bean.MediaGroupBean
+import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
@@ -68,6 +69,7 @@ import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalMediaListSortAsc
@@ -348,7 +350,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
         }
     }
 
-    SortMediaDialog(
+    SortDialog(
         visible = showSortMediaDialog,
         onDismissRequest = { showSortMediaDialog = false },
         sortByValues = MediaListSortByPreference.values,
@@ -356,6 +358,8 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
         sortAsc = LocalMediaListSortAsc.current,
         onSortBy = { MediaListSortByPreference.put(context, scope, it) },
         onSortAsc = { MediaListSortAscPreference.put(context, scope, it) },
+        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(context, it) },
+        onSortByIcon = { BaseMediaListSortByPreference.toIcon(it) },
     )
 
     WaitingDialog(visible = uiState.loadingDialog)

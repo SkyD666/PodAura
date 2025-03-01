@@ -50,21 +50,37 @@ class PlayActivity : BaseComposeActivity() {
         val thumbnail: String?,
     ) : Parcelable
 
+    sealed interface PlayDataMode : Parcelable {
+        @Parcelize
+        data class ArticleList(
+            val articleId: String,
+            val url: String,
+        ) : PlayDataMode
+
+        @Parcelize
+        data class MediaLibraryList(
+            val startMediaPath: String,
+            val mediaList: List<PlayMediaListItem>,
+        ) : PlayDataMode
+
+        @Parcelize
+        data class Playlist(
+            val playlistId: String,
+            val mediaUrl: String?,
+        ) : PlayDataMode
+    }
+
     companion object {
-        const val START_MEDIA_KEY = "startMedia"
-        const val MEDIA_LIST_KEY = "mediaList"
-        const val ARTICLE_ID_KEY = "articleId"
-        const val URL_KEY = "url"
+        const val PLAY_DATA_MODE_KEY = "playDataMode"
 
         fun playArticleList(
             activity: Activity,
-            articleId: String?,
+            articleId: String,
             url: String,
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(ARTICLE_ID_KEY, articleId)
-                    putExtra(URL_KEY, url)
+                    putExtra(PLAY_DATA_MODE_KEY, PlayDataMode.ArticleList(articleId, url))
                 }
             )
         }
@@ -76,8 +92,23 @@ class PlayActivity : BaseComposeActivity() {
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(START_MEDIA_KEY, startMediaPath)
-                    putParcelableArrayListExtra(MEDIA_LIST_KEY, ArrayList(mediaList))
+                    putExtra(
+                        PLAY_DATA_MODE_KEY, PlayDataMode.MediaLibraryList(
+                            startMediaPath, ArrayList(mediaList)
+                        )
+                    )
+                }
+            )
+        }
+
+        fun playPlaylist(
+            activity: Activity,
+            playlistId: String,
+            mediaUrl: String?,
+        ) {
+            activity.startActivity(
+                Intent(activity, PlayActivity::class.java).apply {
+                    putExtra(PLAY_DATA_MODE_KEY, PlayDataMode.Playlist(playlistId, mediaUrl))
                 }
             )
         }

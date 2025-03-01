@@ -39,7 +39,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.EventListener
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
@@ -83,14 +82,15 @@ fun MediaPlayHistoryItem(
                 if (!mediaExists) {
                     return@clickable
                 }
-                if (isLocal) {
+                val articleId = articleWithEnclosure?.article?.articleId
+                if (isLocal || articleId == null) {
                     PlayActivity.playMediaList(
                         activity = context.activity,
                         startMediaPath = path,
                         mediaList = listOf(
                             PlayActivity.PlayMediaListItem(
                                 path = path,
-                                articleId = articleWithEnclosure?.article?.articleId,
+                                articleId = articleId,
                                 title = null,
                                 thumbnail = null,
                             )
@@ -99,7 +99,7 @@ fun MediaPlayHistoryItem(
                 } else {
                     PlayActivity.playArticleList(
                         activity = context.activity,
-                        articleId = articleWithEnclosure?.article?.articleId,
+                        articleId = articleId,
                         url = path,
                     )
                 }
@@ -213,7 +213,7 @@ private fun TagRow(isLocal: Boolean, mediaExists: Boolean) {
         if (!mediaExists) {
             add {
                 TagText(
-                    text = stringResource(R.string.history_screen_media_not_exists),
+                    text = stringResource(R.string.media_not_exists),
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.error,
                 )
@@ -250,7 +250,7 @@ private fun ActionIconButton(
 }
 
 @Composable
-private fun TagText(
+fun TagText(
     modifier: Modifier = Modifier,
     text: String,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -260,10 +260,9 @@ private fun TagText(
         modifier = modifier
             .clip(RoundedCornerShape(3.dp))
             .background(containerColor)
-            .padding(horizontal = 4.dp, vertical = 0.6.dp),
+            .padding(horizontal = 4.dp, vertical = 0.4.dp),
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        fontSize = 12.sp,
         color = contentColor,
     )
 }

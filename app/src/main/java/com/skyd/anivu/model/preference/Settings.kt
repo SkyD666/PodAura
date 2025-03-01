@@ -44,6 +44,10 @@ import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
@@ -126,6 +130,10 @@ import com.skyd.anivu.ui.local.LocalPlayerSeekOption
 import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
 import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
 import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
+import com.skyd.anivu.ui.local.LocalPlaylistMediaSortAsc
+import com.skyd.anivu.ui.local.LocalPlaylistMediaSortBy
+import com.skyd.anivu.ui.local.LocalPlaylistSortAsc
+import com.skyd.anivu.ui.local.LocalPlaylistSortBy
 import com.skyd.anivu.ui.local.LocalProxyHostname
 import com.skyd.anivu.ui.local.LocalProxyMode
 import com.skyd.anivu.ui.local.LocalProxyPassword
@@ -195,6 +203,10 @@ data class Settings(
     val mediaSubListSortAsc: Boolean = MediaSubListSortAscPreference.default,
     val mediaListSortBy: String = MediaListSortByPreference.default,
     val mediaSubListSortBy: String = MediaSubListSortByPreference.default,
+    val playlistSortAsc: Boolean = PlaylistSortAscPreference.default,
+    val playlistMediaSortAsc: Boolean = PlaylistMediaSortAscPreference.default,
+    val playlistSortBy: String = PlaylistSortByPreference.default,
+    val playlistMediaSortBy: String = PlaylistMediaSortByPreference.default,
     // RSS
     val rssSyncFrequency: Long = RssSyncFrequencyPreference.default,
     val rssSyncWifiConstraint: Boolean = RssSyncWifiConstraintPreference.default,
@@ -285,6 +297,10 @@ fun SettingsProvider(
         LocalMediaSubListSortAsc provides settings.mediaSubListSortAsc,
         LocalMediaListSortBy provides settings.mediaListSortBy,
         LocalMediaSubListSortBy provides settings.mediaSubListSortBy,
+        LocalPlaylistSortAsc provides settings.playlistSortAsc,
+        LocalPlaylistMediaSortAsc provides settings.playlistMediaSortAsc,
+        LocalPlaylistSortBy provides settings.playlistSortBy,
+        LocalPlaylistMediaSortBy provides settings.playlistMediaSortBy,
         // Rss
         LocalRssSyncFrequency provides settings.rssSyncFrequency,
         LocalRssSyncWifiConstraint provides settings.rssSyncWifiConstraint,

@@ -11,10 +11,10 @@ import com.skyd.anivu.R
 
 @Composable
 fun DeleteWarningDialog(
-    visible: Boolean,
+    visible: Boolean = true,
     title: String = stringResource(R.string.warning),
     text: String? = null,
-    confirmText: String = stringResource(R.string.ok),
+    confirmText: String = stringResource(R.string.delete),
     dismissText: String = stringResource(R.string.cancel),
     onDismissRequest: () -> Unit,
     onDismiss: () -> Unit,

@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Widgets
@@ -50,6 +52,8 @@ import com.skyd.anivu.ui.screen.media.MEDIA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.media.MediaScreen
 import com.skyd.anivu.ui.screen.more.MORE_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.more.MoreScreen
+import com.skyd.anivu.ui.screen.playlist.PLAYLIST_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.playlist.PlaylistScreen
 
 const val MAIN_SCREEN_ROUTE = "mainScreen"
 
@@ -94,6 +98,7 @@ fun MainScreen() {
                 popExitTransition = { fadeOut(animationSpec = tween(170)) },
             ) {
                 composable(FEED_SCREEN_ROUTE) { FeedScreen() }
+                composable(PLAYLIST_SCREEN_ROUTE) { PlaylistScreen() }
                 composable(MEDIA_SCREEN_ROUTE) { MediaScreen(path = LocalMediaLibLocation.current) }
                 composable(MORE_SCREEN_ROUTE) { MoreScreen() }
             }
@@ -105,13 +110,24 @@ fun MainScreen() {
 private fun NavigationBarOrRail(navController: NavController) {
     val items = listOf(
         stringResource(R.string.feed_screen_name) to FEED_SCREEN_ROUTE,
+        stringResource(R.string.playlist) to PLAYLIST_SCREEN_ROUTE,
         stringResource(R.string.media_screen_name) to MEDIA_SCREEN_ROUTE,
         stringResource(R.string.more_screen_name) to MORE_SCREEN_ROUTE,
     )
     val icons = remember {
         mapOf(
-            true to listOf(Icons.Filled.RssFeed, Icons.Filled.Movie, Icons.Filled.Widgets),
-            false to listOf(Icons.Outlined.RssFeed, Icons.Outlined.Movie, Icons.Outlined.Widgets),
+            true to listOf(
+                Icons.Filled.RssFeed,
+                Icons.AutoMirrored.Filled.PlaylistPlay,
+                Icons.Filled.Movie,
+                Icons.Filled.Widgets
+            ),
+            false to listOf(
+                Icons.Outlined.RssFeed,
+                Icons.AutoMirrored.Outlined.PlaylistPlay,
+                Icons.Outlined.Movie,
+                Icons.Outlined.Widgets
+            ),
         )
     }
 

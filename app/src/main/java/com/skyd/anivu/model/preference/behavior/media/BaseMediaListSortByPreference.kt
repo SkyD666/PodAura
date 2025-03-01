@@ -27,7 +27,7 @@ abstract class BaseMediaListSortByPreference : BasePreference<String> {
         ): String = when (value) {
             Date -> context.getString(R.string.sort_date)
             Name -> context.getString(R.string.sort_name)
-            FileCount -> context.getString(R.string.sort_file_count)
+            FileCount -> context.getString(R.string.sort_item_count)
             else -> context.getString(R.string.unknown)
         }
 

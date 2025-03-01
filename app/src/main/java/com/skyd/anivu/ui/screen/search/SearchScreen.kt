@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -68,12 +67,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
+import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.ui.component.BackIcon
@@ -259,7 +258,7 @@ private fun SuccessContent(
     val result = searchResultState.result.collectAsLazyPagingItems()
     PagingRefreshStateIndicator(
         lazyPagingItems = result,
-        abnormalContent = { Box(modifier = Modifier.padding(innerPaddings)) { it() } },
+        placeholderPadding = innerPaddings,
     ) {
         SearchResultList(
             listState = searchResultListState,
@@ -315,7 +314,7 @@ private fun SearchResultList(
 private fun LazyGridScope.feedItems(result: LazyPagingItems<FeedViewBean>) {
     items(
         count = result.itemCount,
-        key = result.itemKey { it.feed.url },
+        key = result.safeItemKey { it.feed.url },
     ) { index ->
         when (val item = result[index]) {
             is FeedViewBean -> Feed1Item(item)
@@ -331,7 +330,7 @@ private fun LazyGridScope.articleItems(
 ) {
     items(
         count = result.itemCount,
-        key = result.itemKey { it.articleWithEnclosure.article.articleId },
+        key = result.safeItemKey { it.articleWithEnclosure.article.articleId },
     ) { index ->
         when (val item = result[index]) {
             is ArticleWithFeed -> Article1Item(item, onFavorite = onFavorite, onRead = onRead)

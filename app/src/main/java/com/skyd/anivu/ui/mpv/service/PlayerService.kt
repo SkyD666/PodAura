@@ -15,7 +15,10 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
 import com.skyd.anivu.model.repository.player.PlayerRepository
+import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
 import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
@@ -38,6 +41,9 @@ class PlayerService : Service() {
     @Inject
     lateinit var playerRepo: PlayerRepository
 
+    @Inject
+    lateinit var playlistMediaRepo: PlaylistMediaRepository
+
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
 
     private val playerNotificationReceiver = PlayerNotificationReceiver()
@@ -46,7 +52,8 @@ class PlayerService : Service() {
     private val sessionManager = MediaSessionManager(appContext, createMediaSessionCallback())
     private val notificationManager = PlayerNotificationManager(appContext, sessionManager)
     val playerState get() = sessionManager.playerState
-    private val customMediaDataMap = linkedMapOf<String, CustomMediaData>()
+    private var playlistId: String = ""
+    private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
 
     private val observers = mutableSetOf<Observer>()
 
@@ -67,10 +74,16 @@ class PlayerService : Service() {
 
                 "speed" -> sendEvent(PlayerEvent.Speed(player.playbackSpeed.toFloat()))
                 "playlist" -> {
-                    val playlistMap = player.loadPlaylist().associateWith { path ->
-                        PlaylistBean(path, customMediaDataMap[path] ?: CustomMediaData())
+                    val playlistMap = LinkedHashMap<String, PlaylistMediaWithArticleBean>()
+                    player.loadPlaylist().forEachIndexed { index, url ->
+                        playlistMap[url] =
+                            cachedPlaylistMap[url] ?: PlaylistMediaWithArticleBean.fromUrl(
+                                playlistId = playlistId,
+                                url = url,
+                                orderPosition = index.toDouble(),
+                            )
                     }
-                    sendEvent(PlayerEvent.Playlist(LinkedHashMap(playlistMap)))
+                    sendEvent(PlayerEvent.Playlist(playlistId, playlistMap))
                 }
 
                 "track-list" -> {
@@ -133,7 +146,8 @@ class PlayerService : Service() {
                         scope.launch {
                             playerRepo.insertPlayHistory(
                                 path = currentPath,
-                                articleId = customMediaDataMap[currentPath]?.articleId
+                                duration = player.duration.toLong(),
+                                articleId = cachedPlaylistMap[currentPath]?.articleId
                             ).collect()
                         }
                     }
@@ -241,19 +255,27 @@ class PlayerService : Service() {
             is PlayerCommand.Attach -> command.surfaceHolder.addCallback(this)
             is PlayerCommand.Detach -> command.surface.release()
             is PlayerCommand.LoadList -> {
-                // Necessary and should be the first,
-                // because custom data needs to be stored before MPV_EVENT_FILE_LOADED
-//                sendEvent(PlayerEvent.Playlist(command.playlist))
-                customMediaDataMap.clear()
-                customMediaDataMap.putAll(command.playlist.map { it.path to it.customMediaData })
-                if (command.playlist.size == 1 && command.startPath == command.playlist[0].path) {
-                    loadFile(command.playlist[0].path)
-                } else {
-                    loadList(
-                        files = command.playlist.map { it.path },
-                        startFile = command.startPath
-                    )
+                playlistId =
+                    command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
+                cachedPlaylistMap.clear()
+                cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
+                loadList(
+                    files = command.playlist.map { it.playlistMediaBean.url },
+                    startFile = command.startPath
+                )
+            }
+
+            is PlayerCommand.RemoveMediaFromPlaylist -> {
+                if (playlistId != command.playlist.firstOrNull()?.playlistMediaBean?.playlistId) {
+                    return@apply
                 }
+                command.playlist.forEach {
+                    cachedPlaylistMap.remove(it.playlistMediaBean.url)
+                }
+                scope.launch {
+                    playlistMediaRepo.deletePlaylistMediaByIdAndUrl(command.playlist).collect()
+                }
+                removeFromList(command.playlist.map { it.playlistMediaBean.url })
             }
 
             PlayerCommand.Destroy -> stopSelf()
