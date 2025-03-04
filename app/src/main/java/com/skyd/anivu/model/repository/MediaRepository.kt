@@ -195,25 +195,24 @@ class MediaRepository @Inject constructor(
 
                 jsons.mapNotNull { fileJson ->
                     val file = File(path, fileJson.fileName)
-                    if (file.exists()) {
-                        val fileCount = if (file.isDirectory) {
-                            runCatching { file.list()?.size }.getOrNull()?.run {
-                                this - listOf(
-                                    File(file, MEDIA_LIB_JSON_NAME).exists(),
-                                    File(file, FOLDER_INFO_JSON_NAME).exists(),
-                                ).count { it }
-                            } ?: 0
-                        } else 0
+                    if (!file.exists()) return@mapNotNull null
+                    val fileCount = if (file.isDirectory) {
+                        runCatching { file.list()?.size }.getOrNull()?.run {
+                            this - listOf(
+                                File(file, MEDIA_LIB_JSON_NAME).exists(),
+                                File(file, FOLDER_INFO_JSON_NAME).exists(),
+                            ).count { it }
+                        } ?: 0
+                    } else 0
 
-                        MediaBean(
-                            displayName = fileJson.displayName,
-                            file = file,
-                            fileCount = fileCount,
-                            articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
-                            feedBean = feedMap[fileJson.feedUrl]?.feed
-                                ?: articleMap[fileJson.articleId]?.feed,
-                        )
-                    } else null
+                    MediaBean(
+                        displayName = fileJson.displayName,
+                        file = file,
+                        fileCount = fileCount,
+                        articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
+                        feedBean = feedMap[fileJson.feedUrl]?.feed
+                            ?: articleMap[fileJson.articleId]?.feed,
+                    )
                 }
             }
             videoList.toMutableList().apply {

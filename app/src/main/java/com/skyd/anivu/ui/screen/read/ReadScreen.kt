@@ -91,7 +91,7 @@ import com.skyd.anivu.ext.isWifi
 import com.skyd.anivu.ext.openBrowser
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.ext.toEncodedUrl
-import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.article.RssMediaBean
@@ -329,17 +329,19 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun CategoryArea(categories: ArticleBean.Categories) {
+private fun CategoryArea(categories: List<ArticleCategoryBean>) {
     val context = LocalContext.current
-    FlowRow(
-        modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        categories.categories.forEach { category ->
-            SuggestionChip(
-                onClick = { category.copy(context) },
-                label = { Text(text = category) },
-            )
+    if (categories.isNotEmpty()) {
+        FlowRow(
+            modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            categories.forEach { category ->
+                SuggestionChip(
+                    onClick = { category.category.copy(context) },
+                    label = { Text(text = category.category) },
+                )
+            }
         }
     }
 }
@@ -417,9 +419,7 @@ private fun Content(
         fontSize = LocalReadTextSize.current.sp,
         onImageClick = { imageUrl -> openImageSheet = imageUrl }
     )
-    article.article.categories?.let { categories ->
-        CategoryArea(categories)
-    }
+    CategoryArea(article.categories)
 
     if (openImageSheet != null) {
         ImageBottomSheet(

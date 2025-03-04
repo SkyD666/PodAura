@@ -18,6 +18,11 @@ data class ArticleWithEnclosureBean(
     var enclosures: List<EnclosureBean>,
     @Relation(
         parentColumn = ArticleBean.ARTICLE_ID_COLUMN,
+        entityColumn = ArticleCategoryBean.ARTICLE_ID_COLUMN,
+    )
+    var categories: List<ArticleCategoryBean>,
+    @Relation(
+        parentColumn = ArticleBean.ARTICLE_ID_COLUMN,
         entityColumn = RssMediaBean.ARTICLE_ID_COLUMN,
     )
     var media: RssMediaBean?,

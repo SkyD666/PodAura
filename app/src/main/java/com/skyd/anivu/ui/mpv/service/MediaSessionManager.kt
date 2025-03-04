@@ -57,8 +57,8 @@ class MediaSessionManager(
         return session
     }
 
-    override fun onCommand(command: PlayerEvent) {
-        eventFlow.trySend(command)
+    override fun onEvent(event: PlayerEvent) {
+        eventFlow.trySend(event)
     }
 
     private var thumbnailCache = LruCache<String, Bitmap>(maxSize = 2)

@@ -240,14 +240,14 @@ class PlayerService : Service() {
     }
 
     fun interface Observer {
-        fun onCommand(command: PlayerEvent)
+        fun onEvent(event: PlayerEvent)
     }
 
     fun addObserver(observer: Observer) = observers.add(observer)
     fun removeObserver(observer: Observer) = observers.remove(observer)
     fun removeAllObserver() = observers.clear()
-    private fun sendEvent(command: PlayerEvent) {
-        observers.forEach { it.onCommand(command) }
+    private fun sendEvent(event: PlayerEvent) {
+        observers.forEach { it.onEvent(event) }
     }
 
     fun onCommand(command: PlayerCommand) = player.apply {

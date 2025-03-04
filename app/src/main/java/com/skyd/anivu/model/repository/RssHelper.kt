@@ -13,6 +13,7 @@ import com.rometools.rome.io.SyndFeedInput
 import com.rometools.rome.io.XmlReader
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.article.RssMediaBean
@@ -139,9 +140,6 @@ class RssHelper @Inject constructor(
                 link = syndEntry.link,
                 guid = syndEntry.uri,
                 updateAt = Date().time,
-                categories = ArticleBean.Categories(
-                    categories = syndEntry.categories.map { it.name }.filter { it.isNotBlank() }
-                )
             ),
             enclosures = syndEntry.enclosures.map {
                 EnclosureBean(
@@ -150,6 +148,9 @@ class RssHelper @Inject constructor(
                     length = it.length,
                     type = it.type,
                 )
+            },
+            categories = syndEntry.categories.map { it.name }.filter { it.isNotBlank() }.map {
+                ArticleCategoryBean(articleId = articleId, category = it)
             },
             media = rssMedia,
         )

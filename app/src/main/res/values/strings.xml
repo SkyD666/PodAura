@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">Feed</string>
-    <string name="media_screen_name">Local Media</string>
+    <string name="media_screen_name">Media</string>
     <string name="more_screen_name">More</string>
     <string name="add">Add</string>
     <string name="feed_screen_rss_url">RSS URL</string>

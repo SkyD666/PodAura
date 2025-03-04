@@ -58,14 +58,7 @@ data class ArticleBean(
     var isRead: Boolean = false,
     @ColumnInfo(name = IS_FAVORITE_COLUMN)
     var isFavorite: Boolean = false,
-    @ColumnInfo(name = CATEGORIES_COLUMN)
-    var categories: Categories? = null,
 ) : BaseBean, Parcelable {
-
-    @Parcelize
-    @Serializable
-    data class Categories(val categories: List<String>) : BaseBean, Parcelable
-
     companion object {
         const val ARTICLE_ID_COLUMN = "articleId"
         const val FEED_URL_COLUMN = "feedUrl"
@@ -80,6 +73,5 @@ data class ArticleBean(
         const val UPDATE_AT_COLUMN = "updateAt"
         const val IS_READ_COLUMN = "isRead"
         const val IS_FAVORITE_COLUMN = "isFavorite"
-        const val CATEGORIES_COLUMN = "catrgories"
     }
 }

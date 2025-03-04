@@ -32,6 +32,7 @@ interface ArticleDao {
     @InstallIn(SingletonComponent::class)
     interface ArticleDaoEntryPoint {
         val enclosureDao: EnclosureDao
+        val articleCategoryDao: ArticleCategoryDao
         val rssModuleDao: RssModuleDao
     }
 
@@ -64,10 +65,6 @@ interface ArticleDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun innerUpdateArticle(articleBean: ArticleBean)
-
-    @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun innerUpdateArticle(articleBeanList: List<ArticleBean>)
 
     @Transaction
     suspend fun insertListIfNotExist(articleWithEnclosureList: List<ArticleWithEnclosureBean>) {
@@ -105,6 +102,14 @@ interface ArticleDao {
             if (media != null) {
                 hiltEntryPoint.rssModuleDao.insertIfNotExistRssMediaBean(
                     media.copy(articleId = newArticle.articleId)
+                )
+            }
+
+            // Update category
+            val categories = articleWithEnclosure.categories
+            if (categories.isNotEmpty()) {
+                hiltEntryPoint.articleCategoryDao.insertIfNotExist(
+                    categories.map { it.copy(articleId = newArticle.articleId) }
                 )
             }
 

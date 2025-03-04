@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.article.RssMediaBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
@@ -21,8 +22,8 @@ import com.skyd.anivu.model.bean.history.ReadHistoryBean
 import com.skyd.anivu.model.bean.playlist.PlaylistBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
-import com.skyd.anivu.model.db.converter.CategoriesConverter
 import com.skyd.anivu.model.db.converter.RequestHeadersConverter
+import com.skyd.anivu.model.db.dao.ArticleCategoryDao
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.anivu.model.db.dao.DownloadInfoDao
@@ -47,6 +48,7 @@ import com.skyd.anivu.model.db.migration.Migration17To18
 import com.skyd.anivu.model.db.migration.Migration18To19
 import com.skyd.anivu.model.db.migration.Migration19To20
 import com.skyd.anivu.model.db.migration.Migration1To2
+import com.skyd.anivu.model.db.migration.Migration20To21
 import com.skyd.anivu.model.db.migration.Migration2To3
 import com.skyd.anivu.model.db.migration.Migration3To4
 import com.skyd.anivu.model.db.migration.Migration4To5
@@ -63,6 +65,7 @@ const val APP_DATA_BASE_FILE_NAME = "app.db"
         FeedBean::class,
         ArticleBean::class,
         EnclosureBean::class,
+        ArticleCategoryBean::class,
         BtDownloadInfoBean::class,
         DownloadLinkUuidMapBean::class,
         SessionParamsBean::class,
@@ -76,16 +79,17 @@ const val APP_DATA_BASE_FILE_NAME = "app.db"
         PlaylistMediaBean::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 20,
+    version = 21,
 )
 @TypeConverters(
-    value = [CategoriesConverter::class, RequestHeadersConverter::class]
+    value = [RequestHeadersConverter::class]
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun groupDao(): GroupDao
     abstract fun feedDao(): FeedDao
     abstract fun articleDao(): ArticleDao
     abstract fun enclosureDao(): EnclosureDao
+    abstract fun articleCategoryDao(): ArticleCategoryDao
     abstract fun downloadInfoDao(): DownloadInfoDao
     abstract fun torrentFileDao(): TorrentFileDao
     abstract fun sessionParamsDao(): SessionParamsDao
@@ -105,7 +109,7 @@ abstract class AppDatabase : RoomDatabase() {
             Migration5To6(), Migration6To7(), Migration7To8(), Migration8To9(),
             Migration9To10(), Migration10To11(), Migration11To12(), Migration12To13(),
             Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
-            Migration17To18(), Migration18To19(), Migration19To20()
+            Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21()
         )
 
         fun getInstance(context: Context): AppDatabase {

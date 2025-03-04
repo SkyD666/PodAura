@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">订阅</string>
-    <string name="media_screen_name">本地媒体</string>
+    <string name="media_screen_name">媒体库</string>
     <string name="more_screen_name">更多</string>
     <string name="add">添加</string>
     <string name="feed_screen_rss_url">RSS 订阅链接</string>

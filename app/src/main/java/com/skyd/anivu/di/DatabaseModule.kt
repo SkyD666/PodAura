@@ -3,6 +3,7 @@ package com.skyd.anivu.di
 import android.content.Context
 import com.skyd.anivu.model.db.AppDatabase
 import com.skyd.anivu.model.db.SearchDomainDatabase
+import com.skyd.anivu.model.db.dao.ArticleCategoryDao
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.anivu.model.db.dao.DownloadInfoDao
@@ -48,6 +49,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideEnclosureDao(database: AppDatabase): EnclosureDao = database.enclosureDao()
+
+
+    @Provides
+    @Singleton
+    fun provideArticleCategoryDao(database: AppDatabase): ArticleCategoryDao =
+        database.articleCategoryDao()
 
     @Provides
     @Singleton

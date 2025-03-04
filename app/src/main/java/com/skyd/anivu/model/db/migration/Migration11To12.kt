@@ -9,7 +9,7 @@ import com.skyd.anivu.model.bean.article.RssMediaBean
 
 class Migration11To12 : Migration(11, 12) {
     override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("ALTER TABLE $ARTICLE_TABLE_NAME ADD ${ArticleBean.CATEGORIES_COLUMN} TEXT")
+        db.execSQL("ALTER TABLE $ARTICLE_TABLE_NAME ADD catrgories TEXT")
         db.execSQL(
             "CREATE TABLE `$RSS_MEDIA_TABLE_NAME` (" +
                     "${RssMediaBean.ARTICLE_ID_COLUMN} TEXT NOT NULL PRIMARY KEY, " +

@@ -143,7 +143,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                         text = if (LocalMediaShowGroupTab.current) title else {
                             val groupName = uiState.groups
                                 .getOrNull(pagerState.currentPage)?.first?.name
-                            if (groupName.isNullOrBlank()) title else "$title - $groupName"
+                            if (groupName.isNullOrBlank()) title else groupName
                         },
                         maxLines = 1,
                     )
