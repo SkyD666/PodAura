@@ -1,6 +1,8 @@
 package com.skyd.anivu.ui.screen.feed.reorder
 
+import androidx.paging.PagingData
 import com.skyd.anivu.model.bean.group.GroupVo
+import kotlinx.coroutines.flow.Flow
 
 
 internal sealed interface ReorderGroupPartialStateChange {
@@ -24,47 +26,11 @@ internal sealed interface ReorderGroupPartialStateChange {
         data class Failed(val msg: String) : Reorder
     }
 
-    sealed interface ReorderView : ReorderGroupPartialStateChange {
-        override fun reduce(oldState: ReorderGroupState): ReorderGroupState {
-            return when (this) {
-                is Failed -> oldState.copy(loadingDialog = false)
-                is Success -> if (oldState.groupListState is GroupListState.Success) {
-                    oldState.copy(
-                        loadingDialog = false,
-                        groupListState = oldState.groupListState.copy(
-                            dataList = oldState.groupListState.dataList.toMutableList().apply {
-                                add(to, removeAt(from))
-                            }
-                        ),
-                    )
-                } else oldState
-            }
-        }
-
-        data class Success(val from: Int, val to: Int) : ReorderView
-        data class Failed(val msg: String) : ReorderView
-    }
-
-    sealed interface Reset : ReorderGroupPartialStateChange {
-        override fun reduce(oldState: ReorderGroupState): ReorderGroupState {
-            return when (this) {
-                is Failed -> oldState.copy(loadingDialog = false)
-                is Success -> oldState.copy(
-                    groupListState = GroupListState.Success(dataList = dataList),
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val dataList: List<GroupVo>) : Reset
-        data class Failed(val msg: String) : Reset
-    }
-
     sealed interface GroupList : ReorderGroupPartialStateChange {
         override fun reduce(oldState: ReorderGroupState): ReorderGroupState {
             return when (this) {
                 is Success -> oldState.copy(
-                    groupListState = GroupListState.Success(dataList = dataList),
+                    groupListState = GroupListState.Success(pagingDataFlow = pagingDataFlow),
                     loadingDialog = false,
                 )
 
@@ -75,7 +41,7 @@ internal sealed interface ReorderGroupPartialStateChange {
             }
         }
 
-        data class Success(val dataList: List<GroupVo>) : GroupList
+        data class Success(val pagingDataFlow: Flow<PagingData<GroupVo>>) : GroupList
         data class Failed(val msg: String) : GroupList
     }
 }

@@ -40,7 +40,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
                     groupId = groupId,
                     name = group.name,
                     isExpanded = true,
-                ).toPo()
+                ).toPo(orderPosition = groupDao.getMaxOrder() + GroupDao.ORDER_DELTA)
             )
         } else {
             groupId = groupDao.queryGroupIdByName(group.name)

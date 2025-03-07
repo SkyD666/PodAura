@@ -17,8 +17,13 @@ open class GroupVo(
     open val name: String,
     open val isExpanded: Boolean,
 ) : BaseBean, Parcelable {
-    fun toPo(): GroupBean {
-        return GroupBean(groupId, name, null, null, isExpanded = isExpanded)
+    fun toPo(orderPosition: Double): GroupBean {
+        return GroupBean(
+            groupId = groupId,
+            name = name,
+            isExpanded = isExpanded,
+            orderPosition = orderPosition,
+        )
     }
 
     override fun toString(): String {

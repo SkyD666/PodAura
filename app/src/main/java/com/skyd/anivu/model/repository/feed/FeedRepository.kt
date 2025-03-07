@@ -35,7 +35,6 @@ class FeedRepository @Inject constructor(
     private val groupDao: GroupDao,
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
-    private val reorderGroupRepository: ReorderGroupRepository,
     private val rssHelper: RssHelper,
 ) : BaseRepository() {
     fun requestGroupAnyList(): Flow<List<Any>> = combine(
@@ -48,7 +47,7 @@ class FeedRepository @Inject constructor(
         mutableListOf<Any>().apply {
             add(GroupVo.DefaultGroup)
             addAll(defaultFeeds.run { if (hideMute) filter { !it.feed.mute } else this })
-            reorderGroupRepository.sortGroupWithFeed(groupList).forEach { group ->
+            groupList.forEach { group ->
                 add(group.group.toVo())
                 addAll(group.feeds.run { if (hideMute) filter { !it.feed.mute } else this })
             }
@@ -209,7 +208,11 @@ class FeedRepository @Inject constructor(
 
     fun createGroup(group: GroupVo): Flow<Unit> = flow {
         if (groupDao.containsByName(group.name) == 0) {
-            emit(groupDao.setGroup(group.toPo()))
+            emit(
+                groupDao.setGroup(
+                    group.toPo(orderPosition = groupDao.getMaxOrder() + GroupDao.ORDER_DELTA)
+                )
+            )
         } else {
             emit(Unit)
         }

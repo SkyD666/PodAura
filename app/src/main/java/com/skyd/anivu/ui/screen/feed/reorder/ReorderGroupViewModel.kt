@@ -1,5 +1,7 @@
 package com.skyd.anivu.ui.screen.feed.reorder
 
+import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
@@ -58,33 +60,16 @@ class ReorderGroupViewModel @Inject constructor(
     private fun Flow<ReorderGroupIntent>.toReorderGroupPartialStateChangeFlow(): Flow<ReorderGroupPartialStateChange> {
         return merge(
             filterIsInstance<ReorderGroupIntent.Init>().flatMapConcat {
-                reorderGroupRepo.requestGroupList().map {
-                    ReorderGroupPartialStateChange.GroupList.Success(dataList = it)
+                flowOf(reorderGroupRepo.requestGroupList().cachedIn(viewModelScope)).map {
+                    ReorderGroupPartialStateChange.GroupList.Success(pagingDataFlow = it)
                 }.startWith(ReorderGroupPartialStateChange.LoadingDialog.Show)
                     .catchMap { ReorderGroupPartialStateChange.GroupList.Failed(it.message.orEmpty()) }
             },
-            filterIsInstance<ReorderGroupIntent.Reset>().flatMapConcat {
-                reorderGroupRepo.requestResetGroupOrder().map {
-                    ReorderGroupPartialStateChange.Reset.Success(dataList = it)
-                }.startWith(ReorderGroupPartialStateChange.LoadingDialog.Show)
-                    .catchMap { ReorderGroupPartialStateChange.Reset.Failed(it.message.orEmpty()) }
-            },
             filterIsInstance<ReorderGroupIntent.Reorder>().flatMapConcat { intent ->
-                reorderGroupRepo.requestReorderGroup(
-                    intent.movedGroupId,
-                    intent.newPreviousGroupId,
-                    intent.newNextGroupId,
-                ).map {
-                    if (it) ReorderGroupPartialStateChange.Reorder.Success
+                reorderGroupRepo.reorderGroup(intent.from, intent.to).map {
+                    if (it > 0) ReorderGroupPartialStateChange.Reorder.Success
                     else ReorderGroupPartialStateChange.Reorder.Failed("Reorder error: $intent")
                 }.catchMap { ReorderGroupPartialStateChange.Reorder.Failed(it.message.orEmpty()) }
-            },
-            filterIsInstance<ReorderGroupIntent.ReorderView>().flatMapConcat { intent ->
-                flowOf(Unit).map {
-                    ReorderGroupPartialStateChange.ReorderView.Success(intent.from, intent.to)
-                }.catchMap<ReorderGroupPartialStateChange.ReorderView> {
-                    ReorderGroupPartialStateChange.ReorderView.Failed(it.message.orEmpty())
-                }
             },
         )
     }

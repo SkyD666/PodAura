@@ -4,14 +4,8 @@ import com.skyd.anivu.base.mvi.MviIntent
 
 sealed interface ReorderGroupIntent : MviIntent {
     data object Init : ReorderGroupIntent
-    data object Reset : ReorderGroupIntent
-    data class ReorderView(
+    data class Reorder(
         val from: Int,
         val to: Int,
-    ) : ReorderGroupIntent
-    data class Reorder(
-        val movedGroupId: String,
-        val newPreviousGroupId: String? = null,
-        val newNextGroupId: String? = null,
     ) : ReorderGroupIntent
 }

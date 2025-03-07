@@ -52,7 +52,6 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ext.on
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.ext.toRelativeDateTimeString
@@ -170,7 +169,7 @@ fun PlaylistMediaListScreen(
                     onDelete = { dispatch(PlaylistMediaListIntent.Delete(it)) },
                     onMoved = onMoved@{ fromIndex, toIndex ->
                         if (fromIndex == toIndex) return@onMoved
-                        reorderSemaphore vThenP reorderPagingItemsSemaphore on {
+                        reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {
                             dispatch(
                                 PlaylistMediaListIntent.Reorder(
                                     playlistId = playlistId,

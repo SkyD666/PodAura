@@ -39,7 +39,6 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
-import com.skyd.anivu.ext.on
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.vThenP
@@ -145,7 +144,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
                     draggable = LocalPlaylistSortBy.current == BasePlaylistSortByPreference.Manual,
                     onMoved = onMoved@{ fromIndex, toIndex ->
                         if (fromIndex == toIndex) return@onMoved
-                        reorderSemaphore vThenP reorderPagingItemsSemaphore on {
+                        reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {
                             dispatch(
                                 PlaylistIntent.Reorder(
                                     fromIndex = fromIndex,

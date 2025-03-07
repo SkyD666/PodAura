@@ -1,5 +1,6 @@
 package com.skyd.anivu.model.db.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -8,7 +9,6 @@ import androidx.room.Transaction
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.anivu.model.bean.group.GroupBean
-import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupWithFeedBean
 import com.skyd.anivu.model.repository.feed.tryDeleteFeedIconFile
 import dagger.hilt.EntryPoint
@@ -16,6 +16,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 @Dao
 interface GroupDao {
@@ -44,90 +45,9 @@ interface GroupDao {
     )
     suspend fun renameGroup(groupId: String, name: String): Int
 
-    @Transaction
-    @Query(
-        "UPDATE `$GROUP_TABLE_NAME` SET ${GroupBean.PREVIOUS_GROUP_ID_COLUMN} = :previousGroupId " +
-                "WHERE ${GroupBean.GROUP_ID_COLUMN} = :currentGroupId"
-    )
-    suspend fun updatePreviousGroup(currentGroupId: String, previousGroupId: String?): Int
-
-    @Transaction
-    @Query(
-        "UPDATE `$GROUP_TABLE_NAME` SET ${GroupBean.NEXT_GROUP_ID_COLUMN} = :nextGroupId " +
-                "WHERE ${GroupBean.GROUP_ID_COLUMN} = :currentGroupId"
-    )
-    suspend fun updateNextGroup(currentGroupId: String, nextGroupId: String?): Int
-
-    @Transaction
-    @Query(
-        "SELECT ${GroupBean.PREVIOUS_GROUP_ID_COLUMN} FROM `$GROUP_TABLE_NAME` " +
-                "WHERE ${GroupBean.GROUP_ID_COLUMN} = :currentGroupId"
-    )
-    suspend fun getPreviousGroupId(currentGroupId: String): String?
-
-    @Transaction
-    @Query(
-        "SELECT ${GroupBean.NEXT_GROUP_ID_COLUMN} FROM `$GROUP_TABLE_NAME` " +
-                "WHERE ${GroupBean.GROUP_ID_COLUMN} = :currentGroupId"
-    )
-    suspend fun getNextGroupId(currentGroupId: String): String?
-
-    private suspend fun removeGroupIdFromList(groupId: String) {
-        // Linked list
-        val previousGroupId = getPreviousGroupId(groupId)
-        val nextGroupId = getNextGroupId(groupId)
-        if (groupId == previousGroupId ||
-            groupId == nextGroupId ||
-            previousGroupId != null && previousGroupId == nextGroupId
-        ) {
-            return
-        }
-        if (previousGroupId != null) {
-            updateNextGroup(currentGroupId = previousGroupId, nextGroupId = nextGroupId)
-        }
-        if (nextGroupId != null) {
-            updatePreviousGroup(currentGroupId = nextGroupId, previousGroupId = previousGroupId)
-        }
-    }
-
-    private suspend fun addGroupIdToList(
-        groupId: String,
-        previousGroupId: String?,
-        nextGroupId: String?,
-    ): Boolean {
-        if (groupId == previousGroupId ||
-            groupId == nextGroupId ||
-            previousGroupId != null && previousGroupId == nextGroupId
-        ) {
-            return false
-        }
-        // Linked list
-        if (previousGroupId != null) {
-            updateNextGroup(
-                currentGroupId = previousGroupId,
-                nextGroupId = groupId,
-            )
-        }
-        if (nextGroupId != null) {
-            updatePreviousGroup(
-                currentGroupId = nextGroupId,
-                previousGroupId = groupId,
-            )
-        }
-        updatePreviousGroup(
-            currentGroupId = groupId,
-            previousGroupId = previousGroupId,
-        )
-        updateNextGroup(
-            currentGroupId = groupId,
-            nextGroupId = nextGroupId,
-        )
-        return true
-    }
 
     @Transaction
     suspend fun removeGroupWithFeed(groupId: String): Int {
-        removeGroupIdFromList(groupId)
         innerRemoveGroup(groupId)
         return EntryPointAccessors.fromApplication(appContext, GroupDaoEntryPoint::class.java).run {
             feedDao.getFeedsInGroup(listOf(groupId)).forEach {
@@ -138,38 +58,38 @@ interface GroupDao {
     }
 
     @Transaction
-    suspend fun reorderGroup(
-        groupId: String,
-        newPreviousGroupId: String? = null,
-        newNextGroupId: String? = null,
-    ): Boolean {
-        if (groupId == GroupVo.DEFAULT_GROUP_ID ||
-            newPreviousGroupId == GroupVo.DEFAULT_GROUP_ID ||
-            newNextGroupId == GroupVo.DEFAULT_GROUP_ID ||
-            containsById(groupId) == 0 ||
-            newPreviousGroupId != null && containsById(newPreviousGroupId) == 0 ||
-            newNextGroupId != null && containsById(newNextGroupId) == 0 ||
-            groupId == newPreviousGroupId ||
-            groupId == newNextGroupId ||
-            newPreviousGroupId != null && newPreviousGroupId == newNextGroupId
-        ) {
-            return false
-        }
-        // Linked list
-        removeGroupIdFromList(groupId)
-        return addGroupIdToList(
-            groupId,
-            previousGroupId = newPreviousGroupId,
-            nextGroupId = newNextGroupId,
-        )
-    }
+    @Query(
+        "SELECT * FROM `$GROUP_TABLE_NAME` " +
+                "ORDER BY ${GroupBean.ORDER_POSITION_COLUMN} " +
+                "LIMIT 1 OFFSET :index"
+    )
+    suspend fun getNth(index: Int): GroupBean?
+
+    @Transaction
+    @Query("SELECT COALESCE(MAX(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) FROM `$GROUP_TABLE_NAME`")
+    suspend fun getMaxOrder(): Double
+
+    @Transaction
+    @Query("SELECT COALESCE(MIN(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) FROM `$GROUP_TABLE_NAME`")
+    suspend fun getMinOrder(): Double
 
     @Transaction
     @Query(
-        "UPDATE `$GROUP_TABLE_NAME` SET ${GroupBean.PREVIOUS_GROUP_ID_COLUMN} = NULL, " +
-                "${GroupBean.NEXT_GROUP_ID_COLUMN} = NULL"
+        "UPDATE `$GROUP_TABLE_NAME` " +
+                "SET ${GroupBean.ORDER_POSITION_COLUMN} = :orderPosition " +
+                "WHERE ${GroupBean.GROUP_ID_COLUMN} = :groupId"
     )
-    suspend fun resetGroupOrder(): Int
+    suspend fun reorderGroup(groupId: String, orderPosition: Double): Int
+
+    @Transaction
+    suspend fun reindexOrders() {
+        getGroupIds().first().forEachIndexed { index, item ->
+            reorderGroup(
+                groupId = item,
+                orderPosition = (index * ORDER_DELTA) + ORDER_DELTA,
+            )
+        }
+    }
 
     @Transaction
     suspend fun moveGroupFeedsTo(fromGroupId: String?, toGroupId: String?): Int {
@@ -186,15 +106,18 @@ interface GroupDao {
     suspend fun changeGroupExpanded(groupId: String, expanded: Boolean): Int
 
     @Transaction
-    @Query("SELECT * FROM `$GROUP_TABLE_NAME`")
+    @Query("SELECT * FROM `$GROUP_TABLE_NAME` ORDER BY ${GroupBean.ORDER_POSITION_COLUMN}")
     fun getGroupWithFeeds(): Flow<List<GroupWithFeedBean>>
 
     @Transaction
-    @Query("SELECT * FROM `$GROUP_TABLE_NAME`")
-    fun getGroups(): Flow<List<GroupBean>>
+    @Query("SELECT * FROM `$GROUP_TABLE_NAME` ORDER BY ${GroupBean.ORDER_POSITION_COLUMN}")
+    fun getGroups(): PagingSource<Int, GroupBean>
 
     @Transaction
-    @Query("SELECT DISTINCT ${GroupBean.GROUP_ID_COLUMN} FROM `$GROUP_TABLE_NAME`")
+    @Query(
+        "SELECT DISTINCT ${GroupBean.GROUP_ID_COLUMN} FROM `$GROUP_TABLE_NAME` " +
+                "ORDER BY ${GroupBean.ORDER_POSITION_COLUMN}"
+    )
     fun getGroupIds(): Flow<List<String>>
 
     @Transaction
@@ -212,4 +135,9 @@ interface GroupDao {
                 "LIMIT 1"
     )
     fun queryGroupIdByName(name: String): String
+
+    companion object {
+        const val ORDER_DELTA = 10.0
+        const val ORDER_MIN_DELTA = 0.05
+    }
 }

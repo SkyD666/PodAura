@@ -19,12 +19,10 @@ open class GroupBean(
     val groupId: String,
     @ColumnInfo(name = NAME_COLUMN)
     open val name: String,
-    @ColumnInfo(name = PREVIOUS_GROUP_ID_COLUMN)
-    open val previousGroupId: String? = null,
-    @ColumnInfo(name = NEXT_GROUP_ID_COLUMN)
-    open val nextGroupId: String? = null,
     @ColumnInfo(name = IS_EXPANDED_COLUMN)
     open val isExpanded: Boolean = true,
+    @ColumnInfo(name = ORDER_POSITION_COLUMN)
+    open val orderPosition: Double,
 ) : BaseBean, Parcelable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -49,8 +47,7 @@ open class GroupBean(
     companion object {
         const val NAME_COLUMN = "name"
         const val GROUP_ID_COLUMN = "groupId"
-        const val PREVIOUS_GROUP_ID_COLUMN = "previousGroupId"
-        const val NEXT_GROUP_ID_COLUMN = "nextGroupId"
         const val IS_EXPANDED_COLUMN = "isExpanded"
+        const val ORDER_POSITION_COLUMN = "orderPosition"
     }
 }

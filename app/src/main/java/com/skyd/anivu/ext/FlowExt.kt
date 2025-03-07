@@ -91,12 +91,8 @@ fun <T> Flow<T>.sampleWithoutFirst(timeoutMillis: Long) = merge(
 /**
  * Like PV operation in semaphore, but we do V first and then P
  */
-suspend infix fun Channel<Unit>.vThenP(receiveChannel: Channel<Unit>): Channel<Unit> {
+suspend fun Channel<Unit>.vThenP(receiveChannel: Channel<Unit>, block: () -> Unit) {
     send(Unit)
-    return receiveChannel
-}
-
-suspend infix fun Channel<Unit>.on(block: () -> Unit) {
     block()
-    receive()
+    return receiveChannel.receive()
 }

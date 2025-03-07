@@ -40,10 +40,6 @@ data class FeedBean(
     val requestHeaders: RequestHeaders? = null,
     @ColumnInfo(name = MUTE_COLUMN)
     val mute: Boolean = false,
-    @ColumnInfo(name = PREVIOUS_FEED_URL_COLUMN)
-    val previousFeedUrl: String? = null,
-    @ColumnInfo(name = NEXT_FEED_URL_COLUMN)
-    val nextFeedUrl: String? = null,
 ) : BaseBean, Parcelable {
     companion object {
         const val URL_COLUMN = "url"
@@ -58,8 +54,6 @@ data class FeedBean(
         const val SORT_XML_ARTICLES_ON_UPDATE_COLUMN = "sortXmlArticlesOnUpdate"
         const val REQUEST_HEADERS_COLUMN = "requestHeaders"
         const val MUTE_COLUMN = "mute"
-        const val PREVIOUS_FEED_URL_COLUMN = "previousFeedUrl"
-        const val NEXT_FEED_URL_COLUMN = "nextFeedUrl"
 
         fun FeedBean.isDefaultGroup(): Boolean =
             this.groupId == null || this.groupId == GroupVo.DEFAULT_GROUP_ID
