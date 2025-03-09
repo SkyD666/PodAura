@@ -52,16 +52,18 @@
 9. 支持**搜索已获取的 RSS 订阅或文章**
 10. **播放**手机中的**其他视频**
 11. 支持**自定义 MPV** 播放器
-12. 支持 Android 原生**画中画**
-13. 支持通过 **OPML 导入导出**订阅
-14. 支持**深色模式**
-15. ......
+12. 支持**自定义播放列表**
+13. 支持 Android 原生**画中画**
+14. 支持通过 **OPML 导入导出**订阅
+15. 支持**深色模式**
+16. ......
 
 ## 🤩应用截图
 
 <img src="../image/zh-rCN/ic_rss_screen.jpg" alt="ic_rss_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_rss_screen_edit.jpg" alt="ic_rss_screen_edit" style="zoom:80%;" />
 <img src="../image/zh-rCN/ic_article_screen.jpg" alt="ic_article_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_read_screen.jpg" alt="ic_read_screen" style="zoom:80%;" />
-<img src="../image/zh-rCN/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_player_activity_port.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_history_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
 <img src="../image/zh-rCN/ic_setting_screen.jpg" alt="ic_setting_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_appearance_screen.jpg" alt="ic_appearance_screen" style="zoom:80%;" />
 <img src="../image/zh-rCN/ic_rss_config_screen.jpg" alt="ic_rss_config_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_about_screen.jpg" alt="ic_about_screen" style="zoom:80%;" />
 <img src="../image/zh-rCN/ic_player_activity.jpg" alt="ic_player_activity" style="zoom:80%;" />

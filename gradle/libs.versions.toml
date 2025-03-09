@@ -13,8 +13,8 @@ rome = "2.1.0"
 room = "2.6.1"
 tracingPerfetto = "1.0.0"
 worker = "2.10.0"
-kotlin = "2.0.21"
-agp = "8.7.3"
+kotlin = "2.1.10"
+agp = "8.8.2"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
@@ -99,12 +99,12 @@ androidx-test-rules = { module = "androidx.test:rules", version = "1.6.1" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 [plugins]
-android-application = { id = "com.android.application", version = "8.7.3" }
+android-application = { id = "com.android.application", version = "8.8.2" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.51.1" }
 ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.25" }
-android-library = { id = "com.android.library", version = "8.7.3" }
+android-library = { id = "com.android.library", version = "8.8.2" }
 android-test = { id = "com.android.test", version.ref = "agp" }

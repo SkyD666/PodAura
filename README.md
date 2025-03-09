@@ -58,16 +58,18 @@
 9. **Searching** existing **RSS subscription content**
 10. **Play other videos on the phone**
 11. Support **custom MPV player**
-12. Support Android **Picture in Picture**
-13. Support **import and export** subscriptions via **OPML**
-14. Support **dark mode**
-15. ......
+12. Support **custom playlists**
+13. Support Android **Picture in Picture**
+14. Support **import and export** subscriptions via **OPML**
+15. Support **dark mode**
+16. ......
 
 ## 🤩 Screenshots
 
 <img src="doc/image/en/ic_rss_screen.jpg" alt="ic_rss_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_rss_screen_edit.jpg" alt="ic_rss_screen_edit" style="zoom:80%;" />
 <img src="doc/image/en/ic_article_screen.jpg" alt="ic_article_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_read_screen.jpg" alt="ic_read_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="doc/image/en/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_player_activity_port.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="doc/image/en/ic_history_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
 <img src="doc/image/en/ic_setting_screen.jpg" alt="ic_setting_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_appearance_screen.jpg" alt="ic_appearance_screen" style="zoom:80%;" />
 <img src="doc/image/en/ic_rss_config_screen.jpg" alt="ic_rss_config_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_about_screen.jpg" alt="ic_about_screen" style="zoom:80%;" />
 <img src="doc/image/en/ic_player_activity.jpg" alt="ic_player_activity" style="zoom:80%;" />

@@ -326,37 +326,40 @@ private fun Article1ItemContent(
 
             // Bottom row
             Row(
-                modifier = Modifier.padding(start = 15.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
+                modifier = Modifier.padding(start = 11.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.clickable {
-                        openArticleScreen(
-                            navController = navController,
-                            feedUrls = listOf(data.feed.url),
+                Box(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(3.dp))
+                            .clickable {
+                                openArticleScreen(
+                                    navController = navController,
+                                    feedUrls = listOf(data.feed.url),
+                                )
+                            }
+                            .padding(horizontal = 4.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        FeedIcon(
+                            data = data.feed,
+                            size = 22.dp
                         )
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    FeedIcon(
-                        data = data.feed,
-                        size = 22.dp
-                    )
-                    val feedName =
-                        data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
-                    if (feedName.isNotBlank()) {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 6.dp),
-                            text = feedName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        val feedName =
+                            data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
+                        if (feedName.isNotBlank()) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 6.dp),
+                                text = feedName,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-
                 val isFavorite = articleWithEnclosure.article.isFavorite
                 val isRead = articleWithEnclosure.article.isRead
                 Icon(

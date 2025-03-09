@@ -594,13 +594,13 @@ private fun MediaRow(articleWithFeed: ArticleWithFeed, onPlay: (String) -> Unit)
                     RssMediaEpisode(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(end = 15.dp, top = 10.dp),
+                            .padding(end = 10.dp, top = 10.dp),
                         rssMedia = media,
                     )
                     RssMediaDuration(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .padding(end = 15.dp, bottom = 10.dp),
+                            .padding(end = 10.dp, bottom = 10.dp),
                         rssMedia = media,
                     )
                 }

@@ -307,7 +307,7 @@
     <string name="player_config_screen_auto_pip_description">当回到桌面或显示最近任务时，切换到画中画模式</string>
     <string name="player_picture_in_picture">画中画</string>
     <string name="open_file">打开文件</string>
-    <string name="feed_screen_sort_xml_articles_on_update">启用完整刷新</string>
+    <string name="feed_screen_sort_xml_articles_on_update">完整刷新</string>
     <string name="feed_screen_sort_xml_articles_on_update_tip">启用完整刷新可能会增加刷新时间</string>
     <string name="proxy_screen_port_error_message">端口范围只能从 0 到 65535</string>
     <string name="more">更多</string>

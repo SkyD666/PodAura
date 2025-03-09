@@ -19,13 +19,15 @@ import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPrefere
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -47,6 +49,8 @@ class MediaRepository @Inject constructor(
         const val MEDIA_LIB_JSON_NAME = "MediaLib.json"
 
         private val mediaLibJsons = LruCache<String, MediaLibJson>(maxSize = 5)
+
+        private val refreshPath = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
     }
 
     private fun parseMediaLibJson(mediaLibRootJsonFile: File): MediaLibJson? {
@@ -67,21 +71,24 @@ class MediaRepository @Inject constructor(
         }
     }
 
-    private fun getOrReadMediaLibJson(path: String): MediaLibJson {
+    private suspend fun getOrReadMediaLibJson(path: String): MediaLibJson {
         val existFiles: (String) -> List<File> = { p ->
             File(p).listFiles().orEmpty().toMutableList().filter { it.exists() }
         }
-        return mediaLibJsons[path]?.apply {
-            files.appendFiles(existFiles(path))
-        } ?: run {
-            val jsonFile = File(path, MEDIA_LIB_JSON_NAME)
-            parseMediaLibJson(jsonFile)?.also { json ->
-                json.files.appendFiles(existFiles(path))
-                mediaLibJsons.put(path, json)
-            } ?: MediaLibJson(
-                files = mutableListOf<FileJson>().appendFiles(existFiles(path))
-            ).apply { mediaLibJsons.put(path, this) }
+        val existMediaLibJson = mediaLibJsons[path]
+        if (existMediaLibJson != null) {
+            existMediaLibJson.files.appendFiles(existFiles(path))
+            return existMediaLibJson
         }
+
+        val newMediaLibJson = parseMediaLibJson(File(path, MEDIA_LIB_JSON_NAME))
+            ?: MediaLibJson(files = mutableListOf())
+        newMediaLibJson.files.appendFiles(existFiles(path))
+
+        mediaLibJsons.put(path, newMediaLibJson)
+        tryFixWrongArticleId(path, newMediaLibJson)
+
+        return newMediaLibJson
     }
 
     // Format groups
@@ -94,7 +101,7 @@ class MediaRepository @Inject constructor(
         )
     }
 
-    private fun writeMediaLibJson(path: String, data: MediaLibJson) {
+    private suspend fun writeMediaLibJson(path: String, data: MediaLibJson) {
         File(path, MEDIA_LIB_JSON_NAME).apply {
             if (!exists()) {
                 getParentFile()?.mkdirs()
@@ -103,6 +110,7 @@ class MediaRepository @Inject constructor(
         }.outputStream().use { outputStream ->
             json.encodeToStream(formatMediaLibJson(data), outputStream)
         }
+        refreshPath.emit(path)
     }
 
     private fun MutableList<FileJson>.appendFiles(
@@ -139,6 +147,7 @@ class MediaRepository @Inject constructor(
         path: String,
         mediaLibJson: MediaLibJson,
     ) {
+        var shouldFix = false
         mediaLibJson.files.forEach { json ->
             if (json.articleId?.let { articleDao.exists(it) > 0 } != true) {
                 val feedUrl = json.feedUrl
@@ -150,25 +159,28 @@ class MediaRepository @Inject constructor(
                     )?.articleId
 
                     json.articleId = newArticleId
+                    shouldFix = true
                 }
             }
         }
-        writeMediaLibJson(path, mediaLibJson)
-    }
-
-    fun requestGroups(path: String): Flow<List<MediaGroupBean>> {
-        return flow {
-            val allGroups = getOrReadMediaLibJson(path).allGroups
-            emit(listOf(MediaGroupBean.DefaultMediaGroup) +
-                    allGroups.map { MediaGroupBean(name = it) }.sortedBy { it.name })
+        if (shouldFix) {
+            writeMediaLibJson(path, mediaLibJson)
         }
     }
 
-    private val refreshFiles = MutableStateFlow(0)
+    fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
+        refreshFiles, refreshPath
+    ).filter { it == path }.map {
+        val allGroups = getOrReadMediaLibJson(path).allGroups
+        listOf(MediaGroupBean.DefaultMediaGroup) +
+                allGroups.map { MediaGroupBean(name = it) }.sortedBy { it.name }
+    }.flowOn(Dispatchers.IO)
 
-    fun refreshFile(): Flow<Unit> = flow {
-        refreshFiles.emit((refreshFiles.value + 1) % 100)
-        emit(Unit)
+    private val refreshFiles =
+        MutableSharedFlow<String>(replay = 1, extraBufferCapacity = Int.MAX_VALUE)
+
+    suspend fun refreshFiles(path: String) {
+        return refreshFiles.emit(path)
     }
 
     fun requestFiles(
@@ -176,10 +188,8 @@ class MediaRepository @Inject constructor(
         group: MediaGroupBean?,
         isSubList: Boolean = false,
     ): Flow<List<MediaBean>> = combine(
-        refreshFiles.map {
+        merge(refreshFiles, refreshPath).filter { it == path }.map {
             val mediaLibJson = getOrReadMediaLibJson(path)
-            tryFixWrongArticleId(path, mediaLibJson)
-
             val fileJsons = mediaLibJson.files
             val videoList = (if (group == null) fileJsons else {
                 val groupName = if (group.isDefaultGroup()) null else group.name

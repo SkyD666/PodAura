@@ -80,6 +80,7 @@ import com.skyd.anivu.ui.screen.article.FeedIcon
 import com.skyd.anivu.ui.screen.feed.requestheaders.openRequestHeadersScreen
 import com.skyd.anivu.util.launchImagePicker
 import com.skyd.anivu.util.rememberImagePicker
+import androidx.core.net.toUri
 
 @Composable
 fun EditFeedSheet(
@@ -332,7 +333,7 @@ private fun InfoArea(
                 enableConfirm = { URLUtil.isNetworkUrl(networkIcon) },
                 onConfirm = {
                     runCatching {
-                        onCustomIconChange(Uri.parse(it))
+                        onCustomIconChange(it.toUri())
                     }.onSuccess {
                         openNetworkIconDialog = false
                     }.onFailure {

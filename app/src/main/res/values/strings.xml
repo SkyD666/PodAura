@@ -314,7 +314,7 @@
     <string name="player_config_screen_auto_pip_description">Switch to PiP mode if the Home or Recents button is pressed</string>
     <string name="player_picture_in_picture">Picture in picture</string>
     <string name="open_file">Open file</string>
-    <string name="feed_screen_sort_xml_articles_on_update">Use full refresh</string>
+    <string name="feed_screen_sort_xml_articles_on_update">Full refresh</string>
     <string name="feed_screen_sort_xml_articles_on_update_tip">Enabling full refresh may increase the refresh time</string>
     <string name="proxy_screen_port_error_message">Ports can only range from 0 to 65535</string>
     <string name="more">More</string>
@@ -342,7 +342,7 @@
     <string name="media_style_screen_media_list_show_group_tab">Show group tab</string>
     <string name="read_screen_episode">Episode %s</string>
     <string name="feed_screen_clear_articles_warning">This will delete all articles, but not feeds, sure?</string>
-    <string name="request_headers_screen_name">Request headers</string>
+    <string name="request_headers_screen_name">Req headers</string>
     <string name="request_headers_screen_key">Key</string>
     <string name="request_headers_screen_value">Value</string>
     <string name="player_config_screen_show_progress_indicator">Progress indicator</string>
