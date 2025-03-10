@@ -4,7 +4,12 @@ import com.skyd.anivu.base.mvi.MviIntent
 import com.skyd.anivu.model.repository.ArticleSort
 
 sealed interface ArticleIntent : MviIntent {
-    data class Init(val urls: List<String>, val articleIds: List<String>) : ArticleIntent
+    data class Init(
+        val urls: List<String>,
+        val groupIds: List<String>,
+        val articleIds: List<String>,
+    ) : ArticleIntent
+
     data class UpdateSort(val articleSort: ArticleSort) : ArticleIntent
     data class Refresh(val urls: List<String>) : ArticleIntent
     data class Favorite(val articleId: String, val favorite: Boolean) : ArticleIntent

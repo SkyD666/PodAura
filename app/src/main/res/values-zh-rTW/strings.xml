@@ -18,7 +18,6 @@
     <string name="delete">刪除</string>
     <string name="edit">編輯</string>
     <string name="article_screen_name">文章</string>
-    <string name="article_screen_feed_url_illegal">RSS 訂閱連結格式錯誤</string>
     <string name="search_screen_hint">搜尋</string>
     <string name="back">返回</string>
     <string name="read_screen_name">詳情</string>

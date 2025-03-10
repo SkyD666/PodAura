@@ -2,6 +2,10 @@ package com.skyd.anivu.model.repository.feed
 
 import android.net.Uri
 import android.webkit.URLUtil
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.Const
@@ -13,16 +17,19 @@ import com.skyd.anivu.ext.put
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
+import com.skyd.anivu.model.bean.group.groupfeed.GroupOrFeedBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -36,7 +43,39 @@ class FeedRepository @Inject constructor(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
+    private val pagingConfig: PagingConfig,
 ) : BaseRepository() {
+    fun requestGroups(): Flow<PagingData<GroupVo>> = Pager(pagingConfig) {
+        groupDao.getGroups()
+    }.flow.map { pagingData -> pagingData.map { it.toVo() } }.flowOn(Dispatchers.IO)
+
+    fun requestGroupAnyPaging(): Flow<PagingData<Any>> = appContext.dataStore.data.map {
+        listOf(
+            it[FeedDefaultGroupExpandPreference.key] ?: FeedDefaultGroupExpandPreference.default,
+            it[HideEmptyDefaultPreference.key] ?: HideEmptyDefaultPreference.default,
+            it[HideMutedFeedPreference.key] ?: HideMutedFeedPreference.default
+        )
+    }.distinctUntilChanged()
+        .flatMapLatest { (defaultGroupExpand, hideEmptyDefault, hideMutedFeed) ->
+            Pager(pagingConfig) {
+                groupDao.getGroupsAndFeeds(
+                    defaultGroupIsExpanded = defaultGroupExpand,
+                    hideEmptyDefaultGroup = hideEmptyDefault,
+                    hideMutedFeed = hideMutedFeed,
+                )
+            }.flow.map { pagingData ->
+                pagingData.map<GroupOrFeedBean, Any> { entity ->
+                    if (entity.group == null && entity.feed == null) {
+                        GroupVo.DefaultGroup
+                    } else if (entity.group != null) {
+                        entity.group.toVo()
+                    } else {
+                        entity.feed!!
+                    }
+                }
+            }
+        }.flowOn(Dispatchers.IO)
+
     fun requestGroupAnyList(): Flow<List<Any>> = combine(
         groupDao.getGroupWithFeeds(),
         feedDao.getFeedsInDefaultGroup(),

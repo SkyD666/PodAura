@@ -1,15 +1,19 @@
 package com.skyd.anivu.model.db.dao
 
 import androidx.paging.PagingSource
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.skyd.anivu.appContext
+import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
+import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.anivu.model.bean.group.GroupBean
 import com.skyd.anivu.model.bean.group.GroupWithFeedBean
+import com.skyd.anivu.model.bean.group.groupfeed.GroupOrFeedBean
 import com.skyd.anivu.model.repository.feed.tryDeleteFeedIconFile
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -135,6 +139,63 @@ interface GroupDao {
                 "LIMIT 1"
     )
     fun queryGroupIdByName(name: String): String
+
+    data class TypeToId(
+        @ColumnInfo("type")
+        val type: String,
+        @ColumnInfo("_id")
+        val id: String?,
+    )
+
+    @Transaction
+    @Query(
+        "WITH default_group_order(`order`) AS (SELECT COALESCE(MIN(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) - $ORDER_DELTA FROM `$GROUP_TABLE_NAME`) " +
+                "SELECT " +
+                "    NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
+                "    NULL AS ${FeedBean.URL_COLUMN}, " +
+                "    (SELECT `order` FROM default_group_order) AS group_order, " +
+                "    0 AS is_feed, " +
+                "    '' AS feed_order " +
+                "WHERE NOT :hideEmptyDefaultGroup OR " +
+                "    EXISTS(SELECT 1 FROM `$FEED_TABLE_NAME` WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL) " +
+                "UNION ALL " +
+                "SELECT " +
+                "    NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
+                "    f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
+                "    (SELECT `order` FROM default_group_order) AS group_order, " +
+                "    1 AS is_feed, " +
+                "    f.${FeedBean.TITLE_COLUMN} AS feed_order " +
+                "FROM `$FEED_TABLE_NAME` f " +
+                "WHERE f.${FeedBean.GROUP_ID_COLUMN} IS NULL AND " +
+                "    :defaultGroupIsExpanded AND (NOT f.${FeedBean.MUTE_COLUMN} OR NOT :hideMutedFeed) " +
+
+                "UNION ALL " +
+                "SELECT * FROM (" +
+                "    SELECT " +
+                "        g.${GroupBean.GROUP_ID_COLUMN} AS ${GroupBean.GROUP_ID_COLUMN}, " +
+                "        NULL AS ${FeedBean.URL_COLUMN}, " +
+                "        g.${GroupBean.ORDER_POSITION_COLUMN} AS group_order, " +
+                "        0 AS is_feed, " +
+                "        '' AS feed_order " +
+                "    FROM `$GROUP_TABLE_NAME` g " +
+                "    UNION ALL " +
+                "    SELECT " +
+                "        NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
+                "        f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
+                "        g.${GroupBean.ORDER_POSITION_COLUMN} AS group_order, " +
+                "        1 AS is_feed, " +
+                "        f.${FeedBean.TITLE_COLUMN} AS feed_order " +
+                "    FROM `$FEED_TABLE_NAME` f " +
+                "    INNER JOIN `$GROUP_TABLE_NAME` g ON f.${FeedBean.GROUP_ID_COLUMN} = g.${GroupBean.GROUP_ID_COLUMN} " +
+                "    WHERE (NOT f.${FeedBean.MUTE_COLUMN} OR NOT :hideMutedFeed) AND g.${GroupBean.IS_EXPANDED_COLUMN} " +
+                ")" +
+                "ORDER BY group_order, is_feed ASC, feed_order"
+    )
+    fun getGroupsAndFeeds(
+        defaultGroupIsExpanded: Boolean,
+        hideEmptyDefaultGroup: Boolean,
+        hideMutedFeed: Boolean,
+    ): PagingSource<Int, GroupOrFeedBean>
 
     companion object {
         const val ORDER_DELTA = 10.0

@@ -35,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
@@ -68,7 +67,6 @@ import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
-import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
@@ -80,7 +78,6 @@ import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
 import com.skyd.anivu.ui.local.LocalArticleListTonalElevation
@@ -92,23 +89,31 @@ import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import androidx.core.net.toUri
 
 
 const val ARTICLE_SCREEN_ROUTE = "articleScreen"
 const val FEED_URLS_KEY = "feedUrls"
+const val GROUP_IDS_KEY = "groupIds"
 const val ARTICLE_IDS_KEY = "articleIds"
 const val ARTICLE_SCREEN_DEEP_LINK = "anivu://article.screen"
 const val FEED_URLS_JSON_KEY = "feedUrlsJson"
+const val GROUP_IDS_JSON_KEY = "groupIdsJson"
 const val ARTICLE_IDS_JSON_KEY = "articleIdsJson"
 
 fun getArticleScreenDeepLink(
     feedUrls: List<String>,
+    groupIds: List<String> = emptyList(),
     articleIds: List<String> = emptyList(),
 ): Uri {
-    return Uri.parse(ARTICLE_SCREEN_DEEP_LINK).buildUpon()
+    return ARTICLE_SCREEN_DEEP_LINK.toUri().buildUpon()
         .appendQueryParameter(
             FEED_URLS_JSON_KEY,
             Json.encodeToString(feedUrls).toEncodedUrl(allow = null)
+        )
+        .appendQueryParameter(
+            GROUP_IDS_JSON_KEY,
+            Json.encodeToString(groupIds).toEncodedUrl(allow = null)
         )
         .appendQueryParameter(
             ARTICLE_IDS_JSON_KEY,
@@ -120,6 +125,7 @@ fun getArticleScreenDeepLink(
 fun openArticleScreen(
     navController: NavController,
     feedUrls: List<String>,
+    groupIds: List<String> = emptyList(),
     articleIds: List<String> = emptyList(),
     navOptions: NavOptions? = null,
 ) {
@@ -127,6 +133,7 @@ fun openArticleScreen(
         ARTICLE_SCREEN_ROUTE,
         Bundle().apply {
             putStringArrayList(FEED_URLS_KEY, ArrayList(feedUrls))
+            putStringArrayList(GROUP_IDS_KEY, ArrayList(groupIds))
             putStringArrayList(ARTICLE_IDS_KEY, ArrayList(articleIds))
         },
         navOptions = navOptions,
@@ -138,32 +145,7 @@ private val DefaultBackClick = { }
 @Composable
 fun ArticleScreen(
     feedUrls: List<String>,
-    articleIds: List<String>,
-    onBackClick: () -> Unit = DefaultBackClick,
-) {
-    val navController = LocalNavController.current
-    if (feedUrls.isEmpty() && articleIds.isEmpty()) {
-        PodAuraDialog(
-            visible = true,
-            text = { Text(text = stringResource(id = R.string.article_screen_feed_url_illegal)) },
-            confirmButton = {
-                TextButton(onClick = { navController.popBackStackWithLifecycle() }) {
-                    Text(text = stringResource(id = R.string.exit))
-                }
-            }
-        )
-    } else {
-        ArticleContentScreen(
-            feedUrls = feedUrls,
-            articleIds = articleIds,
-            onBackClick = onBackClick,
-        )
-    }
-}
-
-@Composable
-private fun ArticleContentScreen(
-    feedUrls: List<String>,
+    groupIds: List<String>,
     articleIds: List<String>,
     onBackClick: () -> Unit = DefaultBackClick,
     viewModel: ArticleViewModel = hiltViewModel(),
@@ -178,7 +160,11 @@ private fun ArticleContentScreen(
     var showFilterBar by rememberSaveable { mutableStateOf(false) }
 
     val dispatch = viewModel.getDispatcher(
-        feedUrls, startWith = ArticleIntent.Init(feedUrls, articleIds)
+        feedUrls, startWith = ArticleIntent.Init(
+            urls = feedUrls,
+            groupIds = groupIds,
+            articleIds = articleIds,
+        )
     )
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 

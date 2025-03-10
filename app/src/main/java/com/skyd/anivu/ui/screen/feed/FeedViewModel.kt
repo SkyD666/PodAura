@@ -1,5 +1,7 @@
 package com.skyd.anivu.ui.screen.feed
 
+import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
@@ -8,9 +10,11 @@ import com.skyd.anivu.model.repository.feed.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -134,8 +138,14 @@ class FeedViewModel @Inject constructor(
     private fun Flow<FeedIntent>.toFeedPartialStateChangeFlow(): Flow<FeedPartialStateChange> {
         return merge(
             filterIsInstance<FeedIntent.Init>().flatMapConcat {
-                feedRepo.requestGroupAnyList().map {
-                    FeedPartialStateChange.FeedList.Success(dataList = it)
+                combine(
+                    flowOf(feedRepo.requestGroups().cachedIn(viewModelScope)),
+                    flowOf(feedRepo.requestGroupAnyPaging().cachedIn(viewModelScope)),
+                ) { groups, list ->
+                    FeedPartialStateChange.FeedList.Success(
+                        groups = groups,
+                        dataPagingDataFlow = list,
+                    )
                 }.startWith(FeedPartialStateChange.FeedList.Loading)
             },
             filterIsInstance<FeedIntent.AddFeed>().flatMapConcat { intent ->

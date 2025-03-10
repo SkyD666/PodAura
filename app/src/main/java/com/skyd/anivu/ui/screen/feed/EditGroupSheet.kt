@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.isDefaultGroup
@@ -32,7 +34,7 @@ import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 fun EditGroupSheet(
     onDismissRequest: () -> Unit,
     group: GroupVo,
-    groups: List<GroupVo>,
+    groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
     onRefresh: (String) -> Unit,
     onMuteAll: (String, Boolean) -> Unit,
@@ -45,7 +47,10 @@ fun EditGroupSheet(
     var openNameDialog by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable(group.name) { mutableStateOf(group.name) }
 
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -86,8 +91,7 @@ fun EditGroupSheet(
             GroupArea(
                 title = stringResource(id = R.string.feed_screen_group_feeds_move_to),
                 currentGroupId = group.groupId,
-                // Exclude the current group
-                groups = groups.filter { it.groupId != group.groupId },
+                groups = groups,
                 onGroupChange = {
                     onMoveTo(it)
                     onDismissRequest()

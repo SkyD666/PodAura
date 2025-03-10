@@ -71,8 +71,11 @@ class ArticleViewModel @Inject constructor(
         return merge(
             filterIsInstance<ArticleIntent.Init>().flatMapConcat { intent ->
                 flowOf(
-                    articleRepo.requestArticleList(intent.urls, intent.articleIds)
-                        .cachedIn(viewModelScope)
+                    articleRepo.requestArticleList(
+                        feedUrls = intent.urls,
+                        groupIds = intent.groupIds,
+                        articleIds = intent.articleIds,
+                    ).cachedIn(viewModelScope)
                 ).map {
                     ArticlePartialStateChange.ArticleList.Success(articlePagingDataFlow = it)
                 }.startWith(ArticlePartialStateChange.ArticleList.Loading).catchMap {

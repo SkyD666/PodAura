@@ -9,6 +9,9 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ContextualFlowRow
+import androidx.compose.foundation.layout.ContextualFlowRowOverflow
+import androidx.compose.foundation.layout.ContextualFlowRowOverflowScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowOverflow
 import androidx.compose.foundation.layout.Row
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +38,8 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Http
 import androidx.compose.material.icons.outlined.Image
@@ -49,8 +55,10 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -64,6 +72,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import androidx.paging.compose.LazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.copy
 import com.skyd.anivu.ext.openBrowser
@@ -80,13 +90,12 @@ import com.skyd.anivu.ui.screen.article.FeedIcon
 import com.skyd.anivu.ui.screen.feed.requestheaders.openRequestHeadersScreen
 import com.skyd.anivu.util.launchImagePicker
 import com.skyd.anivu.util.rememberImagePicker
-import androidx.core.net.toUri
 
 @Composable
 fun EditFeedSheet(
     onDismissRequest: () -> Unit,
     feedView: FeedViewBean,
-    groups: List<GroupVo>,
+    groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
     onRefresh: (String) -> Unit,
     onMute: (String, Boolean) -> Unit,
@@ -113,7 +122,10 @@ fun EditFeedSheet(
         mutableStateOf(feed.customDescription ?: feed.description)
     }
 
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -476,7 +488,7 @@ internal fun OptionArea(
 internal fun GroupArea(
     title: String = stringResource(id = R.string.feed_group),
     currentGroupId: String?,
-    groups: List<GroupVo>,
+    groups: LazyPagingItems<GroupVo>,
     onGroupChange: (GroupVo) -> Unit,
     openCreateGroupDialog: () -> Unit,
 ) {
@@ -485,28 +497,60 @@ internal fun GroupArea(
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onPrimaryContainer,
     )
-    FlowRow(
-        modifier = Modifier.padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        overflow = FlowRowOverflow.Visible
-    ) {
-        groups.forEach { group ->
-            val selected = (currentGroupId ?: GroupVo.DefaultGroup.groupId) == group.groupId
-            SheetChip(
-                modifier = Modifier.animateContentSize(),
-                icon = if (selected) Icons.Outlined.Check else null,
-                text = group.name,
-                contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
-                onClick = { onGroupChange(group) },
-            )
-        }
+    var flowRowMaxLines by rememberSaveable { mutableIntStateOf(3) }
+    val moreOrCollapseIndicator = @Composable { scope: ContextualFlowRowOverflowScope ->
+        val remainingItems = groups.itemCount + 1 - scope.shownItemCount
         SheetChip(
-            icon = Icons.Outlined.Add,
+            icon = if (remainingItems == 0) Icons.Outlined.ExpandLess
+            else Icons.Outlined.ExpandMore,
             text = null,
-            contentDescription = stringResource(id = R.string.feed_screen_add_group),
-            onClick = openCreateGroupDialog,
+            contentDescription = stringResource(
+                if (remainingItems == 0) R.string.collapse else R.string.expend
+            ),
+            onClick = {
+                if (remainingItems == 0) {
+                    flowRowMaxLines = 3
+                } else {
+                    flowRowMaxLines += 2
+                }
+            },
         )
+    }
+    ContextualFlowRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .wrapContentHeight(align = Alignment.Top),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+        maxLines = flowRowMaxLines,
+        overflow = ContextualFlowRowOverflow.expandOrCollapseIndicator(
+            minRowsToShowCollapse = 5,
+            expandIndicator = moreOrCollapseIndicator,
+            collapseIndicator = moreOrCollapseIndicator
+        ),
+        itemCount = groups.itemCount + 1
+    ) { index ->
+        if (index == 0) {
+            SheetChip(
+                icon = Icons.Outlined.Add,
+                text = null,
+                contentDescription = stringResource(id = R.string.feed_screen_add_group),
+                onClick = openCreateGroupDialog,
+            )
+        } else {
+            val group = groups[index - 1]
+            if (group != null) {
+                val selected = (currentGroupId ?: GroupVo.DefaultGroup.groupId) == group.groupId
+                SheetChip(
+                    modifier = Modifier.animateContentSize(),
+                    icon = if (selected) Icons.Outlined.Check else null,
+                    text = group.name,
+                    contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
+                    onClick = { if (group.groupId != currentGroupId) onGroupChange(group) },
+                )
+            }
+        }
     }
 }
 

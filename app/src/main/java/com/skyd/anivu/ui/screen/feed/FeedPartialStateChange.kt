@@ -1,7 +1,9 @@
 package com.skyd.anivu.ui.screen.feed
 
+import androidx.paging.PagingData
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
+import kotlinx.coroutines.flow.Flow
 
 
 internal sealed interface FeedPartialStateChange {
@@ -211,20 +213,25 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    groupListState = GroupListState.Success(dataList = dataList),
+                    groups = groups,
+                    listState = ListState.Success(dataPagingDataFlow = dataPagingDataFlow),
                 )
 
                 is Failed -> oldState.copy(
-                    groupListState = GroupListState.Failed(msg = msg),
+                    listState = ListState.Failed(msg = msg),
                 )
 
                 Loading -> oldState.copy(
-                    groupListState = GroupListState.Loading,
+                    listState = ListState.Loading,
                 )
             }
         }
 
-        data class Success(val dataList: List<Any>) : FeedList
+        data class Success(
+            val groups: Flow<PagingData<GroupVo>>,
+            val dataPagingDataFlow: Flow<PagingData<Any>>,
+        ) : FeedList
+
         data class Failed(val msg: String) : FeedList
         data object Loading : FeedList
     }

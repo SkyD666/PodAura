@@ -261,6 +261,12 @@ internal fun GroupArea(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         overflow = FlowRowOverflow.Visible
     ) {
+        SheetChip(
+            icon = Icons.Outlined.Add,
+            text = null,
+            contentDescription = stringResource(id = R.string.media_screen_add_group),
+            onClick = openCreateGroupDialog,
+        )
         groups.forEach { group ->
             val selected = currentGroup.name == group.name &&
                     currentGroup.isDefaultGroup() == group.isDefaultGroup()
@@ -272,11 +278,5 @@ internal fun GroupArea(
                 onClick = { onGroupChange(group) },
             )
         }
-        SheetChip(
-            icon = Icons.Outlined.Add,
-            text = null,
-            contentDescription = stringResource(id = R.string.media_screen_add_group),
-            onClick = openCreateGroupDialog,
-        )
     }
 }

@@ -17,7 +17,6 @@
     <string name="delete">Sil</string>
     <string name="edit">Düzenle</string>
     <string name="article_screen_name">Makale</string>
-    <string name="article_screen_feed_url_illegal">Akış URL\'si geçersiz</string>
     <string name="search_screen_hint">Ara</string>
     <string name="back">Geri</string>
     <string name="read_screen_name">Oku</string>

@@ -76,6 +76,8 @@ import com.skyd.anivu.ui.screen.article.ARTICLE_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.article.ArticleScreen
 import com.skyd.anivu.ui.screen.article.FEED_URLS_JSON_KEY
 import com.skyd.anivu.ui.screen.article.FEED_URLS_KEY
+import com.skyd.anivu.ui.screen.article.GROUP_IDS_JSON_KEY
+import com.skyd.anivu.ui.screen.article.GROUP_IDS_KEY
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_LINK_KEY
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_DEEP_LINK_DATA
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_ROUTE
@@ -262,6 +264,12 @@ private fun MainNavHost() {
                         it.arguments?.getString(FEED_URLS_JSON_KEY)?.toDecodedUrl().orEmpty()
                     )
                 }.getOrDefault(emptyList())
+            val groupIds: List<String> = it.arguments?.getStringArrayList(GROUP_IDS_KEY)
+                ?: runCatching {
+                    Json.decodeFromString<List<String>>(
+                        it.arguments?.getString(GROUP_IDS_JSON_KEY)?.toDecodedUrl().orEmpty()
+                    )
+                }.getOrDefault(emptyList())
             val articleIds: List<String> = it.arguments?.getStringArrayList(ARTICLE_IDS_KEY)
                 ?: runCatching {
                     Json.decodeFromString<List<String>>(
@@ -270,6 +278,7 @@ private fun MainNavHost() {
                 }.getOrDefault(emptyList())
             ArticleScreen(
                 feedUrls = feedUrls,
+                groupIds = groupIds,
                 articleIds = articleIds,
             )
         }

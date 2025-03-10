@@ -46,7 +46,6 @@ import com.skyd.anivu.ui.screen.article.openArticleScreen
 @Composable
 fun Feed1Item(
     data: FeedViewBean,
-    visible: Boolean = true,
     selected: Boolean = false,
     inGroup: Boolean = false,
     isEnd: Boolean = false,
@@ -56,81 +55,75 @@ fun Feed1Item(
     val navController = LocalNavController.current
     val feed = data.feed
 
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
-        Row(
-            modifier = Modifier
-                .clip(
-                    if (inGroup) {
-                        if (isEnd) RoundedCornerShape(0.dp, 0.dp, SHAPE_CORNER_DP, SHAPE_CORNER_DP)
-                        else RectangleShape
-                    } else {
-                        RoundedCornerShape(12.dp)
-                    }
+    Row(
+        modifier = Modifier
+            .clip(
+                if (inGroup) {
+                    if (isEnd) RoundedCornerShape(0.dp, 0.dp, SHAPE_CORNER_DP, SHAPE_CORNER_DP)
+                    else RectangleShape
+                } else {
+                    RoundedCornerShape(12.dp)
+                }
+            )
+            .background(
+                MaterialTheme.colorScheme.secondary.copy(
+                    alpha = if (selected) 0.15f else 0.1f
                 )
-                .background(
-                    MaterialTheme.colorScheme.secondary.copy(
-                        alpha = if (selected) 0.15f else 0.1f
-                    )
-                )
-                .combinedClickable(
-                    onLongClick = if (onEdit != null) {
-                        { onEdit(data) }
-                    } else null,
-                    onClick = {
-                        if (onClick == null) {
-                            openArticleScreen(
-                                navController = navController,
-                                feedUrls = arrayListOf(feed.url)
-                            )
-                        } else onClick(feed)
-                    },
-                )
-                .padding(horizontal = 20.dp, vertical = 10.dp)
-                .padding(bottom = if (inGroup && isEnd) 6.dp else 0.dp)
-        ) {
-            FeedIcon(modifier = Modifier.padding(vertical = 3.dp), data = feed, size = 36.dp)
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.align(Alignment.CenterVertically)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val title = rememberSaveable(feed.title, feed.nickname) {
-                        feed.nickname.orEmpty().ifBlank { feed.title?.readable().orEmpty() }
-                    }
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    if (feed.mute) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                            contentDescription = stringResource(R.string.feed_screen_feed_muted),
-                            modifier = Modifier.size(16.dp),
+            )
+            .combinedClickable(
+                onLongClick = if (onEdit != null) {
+                    { onEdit(data) }
+                } else null,
+                onClick = {
+                    if (onClick == null) {
+                        openArticleScreen(
+                            navController = navController,
+                            feedUrls = arrayListOf(feed.url)
                         )
-                    }
-                    FeedNumberBadge(data)
+                    } else onClick(feed)
+                },
+            )
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .padding(bottom = if (inGroup && isEnd) 6.dp else 0.dp)
+    ) {
+        FeedIcon(modifier = Modifier.padding(vertical = 3.dp), data = feed, size = 36.dp)
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.align(Alignment.CenterVertically)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val title = rememberSaveable(feed.title, feed.nickname) {
+                    feed.nickname.orEmpty().ifBlank { feed.title?.readable().orEmpty() }
                 }
-                val description = rememberSaveable(feed.customDescription, feed.description) {
-                    if (feed.customDescription == null) {
-                        feed.description?.readable().orEmpty()
-                    } else {
-                        feed.customDescription.readable()
-                    }
-                }
-                if (description.isNotBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (feed.mute) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                        contentDescription = stringResource(R.string.feed_screen_feed_muted),
+                        modifier = Modifier.size(16.dp),
                     )
                 }
+                FeedNumberBadge(data)
+            }
+            val description = rememberSaveable(feed.customDescription, feed.description) {
+                if (feed.customDescription == null) {
+                    feed.description?.readable().orEmpty()
+                } else {
+                    feed.customDescription.readable()
+                }
+            }
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }

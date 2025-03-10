@@ -25,6 +25,9 @@ fun <T : Any> LazyPagingItems<T>.safeItemKey(
     }
 }
 
+val <T : Any> LazyPagingItems<T>.lastIndex
+    get() = itemCount - 1
+
 fun <T : Any> LazyPagingItems<T>.getOrNull(index: Int): T? {
     return if (index !in 0..<itemCount) {
         null

@@ -151,6 +151,14 @@ interface FeedDao {
     suspend fun getFeedsInGroup(groupIds: List<String>): List<FeedViewBean>
 
     @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IN (:groupIds)")
+    suspend fun getFeedUrlsInGroup(groupIds: List<String>): List<String>
+
+    @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL")
+    suspend fun getFeedUrlsInDefaultGroup(): List<String>
+
+    @Transaction
     @Query(
         """
             SELECT * FROM $FEED_VIEW_NAME

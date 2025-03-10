@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.screen.feed
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Sort
@@ -60,19 +59,24 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
+import com.skyd.anivu.ext.lastIndex
 import com.skyd.anivu.ext.plus
-import com.skyd.anivu.model.bean.feed.FeedBean.Companion.isDefaultGroup
+import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
-import com.skyd.anivu.model.bean.group.GroupVo.Companion.isDefaultGroup
+import com.skyd.anivu.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
 import com.skyd.anivu.ui.component.ClipboardTextField
+import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
@@ -81,15 +85,14 @@ import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.showToast
-import com.skyd.anivu.ui.local.LocalFeedDefaultGroupExpand
 import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
-import com.skyd.anivu.ui.local.LocalHideEmptyDefault
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.article.ArticleScreen
 import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
+import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Group1Item
 import com.skyd.anivu.ui.screen.feed.mute.MUTE_FEED_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
@@ -103,7 +106,7 @@ const val FEED_SCREEN_ROUTE = "feedScreen"
 
 @Composable
 fun FeedScreen() {
-    val navigator = rememberListDetailPaneScaffoldNavigator<List<String>>(
+    val navigator = rememberListDetailPaneScaffoldNavigator<Map<String, List<String>>>(
         scaffoldDirective = calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()).copy(
             horizontalPartitionSpacerSize = 0.dp,
         )
@@ -112,11 +115,11 @@ fun FeedScreen() {
     val windowSizeClass = LocalWindowSizeClass.current
     val density = LocalDensity.current
 
-    var listPaneSelectedFeedUrls by remember { mutableStateOf<List<String>?>(null) }
+    var listPaneSelected by remember { mutableStateOf<Map<String, List<String>>?>(null) }
 
     val onNavigatorBack: () -> Unit = {
         navigator.navigateBack()
-        listPaneSelectedFeedUrls = navigator.currentDestination?.content
+        listPaneSelected = navigator.currentDestination?.content
     }
 
     BackHandler(navigator.canNavigateBack()) {
@@ -127,20 +130,24 @@ fun FeedScreen() {
     val feedListWidth by remember(windowWidth) { mutableStateOf(windowWidth * 0.335f) }
 
     ListDetailPaneScaffold(
-        modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(
-            WindowInsetsSides.Right.run {
-                if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
-            }
-        )),
+        modifier = Modifier.windowInsetsPadding(
+            WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Right.run {
+                    if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
+                }
+            )),
         directive = navigator.scaffoldDirective,
         value = navigator.scaffoldValue,
         listPane = {
             AnimatedPane(modifier = Modifier.preferredWidth(feedListWidth)) {
                 FeedList(
-                    listPaneSelectedFeedUrls = listPaneSelectedFeedUrls,
-                    onShowArticleList = { feedUrls ->
+                    listPaneSelectedFeedUrls = listPaneSelected?.get("feedUrls"),
+                    listPaneSelectedGroupIds = listPaneSelected?.get("groupIds"),
+                    onShowArticleListByFeedUrls = { feedUrls ->
                         if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, feedUrls)
+                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
+                                put("feedUrls", feedUrls)
+                            })
                         } else {
                             openArticleScreen(
                                 navController = navController,
@@ -148,15 +155,29 @@ fun FeedScreen() {
                             )
                         }
                     },
+                    onShowArticleListByGroupId = { groupId ->
+                        if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
+                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
+                                put("groupIds", listOf(groupId))
+                            })
+                        } else {
+                            openArticleScreen(
+                                navController = navController,
+                                feedUrls = emptyList(),
+                                groupIds = listOf(groupId),
+                            )
+                        }
+                    }
                 )
             }
         },
         detailPane = {
             AnimatedPane {
                 navigator.currentDestination?.content?.let {
-                    listPaneSelectedFeedUrls = it
+                    listPaneSelected = it
                     ArticleScreen(
-                        feedUrls = it,
+                        feedUrls = it["feedUrls"].orEmpty(),
+                        groupIds = it["groupIds"].orEmpty(),
                         articleIds = emptyList(),
                         onBackClick = onNavigatorBack,
                     )
@@ -169,7 +190,9 @@ fun FeedScreen() {
 @Composable
 private fun FeedList(
     listPaneSelectedFeedUrls: List<String>? = null,
-    onShowArticleList: (List<String>) -> Unit,
+    listPaneSelectedGroupIds: List<String>? = null,
+    onShowArticleListByFeedUrls: (List<String>) -> Unit,
+    onShowArticleListByGroupId: (String) -> Unit,
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -199,15 +222,7 @@ private fun FeedList(
                 title = { Text(text = stringResource(id = R.string.feed_screen_name)) },
                 actions = {
                     PodAuraIconButton(
-                        onClick = {
-                            onShowArticleList(
-                                (uiState.groupListState as? GroupListState.Success)
-                                    ?.dataList
-                                    ?.filterIsInstance<FeedViewBean>()
-                                    ?.map { it.feed.url }
-                                    .orEmpty()
-                            )
-                        },
+                        onClick = { onShowArticleListByFeedUrls(emptyList()) },
                         imageVector = Icons.AutoMirrored.Outlined.Article,
                         contentDescription = stringResource(id = R.string.feed_screen_all_articles),
                     )
@@ -263,22 +278,23 @@ private fun FeedList(
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPadding ->
-        when (val groupListState = uiState.groupListState) {
-            is GroupListState.Failed, GroupListState.Init, GroupListState.Loading -> {}
-            is GroupListState.Success -> {
-                FeedList(
-                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                    result = groupListState.dataList,
-                    contentPadding = innerPadding + PaddingValues(bottom = fabHeight + 16.dp),
-                    selectedFeedUrls = listPaneSelectedFeedUrls,
-                    onShowArticleList = { feedUrls -> onShowArticleList(feedUrls) },
-                    onExpandChanged = { group, expanded ->
-                        dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
-                    },
-                    onEditFeed = { feed -> openEditFeedDialog = feed },
-                    onEditGroup = { group -> openEditGroupDialog = group },
-                )
-            }
+        when (val listState = uiState.listState) {
+            is ListState.Failed, ListState.Init, ListState.Loading -> {}
+            is ListState.Success -> FeedList(
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                lazyPagingItems = listState.dataPagingDataFlow.collectAsLazyPagingItems(),
+                contentPadding = innerPadding,
+                fabPadding = fabHeight + 16.dp,
+                selectedFeedUrls = listPaneSelectedFeedUrls,
+                selectedGroupIds = listPaneSelectedGroupIds,
+                onShowArticleListByFeedUrls = { feedUrls -> onShowArticleListByFeedUrls(feedUrls) },
+                onShowArticleListByGroupId = { groupId -> onShowArticleListByGroupId(groupId) },
+                onExpandChanged = { group, expanded ->
+                    dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
+                },
+                onEditFeed = { feed -> openEditFeedDialog = feed },
+                onEditGroup = { group -> openEditGroupDialog = group },
+            )
         }
 
         MviEventListener(viewModel.singleEvent) { event ->
@@ -363,14 +379,10 @@ private fun FeedList(
         }
 
         if (openEditFeedDialog != null) {
-            val groups = remember(uiState.groupListState) {
-                (uiState.groupListState as? GroupListState.Success)
-                    ?.dataList?.filterIsInstance<GroupVo>().orEmpty()
-            }
             EditFeedSheet(
                 onDismissRequest = { openEditFeedDialog = null },
                 feedView = openEditFeedDialog!!,
-                groups = groups,
+                groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInFeed(it)) },
                 onRefresh = { dispatch(FeedIntent.RefreshFeed(it)) },
                 onMute = { feedUrl, mute -> dispatch(FeedIntent.MuteFeed(feedUrl, mute)) },
@@ -429,14 +441,10 @@ private fun FeedList(
         }
 
         if (openEditGroupDialog != null) {
-            val groups = remember(uiState.groupListState) {
-                (uiState.groupListState as? GroupListState.Success)
-                    ?.dataList?.filterIsInstance<GroupVo>().orEmpty()
-            }
             EditGroupSheet(
                 onDismissRequest = { openEditGroupDialog = null },
                 group = openEditGroupDialog!!,
-                groups = groups,
+                groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInGroup(it)) },
                 onRefresh = { dispatch(FeedIntent.RefreshGroupFeed(it)) },
                 onMuteAll = { groupId, mute ->
@@ -572,68 +580,65 @@ private fun CreateGroupDialog(
 @Composable
 private fun FeedList(
     modifier: Modifier = Modifier,
-    result: List<Any>,
+    lazyPagingItems: LazyPagingItems<Any>,
     contentPadding: PaddingValues = PaddingValues(),
+    fabPadding: Dp = 0.dp,
     selectedFeedUrls: List<String>? = null,
-    onShowArticleList: (List<String>) -> Unit,
+    selectedGroupIds: List<String>? = null,
+    onShowArticleListByFeedUrls: (List<String>) -> Unit,
+    onShowArticleListByGroupId: (String) -> Unit,
     onExpandChanged: (GroupVo, Boolean) -> Unit,
     onEditFeed: (FeedViewBean) -> Unit,
     onEditGroup: (GroupVo) -> Unit,
 ) {
-    val hideEmptyDefault = LocalHideEmptyDefault.current
-    val groups = remember(result) { result.filterIsInstance<GroupVo>() }
-    val idToGroup = remember(groups) { groups.associateBy { it.groupId } }
-
-    val defaultGroupShouldHide: (Int) -> Boolean = { index ->
-        hideEmptyDefault && result.getOrNull(index + 1) !is FeedViewBean
-    }
-    LazyVerticalGrid(
-        modifier = modifier.fillMaxSize(),
-        columns = GridCells.Fixed(1),
-        contentPadding = contentPadding + PaddingValues(horizontal = 16.dp),
+    PagingRefreshStateIndicator(
+        lazyPagingItems = lazyPagingItems,
+        placeholderPadding = contentPadding,
     ) {
-        itemsIndexed(
-            items = result,
-            key = { _, item ->
-                when (item) {
-                    is GroupVo.DefaultGroup -> item.groupId
-                    is GroupVo -> item.groupId
-                    is FeedViewBean -> item.feed.url
-                    else -> item
-                }
-            },
-        ) { index, item ->
-            when (item) {
-                is GroupVo -> if (!(item.isDefaultGroup() && defaultGroupShouldHide(index))) {
-                    Group1Item(
-                        index = index,
-                        data = item,
-                        onExpandChange = onExpandChanged,
-                        isEmpty = { it == result.lastIndex || result[it + 1] is GroupVo },
-                        onShowAllArticles = { group ->
-                            val feedUrls = result
-                                .filterIsInstance<FeedViewBean>()
-                                .filter { it.feed.groupId == group.groupId || group.isDefaultGroup() && it.feed.isDefaultGroup() }
-                                .map { it.feed.url }
-                            onShowArticleList(feedUrls)
-                        },
-                        onEdit = onEditGroup,
-                    )
-                }
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = contentPadding + PaddingValues(
+                bottom = fabPadding,
+                start = 16.dp,
+                end = 16.dp,
+            ),
+        ) {
+            items(
+                count = lazyPagingItems.itemCount,
+                key = lazyPagingItems.safeItemKey { item ->
+                    when (item) {
+                        is GroupVo.DefaultGroup -> item.groupId
+                        is GroupVo -> item.groupId
+                        is FeedViewBean -> item.feed.url
+                        else -> item
+                    }
+                },
+            ) { index ->
+                Box(modifier = Modifier.animateItem()) {
+                    when (val item = lazyPagingItems[index]) {
+                        is GroupVo -> Group1Item(
+                            index = index,
+                            data = item,
+                            onExpandChange = onExpandChanged,
+                            isEmpty = { it == lazyPagingItems.lastIndex || lazyPagingItems[it + 1] is GroupVo },
+                            onShowAllArticles = { group -> onShowArticleListByGroupId(group.groupId) },
+                            onEdit = onEditGroup,
+                        )
 
-                is FeedViewBean -> Feed1Item(
-                    data = item,
-                    visible = if (item.feed.groupId == null) {
-                        LocalFeedDefaultGroupExpand.current
-                    } else {
-                        idToGroup[item.feed.groupId]?.isExpanded ?: false
-                    },
-                    selected = selectedFeedUrls != null && item.feed.url in selectedFeedUrls,
-                    inGroup = true,
-                    isEnd = index == result.lastIndex || result[index + 1] is GroupVo,
-                    onClick = { onShowArticleList(listOf(it.url)) },
-                    onEdit = onEditFeed,
-                )
+                        is FeedViewBean -> Feed1Item(
+                            data = item,
+                            selected = selectedFeedUrls != null && item.feed.url in selectedFeedUrls ||
+                                    selectedGroupIds != null &&
+                                    (item.feed.groupId ?: DEFAULT_GROUP_ID) in selectedGroupIds,
+                            inGroup = true,
+                            isEnd = index == lazyPagingItems.lastIndex || lazyPagingItems[index + 1] is GroupVo,
+                            onClick = { onShowArticleListByFeedUrls(listOf(it.url)) },
+                            onEdit = onEditFeed,
+                        )
+
+                        else -> Feed1ItemPlaceholder()
+                    }
+                }
             }
         }
     }

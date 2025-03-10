@@ -41,6 +41,9 @@ open class GroupBean(
     }
 
     fun toVo(): GroupVo {
+        if (groupId.isBlank() || groupId == GroupVo.DefaultGroup.groupId) {
+            return GroupVo.DefaultGroup
+        }
         return GroupVo(groupId, name, isExpanded)
     }
 

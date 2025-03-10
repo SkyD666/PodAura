@@ -63,7 +63,8 @@ class ArticleRepository @Inject constructor(
 
     fun requestArticleList(
         feedUrls: List<String>,
-        articleIds: List<String>
+        groupIds: List<String>,
+        articleIds: List<String>,
     ): Flow<PagingData<ArticleWithFeed>> {
         return combine(
             filterFavorite,
@@ -72,10 +73,25 @@ class ArticleRepository @Inject constructor(
         ) { favorite, read, sortDateDesc ->
             arrayOf(favorite, read, sortDateDesc)
         }.flatMapLatest { (favorite, read, sortDateDesc) ->
+            val realFeedUrls =
+                if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
+                    feedDao.getAllFeedUrl()
+                } else {
+                    val realGroupIds =
+                        groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
+                    val hasDefault = realGroupIds.size != groupIds.size
+                    buildList {
+                        addAll(feedUrls)
+                        addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+                        if (hasDefault) {
+                            addAll(feedDao.getFeedUrlsInDefaultGroup())
+                        }
+                    }
+                }
             Pager(pagingConfig) {
                 articleDao.getArticlePagingSource(
                     genSql(
-                        feedUrls = feedUrls,
+                        feedUrls = realFeedUrls.distinct(),
                         articleIds = articleIds,
                         isFavorite = favorite as Boolean?,
                         isRead = read as Boolean?,
