@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -169,7 +170,7 @@ class MediaRepository @Inject constructor(
     }
 
     fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
-        refreshFiles, refreshPath
+        flowOf(path), refreshFiles, refreshPath
     ).filter { it == path }.map {
         val allGroups = getOrReadMediaLibJson(path).allGroups
         listOf(MediaGroupBean.DefaultMediaGroup) +
@@ -188,7 +189,7 @@ class MediaRepository @Inject constructor(
         group: MediaGroupBean?,
         isSubList: Boolean = false,
     ): Flow<List<MediaBean>> = combine(
-        merge(refreshFiles, refreshPath).filter { it == path }.map {
+        merge(flowOf(path), refreshFiles, refreshPath).filter { it == path }.map {
             val mediaLibJson = getOrReadMediaLibJson(path)
             val fileJsons = mediaLibJson.files
             val videoList = (if (group == null) fileJsons else {

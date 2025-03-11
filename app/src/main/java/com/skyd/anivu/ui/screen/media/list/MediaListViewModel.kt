@@ -59,7 +59,6 @@ class MediaListViewModel @Inject constructor(
     private fun Flow<MediaListIntent>.toMediaListPartialStateChangeFlow(): Flow<MediaListPartialStateChange> {
         return merge(
             filterIsInstance<MediaListIntent.Init>().flatMapConcat { intent ->
-                mediaRepo.refreshFiles(intent.path)
                 combine(
                     mediaRepo.requestFiles(path = intent.path, intent.group, intent.isSubList),
                     mediaRepo.requestGroups(path = intent.path),

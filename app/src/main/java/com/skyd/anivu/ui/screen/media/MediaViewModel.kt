@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -83,7 +84,7 @@ class MediaViewModel @Inject constructor(
             merge(
                 filterIsInstance<MediaIntent.Init>(),
                 filterIsInstance<MediaIntent.RefreshGroup>(),
-            ).flatMapConcat { intent ->
+            ).flatMapLatest { intent ->
                 val path = if (intent is MediaIntent.Init) intent.path
                 else (intent as MediaIntent.RefreshGroup).path
                 mediaRepo.requestGroups(path = path).map {

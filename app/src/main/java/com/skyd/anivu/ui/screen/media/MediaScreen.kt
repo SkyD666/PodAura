@@ -344,8 +344,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 is MediaEvent.CreateGroupResultEvent.Success,
                 is MediaEvent.DeleteGroupResultEvent.Success,
                 is MediaEvent.ChangeFileGroupResultEvent.Success,
-                is MediaEvent.MoveFilesToGroupResultEvent.Success ->
-                    dispatch(MediaIntent.RefreshGroup(path = path))
+                is MediaEvent.MoveFilesToGroupResultEvent.Success -> Unit
             }
         }
     }

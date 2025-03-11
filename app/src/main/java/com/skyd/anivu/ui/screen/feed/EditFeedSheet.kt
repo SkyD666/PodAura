@@ -499,7 +499,7 @@ internal fun GroupArea(
     )
     var flowRowMaxLines by rememberSaveable { mutableIntStateOf(3) }
     val moreOrCollapseIndicator = @Composable { scope: ContextualFlowRowOverflowScope ->
-        val remainingItems = groups.itemCount + 1 - scope.shownItemCount
+        val remainingItems = groups.itemCount + 2 - scope.shownItemCount
         SheetChip(
             icon = if (remainingItems == 0) Icons.Outlined.ExpandLess
             else Icons.Outlined.ExpandMore,
@@ -529,26 +529,43 @@ internal fun GroupArea(
             expandIndicator = moreOrCollapseIndicator,
             collapseIndicator = moreOrCollapseIndicator
         ),
-        itemCount = groups.itemCount + 1
+        itemCount = groups.itemCount + 2
     ) { index ->
-        if (index == 0) {
-            SheetChip(
+        when (index) {
+            0 -> SheetChip(
                 icon = Icons.Outlined.Add,
                 text = null,
                 contentDescription = stringResource(id = R.string.feed_screen_add_group),
                 onClick = openCreateGroupDialog,
             )
-        } else {
-            val group = groups[index - 1]
-            if (group != null) {
-                val selected = (currentGroupId ?: GroupVo.DefaultGroup.groupId) == group.groupId
+
+            1 -> {
+                val selected =
+                    currentGroupId == null || currentGroupId == GroupVo.DefaultGroup.groupId
                 SheetChip(
-                    modifier = Modifier.animateContentSize(),
                     icon = if (selected) Icons.Outlined.Check else null,
-                    text = group.name,
+                    text = GroupVo.DefaultGroup.name,
                     contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
-                    onClick = { if (group.groupId != currentGroupId) onGroupChange(group) },
+                    onClick = {
+                        if (GroupVo.DefaultGroup.groupId != currentGroupId) {
+                            onGroupChange(GroupVo.DefaultGroup)
+                        }
+                    },
                 )
+            }
+
+            else -> {
+                val group = groups[index - 2]
+                if (group != null) {
+                    val selected = (currentGroupId ?: GroupVo.DefaultGroup.groupId) == group.groupId
+                    SheetChip(
+                        modifier = Modifier.animateContentSize(),
+                        icon = if (selected) Icons.Outlined.Check else null,
+                        text = group.name,
+                        contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
+                        onClick = { if (group.groupId != currentGroupId) onGroupChange(group) },
+                    )
+                }
             }
         }
     }
