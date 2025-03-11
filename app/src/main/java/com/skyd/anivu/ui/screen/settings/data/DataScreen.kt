@@ -99,7 +99,7 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                 val localMediaLibLocation = LocalMediaLibLocation.current
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.PermMedia),
-                    text = stringResource(id = R.string.data_screen_media_lib_location),
+                    text = stringResource(id = R.string.data_screen_change_lib_location),
                     descriptionText = localMediaLibLocation,
                     onClick = {
                         openFilePicker(

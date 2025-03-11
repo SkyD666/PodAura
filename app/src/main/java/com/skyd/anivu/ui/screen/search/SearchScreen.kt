@@ -354,7 +354,7 @@ fun TrailingIcon(
 }
 
 @Composable
-private fun SearchBarInputField(
+fun SearchBarInputField(
     query: TextFieldValue,
     onQueryChange: (TextFieldValue) -> Unit,
     onSearch: () -> Unit,

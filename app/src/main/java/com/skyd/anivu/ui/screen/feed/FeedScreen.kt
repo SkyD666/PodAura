@@ -222,11 +222,6 @@ private fun FeedList(
                 title = { Text(text = stringResource(id = R.string.feed_screen_name)) },
                 actions = {
                     PodAuraIconButton(
-                        onClick = { onShowArticleListByFeedUrls(emptyList()) },
-                        imageVector = Icons.AutoMirrored.Outlined.Article,
-                        contentDescription = stringResource(id = R.string.feed_screen_all_articles),
-                    )
-                    PodAuraIconButton(
                         onClick = {
                             openSearchScreen(
                                 navController = navController,
@@ -235,6 +230,11 @@ private fun FeedList(
                         },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.feed_screen_search_feed),
+                    )
+                    PodAuraIconButton(
+                        onClick = { onShowArticleListByFeedUrls(emptyList()) },
+                        imageVector = Icons.AutoMirrored.Outlined.Article,
+                        contentDescription = stringResource(id = R.string.feed_screen_all_articles),
                     )
                     PodAuraIconButton(
                         onClick = { openMoreMenu = true },

@@ -1,7 +1,6 @@
 package com.skyd.anivu.model.db.dao
 
 import androidx.paging.PagingSource
-import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -139,13 +138,6 @@ interface GroupDao {
                 "LIMIT 1"
     )
     fun queryGroupIdByName(name: String): String
-
-    data class TypeToId(
-        @ColumnInfo("type")
-        val type: String,
-        @ColumnInfo("_id")
-        val id: String?,
-    )
 
     @Transaction
     @Query(

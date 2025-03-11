@@ -98,6 +98,9 @@ import com.skyd.anivu.ui.screen.filepicker.PATH_KEY
 import com.skyd.anivu.ui.screen.filepicker.PICK_FOLDER_KEY
 import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.history.HistoryScreen
+import com.skyd.anivu.ui.screen.media.search.MEDIA_SEARCH_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.media.search.MediaSearchScreen
+import com.skyd.anivu.ui.screen.media.search.SEARCH_PATH_KEY
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_MEDIA_KEY
 import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.media.sub.SubMediaScreenRoute
@@ -376,6 +379,9 @@ private fun MainNavHost() {
                 BundleCompat.getSerializable(arguments, SEARCH_DOMAIN_KEY, SearchDomain::class.java)
             } ?: SearchDomain.Feed
             SearchScreen(searchDomain = searchDomain)
+        }
+        composable(route = MEDIA_SEARCH_SCREEN_ROUTE) {
+            MediaSearchScreen(path = it.arguments?.getString(SEARCH_PATH_KEY)!!)
         }
         composable(route = SUB_MEDIA_SCREEN_ROUTE) {
             SubMediaScreenRoute(

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -41,7 +40,7 @@ internal fun MediaArea(
             .animateContentSize(),
     ) {
         if (isVideo) {
-            Box(modifier = Modifier.height(200.dp)) { playerContent() }
+            Box(modifier = Modifier.aspectRatio(1f)) { playerContent() }
         } else {
             Thumbnail(playState.thumbnail ?: playState.mediaThumbnail ?: playState.thumbnailAny)
         }

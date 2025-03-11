@@ -283,7 +283,7 @@
     <string name="article_action_switch_favorite_state">切换收藏状态</string>
     <string name="none">无</string>
     <string name="data_screen_media_lib_category">媒体库</string>
-    <string name="data_screen_media_lib_location">存储位置</string>
+    <string name="data_screen_change_lib_location">更改媒体库位置</string>
     <string name="storage_permission_request_screen_first_tip">资源下载与媒体浏览需要存储权限，请授予权限。</string>
     <string name="storage_permission_request_screen_rationale">没有存储权限无法运行应用程序，请授予权限。</string>
     <string name="storage_permission_request_screen_title">PodAura 需要存储访问</string>
@@ -428,6 +428,7 @@
     <string name="sort_manual">手动</string>
     <string name="sort_create_time">创建时间</string>
     <string name="created_on">创建于 %s</string>
+    <string name="media_screen_search_hint">搜索媒体</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

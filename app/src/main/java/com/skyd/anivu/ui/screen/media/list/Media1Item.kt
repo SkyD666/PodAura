@@ -98,7 +98,7 @@ fun Media1Item(
                     }
                 },
             )
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 13.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -145,7 +145,7 @@ fun Media1Item(
                 fileIcon()
             }
         }
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(11.dp))
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -164,7 +164,7 @@ fun Media1Item(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (fileExtension.isNotBlank()) {
                     TagText(text = remember(fileExtension) { fileExtension.uppercase(Locale.getDefault()) })
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 } else if (data.isDir) {
                     TagText(text = stringResource(id = R.string.folder))
                 }

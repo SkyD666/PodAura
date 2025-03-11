@@ -5,10 +5,13 @@ import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.splitByBlank
 import com.skyd.anivu.ext.validateFileName
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
+import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
+import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
@@ -20,10 +23,14 @@ import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreferen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
@@ -49,7 +56,7 @@ class MediaRepository @Inject constructor(
         const val OLD_MEDIA_LIB_JSON_NAME = "group.json"
         const val MEDIA_LIB_JSON_NAME = "MediaLib.json"
 
-        private val mediaLibJsons = LruCache<String, MediaLibJson>(maxSize = 5)
+        private val mediaLibJsons = LruCache<String, MediaLibJson>(maxSize = 10)
 
         private val refreshPath = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
     }
@@ -169,6 +176,31 @@ class MediaRepository @Inject constructor(
         }
     }
 
+    private fun FileJson.toMediaBean(
+        path: String,
+        articleWithEnclosure: ArticleWithEnclosureBean?,
+        feedBean: FeedBean?,
+    ): MediaBean? {
+        val file = File(path, fileName)
+        if (!file.exists()) return null
+        val fileCount = if (file.isDirectory) {
+            runCatching { file.list()?.size }.getOrNull()?.run {
+                this - listOf(
+                    File(file, MEDIA_LIB_JSON_NAME).exists(),
+                    File(file, FOLDER_INFO_JSON_NAME).exists(),
+                ).count { it }
+            } ?: 0
+        } else 0
+
+        return MediaBean(
+            displayName = displayName,
+            file = file,
+            fileCount = fileCount,
+            articleWithEnclosure = articleWithEnclosure,
+            feedBean = feedBean,
+        )
+    }
+
     fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
         flowOf(path), refreshFiles, refreshPath
     ).filter { it == path }.map {
@@ -205,21 +237,8 @@ class MediaRepository @Inject constructor(
                 ).associateBy { it.feed.url }
 
                 jsons.mapNotNull { fileJson ->
-                    val file = File(path, fileJson.fileName)
-                    if (!file.exists()) return@mapNotNull null
-                    val fileCount = if (file.isDirectory) {
-                        runCatching { file.list()?.size }.getOrNull()?.run {
-                            this - listOf(
-                                File(file, MEDIA_LIB_JSON_NAME).exists(),
-                                File(file, FOLDER_INFO_JSON_NAME).exists(),
-                            ).count { it }
-                        } ?: 0
-                    } else 0
-
-                    MediaBean(
-                        displayName = fileJson.displayName,
-                        file = file,
-                        fileCount = fileCount,
+                    fileJson.toMediaBean(
+                        path = path,
                         articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
                         feedBean = feedMap[fileJson.feedUrl]?.feed
                             ?: articleMap[fileJson.articleId]?.feed,
@@ -265,6 +284,51 @@ class MediaRepository @Inject constructor(
         }.distinctUntilChanged(),
     ) { list, sortAsc ->
         if (sortAsc) list else list.reversed()
+    }.flowOn(Dispatchers.IO)
+
+    fun search(
+        path: String,
+        query: String,
+        recursive: Boolean = false,
+    ): Flow<List<MediaBean>> = flowOf(
+        query.trim() to recursive
+    ).flatMapLatest { (query, recursive) ->
+        merge(
+            flowOf(path), refreshFiles, refreshPath
+        ).debounce(70).filter { it == path }.map {
+            val queries = query.splitByBlank()
+
+            val fileJsons = mutableListOf<FileJson>()
+            File(path).walkBottomUp().onEnter { dir ->
+                dir.path == path || recursive
+            }.filter { it.isDirectory }.asFlow().map {
+                val mediaLibJson = getOrReadMediaLibJson(it.path)
+                fileJsons += mediaLibJson.files
+            }.collect()
+
+            val articleMap = articleDao.getArticleListByIds(
+                fileJsons.mapNotNull { it.articleId }
+            ).associateBy { it.articleWithEnclosure.article.articleId }
+            val feedMap = feedDao.getFeedsIn(
+                fileJsons.mapNotNull { it.feedUrl }
+            ).associateBy { it.feed.url }
+
+            fileJsons.filter { file ->
+                queries.any {
+                    it in file.fileName ||
+                            it in file.displayName.orEmpty() ||
+                            it in file.feedUrl.orEmpty() ||
+                            it in file.articleLink.orEmpty()
+                }
+            }.mapNotNull { fileJson ->
+                fileJson.toMediaBean(
+                    path = path,
+                    articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
+                    feedBean = feedMap[fileJson.feedUrl]?.feed
+                        ?: articleMap[fileJson.articleId]?.feed,
+                )
+            }
+        }
     }.flowOn(Dispatchers.IO)
 
     fun deleteFile(file: File): Flow<Boolean> {
@@ -322,11 +386,12 @@ class MediaRepository @Inject constructor(
 
         val realGroupName = if (group.isDefaultGroup()) null else group.name
         val realArticleId = articleId.takeIf { !it.isNullOrBlank() }
-        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() }
-        val article = articleId?.let { articleDao.getArticleWithFeed(it).first() }
+        val article = realArticleId?.let { articleDao.getArticleWithFeed(it).first() }
         val articleLink = article?.articleWithEnclosure?.article?.link
         val articleGuid = article?.articleWithEnclosure?.article?.guid
         val feedUrl = article?.feed?.url
+        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() }
+            ?: article?.articleWithEnclosure?.article?.title
 
         val path = file.parentFile!!.path
         var mediaLibJson = getOrReadMediaLibJson(path = path)
@@ -403,7 +468,8 @@ class MediaRepository @Inject constructor(
 
         val realGroupName = if (group.isDefaultGroup()) null else group.name
         val realFeedUrl = feedUrl.takeIf { !it.isNullOrBlank() }
-        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() }
+        val feed = realFeedUrl?.let { feedDao.getFeed(it) }
+        val realDisplayName = displayName.takeIf { !it.isNullOrBlank() } ?: feed?.feed?.title
 
         val path = file.parentFile!!.path
         var mediaLibJson = getOrReadMediaLibJson(path = path)

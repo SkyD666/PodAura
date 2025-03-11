@@ -10,6 +10,7 @@ import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.allSearchDomain
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.splitByBlank
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
@@ -66,7 +67,8 @@ class SearchRepository @Inject constructor(
     ): Flow<PagingData<ArticleWithFeed>> {
         return searchQuery.debounce(70).flatMapLatest { query ->
             Pager(pagingConfig) {
-                articleDao.getArticlePagingSource(genSql(
+                articleDao.getArticlePagingSource(
+                    genSql(
                     tableName = ARTICLE_TABLE_NAME,
                     k = query,
                     leadingFilter = buildString {
@@ -130,7 +132,7 @@ class SearchRepository @Inject constructor(
             val sql = buildString {
                 if (intersectSearchBySpace) {
                     // 以多个连续的空格/制表符/换行符分割
-                    val keywords = k.trim().split("\\s+".toRegex()).toSet()
+                    val keywords = k.splitByBlank().toSet()
 
                     keywords.forEachIndexed { i, s ->
                         if (i > 0) append("INTERSECT \n")

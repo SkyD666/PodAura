@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Workspaces
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -82,6 +83,7 @@ import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.anivu.ui.screen.filepicker.openFilePicker
 import com.skyd.anivu.ui.screen.media.list.GroupInfo
 import com.skyd.anivu.ui.screen.media.list.MediaList
+import com.skyd.anivu.ui.screen.media.search.openMediaSearchScreen
 import com.skyd.anivu.ui.screen.settings.appearance.media.MEDIA_STYLE_SCREEN_ROUTE
 import kotlinx.coroutines.launch
 import java.io.File
@@ -161,10 +163,10 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 actions = {
                     PodAuraIconButton(
                         onClick = {
-                            openFilePicker(navController = navController, path = path)
+                            openMediaSearchScreen(navController = navController, path = path)
                         },
-                        imageVector = Icons.Outlined.MyLocation,
-                        contentDescription = stringResource(id = R.string.data_screen_media_lib_location),
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = stringResource(id = R.string.media_screen_search_hint),
                     )
                     PodAuraIconButton(
                         onClick = { showSortMediaDialog = true },
@@ -180,6 +182,9 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
                         onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
+                        onChangeLibLocation = {
+                            openFilePicker(navController = navController, path = path)
+                        }
                     )
                 }
             )
@@ -390,9 +395,20 @@ private fun MoreMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     onRefresh: () -> Unit,
+    onChangeLibLocation: () -> Unit,
 ) {
     val navController = LocalNavController.current
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.data_screen_change_lib_location)) },
+            leadingIcon = {
+                Icon(imageVector = Icons.Outlined.MyLocation, contentDescription = null)
+            },
+            onClick = {
+                onChangeLibLocation()
+                onDismissRequest()
+            },
+        )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.media_screen_refresh_group)) },
             leadingIcon = {

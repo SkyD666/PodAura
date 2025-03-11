@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -38,6 +39,7 @@ import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
 import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.list.MediaList
+import com.skyd.anivu.ui.screen.media.search.openMediaSearchScreen
 
 
 const val SUB_MEDIA_SCREEN_ROUTE = "subMediaScreen"
@@ -82,6 +84,7 @@ fun SubMediaScreenRoute(media: MediaBean?) {
 private fun SubMediaScreen(media: MediaBean) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -98,6 +101,16 @@ private fun SubMediaScreen(media: MediaBean) {
                     )
                 },
                 actions = {
+                    PodAuraIconButton(
+                        onClick = {
+                            openMediaSearchScreen(
+                                navController = navController,
+                                path = media.file.path,
+                            )
+                        },
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = stringResource(id = R.string.media_screen_search_hint),
+                    )
                     PodAuraIconButton(
                         onClick = { showSortMediaDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,

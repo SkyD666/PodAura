@@ -290,7 +290,7 @@
     <string name="article_action_switch_favorite_state">Switch favorite state</string>
     <string name="none">None</string>
     <string name="data_screen_media_lib_category">Media library</string>
-    <string name="data_screen_media_lib_location">Storage location</string>
+    <string name="data_screen_change_lib_location">Change media lib location</string>
     <string name="storage_permission_request_screen_first_tip">Resource download and media browsing require storage permission, please grant the permission.</string>
     <string name="storage_permission_request_screen_rationale">Application can\'t be launched without storage permission, please grant the permission</string>
     <string name="storage_permission_request_screen_title">PodAura requires storage access</string>
@@ -435,6 +435,7 @@
     <string name="sort_manual">Manual</string>
     <string name="sort_create_time">Create time</string>
     <string name="created_on">Created on %s</string>
+    <string name="media_screen_search_hint">Search media</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

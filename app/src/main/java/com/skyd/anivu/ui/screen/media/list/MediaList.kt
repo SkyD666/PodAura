@@ -164,7 +164,7 @@ internal fun MediaList(
 }
 
 @Composable
-private fun MediaList(
+internal fun MediaList(
     modifier: Modifier = Modifier,
     list: List<MediaBean>,
     groups: List<MediaGroupBean>,

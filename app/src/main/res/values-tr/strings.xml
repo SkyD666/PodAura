@@ -285,7 +285,7 @@
     <string name="article_action_switch_favorite_state">Favori durumunu değiştir</string>
     <string name="none">Yok</string>
     <string name="data_screen_media_lib_category">Medya kitaplığı</string>
-    <string name="data_screen_media_lib_location">Depolama konumu</string>
+    <string name="data_screen_change_lib_location">Depolama konumu</string>
     <string name="storage_permission_request_screen_first_tip">Kaynak indirme ve medya tarama için depolama izni gereklidir, lütfen izin verin.</string>
     <string name="storage_permission_request_screen_rationale">Uygulama depolama izni olmadan başlatılamaz, lütfen izin verin.</string>
     <string name="storage_permission_request_screen_title">PodAura depolama erişimi gerektirir</string>
