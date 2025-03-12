@@ -50,6 +50,7 @@ import com.skyd.anivu.model.db.migration.Migration19To20
 import com.skyd.anivu.model.db.migration.Migration1To2
 import com.skyd.anivu.model.db.migration.Migration20To21
 import com.skyd.anivu.model.db.migration.Migration21To22
+import com.skyd.anivu.model.db.migration.Migration22To23
 import com.skyd.anivu.model.db.migration.Migration2To3
 import com.skyd.anivu.model.db.migration.Migration3To4
 import com.skyd.anivu.model.db.migration.Migration4To5
@@ -80,7 +81,7 @@ const val APP_DATA_BASE_FILE_NAME = "app.db"
         PlaylistMediaBean::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 22,
+    version = 23,
 )
 @TypeConverters(
     value = [RequestHeadersConverter::class]
@@ -111,7 +112,7 @@ abstract class AppDatabase : RoomDatabase() {
             Migration9To10(), Migration10To11(), Migration11To12(), Migration12To13(),
             Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
             Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
-            Migration21To22()
+            Migration21To22(), Migration22To23(),
         )
 
         fun getInstance(context: Context): AppDatabase {

@@ -38,11 +38,11 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.anivu.ui.component.BaseSettingsItem
+import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.BaseSettingsItem
-import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
@@ -50,6 +50,7 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.anivu.ui.screen.filepicker.openFilePicker
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AUTO_DELETE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DELETE_CONSTRAINT_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
 
 
@@ -131,6 +132,14 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                     text = stringResource(id = R.string.data_screen_clear_cache),
                     descriptionText = stringResource(id = R.string.data_screen_clear_cache_description),
                     onClick = { openDeleteWarningDialog = true }
+                )
+            }
+            item {
+                BaseSettingsItem(
+                    icon = null,
+                    text = stringResource(id = R.string.delete_constraint_screen_name),
+                    descriptionText = stringResource(id = R.string.delete_constraint_screen_name_description),
+                    onClick = { navController.navigate(DELETE_CONSTRAINT_SCREEN_ROUTE) },
                 )
             }
             item {

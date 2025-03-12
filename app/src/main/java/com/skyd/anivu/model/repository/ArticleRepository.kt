@@ -2,10 +2,13 @@ package com.skyd.anivu.model.repository
 
 import android.database.DatabaseUtils
 import android.os.Parcelable
+import android.widget.Toast
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.skyd.anivu.R
+import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
@@ -65,56 +68,62 @@ class ArticleRepository @Inject constructor(
         feedUrls: List<String>,
         groupIds: List<String>,
         articleIds: List<String>,
-    ): Flow<PagingData<ArticleWithFeed>> {
-        return combine(
-            filterFavorite,
-            filterRead,
-            articleSortDateDesc,
-        ) { favorite, read, sortDateDesc ->
-            arrayOf(favorite, read, sortDateDesc)
-        }.flatMapLatest { (favorite, read, sortDateDesc) ->
-            val realFeedUrls =
-                if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
-                    feedDao.getAllFeedUrl()
-                } else {
-                    val realGroupIds =
-                        groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
-                    val hasDefault = realGroupIds.size != groupIds.size
-                    buildList {
-                        addAll(feedUrls)
-                        addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
-                        if (hasDefault) {
-                            addAll(feedDao.getFeedUrlsInDefaultGroup())
-                        }
-                    }
+    ): Flow<PagingData<ArticleWithFeed>> = combine(
+        filterFavorite,
+        filterRead,
+        articleSortDateDesc,
+    ) { favorite, read, sortDateDesc ->
+        arrayOf(favorite, read, sortDateDesc)
+    }.flatMapLatest { (favorite, read, sortDateDesc) ->
+        val realFeedUrls =
+            if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
+                feedDao.getAllFeedUrl()
+            } else {
+                val realGroupIds =
+                    groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
+                val hasDefault = realGroupIds.size != groupIds.size
+                buildList {
+                    addAll(feedUrls)
+                    addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+                    if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
                 }
-            Pager(pagingConfig) {
-                articleDao.getArticlePagingSource(
-                    genSql(
-                        feedUrls = realFeedUrls.distinct(),
-                        articleIds = articleIds,
-                        isFavorite = favorite as Boolean?,
-                        isRead = read as Boolean?,
-                        orderBy = sortDateDesc as ArticleSort,
-                    )
+            }
+        Pager(pagingConfig) {
+            articleDao.getArticlePagingSource(
+                genSql(
+                    feedUrls = realFeedUrls.distinct(),
+                    articleIds = articleIds,
+                    isFavorite = favorite as Boolean?,
+                    isRead = read as Boolean?,
+                    orderBy = sortDateDesc as ArticleSort,
                 )
-            }.flow
-        }.flowOn(Dispatchers.IO)
-    }
+            )
+        }.flow
+    }.flowOn(Dispatchers.IO)
 
-    fun refreshGroupArticles(groupId: String?): Flow<Unit> {
-        return flow {
-            val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
-            emit(feedDao.getFeedsByGroupId(realGroupId).map { it.feed.url })
-        }.flatMapConcat {
-            refreshArticleList(feedUrls = it)
-        }.flowOn(Dispatchers.IO)
-    }
+    fun refreshGroupArticles(groupId: String?): Flow<Unit> = flow {
+        val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
+        emit(feedDao.getFeedsByGroupId(realGroupId).map { it.feed.url })
+    }.flatMapConcat {
+        refreshArticleList(feedUrls = it)
+    }.flowOn(Dispatchers.IO)
 
-    fun refreshArticleList(feedUrls: List<String>): Flow<Unit> = flow {
+    fun refreshArticleList(
+        feedUrls: List<String>,
+        groupIds: List<String?> = emptyList(),
+    ): Flow<Unit> = flow {
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
-            feedUrls.forEach { feedUrl ->
+            val failMsg = mutableListOf<Pair<String, String>>()
+            val realGroupIds = groupIds.filterNotNull()
+                .filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
+            val hasDefault = realGroupIds.size != groupIds.size
+            val realFeedUrls = buildList {
+                addAll(feedUrls)
+                addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+                if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
+            }
+            realFeedUrls.forEach { feedUrl ->
                 requests += async {
                     val articleBeanList = runCatching {
                         rssHelper.queryRssXml(
@@ -126,7 +135,7 @@ class ArticleRepository @Inject constructor(
                     }.onFailure { e ->
                         if (e !is CancellationException) {
                             e.printStackTrace()
-                            (feedUrl + "\n" + e.message).showToast()
+                            failMsg += (feedUrl to e.message.orEmpty())
                         }
                     }.getOrNull()
 
@@ -142,21 +151,28 @@ class ArticleRepository @Inject constructor(
                 }
             }
             requests.forEach { it.await() }
+            if (failMsg.isNotEmpty()) {
+                appContext.getString(
+                    R.string.rss_update_failed,
+                    failMsg.size,
+                    failMsg.joinToString(
+                        separator = "\n",
+                        prefix = "\n",
+                        limit = 10,
+                        transform = { "- ${it.first}" }),
+                ).showToast(Toast.LENGTH_LONG)
+            }
             emit(Unit)
         }
     }.flowOn(Dispatchers.IO)
 
-    fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> {
-        return flow {
-            emit(articleDao.favoriteArticle(articleId, favorite))
-        }.flowOn(Dispatchers.IO)
-    }
+    fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> = flow {
+        emit(articleDao.favoriteArticle(articleId, favorite))
+    }.flowOn(Dispatchers.IO)
 
-    fun readArticle(articleId: String, read: Boolean): Flow<Unit> {
-        return flow {
-            emit(articleDao.readArticle(articleId, read))
-        }.flowOn(Dispatchers.IO)
-    }
+    fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
+        emit(articleDao.readArticle(articleId, read))
+    }.flowOn(Dispatchers.IO)
 
     companion object {
         fun genSql(

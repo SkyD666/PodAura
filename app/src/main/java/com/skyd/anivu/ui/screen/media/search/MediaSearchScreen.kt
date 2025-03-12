@@ -49,6 +49,7 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
+import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -181,7 +182,7 @@ fun MediaSearchScreen(
                         context.activity,
                         startMediaPath = media.file.path,
                         mediaList = searchResultState.result.filter { it.isMedia }.map {
-                            PlayActivity.PlayMediaListItem(
+                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
                                 path = it.file.path,
                                 articleId = it.articleId,
                                 title = it.displayName,

@@ -3,8 +3,10 @@ package com.skyd.anivu.model.bean.history
 import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.skyd.anivu.base.BaseBean
+import com.skyd.anivu.model.bean.article.ArticleBean
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -12,7 +14,17 @@ const val MEDIA_PLAY_HISTORY_TABLE_NAME = "MediaPlayHistory"
 
 @Parcelize
 @Serializable
-@Entity(tableName = MEDIA_PLAY_HISTORY_TABLE_NAME)
+@Entity(
+    tableName = MEDIA_PLAY_HISTORY_TABLE_NAME,
+    foreignKeys = [
+        ForeignKey(
+            entity = ArticleBean::class,
+            parentColumns = [ArticleBean.ARTICLE_ID_COLUMN],
+            childColumns = [MediaPlayHistoryBean.ARTICLE_ID_COLUMN],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+)
 data class MediaPlayHistoryBean(
     @PrimaryKey
     @ColumnInfo(name = PATH_COLUMN)

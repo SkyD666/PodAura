@@ -56,10 +56,10 @@ interface PlaylistDao {
 
     @Transaction
     @Query(
-        "SELECT `${PlaylistBean.PLAYLIST_ID_COLUMN}` FROM $PLAYLIST_TABLE_NAME " +
-                "WHERE ${PlaylistBean.PLAYLIST_ID_COLUMN} = :playlistId"
+        "SELECT EXISTS (SELECT 1 FROM $PLAYLIST_TABLE_NAME " +
+                "WHERE ${PlaylistBean.PLAYLIST_ID_COLUMN} = :playlistId)"
     )
-    suspend fun exists(playlistId: String): String?
+    suspend fun exists(playlistId: String): Int
 
     @Query(
         "SELECT MIN(${PlaylistBean.ORDER_POSITION_COLUMN}) FROM $PLAYLIST_TABLE_NAME WHERE " +

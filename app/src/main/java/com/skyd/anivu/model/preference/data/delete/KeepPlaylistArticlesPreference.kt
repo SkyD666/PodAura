@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.preference.data.autodelete
+package com.skyd.anivu.model.preference.data.delete
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
@@ -10,12 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-object AutoDeleteArticleUseMaxCountPreference : BasePreference<Boolean> {
-    private const val AUTO_DELETE_ARTICLE_USE_MAX_COUNT = "autoDeleteArticleUseMaxCount"
+object KeepPlaylistArticlesPreference : BasePreference<Boolean> {
+    private const val KEEP_PLAYLIST_ARTICLES = "keepPlaylistArticles"
+    override val default = true
 
-    override val default = false
-
-    val key = booleanPreferencesKey(AUTO_DELETE_ARTICLE_USE_MAX_COUNT)
+    val key = booleanPreferencesKey(KEEP_PLAYLIST_ARTICLES)
 
     fun put(context: Context, scope: CoroutineScope, value: Boolean) {
         scope.launch(Dispatchers.IO) {

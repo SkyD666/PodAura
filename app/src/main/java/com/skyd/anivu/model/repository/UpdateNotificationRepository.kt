@@ -12,20 +12,15 @@ import javax.inject.Inject
 class UpdateNotificationRepository @Inject constructor(
     private val articleNotificationRuleDao: ArticleNotificationRuleDao,
 ) : BaseRepository() {
-    fun getAllRules(): Flow<List<ArticleNotificationRuleBean>> {
-        return articleNotificationRuleDao.getAllArticleNotificationRules()
+    fun getAllRules(): Flow<List<ArticleNotificationRuleBean>> =
+        articleNotificationRuleDao.getAllArticleNotificationRules()
             .flowOn(Dispatchers.IO)
-    }
 
-    fun addRule(rule: ArticleNotificationRuleBean): Flow<Unit> {
-        return flow {
-            emit(articleNotificationRuleDao.setArticleNotificationRule(rule))
-        }.flowOn(Dispatchers.IO)
-    }
+    fun addRule(rule: ArticleNotificationRuleBean): Flow<Unit> = flow {
+        emit(articleNotificationRuleDao.setArticleNotificationRule(rule))
+    }.flowOn(Dispatchers.IO)
 
-    fun removeRule(ruleId: Int): Flow<Int> {
-        return flow {
-            emit(articleNotificationRuleDao.removeArticleNotificationRule(ruleId))
-        }.flowOn(Dispatchers.IO)
-    }
+    fun removeRule(ruleId: Int): Flow<Int> = flow {
+        emit(articleNotificationRuleDao.removeArticleNotificationRule(ruleId))
+    }.flowOn(Dispatchers.IO)
 }

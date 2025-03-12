@@ -11,7 +11,6 @@ private val scope = CoroutineScope(Dispatchers.Main.immediate)
 fun CharSequence.showToast(duration: Int = Toast.LENGTH_SHORT) {
     scope.launch {
         val toast = Toast.makeText(appContext, this@showToast, duration)
-        toast.duration = duration
         toast.show()
     }
 }

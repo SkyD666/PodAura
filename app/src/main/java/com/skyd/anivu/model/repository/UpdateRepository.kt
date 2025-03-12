@@ -11,9 +11,7 @@ import retrofit2.Retrofit
 import javax.inject.Inject
 
 class UpdateRepository @Inject constructor(private val retrofit: Retrofit) : BaseRepository() {
-    suspend fun checkUpdate(): Flow<UpdateBean> {
-        return flow {
-            emit(retrofit.create(UpdateService::class.java).checkUpdate())
-        }.flowOn(Dispatchers.IO)
-    }
+    fun checkUpdate(): Flow<UpdateBean> = flow {
+        emit(retrofit.create(UpdateService::class.java).checkUpdate())
+    }.flowOn(Dispatchers.IO)
 }

@@ -429,6 +429,11 @@
     <string name="sort_create_time">创建时间</string>
     <string name="created_on">创建于 %s</string>
     <string name="media_screen_search_hint">搜索媒体</string>
+    <string name="rss_update_failed">%d 个订阅更新失败：\n%s</string>
+    <string name="delete_constraint_screen_name">删除约束</string>
+    <string name="delete_constraint_screen_keep_playlist_articles">保留播放列表文章</string>
+    <string name="delete_constraint_screen_keep_playlist_articles_description">不要删除播放列表中的文章</string>
+    <string name="delete_constraint_screen_name_description">配置删除文章所需的约束</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

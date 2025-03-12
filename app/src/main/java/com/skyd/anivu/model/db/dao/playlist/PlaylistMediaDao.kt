@@ -92,11 +92,11 @@ interface PlaylistMediaDao {
 
     @Transaction
     @Query(
-        "SELECT `${PlaylistMediaBean.PLAYLIST_ID_COLUMN}` FROM $PLAYLIST_MEDIA_TABLE_NAME " +
-                "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId AND " +
-                "${PlaylistMediaBean.URL_COLUMN} = :url"
+        "SELECT EXISTS (SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME WHERE " +
+                "${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId AND " +
+                "${PlaylistMediaBean.URL_COLUMN} = :url)"
     )
-    suspend fun exists(playlistId: String, url: String): String?
+    suspend fun exists(playlistId: String, url: String): Int
 
     @Transaction
     @Query(

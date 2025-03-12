@@ -11,7 +11,6 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Parcelable
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,6 +28,7 @@ import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
+import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerViewRoute
@@ -36,40 +36,10 @@ import com.skyd.anivu.ui.mpv.copyAssetsForMpv
 import com.skyd.anivu.ui.mpv.service.PlayerService
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
 import java.io.File
 
 
 class PlayActivity : BaseComposeActivity() {
-    @Parcelize
-    data class PlayMediaListItem(
-        val path: String,
-        val articleId: String?,
-        // If articleId is invalid, use the following fields
-        val title: String?,
-        val thumbnail: String?,
-    ) : Parcelable
-
-    sealed interface PlayDataMode : Parcelable {
-        @Parcelize
-        data class ArticleList(
-            val articleId: String,
-            val url: String,
-        ) : PlayDataMode
-
-        @Parcelize
-        data class MediaLibraryList(
-            val startMediaPath: String,
-            val mediaList: List<PlayMediaListItem>,
-        ) : PlayDataMode
-
-        @Parcelize
-        data class Playlist(
-            val playlistId: String,
-            val mediaUrl: String?,
-        ) : PlayDataMode
-    }
-
     companion object {
         const val PLAY_DATA_MODE_KEY = "playDataMode"
 
@@ -88,7 +58,7 @@ class PlayActivity : BaseComposeActivity() {
         fun playMediaList(
             activity: Activity,
             startMediaPath: String,
-            mediaList: List<PlayMediaListItem>,
+            mediaList: List<PlayDataMode.MediaLibraryList.PlayMediaListItem>,
         ) {
             activity.startActivity(
                 Intent(activity, PlayActivity::class.java).apply {

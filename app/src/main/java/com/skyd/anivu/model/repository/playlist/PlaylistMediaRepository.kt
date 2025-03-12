@@ -45,6 +45,13 @@ class PlaylistMediaRepository @Inject constructor(
             val oldArticleIdNotExists = articleDao.exists(realArticleId) == 0
             if (oldArticleIdNotExists) {
                 realArticleId = enclosureDao.getMediaArticleId(playlistMediaBean.url)
+                if (realArticleId != null) {
+                    playlistMediaDao.updatePlaylistMediaArticleId(
+                        playlistId = playlistMediaBean.playlistId,
+                        url = playlistMediaBean.url,
+                        articleId = realArticleId
+                    )
+                }
             }
             if (oldArticleIdNotExists) {
                 result = copy(
@@ -87,12 +94,11 @@ class PlaylistMediaRepository @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    fun requestPlaylistMediaList(playlistId: String): Flow<List<PlaylistMediaWithArticleBean>> {
-        return flow {
+    fun requestPlaylistMediaList(playlistId: String): Flow<List<PlaylistMediaWithArticleBean>> =
+        flow {
             val playlist = playlistMediaDao.getPlaylistMediaList(playlistId)
             emit(playlist.map { withContext(Dispatchers.IO) { it.updateMediaMetadata() } })
         }.flowOn(Dispatchers.IO)
-    }
 
     fun getCommonPlaylists(
         medias: List<PlaylistMediaWithArticleBean>
@@ -101,10 +107,10 @@ class PlaylistMediaRepository @Inject constructor(
         medias.size
     ).flowOn(Dispatchers.IO)
 
-    fun insertPlaylistMedia(playlistId: String, url: String, articleId: String?): Flow<Boolean> {
-        return flow {
-            if (playlistDao.exists(playlistId) == null ||
-                playlistMediaDao.exists(playlistId = playlistId, url = url) != null
+    fun insertPlaylistMedia(playlistId: String, url: String, articleId: String?): Flow<Boolean> =
+        flow {
+            if (playlistDao.exists(playlistId) == 0 ||
+                playlistMediaDao.exists(playlistId = playlistId, url = url) != 0
             ) {
                 emit(false)
                 return@flow
@@ -122,7 +128,6 @@ class PlaylistMediaRepository @Inject constructor(
             )
             emit(true)
         }.flowOn(Dispatchers.IO)
-    }
 
     fun removeMediaFromPlaylist(
         playlistId: String,
@@ -139,7 +144,7 @@ class PlaylistMediaRepository @Inject constructor(
         toPlaylistId: String,
         medias: List<PlaylistMediaWithArticleBean>
     ): Flow<Unit> = flow {
-        if (playlistDao.exists(toPlaylistId) == null) {
+        if (playlistDao.exists(toPlaylistId) == 0) {
             emit(Unit)
             return@flow
         }
@@ -158,7 +163,7 @@ class PlaylistMediaRepository @Inject constructor(
         url: String,
         articleId: String?,
     ): Flow<Boolean> = flow {
-        if (playlistMediaDao.exists(playlistId = playlistId, url = url) == null) {
+        if (playlistMediaDao.exists(playlistId = playlistId, url = url) == 0) {
             emit(false)
             return@flow
         }

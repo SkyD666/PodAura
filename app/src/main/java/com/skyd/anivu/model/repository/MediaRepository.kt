@@ -331,46 +331,40 @@ class MediaRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun deleteFile(file: File): Flow<Boolean> {
-        return flow {
-            val path = file.parentFile!!.path
-            val mediaLibJson = getOrReadMediaLibJson(path).apply {
-                files.removeIf { it.fileName == file.name }
-            }
+    fun deleteFile(file: File): Flow<Boolean> = flow {
+        val path = file.parentFile!!.path
+        val mediaLibJson = getOrReadMediaLibJson(path).apply {
+            files.removeIf { it.fileName == file.name }
+        }
+        writeMediaLibJson(path = path, mediaLibJson)
+        emit(file.deleteRecursively())
+    }.flowOn(Dispatchers.IO)
+
+    fun renameFile(file: File, newName: String): Flow<File?> = flow {
+        val path = file.parentFile!!.path
+        val mediaLibJson = getOrReadMediaLibJson(path)
+        val validateFileName = newName.validateFileName()
+        val newFile = File(file.parentFile, validateFileName)
+        if (file.renameTo(newFile)) {
+            mediaLibJson.files.firstOrNull { it.fileName == file.name }?.fileName =
+                validateFileName
             writeMediaLibJson(path = path, mediaLibJson)
-            emit(file.deleteRecursively())
-        }.flowOn(Dispatchers.IO)
-    }
+            emit(newFile)
+        } else {
+            emit(null)
+        }
+    }.flowOn(Dispatchers.IO)
 
-    fun renameFile(file: File, newName: String): Flow<File?> {
-        return flow {
-            val path = file.parentFile!!.path
-            val mediaLibJson = getOrReadMediaLibJson(path)
-            val validateFileName = newName.validateFileName()
-            val newFile = File(file.parentFile, validateFileName)
-            if (file.renameTo(newFile)) {
-                mediaLibJson.files.firstOrNull { it.fileName == file.name }?.fileName =
-                    validateFileName
-                writeMediaLibJson(path = path, mediaLibJson)
-                emit(newFile)
-            } else {
-                emit(null)
-            }
-        }.flowOn(Dispatchers.IO)
-    }
+    fun setFileDisplayName(mediaBean: MediaBean, displayName: String?): Flow<MediaBean> = flow {
+        val path = mediaBean.file.parentFile!!.path
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
+        mediaLibJson.files.firstOrNull {
+            it.fileName == mediaBean.file.name
+        }?.displayName = if (displayName.isNullOrBlank()) null else displayName
+        writeMediaLibJson(path = path, mediaLibJson)
 
-    fun setFileDisplayName(mediaBean: MediaBean, displayName: String?): Flow<MediaBean> {
-        return flow {
-            val path = mediaBean.file.parentFile!!.path
-            val mediaLibJson = getOrReadMediaLibJson(path = path)
-            mediaLibJson.files.firstOrNull {
-                it.fileName == mediaBean.file.name
-            }?.displayName = if (displayName.isNullOrBlank()) null else displayName
-            writeMediaLibJson(path = path, mediaLibJson)
-
-            emit(mediaBean.copy(displayName = displayName))
-        }.flowOn(Dispatchers.IO)
-    }
+        emit(mediaBean.copy(displayName = displayName))
+    }.flowOn(Dispatchers.IO)
 
     fun addNewFile(
         file: File,

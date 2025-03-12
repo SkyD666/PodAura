@@ -134,6 +134,8 @@ import com.skyd.anivu.ui.screen.settings.data.DATA_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.data.DataScreen
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AUTO_DELETE_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteScreen
+import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DELETE_CONSTRAINT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintScreen
 import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
 import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportScreen
 import com.skyd.anivu.ui.screen.settings.data.importexport.exportopml.EXPORT_OPML_SCREEN_ROUTE
@@ -314,6 +316,7 @@ private fun MainNavHost() {
         composable(route = TRANSMISSION_SCREEN_ROUTE) { TransmissionScreen() }
         composable(route = UPDATE_NOTIFICATION_SCREEN_ROUTE) { UpdateNotificationScreen() }
         composable(route = MUTE_FEED_SCREEN_ROUTE) { MuteFeedScreen() }
+        composable(route = DELETE_CONSTRAINT_SCREEN_ROUTE) { DeleteConstraintScreen() }
         composable(
             route = "$PLAYLIST_MEDIA_LIST_SCREEN_ROUTE/{$PLAYLIST_ID_KEY}",
             arguments = listOf(navArgument(PLAYLIST_ID_KEY) { type = NavType.StringType }),

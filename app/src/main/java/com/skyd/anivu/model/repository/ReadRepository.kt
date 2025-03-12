@@ -37,63 +37,57 @@ class ReadRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val readHistoryDao: ReadHistoryDao,
 ) : BaseRepository() {
-    fun requestArticleWithFeed(articleId: String): Flow<ArticleWithFeed?> {
-        return articleDao.getArticleWithFeed(articleId = articleId)
-            .filterNotNull()
-            .onEach {
-                readHistoryDao.updateReadHistory(
-                    ReadHistoryBean(
-                        articleId = articleId,
-                        lastTime = System.currentTimeMillis(),
-                    )
+    fun requestArticleWithFeed(
+        articleId: String,
+    ): Flow<ArticleWithFeed?> = articleDao.getArticleWithFeed(articleId = articleId)
+        .filterNotNull()
+        .onEach {
+            readHistoryDao.updateReadHistory(
+                ReadHistoryBean(
+                    articleId = articleId,
+                    lastTime = System.currentTimeMillis(),
                 )
-            }
-            .flowOn(Dispatchers.IO)
-    }
-
-    fun downloadImage(url: String, title: String?): Flow<Unit> {
-        return flow {
-            val imageFile = appContext.imageLoaderBuilder().build().getImage(appContext, url)!!
-            val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-            imageFile.savePictureToMediaStore(
-                context = appContext,
-                mimetype = format.toMimeType(),
-                fileName = (title.orEmpty().ifEmpty {
-                    url.substringAfterLast('/')
-                } + "_" + Random.nextInt()).validateFileName() + format.toString(),
-                autoDelete = false,
             )
-            emit(Unit)
-        }.flowOn(Dispatchers.IO)
-    }
+        }
+        .flowOn(Dispatchers.IO)
 
-    fun shareImage(url: String): Flow<Unit> {
-        return flow {
-            val imageFile = getImageByCoil(url)
-            val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-            val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
-            imageFile.copyTo(tempImg, overwrite = true)
+    fun downloadImage(url: String, title: String?): Flow<Unit> = flow {
+        val imageFile = appContext.imageLoaderBuilder().build().getImage(appContext, url)!!
+        val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
+        imageFile.savePictureToMediaStore(
+            context = appContext,
+            mimetype = format.toMimeType(),
+            fileName = (title.orEmpty().ifEmpty {
+                url.substringAfterLast('/')
+            } + "_" + Random.nextInt()).validateFileName() + format.toString(),
+            autoDelete = false,
+        )
+        emit(Unit)
+    }.flowOn(Dispatchers.IO)
 
-            coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
+    fun shareImage(url: String): Flow<Unit> = flow {
+        val imageFile = getImageByCoil(url)
+        val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
+        val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
+        imageFile.copyTo(tempImg, overwrite = true)
 
-            tempImg.toUri(appContext).share(appContext, mimeType = format.toMimeType())
-            emit(Unit)
-        }.flowOn(Dispatchers.IO)
-    }
+        coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
 
-    fun copyImage(url: String): Flow<Unit> {
-        return flow {
-            val imageFile = getImageByCoil(url)
-            val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-            val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
-            imageFile.copyTo(tempImg, overwrite = true)
+        tempImg.toUri(appContext).share(appContext, mimeType = format.toMimeType())
+        emit(Unit)
+    }.flowOn(Dispatchers.IO)
 
-            coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
+    fun copyImage(url: String): Flow<Unit> = flow {
+        val imageFile = getImageByCoil(url)
+        val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
+        val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
+        imageFile.copyTo(tempImg, overwrite = true)
 
-            tempImg.toUri(appContext).copyToClipboard(appContext, format.toMimeType())
-            emit(Unit)
-        }.flowOn(Dispatchers.IO)
-    }
+        coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
+
+        tempImg.toUri(appContext).copyToClipboard(appContext, format.toMimeType())
+        emit(Unit)
+    }.flowOn(Dispatchers.IO)
 
     private suspend fun getImageByCoil(url: String): File {
         val request = ImageRequest.Builder(appContext)

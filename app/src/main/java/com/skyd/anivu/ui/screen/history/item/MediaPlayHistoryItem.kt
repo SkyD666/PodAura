@@ -49,6 +49,7 @@ import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.isLocalFile
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
+import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
@@ -88,7 +89,7 @@ fun MediaPlayHistoryItem(
                         activity = context.activity,
                         startMediaPath = path,
                         mediaList = listOf(
-                            PlayActivity.PlayMediaListItem(
+                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
                                 path = path,
                                 articleId = articleId,
                                 title = null,

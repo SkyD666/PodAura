@@ -18,17 +18,13 @@ class HistoryRepository @Inject constructor(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository() {
-    fun requestReadHistoryList(): Flow<Pager<Int, ReadHistoryWithArticle>> {
-        return flow {
-            emit(Pager(pagingConfig) { readHistoryDao.getReadHistoryList() })
-        }.flowOn(Dispatchers.IO)
-    }
+    fun requestReadHistoryList(): Flow<Pager<Int, ReadHistoryWithArticle>> = flow {
+        emit(Pager(pagingConfig) { readHistoryDao.getReadHistoryList() })
+    }.flowOn(Dispatchers.IO)
 
-    fun requestMediaPlayHistoryList(): Flow<Pager<Int, MediaPlayHistoryWithArticle>> {
-        return flow {
-            emit(Pager(pagingConfig) { mediaPlayHistoryDao.getMediaPlayHistoryList() })
-        }.flowOn(Dispatchers.IO)
-    }
+    fun requestMediaPlayHistoryList(): Flow<Pager<Int, MediaPlayHistoryWithArticle>> = flow {
+        emit(Pager(pagingConfig) { mediaPlayHistoryDao.getMediaPlayHistoryList() })
+    }.flowOn(Dispatchers.IO)
 
     fun deleteReadHistory(articleId: String): Flow<Int> = flow {
         emit(readHistoryDao.deleteReadHistory(articleId))

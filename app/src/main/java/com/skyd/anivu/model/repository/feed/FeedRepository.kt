@@ -11,6 +11,7 @@ import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.copyTo
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.isLocal
 import com.skyd.anivu.ext.isNetwork
 import com.skyd.anivu.ext.put
@@ -24,6 +25,7 @@ import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +33,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -99,29 +100,34 @@ class FeedRepository @Inject constructor(
 
     fun clearGroupArticles(groupId: String): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
-        emit(articleDao.deleteArticlesInGroup(realGroupId))
+        val count = with(appContext.dataStore) {
+            articleDao.deleteArticlesInGroup(
+                groupId = realGroupId,
+                keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
+            )
+        }
+        emit(count)
     }
 
-    suspend fun deleteGroup(groupId: String): Flow<Int> {
-        return if (groupId == GroupVo.DEFAULT_GROUP_ID) flowOf(0)
-        else flowOf(groupDao.removeGroupWithFeed(groupId)).flowOn(Dispatchers.IO)
-    }
+    fun deleteGroup(groupId: String): Flow<Int> = flow {
+        if (groupId == GroupVo.DEFAULT_GROUP_ID) emit(0)
+        else emit(groupDao.removeGroupWithFeed(groupId))
+    }.flowOn(Dispatchers.IO)
 
-    fun renameGroup(groupId: String, name: String): Flow<GroupVo> {
-        return if (groupId == GroupVo.DEFAULT_GROUP_ID) flow {
+    fun renameGroup(groupId: String, name: String): Flow<GroupVo> = flow {
+        if (groupId == GroupVo.DEFAULT_GROUP_ID) {
             emit(GroupVo.DefaultGroup)
-        } else flow {
+        } else {
             groupDao.renameGroup(groupId, name)
             emit(groupDao.getGroupById(groupId).toVo())
-        }.flowOn(Dispatchers.IO)
-    }
+        }
+    }.flowOn(Dispatchers.IO)
 
-    suspend fun moveGroupFeedsTo(fromGroupId: String, toGroupId: String): Flow<Int> {
+    fun moveGroupFeedsTo(fromGroupId: String, toGroupId: String): Flow<Int> = flow {
         val realFromGroupId = if (fromGroupId == GroupVo.DEFAULT_GROUP_ID) null else fromGroupId
         val realToGroupId = if (toGroupId == GroupVo.DEFAULT_GROUP_ID) null else toGroupId
-        return flowOf(groupDao.moveGroupFeedsTo(realFromGroupId, realToGroupId))
-            .flowOn(Dispatchers.IO)
-    }
+        emit(groupDao.moveGroupFeedsTo(realFromGroupId, realToGroupId))
+    }.flowOn(Dispatchers.IO)
 
     fun getFeedViewsByUrls(urls: List<String>) = flow {
         emit(feedDao.getFeedsIn(urls))
@@ -242,7 +248,13 @@ class FeedRepository @Inject constructor(
     }
 
     fun clearFeedArticles(url: String): Flow<Int> = flow {
-        emit(articleDao.deleteArticleInFeed(url))
+        val count = with(appContext.dataStore) {
+            articleDao.deleteArticleInFeed(
+                feedUrl = url,
+                keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
+            )
+        }
+        emit(count)
     }.flowOn(Dispatchers.IO)
 
     fun createGroup(group: GroupVo): Flow<Unit> = flow {
@@ -257,19 +269,17 @@ class FeedRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun changeGroupExpanded(groupId: String?, expanded: Boolean): Flow<Unit> {
-        return flow {
-            if (groupId == null || groupId == GroupVo.DEFAULT_GROUP_ID) {
-                appContext.dataStore.put(
-                    FeedDefaultGroupExpandPreference.key,
-                    value = expanded,
-                )
-            } else {
-                groupDao.changeGroupExpanded(groupId, expanded)
-            }
-            emit(Unit)
-        }.flowOn(Dispatchers.IO)
-    }
+    fun changeGroupExpanded(groupId: String?, expanded: Boolean): Flow<Unit> = flow {
+        if (groupId == null || groupId == GroupVo.DEFAULT_GROUP_ID) {
+            appContext.dataStore.put(
+                FeedDefaultGroupExpandPreference.key,
+                value = expanded,
+            )
+        } else {
+            groupDao.changeGroupExpanded(groupId, expanded)
+        }
+        emit(Unit)
+    }.flowOn(Dispatchers.IO)
 
     fun readAllInGroup(groupId: String?): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId

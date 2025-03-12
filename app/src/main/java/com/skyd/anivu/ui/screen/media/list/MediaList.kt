@@ -36,6 +36,7 @@ import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
+import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.EmptyPlaceholder
@@ -111,7 +112,7 @@ internal fun MediaList(
                                     context.activity,
                                     startMediaPath = media.file.path,
                                     mediaList = listState.list.filter { it.isMedia }.map {
-                                        PlayActivity.PlayMediaListItem(
+                                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
                                             path = it.file.path,
                                             articleId = it.articleId,
                                             title = it.displayName,

@@ -27,11 +27,11 @@ import com.skyd.anivu.model.db.AppDatabase
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
-import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.model.repository.feed.FeedRepository

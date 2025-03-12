@@ -35,43 +35,38 @@ class ImportExportRepository @Inject constructor(
     private val feedDao: FeedDao,
     private val groupDao: GroupDao,
 ) : BaseRepository() {
-    private fun groupWithFeedsWithoutDefaultGroup(): Flow<List<GroupWithFeedBean>> {
-        return groupDao.getGroupWithFeeds()
-            .flowOn(Dispatchers.IO)
-    }
+    private fun groupWithFeedsWithoutDefaultGroup(): Flow<List<GroupWithFeedBean>> =
+        groupDao.getGroupWithFeeds().flowOn(Dispatchers.IO)
 
-    private suspend fun defaultGroupFeeds(): Flow<List<FeedViewBean>> {
-        return groupDao.getGroupIds().map { groupIds ->
+    private suspend fun defaultGroupFeeds(): Flow<List<FeedViewBean>> =
+        groupDao.getGroupIds().map { groupIds ->
             feedDao.getFeedsNotInGroup(groupIds)
         }.flowOn(Dispatchers.IO)
-    }
 
-    suspend fun importOpmlMeasureTime(
+    fun importOpmlMeasureTime(
         opmlUri: Uri,
         strategy: ImportOpmlConflictStrategy,
-    ): Flow<ImportOpmlResult> {
-        return flow {
-            var importedFeedCount = 0
-            val time = measureTime {
-                appContext.contentResolver.openInputStream(opmlUri)!!.use {
-                    parseOpml(it)
-                }.forEach { opmlGroupWithFeed ->
-                    importedFeedCount += strategy.handle(
-                        groupDao = groupDao,
-                        feedDao = feedDao,
-                        opmlGroupWithFeed = opmlGroupWithFeed,
-                    )
-                }
-            }.inWholeMilliseconds
-
-            emit(
-                ImportOpmlResult(
-                    time = time,
-                    importedFeedCount = importedFeedCount,
+    ): Flow<ImportOpmlResult> = flow {
+        var importedFeedCount = 0
+        val time = measureTime {
+            appContext.contentResolver.openInputStream(opmlUri)!!.use {
+                parseOpml(it)
+            }.forEach { opmlGroupWithFeed ->
+                importedFeedCount += strategy.handle(
+                    groupDao = groupDao,
+                    feedDao = feedDao,
+                    opmlGroupWithFeed = opmlGroupWithFeed,
                 )
+            }
+        }.inWholeMilliseconds
+
+        emit(
+            ImportOpmlResult(
+                time = time,
+                importedFeedCount = importedFeedCount,
             )
-        }.flowOn(Dispatchers.IO)
-    }
+        )
+    }.flowOn(Dispatchers.IO)
 
     data class ImportOpmlResult(
         val time: Long,
@@ -148,11 +143,9 @@ class ImportExportRepository @Inject constructor(
         val feeds: MutableList<FeedBean>,
     )
 
-    suspend fun exportOpmlMeasureTime(outputDir: Uri): Flow<Long> {
-        return flow {
-            emit(measureTime { exportOpml(outputDir) }.inWholeMilliseconds)
-        }.flowOn(Dispatchers.IO)
-    }
+    fun exportOpmlMeasureTime(outputDir: Uri): Flow<Long> = flow {
+        emit(measureTime { exportOpml(outputDir) }.inWholeMilliseconds)
+    }.flowOn(Dispatchers.IO)
 
     private fun createFeedOutlineList(feeds: List<FeedViewBean>): List<Outline> {
         return feeds.map { feedView ->

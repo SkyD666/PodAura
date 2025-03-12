@@ -40,22 +40,20 @@ class RssHelper @Inject constructor(
 ) {
 
     @Throws(Exception::class)
-    suspend fun searchFeed(url: String): FeedWithArticleBean {
-        return withContext(Dispatchers.IO) {
-            val iconAsync = async { getRssIcon(url) }
-            val syndFeed = SyndFeedInput().build(XmlReader(inputStream(okHttpClient, url)))
-            val feed = FeedBean(
-                url = url,
-                title = syndFeed.title,
-                description = syndFeed.description,
-                link = syndFeed.link,
-                icon = getMediaRssIcon(syndFeed)
-                    ?: syndFeed.icon?.link
-                    ?: iconAsync.await(),
-            )
-            val list = syndFeed.entries.map { article(feed, it) }
-            FeedWithArticleBean(feed, list)
-        }
+    suspend fun searchFeed(url: String): FeedWithArticleBean = withContext(Dispatchers.IO) {
+        val iconAsync = async { getRssIcon(url) }
+        val syndFeed = SyndFeedInput().build(XmlReader(inputStream(okHttpClient, url)))
+        val feed = FeedBean(
+            url = url,
+            title = syndFeed.title,
+            description = syndFeed.description,
+            link = syndFeed.link,
+            icon = getMediaRssIcon(syndFeed)
+                ?: syndFeed.icon?.link
+                ?: iconAsync.await(),
+        )
+        val list = syndFeed.entries.map { article(feed, it) }
+        FeedWithArticleBean(feed, list)
     }
 
     suspend fun queryRssXml(
@@ -201,13 +199,11 @@ class RssHelper @Inject constructor(
         return null
     }
 
-    private fun getRssIcon(url: String): String? {
-        return runCatching {
-            faviconExtractor.extractFavicon(url).apply { Log.e("TAG", "getRssIcon: $this") }
-        }.onFailure { it.printStackTrace() }.getOrNull()
-    }
+    private fun getRssIcon(url: String): String? = runCatching {
+        faviconExtractor.extractFavicon(url).apply { Log.e("TAG", "getRssIcon: $this") }
+    }.onFailure { it.printStackTrace() }.getOrNull()
 
-    fun findImg(rawDescription: String): String? {
+    private fun findImg(rawDescription: String): String? {
         // From: https://gitlab.com/spacecowboy/Feeder
         // Using negative lookahead to skip data: urls, being inline base64
         // And capturing original quote to use as ending quote

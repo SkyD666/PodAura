@@ -436,6 +436,11 @@
     <string name="sort_create_time">Create time</string>
     <string name="created_on">Created on %s</string>
     <string name="media_screen_search_hint">Search media</string>
+    <string name="rss_update_failed">%d subscription updates failed: \n%s</string>
+    <string name="delete_constraint_screen_name">Delete constraint</string>
+    <string name="delete_constraint_screen_keep_playlist_articles">Keep playlist articles</string>
+    <string name="delete_constraint_screen_keep_playlist_articles_description">Don\'t delete articles in playlist</string>
+    <string name="delete_constraint_screen_name_description">Configure the constraints required to delete articles</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

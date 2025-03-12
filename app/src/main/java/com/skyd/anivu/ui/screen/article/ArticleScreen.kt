@@ -200,7 +200,7 @@ fun ArticleScreen(
                             ).value
                         } else 0f
                         PodAuraIconButton(
-                            onClick = { dispatch(ArticleIntent.Refresh(feedUrls)) },
+                            onClick = { dispatch(ArticleIntent.Refresh(feedUrls, groupIds)) },
                             imageVector = Icons.Outlined.Refresh,
                             contentDescription = stringResource(id = R.string.refresh),
                             rotate = angle,
@@ -261,7 +261,7 @@ fun ArticleScreen(
             listState = listState,
             nestedScrollConnection = scrollBehavior.nestedScrollConnection,
             showFilterBar = showFilterBar,
-            onRefresh = { dispatch(ArticleIntent.Refresh(feedUrls)) },
+            onRefresh = { dispatch(ArticleIntent.Refresh(feedUrls, groupIds)) },
             onFilterFavorite = { dispatch(ArticleIntent.FilterFavorite(it)) },
             onFilterRead = { dispatch(ArticleIntent.FilterRead(it)) },
             onSort = { dispatch(ArticleIntent.UpdateSort(it)) },

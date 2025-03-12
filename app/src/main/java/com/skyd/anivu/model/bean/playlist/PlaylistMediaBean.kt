@@ -7,6 +7,7 @@ import androidx.room.ForeignKey
 import androidx.room.Ignore
 import com.skyd.anivu.base.BaseBean
 import com.skyd.anivu.ext.isLocalFile
+import com.skyd.anivu.model.bean.article.ArticleBean
 import kotlinx.serialization.Serializable
 
 const val PLAYLIST_MEDIA_TABLE_NAME = "PlaylistMedia"
@@ -20,6 +21,12 @@ const val PLAYLIST_MEDIA_TABLE_NAME = "PlaylistMedia"
             entity = PlaylistBean::class,
             parentColumns = [PlaylistBean.PLAYLIST_ID_COLUMN],
             childColumns = [PlaylistMediaBean.PLAYLIST_ID_COLUMN],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ArticleBean::class,
+            parentColumns = [ArticleBean.ARTICLE_ID_COLUMN],
+            childColumns = [PlaylistMediaBean.ARTICLE_ID_COLUMN],
             onDelete = ForeignKey.CASCADE
         )
     ],

@@ -49,26 +49,19 @@ class SearchRepository @Inject constructor(
         searchSortDateDesc.value = dateDesc
     }
 
-    fun listenSearchFeed(): Flow<PagingData<FeedViewBean>> {
-        return searchQuery.flatMapLatest { query ->
-            Pager(pagingConfig) {
-                feedDao.getFeedPagingSource(
-                    genSql(
-                        tableName = FEED_VIEW_NAME, k = query
-                    )
-                )
-            }.flow
-        }.flowOn(Dispatchers.IO)
-    }
+    fun listenSearchFeed(): Flow<PagingData<FeedViewBean>> = searchQuery.flatMapLatest { query ->
+        Pager(pagingConfig) {
+            feedDao.getFeedPagingSource(genSql(tableName = FEED_VIEW_NAME, k = query))
+        }.flow
+    }.flowOn(Dispatchers.IO)
 
     fun listenSearchArticle(
         feedUrls: List<String>,
         articleIds: List<String>,
-    ): Flow<PagingData<ArticleWithFeed>> {
-        return searchQuery.debounce(70).flatMapLatest { query ->
-            Pager(pagingConfig) {
-                articleDao.getArticlePagingSource(
-                    genSql(
+    ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
+        Pager(pagingConfig) {
+            articleDao.getArticlePagingSource(
+                genSql(
                     tableName = ARTICLE_TABLE_NAME,
                     k = query,
                     leadingFilter = buildString {
@@ -92,9 +85,8 @@ class SearchRepository @Inject constructor(
                         ArticleBean.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
                     }
                 ))
-            }.flow
-        }.flowOn(Dispatchers.IO)
-    }
+        }.flow
+    }.flowOn(Dispatchers.IO)
 
     class SearchRegexInvalidException(message: String?) : IllegalArgumentException(message)
 
@@ -109,7 +101,6 @@ class SearchRepository @Inject constructor(
             tableName: String,
             k: String,
             useRegexSearch: Boolean = appContext.dataStore.getOrDefault(UseRegexSearchPreference),
-            // 是否使用多个关键字并集查询
             intersectSearchBySpace: Boolean = appContext.dataStore
                 .getOrDefault(IntersectSearchBySpacePreference),
             useSearchDomain: (table: String, column: String) -> Boolean = { table, column ->
@@ -131,7 +122,7 @@ class SearchRepository @Inject constructor(
 
             val sql = buildString {
                 if (intersectSearchBySpace) {
-                    // 以多个连续的空格/制表符/换行符分割
+                    // Split by blank
                     val keywords = k.splitByBlank().toSet()
 
                     keywords.forEachIndexed { i, s ->
@@ -187,7 +178,7 @@ class SearchRepository @Inject constructor(
 
             var filter = "0"
 
-            // 转义输入，防止SQL注入
+            // Escape input text
             val keyword = if (useRegexSearch) {
                 // Check Regex format
                 runCatching { k.toRegex() }.onFailure {

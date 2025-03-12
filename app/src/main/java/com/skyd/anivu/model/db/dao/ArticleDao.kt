@@ -2,7 +2,6 @@ package com.skyd.anivu.model.db.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -19,6 +18,8 @@ import com.skyd.anivu.model.bean.article.ENCLOSURE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.anivu.model.bean.feed.FeedBean
+import com.skyd.anivu.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
+import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.ui.notification.ArticleNotificationManager
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -123,42 +124,53 @@ interface ArticleDao {
     }
 
     @Transaction
-    @Delete
-    suspend fun deleteArticle(articleBean: ArticleBean): Int
-
-    @Transaction
-    @Query("DELETE FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} LIKE :feedUrl")
-    suspend fun deleteArticleInFeed(feedUrl: String): Int
-
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} IN (" +
-                "SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME " +
-                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL OR " +
-                "${FeedBean.GROUP_ID_COLUMN} = :groupId" +
-                ")"
+        "DELETE FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} LIKE :feedUrl AND " +
+                "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN}))"
     )
-    suspend fun deleteArticlesInGroup(groupId: String?): Int
-
-    @Transaction
-    @Query(
-        """
-        DELETE FROM $ARTICLE_TABLE_NAME
-        WHERE (${ArticleBean.UPDATE_AT_COLUMN} IS NULL
-        OR ${ArticleBean.UPDATE_AT_COLUMN} <= :timestamp)
-        AND (:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1)
-        AND (:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)
-        """
-    )
-    suspend fun deleteArticleBefore(
-        timestamp: Long,
-        keepUnread: Boolean = true,
-        keepFavorite: Boolean = true,
+    suspend fun deleteArticleInFeed(
+        feedUrl: String,
+        keepPlaylistArticles: Boolean,
     ): Int
 
     @Transaction
     @Query(
         "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+                "${ArticleBean.FEED_URL_COLUMN} IN (" +
+                "    SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME " +
+                "    WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL OR " +
+                "    ${FeedBean.GROUP_ID_COLUMN} = :groupId) AND " +
+                "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN}))"
+    )
+    suspend fun deleteArticlesInGroup(
+        groupId: String?,
+        keepPlaylistArticles: Boolean,
+    ): Int
+
+    @Transaction
+    @Query(
+        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+                "(${ArticleBean.UPDATE_AT_COLUMN} IS NULL OR " +
+                "${ArticleBean.UPDATE_AT_COLUMN} <= :timestamp) AND " +
+                "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
+                "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
+    )
+    suspend fun deleteArticleBefore(
+        timestamp: Long,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): Int
+
+    @Transaction
+    @Query(
+        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+                "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0) AND " +
                 "(" +
@@ -173,8 +185,9 @@ interface ArticleDao {
     )
     suspend fun deleteArticleExceed(
         count: Int,
-        keepUnread: Boolean = true,
-        keepFavorite: Boolean = true,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
     ): Int
 
     @Transaction
@@ -191,7 +204,7 @@ interface ArticleDao {
         "SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
     )
-    fun getArticleListByIds(articleIds: List<String>): List<ArticleWithFeed>
+    suspend fun getArticleListByIds(articleIds: List<String>): List<ArticleWithFeed>
 
     @Transaction
     @Query(
@@ -204,8 +217,8 @@ interface ArticleDao {
 
     @Transaction
     @Query(
-        "SELECT COUNT(1) FROM $ARTICLE_TABLE_NAME " +
-                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId"
+        "SELECT EXISTS (SELECT 1 FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId)"
     )
     fun exists(articleId: String): Int
 

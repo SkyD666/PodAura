@@ -22,6 +22,9 @@ fun String.toRemoveHtml(): String = parseAsHtml().toString()
 
 fun CharSequence.splitByBlank(limit: Int = 0): List<String> = trim().split("\\s+".toRegex(), limit)
 
+fun String.firstCodePointOrNull(): String? =
+    if (isEmpty()) null else String(Character.toChars(codePointAt(0)))
+
 fun String.readable(): String =
     Readability4JExtended("", this).parse().textContent?.trim().orEmpty()
 

@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.preference.data.autodelete
+package com.skyd.anivu.model.preference.data.delete.autodelete
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences

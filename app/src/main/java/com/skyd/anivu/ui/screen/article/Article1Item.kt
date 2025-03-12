@@ -67,6 +67,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.firstCodePointOrNull
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.readable
 import com.skyd.anivu.ext.toDateTimeString
@@ -508,8 +509,8 @@ fun FeedIcon(modifier: Modifier = Modifier, data: FeedBean, size: Dp = 22.dp) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = (data.nickname.orEmpty().ifBlank { data.title }?.firstOrNull() ?: "")
-                    .toString(),
+                text = (data.nickname?.takeIf { it.isNotEmpty() } ?: data.title)
+                    ?.firstCodePointOrNull().orEmpty(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )

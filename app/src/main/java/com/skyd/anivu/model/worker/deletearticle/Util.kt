@@ -10,8 +10,8 @@ import androidx.work.WorkManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.skyd.anivu.ext.dataStore
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
-import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect

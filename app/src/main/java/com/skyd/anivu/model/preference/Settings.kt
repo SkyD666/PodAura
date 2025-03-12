@@ -49,14 +49,15 @@ import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPref
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepFavoritePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleKeepUnreadPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleMaxCountPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseBeforePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleUseMaxCountPreference
-import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseMaxCountPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
@@ -110,6 +111,7 @@ import com.skyd.anivu.ui.local.LocalHardwareDecode
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
 import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
+import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
 import com.skyd.anivu.ui.local.LocalMediaListSortAsc
@@ -233,6 +235,7 @@ data class Settings(
     val autoDeleteArticleKeepFavorite: Boolean = AutoDeleteArticleKeepFavoritePreference.default,
     val autoDeleteArticleUseMaxCount: Boolean = AutoDeleteArticleUseMaxCountPreference.default,
     val autoDeleteArticleMaxCount: Int = AutoDeleteArticleMaxCountPreference.default,
+    val keepPlaylistArticles: Boolean = KeepPlaylistArticlesPreference.default,
     val opmlExportDir: String = OpmlExportDirPreference.default,
     val mediaLibLocation: String = MediaLibLocationPreference.default,
     // Transmission
@@ -327,6 +330,7 @@ fun SettingsProvider(
         LocalAutoDeleteArticleKeepFavorite provides settings.autoDeleteArticleKeepFavorite,
         LocalAutoDeleteArticleUseMaxCount provides settings.autoDeleteArticleUseMaxCount,
         LocalAutoDeleteArticleMaxCount provides settings.autoDeleteArticleMaxCount,
+        LocalKeepPlaylistArticles provides settings.keepPlaylistArticles,
         LocalOpmlExportDir provides settings.opmlExportDir,
         LocalMediaLibLocation provides settings.mediaLibLocation,
         // Transmission

@@ -65,6 +65,7 @@ import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPrefere
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
@@ -121,7 +122,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                     activity = context.activity,
                     startMediaPath = url,
                     mediaList = listOf(
-                        PlayActivity.PlayMediaListItem(
+                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
                             path = url,
                             articleId = null,
                             title = null,

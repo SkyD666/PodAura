@@ -14,7 +14,6 @@ import com.skyd.anivu.model.db.dao.playlist.PlaylistDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistDao.Companion.ORDER_MIN_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.CreateTime
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.Manual
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MediaCount
@@ -100,7 +99,7 @@ class PlaylistRepository @Inject constructor(
         fromIndex: Int,
         toIndex: Int,
     ): Flow<Int> = flow {
-        if (appContext.dataStore.getOrDefault(PlaylistSortByPreference) != BasePlaylistSortByPreference.Manual ||
+        if (appContext.dataStore.getOrDefault(PlaylistSortByPreference) != Manual ||
             fromIndex == toIndex
         ) {
             emit(0)

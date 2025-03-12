@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.preference.data.autodelete
+package com.skyd.anivu.model.preference.data.delete.autodelete
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
@@ -10,11 +10,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-object UseAutoDeletePreference : BasePreference<Boolean> {
-    private const val USE_AUTO_DELETE = "useAutoDelete"
+object AutoDeleteArticleKeepUnreadPreference : BasePreference<Boolean> {
+    private const val AUTO_DELETE_ARTICLE_KEEP_UNREAD = "autoDeleteArticleKeepUnread"
+
     override val default = true
 
-    val key = booleanPreferencesKey(USE_AUTO_DELETE)
+    val key = booleanPreferencesKey(AUTO_DELETE_ARTICLE_KEEP_UNREAD)
 
     fun put(context: Context, scope: CoroutineScope, value: Boolean) {
         scope.launch(Dispatchers.IO) {
