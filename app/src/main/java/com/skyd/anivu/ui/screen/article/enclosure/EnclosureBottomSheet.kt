@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.copy
@@ -40,9 +41,9 @@ import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.anivu.model.repository.download.DownloadStarter
-import com.skyd.anivu.model.worker.download.doIfMagnetOrTorrentLink
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.component.TagText
 
 fun getEnclosuresList(
     context: Context,
@@ -51,11 +52,7 @@ fun getEnclosuresList(
     val dataList: MutableList<Any> = articleWithEnclosureBean.enclosures.toMutableList()
     if (context.dataStore.getOrDefault(ParseLinkTagAsEnclosurePreference)) {
         articleWithEnclosureBean.article.link?.let { link ->
-            doIfMagnetOrTorrentLink(
-                link = link,
-                onMagnet = { dataList += LinkEnclosureBean(link = link) },
-                onTorrent = { dataList += LinkEnclosureBean(link = link) },
-            )
+            dataList += LinkEnclosureBean(link = link)
         }
     }
     return dataList
@@ -195,14 +192,16 @@ private fun LinkEnclosureItem(
                 Regex("^(http|https)://.*\\.torrent$").matches(enclosure.link)
     }
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .clickable { enclosure.link.copy(context) },
-            text = enclosure.link,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 5,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                modifier = Modifier.clickable { enclosure.link.copy(context) },
+                text = enclosure.link,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 5,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TagText(text = stringResource(R.string.enclosure_item_link_tag), fontSize = 10.sp)
+        }
         Spacer(modifier = Modifier.width(12.dp))
         if (enclosure.isMedia) {
             PodAuraIconButton(

@@ -213,6 +213,7 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
+                    allGroupCollapsed = allGroupCollapsed,
                     groups = groups,
                     listState = ListState.Success(dataPagingDataFlow = dataPagingDataFlow),
                 )
@@ -228,6 +229,7 @@ internal sealed interface FeedPartialStateChange {
         }
 
         data class Success(
+            val allGroupCollapsed: Boolean,
             val groups: Flow<PagingData<GroupVo>>,
             val dataPagingDataFlow: Flow<PagingData<Any>>,
         ) : FeedList
@@ -268,5 +270,22 @@ internal sealed interface FeedPartialStateChange {
 
         data object Success : MuteFeedsInGroup
         data class Failed(val msg: String) : MuteFeedsInGroup
+    }
+
+    sealed interface CollapseAllGroup : FeedPartialStateChange {
+        override fun reduce(oldState: FeedState): FeedState {
+            return when (this) {
+                is Success -> oldState.copy(
+                    loadingDialog = false,
+                )
+
+                is Failed -> oldState.copy(
+                    loadingDialog = false,
+                )
+            }
+        }
+
+        data object Success : CollapseAllGroup
+        data class Failed(val msg: String) : CollapseAllGroup
     }
 }

@@ -42,6 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.isCompact
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
 import com.skyd.anivu.ui.local.LocalNavigationBarLabel
@@ -79,10 +80,8 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(padding)
                 .consumeWindowInsets(padding)
-                .run {
-                    if (!windowSizeClass.isCompact) {
-                        windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                    } else this
+                .thenIf(!windowSizeClass.isCompact) {
+                    windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 },
         ) {
             if (!windowSizeClass.isCompact) {

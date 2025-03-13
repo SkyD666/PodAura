@@ -70,6 +70,7 @@ import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.firstCodePointOrNull
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.readable
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
@@ -222,7 +223,7 @@ private fun Article1ItemContent(
                     )
                 )
                 .fillMaxWidth()
-                .run { if (article.image.isNullOrBlank()) this else height(IntrinsicSize.Max) }
+                .thenIf(!article.image.isNullOrBlank()) { height(IntrinsicSize.Max) }
                 .combinedClickable(
                     onLongClick = onLongClick,
                     onClick = {

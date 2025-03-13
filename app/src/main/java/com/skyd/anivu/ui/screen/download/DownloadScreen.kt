@@ -3,8 +3,6 @@ package com.skyd.anivu.ui.screen.download
 import android.os.Bundle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,17 +44,19 @@ import androidx.navigation.navOptions
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.navigate
+import com.skyd.anivu.ext.onlyHorizontal
+import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.repository.download.DownloadManager
 import com.skyd.anivu.model.repository.download.DownloadStarter
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager.rememberBtDownloadWorkStarter
+import com.skyd.anivu.ui.component.CircularProgressPlaceholder
+import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.CircularProgressPlaceholder
-import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.component.deeplink.DeepLinkData
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import kotlinx.coroutines.launch
@@ -132,11 +131,8 @@ fun DownloadScreen(
             DownloadListState.Loading -> CircularProgressPlaceholder(contentPadding = paddingValues)
 
             is DownloadListState.Success -> {
-                val listContentPadding = PaddingValues(
-                    bottom = fabHeight + 16.dp,
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                )
+                val listContentPadding = paddingValues.onlyHorizontal() +
+                        PaddingValues(bottom = fabHeight + 16.dp)
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })
                 val tabs = listOf<Pair<String, @Composable PagerScope.() -> Unit>>(

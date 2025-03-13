@@ -1,16 +1,11 @@
 package com.skyd.anivu.model.preference.appearance.media
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
-import com.skyd.anivu.ext.put
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 object MediaFileFilterPreference : BasePreference<String> {
     private const val MEDIA_FILE_FILTER = "mediaFileFilter"
@@ -23,16 +18,7 @@ object MediaFileFilterPreference : BasePreference<String> {
     val values = arrayOf(ALL_REGEX, MEDIA_REGEX, VIDEO_REGEX, AUDIO_REGEX)
 
     override val default = ALL_REGEX
-
-    val key = stringPreferencesKey(MEDIA_FILE_FILTER)
-
-    fun put(context: Context, scope: CoroutineScope, value: String) {
-        scope.launch(Dispatchers.IO) {
-            context.dataStore.put(key, value)
-        }
-    }
-
-    override fun fromPreferences(preferences: Preferences): String = preferences[key] ?: default
+    override val key = stringPreferencesKey(MEDIA_FILE_FILTER)
 
     fun toDisplayName(
         context: Context,

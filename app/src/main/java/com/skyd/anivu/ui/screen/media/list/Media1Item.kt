@@ -51,6 +51,7 @@ import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.ui.component.PodAuraImage
+import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
 import java.util.Locale
@@ -163,10 +164,13 @@ fun Media1Item(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (fileExtension.isNotBlank()) {
-                    TagText(text = remember(fileExtension) { fileExtension.uppercase(Locale.getDefault()) })
+                    TagText(
+                        text = remember(fileExtension) { fileExtension.uppercase(Locale.getDefault()) },
+                        fontSize = 10.sp,
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
                 } else if (data.isDir) {
-                    TagText(text = stringResource(id = R.string.folder))
+                    TagText(text = stringResource(id = R.string.folder), fontSize = 10.sp)
                 }
                 if (!data.isDir) {
                     Text(
@@ -239,19 +243,6 @@ fun Media1Item(
             }
         }
     }
-}
-
-@Composable
-private fun TagText(text: String) {
-    Text(
-        modifier = Modifier
-            .clip(RoundedCornerShape(3.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = 4.dp),
-        text = text,
-        style = MaterialTheme.typography.labelSmall,
-        fontSize = 10.sp,
-    )
 }
 
 @Composable

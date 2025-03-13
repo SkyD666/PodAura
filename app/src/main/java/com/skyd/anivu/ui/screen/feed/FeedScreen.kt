@@ -20,6 +20,8 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.UnfoldLess
+import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.Workspaces
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -241,7 +243,12 @@ private fun FeedList(
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(id = R.string.more),
                     )
-                    MoreMenu(expanded = openMoreMenu, onDismissRequest = { openMoreMenu = false })
+                    MoreMenu(
+                        expanded = openMoreMenu,
+                        allGroupCollapsed = uiState.allGroupCollapsed,
+                        onCollapseAllGroup = { dispatch(FeedIntent.CollapseAllGroup(it)) },
+                        onDismissRequest = { openMoreMenu = false },
+                    )
                 },
                 navigationIcon = {},
                 windowInsets = WindowInsets.safeDrawing.only(
@@ -249,7 +256,7 @@ private fun FeedList(
                         if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
                     }
                 ),
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors().copy(
+                colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
                         LocalFeedTopBarTonalElevation.current.dp
                     ),
@@ -303,6 +310,9 @@ private fun FeedList(
                 is FeedEvent.InitFeetListResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
 
+                is FeedEvent.CollapseAllGroupResultEvent.Failed ->
+                    snackbarHostState.showSnackbar(event.msg)
+
                 is FeedEvent.EditFeedResultEvent.Failed -> event.msg.showToast()
                 is FeedEvent.RemoveFeedResultEvent.Failed -> event.msg.showToast()
                 is FeedEvent.RefreshFeedResultEvent.Failed -> event.msg.showToast()
@@ -349,14 +359,6 @@ private fun FeedList(
                 }
 
                 is FeedEvent.AddFeedResultEvent.Success -> openEditFeedDialog = event.feed
-
-                FeedEvent.RemoveFeedResultEvent.Success,
-                FeedEvent.CreateGroupResultEvent.Success,
-                FeedEvent.MoveFeedsToGroupResultEvent.Success,
-                FeedEvent.ClearGroupArticlesResultEvent.Success,
-                FeedEvent.MuteFeedsInGroupResultEvent.Success,
-                FeedEvent.DeleteGroupResultEvent.Success -> Unit
-
             }
         }
 
@@ -647,10 +649,33 @@ private fun FeedList(
 @Composable
 private fun MoreMenu(
     expanded: Boolean,
+    allGroupCollapsed: Boolean,
+    onCollapseAllGroup: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     val navController = LocalNavController.current
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = stringResource(
+                        if (allGroupCollapsed) R.string.expand_all_groups
+                        else R.string.collapse_all_groups
+                    )
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = if (allGroupCollapsed) Icons.Outlined.UnfoldMore
+                    else Icons.Outlined.UnfoldLess,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                onDismissRequest()
+                onCollapseAllGroup(!allGroupCollapsed)
+            },
+        )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.reorder_group_screen_name)) },
             leadingIcon = {

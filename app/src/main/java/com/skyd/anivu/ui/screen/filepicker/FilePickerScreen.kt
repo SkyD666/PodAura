@@ -9,8 +9,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -51,6 +48,8 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.getMimeType
 import com.skyd.anivu.ext.navigate
+import com.skyd.anivu.ext.onlyHorizontal
+import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
@@ -193,9 +192,7 @@ fun FilePickerScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = PaddingValues(
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
+                contentPadding = paddingValues.onlyHorizontal() + PaddingValues(
                     bottom = if (pickFolder) 0.dp else paddingValues.calculateBottomPadding(),
                 ),
             ) {

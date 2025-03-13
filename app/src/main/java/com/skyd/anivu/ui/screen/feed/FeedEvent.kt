@@ -20,7 +20,6 @@ sealed interface FeedEvent : MviSingleEvent {
     }
 
     sealed interface RemoveFeedResultEvent : FeedEvent {
-        data object Success : RemoveFeedResultEvent
         data class Failed(val msg: String) : RemoveFeedResultEvent
     }
 
@@ -35,22 +34,18 @@ sealed interface FeedEvent : MviSingleEvent {
     }
 
     sealed interface CreateGroupResultEvent : FeedEvent {
-        data object Success : CreateGroupResultEvent
         data class Failed(val msg: String) : CreateGroupResultEvent
     }
 
     sealed interface DeleteGroupResultEvent : FeedEvent {
-        data object Success : DeleteGroupResultEvent
         data class Failed(val msg: String) : DeleteGroupResultEvent
     }
 
     sealed interface ClearGroupArticlesResultEvent : FeedEvent {
-        data object Success : ClearGroupArticlesResultEvent
         data class Failed(val msg: String) : ClearGroupArticlesResultEvent
     }
 
     sealed interface MoveFeedsToGroupResultEvent : FeedEvent {
-        data object Success : MoveFeedsToGroupResultEvent
         data class Failed(val msg: String) : MoveFeedsToGroupResultEvent
     }
 
@@ -70,7 +65,10 @@ sealed interface FeedEvent : MviSingleEvent {
     }
 
     sealed interface MuteFeedsInGroupResultEvent : FeedEvent {
-        data object Success : MuteFeedsInGroupResultEvent
         data class Failed(val msg: String) : MuteFeedsInGroupResultEvent
+    }
+
+    sealed interface CollapseAllGroupResultEvent : FeedEvent {
+        data class Failed(val msg: String) : CollapseAllGroupResultEvent
     }
 }

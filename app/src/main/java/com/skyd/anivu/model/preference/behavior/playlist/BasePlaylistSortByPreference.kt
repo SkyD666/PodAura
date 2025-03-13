@@ -10,11 +10,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.datastore.preferences.core.Preferences
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
-import com.skyd.anivu.ext.dataStore
-import com.skyd.anivu.ext.put
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 abstract class BasePlaylistSortByPreference : BasePreference<String> {
     companion object {
@@ -43,13 +38,5 @@ abstract class BasePlaylistSortByPreference : BasePreference<String> {
         }
     }
 
-    abstract val key: Preferences.Key<String>
-
-    fun put(context: Context, scope: CoroutineScope, value: String) {
-        scope.launch(Dispatchers.IO) {
-            context.dataStore.put(key, value)
-        }
-    }
-
-    override fun fromPreferences(preferences: Preferences): String = preferences[key] ?: default
+    abstract override val key: Preferences.Key<String>
 }

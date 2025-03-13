@@ -44,13 +44,14 @@ import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraImage
+import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
-import com.skyd.anivu.ui.screen.history.item.TagText
 import com.skyd.anivu.util.coil.localmedia.LocalMediaFetcher
 import java.io.File
 
@@ -67,11 +68,7 @@ fun PlaylistMediaItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .run {
-                if (selected) background(
-                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
-                ) else this
-            }
+            .thenIf(selected) { background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)) }
             .combinedClickable(onLongClick = { onLongClick(data) }, onClick = { onClick(data) })
             .padding(vertical = 8.dp)
             .padding(start = 20.dp, end = if (draggable) 6.dp else 20.dp),

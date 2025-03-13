@@ -1,7 +1,6 @@
 package com.skyd.anivu.model.preference.transmission
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
@@ -12,11 +11,11 @@ import kotlinx.coroutines.launch
 
 object TorrentDhtBootstrapsPreference : BasePreference<Set<String>> {
     private const val TORRENT_DHT_BOOTSTRAPS = "torrentDhtBootstraps"
+
     override val default = emptySet<String>()
+    override val key = stringSetPreferencesKey(TORRENT_DHT_BOOTSTRAPS)
 
-    val key = stringSetPreferencesKey(TORRENT_DHT_BOOTSTRAPS)
-
-    fun put(context: Context, scope: CoroutineScope, value: Set<String>) {
+    override fun put(context: Context, scope: CoroutineScope, value: Set<String>) {
         scope.launch(Dispatchers.IO) {
             context.dataStore.put(
                 key,
@@ -24,7 +23,4 @@ object TorrentDhtBootstrapsPreference : BasePreference<Set<String>> {
             )
         }
     }
-
-    override fun fromPreferences(preferences: Preferences): Set<String> =
-        preferences[key] ?: default
 }

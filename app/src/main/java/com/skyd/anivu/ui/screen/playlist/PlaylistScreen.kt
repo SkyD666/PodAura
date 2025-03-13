@@ -41,6 +41,7 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.safeItemKey
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.vThenP
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference
@@ -120,11 +121,9 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             }
         },
         contentWindowInsets = WindowInsets.safeDrawing.run {
-            val leftPadding = windowSizeClass.isCompact
-            val bottomPadding = !windowSizeClass.isCompact
             var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-            if (leftPadding) sides += WindowInsetsSides.Left
-            if (bottomPadding) sides += WindowInsetsSides.Bottom
+            sides += if (windowSizeClass.isCompact) WindowInsetsSides.Left
+            else WindowInsetsSides.Bottom
             only(sides)
         },
     ) { paddingValues ->
@@ -285,9 +284,7 @@ private fun PlayList(
                             playlistViewBean = item,
                             enableMenu = true,
                             draggable = draggable,
-                            dragIconModifier = Modifier.run {
-                                if (draggable) draggableHandle() else this
-                            },
+                            dragIconModifier = Modifier.thenIf(draggable) { draggableHandle() },
                             onClick = onClick,
                             onRename = onRename,
                             onDelete = onDelete,

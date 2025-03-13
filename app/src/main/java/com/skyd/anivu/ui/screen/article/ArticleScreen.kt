@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
@@ -53,9 +51,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -66,9 +64,11 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.navigate
+import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.toEncodedUrl
+import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.ArticleSort
 import com.skyd.anivu.ui.component.BackIcon
@@ -89,7 +89,6 @@ import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import androidx.core.net.toUri
 
 
 const val ARTICLE_SCREEN_ROUTE = "articleScreen"
@@ -331,12 +330,7 @@ private fun Content(
     ) {
         Column {
             AnimatedVisibility(visible = showFilterBar) {
-                Column(
-                    modifier = Modifier.padding(
-                        start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-                    ),
-                ) {
+                Column(modifier = Modifier.padding(contentPadding.onlyHorizontal())) {
                     FilterRow(
                         articleFilterState = uiState.articleFilterState,
                         onFilterFavorite = onFilterFavorite,
@@ -347,11 +341,7 @@ private fun Content(
                 }
             }
 
-            val currentContentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-                bottom = contentPadding.calculateBottomPadding(),
-            ) + PaddingValues(vertical = 4.dp)
+            val currentContentPadding = contentPadding.withoutTop() + PaddingValues(vertical = 4.dp)
             when (val articleListState = uiState.articleListState) {
                 is ArticleListState.Init -> CircularProgressPlaceholder(
                     contentPadding = currentContentPadding,

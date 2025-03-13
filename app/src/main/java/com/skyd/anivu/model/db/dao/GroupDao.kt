@@ -124,6 +124,13 @@ interface GroupDao {
     fun getGroupIds(): Flow<List<String>>
 
     @Transaction
+    @Query(
+        "SELECT EXISTS (SELECT 1 FROM `$GROUP_TABLE_NAME` " +
+                "WHERE ${GroupBean.IS_EXPANDED_COLUMN} = 1)"
+    )
+    fun existsExpandedGroup(): Flow<Int>
+
+    @Transaction
     @Query("SELECT COUNT(*) FROM `$GROUP_TABLE_NAME` WHERE ${GroupBean.NAME_COLUMN} LIKE :name")
     fun containsByName(name: String): Int
 
@@ -138,6 +145,10 @@ interface GroupDao {
                 "LIMIT 1"
     )
     fun queryGroupIdByName(name: String): String
+
+    @Transaction
+    @Query("UPDATE `$GROUP_TABLE_NAME` SET ${GroupBean.IS_EXPANDED_COLUMN} = NOT :collapse")
+    suspend fun collapseAllGroup(collapse: Boolean): Int
 
     @Transaction
     @Query(

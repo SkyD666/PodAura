@@ -35,4 +35,5 @@ sealed interface FeedIntent : MviIntent {
     data class MoveFeedsToGroup(val fromGroupId: String, val toGroupId: String) : FeedIntent
     data class MuteFeedsInGroup(val groupId: String, val mute: Boolean) : FeedIntent
     data class MuteFeed(val feedUrl: String, val mute: Boolean) : FeedIntent
+    data class CollapseAllGroup(val collapse: Boolean) : FeedIntent
 }

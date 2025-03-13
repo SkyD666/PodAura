@@ -1,16 +1,11 @@
 package com.skyd.anivu.model.preference.appearance.feed
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
-import com.skyd.anivu.ext.put
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 object FeedNumberBadgePreference : BasePreference<Int> {
     private const val FEED_NUMBER_BADGE = "feedNumberBadge"
@@ -21,16 +16,7 @@ object FeedNumberBadgePreference : BasePreference<Int> {
     val values = arrayOf(UNREAD, ALL, UNREAD_ALL)
 
     override val default = ALL
-
-    val key = intPreferencesKey(FEED_NUMBER_BADGE)
-
-    fun put(context: Context, scope: CoroutineScope, value: Int) {
-        scope.launch(Dispatchers.IO) {
-            context.dataStore.put(key, value)
-        }
-    }
-
-    override fun fromPreferences(preferences: Preferences): Int = preferences[key] ?: default
+    override val key = intPreferencesKey(FEED_NUMBER_BADGE)
 
     fun toDisplayName(
         context: Context,

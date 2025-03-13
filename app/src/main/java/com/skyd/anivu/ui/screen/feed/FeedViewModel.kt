@@ -66,9 +66,6 @@ class FeedViewModel @Inject constructor(
                 is FeedPartialStateChange.ClearFeedArticles.Failed ->
                     FeedEvent.ClearFeedArticlesResultEvent.Failed(change.msg)
 
-                is FeedPartialStateChange.RemoveFeed.Success ->
-                    FeedEvent.RemoveFeedResultEvent.Success
-
                 is FeedPartialStateChange.RemoveFeed.Failed ->
                     FeedEvent.RemoveFeedResultEvent.Failed(change.msg)
 
@@ -81,26 +78,14 @@ class FeedViewModel @Inject constructor(
                 is FeedPartialStateChange.FeedList.Failed ->
                     FeedEvent.InitFeetListResultEvent.Failed(change.msg)
 
-                is FeedPartialStateChange.CreateGroup.Success ->
-                    FeedEvent.CreateGroupResultEvent.Success
-
                 is FeedPartialStateChange.CreateGroup.Failed ->
                     FeedEvent.CreateGroupResultEvent.Failed(change.msg)
-
-                is FeedPartialStateChange.ClearGroupArticles.Success ->
-                    FeedEvent.ClearGroupArticlesResultEvent.Success
 
                 is FeedPartialStateChange.ClearGroupArticles.Failed ->
                     FeedEvent.ClearGroupArticlesResultEvent.Failed(change.msg)
 
-                is FeedPartialStateChange.DeleteGroup.Success ->
-                    FeedEvent.DeleteGroupResultEvent.Success
-
                 is FeedPartialStateChange.DeleteGroup.Failed ->
                     FeedEvent.DeleteGroupResultEvent.Failed(change.msg)
-
-                is FeedPartialStateChange.MoveFeedsToGroup.Success ->
-                    FeedEvent.MoveFeedsToGroupResultEvent.Success
 
                 is FeedPartialStateChange.MoveFeedsToGroup.Failed ->
                     FeedEvent.MoveFeedsToGroupResultEvent.Failed(change.msg)
@@ -123,11 +108,11 @@ class FeedViewModel @Inject constructor(
                 is FeedPartialStateChange.MuteFeed.Failed ->
                     FeedEvent.MuteFeedResultEvent.Failed(change.msg)
 
-                is FeedPartialStateChange.MuteFeedsInGroup.Success ->
-                    FeedEvent.MuteFeedsInGroupResultEvent.Success
-
                 is FeedPartialStateChange.MuteFeedsInGroup.Failed ->
                     FeedEvent.MuteFeedsInGroupResultEvent.Failed(change.msg)
+
+                is FeedPartialStateChange.CollapseAllGroup.Failed ->
+                    FeedEvent.CollapseAllGroupResultEvent.Failed(change.msg)
 
                 else -> return@onEach
             }
@@ -139,10 +124,12 @@ class FeedViewModel @Inject constructor(
         return merge(
             filterIsInstance<FeedIntent.Init>().flatMapConcat {
                 combine(
+                    feedRepo.allGroupCollapsed(),
                     flowOf(feedRepo.requestGroups().cachedIn(viewModelScope)),
                     flowOf(feedRepo.requestGroupAnyPaging().cachedIn(viewModelScope)),
-                ) { groups, list ->
+                ) { allGroupCollapsed, groups, list ->
                     FeedPartialStateChange.FeedList.Success(
+                        allGroupCollapsed = allGroupCollapsed,
                         groups = groups,
                         dataPagingDataFlow = list,
                     )
@@ -279,6 +266,12 @@ class FeedViewModel @Inject constructor(
                     FeedPartialStateChange.MuteFeedsInGroup.Success
                 }.startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.MuteFeedsInGroup.Failed(it.message.toString()) }
+            },
+            filterIsInstance<FeedIntent.CollapseAllGroup>().flatMapConcat { intent ->
+                feedRepo.collapseAllGroup(intent.collapse).map {
+                    FeedPartialStateChange.CollapseAllGroup.Success
+                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
+                    .catchMap { FeedPartialStateChange.CollapseAllGroup.Failed(it.message.toString()) }
             },
         )
     }

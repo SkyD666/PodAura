@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraImage
@@ -66,11 +67,7 @@ fun PlaylistItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .run {
-                if (selected) background(
-                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
-                ) else this
-            }
+            .thenIf(selected) { background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)) }
             .combinedClickable(
                 onLongClick = { if (enableMenu) showMenu = true },
                 onClick = { onClick(playlistViewBean) },

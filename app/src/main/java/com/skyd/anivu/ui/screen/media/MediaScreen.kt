@@ -229,11 +229,9 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
             }
         },
         contentWindowInsets = WindowInsets.safeDrawing.run {
-            val leftPadding = windowSizeClass.isCompact
-            val bottomPadding = !windowSizeClass.isCompact
             var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-            if (leftPadding) sides += WindowInsetsSides.Left
-            if (bottomPadding) sides += WindowInsetsSides.Bottom
+            sides += if (windowSizeClass.isCompact) WindowInsetsSides.Left
+            else WindowInsetsSides.Bottom
             only(sides)
         },
     ) { innerPadding ->

@@ -3,8 +3,6 @@ package com.skyd.anivu.ui.screen.history
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,7 +23,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +34,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
+import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -78,11 +76,8 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
             HistoryListState.Loading -> CircularProgressPlaceholder(contentPadding = paddingValues)
 
             is HistoryListState.Success -> {
-                val listContentPadding = PaddingValues(
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = paddingValues.calculateBottomPadding(),
-                ) + PaddingValues(horizontal = 12.dp, vertical = 12.dp)
+                val listContentPadding = paddingValues.withoutTop() +
+                        PaddingValues(horizontal = 12.dp, vertical = 12.dp)
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })
                 val tabs = listOf<Pair<String, @Composable PagerScope.() -> Unit>>(

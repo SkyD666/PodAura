@@ -75,7 +75,7 @@
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">配置 RSS 等</string>
     <string name="rss_config_screen_parse_link_tag_as_enclosure">解析 Link 為附件</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">解析 Link 標籤，若符合磁力鏈或 Torrent 格式，則顯示為附件</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">解析 Link 標籤，顯示為附件</string>
     <string name="rss_config_screen_parse_category">解析</string>
     <string name="transmission_screen_name">傳輸</string>
     <string name="transmission_screen_description">資料傳輸配置、行為等</string>

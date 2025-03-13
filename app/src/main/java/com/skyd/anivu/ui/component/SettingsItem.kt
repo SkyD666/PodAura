@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.ext.alwaysLight
+import com.skyd.anivu.ext.thenIf
 import java.util.Locale
 
 val LocalUseColorfulIcon = compositionLocalOf { false }
@@ -414,10 +415,8 @@ fun BaseSettingsItem(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .run {
-                    if (onClick != null && enabled) {
-                        combinedClickable(onLongClick = onLongClick) { onClick() }
-                    } else this
+                .thenIf(onClick != null && enabled) {
+                    combinedClickable(onLongClick = onLongClick) { onClick!!() }
                 }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically

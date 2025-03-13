@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +43,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.getOrNull
 import com.skyd.anivu.ext.safeItemKey
+import com.skyd.anivu.ext.thenIf
+import com.skyd.anivu.ext.thenIfNotNull
+import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.ErrorPlaceholder
@@ -220,16 +220,9 @@ private fun PlaylistMediaList(
             columns = StaggeredGridCells.Adaptive(300.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .run {
-                    if (nestedScrollConnection == null) this
-                    else nestedScroll(nestedScrollConnection)
-                },
+                .thenIfNotNull(nestedScrollConnection) { nestedScroll(it) },
             state = state,
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-                bottom = contentPadding.calculateBottomPadding(),
-            )
+            contentPadding = contentPadding.withoutTop(),
         ) {
             if (header != null) {
                 item(span = StaggeredGridItemSpan.FullLine) { header() }
@@ -249,9 +242,7 @@ private fun PlaylistMediaList(
                                 playing = item.playlistMediaBean.isSamePlaylistMedia(currentPlay?.playlistMediaBean),
                                 selected = selected,
                                 data = item,
-                                dragIconModifier = Modifier.run {
-                                    if (draggable) draggableHandle() else this
-                                },
+                                dragIconModifier = Modifier.thenIf(draggable) { draggableHandle() },
                                 draggable = draggable,
                                 onClick = {
                                     if (selectMode) {

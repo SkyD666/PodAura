@@ -79,7 +79,7 @@
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">Configure RSS sync, parsing rules</string>
     <string name="rss_config_screen_parse_link_tag_as_enclosure">Parse link as enclosure</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">Parses and displays the link tag as an enclosure if it\'s a magnet or torrent link</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">Parses and displays the link tag as an enclosure</string>
     <string name="rss_config_screen_parse_category">Parse</string>
     <string name="transmission_screen_name">Transmission</string>
     <string name="transmission_screen_description">Data transfer setup, behavior</string>
@@ -441,6 +441,9 @@
     <string name="delete_constraint_screen_keep_playlist_articles">Keep playlist articles</string>
     <string name="delete_constraint_screen_keep_playlist_articles_description">Don\'t delete articles in playlist</string>
     <string name="delete_constraint_screen_name_description">Configure the constraints required to delete articles</string>
+    <string name="enclosure_item_link_tag">link tag</string>
+    <string name="collapse_all_groups">Collapse all groups</string>
+    <string name="expand_all_groups">Expand all groups</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

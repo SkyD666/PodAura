@@ -5,6 +5,7 @@ import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.ext.splitByBlank
 import com.skyd.anivu.ext.validateFileName
 import com.skyd.anivu.model.bean.MediaBean
@@ -27,7 +28,6 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -252,21 +252,15 @@ class MediaRepository @Inject constructor(
                     ?.let { remove(it) }
             }
         },
-        appContext.dataStore.data.map {
-            it[MediaFileFilterPreference.key] ?: MediaFileFilterPreference.default
-        }.distinctUntilChanged(),
+        appContext.dataStore.flowOf(MediaFileFilterPreference),
     ) { videoList, displayFilter ->
         videoList.filter {
             runCatching { it.file.name.matches(Regex(displayFilter)) }.getOrNull() == true
         }
     }.combine(
-        appContext.dataStore.data.map {
-            if (isSubList) {
-                it[MediaSubListSortByPreference.key] ?: MediaSubListSortByPreference.default
-            } else {
-                it[MediaListSortByPreference.key] ?: MediaListSortByPreference.default
-            }
-        }.distinctUntilChanged(),
+        appContext.dataStore.flowOf(
+            if (isSubList) MediaSubListSortByPreference else MediaListSortByPreference
+        )
     ) { list, sortBy ->
         when (sortBy) {
             BaseMediaListSortByPreference.Date -> list.sortedBy { it.date }
@@ -275,13 +269,9 @@ class MediaRepository @Inject constructor(
             else -> list.sortedBy { it.displayName ?: it.name }
         }
     }.combine(
-        appContext.dataStore.data.map {
-            if (isSubList) {
-                it[MediaSubListSortAscPreference.key] ?: MediaSubListSortAscPreference.default
-            } else {
-                it[MediaListSortAscPreference.key] ?: MediaListSortAscPreference.default
-            }
-        }.distinctUntilChanged(),
+        appContext.dataStore.flowOf(
+            if (isSubList) MediaSubListSortAscPreference else MediaListSortAscPreference
+        )
     ) { list, sortAsc ->
         if (sortAsc) list else list.reversed()
     }.flowOn(Dispatchers.IO)

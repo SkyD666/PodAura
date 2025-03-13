@@ -7,12 +7,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 data class FeedState(
+    val allGroupCollapsed: Boolean,
     val groups: Flow<PagingData<GroupVo>>,
     val listState: ListState,
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = FeedState(
+            allGroupCollapsed = false,
             groups = flowOf(PagingData.empty()),
             listState = ListState.Init,
             loadingDialog = false,

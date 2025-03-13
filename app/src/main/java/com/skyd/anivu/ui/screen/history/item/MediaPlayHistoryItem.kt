@@ -33,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +51,7 @@ import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraImage
+import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
 import com.skyd.anivu.ui.local.LocalNavController
@@ -247,24 +247,6 @@ private fun ActionIconButton(
         imageVector = imageVector,
         contentDescription = contentDescription,
         tint = LocalContentColor.current.copy(alpha = 0.75f)
-    )
-}
-
-@Composable
-fun TagText(
-    modifier: Modifier = Modifier,
-    text: String,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    contentColor: Color = Color.Unspecified,
-) {
-    Text(
-        modifier = modifier
-            .clip(RoundedCornerShape(3.dp))
-            .background(containerColor)
-            .padding(horizontal = 4.dp, vertical = 0.4.dp),
-        text = text,
-        style = MaterialTheme.typography.labelSmall,
-        color = contentColor,
     )
 }
 

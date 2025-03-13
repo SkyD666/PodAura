@@ -11,6 +11,7 @@ import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.copyTo
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.isLocal
 import com.skyd.anivu.ext.isNetwork
@@ -30,7 +31,6 @@ import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -46,43 +46,49 @@ class FeedRepository @Inject constructor(
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository() {
+    fun allGroupCollapsed(): Flow<Boolean> = combine(
+        groupDao.existsExpandedGroup(),
+        appContext.dataStore.flowOf(FeedDefaultGroupExpandPreference),
+    ) { existsExpandedGroup, defaultGroupExpanded ->
+        existsExpandedGroup == 0 && !defaultGroupExpanded
+    }.flowOn(Dispatchers.IO)
+
     fun requestGroups(): Flow<PagingData<GroupVo>> = Pager(pagingConfig) {
         groupDao.getGroups()
     }.flow.map { pagingData -> pagingData.map { it.toVo() } }.flowOn(Dispatchers.IO)
 
-    fun requestGroupAnyPaging(): Flow<PagingData<Any>> = appContext.dataStore.data.map {
-        listOf(
-            it[FeedDefaultGroupExpandPreference.key] ?: FeedDefaultGroupExpandPreference.default,
-            it[HideEmptyDefaultPreference.key] ?: HideEmptyDefaultPreference.default,
-            it[HideMutedFeedPreference.key] ?: HideMutedFeedPreference.default
-        )
-    }.distinctUntilChanged()
-        .flatMapLatest { (defaultGroupExpand, hideEmptyDefault, hideMutedFeed) ->
-            Pager(pagingConfig) {
-                groupDao.getGroupsAndFeeds(
-                    defaultGroupIsExpanded = defaultGroupExpand,
-                    hideEmptyDefaultGroup = hideEmptyDefault,
-                    hideMutedFeed = hideMutedFeed,
-                )
-            }.flow.map { pagingData ->
-                pagingData.map<GroupOrFeedBean, Any> { entity ->
-                    if (entity.group == null && entity.feed == null) {
-                        GroupVo.DefaultGroup
-                    } else if (entity.group != null) {
-                        entity.group.toVo()
-                    } else {
-                        entity.feed!!
-                    }
+    fun requestGroupAnyPaging(): Flow<PagingData<Any>> = appContext.dataStore.run {
+        combine(
+            flowOf(FeedDefaultGroupExpandPreference),
+            flowOf(HideEmptyDefaultPreference),
+            flowOf(HideMutedFeedPreference),
+        ) { defaultGroupExpand, hideEmptyDefault, hideMutedFeed ->
+            listOf(defaultGroupExpand, hideEmptyDefault, hideMutedFeed)
+        }
+    }.flatMapLatest { (defaultGroupExpand, hideEmptyDefault, hideMutedFeed) ->
+        Pager(pagingConfig) {
+            groupDao.getGroupsAndFeeds(
+                defaultGroupIsExpanded = defaultGroupExpand,
+                hideEmptyDefaultGroup = hideEmptyDefault,
+                hideMutedFeed = hideMutedFeed,
+            )
+        }.flow.map { pagingData ->
+            pagingData.map<GroupOrFeedBean, Any> { entity ->
+                if (entity.group == null && entity.feed == null) {
+                    GroupVo.DefaultGroup
+                } else if (entity.group != null) {
+                    entity.group.toVo()
+                } else {
+                    entity.feed!!
                 }
             }
-        }.flowOn(Dispatchers.IO)
+        }
+    }.flowOn(Dispatchers.IO)
 
     fun requestGroupAnyList(): Flow<List<Any>> = combine(
         groupDao.getGroupWithFeeds(),
         feedDao.getFeedsInDefaultGroup(),
-        appContext.dataStore.data.map {
-            it[HideMutedFeedPreference.key] ?: HideMutedFeedPreference.default
-        }.distinctUntilChanged()
+        appContext.dataStore.flowOf(HideMutedFeedPreference),
     ) { groupList, defaultFeeds, hideMute ->
         mutableListOf<Any>().apply {
             add(GroupVo.DefaultGroup)
@@ -297,6 +303,11 @@ class FeedRepository @Inject constructor(
     fun muteFeedsInGroup(groupId: String?, mute: Boolean): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DefaultGroup.groupId) null else groupId
         emit(feedDao.muteFeedsInGroup(realGroupId, mute))
+    }.flowOn(Dispatchers.IO)
+
+    fun collapseAllGroup(collapse: Boolean): Flow<Int> = flow {
+        appContext.dataStore.put(FeedDefaultGroupExpandPreference.key, !collapse)
+        emit(groupDao.collapseAllGroup(collapse) + 1)
     }.flowOn(Dispatchers.IO)
 }
 

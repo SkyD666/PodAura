@@ -7,6 +7,7 @@ import androidx.paging.map
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.db.dao.ArticleDao
@@ -22,7 +23,6 @@ import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPref
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -70,12 +70,9 @@ class PlaylistMediaRepository @Inject constructor(
     }
 
     fun requestPlaylistMediaListPaging(playlistId: String): Flow<PagingData<PlaylistMediaWithArticleBean>> {
-        return appContext.dataStore.data.map {
-            Pair(
-                it[PlaylistMediaSortByPreference.key] ?: PlaylistMediaSortByPreference.default,
-                it[PlaylistMediaSortAscPreference.key] ?: PlaylistMediaSortAscPreference.default,
-            )
-        }.distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->
+        return appContext.dataStore.flowOf(
+            PlaylistMediaSortByPreference, PlaylistMediaSortAscPreference
+        ).flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {
                 CreateTime -> PlaylistMediaBean.CREATE_TIME_COLUMN
                 Manual -> PlaylistMediaBean.ORDER_POSITION_COLUMN

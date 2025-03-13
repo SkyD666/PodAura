@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.readable
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import com.skyd.anivu.ui.component.PodAuraImage
@@ -60,7 +61,7 @@ fun ReadHistoryItem(
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.secondary.copy(0.1f))
             .fillMaxWidth()
-            .run { if (article.image.isNullOrBlank()) this else height(IntrinsicSize.Max) }
+            .thenIf(!article.image.isNullOrBlank()) { height(IntrinsicSize.Max) }
             .clickable { navigateToReadScreen(navController, articleWithEnclosure) },
     ) {
         val title = article.title?.readable().orEmpty()

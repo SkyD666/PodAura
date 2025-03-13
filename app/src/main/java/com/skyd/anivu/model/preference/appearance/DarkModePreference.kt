@@ -35,7 +35,7 @@ object DarkModePreference : BasePreference<Int> {
         AppCompatDelegate.MODE_NIGHT_NO
     }
 
-    val key = intPreferencesKey(DARK_MODE)
+    override val key = intPreferencesKey(DARK_MODE)
 
     fun toDisplayName(context: Context, value: Int): String = context.getString(
         when (value) {
@@ -46,7 +46,7 @@ object DarkModePreference : BasePreference<Int> {
         }
     )
 
-    fun put(context: Context, scope: CoroutineScope, value: Int) {
+    override fun put(context: Context, scope: CoroutineScope, value: Int) {
         if (value != AppCompatDelegate.MODE_NIGHT_YES &&
             value != AppCompatDelegate.MODE_NIGHT_NO &&
             value != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM

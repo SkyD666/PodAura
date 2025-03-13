@@ -45,6 +45,8 @@ import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.vThenP
 import com.skyd.anivu.model.bean.group.GroupVo
+import com.skyd.anivu.ui.component.CircularProgressPlaceholder
+import com.skyd.anivu.ui.component.ErrorPlaceholder
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
@@ -76,8 +78,8 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {
         }
     ) { paddingValues ->
         when (val groupListState = uiState.groupListState) {
-            is GroupListState.Failed,
-            GroupListState.Init -> Unit
+            is GroupListState.Failed -> ErrorPlaceholder(groupListState.msg, paddingValues)
+            GroupListState.Init -> CircularProgressPlaceholder(paddingValues)
 
             is GroupListState.Success -> GroupList(
                 contentPadding = paddingValues,
@@ -169,11 +171,13 @@ private fun GroupList(
 @Composable
 private fun ReorderableGroup(
     group: GroupVo,
+    modifier: Modifier = Modifier,
     dragIconModifier: Modifier = Modifier,
     interactionSource: MutableInteractionSource? = null,
 ) {
     Card(
         onClick = {},
+        modifier = modifier,
         interactionSource = interactionSource,
     ) {
         Row(

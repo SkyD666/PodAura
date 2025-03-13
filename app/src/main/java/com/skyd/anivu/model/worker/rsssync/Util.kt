@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.get
 import com.skyd.anivu.model.preference.rss.RssSyncBatteryNotLowConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
@@ -38,14 +39,10 @@ private data class RssSyncConfiguration(
 fun listenerRssSyncConfig(context: Context) = coroutineScope.launch {
     context.dataStore.data.map {
         RssSyncConfiguration(
-            rssSyncFrequency = it[RssSyncFrequencyPreference.key]
-                ?: RssSyncFrequencyPreference.default,
-            requireWifi = it[RssSyncWifiConstraintPreference.key]
-                ?: RssSyncWifiConstraintPreference.default,
-            requireCharging = it[RssSyncChargingConstraintPreference.key]
-                ?: RssSyncChargingConstraintPreference.default,
-            requireBatteryNotLow = it[RssSyncBatteryNotLowConstraintPreference.key]
-                ?: RssSyncBatteryNotLowConstraintPreference.default,
+            rssSyncFrequency = it[RssSyncFrequencyPreference],
+            requireWifi = it[RssSyncWifiConstraintPreference],
+            requireCharging = it[RssSyncChargingConstraintPreference],
+            requireBatteryNotLow = it[RssSyncBatteryNotLowConstraintPreference],
         )
     }.distinctUntilChanged().combine(
         WorkManager.getInstance(context)

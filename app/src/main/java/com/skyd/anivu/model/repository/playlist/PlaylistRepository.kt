@@ -7,6 +7,7 @@ import androidx.paging.map
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.playlist.PlaylistBean
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
@@ -48,12 +49,9 @@ class PlaylistRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun requestPlaylistList(): Flow<PagingData<PlaylistViewBean>> {
-        return appContext.dataStore.data.map {
-            Pair(
-                it[PlaylistSortByPreference.key] ?: PlaylistSortByPreference.default,
-                it[PlaylistSortAscPreference.key] ?: PlaylistSortAscPreference.default,
-            )
-        }.distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->
+        return appContext.dataStore.flowOf(
+            PlaylistSortByPreference, PlaylistSortAscPreference
+        ).distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {
                 Name -> PlaylistBean.NAME_COLUMN
                 MediaCount -> PlaylistViewBean.ITEM_COUNT_COLUMN

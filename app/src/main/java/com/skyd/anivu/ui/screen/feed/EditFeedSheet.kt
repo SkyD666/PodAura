@@ -78,6 +78,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.ext.copy
 import com.skyd.anivu.ext.openBrowser
 import com.skyd.anivu.ext.readable
+import com.skyd.anivu.ext.thenIfNotNull
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.ui.component.PodAuraIconButton
@@ -597,7 +598,7 @@ internal fun SheetChip(
                 modifier = Modifier
                     .clip(CircleShape)
                     .background(iconBackgroundColor)
-                    .run { if (onIconClick == null) this else clickable(onClick = onIconClick) }
+                    .thenIfNotNull(onIconClick) { clickable(onClick = it) }
                     .padding(3.dp)
                     .fillMaxHeight()
                     .aspectRatio(1f),

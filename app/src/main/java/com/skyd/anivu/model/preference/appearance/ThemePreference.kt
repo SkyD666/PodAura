@@ -2,7 +2,6 @@ package com.skyd.anivu.model.preference.appearance
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.color.DynamicColors
 import com.skyd.anivu.R
@@ -37,7 +36,7 @@ object ThemePreference : BasePreference<String> {
 
     override val default = if (DynamicColors.isDynamicColorAvailable()) DYNAMIC else PINK
 
-    val key = stringPreferencesKey(THEME)
+    override val key = stringPreferencesKey(THEME)
 
     fun put(
         context: Context,
@@ -52,8 +51,6 @@ object ThemePreference : BasePreference<String> {
             }
         }
     }
-
-    override fun fromPreferences(preferences: Preferences): String = preferences[key] ?: default
 
     fun toDisplayName(
         context: Context,
@@ -80,7 +77,7 @@ object ThemePreference : BasePreference<String> {
         RED -> Color(0xFFB90037)
         GREEN -> Color(0xFF3F975B)
         PURPLE -> Color(0xFF7E6195)
-        MAHIRO  -> Color(0xFFEAD4CE)
+        MAHIRO -> Color(0xFFEAD4CE)
         else -> Color(0xFF006EBE)
     }
 }

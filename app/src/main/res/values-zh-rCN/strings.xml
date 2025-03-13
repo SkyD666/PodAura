@@ -74,8 +74,8 @@
     <string name="clear">清除</string>
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">配置 RSS 同步、解析规则等</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure">解析 Link 为附件</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">解析 Link 标签，若符合磁力链或 Torrent 格式，则显示为附件</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure">link 标签为附件</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">将 link 标签显示为附件</string>
     <string name="rss_config_screen_parse_category">解析</string>
     <string name="transmission_screen_name">传输</string>
     <string name="transmission_screen_description">数据传输配置、行为等</string>
@@ -434,6 +434,9 @@
     <string name="delete_constraint_screen_keep_playlist_articles">保留播放列表文章</string>
     <string name="delete_constraint_screen_keep_playlist_articles_description">不要删除播放列表中的文章</string>
     <string name="delete_constraint_screen_name_description">配置删除文章所需的约束</string>
+    <string name="enclosure_item_link_tag">link 标签</string>
+    <string name="collapse_all_groups">收起所有分组</string>
+    <string name="expand_all_groups">展开所有分组</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

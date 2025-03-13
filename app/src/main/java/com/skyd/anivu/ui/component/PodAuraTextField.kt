@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
 
 enum class PodAuraTextFieldStyle(val value: String) {
@@ -75,11 +76,9 @@ fun PodAuraTextField(
         if (autoRequestFocus) focusRequester.requestFocus()
     }
 
-    val newModifier =
-        modifier.run { if (autoRequestFocus) focusRequester(focusRequester) else this }
+    val newModifier = modifier.thenIf(autoRequestFocus) { focusRequester(focusRequester) }
     val newLabel: @Composable (() -> Unit)? =
-        if (label.isBlank()) null
-        else {
+        if (label.isBlank()) null else {
             { Text(label) }
         }
     val newOnValueChange: (String) -> Unit = { if (!readOnly) onValueChange(it) }
