@@ -48,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -102,6 +103,7 @@ import com.skyd.anivu.ui.screen.search.SearchDomain
 import com.skyd.anivu.ui.screen.search.openSearchScreen
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FEED_STYLE_SCREEN_ROUTE
 import kotlinx.coroutines.android.awaitFrame
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 const val FEED_SCREEN_ROUTE = "feedScreen"
@@ -113,6 +115,7 @@ fun FeedScreen() {
             horizontalPartitionSpacerSize = 0.dp,
         )
     )
+    val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val windowSizeClass = LocalWindowSizeClass.current
     val density = LocalDensity.current
@@ -120,8 +123,10 @@ fun FeedScreen() {
     var listPaneSelected by remember { mutableStateOf<Map<String, List<String>>?>(null) }
 
     val onNavigatorBack: () -> Unit = {
-        navigator.navigateBack()
-        listPaneSelected = navigator.currentDestination?.content
+        scope.launch {
+            navigator.navigateBack()
+        }
+        listPaneSelected = navigator.currentDestination?.contentKey
     }
 
     BackHandler(navigator.canNavigateBack()) {
@@ -147,9 +152,11 @@ fun FeedScreen() {
                     listPaneSelectedGroupIds = listPaneSelected?.get("groupIds"),
                     onShowArticleListByFeedUrls = { feedUrls ->
                         if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
-                                put("feedUrls", feedUrls)
-                            })
+                            scope.launch {
+                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
+                                    put("feedUrls", feedUrls)
+                                })
+                            }
                         } else {
                             openArticleScreen(
                                 navController = navController,
@@ -159,9 +166,11 @@ fun FeedScreen() {
                     },
                     onShowArticleListByGroupId = { groupId ->
                         if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
-                                put("groupIds", listOf(groupId))
-                            })
+                            scope.launch {
+                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
+                                    put("groupIds", listOf(groupId))
+                                })
+                            }
                         } else {
                             openArticleScreen(
                                 navController = navController,
@@ -175,7 +184,7 @@ fun FeedScreen() {
         },
         detailPane = {
             AnimatedPane {
-                navigator.currentDestination?.content?.let {
+                navigator.currentDestination?.contentKey?.let {
                     listPaneSelected = it
                     ArticleScreen(
                         feedUrls = it["feedUrls"].orEmpty(),
