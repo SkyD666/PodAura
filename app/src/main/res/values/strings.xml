@@ -63,7 +63,7 @@
     <string name="password_visibility_on">Show</string>
     <string name="article_screen_search_article">Search articles</string>
     <string name="feed_screen_search_feed">Search feeds</string>
-    <string name="read_screen_open_browser">Open in browser</string>
+    <string name="open_link_in_browser">Open the link</string>
     <string name="play_activity_label">PodAura Player</string>
     <string name="failed_msg">Failed: %s</string>
     <string name="success_time_msg">Success: takes %.2fs</string>
@@ -260,7 +260,7 @@
     <string name="article_screen_mark_as_unread">Unread</string>
     <string name="article_screen_mark_as_read">Mark as read</string>
     <string name="article_screen_filter_favorite">Favorite</string>
-    <string name="article_screen_filter_unfavorite">Favorite</string>
+    <string name="article_screen_filter_unfavorite">Not favorite</string>
     <string name="article_screen_filter_read">Read</string>
     <string name="article_screen_filter_unread">Unread</string>
     <string name="article_screen_filter_all">All</string>
@@ -313,8 +313,8 @@
     <string name="player_config_screen_auto_pip_description">Switch to PiP mode if the Home or Recents button is pressed</string>
     <string name="player_picture_in_picture">Picture in picture</string>
     <string name="open_file">Open file</string>
-    <string name="feed_screen_sort_xml_articles_on_update">Full refresh</string>
-    <string name="feed_screen_sort_xml_articles_on_update_tip">Enabling full refresh may increase the refresh time</string>
+    <string name="feed_screen_sort_xml_articles_on_update">Sort refresh</string>
+    <string name="feed_screen_sort_xml_articles_on_update_tip">Enabling sort refresh may increase the refresh time</string>
     <string name="proxy_screen_port_error_message">Ports can only range from 0 to 65535</string>
     <string name="more">More</string>
     <string name="reorder_group_screen_name">Reorder groups</string>
@@ -350,10 +350,12 @@
     <string name="read_style_screen_name">Read screen style</string>
     <string name="read_style_screen_top_bar_category">Top bar</string>
     <string name="read_style_screen_content_category">Content</string>
-    <string name="auto_delete_article_screen_keep_unread">Preserve unread</string>
-    <string name="auto_delete_article_screen_keep_favorite">Preserve favorite</string>
+    <string name="auto_delete_article_screen_keep_unread">Keep unread</string>
+    <string name="auto_delete_article_screen_keep_favorite">Keep favorite</string>
+    <string name="auto_delete_article_screen_keep_playlist">Keep in playlist</string>
     <string name="auto_delete_article_screen_keep_unread_description">Unread articles won\'t be deleted</string>
     <string name="auto_delete_article_screen_keep_favorite_description">Favorite articles won\'t be deleted</string>
+    <string name="auto_delete_article_screen_keep_playlist_description">Articles in playlists won\'t be deleted</string>
     <string name="appearance_screen_amoled_dark">Amoled dark</string>
     <string name="article_notification_new_articles">New articles</string>
     <string name="article_notification_content_text">Your concerns %s have been updated!</string>
@@ -444,6 +446,12 @@
     <string name="enclosure_item_link_tag">link tag</string>
     <string name="collapse_all_groups">Collapse all groups</string>
     <string name="expand_all_groups">Expand all groups</string>
+    <string name="delete_constraint_screen_keep_unread_articles">Keep unread articles</string>
+    <string name="delete_constraint_screen_keep_favorite_articles">Keep favorite articles</string>
+    <string name="auto_delete_article_screen_options_tip">These options are only valid for the auto delete feature</string>
+    <string name="delete_constraint_screen_options_tip">These options do NOT valid for the auto delete feature</string>
+    <string name="article_item_delete_warning">Sure to delete this article?</string>
+    <string name="article_screen_no_link_tip">This article does not contain a link</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

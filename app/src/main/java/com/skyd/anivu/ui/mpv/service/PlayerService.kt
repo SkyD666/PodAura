@@ -63,16 +63,6 @@ class PlayerService : Service() {
                 "aid" -> sendEvent(PlayerEvent.AudioTrackChanged(player.aid))
                 "sid" -> sendEvent(PlayerEvent.SubtitleTrackChanged(player.sid))
                 "vid" -> sendEvent(PlayerEvent.VideoTrackChanged(player.vid))
-                "video-zoom" -> sendEvent(PlayerEvent.Zoom(2.0.pow(player.videoZoom).toFloat()))
-                "video-pan-x" -> sendEvent(
-                    PlayerEvent.VideoOffsetX((player.videoPanX * (player.videoDW ?: 0)).toFloat())
-                )
-
-                "video-pan-y" -> sendEvent(
-                    PlayerEvent.VideoOffsetY((player.videoPanY * (player.videoDH ?: 0)).toFloat())
-                )
-
-                "speed" -> sendEvent(PlayerEvent.Speed(player.playbackSpeed.toFloat()))
                 "playlist" -> {
                     val playlistMap = LinkedHashMap<String, PlaylistMediaWithArticleBean>()
                     player.loadPlaylist().forEachIndexed { index, url ->
@@ -93,7 +83,6 @@ class PlayerService : Service() {
                     sendEvent(PlayerEvent.AllAudioTracks(player.audioTrack))
                 }
 
-                "demuxer-cache-duration" -> sendEvent(PlayerEvent.Buffer(player.demuxerCacheDuration.toInt()))
                 "loop-file", "loop-playlist" -> sendEvent(
                     PlayerEvent.Loop(
                         if (player.loopPlaylist) LoopMode.LoopPlaylist
@@ -135,13 +124,43 @@ class PlayerService : Service() {
             }
         }
 
+        override fun eventProperty(property: String, value: Double) {
+            when (property) {
+                "video-zoom" -> sendEvent(PlayerEvent.Zoom(2.0.pow(value).toFloat()))
+                "video-pan-x" -> sendEvent(
+                    PlayerEvent.VideoOffsetX((value * (player.videoDW ?: 0)).toFloat())
+                )
+
+                "video-pan-y" -> sendEvent(
+                    PlayerEvent.VideoOffsetY((value * (player.videoDH ?: 0)).toFloat())
+                )
+
+                "speed" -> sendEvent(PlayerEvent.Speed(value.toFloat()))
+                "demuxer-cache-duration" -> sendEvent(PlayerEvent.Buffer(value.toInt()))
+            }
+        }
+
         private var currentPath: String? = null
+        private var currentPathPlayed: Boolean = false
         override fun event(eventId: Int) {
             when (eventId) {
                 MPVLib.mpvEventId.MPV_EVENT_SEEK -> sendEvent(PlayerEvent.Seek)
                 MPVLib.mpvEventId.MPV_EVENT_START_FILE -> {
-                    savePosition(currentPath)
                     currentPath = player.path
+                    sendEvent(PlayerEvent.StartFile(currentPath))
+                }
+
+                MPVLib.mpvEventId.MPV_EVENT_END_FILE -> {
+                    sendEvent(PlayerEvent.EndFile)
+                    if (currentPathPlayed) {
+                        savePosition(currentPath)
+                    }
+                    currentPath = null
+                    currentPathPlayed = false
+                }
+
+                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
+                    currentPathPlayed = true
                     currentPath?.let { currentPath ->
                         scope.launch {
                             playerRepo.insertPlayHistory(
@@ -151,16 +170,6 @@ class PlayerService : Service() {
                             ).collect()
                         }
                     }
-                    sendEvent(PlayerEvent.StartFile(currentPath))
-                }
-
-                MPVLib.mpvEventId.MPV_EVENT_END_FILE -> {
-                    sendEvent(PlayerEvent.EndFile)
-                    savePosition(currentPath)
-                    currentPath = null
-                }
-
-                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
                     sendEvent(PlayerEvent.Paused(player.paused))
                     loadLastPosition(currentPath).invokeOnCompletion {
                         sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
@@ -284,6 +293,7 @@ class PlayerService : Service() {
                     if (keepOpen && eofReached) {
                         seek(0)
                     } else if (isIdling && playlistCount > 0) {
+                        // playlist-current-pos
                         playMediaAtIndex(playlistCount - 1)
                     }
                 }
@@ -355,7 +365,11 @@ class PlayerService : Service() {
     private fun savePosition(path: String?) = if (path != null) {
         val position = playerState.value.position * 1000L
         scope.launch {
-            playerRepo.updateLastPlayPosition(path = path, lastPlayPosition = position).collect()
+            if (position > 1000L) {
+                playerRepo.updateLastPlayPosition(
+                    path = path, lastPlayPosition = position
+                ).collect()
+            }
         }
     } else Job().apply { complete() }
 

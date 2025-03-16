@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.article
 
+import android.content.Context
 import androidx.compose.animation.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,12 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.ImportContacts
 import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material.icons.outlined.MarkEmailUnread
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -69,6 +73,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.firstCodePointOrNull
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.openBrowser
 import com.skyd.anivu.ext.readable
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
@@ -81,7 +86,9 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPr
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.ui.component.PodAuraImage
+import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
+import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
 import com.skyd.anivu.ui.local.LocalArticleSwipeLeftAction
 import com.skyd.anivu.ui.local.LocalArticleSwipeRightAction
@@ -98,6 +105,7 @@ fun Article1Item(
     data: ArticleWithFeed,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
+    onDelete: (ArticleWithFeed) -> Unit,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -119,6 +127,7 @@ fun Article1Item(
                     val articleWithEnclosure = dataWrapper.articleWithEnclosure
                     swipeAction(
                         articleSwipeAction = articleSwipeAction,
+                        context = context,
                         navController = navController,
                         data = articleWithEnclosure,
                         onMarkAsRead = {
@@ -180,6 +189,7 @@ fun Article1Item(
                 data = data,
                 onFavorite = onFavorite,
                 onRead = onRead,
+                onDelete = onDelete,
                 onShowEnclosureBottomSheet = {
                     openEnclosureBottomSheet = getEnclosuresList(context, it)
                 }
@@ -411,12 +421,15 @@ private fun ArticleMenu(
     data: ArticleWithFeed,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
+    onDelete: (ArticleWithFeed) -> Unit,
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
 ) {
     val navController = LocalNavController.current
+    val context = LocalContext.current
     val articleWithEnclosure = data.articleWithEnclosure
     val isFavorite = articleWithEnclosure.article.isFavorite
     val isRead = articleWithEnclosure.article.isRead
+    var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
 
     DropdownMenu(
         expanded = expanded,
@@ -492,6 +505,49 @@ private fun ArticleMenu(
             onClick = {
                 onShowEnclosureBottomSheet(articleWithEnclosure)
                 onDismissRequest()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(id = R.string.open_link_in_browser)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.OpenInBrowser,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                data.articleWithEnclosure.article.openLinkInBrowser(context)
+                onDismissRequest()
+            },
+        )
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text(text = stringResource(id = R.string.delete)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                openDeleteWarningDialog = true
+                onDismissRequest()
+            },
+            colors = MenuDefaults.itemColors(
+                textColor = MaterialTheme.colorScheme.error,
+                leadingIconColor = MaterialTheme.colorScheme.error,
+                trailingIconColor = MaterialTheme.colorScheme.error,
+            ),
+        )
+    }
+    if (openDeleteWarningDialog) {
+        DeleteArticleWarningDialog(
+            text = stringResource(id = R.string.article_item_delete_warning),
+            onDismissRequest = { openDeleteWarningDialog = false },
+            onDismiss = { openDeleteWarningDialog = false },
+            onConfirm = {
+                onDelete(data)
+                openDeleteWarningDialog = false
             },
         )
     }
@@ -575,33 +631,24 @@ private fun SwipeBackgroundContent(
     ) {
         val painter = when (direction) {
             SwipeToDismissBoxValue.StartToEnd,
-            SwipeToDismissBoxValue.EndToStart -> when (articleSwipeAction) {
-                ArticleSwipeActionPreference.READ -> {
-                    rememberVectorPainter(image = Icons.Outlined.ImportContacts)
-                }
+            SwipeToDismissBoxValue.EndToStart -> rememberVectorPainter(
+                when (articleSwipeAction) {
+                    ArticleSwipeActionPreference.READ -> Icons.Outlined.ImportContacts
+                    ArticleSwipeActionPreference.SHOW_ENCLOSURES -> Icons.Outlined.AttachFile
+                    ArticleSwipeActionPreference.SWITCH_READ_STATE ->
+                        if (article.isRead) Icons.Outlined.MarkEmailUnread
+                        else Icons.Outlined.Drafts
 
-                ArticleSwipeActionPreference.SHOW_ENCLOSURES -> {
-                    rememberVectorPainter(image = Icons.Outlined.AttachFile)
-                }
+                    ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE ->
+                        if (article.isFavorite) Icons.Outlined.FavoriteBorder
+                        else Icons.Outlined.Favorite
 
-                ArticleSwipeActionPreference.SWITCH_READ_STATE -> {
-                    if (article.isRead) {
-                        rememberVectorPainter(image = Icons.Outlined.MarkEmailUnread)
-                    } else {
-                        rememberVectorPainter(image = Icons.Outlined.Drafts)
-                    }
-                }
+                    ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER ->
+                        Icons.Outlined.OpenInBrowser
 
-                ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> {
-                    if (article.isFavorite) {
-                        rememberVectorPainter(image = Icons.Outlined.FavoriteBorder)
-                    } else {
-                        rememberVectorPainter(image = Icons.Outlined.Favorite)
-                    }
+                    else -> Icons.Outlined.ImportContacts
                 }
-
-                else -> rememberVectorPainter(image = Icons.Outlined.ImportContacts)
-            }
+            )
 
             SwipeToDismissBoxValue.Settled -> null
         }
@@ -721,6 +768,7 @@ fun Article1ItemPlaceholder() {
 
 private fun swipeAction(
     articleSwipeAction: String,
+    context: Context,
     navController: NavController,
     data: ArticleWithEnclosureBean,
     onMarkAsRead: () -> Unit,
@@ -728,16 +776,14 @@ private fun swipeAction(
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
 ) {
     when (articleSwipeAction) {
-        ArticleSwipeActionPreference.READ -> {
+        ArticleSwipeActionPreference.READ ->
             navigateToReadScreen(navController = navController, data = data)
-        }
 
-        ArticleSwipeActionPreference.SHOW_ENCLOSURES -> {
-            onShowEnclosureBottomSheet(data)
-        }
-
+        ArticleSwipeActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet(data)
+        ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.openLinkInBrowser(context)
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()
+        else -> navigateToReadScreen(navController = navController, data = data)
     }
 }
 
@@ -748,14 +794,17 @@ private fun tapAction(
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
 ) {
     when (articleTapAction) {
-        ArticleTapActionPreference.READ -> {
+        ArticleTapActionPreference.READ ->
             navigateToReadScreen(navController = navController, data = data)
-        }
 
-        ArticleTapActionPreference.SHOW_ENCLOSURES -> {
-            onShowEnclosureBottomSheet(data)
-        }
+        ArticleTapActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet(data)
+        else -> navigateToReadScreen(navController = navController, data = data)
     }
+}
+
+fun ArticleBean.openLinkInBrowser(context: Context) {
+    link?.openBrowser(context)
+        ?: context.getString(R.string.article_screen_no_link_tip).showToast()
 }
 
 fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {

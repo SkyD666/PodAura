@@ -44,10 +44,13 @@ import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPref
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
@@ -156,9 +159,12 @@ fun Preferences.toSettings(): Settings {
         autoDeleteArticleBefore = AutoDeleteArticleBeforePreference.fromPreferences(this),
         autoDeleteArticleKeepUnread = AutoDeleteArticleKeepUnreadPreference.fromPreferences(this),
         autoDeleteArticleKeepFavorite = AutoDeleteArticleKeepFavoritePreference.fromPreferences(this),
+        autoDeleteArticleKeepPlaylist = AutoDeleteArticleKeepPlaylistPreference.fromPreferences(this),
         autoDeleteArticleUseMaxCount = AutoDeleteArticleUseMaxCountPreference.fromPreferences(this),
         autoDeleteArticleMaxCount = AutoDeleteArticleMaxCountPreference.fromPreferences(this),
         keepPlaylistArticles = KeepPlaylistArticlesPreference.fromPreferences(this),
+        keepUnreadArticles = KeepUnreadArticlesPreference.fromPreferences(this),
+        keepFavoriteArticles = KeepFavoriteArticlesPreference.fromPreferences(this),
         opmlExportDir = OpmlExportDirPreference.fromPreferences(this),
         mediaLibLocation = MediaLibLocationPreference.fromPreferences(this),
 

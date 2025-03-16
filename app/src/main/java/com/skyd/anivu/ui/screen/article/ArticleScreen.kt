@@ -280,6 +280,13 @@ fun ArticleScreen(
                     )
                 )
             },
+            onDelete = { articleWithFeed ->
+                dispatch(
+                    ArticleIntent.Delete(
+                        articleId = articleWithFeed.articleWithEnclosure.article.articleId,
+                    )
+                )
+            },
             contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
         )
 
@@ -298,6 +305,9 @@ fun ArticleScreen(
 
                 is ArticleEvent.ReadArticleResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
+
+                is ArticleEvent.DeleteArticleResultEvent.Failed ->
+                    snackbarHostState.showSnackbar(event.msg)
             }
         }
     }
@@ -315,6 +325,7 @@ private fun Content(
     onSort: (ArticleSort) -> Unit,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
+    onDelete: (ArticleWithFeed) -> Unit,
     contentPadding: PaddingValues,
 ) {
     val state = rememberPullToRefreshState()
@@ -359,6 +370,7 @@ private fun Content(
                     listState = listState,
                     onFavorite = onFavorite,
                     onRead = onRead,
+                    onDelete = onDelete,
                     contentPadding = currentContentPadding,
                 )
             }
@@ -381,6 +393,7 @@ private fun ArticleList(
     listState: LazyGridState,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
+    onDelete: (ArticleWithFeed) -> Unit,
     contentPadding: PaddingValues,
 ) {
     PagingRefreshStateIndicator(
@@ -404,6 +417,7 @@ private fun ArticleList(
                         data = item,
                         onFavorite = onFavorite,
                         onRead = onRead,
+                        onDelete = onDelete,
                     )
 
                     null -> Article1ItemPlaceholder()

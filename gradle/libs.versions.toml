@@ -61,8 +61,8 @@ retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.8.0" }
 kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutines" }
 
-aniyomi-mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.15.n" }
-ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.15" }
+aniyomi-mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.17.n" }
+ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.17" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }

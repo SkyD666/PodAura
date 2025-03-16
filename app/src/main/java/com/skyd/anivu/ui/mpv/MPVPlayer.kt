@@ -16,6 +16,9 @@ import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
+import com.skyd.anivu.ui.mpv.mpv.DefaultEventObserver
+import com.skyd.anivu.ui.mpv.mpv.EventObserver
+import com.skyd.anivu.ui.mpv.mpv.KeyMapping
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_DOUBLE
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_FLAG
@@ -34,7 +37,7 @@ import kotlin.math.log
 import kotlin.random.Random
 import kotlin.reflect.KProperty
 
-class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVLib.EventObserver {
+class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, DefaultEventObserver() {
     companion object {
         private const val TAG = "MPVPlayer"
 
@@ -208,8 +211,6 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
             Property("aid", MPV_FORMAT_INT64),
             Property("sid", MPV_FORMAT_INT64),
             Property("track-list"),
-            // observing double properties is not hooked up in the JNI code, but doing this
-            // will restrict updates to when it actually changes
             Property("video-zoom", MPV_FORMAT_DOUBLE),
             Property("video-params/aspect", MPV_FORMAT_DOUBLE),
             Property("video-pan-x", MPV_FORMAT_DOUBLE),
@@ -497,21 +498,29 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         if (realFiles.isNotEmpty()) {
             val index = if (startFile == null) 0
             else realFiles.indexOf(startFile).takeIf { it >= 0 } ?: 0
-
             val currentPlaylist = loadPlaylist()
-            if (currentPlaylist.size != realFiles.size ||
-                currentPlaylist.zip(realFiles).any { (old, new) -> old != new }
-            ) {
+            if (currentPlaylist != realFiles) {
                 val playlistFile = File(Const.MPV_CACHE_DIR, "playlist")
                 if (playlistFile.exists() || playlistFile.createNewFile()) {
                     playlistFile.writeText(realFiles.joinToString("\n"))
+                    MPVLib.addObserver(
+                        EventObserver(
+                            onEvent = { eventId ->
+                                if (eventId == MPVLib.mpvEventId.MPV_EVENT_START_FILE) {
+                                    MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+                                    paused = false
+                                    MPVLib.removeObserver(this)
+                                }
+                            }
+                        )
+                    )
+                    paused = true
                     MPVLib.command(arrayOf("loadlist", playlistFile.path, "replace"))
-                    MPVLib.command(arrayOf("playlist-play-index", index.toString()))
                 }
             } else if (path != startFile && playlistCount > 0) {
                 MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+                paused = false
             }
-            paused = false
         }
     }
 
@@ -645,15 +654,6 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, MPVL
         when (property) {
             "track-list" -> loadTracks()
         }
-    }
-
-    override fun eventProperty(property: String, value: Long) {
-    }
-
-    override fun eventProperty(property: String, value: Boolean) {
-    }
-
-    override fun eventProperty(property: String, value: String) {
     }
 
     override fun event(eventId: Int) {

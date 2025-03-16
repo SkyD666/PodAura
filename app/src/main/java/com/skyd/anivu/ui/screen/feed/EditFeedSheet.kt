@@ -82,6 +82,7 @@ import com.skyd.anivu.ext.thenIfNotNull
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
@@ -468,7 +469,7 @@ internal fun OptionArea(
         }
     }
 
-    DeleteWarningDialog(
+    DeleteArticleWarningDialog(
         visible = openClearWarningDialog,
         text = stringResource(id = R.string.feed_screen_clear_articles_warning),
         onDismissRequest = { openClearWarningDialog = false },

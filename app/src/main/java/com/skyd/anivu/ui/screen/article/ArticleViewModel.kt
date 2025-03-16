@@ -45,21 +45,20 @@ class ArticleViewModel @Inject constructor(
     private fun Flow<ArticlePartialStateChange>.sendSingleEvent(): Flow<ArticlePartialStateChange> {
         return onEach { change ->
             val event = when (change) {
-                is ArticlePartialStateChange.ArticleList.Failed -> {
+                is ArticlePartialStateChange.ArticleList.Failed ->
                     ArticleEvent.InitArticleListResultEvent.Failed(change.msg)
-                }
 
-                is ArticlePartialStateChange.RefreshArticleList.Failed -> {
+                is ArticlePartialStateChange.RefreshArticleList.Failed ->
                     ArticleEvent.RefreshArticleListResultEvent.Failed(change.msg)
-                }
 
-                is ArticlePartialStateChange.FavoriteArticle.Failed -> {
+                is ArticlePartialStateChange.FavoriteArticle.Failed ->
                     ArticleEvent.FavoriteArticleResultEvent.Failed(change.msg)
-                }
 
-                is ArticlePartialStateChange.ReadArticle.Failed -> {
+                is ArticlePartialStateChange.ReadArticle.Failed ->
                     ArticleEvent.FavoriteArticleResultEvent.Failed(change.msg)
-                }
+
+                is ArticlePartialStateChange.DeleteArticle.Failed ->
+                    ArticleEvent.DeleteArticleResultEvent.Failed(change.msg)
 
                 else -> return@onEach
             }
@@ -107,6 +106,13 @@ class ArticleViewModel @Inject constructor(
                     ArticlePartialStateChange.ReadArticle.Success
                 }.startWith(ArticlePartialStateChange.LoadingDialog.Show).catchMap {
                     ArticlePartialStateChange.ReadArticle.Failed(it.message.toString())
+                }
+            },
+            filterIsInstance<ArticleIntent.Delete>().flatMapConcat { intent ->
+                articleRepo.deleteArticle(intent.articleId).map {
+                    ArticlePartialStateChange.DeleteArticle.Success
+                }.startWith(ArticlePartialStateChange.LoadingDialog.Show).catchMap {
+                    ArticlePartialStateChange.DeleteArticle.Failed(it.message.toString())
                 }
             },
             filterIsInstance<ArticleIntent.FilterFavorite>().flatMapConcat { intent ->

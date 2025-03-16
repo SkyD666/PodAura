@@ -240,7 +240,11 @@ fun SearchScreen(
                 is SearchEvent.FavoriteArticleResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
 
-                is SearchEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+                is SearchEvent.ReadArticleResultEvent.Failed ->
+                    snackbarHostState.showSnackbar(event.msg)
+
+                is SearchEvent.DeleteArticleResultEvent.Failed ->
+                    snackbarHostState.showSnackbar(event.msg)
             }
         }
     }
@@ -288,6 +292,11 @@ private fun SuccessContent(
                             )
                         )
                     },
+                    onDelete = { articleWithFeed ->
+                        dispatch(
+                            SearchIntent.Delete(articleWithFeed.articleWithEnclosure.article.articleId)
+                        )
+                    },
                 )
             }
         }
@@ -327,13 +336,20 @@ private fun LazyGridScope.articleItems(
     result: LazyPagingItems<ArticleWithFeed>,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
+    onDelete: (ArticleWithFeed) -> Unit,
 ) {
     items(
         count = result.itemCount,
         key = result.safeItemKey { it.articleWithEnclosure.article.articleId },
     ) { index ->
         when (val item = result[index]) {
-            is ArticleWithFeed -> Article1Item(item, onFavorite = onFavorite, onRead = onRead)
+            is ArticleWithFeed -> Article1Item(
+                item,
+                onFavorite = onFavorite,
+                onRead = onRead,
+                onDelete = onDelete,
+            )
+
             null -> Article1ItemPlaceholder()
         }
     }

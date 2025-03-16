@@ -59,7 +59,7 @@
     <string name="password_visibility_on">显示</string>
     <string name="article_screen_search_article">搜索文章</string>
     <string name="feed_screen_search_feed">搜索订阅</string>
-    <string name="read_screen_open_browser">在浏览器中打开</string>
+    <string name="open_link_in_browser">打开链接</string>
     <string name="play_activity_label">PodAura 播放器</string>
     <string name="failed_msg">操作失败：%s</string>
     <string name="success_time_msg">操作成功：耗时 %.2f 秒</string>
@@ -306,8 +306,8 @@
     <string name="player_config_screen_auto_pip_description">当回到桌面或显示最近任务时，切换到画中画模式</string>
     <string name="player_picture_in_picture">画中画</string>
     <string name="open_file">打开文件</string>
-    <string name="feed_screen_sort_xml_articles_on_update">完整刷新</string>
-    <string name="feed_screen_sort_xml_articles_on_update_tip">启用完整刷新可能会增加刷新时间</string>
+    <string name="feed_screen_sort_xml_articles_on_update">排序刷新</string>
+    <string name="feed_screen_sort_xml_articles_on_update_tip">启用排序刷新可能会增加刷新时间</string>
     <string name="proxy_screen_port_error_message">端口范围只能从 0 到 65535</string>
     <string name="more">更多</string>
     <string name="reorder_group_screen_name">重排序组</string>
@@ -345,8 +345,10 @@
     <string name="read_style_screen_content_category">文章内容</string>
     <string name="auto_delete_article_screen_keep_unread">保留未读</string>
     <string name="auto_delete_article_screen_keep_favorite">保留收藏</string>
+    <string name="auto_delete_article_screen_keep_playlist">保留在播放列表中的</string>
     <string name="auto_delete_article_screen_keep_unread_description">不会删除未读的文章</string>
     <string name="auto_delete_article_screen_keep_favorite_description">不会删除收藏的文章</string>
+    <string name="auto_delete_article_screen_keep_playlist_description">不会删除在播放列表中的文章</string>
     <string name="appearance_screen_amoled_dark">Amoled 深色</string>
     <string name="article_notification_new_articles">新文章</string>
     <string name="article_notification_content_text">你关注的 %s 更新了！</string>
@@ -437,6 +439,12 @@
     <string name="enclosure_item_link_tag">link 标签</string>
     <string name="collapse_all_groups">收起所有分组</string>
     <string name="expand_all_groups">展开所有分组</string>
+    <string name="delete_constraint_screen_keep_unread_articles">保留未读</string>
+    <string name="delete_constraint_screen_keep_favorite_articles">保留收藏</string>
+    <string name="auto_delete_article_screen_options_tip">这些选项仅对自动删除功能有效</string>
+    <string name="delete_constraint_screen_options_tip">这些选项对自动删除功能无效</string>
+    <string name="article_item_delete_warning">确定删除这篇文章？</string>
+    <string name="article_screen_no_link_tip">此文章不含链接</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

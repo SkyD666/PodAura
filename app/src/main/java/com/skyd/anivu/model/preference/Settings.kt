@@ -49,10 +49,13 @@ import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPref
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
@@ -95,6 +98,7 @@ import com.skyd.anivu.ui.local.LocalArticleTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleBefore
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleFrequency
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepFavorite
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepPlaylist
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepUnread
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleMaxCount
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseBefore
@@ -111,7 +115,9 @@ import com.skyd.anivu.ui.local.LocalHardwareDecode
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
 import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
+import com.skyd.anivu.ui.local.LocalKeepFavoriteArticles
 import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
+import com.skyd.anivu.ui.local.LocalKeepUnreadArticles
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
 import com.skyd.anivu.ui.local.LocalMediaListSortAsc
@@ -233,9 +239,12 @@ data class Settings(
     val autoDeleteArticleBefore: Long = AutoDeleteArticleBeforePreference.default,
     val autoDeleteArticleKeepUnread: Boolean = AutoDeleteArticleKeepUnreadPreference.default,
     val autoDeleteArticleKeepFavorite: Boolean = AutoDeleteArticleKeepFavoritePreference.default,
+    val autoDeleteArticleKeepPlaylist: Boolean = AutoDeleteArticleKeepPlaylistPreference.default,
     val autoDeleteArticleUseMaxCount: Boolean = AutoDeleteArticleUseMaxCountPreference.default,
     val autoDeleteArticleMaxCount: Int = AutoDeleteArticleMaxCountPreference.default,
     val keepPlaylistArticles: Boolean = KeepPlaylistArticlesPreference.default,
+    val keepUnreadArticles: Boolean = KeepUnreadArticlesPreference.default,
+    val keepFavoriteArticles: Boolean = KeepFavoriteArticlesPreference.default,
     val opmlExportDir: String = OpmlExportDirPreference.default,
     val mediaLibLocation: String = MediaLibLocationPreference.default,
     // Transmission
@@ -328,9 +337,12 @@ fun SettingsProvider(
         LocalAutoDeleteArticleBefore provides settings.autoDeleteArticleBefore,
         LocalAutoDeleteArticleKeepUnread provides settings.autoDeleteArticleKeepUnread,
         LocalAutoDeleteArticleKeepFavorite provides settings.autoDeleteArticleKeepFavorite,
+        LocalAutoDeleteArticleKeepPlaylist provides settings.autoDeleteArticleKeepPlaylist,
         LocalAutoDeleteArticleUseMaxCount provides settings.autoDeleteArticleUseMaxCount,
         LocalAutoDeleteArticleMaxCount provides settings.autoDeleteArticleMaxCount,
         LocalKeepPlaylistArticles provides settings.keepPlaylistArticles,
+        LocalKeepUnreadArticles provides settings.keepUnreadArticles,
+        LocalKeepFavoriteArticles provides settings.keepFavoriteArticles,
         LocalOpmlExportDir provides settings.opmlExportDir,
         LocalMediaLibLocation provides settings.mediaLibLocation,
         // Transmission

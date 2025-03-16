@@ -10,4 +10,8 @@ sealed interface SearchEvent : MviSingleEvent {
     sealed interface ReadArticleResultEvent : SearchEvent {
         data class Failed(val msg: String) : ReadArticleResultEvent
     }
+
+    sealed interface DeleteArticleResultEvent : SearchEvent {
+        data class Failed(val msg: String) : DeleteArticleResultEvent
+    }
 }

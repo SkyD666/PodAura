@@ -14,6 +14,7 @@ sealed interface ArticleIntent : MviIntent {
     data class Refresh(val feedUrls: List<String>, val groupIds: List<String?>) : ArticleIntent
     data class Favorite(val articleId: String, val favorite: Boolean) : ArticleIntent
     data class Read(val articleId: String, val read: Boolean) : ArticleIntent
+    data class Delete(val articleId: String) : ArticleIntent
     data class FilterFavorite(val favorite: Boolean?) : ArticleIntent
     data class FilterRead(val read: Boolean?) : ArticleIntent
 }

@@ -13,6 +13,7 @@ import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.webkit.URLUtil
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
@@ -55,7 +56,7 @@ val Uri.type: String?
     get() = appContext.contentResolver.getType(this)
 
 fun String.openBrowser(context: Context) {
-    Uri.parse(this).openBrowser(context)
+    toUri().openBrowser(context)
 }
 
 fun Uri.openBrowser(context: Context) {

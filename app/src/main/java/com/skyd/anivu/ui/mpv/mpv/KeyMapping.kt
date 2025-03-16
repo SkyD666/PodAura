@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.mpv
+package com.skyd.anivu.ui.mpv.mpv
 
 import android.util.SparseArray
 import android.view.KeyEvent

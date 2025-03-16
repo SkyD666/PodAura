@@ -11,6 +11,7 @@ abstract class ArticleSwipeActionPreference : BasePreference<String> {
         const val NONE = "None"
         const val READ = "Read"
         const val SHOW_ENCLOSURES = "ShowEnclosures"
+        const val OPEN_LINK_IN_BROWSER = "OpenLinkInBrowser"
         const val SWITCH_READ_STATE = "SwitchReadState"
         const val SWITCH_FAVORITE_STATE = "SwitchFavoriteState"
 
@@ -21,13 +22,21 @@ abstract class ArticleSwipeActionPreference : BasePreference<String> {
             NONE -> context.getString(R.string.none)
             READ -> context.getString(R.string.article_action_read)
             SHOW_ENCLOSURES -> context.getString(R.string.article_action_show_enclosures)
+            OPEN_LINK_IN_BROWSER -> context.getString(R.string.open_link_in_browser)
             SWITCH_READ_STATE -> context.getString(R.string.article_action_switch_read_state)
             SWITCH_FAVORITE_STATE -> context.getString(R.string.article_action_switch_favorite_state)
             else -> context.getString(R.string.unknown)
         }
     }
 
-    val values = arrayOf(NONE, READ, SHOW_ENCLOSURES, SWITCH_READ_STATE, SWITCH_FAVORITE_STATE)
+    val values = arrayOf(
+        NONE,
+        READ,
+        SHOW_ENCLOSURES,
+        OPEN_LINK_IN_BROWSER,
+        SWITCH_READ_STATE,
+        SWITCH_FAVORITE_STATE,
+    )
 
     abstract override val key: Preferences.Key<String>
 }

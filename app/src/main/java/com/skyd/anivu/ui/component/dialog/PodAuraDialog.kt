@@ -26,7 +26,7 @@ fun PodAuraDialog(
     },
     title: @Composable (() -> Unit)? = null,
     text: @Composable (() -> Unit)? = null,
-    selectable: Boolean = true,
+    selectable: Boolean = false,
     scrollable: Boolean = true,
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable (() -> Unit)? = null,

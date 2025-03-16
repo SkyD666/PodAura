@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.RssFeed
@@ -112,6 +113,7 @@ import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.article.openArticleScreen
+import com.skyd.anivu.ui.screen.article.openLinkInBrowser
 import com.skyd.anivu.util.ShareUtil
 import java.util.Locale
 
@@ -215,10 +217,8 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                         onOpenInBrowserClick = {
                             val articleState = uiState.articleState
                             if (articleState is ArticleState.Success) {
-                                val link = articleState.article.articleWithEnclosure.article.link
-                                if (!link.isNullOrBlank()) {
-                                    link.openBrowser(context)
-                                }
+                                articleState.article.articleWithEnclosure.article
+                                    .openLinkInBrowser(context)
                             }
                         },
                         onReadTextSizeClick = { openReadTextSizeSliderDialog = true },
@@ -442,10 +442,10 @@ private fun MoreMenu(
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.read_screen_open_browser)) },
+            text = { Text(text = stringResource(R.string.open_link_in_browser)) },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Outlined.Public,
+                    imageVector = Icons.Outlined.OpenInBrowser,
                     contentDescription = null,
                 )
             },

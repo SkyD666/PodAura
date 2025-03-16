@@ -9,9 +9,9 @@ import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.MediaPlayHistoryDao
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
-import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
-import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -53,8 +53,8 @@ class DataRepository @Inject constructor(
             articleDao.deleteArticleBefore(
                 timestamp = timestamp,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
-                keepUnread = getOrDefault(AutoDeleteArticleKeepUnreadPreference),
-                keepFavorite = getOrDefault(AutoDeleteArticleKeepFavoritePreference),
+                keepUnread = getOrDefault(KeepUnreadArticlesPreference),
+                keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
             )
         }
         emit(count)

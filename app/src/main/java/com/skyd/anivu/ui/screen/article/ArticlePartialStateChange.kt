@@ -116,6 +116,20 @@ internal sealed interface ArticlePartialStateChange {
         data class Failed(val msg: String) : ReadArticle
     }
 
+    sealed interface DeleteArticle : ArticlePartialStateChange {
+        override fun reduce(oldState: ArticleState): ArticleState {
+            return when (this) {
+                is Success,
+                is Failed -> oldState.copy(
+                    loadingDialog = false,
+                )
+            }
+        }
+
+        data object Success : DeleteArticle
+        data class Failed(val msg: String) : DeleteArticle
+    }
+
     sealed interface FavoriteFilterArticle : ArticlePartialStateChange {
         override fun reduce(oldState: ArticleState): ArticleState {
             return when (this) {

@@ -26,7 +26,9 @@ import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -110,6 +112,8 @@ class FeedRepository @Inject constructor(
             articleDao.deleteArticlesInGroup(
                 groupId = realGroupId,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
+                keepUnread = getOrDefault(KeepUnreadArticlesPreference),
+                keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
             )
         }
         emit(count)
@@ -258,6 +262,8 @@ class FeedRepository @Inject constructor(
             articleDao.deleteArticleInFeed(
                 feedUrl = url,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
+                keepUnread = getOrDefault(KeepUnreadArticlesPreference),
+                keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
             )
         }
         emit(count)

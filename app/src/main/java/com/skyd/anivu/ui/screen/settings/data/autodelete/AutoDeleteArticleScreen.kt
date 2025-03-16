@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.outlined.AutoDelete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MarkEmailUnread
@@ -47,6 +48,7 @@ import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
@@ -64,6 +66,7 @@ import com.skyd.anivu.ui.component.dialog.SliderDialog
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleBefore
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleFrequency
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepFavorite
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepPlaylist
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepUnread
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleMaxCount
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseBefore
@@ -223,6 +226,22 @@ fun AutoDeleteScreen() {
                         )
                     }
                 )
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                    text = stringResource(id = R.string.auto_delete_article_screen_keep_playlist),
+                    description = stringResource(id = R.string.auto_delete_article_screen_keep_playlist_description),
+                    checked = LocalAutoDeleteArticleKeepPlaylist.current,
+                    onCheckedChange = {
+                        AutoDeleteArticleKeepPlaylistPreference.put(
+                            context = context, scope = scope, value = it,
+                        )
+                    }
+                )
+            }
+            item {
+                TipSettingsItem(stringResource(R.string.auto_delete_article_screen_options_tip))
             }
         }
 

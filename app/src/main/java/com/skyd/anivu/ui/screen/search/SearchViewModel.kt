@@ -51,13 +51,14 @@ class SearchViewModel @Inject constructor(
     private fun Flow<SearchPartialStateChange>.sendSingleEvent(): Flow<SearchPartialStateChange> {
         return onEach { change ->
             val event = when (change) {
-                is SearchPartialStateChange.FavoriteArticle.Failed -> {
+                is SearchPartialStateChange.FavoriteArticle.Failed ->
                     SearchEvent.FavoriteArticleResultEvent.Failed(change.msg)
-                }
 
-                is SearchPartialStateChange.ReadArticle.Failed -> {
+                is SearchPartialStateChange.ReadArticle.Failed ->
                     SearchEvent.ReadArticleResultEvent.Failed(change.msg)
-                }
+
+                is SearchPartialStateChange.DeleteArticle.Failed ->
+                    SearchEvent.DeleteArticleResultEvent.Failed(change.msg)
 
                 else -> return@onEach
             }
@@ -105,6 +106,12 @@ class SearchViewModel @Inject constructor(
                     SearchPartialStateChange.ReadArticle.Success
                 }.startWith(SearchPartialStateChange.LoadingDialog.Show)
                     .catchMap { SearchPartialStateChange.ReadArticle.Failed(it.message.toString()) }
+            },
+            filterIsInstance<SearchIntent.Delete>().flatMapConcat { intent ->
+                articleRepo.deleteArticle(intent.articleId).map {
+                    SearchPartialStateChange.DeleteArticle.Success
+                }.startWith(SearchPartialStateChange.LoadingDialog.Show)
+                    .catchMap { SearchPartialStateChange.DeleteArticle.Failed(it.message.toString()) }
             },
         )
     }

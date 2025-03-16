@@ -18,4 +18,8 @@ sealed interface ArticleEvent : MviSingleEvent {
     sealed interface ReadArticleResultEvent : ArticleEvent {
         data class Failed(val msg: String) : ReadArticleResultEvent
     }
+
+    sealed interface DeleteArticleResultEvent : ArticleEvent {
+        data class Failed(val msg: String) : DeleteArticleResultEvent
+    }
 }

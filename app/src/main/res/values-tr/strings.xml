@@ -63,7 +63,7 @@
     <string name="password_visibility_on">Göster</string>
     <string name="article_screen_search_article">Makaleleri ara</string>
     <string name="feed_screen_search_feed">Akışları ara</string>
-    <string name="read_screen_open_browser">Tarayıcıda aç</string>
+    <string name="open_link_in_browser">Tarayıcıda aç</string>
     <string name="play_activity_label">Oynat</string>
     <string name="failed_msg">Başarısız: %s</string>
     <string name="success_time_msg">Başarı: %.2fs sürdü</string>
@@ -308,8 +308,6 @@
     <string name="player_config_screen_auto_pip_description">Ana Ekran veya Son Kullanılanlar düğmesine basıldığında PiP moduna geç</string>
     <string name="player_picture_in_picture">Resim içinde resim</string>
     <string name="open_file">Dosya aç</string>
-    <string name="feed_screen_sort_xml_articles_on_update">Tam yenileme kullan</string>
-    <string name="feed_screen_sort_xml_articles_on_update_tip">Tam yenilemenin etkinleştirilmesi yenileme süresini artırabilir</string>
     <string name="proxy_screen_port_error_message">Bağlantı noktaları yalnızca 0 ile 65535 arasında olabilir</string>
     <string name="more">Daha fazla</string>
     <string name="reorder_group_screen_name">Grupları yeniden sırala</string>

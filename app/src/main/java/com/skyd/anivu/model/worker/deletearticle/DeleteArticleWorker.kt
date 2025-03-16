@@ -6,9 +6,9 @@ import androidx.work.WorkerParameters
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.db.dao.ArticleDao
-import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
@@ -34,7 +34,8 @@ class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
     override suspend fun doWork(): Result {
         runCatching {
             val dataStore = applicationContext.dataStore
-            val keepPlaylistArticles = dataStore.getOrDefault(KeepPlaylistArticlesPreference)
+            val keepPlaylistArticles =
+                dataStore.getOrDefault(AutoDeleteArticleKeepPlaylistPreference)
             val keepUnread = dataStore.getOrDefault(AutoDeleteArticleKeepUnreadPreference)
             val keepFavorite = dataStore.getOrDefault(AutoDeleteArticleKeepFavoritePreference)
             val useBefore = dataStore.getOrDefault(AutoDeleteArticleUseBeforePreference)

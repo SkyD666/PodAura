@@ -63,6 +63,20 @@ internal sealed interface SearchPartialStateChange {
         data class Failed(val msg: String) : ReadArticle
     }
 
+    sealed interface DeleteArticle : SearchPartialStateChange {
+        override fun reduce(oldState: SearchState): SearchState {
+            return when (this) {
+                is Success,
+                is Failed -> oldState.copy(
+                    loadingDialog = false,
+                )
+            }
+        }
+
+        data object Success : DeleteArticle
+        data class Failed(val msg: String) : DeleteArticle
+    }
+
     sealed interface UpdateQuery : SearchPartialStateChange {
         override fun reduce(oldState: SearchState): SearchState = oldState
 

@@ -10,12 +10,17 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.anivu.ui.component.showToast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -172,6 +177,19 @@ class ArticleRepository @Inject constructor(
 
     fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
         emit(articleDao.readArticle(articleId, read))
+    }.flowOn(Dispatchers.IO)
+
+    fun deleteArticle(articleId: String): Flow<Int> = flow {
+        with(appContext.dataStore) {
+            emit(
+                articleDao.deleteArticle(
+                    articleId,
+                    keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
+                    keepUnread = getOrDefault(KeepUnreadArticlesPreference),
+                    keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
+                )
+            )
+        }
     }.flowOn(Dispatchers.IO)
 
     companion object {
