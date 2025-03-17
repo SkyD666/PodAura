@@ -89,7 +89,7 @@ class ArticleRepository @Inject constructor(
                 val hasDefault = realGroupIds.size != groupIds.size
                 buildList {
                     addAll(feedUrls)
-                    addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+                    if (realGroupIds.isNotEmpty()) addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
                     if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
                 }
             }

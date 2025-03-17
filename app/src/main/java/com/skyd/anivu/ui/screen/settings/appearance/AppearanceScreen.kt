@@ -122,20 +122,16 @@ fun AppearanceScreen() {
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
                 ) {
-                    DarkModePreference.values.forEachIndexed { index, id ->
+                    DarkModePreference.values.forEachIndexed { index, darkModeValue ->
                         SegmentedButton(
                             shape = SegmentedButtonDefaults.itemShape(
                                 index = index,
                                 count = DarkModePreference.values.size,
                             ),
-                            onClick = {
-                                DarkModePreference.put(
-                                    context, scope, DarkModePreference.values[index],
-                                )
-                            },
+                            onClick = { DarkModePreference.put(context, scope, darkModeValue) },
                             selected = index == DarkModePreference.values.indexOf(LocalDarkMode.current)
                         ) {
-                            Text(DarkModePreference.toDisplayName(context, id))
+                            Text(DarkModePreference.toDisplayName(context, darkModeValue))
                         }
                     }
                 }

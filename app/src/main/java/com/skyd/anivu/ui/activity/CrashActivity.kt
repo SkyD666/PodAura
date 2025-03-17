@@ -66,8 +66,8 @@ class CrashActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         val crashInfo = intent.getStringExtra(CRASH_INFO)
         val message = buildString {

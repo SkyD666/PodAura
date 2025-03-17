@@ -2,6 +2,7 @@ package com.skyd.anivu
 
 import android.content.Context
 import android.util.Log
+import androidx.paging.PagingConfig
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -35,7 +36,6 @@ import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePrefe
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.model.repository.feed.FeedRepository
-import com.skyd.anivu.model.repository.feed.ReorderGroupRepository
 import com.skyd.anivu.model.worker.deletearticle.DeleteArticleWorker
 import com.skyd.anivu.model.worker.deletearticle.listenerDeleteArticleFrequency
 import com.skyd.anivu.model.worker.rsssync.RssSyncWorker
@@ -52,7 +52,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -88,7 +90,7 @@ class PeriodicTaskModule {
         .build()
 
     private val faviconExtractor = FaviconExtractor(retrofit)
-
+    private val pagingConfig = PagingConfig(pageSize = 20, enablePlaceholders = false)
 
     private lateinit var context: Context
 
@@ -97,7 +99,6 @@ class PeriodicTaskModule {
     private lateinit var feedDao: FeedDao
     private lateinit var articleDao: ArticleDao
     private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
-    private lateinit var reorderGroupRepository: ReorderGroupRepository
     private lateinit var feedRepository: FeedRepository
 
     /**
@@ -360,7 +361,8 @@ class PeriodicTaskModule {
 
             assertTrue(
                 workManager.getWorkInfosForUniqueWorkFlow(DeleteArticleWorker.UNIQUE_WORK_NAME)
-                    .first().run { firstOrNull() == null || first().state == WorkInfo.State.CANCELLED }
+                    .first()
+                    .run { firstOrNull() == null || first().state == WorkInfo.State.CANCELLED }
             )
         }
     }
@@ -383,9 +385,8 @@ class PeriodicTaskModule {
         groupDao = db.groupDao()
         feedDao = db.feedDao()
         articleDao = db.articleDao()
-        reorderGroupRepository = ReorderGroupRepository(groupDao)
         feedRepository =
-            FeedRepository(groupDao, feedDao, articleDao, reorderGroupRepository, rssHelper)
+            FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
     }
 
     @After

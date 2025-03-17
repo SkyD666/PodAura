@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
@@ -261,14 +260,11 @@ private fun PlaylistInfo(
                         color = LocalContentColor.current.copy(alpha = 0.7f),
                     )
                 }
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f)
-                        .widthIn(min = 12.dp)
-                )
+                Spacer(modifier = Modifier.weight(1f))
                 FilledIconButton(
                     onClick = onPlay,
                     modifier = Modifier
+                        .padding(start = 12.dp)
                         .size(55.dp)
                         .align(Alignment.Bottom),
                     enabled = playlistViewBean.itemCount > 0,

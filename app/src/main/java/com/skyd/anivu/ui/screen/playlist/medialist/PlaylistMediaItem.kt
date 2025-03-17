@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.screen.playlist.medialist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -146,7 +147,12 @@ fun PlaylistMediaItem(
             CompositionLocalProvider(
                 LocalContentColor provides LocalContentColor.current.copy(alpha = 0.7f)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .basicMarquee(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     data.artist?.let { artist ->
                         Text(
                             text = artist,

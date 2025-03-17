@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.mpv.land.controller.bar
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
@@ -83,12 +84,14 @@ internal fun TopBar(
             color = Color.White,
             maxLines = 1,
         )
-        Spacer(modifier = Modifier.width(3.dp))
-        ControllerIconButton(
-            modifier = Modifier.padding(2.dp),
-            onClick = { context.activity.manualEnterPictureInPictureMode() },
-            imageVector = Icons.Outlined.PictureInPictureAlt,
-            contentDescription = stringResource(id = R.string.player_picture_in_picture),
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Spacer(modifier = Modifier.width(3.dp))
+            ControllerIconButton(
+                modifier = Modifier.padding(2.dp),
+                onClick = { context.activity.manualEnterPictureInPictureMode() },
+                imageVector = Icons.Outlined.PictureInPictureAlt,
+                contentDescription = stringResource(id = R.string.player_picture_in_picture),
+            )
+        }
     }
 }

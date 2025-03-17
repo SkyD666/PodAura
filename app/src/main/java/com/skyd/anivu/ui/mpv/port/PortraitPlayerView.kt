@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.mpv.port
 
+import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -57,11 +58,13 @@ internal fun PortraitPlayerView(
                 title = { },
                 navigationIcon = { BackIcon(onClick = onBack) },
                 actions = {
-                    PodAuraIconButton(
-                        onClick = { context.activity.manualEnterPictureInPictureMode() },
-                        imageVector = Icons.Outlined.PictureInPictureAlt,
-                        contentDescription = stringResource(R.string.player_picture_in_picture),
-                    )
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        PodAuraIconButton(
+                            onClick = { context.activity.manualEnterPictureInPictureMode() },
+                            imageVector = Icons.Outlined.PictureInPictureAlt,
+                            contentDescription = stringResource(R.string.player_picture_in_picture),
+                        )
+                    }
                 }
             )
         }

@@ -38,7 +38,7 @@ fun PodAuraTheme(
     val isAmoled = LocalAmoledDarkMode.current
 
     MaterialTheme(
-        colorScheme = remember(themeName, isAmoled) {
+        colorScheme = remember(themeName, darkTheme, isAmoled) {
             colors.getOrElse(themeName) {
                 dynamicColorScheme(
                     seedColor = ThemePreference.toSeedColor(

@@ -31,6 +31,10 @@ class ReorderGroupRepository @Inject constructor(
         fromIndex: Int,
         toIndex: Int,
     ): Flow<Int> = flow {
+        if (fromIndex == toIndex) {
+            emit(0)
+            return@flow
+        }
         val fromGroup = groupDao.getNth(fromIndex)
         if (fromGroup == null) {
             emit(0)

@@ -35,7 +35,9 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -131,6 +133,7 @@ class RssModule {
         feedRepository.setFeed(url = url2, groupId = null, nickname = null).first()
         articleRepository.requestArticleList(
             feedUrls = listOf(url1, url2),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).apply {
             assertTrue(asSnapshot().run {
@@ -141,6 +144,7 @@ class RssModule {
         feedRepository.clearFeedArticles(url = url1).first()
         articleRepository.requestArticleList(
             feedUrls = listOf(url1, url2),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).apply {
             assertTrue(asSnapshot().run {
@@ -173,6 +177,7 @@ class RssModule {
 
         articleRepository.requestArticleList(
             feedUrls = listOf(url1, url2),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).apply {
             assertTrue(asSnapshot().run {
@@ -239,6 +244,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).apply {
             assertTrue(asSnapshot().all { !it.articleWithEnclosure.article.isRead })
@@ -246,6 +252,7 @@ class RssModule {
         feedRepository.readAllInFeed(url1).first()
         articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).apply {
             assertTrue(asSnapshot().all { it.articleWithEnclosure.article.isRead })
@@ -255,6 +262,7 @@ class RssModule {
         articleRepository.refreshArticleList(feedUrls = listOf(url1)).first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first()
         val articleId = article.articleWithEnclosure.article.articleId
@@ -299,6 +307,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first()
         val articleId = article.articleWithEnclosure.article.articleId
@@ -326,6 +335,7 @@ class RssModule {
         assertTrue(searchRepository.listenSearchFeed().asSnapshot().first().feed.url == url1)
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first()
         val realArticle = article.articleWithEnclosure.article
@@ -349,6 +359,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first()
         assertEquals(
@@ -361,8 +372,7 @@ class RssModule {
      * Pass
      * feedRepository.createGroup
      * reorderGroupRepository.requestGroupList
-     * reorderGroupRepository.requestReorderGroup
-     * reorderGroupRepository.requestResetGroupOrder
+     * reorderGroupRepository.reorderGroup
      */
     @Test
     fun test11() = runTest {
@@ -378,18 +388,14 @@ class RssModule {
         feedRepository.createGroup(
             GroupVo(groupId = groupId3, name = "test11-3", isExpanded = true)
         ).first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
+        var itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
             get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
         })
 
-        reorderGroupRepository.requestReorderGroup(
-            movedGroupId = groupId3, newPreviousGroupId = groupId1, newNextGroupId = groupId2
-        ).first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
-            get(0).groupId == groupId1 && get(1).groupId == groupId3 && get(2).groupId == groupId2
-        })
-        reorderGroupRepository.requestResetGroupOrder().first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
+        assertTrue(reorderGroupRepository.reorderGroup(fromIndex = 0, toIndex = -1).first() > 0)
+        itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
             get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
         })
     }
@@ -430,6 +436,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first()
         assertEquals(
@@ -524,6 +531,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first { it.articleWithEnclosure.article.guid != null }
         assertEquals(
@@ -547,6 +555,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().first { it.articleWithEnclosure.article.link != null }
         assertEquals(
@@ -570,6 +579,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot().maxBy { it.articleWithEnclosure.article.date ?: 0 }
         assertEquals(
@@ -588,18 +598,19 @@ class RssModule {
         val url1 = "https://blogs.nvidia.cn/feed/"
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         articleDao.readAllInGroup(null)
-        assertTrue(articleRepository.requestArticleList(
-            feedUrls = feedDao.getFeedsByGroupId(null).map { it.feed.url },
-            articleIds = emptyList(),
-        ).asSnapshot().all { it.articleWithEnclosure.article.isRead })
+        assertTrue(
+            articleRepository.requestArticleList(
+                feedUrls = feedDao.getFeedsByGroupId(null).map { it.feed.url },
+                groupIds = emptyList(),
+                articleIds = emptyList(),
+            ).asSnapshot().all { it.articleWithEnclosure.article.isRead })
     }
 
     /**
      * Pass
      * feedRepository.createGroup
      * reorderGroupRepository.requestGroupList
-     * reorderGroupRepository.requestReorderGroup
-     * reorderGroupRepository.requestResetGroupOrder
+     * reorderGroupRepository.reorderGroup
      */
     @Test
     fun test23() = runTest {
@@ -615,17 +626,14 @@ class RssModule {
         feedRepository.createGroup(
             GroupVo(groupId = groupId3, name = "test23-3", isExpanded = true)
         ).first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
+        var itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
             get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
         })
-
-        assertFalse(
-            reorderGroupRepository.requestReorderGroup(
-                movedGroupId = groupId3, newPreviousGroupId = groupId3, newNextGroupId = groupId3
-            ).first()
-        )
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
-            get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
+        assertTrue(reorderGroupRepository.reorderGroup(fromIndex = 2, toIndex = 1).first() > 0)
+        itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
+            get(0).groupId == groupId1 && get(1).groupId == groupId3 && get(2).groupId == groupId2
         })
     }
 
@@ -633,8 +641,7 @@ class RssModule {
      * Pass
      * feedRepository.createGroup
      * reorderGroupRepository.requestGroupList
-     * reorderGroupRepository.requestReorderGroup
-     * reorderGroupRepository.requestResetGroupOrder
+     * reorderGroupRepository.reorderGroup
      */
     @Test
     fun test24() = runTest {
@@ -650,26 +657,19 @@ class RssModule {
         feedRepository.createGroup(
             GroupVo(groupId = groupId3, name = "test24-3", isExpanded = true)
         ).first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
+        var itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
             get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
         })
 
-        assertFalse(
-            reorderGroupRepository.requestReorderGroup(
-                movedGroupId = "fakeId", newPreviousGroupId = "fakeId2", newNextGroupId = "fakeId3"
-            ).first()
-        )
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
-            get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
-        })
+        assertEquals(reorderGroupRepository.reorderGroup(fromIndex = 0, toIndex = 0).first(), 0)
     }
 
     /**
      * Pass
      * feedRepository.createGroup
      * reorderGroupRepository.requestGroupList
-     * reorderGroupRepository.requestReorderGroup
-     * reorderGroupRepository.requestResetGroupOrder
+     * reorderGroupRepository.reorderGroup
      */
     @Test
     fun test25() = runTest {
@@ -685,19 +685,15 @@ class RssModule {
         feedRepository.createGroup(
             GroupVo(groupId = groupId3, name = "test25-3", isExpanded = true)
         ).first()
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
+        var itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
             get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
         })
 
-        assertFalse(
-            reorderGroupRepository.requestReorderGroup(
-                movedGroupId = GroupVo.DEFAULT_GROUP_ID,
-                newPreviousGroupId = groupId3,
-                newNextGroupId = groupId2
-            ).first()
-        )
-        assertTrue(reorderGroupRepository.requestGroupList().first().run {
-            get(0).groupId == groupId1 && get(1).groupId == groupId2 && get(2).groupId == groupId3
+        assertTrue(reorderGroupRepository.reorderGroup(fromIndex = 0, toIndex = 1).first() > 0)
+        itemsSnapshot = reorderGroupRepository.requestGroupList().asSnapshot { scrollTo(3) }
+        assertTrue(itemsSnapshot.run {
+            get(0).groupId == groupId2 && get(1).groupId == groupId1 && get(2).groupId == groupId3
         })
     }
 
@@ -759,9 +755,8 @@ class RssModule {
             articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
                 .sortedBy { it.articleWithEnclosure.article.date }
         val itemsSnapshot =
-            articleRepository.requestArticleList(listOf(url1), emptyList()).asSnapshot {
-                scrollTo(excepted.size)
-            }
+            articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
+                .asSnapshot { scrollTo(excepted.size) }
         assertEquals(excepted, itemsSnapshot)
     }
 
@@ -781,9 +776,8 @@ class RssModule {
             articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
                 .sortedByDescending { it.articleWithEnclosure.article.title }
         val itemsSnapshot =
-            articleRepository.requestArticleList(listOf(url1), emptyList()).asSnapshot {
-                scrollTo(excepted.size)
-            }
+            articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
+                .asSnapshot { scrollTo(excepted.size) }
         assertEquals(excepted, itemsSnapshot)
     }
 
@@ -806,9 +800,8 @@ class RssModule {
         val excepted =
             articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\""))
         val itemsSnapshot =
-            articleRepository.requestArticleList(listOf(url1, url2), emptyList()).asSnapshot {
-                scrollTo(excepted.size)
-            }
+            articleRepository.requestArticleList(listOf(url1, url2), emptyList(), emptyList())
+                .asSnapshot { scrollTo(excepted.size) }
         assertEquals(excepted, itemsSnapshot)
     }
 
@@ -827,6 +820,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         val (article1, article2) = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
+            groupIds = emptyList(),
             articleIds = emptyList(),
         ).asSnapshot { scrollTo(1) }
         articleDao.favoriteArticle(article1.articleWithEnclosure.article.articleId, true)
@@ -840,9 +834,8 @@ class RssModule {
         val excepted = listOf(newArticle1, newArticle2)
             .sortedByDescending { it.articleWithEnclosure.article.date }
         val itemsSnapshot =
-            articleRepository.requestArticleList(listOf(url1), emptyList()).asSnapshot {
-                scrollTo(excepted.size)
-            }
+            articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
+                .asSnapshot { scrollTo(excepted.size) }
         assertEquals(excepted, itemsSnapshot)
     }
 
@@ -862,7 +855,8 @@ class RssModule {
         articleRepository.updateSort(ArticleSort.Title(asc = false))
         articleRepository.filterRead(false)
         assertTrue(
-            articleRepository.requestArticleList(listOf(url1), emptyList()).asSnapshot().isEmpty()
+            articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
+                .asSnapshot().isEmpty()
         )
     }
 
@@ -877,9 +871,8 @@ class RssModule {
         articleDao = db.articleDao()
         readHistoryDao = db.readHistoryDao()
 
-        reorderGroupRepository = ReorderGroupRepository(groupDao)
-        feedRepository =
-            FeedRepository(groupDao, feedDao, articleDao, reorderGroupRepository, rssHelper)
+        reorderGroupRepository = ReorderGroupRepository(groupDao, pagingConfig)
+        feedRepository = FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
         articleRepository = ArticleRepository(feedDao, articleDao, rssHelper, pagingConfig)
         searchRepository = SearchRepository(feedDao, articleDao, pagingConfig)
         readRepository = ReadRepository(articleDao, readHistoryDao)

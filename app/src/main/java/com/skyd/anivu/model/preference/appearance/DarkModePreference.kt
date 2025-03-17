@@ -20,10 +20,9 @@ import kotlinx.coroutines.withContext
 object DarkModePreference : BasePreference<Int> {
     private const val DARK_MODE = "darkMode"
 
-    val values: List<Int> = mutableListOf(
-        AppCompatDelegate.MODE_NIGHT_NO,
-        AppCompatDelegate.MODE_NIGHT_YES,
-    ).apply {
+    val values: List<Int> = buildList {
+        add(AppCompatDelegate.MODE_NIGHT_NO)
+        add(AppCompatDelegate.MODE_NIGHT_YES)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             add(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }

@@ -152,33 +152,30 @@ fun MediaPlayHistoryItem(
                 modifier = Modifier.padding(end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                val lastPlayPosition = data.mediaPlayHistoryBean.lastPlayPosition
-                Text(
+                Row(
                     modifier = Modifier
-                        .basicMarquee()
-                        .widthIn(min = 40.dp),
-                    text = stringResource(
-                        R.string.history_screen_last_seen,
-                        (lastPlayPosition / 1000).toDurationString(),
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                )
-                Spacer(
-                    modifier = Modifier
-                        .widthIn(min = 6.dp)
                         .weight(1f)
-                )
-                val lastTime = data.mediaPlayHistoryBean.lastTime
-                if (lastTime > 0) {
+                        .basicMarquee(),
+                ) {
+                    val lastPlayPosition = data.mediaPlayHistoryBean.lastPlayPosition
                     Text(
-                        modifier = Modifier
-                            .basicMarquee()
-                            .widthIn(min = 40.dp),
-                        text = remember(lastTime) { lastTime.toDateTimeString(context = context) },
+                        text = stringResource(
+                            R.string.history_screen_last_seen,
+                            (lastPlayPosition / 1000).toDurationString(),
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                     )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.widthIn(min = 12.dp))
+                    val lastTime = data.mediaPlayHistoryBean.lastTime
+                    if (lastTime > 0) {
+                        Text(
+                            text = remember(lastTime) { lastTime.toDateTimeString(context = context) },
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                        )
+                    }
                 }
                 ActionIconButton(
                     imageVector = Icons.Outlined.Delete,

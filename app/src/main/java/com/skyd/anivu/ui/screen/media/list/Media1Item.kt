@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -172,27 +171,29 @@ fun Media1Item(
                 } else if (data.isDir) {
                     TagText(text = stringResource(id = R.string.folder), fontSize = 10.sp)
                 }
-                if (!data.isDir) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .basicMarquee(),
+                ) {
+                    if (!data.isDir) {
+                        Text(
+                            modifier = Modifier.alignByBaseline(),
+                            text = remember(data) { data.size.fileSize(context) },
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
                     Text(
                         modifier = Modifier
-                            .basicMarquee()
-                            .widthIn(min = 40.dp)
+                            .padding(start = 12.dp)
                             .alignByBaseline(),
-                        text = remember(data) { data.size.fileSize(context) },
+                        text = remember(data) { data.date.toDateTimeString(context = context) },
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    modifier = Modifier
-                        .padding(start = 12.dp)
-                        .basicMarquee()
-                        .alignByBaseline(),
-                    text = remember(data) { data.date.toDateTimeString(context = context) },
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                )
             }
 
             DropdownMenu(
