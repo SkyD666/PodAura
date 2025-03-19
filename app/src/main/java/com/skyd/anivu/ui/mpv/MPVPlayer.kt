@@ -42,7 +42,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         private const val TAG = "MPVPlayer"
 
         // resolution (px) of the thumbnail
-        private const val THUMB_SIZE = 1024
+        private const val THUMB_SIZE = 512
 
         @Volatile
         private var initialized = false

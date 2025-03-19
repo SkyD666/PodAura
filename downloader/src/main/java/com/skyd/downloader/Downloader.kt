@@ -11,9 +11,7 @@ import com.skyd.downloader.download.DownloadTask.Companion.ETAG_HEADER
 import com.skyd.downloader.net.RetrofitInstance
 import com.skyd.downloader.util.FileUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.withContext
 
 class Downloader private constructor(

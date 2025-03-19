@@ -43,7 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
-import com.skyd.anivu.model.repository.ArticleSort
+import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.ui.component.ListMenu
 
 @Composable

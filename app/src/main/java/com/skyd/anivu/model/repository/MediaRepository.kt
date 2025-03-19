@@ -263,9 +263,9 @@ class MediaRepository @Inject constructor(
         )
     ) { list, sortBy ->
         when (sortBy) {
-            BaseMediaListSortByPreference.Date -> list.sortedBy { it.date }
-            BaseMediaListSortByPreference.Name -> list.sortedBy { it.displayName ?: it.name }
-            BaseMediaListSortByPreference.FileCount -> list.sortedBy { it.fileCount }
+            BaseMediaListSortByPreference.DATE -> list.sortedBy { it.date }
+            BaseMediaListSortByPreference.NAME -> list.sortedBy { it.displayName ?: it.name }
+            BaseMediaListSortByPreference.FILE_COUNT -> list.sortedBy { it.fileCount }
             else -> list.sortedBy { it.displayName ?: it.name }
         }
     }.combine(

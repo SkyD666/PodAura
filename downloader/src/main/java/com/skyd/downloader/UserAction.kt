@@ -5,6 +5,5 @@ internal enum class UserAction {
     Start,
     Pause,
     Resume,
-    Cancel,
     Retry,
 }

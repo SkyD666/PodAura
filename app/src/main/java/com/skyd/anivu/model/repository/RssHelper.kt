@@ -28,7 +28,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.executeAsync
 import java.io.InputStream
-import java.util.*
+import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -172,7 +173,7 @@ class RssHelper @Inject constructor(
                     RssMediaBean(
                         articleId = articleId,
                         duration = content?.duration,
-                        adult = content?.metadata?.ratings?.any { it == Rating.ADULT } ?: false,
+                        adult = content?.metadata?.ratings?.any { it == Rating.ADULT } == true,
                         image = content?.metadata?.thumbnail?.firstOrNull()?.url?.toString(),
                         episode = null,
                     )
@@ -199,7 +200,7 @@ class RssHelper @Inject constructor(
         return null
     }
 
-    private fun getRssIcon(url: String): String? = runCatching {
+    private suspend fun getRssIcon(url: String): String? = runCatching {
         faviconExtractor.extractFavicon(url).apply { Log.e("TAG", "getRssIcon: $this") }
     }.onFailure { it.printStackTrace() }.getOrNull()
 

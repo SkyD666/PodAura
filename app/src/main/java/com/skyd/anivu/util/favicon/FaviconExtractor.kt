@@ -5,7 +5,7 @@ import com.skyd.anivu.util.favicon.extractor.BaseUrlIconTagExtractor
 import com.skyd.anivu.util.favicon.extractor.HardCodedExtractor
 import com.skyd.anivu.util.favicon.extractor.IconTagExtractor
 import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.coroutineScope
 import retrofit2.Retrofit
 import javax.inject.Inject
 
@@ -18,7 +18,7 @@ class FaviconExtractor @Inject constructor(
         BaseUrlIconTagExtractor(retrofit),
     )
 
-    fun extractFavicon(url: String): String? = runBlocking {
+    suspend fun extractFavicon(url: String): String? = coroutineScope {
         extractors
             .map { async { it.extract(url) } }
             .map { it.await() }

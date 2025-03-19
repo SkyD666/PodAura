@@ -11,15 +11,7 @@ data class DialogState(
     val speedDialogState: () -> SpeedDialogState,
     val audioTrackDialogState: () -> AudioTrackDialogState,
     val subtitleTrackDialogState: () -> SubtitleTrackDialogState,
-) {
-    companion object {
-        val initial = DialogState(
-            speedDialogState = { SpeedDialogState.initial },
-            audioTrackDialogState = { AudioTrackDialogState.initial },
-            subtitleTrackDialogState = { SubtitleTrackDialogState.initial },
-        )
-    }
-}
+)
 
 @Immutable
 data class DialogCallback(

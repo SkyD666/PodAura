@@ -12,24 +12,24 @@ import com.skyd.anivu.base.BasePreference
 
 abstract class BaseMediaListSortByPreference : BasePreference<String> {
     companion object {
-        const val Date = "Date"
-        const val Name = "Name"
-        const val FileCount = "FileCount"
+        const val DATE = "Date"
+        const val NAME = "Name"
+        const val FILE_COUNT = "FileCount"
 
         fun toDisplayName(
             context: Context,
             value: String,
         ): String = when (value) {
-            Date -> context.getString(R.string.sort_date)
-            Name -> context.getString(R.string.sort_name)
-            FileCount -> context.getString(R.string.sort_item_count)
+            DATE -> context.getString(R.string.sort_date)
+            NAME -> context.getString(R.string.sort_name)
+            FILE_COUNT -> context.getString(R.string.sort_item_count)
             else -> context.getString(R.string.unknown)
         }
 
         fun toIcon(value: String): ImageVector? = when (value) {
-            Date -> Icons.Outlined.DateRange
-            Name -> Icons.Outlined.Title
-            FileCount -> Icons.AutoMirrored.Outlined.InsertDriveFile
+            DATE -> Icons.Outlined.DateRange
+            NAME -> Icons.Outlined.Title
+            FILE_COUNT -> Icons.AutoMirrored.Outlined.InsertDriveFile
             else -> null
         }
     }

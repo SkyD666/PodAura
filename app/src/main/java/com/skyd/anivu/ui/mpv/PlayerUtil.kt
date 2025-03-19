@@ -3,14 +3,16 @@ package com.skyd.anivu.ui.mpv
 import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import coil3.ImageLoader
 import com.skyd.anivu.appContext
 import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.getImage
-import com.skyd.anivu.ext.imageLoaderBuilder
+import com.skyd.anivu.ui.mpv.service.PlayerState
+import com.skyd.anivu.util.image.decodeSampledBitmap
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -89,13 +91,20 @@ fun isFdFileExists(fdPath: String): Boolean {
     }
 }
 
-suspend fun createThumbnail(thumbnailPath: String?): Bitmap? {
+suspend fun createThumbnailFile(
+    thumbnailPath: String?,
+): File? {
     thumbnailPath ?: return null
-    return appContext.imageLoaderBuilder().build()
+    return ImageLoader.Builder(appContext).build()
         .getImage(appContext, thumbnailPath)
-        ?.inputStream()
-        ?.use { BitmapFactory.decodeStream(it) }
 }
+
+suspend fun createThumbnail(
+    thumbnailPath: String?,
+    reqWidth: Int = 512,
+    reqHeight: Int = 512,
+): Bitmap? =
+    createThumbnailFile(thumbnailPath)?.let { decodeSampledBitmap(it, reqWidth, reqHeight) }
 
 fun copyAssetsForMpv(context: Context) {
     val assetManager = context.assets
@@ -122,3 +131,16 @@ fun copyAssetsForMpv(context: Context) {
         }
     }
 }
+
+fun PlayerState.playbackState(): Int = when {
+    idling || position < 0 || duration <= 0 || playlist.isEmpty() -> {
+        PlaybackStateCompat.STATE_NONE
+    }
+
+    pausedForCache -> PlaybackStateCompat.STATE_BUFFERING
+    paused -> PlaybackStateCompat.STATE_PAUSED
+    else -> PlaybackStateCompat.STATE_PLAYING
+}
+
+val PlayerState.isPlaying
+    get() = playbackState() != PlaybackStateCompat.STATE_PLAYING

@@ -13,27 +13,27 @@ import com.skyd.anivu.base.BasePreference
 
 abstract class BasePlaylistSortByPreference : BasePreference<String> {
     companion object {
-        const val Name = "Name"
-        const val MediaCount = "MediaCount"
-        const val Manual = "Manual"
-        const val CreateTime = "CreateTime"
+        const val NAME = "Name"
+        const val MEDIA_COUNT = "MediaCount"
+        const val MANUAL = "Manual"
+        const val CREATE_TIME = "CreateTime"
 
         fun toDisplayName(
             context: Context,
             value: String,
         ): String = when (value) {
-            Name -> context.getString(R.string.sort_name)
-            MediaCount -> context.getString(R.string.sort_item_count)
-            Manual -> context.getString(R.string.sort_manual)
-            CreateTime -> context.getString(R.string.sort_create_time)
+            NAME -> context.getString(R.string.sort_name)
+            MEDIA_COUNT -> context.getString(R.string.sort_item_count)
+            MANUAL -> context.getString(R.string.sort_manual)
+            CREATE_TIME -> context.getString(R.string.sort_create_time)
             else -> context.getString(R.string.unknown)
         }
 
         fun toIcon(value: String): ImageVector? = when (value) {
-            Name -> Icons.Outlined.Title
-            MediaCount -> Icons.Outlined.Subscriptions
-            Manual -> Icons.Outlined.SwipeVertical
-            CreateTime -> Icons.Outlined.DateRange
+            NAME -> Icons.Outlined.Title
+            MEDIA_COUNT -> Icons.Outlined.Subscriptions
+            MANUAL -> Icons.Outlined.SwipeVertical
+            CREATE_TIME -> Icons.Outlined.DateRange
             else -> null
         }
     }

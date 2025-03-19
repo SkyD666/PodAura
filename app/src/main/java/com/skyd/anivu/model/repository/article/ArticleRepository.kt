@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.repository
+package com.skyd.anivu.model.repository.article
 
 import android.database.DatabaseUtils
 import android.os.Parcelable
@@ -21,6 +21,7 @@ import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
+import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.ui.component.showToast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +53,7 @@ class ArticleRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
-) : BaseRepository() {
+) : BaseRepository(), IArticleRepository {
     private val filterFavorite = MutableStateFlow<Boolean?>(null)
     private val filterRead = MutableStateFlow<Boolean?>(null)
     private val articleSortDateDesc = MutableStateFlow<ArticleSort>(ArticleSort.default)
@@ -67,6 +68,20 @@ class ArticleRepository @Inject constructor(
 
     fun updateSort(articleSort: ArticleSort) {
         articleSortDateDesc.value = articleSort
+    }
+
+    override suspend fun getFeedUrls(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+    ): List<String> {
+        val realGroupIds =
+            groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
+        val hasDefault = realGroupIds.size != groupIds.size
+        return buildList {
+            addAll(feedUrls)
+            if (realGroupIds.isNotEmpty()) addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+            if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
+        }
     }
 
     fun requestArticleList(
@@ -84,14 +99,7 @@ class ArticleRepository @Inject constructor(
             if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
                 feedDao.getAllFeedUrl()
             } else {
-                val realGroupIds =
-                    groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
-                val hasDefault = realGroupIds.size != groupIds.size
-                buildList {
-                    addAll(feedUrls)
-                    if (realGroupIds.isNotEmpty()) addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
-                    if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
-                }
+                getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
             }
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
@@ -106,16 +114,16 @@ class ArticleRepository @Inject constructor(
         }.flow
     }.flowOn(Dispatchers.IO)
 
-    fun refreshGroupArticles(groupId: String?): Flow<Unit> = flow {
+    override fun refreshGroupArticles(groupId: String?): Flow<Unit> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
         emit(feedDao.getFeedsByGroupId(realGroupId).map { it.feed.url })
     }.flatMapConcat {
         refreshArticleList(feedUrls = it)
     }.flowOn(Dispatchers.IO)
 
-    fun refreshArticleList(
+    override fun refreshArticleList(
         feedUrls: List<String>,
-        groupIds: List<String?> = emptyList(),
+        groupIds: List<String?>,
     ): Flow<Unit> = flow {
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
@@ -171,15 +179,15 @@ class ArticleRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> = flow {
+    override fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> = flow {
         emit(articleDao.favoriteArticle(articleId, favorite))
     }.flowOn(Dispatchers.IO)
 
-    fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
+    override fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
         emit(articleDao.readArticle(articleId, read))
     }.flowOn(Dispatchers.IO)
 
-    fun deleteArticle(articleId: String): Flow<Int> = flow {
+    override fun deleteArticle(articleId: String): Flow<Int> = flow {
         with(appContext.dataStore) {
             emit(
                 articleDao.deleteArticle(

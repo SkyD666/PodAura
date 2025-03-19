@@ -1,6 +1,6 @@
 [versions]
 adaptive = "1.1.0"
-coil = "3.0.4"
+coil = "3.1.0"
 hilt = "2.55"
 androidxTest = "1.2.1"
 libtorrent4j = "2.1.0-35"
@@ -105,6 +105,6 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.51.1" }
-ksp = { id = "com.google.devtools.ksp", version = "2.0.21-1.0.25" }
+ksp = { id = "com.google.devtools.ksp", version = "2.1.10-1.0.31" }
 android-library = { id = "com.android.library", version = "8.8.2" }
 android-test = { id = "com.android.test", version.ref = "agp" }

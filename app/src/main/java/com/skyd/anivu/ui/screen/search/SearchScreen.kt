@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.screen.search
 
 import android.os.Bundle
+import androidx.annotation.Keep
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -113,10 +114,15 @@ fun openSearchScreen(
 @kotlinx.serialization.Serializable
 sealed interface SearchDomain : Serializable {
     data object Feed : SearchDomain {
+        @Keep
         private fun readResolve(): Any = Feed
     }
 
-    data class Article(val feedUrls: List<String>, val articleIds: List<String>) : SearchDomain
+    data class Article(
+        val feedUrls: List<String>,
+        val groupIds: List<String>,
+        val articleIds: List<String>,
+    ) : SearchDomain
 }
 
 @Composable
@@ -142,6 +148,7 @@ fun SearchScreen(
             SearchDomain.Feed -> SearchIntent.ListenSearchFeed
             is SearchDomain.Article -> SearchIntent.ListenSearchArticle(
                 feedUrls = searchDomain.feedUrls,
+                groupIds = searchDomain.groupIds,
                 articleIds = searchDomain.articleIds,
             )
         }

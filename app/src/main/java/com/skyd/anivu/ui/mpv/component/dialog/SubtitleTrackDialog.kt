@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.SubtitleTrackDialogCallback
@@ -60,7 +61,7 @@ internal fun SubtitleTrackDialog(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     PodAuraIconButton(
-                        onClick = { pickSubtitleFileLauncher.launch("*/*") },
+                        onClick = { pickSubtitleFileLauncher.safeLaunch("*/*") },
                         imageVector = Icons.Rounded.Add,
                         contentDescription = stringResource(id = R.string.player_add_external_subtitle),
                     )

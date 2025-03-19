@@ -55,6 +55,7 @@ import androidx.navigation.navDeepLink
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
+import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.toDecodedUrl
 import com.skyd.anivu.ext.type
 import com.skyd.anivu.model.bean.MediaBean
@@ -419,7 +420,7 @@ private fun MainContent(onHandleIntent: @Composable () -> Unit) {
                 onPermissionRequest = {
                     permissionGranted = Environment.isExternalStorageManager()
                     if (!permissionGranted) {
-                        permissionRequester.launch(
+                        permissionRequester.safeLaunch(
                             Intent(ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
                         )
                     }

@@ -4,10 +4,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.skyd.anivu.model.bean.ARTICLE_NOTIFICATION_RULE_TABLE_NAME
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
-import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
-import com.skyd.anivu.model.bean.feed.FeedBean
-import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
-import com.skyd.anivu.model.bean.group.GroupBean
 
 class Migration13To14 : Migration(13, 14) {
     override fun migrate(db: SupportSQLiteDatabase) {

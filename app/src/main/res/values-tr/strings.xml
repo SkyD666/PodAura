@@ -32,8 +32,6 @@
     <string name="download_initializing">Başlatılıyor…</string>
     <string name="download_completed">Tamamlandı</string>
     <string name="download_peer_count">Bağlantılar: %d</string>
-    <string name="download_upload_payload_rate" translatable="false">%s ↑</string>
-    <string name="download_download_payload_rate" translatable="false">%s ↓</string>
     <string name="torrent_status_checking_files">Dosyalar kontrol ediliyor…</string>
     <string name="torrent_status_downloading_metadata">Meta veriler indiriliyor…</string>
     <string name="torrent_status_downloading">İndiriliyor…</string>
@@ -50,11 +48,8 @@
     <string name="about_screen_join_telegram">Telegram grubu</string>
     <string name="about_screen_join_discord">Discord sunucusu</string>
     <string name="about_screen_other_works">Diğer Çalışmalar</string>
-    <string name="about_screen_other_works_rays_name" translatable="false">Rays (Tüm Çıkartmalarınızı Kaydedin)</string>
     <string name="about_screen_other_works_rays_description">Telefonunuzdaki çıkartmaları kaydetmek, aramak ve yönetmek için bir araç. Telefonunuzda çok fazla çıkartma mı var ve aradığınızı bulmakta zorlanıyor musunuz? Bu araç çıkartmalarınızı yönetmenize yardımcı olacak! 😋</string>
-    <string name="about_screen_other_works_raca_name" translatable="false">Raca (Tüm Klasik Makaleleri Kaydedin)</string>
     <string name="about_screen_other_works_raca_description">Yerel olarak yorumlar bölümündeki soyut pasajları ve mini denemeleri kaydetmek ve aramak için bir araç. 🤗 İçeriği hatırlamakta zorluk mu çekiyorsunuz? Bu araç, karşılaştığınız mini denemeleri kaydetmenize yardımcı olacak! 😋</string>
-    <string name="about_screen_other_works_night_screen_name" translatable="false">Night Screen</string>
     <string name="about_screen_other_works_night_screen_description">Telefonunuzu gece kullanırken 🌙, ekran parlaklığını azaltarak gözlerinize zarar vermeyi önler.</string>
     <string name="no_browser_found">Tarayıcı bulunamadı! Bağlantı: %s</string>
     <string name="license_screen_name">Lisans</string>
@@ -139,7 +134,6 @@
     <string name="theme_red">Kırmızı</string>
     <string name="theme_purple">Mor</string>
     <string name="theme_mahiro">Mahiro</string>
-    <string name="player_forward_85s" translatable="false">+85s</string>
     <string name="player_config_screen_appearance_category">Görünüm</string>
     <string name="player_config_screen_show_85s_button">+85s düğmesi</string>
     <string name="player_config_screen_show_85s_button_description">İlerleme çubuğunun üzerine +85s düğmesini göster</string>
@@ -152,7 +146,6 @@
     <string name="sponsor">Destekçi</string>
     <string name="sponsor_description">Uygulamayı beğendiyseniz, bana bir kahve ısmarlayabilirsiniz, teşekkürler!</string>
     <string name="sponsor_afadian">Afadian</string>
-    <string name="sponsor_buy_me_a_coffee" translatable="false">Bana bir kahve al</string>
     <string name="update_check">Güncellemeleri kontrol et</string>
     <string name="update_no_update">Zaten en son sürüm!</string>
     <string name="update_newer">Yeni sürüm</string>

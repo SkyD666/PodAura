@@ -15,10 +15,10 @@ import com.skyd.anivu.model.db.dao.playlist.PlaylistDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistDao.Companion.ORDER_MIN_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.CreateTime
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.Manual
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MediaCount
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.Name
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.CREATE_TIME
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MANUAL
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MEDIA_COUNT
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.NAME
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import kotlinx.coroutines.Dispatchers
@@ -53,13 +53,13 @@ class PlaylistRepository @Inject constructor(
             PlaylistSortByPreference, PlaylistSortAscPreference
         ).distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {
-                Name -> PlaylistBean.NAME_COLUMN
-                MediaCount -> PlaylistViewBean.ITEM_COUNT_COLUMN
-                Manual -> PlaylistBean.ORDER_POSITION_COLUMN
-                CreateTime -> PlaylistBean.CREATE_TIME_COLUMN
+                NAME -> PlaylistBean.NAME_COLUMN
+                MEDIA_COUNT -> PlaylistViewBean.ITEM_COUNT_COLUMN
+                MANUAL -> PlaylistBean.ORDER_POSITION_COLUMN
+                CREATE_TIME -> PlaylistBean.CREATE_TIME_COLUMN
                 else -> PlaylistBean.ORDER_POSITION_COLUMN
             }
-            val realSortAsc = if (sortBy == Manual) true else sortAsc
+            val realSortAsc = if (sortBy == MANUAL) true else sortAsc
             Pager(pagingConfig) {
                 playlistDao.getPlaylistList(
                     orderByColumnName = sortByColumnName,
@@ -97,7 +97,7 @@ class PlaylistRepository @Inject constructor(
         fromIndex: Int,
         toIndex: Int,
     ): Flow<Int> = flow {
-        if (appContext.dataStore.getOrDefault(PlaylistSortByPreference) != Manual ||
+        if (appContext.dataStore.getOrDefault(PlaylistSortByPreference) != MANUAL ||
             fromIndex == toIndex
         ) {
             emit(0)

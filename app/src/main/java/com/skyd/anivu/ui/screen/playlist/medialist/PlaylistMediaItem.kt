@@ -149,7 +149,7 @@ fun PlaylistMediaItem(
             ) {
                 Row(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .basicMarquee(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

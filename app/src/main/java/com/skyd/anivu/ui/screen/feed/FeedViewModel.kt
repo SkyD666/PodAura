@@ -5,7 +5,7 @@ import androidx.paging.cachedIn
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.ArticleRepository
+import com.skyd.anivu.model.repository.article.IArticleRepository
 import com.skyd.anivu.model.repository.feed.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FeedViewModel @Inject constructor(
     private val feedRepo: FeedRepository,
-    private val articleRepo: ArticleRepository,
+    private val articleRepo: IArticleRepository,
 ) : AbstractMviViewModel<FeedIntent, FeedState, FeedEvent>() {
 
     override val viewState: StateFlow<FeedState>
@@ -134,6 +134,7 @@ class FeedViewModel @Inject constructor(
                         dataPagingDataFlow = list,
                     )
                 }.startWith(FeedPartialStateChange.FeedList.Loading)
+                    .catchMap { FeedPartialStateChange.FeedList.Failed(it.message.orEmpty()) }
             },
             filterIsInstance<FeedIntent.AddFeed>().flatMapConcat { intent ->
                 feedRepo.setFeed(

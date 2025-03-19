@@ -15,5 +15,5 @@ fun ContentResolver.saveToGallery(
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
         contentValues
     ) ?: return false
-    return openOutputStream(uri)?.use(output) ?: false
+    return openOutputStream(uri)?.use(output) == true
 }

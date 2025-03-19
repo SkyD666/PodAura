@@ -8,16 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.popBackStackWithLifecycle
@@ -34,11 +30,7 @@ fun PodAuraTopBar(
     contentPadding: @Composable () -> PaddingValues = { PaddingValues() },
     navigationIcon: @Composable () -> Unit = { BackIcon() },
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
-    colors: TopAppBarColors = when (style) {
-        PodAuraTopBarStyle.Small -> TopAppBarDefaults.topAppBarColors()
-        PodAuraTopBarStyle.Large -> TopAppBarDefaults.largeTopAppBarColors()
-        PodAuraTopBarStyle.CenterAligned -> TopAppBarDefaults.centerAlignedTopAppBarColors()
-    },
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
     actions: @Composable RowScope.() -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
@@ -83,40 +75,6 @@ fun PodAuraTopBar(
 }
 
 @Composable
-fun TopBarIcon(
-    painter: Painter,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    tint: Color = LocalContentColor.current,
-    contentDescription: String?,
-) {
-    PodAuraIconButton(
-        modifier = modifier,
-        painter = painter,
-        tint = tint,
-        contentDescription = contentDescription,
-        onClick = onClick
-    )
-}
-
-@Composable
-fun TopBarIcon(
-    imageVector: ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    tint: Color = LocalContentColor.current,
-    contentDescription: String?,
-) {
-    PodAuraIconButton(
-        modifier = modifier,
-        imageVector = imageVector,
-        tint = tint,
-        contentDescription = contentDescription,
-        onClick = onClick
-    )
-}
-
-@Composable
 fun BackIcon() {
     val navController = LocalNavController.current
     BackIcon {
@@ -126,7 +84,7 @@ fun BackIcon() {
 
 @Composable
 fun BackIcon(onClick: () -> Unit = {}) {
-    TopBarIcon(
+    PodAuraIconButton(
         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
         contentDescription = stringResource(id = R.string.back),
         onClick = onClick

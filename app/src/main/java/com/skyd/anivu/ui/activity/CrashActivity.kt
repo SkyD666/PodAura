@@ -2,7 +2,6 @@ package com.skyd.anivu.ui.activity
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.skyd.anivu.R
 import com.skyd.anivu.config.Const.GITHUB_NEW_ISSUE_URL
 import com.skyd.anivu.ext.copy
@@ -90,7 +90,7 @@ class CrashActivity : ComponentActivity() {
                         CrashScreen(
                             message = message,
                             onReport = {
-                                Uri.parse(GITHUB_NEW_ISSUE_URL).openBrowser(this)
+                                GITHUB_NEW_ISSUE_URL.toUri().openBrowser(this)
                             }
                         )
                     }

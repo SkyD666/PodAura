@@ -16,8 +16,8 @@ import com.skyd.anivu.model.db.dao.playlist.PlaylistDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_MIN_DELTA
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.CreateTime
-import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.Manual
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.CREATE_TIME
+import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MANUAL
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
 import kotlinx.coroutines.Dispatchers
@@ -74,11 +74,11 @@ class PlaylistMediaRepository @Inject constructor(
             PlaylistMediaSortByPreference, PlaylistMediaSortAscPreference
         ).flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {
-                CreateTime -> PlaylistMediaBean.CREATE_TIME_COLUMN
-                Manual -> PlaylistMediaBean.ORDER_POSITION_COLUMN
+                CREATE_TIME -> PlaylistMediaBean.CREATE_TIME_COLUMN
+                MANUAL -> PlaylistMediaBean.ORDER_POSITION_COLUMN
                 else -> PlaylistMediaBean.ORDER_POSITION_COLUMN
             }
-            val realSortAsc = if (sortBy == Manual) true else sortAsc
+            val realSortAsc = if (sortBy == MANUAL) true else sortAsc
             Pager(pagingConfig) {
                 playlistMediaDao.getPlaylistMediaListPaging(
                     playlistId = playlistId,
@@ -153,27 +153,6 @@ class PlaylistMediaRepository @Inject constructor(
             ).collect()
         }
         emit(Unit)
-    }.flowOn(Dispatchers.IO)
-
-    fun updatePlaylistMediaArticleId(
-        playlistId: String,
-        url: String,
-        articleId: String?,
-    ): Flow<Boolean> = flow {
-        if (playlistMediaDao.exists(playlistId = playlistId, url = url) == 0) {
-            emit(false)
-            return@flow
-        }
-        playlistMediaDao.updatePlaylistMediaArticleId(
-            playlistId = playlistId,
-            url = url,
-            articleId = articleId,
-        )
-        emit(true)
-    }.flowOn(Dispatchers.IO)
-
-    fun deletePlaylistMedia(playlistId: String, url: String): Flow<Int> = flow {
-        emit(playlistMediaDao.deletePlaylistMedia(playlistId = playlistId, url = url))
     }.flowOn(Dispatchers.IO)
 
     fun deletePlaylistMediaByIdAndUrl(playlist: List<PlaylistMediaWithArticleBean>): Flow<Int> =

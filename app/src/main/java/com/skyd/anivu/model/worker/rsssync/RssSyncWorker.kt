@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.skyd.anivu.model.db.dao.FeedDao
-import com.skyd.anivu.model.repository.ArticleRepository
+import com.skyd.anivu.model.repository.article.IArticleRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -19,7 +19,7 @@ class RssSyncWorker(context: Context, parameters: WorkerParameters) :
     @InstallIn(SingletonComponent::class)
     interface WorkerEntryPoint {
         val feedDao: FeedDao
-        val articleRepo: ArticleRepository
+        val articleRepo: IArticleRepository
     }
 
     private val hiltEntryPoint = EntryPointAccessors.fromApplication(

@@ -19,8 +19,8 @@ import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.db.dao.ReadHistoryDao
-import com.skyd.anivu.model.repository.ArticleRepository
-import com.skyd.anivu.model.repository.ArticleSort
+import com.skyd.anivu.model.repository.article.ArticleRepository
+import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.model.repository.ReadRepository
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.model.repository.SearchRepository

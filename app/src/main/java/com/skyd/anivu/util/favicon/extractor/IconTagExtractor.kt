@@ -78,8 +78,7 @@ fun extractIconFromHtml(html: String): List<Extractor.IconData> {
                 .find(linkTag)
                 ?.groupValues
                 ?.firstOrNull()
-                ?.contains("svg", ignoreCase = true)
-                ?: false
+                ?.contains("svg", ignoreCase = true) == true
 
             Extractor.IconData(
                 url = faviconUrl,

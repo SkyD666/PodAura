@@ -6,8 +6,8 @@ import androidx.paging.cachedIn
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.ArticleRepository
 import com.skyd.anivu.model.repository.SearchRepository
+import com.skyd.anivu.model.repository.article.IArticleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val searchRepo: SearchRepository,
-    private val articleRepo: ArticleRepository
+    private val articleRepo: IArticleRepository
 ) : AbstractMviViewModel<SearchIntent, SearchState, SearchEvent>() {
 
     override val viewState: StateFlow<SearchState>
@@ -77,8 +77,9 @@ class SearchViewModel @Inject constructor(
             },
             filterIsInstance<SearchIntent.ListenSearchArticle>().flatMapConcat { intent ->
                 flowOf(
-                    searchRepo.listenSearchArticle(intent.feedUrls, intent.articleIds)
-                        .cachedIn(viewModelScope)
+                    searchRepo.listenSearchArticle(
+                        intent.feedUrls, intent.groupIds, intent.articleIds,
+                    ).cachedIn(viewModelScope)
                 ).map {
                     @Suppress("UNCHECKED_CAST")
                     SearchPartialStateChange.SearchResult.Success(result = it as Flow<PagingData<Any>>)

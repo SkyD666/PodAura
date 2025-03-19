@@ -26,6 +26,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
@@ -190,7 +191,7 @@ class PlayActivity : BaseComposeActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             picture.savePictureToMediaStore(this)
         } else {
-            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            requestPermissionLauncher.safeLaunch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 

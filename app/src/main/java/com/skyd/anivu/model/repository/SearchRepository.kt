@@ -21,6 +21,7 @@ import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.SearchDomainDao
 import com.skyd.anivu.model.preference.search.IntersectSearchBySpacePreference
 import com.skyd.anivu.model.preference.search.UseRegexSearchPreference
+import com.skyd.anivu.model.repository.article.IArticleRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -36,6 +37,7 @@ import javax.inject.Inject
 class SearchRepository @Inject constructor(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
+    private val articleRepo: IArticleRepository,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository() {
     private val searchQuery = MutableStateFlow("")
@@ -57,18 +59,20 @@ class SearchRepository @Inject constructor(
 
     fun listenSearchArticle(
         feedUrls: List<String>,
+        groupIds: List<String>,
         articleIds: List<String>,
     ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
+        val realFeedUrls = articleRepo.getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
                 genSql(
                     tableName = ARTICLE_TABLE_NAME,
                     k = query,
                     leadingFilter = buildString {
-                        if (feedUrls.isEmpty()) {
+                        if (realFeedUrls.isEmpty()) {
                             append("(0 ")
                         } else {
-                            val feedUrlsStr = feedUrls.joinToString(", ") {
+                            val feedUrlsStr = realFeedUrls.joinToString(", ") {
                                 DatabaseUtils.sqlEscapeString(it)
                             }
                             append("(`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")

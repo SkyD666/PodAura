@@ -34,7 +34,7 @@ fun <I : MviIntent, S : MviViewState, E : MviSingleEvent>
         withContext(Dispatchers.Main.immediate) {
             intentChannel
                 .consumeAsFlow()
-                .run { if (startWith == null) this else startWith(startWith) }
+                .run { startWith?.let { startWith(startWith) } ?: this }
                 .collect(this@getDispatcher::processIntent)
         }
     }

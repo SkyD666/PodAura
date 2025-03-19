@@ -1,6 +1,7 @@
 package com.skyd.anivu.model.bean.group
 
 import android.os.Parcelable
+import androidx.annotation.Keep
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseBean
@@ -30,12 +31,13 @@ open class GroupVo(
         return "groupId: $groupId, name: $name, isExpanded: $isExpanded"
     }
 
-    object DefaultGroup :
-        GroupVo(
-            DEFAULT_GROUP_ID,
-            appContext.getString(R.string.default_feed_group),
-            appContext.dataStore.getOrDefault(FeedDefaultGroupExpandPreference),
-        ) {
+    @Parcelize
+    object DefaultGroup : GroupVo(
+        DEFAULT_GROUP_ID,
+        appContext.getString(R.string.default_feed_group),
+        appContext.dataStore.getOrDefault(FeedDefaultGroupExpandPreference),
+    ) {
+        @Keep
         private fun readResolve(): Any = DefaultGroup
         override val name: String
             get() = appContext.getString(R.string.default_feed_group)

@@ -98,10 +98,6 @@ public static final ** CREATOR;
 # libtorrent4j
 -keep class org.libtorrent4j.** { *; }
 
-# VarietyAdapter
--keep class * extends com.skyd.anivu.ui.component.lazyverticalgrid.adapter.LazyGridAdapter$Proxy
--keep class com.skyd.anivu.ui.component.lazyverticalgrid.adapter.LazyGridAdapter$Proxy { *; }
-
 # Retrofit
 -keep, allowobfuscation, allowshrinking interface retrofit2.Call
 
@@ -110,3 +106,6 @@ public static final ** CREATOR;
 
 # MPV
 -keep,allowoptimization class is.xyz.mpv.MPVLib { public protected *; }
+
+# https://stackoverflow.com/questions/63505503/notserializableexception-kotlin-uninitialized-value-after-setting-minifyenabled
+-keep class * implements kotlin.Lazy { *; }

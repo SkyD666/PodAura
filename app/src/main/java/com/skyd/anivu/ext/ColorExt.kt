@@ -5,8 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
-import com.materialkolor.ktx.from
-import com.materialkolor.palettes.TonalPalette
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
 import com.skyd.anivu.ui.local.LocalDarkMode
 
@@ -49,5 +47,3 @@ infix fun Color.alwaysLight(isAlways: Boolean): Color {
         this
     }
 }
-
-fun Color.tone(tone: Int) = Color(TonalPalette.from(this).tone(tone))

@@ -13,13 +13,6 @@ fun NavController.navigate(
     navOptions: NavOptions? = null,
     navigatorExtras: Navigator.Extras? = null
 ) {
-    val link = graph.matchRouteComprehensive(
-        route,
-        searchChildren = true,
-        searchParent = true,
-        lastVisited = graph
-    )
-    link?.matchingArgs?.let { args.putAll(it) }
     val nodeId = graph.findNode(route = route)?.id
     if (nodeId != null) {
         navigate(nodeId, args, navOptions, navigatorExtras)

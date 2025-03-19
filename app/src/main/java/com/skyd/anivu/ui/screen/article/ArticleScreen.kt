@@ -70,7 +70,7 @@ import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
-import com.skyd.anivu.model.repository.ArticleSort
+import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.ErrorPlaceholder
@@ -220,6 +220,7 @@ fun ArticleScreen(
                                 navController = navController,
                                 searchDomain = SearchDomain.Article(
                                     feedUrls = feedUrls,
+                                    groupIds = groupIds,
                                     articleIds = articleIds,
                                 ),
                             )

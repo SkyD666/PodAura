@@ -31,11 +31,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
 import java.io.File
 
 object DownloadStarter {
     private val scope = CoroutineScope(Dispatchers.IO)
+
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface WorkerEntryPoint {

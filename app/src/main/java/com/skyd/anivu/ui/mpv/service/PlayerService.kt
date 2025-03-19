@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.Binder
+import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -30,7 +31,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,7 +50,6 @@ class PlayerService : Service() {
     private val binder = PlayerServiceBinder()
     val player = MPVPlayer.getInstance(appContext as Application)
     private val sessionManager = MediaSessionManager(appContext, createMediaSessionCallback())
-    private val notificationManager = PlayerNotificationManager(appContext, sessionManager)
     val playerState get() = sessionManager.playerState
     private var playlistId: String = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
@@ -211,13 +210,6 @@ class PlayerService : Service() {
 
         addObserver(sessionManager)
         MPVLib.addObserver(mpvObserver)
-        notificationManager.createNotificationChannel()
-
-        lifecycleScope.launch {
-            playerState.collectLatest {
-                notificationManager.update()
-            }
-        }
     }
 
     override fun onDestroy() {
@@ -226,9 +218,7 @@ class PlayerService : Service() {
         sendEvent(PlayerEvent.ServiceDestroy)
         player.destroy()
         MPVLib.removeObserver(mpvObserver)
-        sessionManager.mediaSession.isActive = false
-        sessionManager.mediaSession.release()
-        notificationManager.cancel()
+        sessionManager.onDestroy()
         removeAllObserver()
         lifecycleScope.cancel()
 
@@ -238,7 +228,7 @@ class PlayerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        notificationManager.startForegroundService(this)
+        sessionManager.startForegroundService(this)
         return START_NOT_STICKY
     }
 
@@ -332,6 +322,10 @@ class PlayerService : Service() {
     }
 
     private fun createMediaSessionCallback() = object : MediaSessionCompat.Callback() {
+        fun sendBroadcastWithPackage(action: String) {
+            sendBroadcast(Intent(action).apply { `package` = packageName })
+        }
+
         override fun onPause() {
             player.paused = true
         }
@@ -344,12 +338,27 @@ class PlayerService : Service() {
             player.timePos = (pos / 1000).toInt()
         }
 
-        override fun onSkipToNext() = Unit
-        override fun onSkipToPrevious() = Unit
-        override fun onSetRepeatMode(repeatMode: Int) = Unit
+        override fun onSkipToNext() = sendBroadcastWithPackage(NEXT_ACTION)
+        override fun onSkipToPrevious() = sendBroadcastWithPackage(PREVIOUS_ACTION)
+        override fun onSetRepeatMode(repeatMode: Int) {
+            when (repeatMode) {
+                PlaybackStateCompat.REPEAT_MODE_ALL -> player.loopPlaylist()
+                PlaybackStateCompat.REPEAT_MODE_ONE -> player.loopFile()
+                PlaybackStateCompat.REPEAT_MODE_INVALID,
+                PlaybackStateCompat.REPEAT_MODE_GROUP,
+                PlaybackStateCompat.REPEAT_MODE_NONE -> player.loopNo()
+            }
+        }
 
         override fun onSetShuffleMode(shuffleMode: Int) {
             player.shuffle(shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
+        }
+
+        override fun onCustomAction(action: String?, extras: Bundle?) {
+            when (action) {
+                LOOP_ACTION -> sendBroadcastWithPackage(LOOP_ACTION)
+                CLOSE_ACTION -> sendBroadcastWithPackage(CLOSE_ACTION)
+            }
         }
     }
 
@@ -387,7 +396,9 @@ class PlayerService : Service() {
                 LOOP_ACTION -> onCommand(PlayerCommand.CycleLoop)
                 CLOSE_ACTION -> {
                     onCommand(PlayerCommand.Destroy)
-                    context?.sendBroadcast(Intent(FINISH_PLAY_ACTIVITY_ACTION))
+                    context?.sendBroadcast(Intent(FINISH_PLAY_ACTIVITY_ACTION).apply {
+                        `package` = context.packageName
+                    })
                 }
             }
         }

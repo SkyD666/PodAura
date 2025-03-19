@@ -41,7 +41,6 @@ import com.skyd.anivu.model.service.HttpService
 import com.skyd.anivu.ui.activity.MainActivity
 import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_DEEP_LINK_DATA
 import com.skyd.anivu.util.uniqueInt
-import com.skyd.downloader.notification.NotificationConst
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -61,8 +60,6 @@ import org.libtorrent4j.TorrentInfo
 import org.libtorrent4j.TorrentStatus
 import org.libtorrent4j.alerts.AddTorrentAlert
 import org.libtorrent4j.alerts.Alert
-import org.libtorrent4j.alerts.DhtAnnounceAlert
-import org.libtorrent4j.alerts.DhtBootstrapAlert
 import org.libtorrent4j.alerts.FileErrorAlert
 import org.libtorrent4j.alerts.FileRenamedAlert
 import org.libtorrent4j.alerts.MetadataReceivedAlert
@@ -89,7 +86,8 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     private lateinit var torrentLinkUuid: String
     private lateinit var torrentLink: String
-    private var saveDir = File(applicationContext.dataStore.getOrDefault(MediaLibLocationPreference))
+    private var saveDir =
+        File(applicationContext.dataStore.getOrDefault(MediaLibLocationPreference))
     private var progress: Float = 0f
     private var name: String? = null
     private var description: String? = null
@@ -100,15 +98,15 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
 
     private val sessionManager = SessionManager(BuildConfig.DEBUG)
 
-    private fun initData(): Boolean = runBlocking {
-        torrentLinkUuid = inputData.getString(TORRENT_LINK_UUID) ?: return@runBlocking false
+    private suspend fun initData(): Boolean {
+        torrentLinkUuid = inputData.getString(TORRENT_LINK_UUID) ?: return false
         inputData.getString(SAVE_DIR)?.let { saveDir = File(it) }
         BtDownloadManager.apply {
-            torrentLink = getDownloadLinkByUuid(torrentLinkUuid) ?: return@runBlocking false
+            torrentLink = getDownloadLinkByUuid(torrentLinkUuid) ?: return false
             name = getDownloadName(link = torrentLink)
             progress = getDownloadProgress(link = torrentLink) ?: 0f
         }
-        return@runBlocking true
+        return true
     }
 
     override suspend fun doWork(): Result {

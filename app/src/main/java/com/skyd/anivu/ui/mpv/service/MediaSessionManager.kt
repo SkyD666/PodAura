@@ -1,17 +1,19 @@
 package com.skyd.anivu.ui.mpv.service
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.collection.LruCache
+import com.skyd.anivu.R
+import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.PlayerEvent
-import com.skyd.anivu.ui.mpv.createThumbnail
+import com.skyd.anivu.ui.mpv.createThumbnailFile
+import com.skyd.anivu.ui.mpv.playbackState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,10 +27,10 @@ class MediaSessionManager(
     private val callback: MediaSessionCompat.Callback,
 ) : PlayerService.Observer {
     val mediaSession: MediaSessionCompat = initMediaSession()
+    private val notificationManager = PlayerNotificationManager(context, mediaSession)
     private val mediaMetadataBuilder = MediaMetadataCompat.Builder()
-    private val playbackStateBuilder = PlaybackStateCompat.Builder()
 
-    private val scope = CoroutineScope(Dispatchers.Main)
+    private val scope = CoroutineScope(Dispatchers.Main.immediate)
     private val eventFlow = Channel<PlayerEvent>(Channel.UNLIMITED)
 
     private val initialPlayerState = PlayerState()
@@ -42,9 +44,6 @@ class MediaSessionManager(
         .distinctUntilChanged()
         .stateIn(scope, SharingStarted.Eagerly, initialPlayerState)
 
-    var state: Int = PlaybackStateCompat.STATE_NONE
-        private set
-
     private fun initMediaSession(): MediaSessionCompat {
         /*
             https://developer.android.com/guide/topics/media-apps/working-with-a-media-session
@@ -57,65 +56,65 @@ class MediaSessionManager(
         return session
     }
 
+    fun startForegroundService(service: PlayerService) {
+        notificationManager.startForegroundService(service, playerState.value)
+    }
+
+    fun onDestroy() {
+        mediaSession.isActive = false
+        mediaSession.release()
+        notificationManager.cancel()
+    }
+
     override fun onEvent(event: PlayerEvent) {
         eventFlow.trySend(event)
     }
 
-    private var thumbnailCache = LruCache<String, Bitmap>(maxSize = 2)
-    private suspend fun PlayerState.buildMediaMetadata(): MediaMetadataCompat {
-        // TODO could provide: genre, num_tracks, track_number, year
-        return with(mediaMetadataBuilder) {
-            putText(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
-            val thumbnail = currentMedia?.thumbnail
-            var customThumbnail: Bitmap? = null
-            if (thumbnail != null) {
-                customThumbnail = thumbnailCache[thumbnail]
-                if (customThumbnail == null) {
-                    val newThumb = withContext(Dispatchers.IO) { createThumbnail(thumbnail) }
-                    if (newThumb != null) {
-                        thumbnailCache.put(thumbnail, newThumb)
-                        customThumbnail = newThumb
-                    }
-                }
-            }
-            // put even if it's null to reset any previous art
-            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, customThumbnail ?: mediaThumbnail)
-            putText(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-            putLong(
-                MediaMetadataCompat.METADATA_KEY_DURATION,
-                (duration * 1000).takeIf { it > 0 } ?: -1)
-            putText(
-                MediaMetadataCompat.METADATA_KEY_TITLE,
-                currentMedia?.title.orEmpty().ifBlank { mediaTitle })
-            build()
-        }
+    private inline fun MediaMetadataCompat.Builder.updateMetadata(
+        block: MediaMetadataCompat.Builder.() -> Unit,
+    ) {
+        block()
+        return mediaSession.setMetadata(build())
     }
 
     private fun PlayerState.buildPlaybackState(): PlaybackStateCompat {
-        state = when {
-            idling || position < 0 || duration <= 0 || playlist.isEmpty() -> {
-                PlaybackStateCompat.STATE_NONE
-            }
-
-            pausedForCache -> PlaybackStateCompat.STATE_BUFFERING
-            paused -> PlaybackStateCompat.STATE_PAUSED
-            else -> PlaybackStateCompat.STATE_PLAYING
-        }
+        var state: Int = playbackState()
         var actions = PlaybackStateCompat.ACTION_PLAY or
                 PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_PAUSE or
                 PlaybackStateCompat.ACTION_SET_REPEAT_MODE
         if (duration > 0) actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
+        if (!playlistFirst) {
+            actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+        }
+        if (!playlistLast) {
+            actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+        }
         if (playlist.isNotEmpty()) {
-            // we could be very pedantic here but it's probably better to either show both or none
-            actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
-                    PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
-                    PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE
+            actions = actions or PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE
         }
         mediaSession.isActive = state != PlaybackStateCompat.STATE_NONE
-        return with(playbackStateBuilder) {
+        return with(PlaybackStateCompat.Builder()) {
             setState(state, position * 1000, speed)
             setActions(actions)
+            addCustomAction(
+                PlaybackStateCompat.CustomAction.Builder(
+                    PlayerService.LOOP_ACTION,
+                    context.getString(R.string.loop_playlist_mode),
+                    when (loop) {
+                        LoopMode.LoopPlaylist -> R.drawable.ic_repeat_on_24
+                        LoopMode.LoopFile -> R.drawable.ic_repeat_one_on_24
+                        LoopMode.None -> R.drawable.ic_repeat_24
+                    },
+                ).build()
+            )
+            addCustomAction(
+                PlaybackStateCompat.CustomAction.Builder(
+                    PlayerService.CLOSE_ACTION,
+                    context.getString(R.string.close),
+                    R.drawable.ic_close_24,
+                ).build()
+            )
             //setActiveQueueItemId(0) TODO
             build()
         }
@@ -154,43 +153,80 @@ class MediaSessionManager(
         else -> old
     }
 
-    private fun PlayerEvent.updateMediaSession(newState: PlayerState) {
+    private suspend fun PlayerEvent.updateMediaSession(newState: PlayerState) {
         when (this) {
             is PlayerEvent.Shuffle -> mediaSession.setShuffleMode(
                 if (shuffle) PlaybackStateCompat.SHUFFLE_MODE_ALL
                 else PlaybackStateCompat.SHUFFLE_MODE_NONE
             )
 
-            is PlayerEvent.Loop -> mediaSession.setRepeatMode(
-                when (mode) {
-                    LoopMode.LoopPlaylist -> PlaybackStateCompat.REPEAT_MODE_ALL
-                    LoopMode.LoopFile -> PlaybackStateCompat.REPEAT_MODE_ONE
-                    LoopMode.None -> PlaybackStateCompat.REPEAT_MODE_NONE
-                }
-            )
+            is PlayerEvent.Loop -> with(mediaSession) {
+                setRepeatMode(
+                    when (mode) {
+                        LoopMode.LoopPlaylist -> PlaybackStateCompat.REPEAT_MODE_ALL
+                        LoopMode.LoopFile -> PlaybackStateCompat.REPEAT_MODE_ONE
+                        LoopMode.None -> PlaybackStateCompat.REPEAT_MODE_NONE
+                    }
+                )
+                setPlaybackState(newState.buildPlaybackState())
+            }
 
             is PlayerEvent.Paused,
             is PlayerEvent.EndFile,
             is PlayerEvent.Speed,
-            is PlayerEvent.Position,
-            is PlayerEvent.Duration,
-            is PlayerEvent.PausedForCache -> {
+            is PlayerEvent.Position -> mediaSession.setPlaybackState(newState.buildPlaybackState())
+
+            is PlayerEvent.Duration -> {
+                mediaMetadataBuilder.updateMetadata {
+                    putLong(
+                        MediaMetadataCompat.METADATA_KEY_DURATION,
+                        (value * 1000).takeIf { it > 0 } ?: -1,
+                    )
+                }
                 mediaSession.setPlaybackState(newState.buildPlaybackState())
-                scope.launch { mediaSession.setMetadata(newState.buildMediaMetadata()) }
             }
 
-            is PlayerEvent.Idling,
-            is PlayerEvent.MediaTitle,
-            is PlayerEvent.Artist,
-            is PlayerEvent.Album,
-            is PlayerEvent.MediaThumbnail,
-            is PlayerEvent.StartFile -> {
-                scope.launch { mediaSession.setMetadata(newState.buildMediaMetadata()) }
+            is PlayerEvent.PausedForCache -> {
+                mediaSession.setPlaybackState(newState.buildPlaybackState())
+            }
+
+            is PlayerEvent.MediaTitle -> mediaMetadataBuilder.updateMetadata {
+                putText(
+                    MediaMetadataCompat.METADATA_KEY_TITLE,
+                    newState.currentMedia?.title.orEmpty().ifBlank { value })
+            }
+
+            is PlayerEvent.Artist -> mediaMetadataBuilder.updateMetadata {
+                putText(MediaMetadataCompat.METADATA_KEY_ARTIST, value)
+            }
+
+            is PlayerEvent.Album -> mediaMetadataBuilder.updateMetadata {
+                putText(MediaMetadataCompat.METADATA_KEY_ALBUM, value)
+            }
+
+            is PlayerEvent.MediaThumbnail -> coroutineScope {
+                launch {
+                    mediaMetadataBuilder.updateMetadata {
+                        val thumbnail = newState.currentMedia?.thumbnail?.let { thumbnailUrl ->
+                            withContext(Dispatchers.IO) { createThumbnailFile(thumbnailUrl) }
+                        }?.toUri(context)
+                        if (thumbnail != null) {
+                            putString(
+                                MediaMetadataCompat.METADATA_KEY_ART_URI,
+                                thumbnail.toString()
+                            )
+                        } else if (newState.mediaThumbnail != null) {
+                            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, newState.mediaThumbnail)
+                        }
+                    }
+                    notificationManager.notifyNotification()
+                }
             }
 
             is PlayerEvent.PlaylistPosition -> Unit
             else -> Unit
         }
+        notificationManager.update(this, newState)
     }
 
     companion object {

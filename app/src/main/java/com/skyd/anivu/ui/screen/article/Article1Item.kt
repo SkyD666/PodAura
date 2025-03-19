@@ -362,7 +362,7 @@ private fun Article1ItemContent(
                             data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
                         if (feedName.isNotBlank()) {
                             Text(
-                                modifier = Modifier.padding(horizontal = 6.dp),
+                                modifier = Modifier.padding(start = 6.dp, end = 2.dp),
                                 text = feedName,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),

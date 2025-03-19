@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.AudioTrackDialogCallback
@@ -60,7 +61,7 @@ internal fun AudioTrackDialog(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     PodAuraIconButton(
-                        onClick = { pickAudioFileLauncher.launch("*/*") },
+                        onClick = { pickAudioFileLauncher.safeLaunch("*/*") },
                         imageVector = Icons.Rounded.Add,
                         contentDescription = stringResource(id = R.string.player_add_external_audio),
                     )

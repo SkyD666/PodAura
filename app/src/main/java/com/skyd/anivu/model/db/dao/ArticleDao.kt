@@ -39,11 +39,10 @@ interface ArticleDao {
 
     // null always compares false in '='
     @Query(
-        """
-        SELECT * from $ARTICLE_TABLE_NAME 
-        WHERE ${ArticleBean.GUID_COLUMN} = :guid AND 
-        ${ArticleBean.FEED_URL_COLUMN} = :feedUrl
-        """
+        "SELECT * from `$ARTICLE_TABLE_NAME` " +
+                "WHERE ${ArticleBean.GUID_COLUMN} = :guid AND " +
+                "${ArticleBean.FEED_URL_COLUMN} = :feedUrl"
+
     )
     suspend fun queryArticleByGuid(
         guid: String?,
@@ -52,11 +51,9 @@ interface ArticleDao {
 
     // null always compares false in '='
     @Query(
-        """
-        SELECT * from $ARTICLE_TABLE_NAME 
-        WHERE ${ArticleBean.LINK_COLUMN} = :link AND 
-        ${ArticleBean.FEED_URL_COLUMN} = :feedUrl
-        """
+        "SELECT * from `$ARTICLE_TABLE_NAME` " +
+                "WHERE ${ArticleBean.LINK_COLUMN} = :link AND " +
+                "${ArticleBean.FEED_URL_COLUMN} = :feedUrl"
     )
     suspend fun queryArticleByLink(
         link: String?,
@@ -127,7 +124,7 @@ interface ArticleDao {
     @Query(
         "DELETE FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} LIKE :feedUrl AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
-                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
@@ -146,7 +143,7 @@ interface ArticleDao {
                 "    WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL OR " +
                 "    ${FeedBean.GROUP_ID_COLUMN} = :groupId) AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
-                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
@@ -163,7 +160,7 @@ interface ArticleDao {
                 "(${ArticleBean.UPDATE_AT_COLUMN} IS NULL OR " +
                 "${ArticleBean.UPDATE_AT_COLUMN} <= :timestamp) AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
-                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
@@ -178,7 +175,7 @@ interface ArticleDao {
     @Query(
         "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
-                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0) AND " +
                 "(" +
@@ -186,8 +183,8 @@ interface ArticleDao {
                 "    SELECT COUNT(*) " +
                 "    FROM $ARTICLE_TABLE_NAME AS a2 " +
                 "    WHERE " +
-                "      a2.${ArticleBean.FEED_URL_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.FEED_URL_COLUMN} AND " +
-                "      a2.${ArticleBean.UPDATE_AT_COLUMN} > $ARTICLE_TABLE_NAME.${ArticleBean.UPDATE_AT_COLUMN}" +
+                "      a2.${ArticleBean.FEED_URL_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.FEED_URL_COLUMN} AND " +
+                "      a2.${ArticleBean.UPDATE_AT_COLUMN} > `$ARTICLE_TABLE_NAME`.${ArticleBean.UPDATE_AT_COLUMN}" +
                 "  ) >= :count" +
                 ")"
     )
@@ -203,7 +200,7 @@ interface ArticleDao {
         "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
                 "${ArticleBean.ARTICLE_ID_COLUMN} = :articleId AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
-                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
+                "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
@@ -249,7 +246,7 @@ interface ArticleDao {
     @Transaction
     @Query(
         "WITH temp_target(feed_url, update_time) AS (SELECT ${ArticleBean.FEED_URL_COLUMN}, ${ArticleBean.DATE_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId), " +
-                "temp_enclosure(enclosure_count) AS (SELECT COUNT(1) FROM $ENCLOSURE_TABLE_NAME WHERE ${EnclosureBean.ARTICLE_ID_COLUMN} = $ARTICLE_TABLE_NAME.${ArticleBean.ARTICLE_ID_COLUMN}) " +
+                "temp_enclosure(enclosure_count) AS (SELECT COUNT(1) FROM $ENCLOSURE_TABLE_NAME WHERE ${EnclosureBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN}) " +
                 "SELECT * FROM ( " +
                 "    SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "    WHERE ${ArticleBean.FEED_URL_COLUMN} = (SELECT feed_url FROM temp_target) AND " +

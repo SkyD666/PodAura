@@ -144,7 +144,7 @@ fun PlaylistMediaListScreen(
                 PlaylistMediaList(
                     currentPlaylistId = playlistId,
                     playlist = lazyPagingItems,
-                    draggable = LocalPlaylistMediaSortBy.current == BasePlaylistSortByPreference.Manual,
+                    draggable = LocalPlaylistMediaSortBy.current == BasePlaylistSortByPreference.MANUAL,
                     state = lazyGridState,
                     header = {
                         PlaylistInfo(
@@ -188,7 +188,7 @@ fun PlaylistMediaListScreen(
             sortByValues = PlaylistMediaSortByPreference.values,
             sortBy = LocalPlaylistMediaSortBy.current,
             sortAsc = LocalPlaylistMediaSortAsc.current,
-            enableSortAsc = LocalPlaylistMediaSortBy.current != BasePlaylistSortByPreference.Manual,
+            enableSortAsc = LocalPlaylistMediaSortBy.current != BasePlaylistSortByPreference.MANUAL,
             onSortBy = { PlaylistMediaSortByPreference.put(context, scope, it) },
             onSortAsc = { PlaylistMediaSortAscPreference.put(context, scope, it) },
             onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(context, it) },
@@ -238,7 +238,7 @@ private fun PlaylistInfo(
             )
             Spacer(modifier = Modifier.height(3.dp))
             Row(modifier = Modifier.fillMaxSize()) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(
                             R.string.created_on,
@@ -260,7 +260,6 @@ private fun PlaylistInfo(
                         color = LocalContentColor.current.copy(alpha = 0.7f),
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
                 FilledIconButton(
                     onClick = onPlay,
                     modifier = Modifier

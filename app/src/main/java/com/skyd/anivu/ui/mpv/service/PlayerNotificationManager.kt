@@ -1,42 +1,51 @@
 package com.skyd.anivu.ui.mpv.service
 
-import android.Manifest
+import android.annotation.SuppressLint
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.graphics.Bitmap
 import android.os.Build
-import android.support.v4.media.session.PlaybackStateCompat
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.graphics.get
+import androidx.core.graphics.scale
+import coil3.Bitmap
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.notify
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.mpv.PlayerEvent
 import com.skyd.anivu.ui.mpv.createThumbnail
+import com.skyd.anivu.ui.mpv.isPlaying
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class PlayerNotificationManager(
     private val context: Context,
-    private val sessionManager: MediaSessionManager,
+    mediaSession: MediaSessionCompat,
 ) {
-    private val playerState get() = sessionManager.playerState
     private val scope = CoroutineScope(Dispatchers.Main)
-
     private var notificationCreated = false
 
-    private fun getNotificationBuilder(): NotificationCompat.Builder {
+    init {
+        createNotificationChannel()
+    }
+
+    private val style = androidx.media.app.NotificationCompat.MediaStyle()
+        .setMediaSession(mediaSession.sessionToken)
+
+    private val baseNotificationBuilder = run {
         val openActivityPendingIntent = PendingIntentCompat.getActivity(
             context,
             0,
@@ -44,22 +53,72 @@ class PlayerNotificationManager(
             PendingIntent.FLAG_UPDATE_CURRENT,
             false
         )
-        val style = androidx.media.app.NotificationCompat.MediaStyle()
-            .setMediaSession(sessionManager.mediaSession.sessionToken)
-        return NotificationCompat.Builder(context, CHANNEL_ID)
+        NotificationCompat.Builder(context, CHANNEL_ID)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.ic_icon_24)
             .setStyle(style)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(openActivityPendingIntent)
             .setOngoing(true)
-            .setContentTitle()
-            .setContentText()
-            .addAllAction(style)
     }
 
-    private suspend fun getNotificationBuilderWithThumb(): NotificationCompat.Builder {
-        return getNotificationBuilder().setThumbnail()
+    // https://developer.android.com/develop/ui/views/notifications/notification-permission#exemptions-media-sessions
+    @SuppressLint("MissingPermission")
+    private fun android.app.Notification.myNotify() {
+        notify(context, NOTIFICATION_ID)
+    }
+
+    private var fetchThumbnailJob: Job? = null
+    private val updateThumbnail = { state: PlayerState ->
+        fetchThumbnailJob?.cancel()
+        fetchThumbnailJob = scope.launch(Dispatchers.IO) {
+            getThumbnail(state)?.let { thumbnail ->
+                baseNotificationBuilder.setThumbnail(thumbnail).build().myNotify()
+            }
+        }
+    }
+
+    private fun fullUpdatedNotificationWithoutThumbnail(playerState: PlayerState) =
+        baseNotificationBuilder
+            .setContentTitle(playerState)
+            .setContentText(playerState)
+            .addAllAction(style, playerState)
+            .build()
+
+    private fun fullUpdateNotification(playerState: PlayerState) {
+        fullUpdatedNotificationWithoutThumbnail(playerState).myNotify()
+        fetchThumbnailJob?.cancel()
+        fetchThumbnailJob = scope.launch { updateThumbnail(playerState) }
+    }
+
+    private fun partialUpdateNotification(event: PlayerEvent, state: PlayerState) {
+        when (event) {
+            is PlayerEvent.MediaTitle -> baseNotificationBuilder.setContentTitle(state)
+            is PlayerEvent.StartFile -> {
+                updateThumbnail(state)
+                baseNotificationBuilder.setContentTitle(state)
+            }
+
+            is PlayerEvent.Album,
+            is PlayerEvent.Artist -> baseNotificationBuilder.setContentText(state)
+
+            is PlayerEvent.Idling,
+            is PlayerEvent.Paused,
+            is PlayerEvent.PausedForCache,
+            is PlayerEvent.Duration,
+            is PlayerEvent.Position,
+            is PlayerEvent.Loop,
+            is PlayerEvent.Playlist,
+            is PlayerEvent.PlaylistPosition -> baseNotificationBuilder.addAllAction(style, state)
+
+            is PlayerEvent.MediaThumbnail -> {
+                updateThumbnail(state)
+                return
+            }
+
+            else -> return
+        }
+        baseNotificationBuilder.build().myNotify()
     }
 
     private fun buildNotificationAction(
@@ -76,46 +135,44 @@ class PlayerNotificationManager(
         }
     }
 
-    fun update() {
-        if (!notificationCreated || ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
-        scope.launch {
-            val builder = getNotificationBuilderWithThumb()
-            if (notificationCreated) {
-                NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
-            }
+    fun notifyNotification() = baseNotificationBuilder.build().myNotify()
+
+    fun update(event: PlayerEvent, state: PlayerState) {
+        if (notificationCreated) {
+            partialUpdateNotification(event, state)
         }
     }
 
-    internal fun startForegroundService(service: PlayerService) = scope.launch {
-        try {
-            ServiceCompat.startForeground(
-                service, NOTIFICATION_ID, getNotificationBuilderWithThumb().build(),
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                } else {
-                    0
-                },
-            )
-            notificationCreated = true
-        } catch (e: Exception) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                e is ForegroundServiceStartNotAllowedException
-            ) {
-                // App not in a valid state to start foreground service (e.g. started from bg)
-                e.printStackTrace()
+    internal fun startForegroundService(service: PlayerService, playerState: PlayerState) =
+        scope.launch {
+            try {
+                ServiceCompat.startForeground(
+                    service,
+                    NOTIFICATION_ID,
+                    fullUpdatedNotificationWithoutThumbnail(playerState),
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                    } else {
+                        0
+                    },
+                )
+                notificationCreated = true
+                fullUpdateNotification(playerState)
+            } catch (e: Exception) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    e is ForegroundServiceStartNotAllowedException
+                ) {
+                    // App not in a valid state to start foreground service (e.g. started from bg)
+                    e.printStackTrace()
+                }
             }
         }
-    }
 
     private fun NotificationCompat.Builder.addAllAction(
         style: androidx.media.app.NotificationCompat.MediaStyle,
+        playerState: PlayerState,
     ) = apply {
+        clearActions()
         var actionCount = 0
         val actionsInCompactView = mutableListOf<Int>()
         val myAddAction: (NotificationCompat.Action, Boolean) -> Unit = { action, inCompact ->
@@ -134,18 +191,21 @@ class PlayerNotificationManager(
             title = context.getString(R.string.skip_next),
             intentAction = PlayerService.NEXT_ACTION
         )
-        val playPendingIntent =
-            if (sessionManager.state != PlaybackStateCompat.STATE_PLAYING) buildNotificationAction(
+        val playPendingIntent = if (playerState.isPlaying) {
+            buildNotificationAction(
                 icon = R.drawable.ic_play_arrow_24,
                 title = context.getString(R.string.play),
                 intentAction = PlayerService.PLAY_ACTION
-            ) else buildNotificationAction(
+            )
+        } else {
+            buildNotificationAction(
                 icon = R.drawable.ic_pause_24,
                 title = context.getString(R.string.pause),
                 intentAction = PlayerService.PLAY_ACTION
             )
+        }
         val loopPendingIntent = buildNotificationAction(
-            icon = when (playerState.value.loop) {
+            icon = when (playerState.loop) {
                 LoopMode.LoopPlaylist -> R.drawable.ic_repeat_on_24
                 LoopMode.LoopFile -> R.drawable.ic_repeat_one_on_24
                 LoopMode.None -> R.drawable.ic_repeat_24
@@ -158,11 +218,11 @@ class PlayerNotificationManager(
             title = context.getString(R.string.close),
             intentAction = PlayerService.CLOSE_ACTION
         )
-        if (!playerState.value.playlistFirst) {
+        if (!playerState.playlistFirst) {
             myAddAction(previousPendingIntent, true)
         }
         myAddAction(playPendingIntent, true)
-        if (!playerState.value.playlistLast) {
+        if (!playerState.playlistLast) {
             myAddAction(nextPendingIntent, true)
         }
         myAddAction(loopPendingIntent, false)
@@ -198,14 +258,14 @@ class PlayerNotificationManager(
         NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
     }
 
-    private fun NotificationCompat.Builder.setContentTitle() = apply {
-        setContentTitle(playerState.value.run {
+    private fun NotificationCompat.Builder.setContentTitle(playerState: PlayerState) = apply {
+        setContentTitle(playerState.run {
             currentMedia?.title.orEmpty().ifBlank { mediaTitle }
         })
     }
 
-    private fun NotificationCompat.Builder.setContentText() = apply {
-        with(playerState.value) {
+    private fun NotificationCompat.Builder.setContentText(playerState: PlayerState) = apply {
+        with(playerState) {
             val artistEmpty = artist.isNullOrEmpty()
             val albumEmpty = album.isNullOrEmpty()
             setContentText(
@@ -219,24 +279,27 @@ class PlayerNotificationManager(
         }
     }
 
-    private suspend fun NotificationCompat.Builder.setThumbnail() = apply {
-        playerState.value.run {
-            val thumbnailAny = currentMedia?.thumbnailAny
-            if (thumbnailAny is String) {
-                withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) } ?: mediaThumbnail
-            } else {
-                mediaThumbnail
-            }
-        }?.also {
-            setLargeIcon(it)
-            setColorized(true)
-            // scale thumbnail to a single color in two steps
-            val b1 = Bitmap.createScaledBitmap(it, 16, 16, true)
-            val b2 = Bitmap.createScaledBitmap(b1, 1, 1, true)
-            setColor(b2.getPixel(0, 0))
-            b2.recycle()
-            b1.recycle()
+    private var lastThumbnail: Any? = null
+    private suspend fun getThumbnail(playerState: PlayerState): Bitmap? = playerState.run {
+        val thumbnailAny = currentMedia?.thumbnailAny
+        if (thumbnailAny is String) {
+            lastThumbnail = thumbnailAny
+            withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) } ?: mediaThumbnail
+        } else {
+            lastThumbnail = thumbnailAny
+            mediaThumbnail
         }
+    }
+
+    private fun NotificationCompat.Builder.setThumbnail(thumbnail: Bitmap) = apply {
+        setLargeIcon(thumbnail)
+        setColorized(true)
+        // scale thumbnail to a single color in two steps
+        val b1 = thumbnail.scale(16, 16)
+        val b2 = b1.scale(1, 1)
+        setColor(b2[0, 0])
+        b2.recycle()
+        b1.recycle()
     }
 
     companion object {

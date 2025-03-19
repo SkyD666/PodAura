@@ -5,9 +5,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 object MediaSubListSortByPreference : BaseMediaListSortByPreference() {
     private const val MEDIA_SUB_LIST_SORT_BY = "mediaSubListSortBy"
 
-    val values = listOf(Date, Name)
+    val values = listOf(DATE, NAME)
 
-    override val default = Date
+    override val default = DATE
 
     override val key = stringPreferencesKey(MEDIA_SUB_LIST_SORT_BY)
 }

@@ -23,7 +23,6 @@ import com.skyd.anivu.model.preference.proxy.UseProxyPreference
 import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManagerIntent
-import kotlinx.coroutines.runBlocking
 import org.libtorrent4j.AddTorrentParams
 import org.libtorrent4j.FileStorage
 import org.libtorrent4j.SettingsPack
@@ -272,7 +271,7 @@ internal fun updateSizeInfoToDb(link: String, size: Long) {
 /**
  * 添加新的下载信息（之前没下载过的）
  */
-internal fun addNewDownloadInfoToDbIfNotExists(
+internal suspend fun addNewDownloadInfoToDbIfNotExists(
     forceAdd: Boolean = false,
     link: String,
     name: String?,
@@ -280,10 +279,10 @@ internal fun addNewDownloadInfoToDbIfNotExists(
     progress: Float,
     size: Long,
     downloadRequestId: String,
-) = runBlocking {
+) {
     if (!forceAdd) {
         val video = BtDownloadManager.getDownloadInfo(link = link)
-        if (video != null) return@runBlocking
+        if (video != null) return
     }
     BtDownloadManager.sendIntent(
         BtDownloadManagerIntent.UpdateDownloadInfo(
@@ -311,6 +310,7 @@ fun serializeResumeData(name: String, params: AddTorrentParams) {
     try {
         FileOutputStream(resume).use { it.write(Vectors.byte_vector2bytes(data)) }
     } catch (e: IOException) {
+        e.printStackTrace()
         Log.e("serializeResumeData", "Error saving resume data")
     }
 }

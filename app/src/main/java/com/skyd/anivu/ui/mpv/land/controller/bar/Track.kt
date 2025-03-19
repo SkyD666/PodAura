@@ -98,13 +98,6 @@ internal val SliderState.tickFractions
 private fun calcFraction(a: Float, b: Float, pos: Float) =
     (if (b - a == 0f) 0f else (pos - a) / (b - a)).coerceIn(0f, 1f)
 
-internal val SliderState.coercedValueAsFraction
-    get() = calcFraction(
-        valueRange.start,
-        valueRange.endInclusive,
-        value.coerceIn(valueRange.start, valueRange.endInclusive),
-    )
-
 internal fun SliderState.coercedBufferValueAsFraction(bufferValue: Float) = calcFraction(
     valueRange.start,
     valueRange.endInclusive,

@@ -140,7 +140,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
                 PlayList(
                     playlist = lazyPagingItems,
                     state = lazyListState,
-                    draggable = LocalPlaylistSortBy.current == BasePlaylistSortByPreference.Manual,
+                    draggable = LocalPlaylistSortBy.current == BasePlaylistSortByPreference.MANUAL,
                     onMoved = onMoved@{ fromIndex, toIndex ->
                         if (fromIndex == toIndex) return@onMoved
                         reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {
@@ -226,7 +226,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             sortByValues = PlaylistSortByPreference.values,
             sortBy = LocalPlaylistSortBy.current,
             sortAsc = LocalPlaylistSortAsc.current,
-            enableSortAsc = LocalPlaylistSortBy.current != BasePlaylistSortByPreference.Manual,
+            enableSortAsc = LocalPlaylistSortBy.current != BasePlaylistSortByPreference.MANUAL,
             onSortBy = { PlaylistSortByPreference.put(context, scope, it) },
             onSortAsc = { PlaylistSortAscPreference.put(context, scope, it) },
             onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(context, it) },
