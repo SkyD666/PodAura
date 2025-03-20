@@ -26,6 +26,7 @@ import com.skyd.anivu.ui.component.showToast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,8 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -137,35 +140,38 @@ class ArticleRepository @Inject constructor(
                 addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
                 if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
             }
+            val semaphore = Semaphore(5)
             realFeedUrls.forEach { feedUrl ->
                 requests += async {
-                    val articleBeanList = runCatching {
-                        rssHelper.queryRssXml(
-                            feed = feedDao.getFeed(feedUrl).feed,
-                            full = full,
-                            latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
-                        )?.also { feedWithArticle ->
-                            feedDao.updateFeed(feedWithArticle.feed)
-                        }?.articles
-                    }.onFailure { e ->
-                        if (e !is CancellationException) {
-                            e.printStackTrace()
-                            failMsg += (feedUrl to e.message.orEmpty())
-                        }
-                    }.getOrNull()
+                    semaphore.withPermit {
+                        val articleBeanList = runCatching {
+                            rssHelper.queryRssXml(
+                                feed = feedDao.getFeed(feedUrl).feed,
+                                full = full,
+                                latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
+                            )?.also { feedWithArticle ->
+                                feedDao.updateFeed(feedWithArticle.feed)
+                            }?.articles
+                        }.onFailure { e ->
+                            if (e !is CancellationException) {
+                                e.printStackTrace()
+                                failMsg += (feedUrl to e.message.orEmpty())
+                            }
+                        }.getOrNull()
 
-                    if (articleBeanList.isNullOrEmpty()) return@async
+                        if (articleBeanList.isNullOrEmpty()) return@async
 
-                    articleDao.insertListIfNotExist(articleBeanList.map { articleWithEnclosure ->
-                        if (articleWithEnclosure.article.feedUrl != feedUrl) {
-                            articleWithEnclosure.copy(
-                                article = articleWithEnclosure.article.copy(feedUrl = feedUrl)
-                            )
-                        } else articleWithEnclosure
-                    })
+                        articleDao.insertListIfNotExist(articleBeanList.map { articleWithEnclosure ->
+                            if (articleWithEnclosure.article.feedUrl != feedUrl) {
+                                articleWithEnclosure.copy(
+                                    article = articleWithEnclosure.article.copy(feedUrl = feedUrl)
+                                )
+                            } else articleWithEnclosure
+                        })
+                    }
                 }
             }
-            requests.forEach { it.await() }
+            requests.awaitAll()
             if (failMsg.isNotEmpty()) {
                 appContext.getString(
                     R.string.rss_update_failed,

@@ -6,6 +6,7 @@ import com.rometools.modules.itunes.FeedInformation
 import com.rometools.modules.mediarss.MediaEntryModule
 import com.rometools.modules.mediarss.MediaModule
 import com.rometools.modules.mediarss.types.Rating
+import com.rometools.modules.mediarss.types.UrlReference
 import com.rometools.rome.feed.module.Module
 import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
@@ -127,6 +128,18 @@ class RssHelper @Inject constructor(
         )
         val articleId = UUID.randomUUID().toString()
         val rssMedia = getRssMedia(articleId = articleId, modules = syndEntry.modules)
+        val enclosures = syndEntry.enclosures.map {
+            EnclosureBean(
+                articleId = articleId,
+                url = it.url.orEmpty().toEncodedUrl(),
+                length = it.length,
+                type = it.type,
+            )
+        }
+        val enclosuresFromMedia = getEnclosuresFromMedia(
+            articleId = articleId,
+            modules = syndEntry.modules,
+        )
         return ArticleWithEnclosureBean(
             article = ArticleBean(
                 articleId = articleId,
@@ -141,14 +154,7 @@ class RssHelper @Inject constructor(
                 guid = syndEntry.uri,
                 updateAt = Date().time,
             ),
-            enclosures = syndEntry.enclosures.map {
-                EnclosureBean(
-                    articleId = articleId,
-                    url = it.url.orEmpty().toEncodedUrl(),
-                    length = it.length,
-                    type = it.type,
-                )
-            },
+            enclosures = enclosures + enclosuresFromMedia,
             categories = syndEntry.categories.map { it.name }.filter { it.isNotBlank() }.map {
                 ArticleCategoryBean(articleId = articleId, category = it)
             },
@@ -185,6 +191,40 @@ class RssHelper @Inject constructor(
             if (media != null) return media
         }
         return null
+    }
+
+    private fun getEnclosuresFromMedia(
+        articleId: String,
+        modules: List<Module>
+    ): List<EnclosureBean> = buildList {
+        modules.asSequence().forEach { module ->
+            if (module is MediaEntryModule) {
+                module.mediaGroups.forEach { group ->
+                    addAll(
+                        group.contents.orEmpty().mapNotNull { content ->
+                            val url = (content.reference as? UrlReference)?.url?.toString()
+                                ?: return@mapNotNull null
+                            EnclosureBean(
+                                articleId = articleId,
+                                url = url.toEncodedUrl(),
+                                length = content.fileSize ?: 0L,
+                                type = content.type,
+                            )
+                        }
+                    )
+                    addAll(
+                        group.metadata.peerLinks.orEmpty().map { peerLink ->
+                            EnclosureBean(
+                                articleId = articleId,
+                                url = peerLink.href.toString().toEncodedUrl(),
+                                length = 0,
+                                type = peerLink.type,
+                            )
+                        }
+                    )
+                }
+            }
+        }
     }
 
     private fun getMediaRssIcon(syndFeed: SyndFeed): String? {
