@@ -15,8 +15,5 @@ sealed interface ListIntent : MviIntent {
         val playlist: PlaylistViewBean
     ) : ListIntent
 
-    data class RemoveFromPlaylist(
-        val medias: List<PlaylistMediaWithArticleBean>,
-        val playlist: PlaylistViewBean
-    ) : ListIntent
+    data class RemoveFromPlaylist(val medias: List<PlaylistMediaWithArticleBean>) : ListIntent
 }

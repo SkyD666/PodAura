@@ -19,8 +19,8 @@ import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.anivu.model.repository.MediaRepository
 import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
+import com.skyd.anivu.model.repository.media.IMediaRepository
 import com.skyd.anivu.model.worker.download.isTorrentMimetype
 import com.skyd.anivu.ui.component.showToast
 import dagger.hilt.EntryPoint
@@ -42,7 +42,7 @@ object DownloadStarter {
         val groupDao: GroupDao
         val articleDao: ArticleDao
         val enclosureDao: EnclosureDao
-        val mediaRepository: MediaRepository
+        val mediaRepository: IMediaRepository
     }
 
     private val hiltEntryPoint = EntryPointAccessors.fromApplication(

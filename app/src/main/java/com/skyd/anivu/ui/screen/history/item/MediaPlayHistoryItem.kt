@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Feed
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -185,7 +185,7 @@ fun MediaPlayHistoryItem(
                 if (articleWithEnclosure != null) {
                     val navController = LocalNavController.current
                     ActionIconButton(
-                        imageVector = Icons.AutoMirrored.Outlined.Feed,
+                        imageVector = Icons.AutoMirrored.Outlined.Article,
                         contentDescription = stringResource(id = R.string.read_screen_name),
                         onClick = {
                             openReadScreen(

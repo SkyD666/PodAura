@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.model.repository.player.PlayerRepository
-import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
+import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.anivu.ui.activity.player.PlayActivity.Companion.PLAY_DATA_MODE_KEY
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val playerRepo: PlayerRepository,
-    private val playlistMediaRepo: PlaylistMediaRepository,
+    private val playlistMediaRepo: IPlaylistMediaRepository,
 ) : ViewModel() {
     // Do not store data
     val mediaInfos = MutableSharedFlow<Pair<String?, List<PlaylistMediaWithArticleBean>>>(

@@ -294,7 +294,7 @@ private fun AddToPlaylistSheet(
                 },
                 onRemove = {
                     dispatch(
-                        ListIntent.RemoveFromPlaylist(medias = uiState.selectedItems, playlist = it)
+                        ListIntent.RemoveFromPlaylist(medias = uiState.selectedItems)
                     )
                 },
             )

@@ -2,12 +2,11 @@ package com.skyd.anivu.model.db.dao
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
+import androidx.room.Upsert
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
@@ -61,8 +60,8 @@ interface ArticleDao {
     ): ArticleBean?
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun innerUpdateArticle(articleBean: ArticleBean)
+    @Upsert
+    suspend fun innerUpsertArticle(articleBean: ArticleBean)
 
     @Transaction
     suspend fun insertListIfNotExist(articleWithEnclosureList: List<ArticleWithEnclosureBean>) {
@@ -86,19 +85,23 @@ interface ArticleDao {
                 )
             }
             if (newArticle == null) {
-                innerUpdateArticle(article)
+                innerUpsertArticle(article)
                 newArticle = article
             } else {
-                // Update all fields except articleId
-                newArticle = article.copy(articleId = newArticle.articleId)
-                innerUpdateArticle(newArticle)
+                // Update all fields except articleId, isRead and isFavorite
+                newArticle = article.copy(
+                    articleId = newArticle.articleId,
+                    isRead = newArticle.isRead,
+                    isFavorite = newArticle.isFavorite,
+                )
+                innerUpsertArticle(newArticle)
                 articleWithEnclosure.article = newArticle
             }
 
             // Update modules
             val media = articleWithEnclosure.media
             if (media != null) {
-                hiltEntryPoint.rssModuleDao.insertIfNotExistRssMediaBean(
+                hiltEntryPoint.rssModuleDao.upsert(
                     media.copy(articleId = newArticle.articleId)
                 )
             }
@@ -106,12 +109,12 @@ interface ArticleDao {
             // Update category
             val categories = articleWithEnclosure.categories
             if (categories.isNotEmpty()) {
-                hiltEntryPoint.articleCategoryDao.insertIfNotExist(
+                hiltEntryPoint.articleCategoryDao.upsert(
                     categories.map { it.copy(articleId = newArticle.articleId) }
                 )
             }
 
-            hiltEntryPoint.enclosureDao.insertListIfNotExist(
+            hiltEntryPoint.enclosureDao.upsert(
                 articleWithEnclosure.enclosures.map { enclosure ->
                     enclosure.copy(articleId = newArticle.articleId)
                 }

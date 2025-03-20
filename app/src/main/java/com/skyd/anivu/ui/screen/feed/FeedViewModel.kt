@@ -205,12 +205,16 @@ class FeedViewModel @Inject constructor(
             merge(
                 filterIsInstance<FeedIntent.RefreshFeed>().map { intent ->
                     val urls = listOf(intent.url)
-                    articleRepo.refreshArticleList(urls).flatMapConcat {
+                    articleRepo.refreshArticleList(
+                        feedUrls = urls, full = intent.full,
+                    ).flatMapConcat {
                         feedRepo.getFeedViewsByUrls(urls)
                     }
                 },
                 filterIsInstance<FeedIntent.RefreshGroupFeed>().map { intent ->
-                    articleRepo.refreshGroupArticles(intent.groupId).flatMapConcat {
+                    articleRepo.refreshGroupArticles(
+                        groupId = intent.groupId, full = intent.full,
+                    ).flatMapConcat {
                         feedRepo.getFeedViewsByGroupId(intent.groupId)
                     }
                 },

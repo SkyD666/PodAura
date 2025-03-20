@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.skyd.anivu.model.bean.article.ENCLOSURE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import kotlinx.coroutines.flow.Flow
@@ -29,21 +30,8 @@ interface EnclosureDao {
     suspend fun innerUpdateEnclosure(enclosureBean: EnclosureBean)
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun innerUpdateEnclosure(enclosureBeanList: List<EnclosureBean>)
-
-    @Transaction
-    suspend fun insertListIfNotExist(enclosureBeanList: List<EnclosureBean>) {
-        enclosureBeanList.mapNotNull {
-            if (queryEnclosureByLink(
-                    articleId = it.articleId,
-                    url = it.url,
-                ) == null
-            ) it else null
-        }.also {
-            innerUpdateEnclosure(it)
-        }
-    }
+    @Upsert
+    suspend fun upsert(enclosureBeanList: List<EnclosureBean>)
 
     @Transaction
     @Delete

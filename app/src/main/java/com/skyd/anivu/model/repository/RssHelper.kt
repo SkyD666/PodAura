@@ -59,6 +59,7 @@ class RssHelper @Inject constructor(
 
     suspend fun queryRssXml(
         feed: FeedBean,
+        full: Boolean,
         latestLink: String?,        // 日期最新的文章链接，更新时不会take比这个文章更旧的文章
     ): FeedWithArticleBean? = withContext(Dispatchers.IO) {
         runCatching {
@@ -93,7 +94,7 @@ class RssHelper @Inject constructor(
                                         this
                                     }
                                 }
-                                .takeWhile { latestLink == null || latestLink != it.link }
+                                .takeWhile { full || latestLink == null || latestLink != it.link }
                                 .map { article(feed, it) }
                                 .toList(),
                         )

@@ -34,7 +34,7 @@ import com.skyd.anivu.model.db.dao.DownloadInfoDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.db.dao.SessionParamsDao
 import com.skyd.anivu.model.db.dao.TorrentFileDao
-import com.skyd.anivu.model.repository.MediaRepository
+import com.skyd.anivu.model.repository.media.IMediaRepository
 import com.skyd.anivu.model.worker.download.BtDownloadWorker
 import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.SAVE_DIR
 import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.TORRENT_LINK_UUID
@@ -76,7 +76,7 @@ object BtDownloadManager {
         val torrentFileDao: TorrentFileDao
         val enclosureDao: EnclosureDao
         val articleDao: ArticleDao
-        val mediaRepository: MediaRepository
+        val mediaRepository: IMediaRepository
     }
 
     private val hiltEntryPoint = EntryPointAccessors.fromApplication(

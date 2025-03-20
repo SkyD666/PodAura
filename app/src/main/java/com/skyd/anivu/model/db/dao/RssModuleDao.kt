@@ -1,18 +1,17 @@
 package com.skyd.anivu.model.db.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.skyd.anivu.model.bean.article.RSS_MEDIA_TABLE_NAME
 import com.skyd.anivu.model.bean.article.RssMediaBean
 
 @Dao
 interface RssModuleDao {
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertIfNotExistRssMediaBean(rssMediaBean: RssMediaBean)
+    @Upsert
+    fun upsert(rssMediaBean: RssMediaBean)
 
     @Transaction
     @Query(

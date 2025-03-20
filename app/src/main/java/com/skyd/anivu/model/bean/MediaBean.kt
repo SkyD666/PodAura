@@ -14,14 +14,15 @@ data class MediaBean(
     val articleWithEnclosure: ArticleWithEnclosureBean?,
     val feedBean: FeedBean?,
 ) : BaseBean {
-    var name: String = file.name
+    val name: String = file.name
     val mimetype: String by lazy { file.getMimeType() ?: "*/*" }
-    var size: Long = file.length()
-    var date: Long = file.lastModified()
+    val size: Long = file.length()
+    val date: Long = file.lastModified()
     val isMedia: Boolean = mimetype.startsWith("video/") || mimetype.startsWith("audio/")
     val isDir: Boolean = file.isDirectory
     val isFile: Boolean = file.isFile
     val icon: Int by lazy { getFileIcon(mimetype).resourceId }
     val articleId = articleWithEnclosure?.article?.articleId
     val feedUrl = feedBean?.url
+    val cover: String? = articleWithEnclosure?.media?.image ?: feedBean?.icon ?: file.path
 }

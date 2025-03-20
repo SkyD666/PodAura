@@ -114,16 +114,17 @@ class ArticleRepository @Inject constructor(
         }.flow
     }.flowOn(Dispatchers.IO)
 
-    override fun refreshGroupArticles(groupId: String?): Flow<Unit> = flow {
+    override fun refreshGroupArticles(groupId: String?, full: Boolean): Flow<Unit> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
         emit(feedDao.getFeedsByGroupId(realGroupId).map { it.feed.url })
     }.flatMapConcat {
-        refreshArticleList(feedUrls = it)
+        refreshArticleList(feedUrls = it, full = full)
     }.flowOn(Dispatchers.IO)
 
     override fun refreshArticleList(
         feedUrls: List<String>,
         groupIds: List<String?>,
+        full: Boolean,
     ): Flow<Unit> = flow {
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
@@ -141,6 +142,7 @@ class ArticleRepository @Inject constructor(
                     val articleBeanList = runCatching {
                         rssHelper.queryRssXml(
                             feed = feedDao.getFeed(feedUrl).feed,
+                            full = full,
                             latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
                         )?.also { feedWithArticle ->
                             feedDao.updateFeed(feedWithArticle.feed)

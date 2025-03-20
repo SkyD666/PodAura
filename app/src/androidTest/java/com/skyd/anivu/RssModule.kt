@@ -19,11 +19,11 @@ import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.db.dao.ReadHistoryDao
-import com.skyd.anivu.model.repository.article.ArticleRepository
-import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.model.repository.ReadRepository
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.model.repository.SearchRepository
+import com.skyd.anivu.model.repository.article.ArticleRepository
+import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.model.repository.feed.FeedRepository
 import com.skyd.anivu.model.repository.feed.ReorderGroupRepository
 import com.skyd.anivu.model.repository.feed.RequestHeadersRepository
@@ -259,7 +259,7 @@ class RssModule {
         }
 
         feedRepository.clearFeedArticles(url1).first()
-        articleRepository.refreshArticleList(feedUrls = listOf(url1)).first()
+        articleRepository.refreshArticleList(feedUrls = listOf(url1), full = false).first()
         val article = articleRepository.requestArticleList(
             feedUrls = listOf(url1),
             groupIds = emptyList(),
@@ -290,7 +290,7 @@ class RssModule {
         feedRepository.clearFeedArticles(url1).first()
         assertTrue(feedDao.getFeedsByGroupId(null).first().articleCount == 0)
 
-        articleRepository.refreshGroupArticles(null).first()
+        articleRepository.refreshGroupArticles(null, false).first()
         assertTrue(feedDao.getFeedsByGroupId(null).first().articleCount > 0)
     }
 
@@ -339,9 +339,9 @@ class RssModule {
             articleIds = emptyList(),
         ).asSnapshot().first()
         val realArticle = article.articleWithEnclosure.article
-        articleDao.innerUpdateArticle(realArticle.copy(title = "test9"))
+        articleDao.innerUpsertArticle(realArticle.copy(title = "test9"))
         assertTrue(
-            searchRepository.listenSearchArticle(listOf(url1), emptyList())
+            searchRepository.listenSearchArticle(listOf(url1), emptyList(), emptyList())
                 .asSnapshot()
                 .any { it.articleWithEnclosure.article.articleId == realArticle.articleId }
         )
@@ -712,9 +712,8 @@ class RssModule {
         val excepted =
             articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
         val itemsSnapshot =
-            searchRepository.listenSearchArticle(feedDao.getAllFeedUrl(), emptyList()).asSnapshot {
-                scrollTo(excepted.size)
-            }
+            searchRepository.listenSearchArticle(feedDao.getAllFeedUrl(), emptyList(), emptyList())
+                .asSnapshot { scrollTo(excepted.size) }
         assertEquals(excepted, itemsSnapshot)
     }
 
@@ -874,7 +873,7 @@ class RssModule {
         reorderGroupRepository = ReorderGroupRepository(groupDao, pagingConfig)
         feedRepository = FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
         articleRepository = ArticleRepository(feedDao, articleDao, rssHelper, pagingConfig)
-        searchRepository = SearchRepository(feedDao, articleDao, pagingConfig)
+        searchRepository = SearchRepository(feedDao, articleDao, articleRepository, pagingConfig)
         readRepository = ReadRepository(articleDao, readHistoryDao)
         requestHeadersRepository = RequestHeadersRepository(feedDao)
     }

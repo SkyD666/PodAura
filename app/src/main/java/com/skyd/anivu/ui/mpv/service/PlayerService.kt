@@ -18,8 +18,8 @@ import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
-import com.skyd.anivu.model.repository.player.PlayerRepository
-import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
+import com.skyd.anivu.model.repository.player.IPlayerRepository
+import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
@@ -39,10 +39,10 @@ import kotlin.math.pow
 @AndroidEntryPoint
 class PlayerService : Service() {
     @Inject
-    lateinit var playerRepo: PlayerRepository
+    lateinit var playerRepo: IPlayerRepository
 
     @Inject
-    lateinit var playlistMediaRepo: PlaylistMediaRepository
+    lateinit var playlistMediaRepo: IPlaylistMediaRepository
 
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
 
@@ -272,7 +272,7 @@ class PlayerService : Service() {
                     cachedPlaylistMap.remove(it.playlistMediaBean.url)
                 }
                 scope.launch {
-                    playlistMediaRepo.deletePlaylistMediaByIdAndUrl(command.playlist).collect()
+                    playlistMediaRepo.removeMediaFromPlaylist(command.playlist).collect()
                 }
                 removeFromList(command.playlist.map { it.playlistMediaBean.url })
             }

@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport.importopml
 
-import com.skyd.anivu.model.repository.importexport.ImportExportRepository
+import com.skyd.anivu.model.repository.importexport.IImportRepository.ImportOpmlResult
 
 
 internal sealed interface ImportOpmlPartialStateChange {
@@ -29,7 +29,7 @@ internal sealed interface ImportOpmlPartialStateChange {
             }
         }
 
-        data class Success(val result: ImportExportRepository.ImportOpmlResult) : ImportOpml
+        data class Success(val result: ImportOpmlResult) : ImportOpml
         data class Failed(val msg: String) : ImportOpml
     }
 }

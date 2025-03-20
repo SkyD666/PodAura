@@ -36,7 +36,7 @@ fun EditGroupSheet(
     group: GroupVo,
     groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
-    onRefresh: (String) -> Unit,
+    onRefresh: (String, Boolean) -> Unit,
     onMuteAll: (String, Boolean) -> Unit,
     onClear: (String) -> Unit,
     onDelete: (String) -> Unit,
@@ -74,7 +74,7 @@ fun EditGroupSheet(
                     group.name,
                 ),
                 onReadAll = { onReadAll(group.groupId) },
-                onRefresh = { onRefresh(group.groupId) },
+                onRefresh = { onRefresh(group.groupId, it) },
                 onMuteAll = { onMuteAll(group.groupId, it) },
                 onClear = { onClear(group.groupId) },
                 // Default group cannot be deleted

@@ -3,7 +3,7 @@ package com.skyd.anivu.ui.screen.media.search
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.MediaRepository
+import com.skyd.anivu.model.repository.media.IMediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MediaSearchViewModel @Inject constructor(
-    private val mediaRepo: MediaRepository
+    private val mediaRepo: IMediaRepository
 ) : AbstractMviViewModel<MediaSearchIntent, MediaSearchState, MediaSearchEvent>() {
 
     override val viewState: StateFlow<MediaSearchState>

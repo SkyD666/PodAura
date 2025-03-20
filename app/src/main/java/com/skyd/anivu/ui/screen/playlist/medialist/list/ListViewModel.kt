@@ -6,8 +6,8 @@ import androidx.paging.filter
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
-import com.skyd.anivu.model.repository.playlist.PlaylistRepository
+import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
+import com.skyd.anivu.model.repository.playlist.IPlaylistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,8 +25,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
-    private val playlistRepo: PlaylistRepository,
-    private val playlistMediaRepo: PlaylistMediaRepository,
+    private val playlistRepo: IPlaylistRepository,
+    private val playlistMediaRepo: IPlaylistMediaRepository,
 ) : AbstractMviViewModel<ListIntent, ListState, ListEvent>() {
 
     override val viewState: StateFlow<ListState>
@@ -102,10 +102,7 @@ class ListViewModel @Inject constructor(
                 }
             },
             filterIsInstance<ListIntent.RemoveFromPlaylist>().flatMapConcat { intent ->
-                playlistMediaRepo.removeMediaFromPlaylist(
-                    intent.playlist.playlist.playlistId,
-                    intent.medias,
-                ).map {
+                playlistMediaRepo.removeMediaFromPlaylist(intent.medias).map {
                     ListPartialStateChange.RemoveFromPlaylist.Success
                 }.startWith(ListPartialStateChange.LoadingDialog.Show).catchMap {
                     ListPartialStateChange.RemoveFromPlaylist.Failed(it.message.toString())

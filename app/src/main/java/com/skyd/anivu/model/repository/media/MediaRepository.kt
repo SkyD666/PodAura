@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.repository
+package com.skyd.anivu.model.repository.media
 
 import androidx.collection.LruCache
 import androidx.compose.ui.util.fastFirstOrNull
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -49,7 +48,7 @@ class MediaRepository @Inject constructor(
     private val json: Json,
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
-) : BaseRepository() {
+) : BaseRepository(), IMediaRepository {
 
     companion object {
         const val FOLDER_INFO_JSON_NAME = "info.json"
@@ -201,8 +200,8 @@ class MediaRepository @Inject constructor(
         )
     }
 
-    fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
-        flowOf(path), refreshFiles, refreshPath
+    override fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
+        kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath
     ).filter { it == path }.map {
         val allGroups = getOrReadMediaLibJson(path).allGroups
         listOf(MediaGroupBean.DefaultMediaGroup) +
@@ -212,46 +211,47 @@ class MediaRepository @Inject constructor(
     private val refreshFiles =
         MutableSharedFlow<String>(replay = 1, extraBufferCapacity = Int.MAX_VALUE)
 
-    suspend fun refreshFiles(path: String) {
+    override suspend fun refreshFiles(path: String) {
         return refreshFiles.emit(path)
     }
 
-    fun requestFiles(
+    override fun requestFiles(
         path: String,
         group: MediaGroupBean?,
-        isSubList: Boolean = false,
+        isSubList: Boolean,
     ): Flow<List<MediaBean>> = combine(
-        merge(flowOf(path), refreshFiles, refreshPath).filter { it == path }.map {
-            val mediaLibJson = getOrReadMediaLibJson(path)
-            val fileJsons = mediaLibJson.files
-            val videoList = (if (group == null) fileJsons else {
-                val groupName = if (group.isDefaultGroup()) null else group.name
-                fileJsons.filter { it.groupName == groupName }
-            }).let { jsons ->
-                val articleMap = articleDao.getArticleListByIds(
-                    jsons.mapNotNull { it.articleId }
-                ).associateBy { it.articleWithEnclosure.article.articleId }
+        merge(kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath).filter { it == path }
+            .map {
+                val mediaLibJson = getOrReadMediaLibJson(path)
+                val fileJsons = mediaLibJson.files
+                val videoList = (if (group == null) fileJsons else {
+                    val groupName = if (group.isDefaultGroup()) null else group.name
+                    fileJsons.filter { it.groupName == groupName }
+                }).let { jsons ->
+                    val articleMap = articleDao.getArticleListByIds(
+                        jsons.mapNotNull { it.articleId }
+                    ).associateBy { it.articleWithEnclosure.article.articleId }
 
-                val feedMap = feedDao.getFeedsIn(
-                    jsons.mapNotNull { it.feedUrl }
-                ).associateBy { it.feed.url }
+                    val feedMap = feedDao.getFeedsIn(
+                        jsons.mapNotNull { it.feedUrl }
+                    ).associateBy { it.feed.url }
 
-                jsons.mapNotNull { fileJson ->
-                    fileJson.toMediaBean(
-                        path = path,
-                        articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
-                        feedBean = feedMap[fileJson.feedUrl]?.feed
-                            ?: articleMap[fileJson.articleId]?.feed,
-                    )
+                    jsons.mapNotNull { fileJson ->
+                        fileJson.toMediaBean(
+                            path = path,
+                            articleWithEnclosure = articleMap[fileJson.articleId]?.articleWithEnclosure,
+                            feedBean = feedMap[fileJson.feedUrl]?.feed
+                                ?: articleMap[fileJson.articleId]?.feed,
+                        )
+                    }
                 }
-            }
-            videoList.toMutableList().apply {
-                fastFirstOrNull { it.name.equals(FOLDER_INFO_JSON_NAME, true) }
-                    ?.let { remove(it) }
-                fastFirstOrNull { it.name.equals(MEDIA_LIB_JSON_NAME, true) }
-                    ?.let { remove(it) }
-            }
-        },
+                videoList.toMutableList().apply {
+                    fastFirstOrNull { it.name.equals(FOLDER_INFO_JSON_NAME, true) }
+                        ?.let { remove(it) }
+                    fastFirstOrNull { it.name.equals(MEDIA_LIB_JSON_NAME, true) }
+                        ?.let { remove(it) }
+                }
+            },
         appContext.dataStore.flowOf(MediaFileFilterPreference),
     ) { videoList, displayFilter ->
         videoList.filter {
@@ -263,9 +263,12 @@ class MediaRepository @Inject constructor(
         )
     ) { list, sortBy ->
         when (sortBy) {
-            BaseMediaListSortByPreference.DATE -> list.sortedBy { it.date }
-            BaseMediaListSortByPreference.NAME -> list.sortedBy { it.displayName ?: it.name }
-            BaseMediaListSortByPreference.FILE_COUNT -> list.sortedBy { it.fileCount }
+            BaseMediaListSortByPreference.Companion.DATE -> list.sortedBy { it.date }
+            BaseMediaListSortByPreference.Companion.NAME -> list.sortedBy {
+                it.displayName ?: it.name
+            }
+
+            BaseMediaListSortByPreference.Companion.FILE_COUNT -> list.sortedBy { it.fileCount }
             else -> list.sortedBy { it.displayName ?: it.name }
         }
     }.combine(
@@ -276,15 +279,15 @@ class MediaRepository @Inject constructor(
         if (sortAsc) list else list.reversed()
     }.flowOn(Dispatchers.IO)
 
-    fun search(
+    override fun search(
         path: String,
         query: String,
-        recursive: Boolean = false,
-    ): Flow<List<MediaBean>> = flowOf(
+        recursive: Boolean,
+    ): Flow<List<MediaBean>> = kotlinx.coroutines.flow.flowOf(
         query.trim() to recursive
     ).flatMapLatest { (query, recursive) ->
         merge(
-            flowOf(path), refreshFiles, refreshPath
+            kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath
         ).debounce(70).filter { it == path }.map {
             val queries = query.splitByBlank()
 
@@ -321,7 +324,7 @@ class MediaRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun deleteFile(file: File): Flow<Boolean> = flow {
+    override fun deleteFile(file: File): Flow<Boolean> = flow {
         val path = file.parentFile!!.path
         val mediaLibJson = getOrReadMediaLibJson(path).apply {
             files.removeIf { it.fileName == file.name }
@@ -330,7 +333,7 @@ class MediaRepository @Inject constructor(
         emit(file.deleteRecursively())
     }.flowOn(Dispatchers.IO)
 
-    fun renameFile(file: File, newName: String): Flow<File?> = flow {
+    override fun renameFile(file: File, newName: String): Flow<File?> = flow {
         val path = file.parentFile!!.path
         val mediaLibJson = getOrReadMediaLibJson(path)
         val validateFileName = newName.validateFileName()
@@ -345,7 +348,10 @@ class MediaRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun setFileDisplayName(mediaBean: MediaBean, displayName: String?): Flow<MediaBean> = flow {
+    override fun setDisplayName(
+        mediaBean: MediaBean,
+        displayName: String?,
+    ): Flow<MediaBean> = flow {
         val path = mediaBean.file.parentFile!!.path
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         mediaLibJson.files.firstOrNull {
@@ -356,7 +362,7 @@ class MediaRepository @Inject constructor(
         emit(mediaBean.copy(displayName = displayName))
     }.flowOn(Dispatchers.IO)
 
-    fun addNewFile(
+    override fun addNewFile(
         file: File,
         groupName: String?,
         articleId: String?,
@@ -410,7 +416,7 @@ class MediaRepository @Inject constructor(
         emit(true)
     }.flowOn(Dispatchers.IO)
 
-    fun getFolder(
+    override fun getFolder(
         parentFile: File,
         groupName: String?,
         feedUrl: String?,

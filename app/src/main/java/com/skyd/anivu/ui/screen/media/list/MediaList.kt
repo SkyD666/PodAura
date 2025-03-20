@@ -41,6 +41,7 @@ import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
 import com.skyd.anivu.ui.screen.media.sub.openSubMediaScreen
 import com.skyd.anivu.ui.screen.read.openReadScreen
@@ -184,6 +185,31 @@ internal fun MediaList(
     var openCreateGroupDialog by rememberSaveable { mutableStateOf(false) }
     var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
 
+    val onOpenFeed: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
+        mediaBean.feedBean?.let {
+            { it: MediaBean ->
+                it.feedUrl?.let { feedUrl ->
+                    openArticleScreen(
+                        navController = navController,
+                        feedUrls = listOf(feedUrl),
+                    )
+                }
+            }
+        }
+    }
+    val onOpenArticle: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
+        mediaBean.articleWithEnclosure?.let {
+            { it: MediaBean ->
+                it.articleId?.let { articleId ->
+                    openReadScreen(
+                        navController = navController,
+                        articleId = articleId,
+                    )
+                }
+            }
+        }
+    }
+
     LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 12.dp),
@@ -197,6 +223,8 @@ internal fun MediaList(
                 onPlay = onPlay,
                 onOpenDir = onOpenDir,
                 onRemove = onRemove,
+                onOpenFeed = onOpenFeed(item),
+                onOpenArticle = onOpenArticle(item),
                 onLongClick = if (groupInfo == null) null else {
                     { openEditMediaDialog = it }
                 },
@@ -224,16 +252,8 @@ internal fun MediaList(
                 openCreateGroupDialog = true
                 createGroupDialogGroup = ""
             },
-            onOpenArticle = videoBean.articleWithEnclosure?.let {
-                {
-                    it.articleId?.let { articleId ->
-                        openReadScreen(
-                            navController = navController,
-                            articleId = articleId,
-                        )
-                    }
-                }
-            }
+            onOpenFeed = onOpenFeed(videoBean),
+            onOpenArticle = onOpenArticle(videoBean),
         )
     }
 

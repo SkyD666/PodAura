@@ -2,7 +2,6 @@ package com.skyd.anivu.ui.screen.media.list
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowOverflow
@@ -17,13 +16,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Feed
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
+import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -50,7 +50,6 @@ import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.screen.feed.SheetChip
-import java.io.File
 
 @Composable
 fun EditMediaSheet(
@@ -63,6 +62,7 @@ fun EditMediaSheet(
     onDelete: (MediaBean) -> Unit,
     onGroupChange: (MediaGroupBean) -> Unit,
     openCreateGroupDialog: () -> Unit,
+    onOpenFeed: ((MediaBean) -> Unit)?,
     onOpenArticle: ((MediaBean) -> Unit)?,
 ) {
     val context = LocalContext.current
@@ -76,11 +76,15 @@ fun EditMediaSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
-            InfoArea(file = mediaBean.file)
+            InfoArea(mediaBean = mediaBean)
             Spacer(modifier = Modifier.height(20.dp))
 
             // Options
             OptionArea(
+                deleteWarningText = stringResource(
+                    if (mediaBean.isFile) R.string.media_screen_delete_file_warning
+                    else R.string.media_screen_delete_directory_warning
+                ),
                 onOpenWith = { mediaBean.file.toUri(context).openWith(context) },
                 onRenameClicked = { openRenameInputDialog = mediaBean.file.name },
                 onSetFileDisplayNameClicked = {
@@ -90,7 +94,18 @@ fun EditMediaSheet(
                     onDelete(mediaBean)
                     onDismissRequest()
                 },
-                onOpenArticle = onOpenArticle?.let { { it(mediaBean) } },
+                onOpenFeed = onOpenFeed?.let {
+                    {
+                        it(mediaBean)
+                        onDismissRequest()
+                    }
+                },
+                onOpenArticle = onOpenArticle?.let {
+                    {
+                        it(mediaBean)
+                        onDismissRequest()
+                    }
+                },
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -140,21 +155,26 @@ fun EditMediaSheet(
 }
 
 @Composable
-private fun InfoArea(file: File) {
-    Row {
-        Box(modifier = Modifier.size(48.dp))
+private fun InfoArea(mediaBean: MediaBean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        MediaCover(
+            data = mediaBean,
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .size(48.dp),
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(6.dp)),
-                text = file.name.orEmpty(),
+                text = mediaBean.displayName ?: mediaBean.file.name.orEmpty(),
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val description = file.length().fileSize(LocalContext.current)
+            val description = mediaBean.file.length().fileSize(LocalContext.current)
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 modifier = Modifier
@@ -172,11 +192,12 @@ private fun InfoArea(file: File) {
 
 @Composable
 internal fun OptionArea(
-    deleteWarningText: String = stringResource(id = R.string.media_screen_delete_file_warning),
+    deleteWarningText: String,
     onOpenWith: (() -> Unit)? = null,
     onRenameClicked: (() -> Unit)? = null,
     onSetFileDisplayNameClicked: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
+    onOpenFeed: (() -> Unit)? = null,
     onOpenArticle: (() -> Unit)? = null,
 ) {
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
@@ -223,9 +244,16 @@ internal fun OptionArea(
                     onClick = { openDeleteWarningDialog = true },
                 )
             }
+            if (onOpenFeed != null) {
+                SheetChip(
+                    icon = Icons.Outlined.RssFeed,
+                    text = stringResource(id = R.string.feed_screen_name),
+                    onClick = onOpenFeed,
+                )
+            }
             if (onOpenArticle != null) {
                 SheetChip(
-                    icon = Icons.AutoMirrored.Outlined.Feed,
+                    icon = Icons.AutoMirrored.Outlined.Article,
                     text = stringResource(id = R.string.read_screen_name),
                     onClick = onOpenArticle,
                 )

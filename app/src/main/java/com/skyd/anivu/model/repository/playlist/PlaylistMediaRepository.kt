@@ -37,7 +37,7 @@ class PlaylistMediaRepository @Inject constructor(
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,
     private val pagingConfig: PagingConfig,
-) : BaseRepository() {
+) : BaseRepository(), IPlaylistMediaRepository {
     private suspend fun PlaylistMediaWithArticleBean.updateMediaMetadata(): PlaylistMediaWithArticleBean {
         var result = this
         var realArticleId = playlistMediaBean.articleId
@@ -91,13 +91,14 @@ class PlaylistMediaRepository @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
-    fun requestPlaylistMediaList(playlistId: String): Flow<List<PlaylistMediaWithArticleBean>> =
-        flow {
-            val playlist = playlistMediaDao.getPlaylistMediaList(playlistId)
-            emit(playlist.map { withContext(Dispatchers.IO) { it.updateMediaMetadata() } })
-        }.flowOn(Dispatchers.IO)
+    override fun requestPlaylistMediaList(
+        playlistId: String
+    ): Flow<List<PlaylistMediaWithArticleBean>> = flow {
+        val playlist = playlistMediaDao.getPlaylistMediaList(playlistId)
+        emit(playlist.map { withContext(Dispatchers.IO) { it.updateMediaMetadata() } })
+    }.flowOn(Dispatchers.IO)
 
-    fun getCommonPlaylists(
+    override fun getCommonPlaylists(
         medias: List<PlaylistMediaWithArticleBean>
     ): Flow<List<String>> = playlistMediaDao.getCommonMediaPlaylistIdList(
         medias.map { it.playlistMediaBean.url },
@@ -126,18 +127,7 @@ class PlaylistMediaRepository @Inject constructor(
             emit(true)
         }.flowOn(Dispatchers.IO)
 
-    fun removeMediaFromPlaylist(
-        playlistId: String,
-        medias: List<PlaylistMediaWithArticleBean>,
-    ): Flow<Int> = flow {
-        var count = 0
-        medias.forEach {
-            count += playlistMediaDao.deletePlaylistMedia(playlistId, it.playlistMediaBean.url)
-        }
-        emit(count)
-    }.flowOn(Dispatchers.IO)
-
-    fun insertPlaylistMedias(
+    override fun insertPlaylistMedias(
         toPlaylistId: String,
         medias: List<PlaylistMediaWithArticleBean>
     ): Flow<Unit> = flow {
@@ -155,10 +145,11 @@ class PlaylistMediaRepository @Inject constructor(
         emit(Unit)
     }.flowOn(Dispatchers.IO)
 
-    fun deletePlaylistMediaByIdAndUrl(playlist: List<PlaylistMediaWithArticleBean>): Flow<Int> =
-        flow {
-            emit(playlistMediaDao.deletePlaylistMediaByIdAndUrl(playlist = playlist))
-        }.flowOn(Dispatchers.IO)
+    override fun removeMediaFromPlaylist(
+        mediaList: List<PlaylistMediaWithArticleBean>,
+    ): Flow<Int> = flow {
+        emit(playlistMediaDao.deletePlaylistMediaByIdAndUrl(playlist = mediaList))
+    }.flowOn(Dispatchers.IO)
 
     fun reorderPlaylistMedia(
         playlistId: String,

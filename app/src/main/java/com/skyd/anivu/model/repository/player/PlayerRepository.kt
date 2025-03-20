@@ -20,8 +20,8 @@ class PlayerRepository @Inject constructor(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
-) : BaseRepository() {
-    fun insertPlayHistory(path: String, duration: Long, articleId: String?): Flow<Unit> = flow {
+) : BaseRepository(), IPlayerRepository {
+    override fun insertPlayHistory(path: String, duration: Long, articleId: String?): Flow<Unit> = flow {
         val realArticleId = articleId?.takeIf {
             articleDao.exists(it) > 0
         } ?: enclosureDao.getMediaArticleId(path)
@@ -42,12 +42,12 @@ class PlayerRepository @Inject constructor(
         emit(Unit)
     }.flowOn(Dispatchers.IO)
 
-    fun updateLastPlayPosition(path: String, lastPlayPosition: Long): Flow<Unit> = flow {
+    override fun updateLastPlayPosition(path: String, lastPlayPosition: Long): Flow<Unit> = flow {
         mediaPlayHistoryDao.updateLastPlayPosition(path, lastPlayPosition)
         emit(Unit)
     }.flowOn(Dispatchers.IO)
 
-    fun requestLastPlayPosition(path: String): Flow<Long> = flow {
+    override fun requestLastPlayPosition(path: String): Flow<Long> = flow {
         emit(mediaPlayHistoryDao.getMediaPlayHistory(path)?.lastPlayPosition ?: 0L)
     }.flowOn(Dispatchers.IO)
 

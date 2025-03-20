@@ -395,7 +395,7 @@ private fun FeedList(
                 feedView = openEditFeedDialog!!,
                 groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInFeed(it)) },
-                onRefresh = { dispatch(FeedIntent.RefreshFeed(it)) },
+                onRefresh = { feedUrl, full -> dispatch(FeedIntent.RefreshFeed(feedUrl, full)) },
                 onMute = { feedUrl, mute -> dispatch(FeedIntent.MuteFeed(feedUrl, mute)) },
                 onClear = { dispatch(FeedIntent.ClearFeedArticles(it)) },
                 onDelete = { dispatch(FeedIntent.RemoveFeed(it)) },
@@ -457,7 +457,9 @@ private fun FeedList(
                 group = openEditGroupDialog!!,
                 groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInGroup(it)) },
-                onRefresh = { dispatch(FeedIntent.RefreshGroupFeed(it)) },
+                onRefresh = { groupId, full ->
+                    dispatch(FeedIntent.RefreshGroupFeed(groupId, full))
+                },
                 onMuteAll = { groupId, mute ->
                     dispatch(FeedIntent.MuteFeedsInGroup(groupId, mute))
                 },

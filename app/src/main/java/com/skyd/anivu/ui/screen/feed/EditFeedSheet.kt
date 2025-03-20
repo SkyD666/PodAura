@@ -54,12 +54,17 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -99,7 +104,7 @@ fun EditFeedSheet(
     feedView: FeedViewBean,
     groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
-    onRefresh: (String) -> Unit,
+    onRefresh: (String, Boolean) -> Unit,
     onMute: (String, Boolean) -> Unit,
     onClear: (String) -> Unit,
     onDelete: (String) -> Unit,
@@ -150,7 +155,7 @@ fun EditFeedSheet(
                 sortXmlArticlesOnUpdate = feed.sortXmlArticlesOnUpdate,
                 mute = feed.mute,
                 onReadAll = { onReadAll(feed.url) },
-                onRefresh = { onRefresh(feed.url) },
+                onRefresh = { onRefresh(feed.url, it) },
                 onMuteChanged = { onMute(feed.url, it) },
                 onClear = { onClear(feed.url) },
                 onDelete = {
@@ -380,7 +385,7 @@ internal fun OptionArea(
     sortXmlArticlesOnUpdate: Boolean? = null,
     mute: Boolean? = null,
     onReadAll: () -> Unit,
-    onRefresh: () -> Unit,
+    onRefresh: (full: Boolean) -> Unit,
     onMuteChanged: ((Boolean) -> Unit)? = null,
     onMuteAll: ((Boolean) -> Unit)? = null,
     onClear: () -> Unit,
@@ -391,6 +396,7 @@ internal fun OptionArea(
     val context = LocalContext.current
     var openClearWarningDialog by rememberSaveable { mutableStateOf(false) }
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
+    var openRefreshDialog by rememberSaveable { mutableStateOf(false) }
 
     Text(
         text = stringResource(id = R.string.feed_options),
@@ -411,7 +417,8 @@ internal fun OptionArea(
         SheetChip(
             icon = Icons.Outlined.Refresh,
             text = stringResource(id = R.string.refresh),
-            onClick = onRefresh,
+            onClick = { onRefresh(false) },
+            onLongClick = { openRefreshDialog = true },
         )
         if (onMuteChanged != null && mute != null) {
             SheetChip(
@@ -483,6 +490,79 @@ internal fun OptionArea(
         onDismissRequest = { openDeleteWarningDialog = false },
         onDismiss = { openDeleteWarningDialog = false },
         onConfirm = { onDelete?.invoke() },
+    )
+
+    RefreshDialog(
+        visible = openRefreshDialog,
+        onDismissRequest = { openRefreshDialog = false },
+        onRefresh = onRefresh,
+    )
+}
+
+@Composable
+private fun RefreshDialog(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    onRefresh: (full: Boolean) -> Unit,
+) {
+    val context = LocalContext.current
+
+    val texts = remember {
+        listOf(
+            context.getString(R.string.feed_screen_incremental_refresh),
+            context.getString(R.string.feed_screen_full_refresh)
+        )
+    }
+    var currentIndex by rememberSaveable { mutableIntStateOf(0) }
+
+    PodAuraDialog(
+        visible = visible,
+        onDismissRequest = onDismissRequest,
+        icon = { Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null) },
+        title = { Text(text = stringResource(id = R.string.refresh)) },
+        selectable = false,
+        text = {
+            Column {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                ) {
+                    texts.forEachIndexed { index, text ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = texts.size,
+                            ),
+                            onClick = { currentIndex = index },
+                            selected = index == currentIndex
+                        ) {
+                            Text(text)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(22.dp))
+                Text(
+                    stringResource(
+                        if (currentIndex == 0) R.string.feed_screen_incremental_refresh_description
+                        else R.string.feed_screen_full_refresh_description
+                    )
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(R.string.cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onDismissRequest()
+                onRefresh(currentIndex == 1)
+            }) {
+                Text(text = stringResource(R.string.refresh))
+            }
+        },
     )
 }
 

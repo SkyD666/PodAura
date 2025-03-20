@@ -293,6 +293,7 @@
     <string name="file_picker_screen_pick">选择此文件夹</string>
     <string name="file_picker_screen_internal_storage">内部存储</string>
     <string name="media_screen_delete_file_warning">删除此文件？</string>
+    <string name="media_screen_delete_directory_warning">删除此文件夹及其内容？</string>
     <string name="media_options">选项</string>
     <string name="media_group">分组</string>
     <string name="media_screen_add_group">添加分组</string>
@@ -445,6 +446,10 @@
     <string name="delete_constraint_screen_options_tip">这些选项对自动删除功能无效</string>
     <string name="article_item_delete_warning">确定删除这篇文章？</string>
     <string name="article_screen_no_link_tip">此文章不含链接</string>
+    <string name="feed_screen_full_refresh">全量刷新</string>
+    <string name="feed_screen_full_refresh_description">全量刷新使用请求到的所有文章来更新本地数据，而不是仅仅添加新文章。\n\n如果订阅源未提供文章的 GUID 或 LINK 标签，文章可能会出现重复。</string>
+    <string name="feed_screen_incremental_refresh">增量刷新</string>
+    <string name="feed_screen_incremental_refresh_description">增量刷新使用比本地任何文章发布时间都新的文章来更新本地数据，较旧的缺失的文章不会被恢复。</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

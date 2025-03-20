@@ -47,7 +47,7 @@ class FeedRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
-) : BaseRepository() {
+) : BaseRepository(), IFeedRepository {
     fun allGroupCollapsed(): Flow<Boolean> = combine(
         groupDao.existsExpandedGroup(),
         appContext.dataStore.flowOf(FeedDefaultGroupExpandPreference),
@@ -102,7 +102,7 @@ class FeedRepository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun requestAllFeedList(): Flow<List<FeedBean>> = feedDao.getAllFeedList()
+    override fun requestAllFeedList(): Flow<List<FeedBean>> = feedDao.getAllFeedList()
         .map { list -> list.sortedBy { it.title } }
         .flowOn(Dispatchers.IO)
 
@@ -302,7 +302,7 @@ class FeedRepository @Inject constructor(
         emit(articleDao.readAllInFeed(feedUrl))
     }.flowOn(Dispatchers.IO)
 
-    fun muteFeed(feedUrl: String, mute: Boolean): Flow<Int> = flow {
+    override fun muteFeed(feedUrl: String, mute: Boolean): Flow<Int> = flow {
         emit(feedDao.muteFeed(feedUrl, mute))
     }.flowOn(Dispatchers.IO)
 

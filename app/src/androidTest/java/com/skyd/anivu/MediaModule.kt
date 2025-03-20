@@ -10,7 +10,7 @@ import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.anivu.model.db.AppDatabase
 import com.skyd.anivu.model.repository.FilePickerRepository
-import com.skyd.anivu.model.repository.MediaRepository
+import com.skyd.anivu.model.repository.media.MediaRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -249,7 +249,7 @@ class MediaModule {
         })
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         val displayName = ":/*-\\`~"
-        mediaRepository.setFileDisplayName(
+        mediaRepository.setDisplayName(
             MediaBean(file = file2, fileCount = 0, articleWithEnclosure = null, feedBean = null),
             displayName
         ).first()

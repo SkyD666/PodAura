@@ -8,7 +8,7 @@ import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
-import com.skyd.anivu.model.repository.MediaRepository
+import com.skyd.anivu.model.repository.media.IMediaRepository
 import com.skyd.downloader.Downloader
 import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
@@ -89,7 +89,7 @@ class DownloadManager private constructor(context: Context) {
         interface WorkerEntryPoint {
             val enclosureDao: EnclosureDao
             val articleDao: ArticleDao
-            val mediaRepository: MediaRepository
+            val mediaRepository: IMediaRepository
         }
 
         private val hiltEntryPoint = EntryPointAccessors.fromApplication(

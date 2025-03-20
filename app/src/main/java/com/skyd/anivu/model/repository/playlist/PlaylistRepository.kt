@@ -36,7 +36,7 @@ class PlaylistRepository @Inject constructor(
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,
     private val pagingConfig: PagingConfig,
-) : BaseRepository() {
+) : BaseRepository(), IPlaylistRepository {
     private suspend fun PlaylistViewBean.updateThumbnails() = apply {
         thumbnails = playlistMediaDao.getPlaylistMediaArticles(
             playlistId = playlist.playlistId,
@@ -44,11 +44,11 @@ class PlaylistRepository @Inject constructor(
         ).mapNotNull { it.getThumbnail() }
     }
 
-    fun requestPlaylist(playlistId: String): Flow<PlaylistViewBean> = flow {
+    override fun requestPlaylist(playlistId: String): Flow<PlaylistViewBean> = flow {
         emit(playlistDao.getPlaylistView(playlistId).updateThumbnails())
     }.flowOn(Dispatchers.IO)
 
-    fun requestPlaylistList(): Flow<PagingData<PlaylistViewBean>> {
+    override fun requestPlaylistList(): Flow<PagingData<PlaylistViewBean>> {
         return appContext.dataStore.flowOf(
             PlaylistSortByPreference, PlaylistSortAscPreference
         ).distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->

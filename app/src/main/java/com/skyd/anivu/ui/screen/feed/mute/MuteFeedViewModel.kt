@@ -3,7 +3,7 @@ package com.skyd.anivu.ui.screen.feed.mute
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.feed.FeedRepository
+import com.skyd.anivu.model.repository.feed.IFeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MuteFeedViewModel @Inject constructor(
-    private val feedRepo: FeedRepository,
+    private val feedRepo: IFeedRepository,
 ) : AbstractMviViewModel<MuteFeedIntent, MuteFeedState, MuteFeedEvent>() {
 
     override val viewState: StateFlow<MuteFeedState>

@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.EventListener
@@ -51,6 +54,8 @@ import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.TagText
+import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
+import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
 import java.util.Locale
@@ -61,6 +66,8 @@ fun Media1Item(
     onPlay: (MediaBean) -> Unit,
     onOpenDir: (MediaBean) -> Unit,
     onRemove: (MediaBean) -> Unit,
+    onOpenFeed: ((MediaBean) -> Unit)?,
+    onOpenArticle: ((MediaBean) -> Unit)?,
     onLongClick: ((MediaBean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -101,50 +108,12 @@ fun Media1Item(
             .padding(horizontal = 13.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        MediaCover(
+            data = data,
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
                 .size(50.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            var showThumbnail by remember(data) { mutableStateOf(true) }
-            val fileIcon = @Composable {
-                Icon(
-                    modifier = Modifier.size(25.dp),
-                    painter = painterResource(id = data.icon),
-                    contentDescription = null
-                )
-            }
-            val articleWithEnclosure = data.articleWithEnclosure
-            val feed = data.feedBean
-            val image = articleWithEnclosure?.media?.image ?: feed?.icon ?: data.file.path
-            if (image != null && LocalMediaShowThumbnail.current) {
-                if (showThumbnail) {
-                    PodAuraImage(
-                        modifier = Modifier.fillMaxSize(),
-                        model = remember(image) {
-                            ImageRequest.Builder(context)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .memoryCachePolicy(CachePolicy.ENABLED)
-                                .data(image)
-                                .crossfade(true)
-                                .build()
-                        },
-                        imageLoader = rememberPodAuraImageLoader(listener = object :
-                            EventListener() {
-                            override fun onError(request: ImageRequest, result: ErrorResult) {
-                                showThumbnail = false
-                            }
-                        }),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    fileIcon()
-                }
-            } else {
-                fileIcon()
-            }
-        }
+        )
         Spacer(modifier = Modifier.width(11.dp))
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -195,55 +164,111 @@ fun Media1Item(
                     )
                 }
             }
-
-            DropdownMenu(
+            Menu(
                 expanded = expandMenu,
                 onDismissRequest = { expandMenu = false },
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(id = R.string.open_with)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        data.file
-                            .toUri(context)
-                            .openWith(context)
-                        expandMenu = false
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(id = R.string.share)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        data.file.toUri(context).share(context)
-                        expandMenu = false
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(id = R.string.remove)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        onRemove(data)
-                        expandMenu = false
-                    },
-                )
-            }
+                data = data,
+                onRemove = onRemove,
+                onOpenFeed = onOpenFeed,
+                onOpenArticle = onOpenArticle,
+            )
         }
     }
+}
+
+@Composable
+private fun Menu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    data: MediaBean,
+    onRemove: (MediaBean) -> Unit,
+    onOpenFeed: ((MediaBean) -> Unit)?,
+    onOpenArticle: ((MediaBean) -> Unit)?,
+) {
+    val context = LocalContext.current
+    var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+    ) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(id = R.string.open_with)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                data.file
+                    .toUri(context)
+                    .openWith(context)
+                onDismissRequest()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(id = R.string.share)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Share,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                data.file.toUri(context).share(context)
+                onDismissRequest()
+            },
+        )
+        if (onOpenFeed != null) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.feed_screen_name)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.RssFeed,
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    onOpenFeed(data)
+                    onDismissRequest()
+                },
+            )
+        }
+        if (onOpenArticle != null) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.read_screen_name)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.Article,
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    onOpenArticle(data)
+                    onDismissRequest()
+                },
+            )
+        }
+        HorizontalDivider()
+        DropdownMenuDeleteItem(
+            onClick = {
+                openDeleteWarningDialog = true
+                onDismissRequest()
+            }
+        )
+    }
+
+    DeleteWarningDialog(
+        visible = openDeleteWarningDialog,
+        text = stringResource(
+            if (data.isFile) R.string.media_screen_delete_file_warning
+            else R.string.media_screen_delete_directory_warning
+        ),
+        onDismissRequest = { openDeleteWarningDialog = false },
+        onDismiss = { openDeleteWarningDialog = false },
+        onConfirm = { onRemove(data) },
+    )
 }
 
 @Composable
@@ -261,6 +286,50 @@ private fun MediaFolderNumberBadge(mediaBean: MediaBean) {
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25.dp) {
+    val context = LocalContext.current
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        var showThumbnail by remember(data) { mutableStateOf(true) }
+        val fileIcon = @Composable {
+            Icon(
+                modifier = Modifier.size(iconSize),
+                painter = painterResource(id = data.icon),
+                contentDescription = null
+            )
+        }
+        if (data.cover != null && LocalMediaShowThumbnail.current) {
+            if (showThumbnail) {
+                PodAuraImage(
+                    modifier = Modifier.fillMaxSize(),
+                    model = remember(data.cover) {
+                        ImageRequest.Builder(context)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .data(data.cover)
+                            .crossfade(true)
+                            .build()
+                    },
+                    imageLoader = rememberPodAuraImageLoader(listener = object :
+                        EventListener() {
+                        override fun onError(request: ImageRequest, result: ErrorResult) {
+                            showThumbnail = false
+                        }
+                    }),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                fileIcon()
+            }
+        } else {
+            fileIcon()
         }
     }
 }

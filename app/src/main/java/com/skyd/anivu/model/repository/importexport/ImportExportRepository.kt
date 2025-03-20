@@ -19,6 +19,7 @@ import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupWithFeedBean
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
+import com.skyd.anivu.model.repository.importexport.IImportRepository.ImportOpmlResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -34,7 +35,7 @@ import kotlin.time.measureTime
 class ImportExportRepository @Inject constructor(
     private val feedDao: FeedDao,
     private val groupDao: GroupDao,
-) : BaseRepository() {
+) : BaseRepository(), IImportRepository, IExportRepository {
     private fun groupWithFeedsWithoutDefaultGroup(): Flow<List<GroupWithFeedBean>> =
         groupDao.getGroupWithFeeds().flowOn(Dispatchers.IO)
 
@@ -43,7 +44,7 @@ class ImportExportRepository @Inject constructor(
             feedDao.getFeedsNotInGroup(groupIds)
         }.flowOn(Dispatchers.IO)
 
-    fun importOpmlMeasureTime(
+    override fun importOpmlMeasureTime(
         opmlUri: Uri,
         strategy: ImportOpmlConflictStrategy,
     ): Flow<ImportOpmlResult> = flow {
@@ -67,11 +68,6 @@ class ImportExportRepository @Inject constructor(
             )
         )
     }.flowOn(Dispatchers.IO)
-
-    data class ImportOpmlResult(
-        val time: Long,
-        val importedFeedCount: Int,
-    )
 
     private fun parseOpml(inputStream: InputStream): List<OpmlGroupWithFeed> {
         fun MutableList<OpmlGroupWithFeed>.addGroup(group: GroupVo) = add(
@@ -138,12 +134,7 @@ class ImportExportRepository @Inject constructor(
         return groupWithFeedList
     }
 
-    data class OpmlGroupWithFeed(
-        val group: GroupVo,
-        val feeds: MutableList<FeedBean>,
-    )
-
-    fun exportOpmlMeasureTime(outputDir: Uri): Flow<Long> = flow {
+    override fun exportOpmlMeasureTime(outputDir: Uri): Flow<Long> = flow {
         emit(measureTime { exportOpml(outputDir) }.inWholeMilliseconds)
     }.flowOn(Dispatchers.IO)
 

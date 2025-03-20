@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -37,7 +36,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -87,6 +85,7 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionP
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
+import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
@@ -521,23 +520,11 @@ private fun ArticleMenu(
             },
         )
         HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.delete)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = null,
-                )
-            },
+        DropdownMenuDeleteItem(
             onClick = {
                 openDeleteWarningDialog = true
                 onDismissRequest()
-            },
-            colors = MenuDefaults.itemColors(
-                textColor = MaterialTheme.colorScheme.error,
-                leadingIconColor = MaterialTheme.colorScheme.error,
-                trailingIconColor = MaterialTheme.colorScheme.error,
-            ),
+            }
         )
     }
     if (openDeleteWarningDialog) {

@@ -300,6 +300,7 @@
     <string name="file_picker_screen_pick">Pick this folder</string>
     <string name="file_picker_screen_internal_storage">Internal storage</string>
     <string name="media_screen_delete_file_warning">Delete this file?</string>
+    <string name="media_screen_delete_directory_warning">Delete this directory with its contents?</string>
     <string name="media_options">Options</string>
     <string name="media_group">Group</string>
     <string name="media_screen_add_group">Add group</string>
@@ -452,6 +453,10 @@
     <string name="delete_constraint_screen_options_tip">These options do NOT valid for the auto delete feature</string>
     <string name="article_item_delete_warning">Sure to delete this article?</string>
     <string name="article_screen_no_link_tip">This article does not contain a link</string>
+    <string name="feed_screen_full_refresh">Full refresh</string>
+    <string name="feed_screen_full_refresh_description">Full refresh updates local data with all the fetched articles instead of just adding new ones. \n\nNote that if the feed does not provide the article\'s GUID or LINK tag, duplicate articles may occur.</string>
+    <string name="feed_screen_incremental_refresh">Inc refresh</string>
+    <string name="feed_screen_incremental_refresh_description">Incremental refresh updates local data with articles newer than any locally stored article. Older missing articles will not be restored.</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

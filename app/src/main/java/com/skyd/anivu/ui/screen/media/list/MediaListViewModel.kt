@@ -3,7 +3,7 @@ package com.skyd.anivu.ui.screen.media.list
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.MediaRepository
+import com.skyd.anivu.model.repository.media.IMediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MediaListViewModel @Inject constructor(
-    private val mediaRepo: MediaRepository
+    private val mediaRepo: IMediaRepository
 ) : AbstractMviViewModel<MediaListIntent, MediaListState, MediaListEvent>() {
 
     override val viewState: StateFlow<MediaListState>
@@ -90,7 +90,7 @@ class MediaListViewModel @Inject constructor(
                     .catchMap { MediaListPartialStateChange.RenameFileResult.Failed(it.message.toString()) }
             },
             filterIsInstance<MediaListIntent.SetFileDisplayName>().flatMapConcat { intent ->
-                mediaRepo.setFileDisplayName(intent.media, intent.displayName).map {
+                mediaRepo.setDisplayName(intent.media, intent.displayName).map {
                     MediaListPartialStateChange.SetFileDisplayNameResult.Success(
                         media = intent.media, displayName = intent.displayName
                     )

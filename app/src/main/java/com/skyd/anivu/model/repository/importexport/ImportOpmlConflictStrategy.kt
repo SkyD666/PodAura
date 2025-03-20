@@ -15,10 +15,10 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
     suspend fun handle(
         groupDao: GroupDao,
         feedDao: FeedDao,
-        opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+        opmlGroupWithFeed: OpmlGroupWithFeed,
     ): Int
 
-    fun checkOpmlGroupWithFeedFormat(opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed) {
+    fun checkOpmlGroupWithFeedFormat(opmlGroupWithFeed: OpmlGroupWithFeed) {
         opmlGroupWithFeed.feeds.forEach {
             check(it.url.isNotBlank()) { "Feed's URL is blank: Feed title: ${it.title}" }
         }
@@ -56,7 +56,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         override suspend fun handle(
             groupDao: GroupDao,
             feedDao: FeedDao,
-            opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+            opmlGroupWithFeed: OpmlGroupWithFeed,
         ): Int {
             checkOpmlGroupWithFeedFormat(opmlGroupWithFeed)
 
@@ -83,7 +83,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         override suspend fun handle(
             groupDao: GroupDao,
             feedDao: FeedDao,
-            opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+            opmlGroupWithFeed: OpmlGroupWithFeed,
         ): Int {
             checkOpmlGroupWithFeedFormat(opmlGroupWithFeed)
 

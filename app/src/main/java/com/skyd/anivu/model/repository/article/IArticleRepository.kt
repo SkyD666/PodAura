@@ -8,9 +8,10 @@ interface IArticleRepository {
     fun refreshArticleList(
         feedUrls: List<String>,
         groupIds: List<String?> = emptyList(),
+        full: Boolean,
     ): Flow<Unit>
 
-    fun refreshGroupArticles(groupId: String?): Flow<Unit>
+    fun refreshGroupArticles(groupId: String?, full: Boolean): Flow<Unit>
 
     fun readArticle(articleId: String, read: Boolean): Flow<Unit>
 
