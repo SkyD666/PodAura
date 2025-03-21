@@ -168,6 +168,7 @@
     <string name="behavior_screen_article_swipe_right_action">右滑</string>
     <string name="to_top">到頂部</string>
     <string name="default_feed_group">預設</string>
+    <string name="default_media_group">預設</string>
     <string name="feed_group">分組</string>
     <string name="feed_screen_add_group">新增分組</string>
     <string name="feed_screen_group_feeds_move_to">移動到組</string>
@@ -225,6 +226,7 @@
     <string name="import_opml_conflict_strategy_replace">替換</string>
     <string name="import_opml_conflict_strategy_skip">跳過</string>
     <string name="import_opml_screen_opml_not_selected">請選擇一個 OPML 文件</string>
+    <string name="data_screen_sync_category">同步</string>
     <string name="import_export_screen_description">透過 OPML 檔案匯入和匯出 RSS 資料</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">添加音頻文件</string>
@@ -277,6 +279,22 @@
     <string name="article_action_switch_read_state">切換已讀狀態</string>
     <string name="article_action_switch_favorite_state">切換收藏狀態</string>
     <string name="none">無</string>
+    <string name="data_screen_media_lib_category">媒體庫</string>
+    <string name="data_screen_media_lib_location">儲存位置</string>
+    <string name="storage_permission_request_screen_first_tip">資源下載和媒體瀏覽需要儲存權限，請授予權限。</string>
+    <string name="storage_permission_request_screen_rationale">沒有儲存權限，應用程式無法啟動，請授予權限</string>
+    <string name="storage_permission_request_screen_title">PodAura 需要儲存存取權限</string>
+    <string name="storage_permission_request_screen_request_permission">要求權限</string>
+    <string name="file_picker_screen_pick">文件選擇器</string>
+    <string name="file_picker_screen_internal_storage">內部儲存空間</string>
+    <string name="media_screen_delete_file_warning">刪除此檔案？</string>
+    <string name="media_options">選項</string>
+    <string name="media_group">分組</string>
+    <string name="media_screen_add_group">新增分組</string>
+    <string name="media_screen_group_media_move_to">移動</string>
+    <string name="media_screen_delete_group_warning">刪除“%s”分組及其所有檔案</string>
+    <string name="min_width_dp">最小寬度 (dp)</string>
+    <string name="search_style_screen_search_item_category">搜尋項</string>
     <plurals name="import_opml_result">
         <item quantity="other">匯入 %d 項, 耗時 %.2f 秒</item>
     </plurals>
