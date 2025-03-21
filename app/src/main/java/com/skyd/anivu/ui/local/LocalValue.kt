@@ -62,6 +62,7 @@ import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.PlayerAutoPipPreference
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
+import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
@@ -170,6 +171,7 @@ val LocalPlayerMaxCacheSize = compositionLocalOf { PlayerMaxCacheSizePreference.
 val LocalPlayerMaxBackCacheSize = compositionLocalOf { PlayerMaxBackCacheSizePreference.default }
 val LocalPlayerSeekOption = compositionLocalOf { PlayerSeekOptionPreference.default }
 val LocalBackgroundPlay = compositionLocalOf { BackgroundPlayPreference.default }
+val LocalPlayerLoopMode = compositionLocalOf { PlayerLoopModePreference.default }
 
 // Data
 val LocalUseAutoDelete = compositionLocalOf { UseAutoDeletePreference.default }

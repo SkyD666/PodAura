@@ -66,6 +66,7 @@ import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.PlayerAutoPipPreference
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
+import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
@@ -132,6 +133,7 @@ import com.skyd.anivu.ui.local.LocalParseLinkTagAsEnclosure
 import com.skyd.anivu.ui.local.LocalPickImageMethod
 import com.skyd.anivu.ui.local.LocalPlayerAutoPip
 import com.skyd.anivu.ui.local.LocalPlayerDoubleTap
+import com.skyd.anivu.ui.local.LocalPlayerLoopMode
 import com.skyd.anivu.ui.local.LocalPlayerMaxBackCacheSize
 import com.skyd.anivu.ui.local.LocalPlayerMaxCacheSize
 import com.skyd.anivu.ui.local.LocalPlayerSeekOption
@@ -232,6 +234,7 @@ data class Settings(
     val playerMaxBackCacheSize: Long = PlayerMaxBackCacheSizePreference.default,
     val playerSeekOption: String = PlayerSeekOptionPreference.default,
     val backgroundPlay: Boolean = BackgroundPlayPreference.default,
+    val playerLoopMode: String = PlayerLoopModePreference.default,
     // Data
     val useAutoDelete: Boolean = UseAutoDeletePreference.default,
     val autoDeleteArticleUseBefore: Boolean = AutoDeleteArticleUseBeforePreference.default,
@@ -330,6 +333,7 @@ fun SettingsProvider(
         LocalPlayerMaxBackCacheSize provides settings.playerMaxBackCacheSize,
         LocalPlayerSeekOption provides settings.playerSeekOption,
         LocalBackgroundPlay provides settings.backgroundPlay,
+        LocalPlayerLoopMode provides settings.playerLoopMode,
         // Data
         LocalUseAutoDelete provides settings.useAutoDelete,
         LocalAutoDeleteArticleUseBefore provides settings.autoDeleteArticleUseBefore,

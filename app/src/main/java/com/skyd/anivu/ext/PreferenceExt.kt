@@ -61,6 +61,7 @@ import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.PlayerAutoPipPreference
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
+import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
@@ -151,6 +152,7 @@ fun Preferences.toSettings(): Settings {
         playerMaxBackCacheSize = PlayerMaxBackCacheSizePreference.fromPreferences(this),
         playerSeekOption = PlayerSeekOptionPreference.fromPreferences(this),
         backgroundPlay = BackgroundPlayPreference.fromPreferences(this),
+        playerLoopMode = PlayerLoopModePreference.fromPreferences(this),
 
         // Data
         useAutoDelete = UseAutoDeletePreference.fromPreferences(this),

@@ -280,7 +280,6 @@
     <string name="article_action_switch_favorite_state">切換收藏狀態</string>
     <string name="none">無</string>
     <string name="data_screen_media_lib_category">媒體庫</string>
-    <string name="data_screen_media_lib_location">儲存位置</string>
     <string name="storage_permission_request_screen_first_tip">資源下載和媒體瀏覽需要儲存權限，請授予權限。</string>
     <string name="storage_permission_request_screen_rationale">沒有儲存權限，應用程式無法啟動，請授予權限</string>
     <string name="storage_permission_request_screen_title">PodAura 需要儲存存取權限</string>

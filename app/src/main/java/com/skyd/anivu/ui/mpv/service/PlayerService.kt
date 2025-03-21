@@ -16,8 +16,11 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
+import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.repository.player.IPlayerRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.anivu.ui.mpv.LoopMode
@@ -82,13 +85,14 @@ class PlayerService : Service() {
                     sendEvent(PlayerEvent.AllAudioTracks(player.audioTrack))
                 }
 
-                "loop-file", "loop-playlist" -> sendEvent(
-                    PlayerEvent.Loop(
-                        if (player.loopPlaylist) LoopMode.LoopPlaylist
-                        else if (player.loopOne) LoopMode.LoopFile
-                        else LoopMode.None
-                    )
-                )
+                "loop-file", "loop-playlist" -> {
+                    val mode = if (player.loopPlaylist) LoopMode.LoopPlaylist
+                    else if (player.loopOne) LoopMode.LoopFile
+                    else LoopMode.None
+
+                    sendEvent(PlayerEvent.Loop(mode))
+                    PlayerLoopModePreference.put(this@PlayerService, scope, mode)
+                }
 
                 "metadata" -> {
                     sendEvent(PlayerEvent.Artist(player.artist))
@@ -210,6 +214,8 @@ class PlayerService : Service() {
 
         addObserver(sessionManager)
         MPVLib.addObserver(mpvObserver)
+
+        initPlayer()
     }
 
     override fun onDestroy() {
@@ -224,6 +230,10 @@ class PlayerService : Service() {
 
         unregisterReceiver(playerNotificationReceiver)
         super.onDestroy()
+    }
+
+    private fun initPlayer() {
+        loop(PlayerLoopModePreference.toLoopMode(dataStore.getOrDefault(PlayerLoopModePreference)))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -310,14 +320,18 @@ class PlayerService : Service() {
             is PlayerCommand.Shuffle -> shuffle(command.shuffle)
             is PlayerCommand.CycleLoop -> {
                 val entries = LoopMode.entries
-                when (entries[(playerState.value.loop.ordinal + 1) % entries.size]) {
-                    LoopMode.LoopPlaylist -> loopPlaylist()
-                    LoopMode.LoopFile -> loopFile()
-                    LoopMode.None -> loopNo()
-                }
+                loop(entries[(playerState.value.loop.ordinal + 1) % entries.size])
             }
 
             is PlayerCommand.PlayFileInPlaylist -> playFileInPlaylist(command.path)
+        }
+    }
+
+    private fun loop(mode: LoopMode) {
+        when (mode) {
+            LoopMode.LoopPlaylist -> player.loopPlaylist()
+            LoopMode.LoopFile -> player.loopFile()
+            LoopMode.None -> player.loopNo()
         }
     }
 
