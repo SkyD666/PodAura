@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">订阅</string>
-    <string name="media_screen_name">媒体库</string>
+    <string name="media_screen_name">媒体</string>
     <string name="more_screen_name">更多</string>
     <string name="add">添加</string>
     <string name="feed_screen_rss_url">RSS 订阅链接</string>
@@ -74,7 +74,7 @@
     <string name="clear">清除</string>
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">配置 RSS 同步、解析规则等</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure">link 标签为附件</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure">解析 Link 为附件</string>
     <string name="rss_config_screen_parse_link_tag_as_enclosure_description">将 link 标签显示为附件</string>
     <string name="rss_config_screen_parse_category">解析</string>
     <string name="transmission_screen_name">传输</string>
@@ -304,7 +304,7 @@
     <string name="empty_tip_1">空空如也~</string>
     <string name="sub_media_screen_path_illegal">非法媒体</string>
     <string name="player_config_screen_auto_pip">自动画中画</string>
-    <string name="player_config_screen_auto_pip_description">当回到桌面或显示最近任务时，切换到画中画模式</string>
+    <string name="player_config_screen_auto_pip_description">如果按下主页或最近任务按钮，则切换到画中画模式</string>
     <string name="player_picture_in_picture">画中画</string>
     <string name="open_file">打开文件</string>
     <string name="feed_screen_sort_xml_articles_on_update">排序刷新</string>
@@ -372,7 +372,7 @@
     <string name="feed_number_badge_unread">未读</string>
     <string name="feed_number_badge_all">所有</string>
     <string name="feed_style_screen_number_badge">文章数指示类型</string>
-    <string name="feed_number_badge_unread_all">未读与所有</string>
+    <string name="feed_number_badge_unread_all"><![CDATA[未读与所有]]></string>
     <string name="media_screen_style">样式</string>
     <string name="media_display_filter_video">视频</string>
     <string name="media_display_filter_audio">音频</string>
