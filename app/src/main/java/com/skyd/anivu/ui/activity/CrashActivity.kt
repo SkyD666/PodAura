@@ -2,7 +2,6 @@ package com.skyd.anivu.ui.activity
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -34,24 +33,21 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.skyd.anivu.R
 import com.skyd.anivu.config.Const.GITHUB_NEW_ISSUE_URL
+import com.skyd.anivu.ext.copy
 import com.skyd.anivu.ext.getAppVersionCode
 import com.skyd.anivu.ext.getAppVersionName
 import com.skyd.anivu.ext.openBrowser
-import com.skyd.anivu.ext.showSnackbar
 import com.skyd.anivu.model.preference.SettingsProvider
 import com.skyd.anivu.ui.local.LocalDarkMode
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
-import com.skyd.anivu.ui.theme.AniVuTheme
+import com.skyd.anivu.ui.theme.PodAuraTheme
 
 
 /**
@@ -70,8 +66,8 @@ class CrashActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         val crashInfo = intent.getStringExtra(CRASH_INFO)
         val message = buildString {
@@ -90,11 +86,11 @@ class CrashActivity : ComponentActivity() {
                 LocalWindowSizeClass provides calculateWindowSizeClass(this)
             ) {
                 SettingsProvider {
-                    AniVuTheme(darkTheme = LocalDarkMode.current) {
+                    PodAuraTheme(darkTheme = LocalDarkMode.current) {
                         CrashScreen(
                             message = message,
                             onReport = {
-                                Uri.parse(GITHUB_NEW_ISSUE_URL).openBrowser(this)
+                                GITHUB_NEW_ISSUE_URL.toUri().openBrowser(this)
                             }
                         )
                     }
@@ -111,8 +107,6 @@ private fun CrashScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val clipboardManager = LocalClipboardManager.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -138,20 +132,14 @@ private fun CrashScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = {
-                    copyToClipboard(message, clipboardManager)
-                    snackbarHostState.showSnackbar(
-                        scope = scope,
-                        message = context.getString(R.string.copied),
-                    )
-                }) {
+                TextButton(onClick = { message.copy(context) }) {
                     Text(text = stringResource(id = R.string.crash_screen_copy_crash_log))
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Button(onClick = {
-                    copyToClipboard(message, clipboardManager)
+                    message.copy(context)
                     onReport()
                 }) {
                     Text(text = stringResource(id = R.string.submit_an_issue_on_github))
@@ -170,8 +158,4 @@ private fun CrashScreen(
             }
         }
     }
-}
-
-private fun copyToClipboard(text: String, clipboardManager: ClipboardManager) {
-    clipboardManager.setText(AnnotatedString(text))
 }

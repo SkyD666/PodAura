@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.util.debug
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
@@ -19,10 +20,9 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.LazyThreadSafetyMode.PUBLICATION
@@ -66,7 +66,7 @@ abstract class AbstractMviViewModel<I : MviIntent, S : MviViewState, E : MviSing
     }
 
     private val eventChannel = Channel<E>(Channel.UNLIMITED)
-    private val intentMutableFlow = MutableSharedFlow<I>(extraBufferCapacity = 2)
+    private val intentMutableFlow = MutableSharedFlow<I>(extraBufferCapacity = Int.MAX_VALUE)
 
     final override val singleEvent: Flow<E> = eventChannel.receiveAsFlow()
 
@@ -88,7 +88,7 @@ abstract class AbstractMviViewModel<I : MviIntent, S : MviViewState, E : MviSing
     // Send event and access intent flow.
 
     /**
-     * Must be called in [kotlinx.coroutines.Dispatchers.Main.immediate],
+     * Must be called in [MainCoroutineDispatcher.immediate],
      * otherwise it will throw an exception.
      *
      * If you want to send an event from other [kotlinx.coroutines.CoroutineDispatcher],
@@ -100,15 +100,19 @@ abstract class AbstractMviViewModel<I : MviIntent, S : MviViewState, E : MviSing
 
         eventChannel.trySend(event)
             .onSuccess { debug { Log.i(logTag, "sendEvent: event=$event") } }
-            .onFailure {
-                debug { Log.e(logTag, "$it. Failed to send event: $event") }
-            }
+            .onFailure { debug { Log.e(logTag, "$it. Failed to send event: $event") } }
             .getOrThrow()
     }
 
-    protected val intentSharedFlow: SharedFlow<I> get() = intentMutableFlow
+    protected val intentFlow: Flow<I> get() = intentMutableFlow.asSharedFlow()
 
     // Extensions on Flow using viewModelScope.
+
+    protected fun Flow<S>.toState(initialValue: S) = stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        initialValue
+    )
 
     protected fun <T> Flow<T>.debugLog(subject: String): Flow<T> =
         if (BuildConfig.DEBUG) {
@@ -136,24 +140,6 @@ abstract class AbstractMviViewModel<I : MviIntent, S : MviViewState, E : MviSing
         } else {
             this
         }
-
-    /**
-     * Share the flow in [viewModelScope],
-     * start when the first subscriber arrives,
-     * and stop when the last subscriber leaves.
-     */
-    protected fun <T> Flow<T>.shareWhileSubscribed(): SharedFlow<T> =
-        shareIn(viewModelScope, SharingStarted.WhileSubscribed())
-
-    protected fun <T> Flow<T>.stateWithInitialNullWhileSubscribed(): StateFlow<T?> =
-        stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
-
-    @Deprecated(
-        message = "This Flow is already shared in viewModelScope, so you don't need to share it again.",
-        replaceWith = ReplaceWith("this"),
-        level = DeprecationLevel.ERROR
-    )
-    protected fun <T> SharedFlow<T>.shareWhileSubscribed(): SharedFlow<T> = this
 
     private companion object {
         private const val MAX_TAG_LENGTH = 23

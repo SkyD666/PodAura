@@ -29,6 +29,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -44,6 +45,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.ext.alwaysLight
+import com.skyd.anivu.ext.thenIf
 import java.util.Locale
 
 val LocalUseColorfulIcon = compositionLocalOf { false }
@@ -137,11 +139,11 @@ fun SliderSettingsItem(
 
 @Composable
 fun SwitchSettingsItem(
-    imageVector: ImageVector?,
+    checked: Boolean,
     text: String,
+    imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    checked: Boolean = false,
     enabled: Boolean = true,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
@@ -158,11 +160,11 @@ fun SwitchSettingsItem(
 
 @Composable
 fun SwitchSettingsItem(
-    painter: Painter?,
+    checked: Boolean,
     text: String,
+    painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    checked: Boolean = false,
     enabled: Boolean = true,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
@@ -187,6 +189,69 @@ fun SwitchSettingsItem(
             onCheckedChange = onCheckedChange,
             interactionSource = interactionSource
         )
+    }
+}
+
+
+@Composable
+fun SwitchBaseSettingsItem(
+    checked: Boolean,
+    text: String,
+    imageVector: ImageVector?,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
+    onCheckedChange: ((Boolean) -> Unit)?,
+) {
+    SwitchBaseSettingsItem(
+        checked = checked,
+        text = text,
+        painter = imageVector?.let { rememberVectorPainter(image = it) },
+        modifier = modifier,
+        description = description,
+        enabled = enabled,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        extraContent = extraContent,
+        onCheckedChange = onCheckedChange,
+    )
+}
+
+@Composable
+fun SwitchBaseSettingsItem(
+    checked: Boolean,
+    text: String,
+    painter: Painter?,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    enabled: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
+    onCheckedChange: ((Boolean) -> Unit)?,
+) {
+    BaseSettingsItem(
+        modifier = modifier,
+        icon = painter,
+        text = text,
+        descriptionText = description,
+        enabled = enabled,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        extraContent = extraContent,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            VerticalDivider(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Switch(
+                checked = checked,
+                enabled = enabled,
+                onCheckedChange = onCheckedChange,
+            )
+        }
     }
 }
 
@@ -303,7 +368,7 @@ fun BaseSettingsItem(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    dropdownMenu: (@Composable () -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null,
 ) {
     BaseSettingsItem(
@@ -323,7 +388,7 @@ fun BaseSettingsItem(
         enabled = enabled,
         onClick = if (enabled) onClick else null,
         onLongClick = if (enabled) onLongClick else null,
-        dropdownMenu = dropdownMenu,
+        extraContent = extraContent,
         content = content,
     )
 }
@@ -337,7 +402,7 @@ fun BaseSettingsItem(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
-    dropdownMenu: (@Composable () -> Unit)? = null,
+    extraContent: (@Composable () -> Unit)? = null,
     content: (@Composable () -> Unit)? = null
 ) {
     CompositionLocalProvider(
@@ -350,10 +415,8 @@ fun BaseSettingsItem(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .run {
-                    if (onClick != null && enabled) {
-                        combinedClickable(onLongClick = onLongClick) { onClick() }
-                    } else this
+                .thenIf(onClick != null && enabled) {
+                    combinedClickable(onLongClick = onLongClick) { onClick!!() }
                 }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -388,7 +451,7 @@ fun BaseSettingsItem(
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
-                dropdownMenu?.invoke()
+                extraContent?.invoke()
                 if (description != null) {
                     Box(modifier = Modifier.padding(top = 4.dp)) {
                         description.invoke()

@@ -3,7 +3,7 @@ package com.skyd.anivu.model.repository.importexport
 import android.os.Parcelable
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
-import com.skyd.anivu.model.bean.GroupBean
+import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import kotlinx.parcelize.Parcelize
@@ -15,10 +15,10 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
     suspend fun handle(
         groupDao: GroupDao,
         feedDao: FeedDao,
-        opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+        opmlGroupWithFeed: OpmlGroupWithFeed,
     ): Int
 
-    fun checkOpmlGroupWithFeedFormat(opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed) {
+    fun checkOpmlGroupWithFeedFormat(opmlGroupWithFeed: OpmlGroupWithFeed) {
         opmlGroupWithFeed.feeds.forEach {
             check(it.url.isNotBlank()) { "Feed's URL is blank: Feed title: ${it.title}" }
         }
@@ -29,17 +29,18 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
      *
      * @return groupId. return null if the group is default group.
      */
-    suspend fun addOrMergeGroup(groupDao: GroupDao, group: GroupBean): String? {
-        if (group.groupId == GroupBean.DEFAULT_GROUP_ID) {
+    suspend fun addOrMergeGroup(groupDao: GroupDao, group: GroupVo): String? {
+        if (group.groupId == GroupVo.DEFAULT_GROUP_ID) {
             return null
         }
         var groupId = UUID.randomUUID().toString()
         if (groupDao.containsByName(group.name) == 0) {
             groupDao.setGroup(
-                GroupBean(
+                GroupVo(
                     groupId = groupId,
                     name = group.name,
-                )
+                    isExpanded = true,
+                ).toPo(orderPosition = groupDao.getMaxOrder() + GroupDao.ORDER_DELTA)
             )
         } else {
             groupId = groupDao.queryGroupIdByName(group.name)
@@ -55,7 +56,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         override suspend fun handle(
             groupDao: GroupDao,
             feedDao: FeedDao,
-            opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+            opmlGroupWithFeed: OpmlGroupWithFeed,
         ): Int {
             checkOpmlGroupWithFeedFormat(opmlGroupWithFeed)
 
@@ -82,7 +83,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         override suspend fun handle(
             groupDao: GroupDao,
             feedDao: FeedDao,
-            opmlGroupWithFeed: ImportExportRepository.OpmlGroupWithFeed,
+            opmlGroupWithFeed: OpmlGroupWithFeed,
         ): Int {
             checkOpmlGroupWithFeedFormat(opmlGroupWithFeed)
 

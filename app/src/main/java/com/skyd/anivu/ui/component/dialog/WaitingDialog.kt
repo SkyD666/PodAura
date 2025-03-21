@@ -92,7 +92,7 @@ fun WaitingDialog(
     icon: @Composable (() -> Unit)? = { CircularProgressIndicator() },
     text: @Composable (() -> Unit)? = null,
 ) {
-    AniVuDialog(
+    PodAuraDialog(
         visible = visible,
         onDismissRequest = { },
         icon = icon,

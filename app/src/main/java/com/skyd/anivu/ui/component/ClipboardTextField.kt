@@ -25,7 +25,8 @@ fun ClipboardTextField(
     value: String = "",
     label: String = "",
     maxLines: Int = Int.MAX_VALUE,
-    style: AniVuTextFieldStyle = AniVuTextFieldStyle.toEnum(LocalTextFieldStyle.current),
+    singleLine: Boolean = maxLines == 1,
+    style: PodAuraTextFieldStyle = PodAuraTextFieldStyle.toEnum(LocalTextFieldStyle.current),
     autoRequestFocus: Boolean = true,
     onValueChange: (String) -> Unit = {},
     placeholder: String = "",
@@ -33,17 +34,19 @@ fun ClipboardTextField(
     isPassword: Boolean = false,
     errorText: String = "",
     imeAction: ImeAction = ImeAction.Done,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = imeAction),
     keyboardAction: (KeyboardActionScope.(focusManager: FocusManager?, value: String) -> Unit)? = null,
     focusManager: FocusManager? = null,
     onConfirm: (String) -> Unit = {},
 ) {
     Column {
-        AniVuTextField(
+        PodAuraTextField(
             modifier = modifier,
             readOnly = readOnly,
             value = value,
             label = label,
             maxLines = maxLines,
+            singleLine = singleLine,
             style = style,
             autoRequestFocus = autoRequestFocus,
             onValueChange = onValueChange,
@@ -89,9 +92,7 @@ fun ClipboardTextField(
                     }
                 } else null,
             ),
-            keyboardOptions = KeyboardOptions(
-                imeAction = imeAction
-            ),
+            keyboardOptions = keyboardOptions,
         )
         if (errorText.isNotEmpty()) {
             SelectionContainer {

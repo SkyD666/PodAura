@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.component.dialog
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -12,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import com.skyd.anivu.R
-import com.skyd.anivu.ui.component.AniVuTextFieldStyle
+import com.skyd.anivu.ui.component.PodAuraTextFieldStyle
 import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.DefaultTrailingIcon
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
@@ -23,7 +24,8 @@ fun TextFieldDialog(
     visible: Boolean = true,
     readOnly: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
-    style: AniVuTextFieldStyle = AniVuTextFieldStyle.toEnum(LocalTextFieldStyle.current),
+    singleLine: Boolean = maxLines == 1,
+    style: PodAuraTextFieldStyle = PodAuraTextFieldStyle.toEnum(LocalTextFieldStyle.current),
     icon: @Composable (() -> Unit)? = null,
     titleText: String? = null,
     value: String = "",
@@ -33,17 +35,19 @@ fun TextFieldDialog(
     errorText: String = "",
     dismissText: String = stringResource(R.string.cancel),
     confirmText: String = stringResource(R.string.ok),
-    enableConfirm: (String) -> Boolean = { it.isNotBlank() },
+    enableConfirm: (String) -> Boolean = { it.isNotBlank() && errorText.isEmpty() },
     onValueChange: (String) -> Unit = {},
     onDismissRequest: () -> Unit = {},
     onConfirm: (String) -> Unit = {},
     imeAction: ImeAction = if (maxLines == 1) ImeAction.Done else ImeAction.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = imeAction),
 ) {
     TextFieldDialog(
         modifier = modifier,
         visible = visible,
         readOnly = readOnly,
         maxLines = maxLines,
+        singleLine = singleLine,
         style = style,
         icon = icon,
         title = if (titleText == null) null else {
@@ -61,6 +65,7 @@ fun TextFieldDialog(
         onDismissRequest = onDismissRequest,
         onConfirm = onConfirm,
         imeAction = imeAction,
+        keyboardOptions = keyboardOptions,
     )
 }
 
@@ -70,7 +75,8 @@ fun TextFieldDialog(
     visible: Boolean = true,
     readOnly: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
-    style: AniVuTextFieldStyle = AniVuTextFieldStyle.toEnum(LocalTextFieldStyle.current),
+    singleLine: Boolean = maxLines == 1,
+    style: PodAuraTextFieldStyle = PodAuraTextFieldStyle.toEnum(LocalTextFieldStyle.current),
     icon: @Composable (() -> Unit)? = null,
     title: @Composable (() -> Unit)? = null,
     value: String = "",
@@ -80,15 +86,16 @@ fun TextFieldDialog(
     errorText: String = "",
     dismissText: String = stringResource(R.string.cancel),
     confirmText: String = stringResource(R.string.ok),
-    enableConfirm: (String) -> Boolean = { it.isNotBlank() },
+    enableConfirm: (String) -> Boolean = { it.isNotBlank() && errorText.isEmpty() },
     onValueChange: (String) -> Unit = {},
     onDismissRequest: () -> Unit = {},
     onConfirm: (String) -> Unit = {},
     imeAction: ImeAction = if (maxLines == 1) ImeAction.Done else ImeAction.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions(imeAction = imeAction),
 ) {
     val focusManager = LocalFocusManager.current
 
-    AniVuDialog(
+    PodAuraDialog(
         modifier = modifier,
         visible = visible,
         onDismissRequest = onDismissRequest,
@@ -100,6 +107,7 @@ fun TextFieldDialog(
                 readOnly = readOnly,
                 value = value,
                 maxLines = maxLines,
+                singleLine = singleLine,
                 style = style,
                 onValueChange = onValueChange,
                 placeholder = placeholder,
@@ -107,6 +115,7 @@ fun TextFieldDialog(
                 isPassword = isPassword,
                 errorText = errorText,
                 imeAction = imeAction,
+                keyboardOptions = keyboardOptions,
                 focusManager = focusManager,
                 onConfirm = onConfirm,
             )

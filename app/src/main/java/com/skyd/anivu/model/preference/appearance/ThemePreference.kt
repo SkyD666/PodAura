@@ -2,7 +2,6 @@ package com.skyd.anivu.model.preference.appearance
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.android.material.color.DynamicColors
 import com.skyd.anivu.R
@@ -19,13 +18,15 @@ object ThemePreference : BasePreference<String> {
     private const val THEME = "theme"
 
     const val DYNAMIC = "Dynamic"
-    const val PINK = "Pink"
-    const val GREEN = "Green"
     const val BLUE = "Blue"
+    const val PINK = "Pink"
     const val YELLOW = "Yellow"
+    const val RED = "Red"
+    const val GREEN = "Green"
     const val PURPLE = "Purple"
+    const val MAHIRO = "Mahiro"
 
-    val basicValues = arrayOf(PINK, GREEN, BLUE, YELLOW, PURPLE)
+    val basicValues = arrayOf(BLUE, PINK, YELLOW, RED, GREEN, PURPLE, MAHIRO)
 
     val values: Array<String>
         get() {
@@ -35,7 +36,7 @@ object ThemePreference : BasePreference<String> {
 
     override val default = if (DynamicColors.isDynamicColorAvailable()) DYNAMIC else PINK
 
-    val key = stringPreferencesKey(THEME)
+    override val key = stringPreferencesKey(THEME)
 
     fun put(
         context: Context,
@@ -51,43 +52,32 @@ object ThemePreference : BasePreference<String> {
         }
     }
 
-    override fun fromPreferences(preferences: Preferences): String = preferences[key] ?: default
-
     fun toDisplayName(
         context: Context,
         value: String = context.dataStore.getOrDefault(this),
     ): String = when (value) {
         DYNAMIC -> context.getString(R.string.theme_dynamic)
-        PINK -> context.getString(R.string.theme_pink)
-        GREEN -> context.getString(R.string.theme_green)
         BLUE -> context.getString(R.string.theme_blue)
+        PINK -> context.getString(R.string.theme_pink)
         YELLOW -> context.getString(R.string.theme_yellow)
+        RED -> context.getString(R.string.theme_red)
+        GREEN -> context.getString(R.string.theme_green)
         PURPLE -> context.getString(R.string.theme_purple)
+        MAHIRO -> context.getString(R.string.theme_mahiro)
         else -> context.getString(R.string.unknown)
-    }
-
-    fun toResId(
-        context: Context,
-        value: String = context.dataStore.getOrDefault(this),
-    ): Int = when (value) {
-        DYNAMIC -> R.style.Theme_AniVu_Dynamic
-        PINK -> R.style.Theme_AniVu_Pink
-        GREEN -> R.style.Theme_AniVu_Green
-        BLUE -> R.style.Theme_AniVu_Blue
-        YELLOW -> R.style.Theme_AniVu_Yellow
-        PURPLE -> R.style.Theme_AniVu_Purple
-        else -> R.style.Theme_AniVu_Pink
     }
 
     fun toSeedColor(
         context: Context,
         value: String = context.dataStore.getOrDefault(this),
     ): Color = when (value) {
-        PINK -> Color(0xFF884A69)
-        GREEN -> Color(0xFF406836)
-        BLUE -> Color(0xFF3A608F)
-        YELLOW -> Color(0xFF6C5E10)
-        PURPLE -> Color(0xFF65558F)
-        else -> Color(0xFF884A69)
+        BLUE -> Color(0xFF006EBE)
+        PINK -> Color(0xFFFF7AA3)
+        YELLOW -> Color(0xFFFABE03)
+        RED -> Color(0xFFB90037)
+        GREEN -> Color(0xFF3F975B)
+        PURPLE -> Color(0xFF7E6195)
+        MAHIRO -> Color(0xFFEAD4CE)
+        else -> Color(0xFF006EBE)
     }
 }

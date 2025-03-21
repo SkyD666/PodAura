@@ -10,8 +10,9 @@ import androidx.work.WorkManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.skyd.anivu.ext.dataStore
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
-import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.ext.get
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -29,46 +30,42 @@ private data class DeleteArticleConfiguration(
     val deleteArticleFrequency: Long,
 )
 
-fun listenerDeleteArticleFrequency(context: Context) {
-    coroutineScope.launch {
-        context.dataStore.data.map {
-            DeleteArticleConfiguration(
-                useDeleteArticle = it[UseAutoDeletePreference.key]
-                    ?: UseAutoDeletePreference.default,
-                deleteArticleFrequency = it[AutoDeleteArticleFrequencyPreference.key]
-                    ?: AutoDeleteArticleFrequencyPreference.default,
-            )
-        }.distinctUntilChanged().combine(
-            WorkManager.getInstance(context)
-                .getWorkInfosForUniqueWorkFlow(DeleteArticleWorker.UNIQUE_WORK_NAME)
-                .distinctUntilChanged(),
-        ) { deleteArticleConfiguration, workInfos ->
-            val workInfo = workInfos.firstOrNull()
-            val useDeleteArticle = deleteArticleConfiguration.useDeleteArticle
-            val deleteArticleFrequency = deleteArticleConfiguration.deleteArticleFrequency
+fun listenerDeleteArticleFrequency(context: Context) = coroutineScope.launch {
+    context.dataStore.data.map {
+        DeleteArticleConfiguration(
+            useDeleteArticle = it[UseAutoDeletePreference],
+            deleteArticleFrequency = it[AutoDeleteArticleFrequencyPreference],
+        )
+    }.distinctUntilChanged().combine(
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWorkFlow(DeleteArticleWorker.UNIQUE_WORK_NAME)
+            .distinctUntilChanged(),
+    ) { deleteArticleConfiguration, workInfos ->
+        val workInfo = workInfos.firstOrNull()
+        val useDeleteArticle = deleteArticleConfiguration.useDeleteArticle
+        val deleteArticleFrequency = deleteArticleConfiguration.deleteArticleFrequency
 
-            if (!useDeleteArticle) {
-                if (workInfo == null || !workInfo.state.isFinished) {
-                    stopDeleteArticleWorker(context)
-                }
+        if (!useDeleteArticle) {
+            if (workInfo == null || !workInfo.state.isFinished) {
+                stopDeleteArticleWorker(context)
+            }
+        } else {
+            if (workInfo == null || workInfo.state.isFinished) {
+                startRssSyncWorker(
+                    context = context,
+                    deleteArticleFrequency = deleteArticleFrequency,
+                )
             } else {
-                if (workInfo == null || workInfo.state.isFinished) {
-                    startRssSyncWorker(
+                if (workInfo.periodicityInfo?.repeatIntervalMillis != deleteArticleFrequency) {
+                    updateDeleteArticleWorker(
                         context = context,
                         deleteArticleFrequency = deleteArticleFrequency,
+                        id = workInfo.id,
                     )
-                } else {
-                    if (workInfo.periodicityInfo?.repeatIntervalMillis != deleteArticleFrequency) {
-                        updateDeleteArticleWorker(
-                            context = context,
-                            deleteArticleFrequency = deleteArticleFrequency,
-                            id = workInfo.id,
-                        )
-                    }
                 }
             }
-        }.collect()
-    }
+        }
+    }.collect()
 }
 
 fun updateDeleteArticleWorker(

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AniVu</string>
+    <string name="app_name">PodAura</string>
     <string name="feed_screen_name">Akış</string>
     <string name="media_screen_name">Medya</string>
     <string name="more_screen_name">Daha Fazla</string>
@@ -18,7 +18,6 @@
     <string name="delete">Sil</string>
     <string name="edit">Düzenle</string>
     <string name="article_screen_name">Makale</string>
-    <string name="article_screen_feed_url_illegal">Akış URL\'si geçersiz</string>
     <string name="search_screen_hint">Ara</string>
     <string name="back">Geri</string>
     <string name="read_screen_name">Oku</string>
@@ -45,7 +44,7 @@
     <string name="player_long_press_playback_speed">Hızlı İleri Sarılıyor…</string>
     <string name="about_screen_name">Hakkında</string>
     <string name="app_short_description">RSS anime aboneliği ve güncellemeleri, bit torrent indirmeleri ve video oynatma için hepsi bir arada bir araç.</string>
-    <string name="app_tech_stack_description">AniVu, MVI mimarisini kullanır ve tamamen Material You tasarım stilini benimser. Tüm sayfalar Android View ve Compose kullanılarak geliştirilmiştir.</string>
+    <string name="app_tech_stack_description">PodAura, MVI mimarisini kullanır ve tamamen Material You tasarım stilini benimser. Tüm sayfalar Android View ve Compose kullanılarak geliştirilmiştir.</string>
     <string name="about_screen_visit_github">GitHub deposu</string>
     <string name="about_screen_join_telegram">Telegram grubu</string>
     <string name="about_screen_join_discord">Discord sunucusu</string>
@@ -137,7 +136,9 @@
     <string name="theme_green">Yeşil</string>
     <string name="theme_blue">Mavi</string>
     <string name="theme_yellow">Sarı</string>
+    <string name="theme_red">Kırmızı</string>
     <string name="theme_purple">Mor</string>
+    <string name="theme_mahiro">Mahiro</string>
     <string name="player_config_screen_appearance_category">Görünüm</string>
     <string name="player_config_screen_show_85s_button">+85sn düğmesi</string>
     <string name="player_config_screen_show_85s_button_description">İlerleme çubuğunun üstünde +85sn düğmesini göster</string>
@@ -285,7 +286,7 @@
     <string name="data_screen_media_lib_location">Depolama konumu</string>
     <string name="storage_permission_request_screen_first_tip">Kaynak indirme ve medya göz atma işlemleri depolama izni gerektirir, lütfen izni verin.</string>
     <string name="storage_permission_request_screen_rationale">Uygulama depolama izni olmadan başlatılamaz, lütfen izni verin.</string>
-    <string name="storage_permission_request_screen_title">AniVu depolama erişimi gerektiriyor</string>
+    <string name="storage_permission_request_screen_title">PodAura depolama erişimi gerektiriyor</string>
     <string name="storage_permission_request_screen_request_permission">İzin iste</string>
     <string name="file_picker_screen_open_file">Dosya aç</string>
     <string name="file_picker_screen_open_folder">Bir klasör aç</string>

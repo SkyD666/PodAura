@@ -20,10 +20,9 @@ import kotlinx.coroutines.withContext
 object DarkModePreference : BasePreference<Int> {
     private const val DARK_MODE = "darkMode"
 
-    val values: List<Int> = mutableListOf(
-        AppCompatDelegate.MODE_NIGHT_NO,
-        AppCompatDelegate.MODE_NIGHT_YES,
-    ).apply {
+    val values: List<Int> = buildList {
+        add(AppCompatDelegate.MODE_NIGHT_NO)
+        add(AppCompatDelegate.MODE_NIGHT_YES)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             add(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         }
@@ -35,7 +34,7 @@ object DarkModePreference : BasePreference<Int> {
         AppCompatDelegate.MODE_NIGHT_NO
     }
 
-    val key = intPreferencesKey(DARK_MODE)
+    override val key = intPreferencesKey(DARK_MODE)
 
     fun toDisplayName(context: Context, value: Int): String = context.getString(
         when (value) {
@@ -46,7 +45,7 @@ object DarkModePreference : BasePreference<Int> {
         }
     )
 
-    fun put(context: Context, scope: CoroutineScope, value: Int) {
+    override fun put(context: Context, scope: CoroutineScope, value: Int) {
         if (value != AppCompatDelegate.MODE_NIGHT_YES &&
             value != AppCompatDelegate.MODE_NIGHT_NO &&
             value != AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM

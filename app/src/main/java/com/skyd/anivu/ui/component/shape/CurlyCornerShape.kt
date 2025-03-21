@@ -13,7 +13,7 @@ import kotlin.math.sin
 
 class CurlyCornerShape(
     private val amp: Float = 16f,
-    private val count: Int = 12,
+    private val count: Float = 12f,
 ) : CornerBasedShape(
     topStart = ZeroCornerSize,
     topEnd = ZeroCornerSize,
@@ -27,7 +27,7 @@ class CurlyCornerShape(
         d3: Float,
         d4: Float,
         d5: Float,
-        i: Int,
+        i: Float,
     ): List<Float> = (i * d5).run {
         listOf(
             (sin(this) * d4 + d3) * cos(d5) + d1,

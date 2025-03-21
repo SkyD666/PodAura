@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.skyd.anivu.model.bean.download.SESSION_PARAMS_TABLE_NAME
-import com.skyd.anivu.model.bean.download.SessionParamsBean
+import com.skyd.anivu.model.bean.download.bt.SESSION_PARAMS_TABLE_NAME
+import com.skyd.anivu.model.bean.download.bt.SessionParamsBean
 
 @Dao
 interface SessionParamsDao {

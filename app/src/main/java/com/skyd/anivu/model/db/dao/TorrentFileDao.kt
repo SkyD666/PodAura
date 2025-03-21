@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.skyd.anivu.model.bean.download.TORRENT_FILE_TABLE_NAME
-import com.skyd.anivu.model.bean.download.TorrentFileBean
+import com.skyd.anivu.model.bean.download.bt.TORRENT_FILE_TABLE_NAME
+import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
 
 @Dao
 interface TorrentFileDao {

@@ -1,5 +1,0 @@
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PrivateResource">
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="divider_inset_start">16dp</dimen>
-    <dimen name="divider_inset_end">16dp</dimen>
-</resources>

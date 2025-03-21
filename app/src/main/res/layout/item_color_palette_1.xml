@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<com.skyd.anivu.ui.component.ColorPaletteView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="74dp"
-    android:layout_height="74dp" />

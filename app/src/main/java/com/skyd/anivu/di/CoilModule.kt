@@ -1,8 +1,10 @@
 package com.skyd.anivu.di
 
 import android.content.Context
-import coil.ImageLoader
-import coil.util.DebugLogger
+import coil3.ImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
+import coil3.util.DebugLogger
 import com.skyd.anivu.util.debug
 import dagger.Module
 import dagger.Provides
@@ -21,7 +23,7 @@ object CoilModule {
         @ApplicationContext context: Context,
         okHttpClient: OkHttpClient,
     ): ImageLoader = ImageLoader.Builder(context)
-        .okHttpClient(okHttpClient)
+        .components { add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient })) }
         .crossfade(400)
         .apply { debug { logger(DebugLogger()) } }
         .build()

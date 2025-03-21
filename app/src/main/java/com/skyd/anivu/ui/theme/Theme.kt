@@ -2,53 +2,43 @@ package com.skyd.anivu.ui.theme
 
 import android.app.WallpaperManager
 import android.os.Build
-import android.view.View
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.rememberDynamicColorScheme
-import com.skyd.anivu.ext.activity
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
 import com.skyd.anivu.model.preference.appearance.ThemePreference
+import com.skyd.anivu.ui.local.LocalAmoledDarkMode
 import com.skyd.anivu.ui.local.LocalTheme
 
 @Composable
-fun AniVuTheme(
+fun PodAuraTheme(
     darkTheme: Int,
     content: @Composable () -> Unit
 ) {
-    AniVuTheme(
+    PodAuraTheme(
         darkTheme = DarkModePreference.inDark(darkTheme),
         content = content
     )
 }
 
 @Composable
-fun AniVuTheme(
+fun PodAuraTheme(
     darkTheme: Boolean,
     colors: Map<String, ColorScheme> = extractAllColors(darkTheme),
     content: @Composable () -> Unit
 ) {
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            setSystemBarsColor(view, darkTheme)
-        }
-    }
-
     val themeName = LocalTheme.current
     val context = LocalContext.current
+    val isAmoled = LocalAmoledDarkMode.current
 
     MaterialTheme(
-        colorScheme = remember(themeName) {
+        colorScheme = remember(themeName, darkTheme, isAmoled) {
             colors.getOrElse(themeName) {
                 dynamicColorScheme(
                     seedColor = ThemePreference.toSeedColor(
@@ -56,30 +46,13 @@ fun AniVuTheme(
                         value = ThemePreference.values[0],
                     ),
                     isDark = darkTheme,
-                    isAmoled = false,
+                    isAmoled = isAmoled,
                 )
             }
         },
         typography = Typography,
         content = content
     )
-}
-
-private fun setSystemBarsColor(view: View, darkMode: Boolean) {
-    val window = view.context.activity.window
-    WindowCompat.setDecorFitsSystemWindows(window, false)
-    window.apply {
-        statusBarColor = android.graphics.Color.TRANSPARENT
-        navigationBarColor = android.graphics.Color.TRANSPARENT
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            navigationBarDividerColor = android.graphics.Color.TRANSPARENT
-        }
-        // 状态栏和导航栏字体颜色
-        WindowInsetsControllerCompat(this, view).apply {
-            isAppearanceLightStatusBars = !darkMode
-            isAppearanceLightNavigationBars = !darkMode
-        }
-    }
 }
 
 @Composable
@@ -91,8 +64,9 @@ fun extractAllColors(darkTheme: Boolean): Map<String, ColorScheme> {
 fun extractColors(darkTheme: Boolean): Map<String, ColorScheme> {
     return ThemePreference.values.associateWith {
         rememberDynamicColorScheme(
-            seedColor = ThemePreference.toSeedColor(LocalContext.current, it),
+            primary = ThemePreference.toSeedColor(LocalContext.current, it),
             isDark = darkTheme,
+            isAmoled = LocalAmoledDarkMode.current,
         )
     }.toMutableMap()
 }
@@ -110,7 +84,11 @@ fun extractDynamicColor(darkTheme: Boolean): Map<String, ColorScheme> {
             preset[ThemePreference.DYNAMIC] = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 rememberSystemDynamicColorScheme(isDark = darkTheme)
             } else {
-                rememberDynamicColorScheme(seedColor = Color(primary), isDark = darkTheme)
+                rememberDynamicColorScheme(
+                    primary = Color(primary),
+                    isDark = darkTheme,
+                    isAmoled = LocalAmoledDarkMode.current,
+                )
             }
         }
     }

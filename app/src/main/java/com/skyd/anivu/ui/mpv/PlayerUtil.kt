@@ -2,10 +2,17 @@ package com.skyd.anivu.ui.mpv
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import coil3.ImageLoader
+import com.skyd.anivu.appContext
 import com.skyd.anivu.config.Const
+import com.skyd.anivu.ext.getImage
+import com.skyd.anivu.ui.mpv.service.PlayerState
+import com.skyd.anivu.util.image.decodeSampledBitmap
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -13,17 +20,20 @@ import java.io.IOException
 import java.io.InputStream
 
 internal fun Uri.resolveUri(context: Context): String? {
-    val filepath = when (scheme) {
+    var filepath = when (scheme) {
         "file" -> path
         "content" -> openContentFd(context)
         "http", "https", "rtmp", "rtmps", "rtp", "rtsp",
-        "mms", "mmst", "mmsh", "tcp", "udp", "lavf" -> this.toString()
+        "mms", "mmst", "mmsh", "tcp", "udp", "lavf", "fd" -> this.toString()
 
         else -> null
     }
 
     if (filepath == null) {
         Log.e("resolveUri", "unknown scheme: $scheme")
+        if (scheme == null && path?.startsWith("/") == true) {
+            filepath = path
+        }
     }
     return filepath
 }
@@ -64,6 +74,38 @@ fun findRealPath(fd: Int): String? {
     return null
 }
 
+fun isFdFileExists(fdPath: String): Boolean {
+    var pfd: ParcelFileDescriptor? = null
+    var inputStream: InputStream? = null
+    return try {
+        val fd = fdPath.substringAfterLast("fd://").toInt()
+        pfd = ParcelFileDescriptor.fromFd(fd)
+        inputStream = FileInputStream(pfd.fileDescriptor)
+        inputStream.read() != -1
+    } catch (e: IOException) {
+        e.printStackTrace()
+        false
+    } finally {
+        inputStream?.close()
+        pfd?.close()
+    }
+}
+
+suspend fun createThumbnailFile(
+    thumbnailPath: String?,
+): File? {
+    thumbnailPath ?: return null
+    return ImageLoader.Builder(appContext).build()
+        .getImage(appContext, thumbnailPath)
+}
+
+suspend fun createThumbnail(
+    thumbnailPath: String?,
+    reqWidth: Int = 512,
+    reqHeight: Int = 512,
+): Bitmap? =
+    createThumbnailFile(thumbnailPath)?.let { decodeSampledBitmap(it, reqWidth, reqHeight) }
+
 fun copyAssetsForMpv(context: Context) {
     val assetManager = context.assets
     arrayOf(
@@ -89,3 +131,16 @@ fun copyAssetsForMpv(context: Context) {
         }
     }
 }
+
+fun PlayerState.playbackState(): Int = when {
+    idling || position < 0 || duration <= 0 || playlist.isEmpty() -> {
+        PlaybackStateCompat.STATE_NONE
+    }
+
+    pausedForCache -> PlaybackStateCompat.STATE_BUFFERING
+    paused -> PlaybackStateCompat.STATE_PAUSED
+    else -> PlaybackStateCompat.STATE_PLAYING
+}
+
+val PlayerState.isPlaying
+    get() = playbackState() != PlaybackStateCompat.STATE_PLAYING

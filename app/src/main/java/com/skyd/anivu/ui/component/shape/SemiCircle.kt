@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-import com.skyd.anivu.ui.mpv.controller.ForwardRippleDirect
+import com.skyd.anivu.ui.mpv.land.controller.ForwardRippleDirect
 
 class ForwardRippleShape(private val direct: ForwardRippleDirect) : Shape {
     override fun createOutline(

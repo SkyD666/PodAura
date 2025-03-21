@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.toSettings
+import com.skyd.anivu.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
 import com.skyd.anivu.model.preference.appearance.DateStylePreference
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
@@ -19,9 +20,16 @@ import com.skyd.anivu.model.preference.appearance.article.ArticleListTonalElevat
 import com.skyd.anivu.model.preference.appearance.article.ArticleTopBarTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.anivu.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
-import com.skyd.anivu.model.preference.appearance.feed.FeedGroupExpandPreference
+import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
+import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
+import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
+import com.skyd.anivu.model.preference.appearance.read.ReadContentTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.read.ReadTextSizePreference
+import com.skyd.anivu.model.preference.appearance.read.ReadTopBarTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.search.SearchItemMinWidthPreference
 import com.skyd.anivu.model.preference.appearance.search.SearchListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.search.SearchTopBarTonalElevationPreference
@@ -31,16 +39,55 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionP
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
+import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
+import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
 import com.skyd.anivu.model.preference.data.OpmlExportDirPreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleBeforePreference
-import com.skyd.anivu.model.preference.data.autodelete.AutoDeleteArticleFrequencyPreference
-import com.skyd.anivu.model.preference.data.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleMaxCountPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleUseMaxCountPreference
+import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
+import com.skyd.anivu.model.preference.player.PlayerAutoPipPreference
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
+import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
+import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
+import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.anivu.model.preference.player.PlayerShow85sButtonPreference
+import com.skyd.anivu.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.anivu.model.preference.player.PlayerShowScreenshotButtonPreference
+import com.skyd.anivu.model.preference.proxy.ProxyHostnamePreference
+import com.skyd.anivu.model.preference.proxy.ProxyModePreference
+import com.skyd.anivu.model.preference.proxy.ProxyPasswordPreference
+import com.skyd.anivu.model.preference.proxy.ProxyPortPreference
+import com.skyd.anivu.model.preference.proxy.ProxyTypePreference
+import com.skyd.anivu.model.preference.proxy.ProxyUsernamePreference
+import com.skyd.anivu.model.preference.proxy.UseProxyPreference
+import com.skyd.anivu.model.preference.rss.ParseLinkTagAsEnclosurePreference
+import com.skyd.anivu.model.preference.rss.RssSyncBatteryNotLowConstraintPreference
+import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
+import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
+import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
+import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
+import com.skyd.anivu.ui.local.LocalAmoledDarkMode
 import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
 import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
 import com.skyd.anivu.ui.local.LocalArticleListTonalElevation
@@ -50,22 +97,64 @@ import com.skyd.anivu.ui.local.LocalArticleTapAction
 import com.skyd.anivu.ui.local.LocalArticleTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleBefore
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleFrequency
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepFavorite
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepPlaylist
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleKeepUnread
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleMaxCount
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseBefore
+import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseMaxCount
+import com.skyd.anivu.ui.local.LocalBackgroundPlay
 import com.skyd.anivu.ui.local.LocalDarkMode
 import com.skyd.anivu.ui.local.LocalDateStyle
 import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
-import com.skyd.anivu.ui.local.LocalFeedGroupExpand
+import com.skyd.anivu.ui.local.LocalFeedDefaultGroupExpand
 import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
+import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalHardwareDecode
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
+import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
+import com.skyd.anivu.ui.local.LocalKeepFavoriteArticles
+import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
+import com.skyd.anivu.ui.local.LocalKeepUnreadArticles
+import com.skyd.anivu.ui.local.LocalMediaFileFilter
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
+import com.skyd.anivu.ui.local.LocalMediaListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaListSortBy
+import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
+import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
+import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavigationBarLabel
 import com.skyd.anivu.ui.local.LocalOpmlExportDir
+import com.skyd.anivu.ui.local.LocalParseLinkTagAsEnclosure
 import com.skyd.anivu.ui.local.LocalPickImageMethod
+import com.skyd.anivu.ui.local.LocalPlayerAutoPip
 import com.skyd.anivu.ui.local.LocalPlayerDoubleTap
+import com.skyd.anivu.ui.local.LocalPlayerMaxBackCacheSize
+import com.skyd.anivu.ui.local.LocalPlayerMaxCacheSize
+import com.skyd.anivu.ui.local.LocalPlayerSeekOption
 import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
+import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
 import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
+import com.skyd.anivu.ui.local.LocalPlaylistMediaSortAsc
+import com.skyd.anivu.ui.local.LocalPlaylistMediaSortBy
+import com.skyd.anivu.ui.local.LocalPlaylistSortAsc
+import com.skyd.anivu.ui.local.LocalPlaylistSortBy
+import com.skyd.anivu.ui.local.LocalProxyHostname
+import com.skyd.anivu.ui.local.LocalProxyMode
+import com.skyd.anivu.ui.local.LocalProxyPassword
+import com.skyd.anivu.ui.local.LocalProxyPort
+import com.skyd.anivu.ui.local.LocalProxyType
+import com.skyd.anivu.ui.local.LocalProxyUsername
+import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
+import com.skyd.anivu.ui.local.LocalReadTextSize
+import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
+import com.skyd.anivu.ui.local.LocalRssSyncBatteryNotLowConstraint
+import com.skyd.anivu.ui.local.LocalRssSyncChargingConstraint
+import com.skyd.anivu.ui.local.LocalRssSyncFrequency
+import com.skyd.anivu.ui.local.LocalRssSyncWifiConstraint
 import com.skyd.anivu.ui.local.LocalSearchItemMinWidth
 import com.skyd.anivu.ui.local.LocalSearchListTonalElevation
 import com.skyd.anivu.ui.local.LocalSearchTopBarTonalElevation
@@ -74,7 +163,10 @@ import com.skyd.anivu.ui.local.LocalShowArticlePullRefresh
 import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
 import com.skyd.anivu.ui.local.LocalTheme
+import com.skyd.anivu.ui.local.LocalTorrentDhtBootstraps
+import com.skyd.anivu.ui.local.LocalTorrentTrackers
 import com.skyd.anivu.ui.local.LocalUseAutoDelete
+import com.skyd.anivu.ui.local.LocalUseProxy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 
@@ -82,7 +174,8 @@ data class Settings(
     // Appearance
     val theme: String = ThemePreference.default,
     val darkMode: Int = DarkModePreference.default,
-    val feedGroupExpand: Boolean = FeedGroupExpandPreference.default,
+    val amoledDarkMode: Boolean = AmoledDarkModePreference.default,
+    val feedDefaultGroupExpand: Boolean = FeedDefaultGroupExpandPreference.default,
     val textFieldStyle: String = TextFieldStylePreference.default,
     val dateStyle: String = DateStylePreference.default,
     val navigationBarLabel: String = NavigationBarLabelPreference.default,
@@ -97,6 +190,12 @@ data class Settings(
     val showArticlePullRefresh: Boolean = ShowArticlePullRefreshPreference.default,
     val articleItemMinWidth: Float = ArticleItemMinWidthPreference.default,
     val searchItemMinWidth: Float = SearchItemMinWidthPreference.default,
+    val mediaShowThumbnail: Boolean = MediaShowThumbnailPreference.default,
+    val mediaShowGroupTab: Boolean = MediaShowGroupTabPreference.default,
+    val readTextSize: Float = ReadTextSizePreference.default,
+    val readContentTonalElevation: Float = ReadContentTonalElevationPreference.default,
+    val readTopBarTonalElevation: Float = ReadTopBarTonalElevationPreference.default,
+    val feedNumberBadge: Int = FeedNumberBadgePreference.default,
     // Update
     val ignoreUpdateVersion: Long = IgnoreUpdateVersionPreference.default,
     // Behavior
@@ -105,20 +204,60 @@ data class Settings(
     val articleSwipeLeftAction: String = ArticleSwipeLeftActionPreference.default,
     val articleSwipeRightAction: String = ArticleSwipeRightActionPreference.default,
     val hideEmptyDefault: Boolean = HideEmptyDefaultPreference.default,
+    val hideMutedFeed: Boolean = HideMutedFeedPreference.default,
     val pickImageMethod: String = PickImageMethodPreference.default,
+    val mediaFileFilter: String = MediaFileFilterPreference.default,
+    val mediaListSortAsc: Boolean = MediaListSortAscPreference.default,
+    val mediaSubListSortAsc: Boolean = MediaSubListSortAscPreference.default,
+    val mediaListSortBy: String = MediaListSortByPreference.default,
+    val mediaSubListSortBy: String = MediaSubListSortByPreference.default,
+    val playlistSortAsc: Boolean = PlaylistSortAscPreference.default,
+    val playlistMediaSortAsc: Boolean = PlaylistMediaSortAscPreference.default,
+    val playlistSortBy: String = PlaylistSortByPreference.default,
+    val playlistMediaSortBy: String = PlaylistMediaSortByPreference.default,
+    // RSS
+    val rssSyncFrequency: Long = RssSyncFrequencyPreference.default,
+    val rssSyncWifiConstraint: Boolean = RssSyncWifiConstraintPreference.default,
+    val rssSyncChargingConstraint: Boolean = RssSyncChargingConstraintPreference.default,
+    val rssSyncBatteryNotLowConstraint: Boolean = RssSyncBatteryNotLowConstraintPreference.default,
+    val parseLinkTagAsEnclosure: Boolean = ParseLinkTagAsEnclosurePreference.default,
     // Player
     val playerDoubleTap: String = PlayerDoubleTapPreference.default,
     val playerShow85sButton: Boolean = PlayerShow85sButtonPreference.default,
     val playerShowScreenshotButton: Boolean = PlayerShowScreenshotButtonPreference.default,
+    val playerShowProgressIndicator: Boolean = PlayerShowProgressIndicatorPreference.default,
     val hardwareDecode: Boolean = HardwareDecodePreference.default,
+    val playerAutoPip: Boolean = PlayerAutoPipPreference.default,
+    val playerMaxCacheSize: Long = PlayerMaxCacheSizePreference.default,
+    val playerMaxBackCacheSize: Long = PlayerMaxBackCacheSizePreference.default,
+    val playerSeekOption: String = PlayerSeekOptionPreference.default,
+    val backgroundPlay: Boolean = BackgroundPlayPreference.default,
     // Data
     val useAutoDelete: Boolean = UseAutoDeletePreference.default,
+    val autoDeleteArticleUseBefore: Boolean = AutoDeleteArticleUseBeforePreference.default,
     val autoDeleteArticleFrequency: Long = AutoDeleteArticleFrequencyPreference.default,
     val autoDeleteArticleBefore: Long = AutoDeleteArticleBeforePreference.default,
+    val autoDeleteArticleKeepUnread: Boolean = AutoDeleteArticleKeepUnreadPreference.default,
+    val autoDeleteArticleKeepFavorite: Boolean = AutoDeleteArticleKeepFavoritePreference.default,
+    val autoDeleteArticleKeepPlaylist: Boolean = AutoDeleteArticleKeepPlaylistPreference.default,
+    val autoDeleteArticleUseMaxCount: Boolean = AutoDeleteArticleUseMaxCountPreference.default,
+    val autoDeleteArticleMaxCount: Int = AutoDeleteArticleMaxCountPreference.default,
+    val keepPlaylistArticles: Boolean = KeepPlaylistArticlesPreference.default,
+    val keepUnreadArticles: Boolean = KeepUnreadArticlesPreference.default,
+    val keepFavoriteArticles: Boolean = KeepFavoriteArticlesPreference.default,
     val opmlExportDir: String = OpmlExportDirPreference.default,
     val mediaLibLocation: String = MediaLibLocationPreference.default,
     // Transmission
     val seedingWhenComplete: Boolean = SeedingWhenCompletePreference.default,
+    val useProxy: Boolean = UseProxyPreference.default,
+    val proxyMode: String = ProxyModePreference.default,
+    val proxyType: String = ProxyTypePreference.default,
+    val proxyHostname: String = ProxyHostnamePreference.default,
+    val proxyPort: Int = ProxyPortPreference.default,
+    val proxyUsername: String = ProxyUsernamePreference.default,
+    val proxyPassword: String = ProxyPasswordPreference.default,
+    val torrentTrackers: Set<String> = TorrentTrackersPreference.default,
+    val torrentDhtBootstraps: Set<String> = TorrentDhtBootstrapsPreference.default,
 )
 
 @Composable
@@ -133,7 +272,8 @@ fun SettingsProvider(
         // Appearance
         LocalTheme provides settings.theme,
         LocalDarkMode provides settings.darkMode,
-        LocalFeedGroupExpand provides settings.feedGroupExpand,
+        LocalAmoledDarkMode provides settings.amoledDarkMode,
+        LocalFeedDefaultGroupExpand provides settings.feedDefaultGroupExpand,
         LocalTextFieldStyle provides settings.textFieldStyle,
         LocalDateStyle provides settings.dateStyle,
         LocalNavigationBarLabel provides settings.navigationBarLabel,
@@ -148,6 +288,12 @@ fun SettingsProvider(
         LocalShowArticlePullRefresh provides settings.showArticlePullRefresh,
         LocalArticleItemMinWidth provides settings.articleItemMinWidth,
         LocalSearchItemMinWidth provides settings.searchItemMinWidth,
+        LocalMediaShowThumbnail provides settings.mediaShowThumbnail,
+        LocalMediaShowGroupTab provides settings.mediaShowGroupTab,
+        LocalReadTextSize provides settings.readTextSize,
+        LocalReadContentTonalElevation provides settings.readContentTonalElevation,
+        LocalReadTopBarTonalElevation provides settings.readTopBarTonalElevation,
+        LocalFeedNumberBadge provides settings.feedNumberBadge,
         // Update
         LocalIgnoreUpdateVersion provides settings.ignoreUpdateVersion,
         // Behavior
@@ -156,20 +302,60 @@ fun SettingsProvider(
         LocalArticleSwipeLeftAction provides settings.articleSwipeLeftAction,
         LocalArticleSwipeRightAction provides settings.articleSwipeRightAction,
         LocalHideEmptyDefault provides settings.hideEmptyDefault,
+        LocalHideMutedFeed provides settings.hideMutedFeed,
         LocalPickImageMethod provides settings.pickImageMethod,
+        LocalMediaFileFilter provides settings.mediaFileFilter,
+        LocalMediaListSortAsc provides settings.mediaListSortAsc,
+        LocalMediaSubListSortAsc provides settings.mediaSubListSortAsc,
+        LocalMediaListSortBy provides settings.mediaListSortBy,
+        LocalMediaSubListSortBy provides settings.mediaSubListSortBy,
+        LocalPlaylistSortAsc provides settings.playlistSortAsc,
+        LocalPlaylistMediaSortAsc provides settings.playlistMediaSortAsc,
+        LocalPlaylistSortBy provides settings.playlistSortBy,
+        LocalPlaylistMediaSortBy provides settings.playlistMediaSortBy,
+        // Rss
+        LocalRssSyncFrequency provides settings.rssSyncFrequency,
+        LocalRssSyncWifiConstraint provides settings.rssSyncWifiConstraint,
+        LocalRssSyncChargingConstraint provides settings.rssSyncChargingConstraint,
+        LocalRssSyncBatteryNotLowConstraint provides settings.rssSyncBatteryNotLowConstraint,
+        LocalParseLinkTagAsEnclosure provides settings.parseLinkTagAsEnclosure,
         // Player
         LocalPlayerDoubleTap provides settings.playerDoubleTap,
         LocalPlayerShow85sButton provides settings.playerShow85sButton,
         LocalPlayerShowScreenshotButton provides settings.playerShowScreenshotButton,
+        LocalPlayerShowProgressIndicator provides settings.playerShowProgressIndicator,
         LocalHardwareDecode provides settings.hardwareDecode,
+        LocalPlayerAutoPip provides settings.playerAutoPip,
+        LocalPlayerMaxCacheSize provides settings.playerMaxCacheSize,
+        LocalPlayerMaxBackCacheSize provides settings.playerMaxBackCacheSize,
+        LocalPlayerSeekOption provides settings.playerSeekOption,
+        LocalBackgroundPlay provides settings.backgroundPlay,
         // Data
         LocalUseAutoDelete provides settings.useAutoDelete,
+        LocalAutoDeleteArticleUseBefore provides settings.autoDeleteArticleUseBefore,
         LocalAutoDeleteArticleFrequency provides settings.autoDeleteArticleFrequency,
         LocalAutoDeleteArticleBefore provides settings.autoDeleteArticleBefore,
+        LocalAutoDeleteArticleKeepUnread provides settings.autoDeleteArticleKeepUnread,
+        LocalAutoDeleteArticleKeepFavorite provides settings.autoDeleteArticleKeepFavorite,
+        LocalAutoDeleteArticleKeepPlaylist provides settings.autoDeleteArticleKeepPlaylist,
+        LocalAutoDeleteArticleUseMaxCount provides settings.autoDeleteArticleUseMaxCount,
+        LocalAutoDeleteArticleMaxCount provides settings.autoDeleteArticleMaxCount,
+        LocalKeepPlaylistArticles provides settings.keepPlaylistArticles,
+        LocalKeepUnreadArticles provides settings.keepUnreadArticles,
+        LocalKeepFavoriteArticles provides settings.keepFavoriteArticles,
         LocalOpmlExportDir provides settings.opmlExportDir,
         LocalMediaLibLocation provides settings.mediaLibLocation,
         // Transmission
         LocalSeedingWhenComplete provides settings.seedingWhenComplete,
+        LocalUseProxy provides settings.useProxy,
+        LocalProxyMode provides settings.proxyMode,
+        LocalProxyType provides settings.proxyType,
+        LocalProxyHostname provides settings.proxyHostname,
+        LocalProxyPort provides settings.proxyPort,
+        LocalProxyUsername provides settings.proxyUsername,
+        LocalProxyPassword provides settings.proxyPassword,
+        LocalTorrentTrackers provides settings.torrentTrackers,
+        LocalTorrentDhtBootstraps provides settings.torrentDhtBootstraps,
     ) {
         content()
     }

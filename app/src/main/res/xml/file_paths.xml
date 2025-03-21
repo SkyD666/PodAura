@@ -6,4 +6,7 @@
     <files-path
         name="files"
         path="Video" />
+    <cache-path
+        name="cache"
+        path="Pictures" />
 </paths>

@@ -1,38 +1,29 @@
 package com.skyd.anivu.ext
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
-import android.text.Html
-import android.text.Spanned
-import androidx.core.text.HtmlCompat
+import android.os.Build
+import androidx.core.text.parseAsHtml
+import com.skyd.anivu.R
+import com.skyd.anivu.ui.component.showToast
 import net.dankito.readability4j.extended.Readability4JExtended
 
-fun String.toEncodedUrl(): String {
-    return Uri.encode(this, ":/-![].,%?&=")
+fun String.toEncodedUrl(allow: String? = ":/-![].,%?&="): String {
+    return Uri.encode(this, allow)
 }
 
 fun String.toDecodedUrl(): String {
     return Uri.decode(this)
 }
 
-fun String.toHtml(@SuppressLint("InlinedApi") flag: Int = Html.FROM_HTML_MODE_LEGACY): Spanned {
-    return Html.fromHtml(this, flag)
-}
+fun String.toRemoveHtml(): String = parseAsHtml().toString()
 
-fun String.toHtml(
-    @SuppressLint("InlinedApi") flag: Int = Html.FROM_HTML_MODE_LEGACY,
-    imageGetter: Html.ImageGetter,
-    tagHandler: Html.TagHandler?,
-): Spanned {
-    return Html.fromHtml(this, flag, imageGetter, tagHandler)
-}
+fun CharSequence.splitByBlank(limit: Int = 0): List<String> = trim().split("\\s+".toRegex(), limit)
 
-fun String.toRemoveHtml(): String {
-    return Html.fromHtml(this, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
-}
+fun String.firstCodePointOrNull(): String? =
+    if (isEmpty()) null else String(Character.toChars(codePointAt(0)))
 
 fun String.readable(): String =
     Readability4JExtended("", this).parse().textContent?.trim().orEmpty()
@@ -41,6 +32,10 @@ fun String.copy(context: Context) {
     try {
         val systemService = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         systemService.setPrimaryClip(ClipData.newPlainText("text", this))
+        // If you show a copy confirmation toast in Android 13, the user sees duplicate messages.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+            context.getString(R.string.copied).showToast()
+        }
     } catch (e: Exception) {
         e.printStackTrace()
     }

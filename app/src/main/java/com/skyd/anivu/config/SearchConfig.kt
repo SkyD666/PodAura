@@ -1,10 +1,10 @@
 package com.skyd.anivu.config
 
-import com.skyd.anivu.model.bean.ARTICLE_TABLE_NAME
-import com.skyd.anivu.model.bean.ArticleBean
-import com.skyd.anivu.model.bean.FEED_TABLE_NAME
-import com.skyd.anivu.model.bean.FEED_VIEW_NAME
-import com.skyd.anivu.model.bean.FeedBean
+import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
+import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
+import com.skyd.anivu.model.bean.feed.FEED_VIEW_NAME
+import com.skyd.anivu.model.bean.feed.FeedBean
 
 val allSearchDomain: Map<String, List<String>> = mutableMapOf(
     FEED_TABLE_NAME to listOf(

@@ -1,16 +1,16 @@
 package com.skyd.anivu.ui.component
 
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import com.skyd.anivu.appContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-private var uiThreadHandler: Handler = Handler(Looper.getMainLooper())
+private val scope = CoroutineScope(Dispatchers.Main.immediate)
 
 fun CharSequence.showToast(duration: Int = Toast.LENGTH_SHORT) {
-    uiThreadHandler.post {
-        val toast = Toast.makeText(appContext, this, duration)
-        toast.duration = duration
+    scope.launch {
+        val toast = Toast.makeText(appContext, this@showToast, duration)
         toast.show()
     }
 }

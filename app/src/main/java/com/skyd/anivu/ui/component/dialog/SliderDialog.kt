@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.component.dialog
 
+import androidx.annotation.IntRange
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ fun SliderDialog(
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    @IntRange(from = 0) steps: Int = 0,
     valueLabel: @Composable (() -> Unit)? = null,
     icon: @Composable (() -> Unit)? = {
         Icon(
@@ -29,7 +31,7 @@ fun SliderDialog(
     confirmButton: @Composable () -> Unit,
     dismissButton: @Composable (() -> Unit)? = null,
 ) {
-    AniVuDialog(
+    PodAuraDialog(
         onDismissRequest = onDismissRequest,
         icon = icon,
         title = title,
@@ -43,6 +45,7 @@ fun SliderDialog(
                     value = value,
                     onValueChange = onValueChange,
                     valueRange = valueRange,
+                    steps = steps,
                 )
             }
         },

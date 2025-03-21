@@ -3,21 +3,24 @@ package com.skyd.anivu.ext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.produceIn
+import kotlinx.coroutines.flow.sample
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -74,11 +77,22 @@ fun <T> Flow<Flow<T>>.flattenFirst(): Flow<T> = channelFlow {
     }
 }
 
-// 用感知生命周期的方式收集流
-fun <T> Flow<T>.collectIn(
+// collect with lifecycle
+suspend fun <T> Flow<T>.collectIn(
     lifecycleOwner: LifecycleOwner,
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
-    action: (T) -> Unit
-): Job = lifecycleOwner.lifecycleScope.launch {
-    flowWithLifecycle(lifecycleOwner.lifecycle, minActiveState).collect(action)
+    action: suspend (T) -> Unit = {},
+) = flowWithLifecycle(lifecycleOwner.lifecycle, minActiveState).collect(action)
+
+fun <T> Flow<T>.sampleWithoutFirst(timeoutMillis: Long) = merge(
+    take(1), drop(1).sample(timeoutMillis)
+)
+
+/**
+ * Like PV operation in semaphore, but we do V first and then P
+ */
+suspend fun Channel<Unit>.vThenP(receiveChannel: Channel<Unit>, block: () -> Unit) {
+    send(Unit)
+    block()
+    return receiveChannel.receive()
 }

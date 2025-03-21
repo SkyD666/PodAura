@@ -1,6 +1,7 @@
 package com.skyd.anivu.base.mvi
 
 import androidx.annotation.MainThread
+import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -18,7 +19,7 @@ interface MviViewModel<I : MviIntent, S : MviViewState, E : MviSingleEvent> {
     val singleEvent: Flow<E>
 
     /**
-     * Must be called in [kotlinx.coroutines.Dispatchers.Main.immediate],
+     * Must be called in [MainCoroutineDispatcher.immediate],
      * otherwise it will throw an exception.
      *
      * If you want to process an intent from other [kotlinx.coroutines.CoroutineDispatcher],

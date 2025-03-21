@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.get
 import com.skyd.anivu.model.preference.rss.RssSyncBatteryNotLowConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
@@ -35,67 +36,61 @@ private data class RssSyncConfiguration(
     val requireBatteryNotLow: Boolean,
 )
 
-fun listenerRssSyncFrequency(context: Context) {
-    coroutineScope.launch {
-        context.dataStore.data.map {
-            RssSyncConfiguration(
-                rssSyncFrequency = it[RssSyncFrequencyPreference.key]
-                    ?: RssSyncFrequencyPreference.default,
-                requireWifi = it[RssSyncWifiConstraintPreference.key]
-                    ?: RssSyncWifiConstraintPreference.default,
-                requireCharging = it[RssSyncChargingConstraintPreference.key]
-                    ?: RssSyncChargingConstraintPreference.default,
-                requireBatteryNotLow = it[RssSyncBatteryNotLowConstraintPreference.key]
-                    ?: RssSyncBatteryNotLowConstraintPreference.default,
-            )
-        }.distinctUntilChanged().combine(
-            WorkManager.getInstance(context)
-                .getWorkInfosForUniqueWorkFlow(RssSyncWorker.UNIQUE_WORK_NAME)
-                .distinctUntilChanged(),
-        ) { rssSyncConfiguration, workInfos ->
-            val workInfo = workInfos.firstOrNull()
-            val rssSyncFrequency = rssSyncConfiguration.rssSyncFrequency
-            val requireWifi = rssSyncConfiguration.requireWifi
-            val requireCharging = rssSyncConfiguration.requireCharging
-            val requireBatteryNotLow = rssSyncConfiguration.requireBatteryNotLow
+fun listenerRssSyncConfig(context: Context) = coroutineScope.launch {
+    context.dataStore.data.map {
+        RssSyncConfiguration(
+            rssSyncFrequency = it[RssSyncFrequencyPreference],
+            requireWifi = it[RssSyncWifiConstraintPreference],
+            requireCharging = it[RssSyncChargingConstraintPreference],
+            requireBatteryNotLow = it[RssSyncBatteryNotLowConstraintPreference],
+        )
+    }.distinctUntilChanged().combine(
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWorkFlow(RssSyncWorker.UNIQUE_WORK_NAME)
+            .distinctUntilChanged(),
+    ) { rssSyncConfiguration, workInfos ->
+        val workInfo = workInfos.firstOrNull()
+        val rssSyncFrequency = rssSyncConfiguration.rssSyncFrequency
+        val requireWifi = rssSyncConfiguration.requireWifi
+        val requireCharging = rssSyncConfiguration.requireCharging
+        val requireBatteryNotLow = rssSyncConfiguration.requireBatteryNotLow
 
-            if (rssSyncFrequency == RssSyncFrequencyPreference.MANUAL) {
-                if (workInfo == null || !workInfo.state.isFinished) {
-                    stopRssSyncWorker(context)
-                }
+        if (rssSyncFrequency == RssSyncFrequencyPreference.MANUAL) {
+            if (workInfo != null && !workInfo.state.isFinished) {
+                stopRssSyncWorker(context)
+            }
+        } else {
+            if (workInfo == null || workInfo.state.isFinished) {
+                startRssSyncWorker(
+                    context = context,
+                    rssSyncFrequency = rssSyncFrequency,
+                    requireWifi = requireWifi,
+                    requireCharging = requireCharging,
+                    requireBatteryNotLow = requireBatteryNotLow,
+                )
             } else {
-                if (workInfo == null || workInfo.state.isFinished) {
-                    startRssSyncWorker(
+                val constraints = workInfo.constraints
+                if (workInfo.periodicityInfo?.repeatIntervalMillis != rssSyncFrequency ||
+                    constraints.requiresCharging() != requireCharging ||
+                    constraints.requiresBatteryNotLow() != requireBatteryNotLow ||
+                    constraints.requiredNetworkType != if (requireWifi) NetworkType.UNMETERED
+                    else NetworkType.CONNECTED
+                ) {
+                    updateRssSyncWorker(
                         context = context,
                         rssSyncFrequency = rssSyncFrequency,
                         requireWifi = requireWifi,
                         requireCharging = requireCharging,
                         requireBatteryNotLow = requireBatteryNotLow,
+                        id = workInfo.id,
                     )
-                } else {
-                    val constraints = workInfo.constraints
-                    if (workInfo.periodicityInfo?.repeatIntervalMillis != rssSyncFrequency ||
-                        constraints.requiresCharging() != requireCharging ||
-                        constraints.requiresBatteryNotLow() != requireBatteryNotLow ||
-                        constraints.requiredNetworkType != if (requireWifi) NetworkType.UNMETERED
-                        else NetworkType.CONNECTED
-                    ) {
-                        updateRssSyncWorker(
-                            context = context,
-                            rssSyncFrequency = rssSyncFrequency,
-                            requireWifi = requireWifi,
-                            requireCharging = requireCharging,
-                            requireBatteryNotLow = requireBatteryNotLow,
-                            id = workInfo.id,
-                        )
-                    }
                 }
             }
-        }.collect()
-    }
+        }
+    }.collect()
 }
 
-fun updateRssSyncWorker(
+private fun updateRssSyncWorker(
     context: Context,
     rssSyncFrequency: Long,
     requireWifi: Boolean,
@@ -128,7 +123,7 @@ fun updateRssSyncWorker(
     )
 }
 
-fun startRssSyncWorker(
+private fun startRssSyncWorker(
     context: Context,
     rssSyncFrequency: Long,
     requireWifi: Boolean,
@@ -147,11 +142,11 @@ fun startRssSyncWorker(
     )
 }
 
-fun stopRssSyncWorker(context: Context) {
+private fun stopRssSyncWorker(context: Context) {
     WorkManager.getInstance(context).cancelUniqueWork(RssSyncWorker.UNIQUE_WORK_NAME)
 }
 
-fun getRssSyncWorkRequest(
+private fun getRssSyncWorkRequest(
     rssSyncFrequency: Long,
     requireWifi: Boolean,
     requireCharging: Boolean,

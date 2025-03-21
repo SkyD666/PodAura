@@ -10,16 +10,18 @@ import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.allSearchDomain
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
-import com.skyd.anivu.model.bean.ARTICLE_TABLE_NAME
-import com.skyd.anivu.model.bean.ArticleBean
-import com.skyd.anivu.model.bean.ArticleWithFeed
-import com.skyd.anivu.model.bean.FEED_VIEW_NAME
-import com.skyd.anivu.model.bean.FeedViewBean
+import com.skyd.anivu.ext.splitByBlank
+import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
+import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.article.ArticleWithFeed
+import com.skyd.anivu.model.bean.feed.FEED_VIEW_NAME
+import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.SearchDomainDao
 import com.skyd.anivu.model.preference.search.IntersectSearchBySpacePreference
 import com.skyd.anivu.model.preference.search.UseRegexSearchPreference
+import com.skyd.anivu.model.repository.article.IArticleRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -27,6 +29,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
@@ -34,6 +37,7 @@ import javax.inject.Inject
 class SearchRepository @Inject constructor(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
+    private val articleRepo: IArticleRepository,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository() {
     private val searchQuery = MutableStateFlow("")
@@ -47,35 +51,46 @@ class SearchRepository @Inject constructor(
         searchSortDateDesc.value = dateDesc
     }
 
-    fun listenSearchFeed(): Flow<PagingData<FeedViewBean>> {
-        return searchQuery.flatMapLatest { query ->
-            Pager(pagingConfig) {
-                feedDao.getFeedPagingSource(
-                    genSql(
-                        tableName = FEED_VIEW_NAME, k = query
-                    )
-                )
-            }.flow
-        }.flowOn(Dispatchers.IO)
-    }
+    fun listenSearchFeed(): Flow<PagingData<FeedViewBean>> = searchQuery.flatMapLatest { query ->
+        Pager(pagingConfig) {
+            feedDao.getFeedPagingSource(genSql(tableName = FEED_VIEW_NAME, k = query))
+        }.flow
+    }.flowOn(Dispatchers.IO)
 
-    fun listenSearchArticle(feedUrls: List<String>): Flow<PagingData<ArticleWithFeed>> {
-        return searchQuery.flatMapLatest { query ->
-            Pager(pagingConfig) {
-                articleDao.getArticlePagingSource(genSql(
+    fun listenSearchArticle(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+        articleIds: List<String>,
+    ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
+        val realFeedUrls = articleRepo.getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+        Pager(pagingConfig) {
+            articleDao.getArticlePagingSource(
+                genSql(
                     tableName = ARTICLE_TABLE_NAME,
                     k = query,
-                    leadingFilter = if (feedUrls.isEmpty()) "1"
-                    else "${ArticleBean.FEED_URL_COLUMN} IN (${
-                        feedUrls.joinToString(", ") { DatabaseUtils.sqlEscapeString(it) }
-                    })",
+                    leadingFilter = buildString {
+                        if (realFeedUrls.isEmpty()) {
+                            append("(0 ")
+                        } else {
+                            val feedUrlsStr = realFeedUrls.joinToString(", ") {
+                                DatabaseUtils.sqlEscapeString(it)
+                            }
+                            append("(`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
+                        }
+                        if (articleIds.isNotEmpty()) {
+                            val articleIdsStr = articleIds.joinToString(", ") {
+                                DatabaseUtils.sqlEscapeString(it)
+                            }
+                            append("OR `${ArticleBean.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
+                        }
+                        append(")")
+                    },
                     orderBy = {
                         ArticleBean.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
                     }
                 ))
-            }.flow
-        }.flowOn(Dispatchers.IO)
-    }
+        }.flow
+    }.flowOn(Dispatchers.IO)
 
     class SearchRegexInvalidException(message: String?) : IllegalArgumentException(message)
 
@@ -90,7 +105,6 @@ class SearchRepository @Inject constructor(
             tableName: String,
             k: String,
             useRegexSearch: Boolean = appContext.dataStore.getOrDefault(UseRegexSearchPreference),
-            // 是否使用多个关键字并集查询
             intersectSearchBySpace: Boolean = appContext.dataStore
                 .getOrDefault(IntersectSearchBySpacePreference),
             useSearchDomain: (table: String, column: String) -> Boolean = { table, column ->
@@ -112,8 +126,8 @@ class SearchRepository @Inject constructor(
 
             val sql = buildString {
                 if (intersectSearchBySpace) {
-                    // 以多个连续的空格/制表符/换行符分割
-                    val keywords = k.trim().split("\\s+".toRegex()).toSet()
+                    // Split by blank
+                    val keywords = k.splitByBlank().toSet()
 
                     keywords.forEachIndexed { i, s ->
                         if (i > 0) append("INTERSECT \n")
@@ -168,7 +182,7 @@ class SearchRepository @Inject constructor(
 
             var filter = "0"
 
-            // 转义输入，防止SQL注入
+            // Escape input text
             val keyword = if (useRegexSearch) {
                 // Check Regex format
                 runCatching { k.toRegex() }.onFailure {

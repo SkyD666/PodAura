@@ -1,0 +1,110 @@
+[versions]
+adaptive = "1.1.0"
+coil = "3.1.0"
+hilt = "2.55"
+androidxTest = "1.2.1"
+libtorrent4j = "2.1.0-35"
+composeMaterial = "1.7.8"
+composeMaterial3 = "1.4.0-alpha09"
+coroutines = "1.10.1"
+okhttp3 = "4.12.0"
+paging = "3.3.6"
+rome = "2.1.0"
+room = "2.6.1"
+tracingPerfetto = "1.0.0"
+worker = "2.10.0"
+kotlin = "2.1.10"
+agp = "8.8.2"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.0" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.10.1" }
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version = "1.1.1" }
+androidx-media = { module = "androidx.media:media", version = "1.7.0" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.8.9" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.8.7" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "composeMaterial" }
+androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.7.8" }
+androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "composeMaterial" }
+androidx-compose-icons = { module = "androidx.compose.material:material-icons-extended", version.ref = "composeMaterial" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
+androidx-compose-window-size = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "composeMaterial3" }
+androidx-compose-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
+androidx-compose-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
+androidx-compose-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracingPerfetto" }
+androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracingPerfetto" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.3" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.0.1" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version = "1.2.0" }
+androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
+
+material = { module = "com.google.android.material:material", version = "1.12.0" }
+material-kolor = { module = "com.materialkolor:material-kolor", version = "2.0.0" }
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.0" }
+
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
+
+okhttp3 = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp3" }
+okhttp3-coroutines-jvm = { module = "com.squareup.okhttp3:okhttp-coroutines-jvm", version = "5.0.0-alpha.12" }
+okhttp3-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp3" }
+retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "2.11.0" }
+retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version = "1.0.0" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.8.0" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutines" }
+
+aniyomi-mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.17.n" }
+ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.17" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
+coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
+coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version = "6.6.2" }
+
+rome = { module = "com.rometools:rome", version.ref = "rome" }
+rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
+ceau-opmlparser = { module = "be.ceau:opml-parser", version = "3.1.0" }
+
+readability4j = { module = "net.dankito.readability4j:readability4j", version = "1.0.8" }
+
+reorderable = { module = "sh.calvin.reorderable:reorderable", version = "2.4.3" }
+
+libtorrent4j-arm64 = { module = "org.libtorrent4j:libtorrent4j-android-arm64", version.ref = "libtorrent4j" }
+libtorrent4j-arm = { module = "org.libtorrent4j:libtorrent4j-android-arm", version.ref = "libtorrent4j" }
+libtorrent4j-x86 = { module = "org.libtorrent4j:libtorrent4j-android-x86", version.ref = "libtorrent4j" }
+libtorrent4j-x8664 = { module = "org.libtorrent4j:libtorrent4j-android-x86_64", version.ref = "libtorrent4j" }
+
+junit = { module = "junit:junit", version = "4.13.2" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTest" }
+androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxTest" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.14.2" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "5.4.0" }
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.6.1" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.2.0" }
+androidx-paging-test = { module = "androidx.paging:paging-testing", version.ref = "paging" }
+androidx-work-test = { module = "androidx.work:work-testing", version.ref = "worker" }
+androidx-test-rules = { module = "androidx.test:rules", version = "1.6.1" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version = "8.8.2" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+hilt = { id = "com.google.dagger.hilt.android", version = "2.51.1" }
+ksp = { id = "com.google.devtools.ksp", version = "2.1.10-1.0.31" }
+android-library = { id = "com.android.library", version = "8.8.2" }
+android-test = { id = "com.android.test", version.ref = "agp" }

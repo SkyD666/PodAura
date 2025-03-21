@@ -1,7 +1,6 @@
 package com.skyd.anivu.model.worker.download
 
 import android.content.Context
-import android.database.sqlite.SQLiteConstraintException
 import android.net.ConnectivityManager
 import android.net.ProxyInfo
 import android.util.Log
@@ -12,9 +11,8 @@ import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.ifNullOfBlank
 import com.skyd.anivu.ext.toDecodedUrl
 import com.skyd.anivu.ext.validateFileName
-import com.skyd.anivu.model.bean.download.DownloadInfoBean
-import com.skyd.anivu.model.bean.download.SessionParamsBean
-import com.skyd.anivu.model.bean.download.TorrentFileBean
+import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
+import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
 import com.skyd.anivu.model.preference.proxy.ProxyHostnamePreference
 import com.skyd.anivu.model.preference.proxy.ProxyModePreference
 import com.skyd.anivu.model.preference.proxy.ProxyPasswordPreference
@@ -22,11 +20,14 @@ import com.skyd.anivu.model.preference.proxy.ProxyPortPreference
 import com.skyd.anivu.model.preference.proxy.ProxyTypePreference
 import com.skyd.anivu.model.preference.proxy.ProxyUsernamePreference
 import com.skyd.anivu.model.preference.proxy.UseProxyPreference
+import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
+import com.skyd.anivu.model.repository.download.bt.BtDownloadManager
+import com.skyd.anivu.model.repository.download.bt.BtDownloadManagerIntent
+import org.libtorrent4j.AddTorrentParams
 import org.libtorrent4j.FileStorage
 import org.libtorrent4j.SettingsPack
 import org.libtorrent4j.TorrentStatus
 import org.libtorrent4j.Vectors
-import org.libtorrent4j.alerts.SaveResumeDataAlert
 import org.libtorrent4j.swig.add_torrent_params
 import org.libtorrent4j.swig.error_code
 import org.libtorrent4j.swig.libtorrent
@@ -86,7 +87,7 @@ fun TorrentStatus.State.toDisplayString(context: Context): String {
         TorrentStatus.State.DOWNLOADING_METADATA -> context.getString(R.string.torrent_status_downloading_metadata)
         TorrentStatus.State.DOWNLOADING -> context.getString(R.string.torrent_status_downloading)
         TorrentStatus.State.FINISHED -> context.getString(R.string.torrent_status_finished)
-        TorrentStatus.State.SEEDING -> context.getString(R.string.torrent_status_seeding)
+        TorrentStatus.State.SEEDING -> context.getString(R.string.download_seeding)
         TorrentStatus.State.CHECKING_RESUME_DATA -> context.getString(R.string.torrent_status_checking_resume_data)
         TorrentStatus.State.UNKNOWN -> ""
     }
@@ -135,6 +136,14 @@ internal fun initProxySettings(context: Context, settings: SettingsPack): Settin
         settings_pack.int_types.proxy_port.swigValue(),
         proxyPort
     ).run {
+        val dhtBootstrapNodes = dataStore.getOrDefault(TorrentDhtBootstrapsPreference)
+            .joinToString(",")
+        if (dhtBootstrapNodes.isNotBlank()) {
+            setString(settings_pack.string_types.dht_bootstrap_nodes.swigValue(), dhtBootstrapNodes)
+        } else {
+            this
+        }
+    }.run {
         if (proxyUsername.isBlank() || proxyPassword.isBlank()) {
             clear(settings_pack.string_types.proxy_username.swigValue())
             clear(settings_pack.string_types.proxy_password.swigValue())
@@ -160,215 +169,148 @@ internal fun toSettingsPackProxyType(proxyType: String): settings_pack.proxy_typ
     }
 }
 
-internal fun getWhatPausedState(oldState: DownloadInfoBean.DownloadState?) =
+internal fun getWhatPausedState(oldState: BtDownloadInfoBean.DownloadState?) =
     when (oldState) {
-        DownloadInfoBean.DownloadState.Seeding,
-        DownloadInfoBean.DownloadState.Completed,
-        DownloadInfoBean.DownloadState.SeedingPaused -> {
-            DownloadInfoBean.DownloadState.SeedingPaused
+        BtDownloadInfoBean.DownloadState.Seeding,
+        BtDownloadInfoBean.DownloadState.Completed,
+        BtDownloadInfoBean.DownloadState.SeedingPaused -> {
+            BtDownloadInfoBean.DownloadState.SeedingPaused
         }
 
         else -> {
-            DownloadInfoBean.DownloadState.Paused
+            BtDownloadInfoBean.DownloadState.Paused
         }
     }
 
 internal fun updateDownloadState(
     link: String,
-    downloadState: DownloadInfoBean.DownloadState,
-): Boolean {
-    try {
-        val result = DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.updateDownloadState(
+    downloadState: BtDownloadInfoBean.DownloadState,
+) {
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadState(
             link = link,
             downloadState = downloadState,
         )
-        if (result == 0) {
-            Log.w(
-                DownloadTorrentWorker.TAG,
-                "updateDownloadState return 0. downloadState: $downloadState"
-            )
-        }
-        return result != 0
-    } catch (e: SQLiteConstraintException) {
-        // 捕获link外键约束异常
-        e.printStackTrace()
-    }
-    return false
+    )
 }
 
 internal fun updateDownloadStateAndSessionParams(
     link: String,
     sessionStateData: ByteArray,
-    downloadState: DownloadInfoBean.DownloadState,
+    downloadState: BtDownloadInfoBean.DownloadState,
 ) {
-    updateDownloadState(link, downloadState)
-    try {
-        DownloadTorrentWorker.hiltEntryPoint.sessionParamsDao.updateSessionParams(
-            SessionParamsBean(
-                link = link,
-                data = sessionStateData,
-            )
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadState(
+            link = link, downloadState = downloadState,
         )
-    } catch (e: SQLiteConstraintException) {
-        // 捕获link外键约束异常
-        e.printStackTrace()
-    }
+    )
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateSessionParams(
+            link = link, sessionStateData = sessionStateData,
+        )
+    )
 }
 
-internal fun updateDescriptionInfoToDb(link: String, description: String): Boolean {
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        val result = updateDownloadDescription(
+internal fun updateDescriptionInfoToDb(link: String, description: String) {
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadDescription(
             link = link,
             description = description,
         )
-        if (result == 0) {
-            Log.w(
-                DownloadTorrentWorker.TAG,
-                "updateDownloadDescription return 0. description: $description"
+    )
+}
+
+internal fun updateTorrentFilesToDb(
+    link: String,
+    savePath: String,
+    files: FileStorage,
+) {
+    val list = mutableListOf<TorrentFileBean>()
+    runCatching {
+        for (i in 0..<files.numFiles()) {
+            list.add(
+                TorrentFileBean(
+                    link = link,
+                    path = File(savePath, files.filePath(i)).path,
+                    size = files.fileSize(i),
+                )
             )
         }
-        return result != 0
-    }
+    }.onFailure { it.printStackTrace() }
+    BtDownloadManager.sendIntent(BtDownloadManagerIntent.UpdateTorrentFiles(list))
 }
 
-internal fun updateTorrentFilesToDb(link: String, files: FileStorage): Boolean {
-    DownloadTorrentWorker.hiltEntryPoint.torrentFileDao.apply {
-        val list = mutableListOf<TorrentFileBean>()
-        runCatching {
-            for (i in 0..<files.numFiles()) {
-                list.add(
-                    TorrentFileBean(
-                        link = link,
-                        path = files.filePath(i),
-                        size = files.fileSize(i),
-                    )
-                )
-            }
-        }.onFailure {
-            return false
-        }
-        updateTorrentFiles(list)
-        return true
-    }
-}
-
-internal fun updateNameInfoToDb(link: String, name: String?): Boolean {
-    if (name.isNullOrBlank()) return false
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        val result = updateDownloadName(
+internal fun updateNameInfoToDb(link: String, name: String?) {
+    if (name.isNullOrBlank()) return
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadName(
             link = link,
             name = name,
         )
-        if (result == 0) {
-            Log.w(DownloadTorrentWorker.TAG, "updateDownloadName return 0. name: $name")
-        }
-        return result != 0
-    }
+    )
 }
 
-internal fun updateProgressInfoToDb(link: String, progress: Float): Boolean {
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        val result = updateDownloadProgress(
+internal fun updateProgressInfoToDb(link: String, progress: Float) {
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadProgress(
             link = link,
             progress = progress,
         )
-        if (result == 0) {
-            Log.w(DownloadTorrentWorker.TAG, "updateDownloadProgress return 0. progress: $progress")
-        }
-        return result != 0
-    }
+    )
 }
 
-internal fun updateSizeInfoToDb(link: String, size: Long): Boolean {
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        val result = updateDownloadSize(
+internal fun updateSizeInfoToDb(link: String, size: Long) {
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadSize(
             link = link,
             size = size,
         )
-        if (result == 0) {
-            Log.w(DownloadTorrentWorker.TAG, "updateDownloadSize return 0. size: $size")
-        }
-        return result != 0
-    }
+    )
 }
 
 /**
  * 添加新的下载信息（之前没下载过的）
  */
-internal fun addNewDownloadInfoToDbIfNotExists(
+internal suspend fun addNewDownloadInfoToDbIfNotExists(
     forceAdd: Boolean = false,
     link: String,
     name: String?,
+    path: String,
     progress: Float,
     size: Long,
-    downloadingDirName: String,
     downloadRequestId: String,
 ) {
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        if (!forceAdd) {
-            val video = getDownloadInfo(link = link)
-            if (video != null) return
-        }
-        updateDownloadInfo(
-            DownloadInfoBean(
+    if (!forceAdd) {
+        val video = BtDownloadManager.getDownloadInfo(link = link)
+        if (video != null) return
+    }
+    BtDownloadManager.sendIntent(
+        BtDownloadManagerIntent.UpdateDownloadInfo(
+            BtDownloadInfoBean(
                 link = link,
                 name = name.ifNullOfBlank {
                     link.substringAfterLast('/')
                         .toDecodedUrl()
                         .validateFileName()
                 },
-                downloadingDirName = downloadingDirName,
+                path = path,
                 downloadDate = System.currentTimeMillis(),
                 size = size,
                 progress = progress,
                 downloadRequestId = downloadRequestId,
             )
         )
-    }
+    )
 }
 
-internal fun updateAllDownloadVideoInfoToDb(
-    link: String,
-    name: String?,
-    progress: Float,
-    size: Long,
-    downloadingDirName: String,
-    downloadRequestId: String,
-) {
-    DownloadTorrentWorker.hiltEntryPoint.downloadInfoDao.apply {
-        val video = getDownloadInfo(link = link)
-        if (video != null) {
-            updateDownloadInfo(
-                link = link,
-                name = name.ifNullOfBlank {
-                    link.substringAfterLast('/')
-                        .toDecodedUrl()
-                        .validateFileName()
-                },
-                size = size,
-                progress = progress,
-            )
-        } else {
-            addNewDownloadInfoToDbIfNotExists(
-                forceAdd = true,
-                link = link,
-                name = name,
-                progress = progress,
-                size = size,
-                downloadingDirName = downloadingDirName,
-                downloadRequestId = downloadRequestId,
-            )
-        }
-    }
-}
-
-fun serializeResumeData(name: String, alert: SaveResumeDataAlert) {
+fun serializeResumeData(name: String, params: AddTorrentParams) {
     val resume = File(Const.TORRENT_RESUME_DATA_DIR, name)
     if (!resume.exists()) resume.createNewFile()
-    val data = libtorrent.write_resume_data(alert.params().swig()).bencode()
+    val data = libtorrent.write_resume_data(params.swig()).bencode()
     try {
         FileOutputStream(resume).use { it.write(Vectors.byte_vector2bytes(data)) }
     } catch (e: IOException) {
+        e.printStackTrace()
         Log.e("serializeResumeData", "Error saving resume data")
     }
 }

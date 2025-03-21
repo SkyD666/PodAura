@@ -1,20 +1,21 @@
 <div align="center">
     <div>
-        <img src="../image/AniVu.svg" style="height: 210px"/>
+        <img src="../image/PodAura.svg" style="height: 210px"/>
     </div>
-    <h1>🥰 AniVu</h1>
+    <h1>🥰 PodAura</h1>
+    <p><b>P</b>odcasts <b>O</b>rganized <b>D</b>iversely with <b>A</b>udio-Video <b>U</b>nification for <b>R</b>ich <b>A</b>ccess</p>
     <p>
-        <a href="https://github.com/SkyD666/AniVu/releases/latest" style="text-decoration:none">
-            <img src="https://img.shields.io/github/v/release/SkyD666/AniVu?display_name=release&style=for-the-badge" alt="GitHub release (latest by date)"/>
+        <a href="https://github.com/SkyD666/PodAura/releases/latest" style="text-decoration:none">
+            <img src="https://img.shields.io/github/v/release/SkyD666/PodAura?display_name=release&style=for-the-badge" alt="GitHub release (latest by date)"/>
         </a>
-        <a href="https://github.com/SkyD666/AniVu/releases/latest" style="text-decoration:none" >
-            <img src="https://img.shields.io/github/downloads/SkyD666/AniVu/total?style=for-the-badge" alt="GitHub all downloads"/>
+        <a href="https://github.com/SkyD666/PodAura/releases/latest" style="text-decoration:none" >
+            <img src="https://img.shields.io/github/downloads/SkyD666/PodAura/total?style=for-the-badge" alt="GitHub all downloads"/>
         </a>
         <a href="https://www.android.com/versions/nougat-7-0" style="text-decoration:none" >
             <img src="https://img.shields.io/badge/Android 7.0+-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Support platform"/>
         </a>
-        <a href="https://github.com/SkyD666/AniVu/blob/master/LICENSE" style="text-decoration:none" >
-            <img src="https://img.shields.io/github/license/SkyD666/AniVu?style=for-the-badge" alt="GitHub license"/>
+        <a href="https://github.com/SkyD666/PodAura/blob/master/LICENSE" style="text-decoration:none" >
+            <img src="https://img.shields.io/github/license/SkyD666/PodAura?style=for-the-badge" alt="GitHub license"/>
         </a>
         <a href="https://t.me/SkyD666Chat" style="text-decoration:none" >
             <img src="https://img.shields.io/badge/Telegram-2CA5E0?logo=telegram&logoColor=white&style=for-the-badge" alt="Telegram"/>
@@ -24,22 +25,25 @@
         </a>
     </p>
     <p>
-        <b>AniVu</b>，一个集<b> RSS 订阅与更新、比特洪流下载、视频播放</b>为一体的工具。
+        <b>PodAura</b>，一个集<b> RSS 订阅与更新、媒体下载与播放</b>为一体的播客工具。
     </p>
     <p>
-        使用 <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> 架构，完全采用 <b><a href="https://m3.material.io/">Material You</a></b> 设计风格。使用 <b>Android View</b> 和 <b>Jetpack Compose</b> 混合开发。
+        使用 <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> 架构，完全采用 <b><a href="https://m3.material.io/">Material You</a></b> 设计风格。使用 <b>Jetpack Compose</b> 开发。
     </p>
     <p>
-        <b><a href="../../README.md">English</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b>中文</b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="README-zh-rTW.md">正體中文</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="https://crowdin.com/project/anivu">帮助我们翻译</a></b>
+        <b><a href="../../README.md">English</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b>简体中文</b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="README-zh-rTW.md">正體中文</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="https://crowdin.com/project/anivu">帮助我们翻译</a></b>
     </p>
 </div>
 
+
+
+<a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-zh-cn.png" alt="Get it on F-Droid" height="80"></a>
 
 ## 💡主要功能
 
 1. **订阅** RSS、**更新** RSS、**阅读** RSS
 2. **自动更新 RSS 订阅**
-3. **下载** RSS 文章中的 **BT 种子或磁力链接**附件（enclosure 标签）
+3. **下载** RSS 文章中的附件（enclosure 标签），支持 **BT 种子或磁力链接**
 4. 已下载**文件做种**
 5. **播放**媒体附件或已下载的**媒体文件**
 6. **更改播放速度**、设置**音轨**、**字幕轨道**等
@@ -48,17 +52,20 @@
 9. 支持**搜索已获取的 RSS 订阅或文章**
 10. **播放**手机中的**其他视频**
 11. 支持**自定义 MPV** 播放器
-12. 支持通过 **OPML 导入导出**订阅
-13. 支持**深色模式**
-14. ......
+12. 支持**自定义播放列表**
+13. 支持 Android 原生**画中画**
+14. 支持通过 **OPML 导入导出**订阅
+15. 支持**深色模式**
+16. ......
 
 ## 🤩应用截图
 
-<img src="../image/zh-rCN/ic_rss_fragment.jpg" alt="ic_rss_fragment" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_media_fragment.jpg" alt="ic_media_fragment" style="zoom:80%;" />
-<img src="../image/zh-rCN/ic_article_fragment.jpg" alt="ic_article_fragment" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_read_fragment.jpg" alt="ic_read_fragment" style="zoom:80%;" />
-<img src="../image/zh-rCN/ic_read_fragment_enclosure.jpg" alt="ic_read_fragment_enclosure" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_download_fragment.jpg" alt="ic_download_fragment" style="zoom:80%;" />
-<img src="../image/zh-rCN/ic_setting_fragment.jpg" alt="ic_setting_fragment" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_appearance_fragment.jpg" alt="ic_appearance_fragment" style="zoom:80%;" />
-<img src="../image/zh-rCN/ic_rss_config_fragment.jpg" alt="ic_rss_config_fragment" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_about_fragment.jpg" alt="ic_about_fragment" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_rss_screen.jpg" alt="ic_rss_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_rss_screen_edit.jpg" alt="ic_rss_screen_edit" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_article_screen.jpg" alt="ic_article_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_read_screen.jpg" alt="ic_read_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_player_activity_port.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_history_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_setting_screen.jpg" alt="ic_setting_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_appearance_screen.jpg" alt="ic_appearance_screen" style="zoom:80%;" />
+<img src="../image/zh-rCN/ic_rss_config_screen.jpg" alt="ic_rss_config_screen" style="zoom:80%;" /> <img src="../image/zh-rCN/ic_about_screen.jpg" alt="ic_about_screen" style="zoom:80%;" />
 <img src="../image/zh-rCN/ic_player_activity.jpg" alt="ic_player_activity" style="zoom:80%;" />
 
 ## 🌏翻译
@@ -86,7 +93,7 @@
 
 ## ✨Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SkyD666/AniVu)](https://star-history.com/?repos=SkyD666/AniVu#SkyD666/AniVu&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=SkyD666/PodAura)](https://star-history.com/?repos=SkyD666/PodAura#SkyD666/PodAura&Date)
 
 ## 🎈其他应用
 

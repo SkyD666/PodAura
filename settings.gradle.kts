@@ -19,6 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AniVu"
+rootProject.name = "PodAura"
 include(":app")
- 
+include(":downloader")
+include(":benchmark")

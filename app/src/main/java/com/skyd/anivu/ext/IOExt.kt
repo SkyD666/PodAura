@@ -1,16 +1,19 @@
 package com.skyd.anivu.ext
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.webkit.URLUtil
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
@@ -26,7 +29,7 @@ import java.security.NoSuchAlgorithmException
 import java.util.LinkedList
 
 
-fun Uri.copyTo(target: File): File {
+fun Uri.copyTo(target: File): Long {
     return appContext.contentResolver.openInputStream(this)!!.use { it.saveTo(target) }
 }
 
@@ -49,8 +52,11 @@ fun Uri.fileName(): String? {
     return name ?: path?.substringAfterLast("/")?.toDecodedUrl()
 }
 
+val Uri.type: String?
+    get() = appContext.contentResolver.getType(this)
+
 fun String.openBrowser(context: Context) {
-    Uri.parse(this).openBrowser(context)
+    toUri().openBrowser(context)
 }
 
 fun Uri.openBrowser(context: Context) {
@@ -70,25 +76,34 @@ fun Uri.openWith(context: Context) = openChooser(
     chooserTitle = context.getString(R.string.open_with),
 )
 
-fun Uri.share(context: Context) = openChooser(
+fun Uri.share(context: Context, mimeType: String? = null) = openChooser(
     context = context,
     action = Intent.ACTION_SEND,
     chooserTitle = context.getString(R.string.share),
+    mimeType = mimeType,
 )
 
-private fun Uri.openChooser(context: Context, action: String, chooserTitle: CharSequence) {
+private fun Uri.openChooser(
+    context: Context,
+    action: String,
+    chooserTitle: CharSequence,
+    mimeType: String? = null,
+) {
     try {
-        val mimeType = context.contentResolver.getType(this)
+        val currentMimeType = mimeType ?: context.contentResolver.getType(this)
         val intent = Intent.createChooser(
             Intent().apply {
                 this.action = action
                 putExtra(Intent.EXTRA_STREAM, this@openChooser)
-                setDataAndType(this@openChooser, mimeType)
+                setDataAndType(this@openChooser, currentMimeType)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             },
             chooserTitle
         )
-        ContextCompat.startActivity(context, intent, null)
+        if (context.tryActivity == null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent, null)
     } catch (e: Exception) {
         e.printStackTrace()
         context.getString(R.string.failed_msg, e.message).showToast(Toast.LENGTH_LONG)
@@ -188,11 +203,19 @@ fun Uri.findFile(contentResolver: ContentResolver, name: String): Uri? {
     return null
 }
 
-fun Uri.isLocal(): Boolean = URLUtil.isFileUrl(toString()) || URLUtil.isContentUrl(toString())
+fun Uri.isLocal(): Boolean = toString().startsWith("/") ||
+        toString().startsWith("fd://") ||
+        URLUtil.isFileUrl(toString()) ||
+        URLUtil.isContentUrl(toString())
+
+fun String.isLocalFile(): Boolean = startsWith("/") ||
+        startsWith("fd://") ||
+        URLUtil.isFileUrl(this) ||
+        URLUtil.isContentUrl(this)
 
 fun Uri.isNetwork(): Boolean = URLUtil.isNetworkUrl(toString())
 
-fun InputStream.saveTo(target: File): File {
+fun InputStream.saveTo(target: File): Long {
     val parentFile = target.parentFile
     if (parentFile?.exists() == false) {
         parentFile.mkdirs()
@@ -200,8 +223,7 @@ fun InputStream.saveTo(target: File): File {
     if (!target.exists()) {
         target.createNewFile()
     }
-    FileOutputStream(target).use { copyTo(it) }
-    return target
+    return FileOutputStream(target).use { copyTo(it) }
 }
 
 fun File.md5(): String? {
@@ -229,3 +251,14 @@ fun File.md5(): String? {
 
 inline val String.extName: String
     get() = substringAfterLast(".", missingDelimiterValue = "")
+
+fun Uri.copyToClipboard(context: Context, mimeType: String? = null) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(
+        ClipData(context.applicationInfo.name, arrayOf(mimeType), ClipData.Item(this))
+    )
+    // If you show a copy confirmation toast in Android 13, the user sees duplicate messages.
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        context.getString(R.string.copied).showToast()
+    }
+}

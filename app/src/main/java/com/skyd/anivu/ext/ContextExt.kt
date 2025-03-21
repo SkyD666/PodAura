@@ -6,11 +6,20 @@ import android.content.ContextWrapper
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Point
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.view.Window
-import androidx.core.content.ContextCompat
 import androidx.core.content.pm.PackageInfoCompat
+import coil3.ImageLoader
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.svg.SvgDecoder
+import coil3.video.VideoFrameDecoder
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
 
 val Context.activity: Activity
     get() {
@@ -42,36 +51,15 @@ val Context.tryWindow: Window?
         return null
     }
 
-val Context.screenIsLand: Boolean
-    get() = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-fun Context.screenHeight(includeVirtualKey: Boolean): Int {
-    val display = ContextCompat.getDisplayOrDefault(this)
-    val outPoint = Point()
-    // 可能有虚拟按键的情况
-    if (includeVirtualKey) display.getRealSize(outPoint)
-    else display.getSize(outPoint)
-    return outPoint.y
-}
-
-fun Context.screenWidth(includeVirtualKey: Boolean): Int {
-    val display = ContextCompat.getDisplayOrDefault(this)
-    val outPoint = Point()
-    // 可能有虚拟按键的情况
-    if (includeVirtualKey) display.getRealSize(outPoint)
-    else display.getSize(outPoint)
-    return outPoint.x
-}
-
 fun Context.getAppVersionName(): String {
     var appVersionName = ""
     try {
-        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val packageInfo = if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0L))
         } else {
             packageManager.getPackageInfo(packageName, 0)
         }
-        appVersionName = packageInfo.versionName
+        appVersionName = packageInfo.versionName.orEmpty()
     } catch (e: PackageManager.NameNotFoundException) {
         e.printStackTrace()
     }
@@ -94,7 +82,7 @@ fun Context.getAppVersionCode(): Long {
 fun Context.getAppName(): String? {
     return try {
         val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, 0)
-        val labelRes: Int = packageInfo.applicationInfo.labelRes
+        val labelRes: Int = packageInfo.applicationInfo?.labelRes ?: return null
         getString(labelRes)
     } catch (e: Exception) {
         e.printStackTrace()
@@ -105,4 +93,33 @@ fun Context.getAppName(): String? {
 fun Context.inDarkMode(): Boolean {
     return (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
             Configuration.UI_MODE_NIGHT_YES
+}
+
+fun Context.isWifi(): Boolean {
+    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val networkCapabilities =
+        connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+    return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+}
+
+fun Context.imageLoaderBuilder(): ImageLoader.Builder {
+    return ImageLoader.Builder(this)
+        .components {
+            if (SDK_INT >= 28) {
+                add(AnimatedImageDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+            add(SvgDecoder.Factory())
+            add(VideoFrameDecoder.Factory())
+        }
+        .components {
+            add(OkHttpNetworkFetcherFactory(callFactory = {
+                OkHttpClient.Builder().addNetworkInterceptor(Interceptor { chain ->
+                    chain.proceed(chain.request()).newBuilder()
+                        .header("Cache-Control", "max-age=31536000,public")
+                        .build()
+                }).build()
+            }))
+        }
 }

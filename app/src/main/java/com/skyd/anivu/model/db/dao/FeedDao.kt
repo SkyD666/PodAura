@@ -11,18 +11,19 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.appContext
-import com.skyd.anivu.model.bean.ArticleBean
-import com.skyd.anivu.model.bean.FEED_TABLE_NAME
-import com.skyd.anivu.model.bean.FEED_VIEW_NAME
-import com.skyd.anivu.model.bean.FeedBean
-import com.skyd.anivu.model.bean.FeedViewBean
-import com.skyd.anivu.model.bean.FeedWithArticleBean
-import com.skyd.anivu.model.bean.GROUP_TABLE_NAME
-import com.skyd.anivu.model.bean.GroupBean
+import com.skyd.anivu.model.bean.article.ArticleBean
+import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
+import com.skyd.anivu.model.bean.feed.FEED_VIEW_NAME
+import com.skyd.anivu.model.bean.feed.FeedBean
+import com.skyd.anivu.model.bean.feed.FeedViewBean
+import com.skyd.anivu.model.bean.feed.FeedWithArticleBean
+import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
+import com.skyd.anivu.model.bean.group.GroupBean
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FeedDao {
@@ -52,11 +53,10 @@ interface FeedDao {
         val feedUrl = feedWithArticleBean.feed.url
         hiltEntryPoint.articleDao.insertListIfNotExist(
             feedWithArticleBean.articles.map { articleWithEnclosure ->
-                // Enclosure
                 val articleId = articleWithEnclosure.article.articleId
 
                 // Add ArticleWithEnclosure
-                if (articleWithEnclosure.article.feedUrl != feedUrl) {
+                return@map if (articleWithEnclosure.article.feedUrl != feedUrl) {
                     articleWithEnclosure.copy(
                         article = articleWithEnclosure.article.copy(feedUrl = feedUrl),
                         enclosures = articleWithEnclosure.enclosures.map {
@@ -106,21 +106,57 @@ interface FeedDao {
     suspend fun updateFeedIcon(feedUrl: String, icon: String?): Int
 
     @Transaction
-    @Query("SELECT * FROM $FEED_TABLE_NAME")
-    fun getFeedPagingSource(): PagingSource<Int, FeedBean>
-
-    @Transaction
-    @Query("SELECT * FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} = :feedUrl")
-    suspend fun getFeed(feedUrl: String): FeedBean
+    @Query(
+        """
+        UPDATE $FEED_TABLE_NAME
+        SET ${FeedBean.REQUEST_HEADERS_COLUMN} = :headers
+        WHERE ${FeedBean.URL_COLUMN} = :feedUrl
+        """
+    )
+    suspend fun updateFeedHeaders(feedUrl: String, headers: FeedBean.RequestHeaders?)
 
     @Transaction
     @Query(
         """
-            SELECT * FROM $FEED_VIEW_NAME
-            WHERE ${FeedBean.GROUP_ID_COLUMN} IN (:groupIds)
+        SELECT ${FeedBean.REQUEST_HEADERS_COLUMN} FROM $FEED_TABLE_NAME
+        WHERE ${FeedBean.URL_COLUMN} = :feedUrl
         """
     )
-    suspend fun getFeedsIn(groupIds: List<String>): List<FeedViewBean>
+    fun getFeedHeaders(feedUrl: String): Flow<FeedBean.RequestHeaders?>
+
+    @Transaction
+    @Query(
+        """
+        UPDATE $FEED_TABLE_NAME
+        SET ${FeedBean.SORT_XML_ARTICLES_ON_UPDATE_COLUMN} = :sort
+        WHERE ${FeedBean.URL_COLUMN} = :feedUrl
+        """
+    )
+    suspend fun updateFeedSortXmlArticlesOnUpdate(feedUrl: String, sort: Boolean): Int
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_TABLE_NAME")
+    fun getFeedPagingSource(): PagingSource<Int, FeedBean>
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.URL_COLUMN} = :feedUrl")
+    suspend fun getFeed(feedUrl: String): FeedViewBean
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.URL_COLUMN} IN (:feedUrls)")
+    suspend fun getFeedsIn(feedUrls: List<String>): List<FeedViewBean>
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IN (:groupIds)")
+    suspend fun getFeedsInGroup(groupIds: List<String>): List<FeedViewBean>
+
+    @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IN (:groupIds)")
+    suspend fun getFeedUrlsInGroup(groupIds: List<String>): List<String>
+
+    @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL")
+    suspend fun getFeedUrlsInDefaultGroup(): List<String>
 
     @Transaction
     @Query(
@@ -130,7 +166,11 @@ interface FeedDao {
             ${FeedBean.GROUP_ID_COLUMN} NOT IN (:groupIds)
         """
     )
-    suspend fun getFeedsNotIn(groupIds: List<String>): List<FeedViewBean>
+    suspend fun getFeedsNotInGroup(groupIds: List<String>): List<FeedViewBean>
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL")
+    fun getFeedsInDefaultGroup(): Flow<List<FeedViewBean>>
 
     @Transaction
     @Query(
@@ -151,8 +191,16 @@ interface FeedDao {
     fun getFeedList(sql: SupportSQLiteQuery): List<FeedViewBean>
 
     @Transaction
+    @Query("SELECT * FROM $FEED_TABLE_NAME")
+    fun getAllFeedList(): Flow<List<FeedBean>>
+
+    @Transaction
     @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME")
     fun getAllFeedUrl(): List<String>
+
+    @Transaction
+    @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.MUTE_COLUMN} = 0")
+    fun getAllUnmutedFeedUrl(): List<String>
 
     @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} LIKE :url")
@@ -161,4 +209,19 @@ interface FeedDao {
     @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.CUSTOM_ICON_COLUMN} LIKE :customIcon")
     fun containsByCustomIcon(customIcon: String): Int
+
+    @Transaction
+    @Query(
+        "UPDATE $FEED_TABLE_NAME SET ${FeedBean.MUTE_COLUMN} = :mute " +
+                "WHERE ${FeedBean.URL_COLUMN} = :feedUrl"
+    )
+    suspend fun muteFeed(feedUrl: String, mute: Boolean): Int
+
+    @Transaction
+    @Query(
+        "UPDATE $FEED_TABLE_NAME SET ${FeedBean.MUTE_COLUMN} = :mute " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
+    )
+    suspend fun muteFeedsInGroup(groupId: String?, mute: Boolean): Int
 }

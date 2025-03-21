@@ -1,5 +1,6 @@
 package com.skyd.anivu.model.bean
 
+import androidx.annotation.Keep
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseBean
@@ -25,8 +26,8 @@ open class MediaGroupBean(
         else name
     }
 
-    object DefaultMediaGroup :
-        MediaGroupBean(appContext.getString(R.string.default_media_group)) {
+    object DefaultMediaGroup : MediaGroupBean(appContext.getString(R.string.default_media_group)) {
+        @Keep
         private fun readResolve(): Any = DefaultMediaGroup
         override val name: String
             get() = appContext.getString(R.string.default_media_group)

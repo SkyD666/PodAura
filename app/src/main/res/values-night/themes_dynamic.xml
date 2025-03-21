@@ -1,4 +1,4 @@
 <resources>
 
-    <style name="Theme.AniVu.Dynamic" parent="Theme.Dynamic" />
+    <style name="Theme.PodAura.Dynamic" parent="Theme.Dynamic" />
 </resources>
