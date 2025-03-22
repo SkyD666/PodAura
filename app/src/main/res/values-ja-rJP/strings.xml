@@ -44,13 +44,13 @@
     <string name="player_long_press_playback_speed">早送り…</string>
     <string name="about_screen_name">アプリについて</string>
     <string name="app_short_description">オールインワンな Android ポッドキャストアプリ。</string>
-    <string name="app_tech_stack_description">PodAura utilizes the MVI architecture and fully adopts the Material You design style. All pages are developed using Android View and Compose.</string>
+    <string name="app_tech_stack_description">PodAura は MVI アーキテクチャを活用、Material You デザインスタイルを完全に採用しています。すべてのページは Android View と Compose を使用して開発されています。</string>
     <string name="about_screen_visit_github">GitHub リポジトリ</string>
     <string name="about_screen_join_telegram">Telegram グループ</string>
     <string name="about_screen_join_discord">Discord サーバー</string>
     <string name="about_screen_other_works">その他の創作物</string>
-    <string name="about_screen_other_works_rays_description">A tool to record, search and manage stickers on your phone. Are you still struggling with too many stickers on your phone and having trouble finding the ones you want? This tool will help you manage your stickers! \uD83D\uDE0B</string>
-    <string name="about_screen_other_works_raca_description">A tool to record and search abstract passages and mini-essays in the comments section locally. 🤗 Are you still having trouble remembering the content of your mini-essay and facing the embarrassing situation of forgetting the front, middle and back? Using this tool will help you record the mini-essays you come across and never worry about forgetting them again! 😋</string>
+    <string name="about_screen_other_works_rays_description">デバイスのステッカーを記録、検索、管理するためのツールです。デバイスにステッカーが多すぎることで欲しいステッカーを見つけることに苦労はしていませんか？このツールはステッカーの管理に役立ちます！\uD83D\uDE0B</string>
+    <string name="about_screen_other_works_raca_description">コメント欄の抽象的な文章やミニエッセイをローカルで記録、検索ができるツールです。🤗ミニエッセイの内容を思い出すのにまだ苦労して前、中、後を忘れてしまう恥ずかしい状況に直面したりはしていませんか？このツールを使用することで遭遇したミニエッセイを記録することで二度と忘れる心配はなくなるでしょう！😋</string>
     <string name="about_screen_other_works_night_screen_description">When you use your phone at night 🌙, Night Screen can help you reduce the brightness of the screen and reduce the damage to your eyes.</string>
     <string name="no_browser_found">Can\'t find the browser! Link: %s</string>
     <string name="license_screen_name">ライセンス</string>
