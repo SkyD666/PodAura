@@ -3,7 +3,7 @@
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">フィード</string>
     <string name="media_screen_name">メディア</string>
-    <string name="more_screen_name">さらに表示</string>
+    <string name="more_screen_name">詳細</string>
     <string name="add">追加</string>
     <string name="feed_screen_rss_url">RSS URL</string>
     <string name="paste">貼り付け</string>
@@ -68,7 +68,7 @@
     <string name="data_screen_name">データ</string>
     <string name="data_screen_description">データの管理、ファイル、キャッシュ</string>
     <string name="data_screen_clear_cache">キャッシュを消去</string>
-    <string name="data_screen_clear_cache_description">分離されたダウンロード一時ファイル、キャッシュされた Torrent ファイルなどの削除</string>
+    <string name="data_screen_clear_cache_description">分離されたダウンロード一時ファイル、キャッシュ済み Torrent ファイルなどを削除します</string>
     <string name="data_screen_data_cleared_size">%s 個のデータを消去しました</string>
     <string name="data_screen_clear_cache_warning">キャッシュを消去してもよろしいですか？</string>
     <string name="clear">消去</string>
@@ -81,7 +81,7 @@
     <string name="transmission_screen_description">データ転送のセットアップ、動作</string>
     <string name="transmission_screen_transmission_behavior_category">動作</string>
     <string name="transmission_screen_seeding_when_complete">自動シーディング</string>
-    <string name="transmission_screen_seeding_when_complete_description">ダウンロードが完了後に自動でシードします</string>
+    <string name="transmission_screen_seeding_when_complete_description">ダウンロードを完了後に自動でシードします</string>
     <string name="transmission_screen_config_category">構成</string>
     <string name="proxy_screen_name">プロキシ</string>
     <string name="proxy_screen_description">プロキシサーバーのアドレス構成、ポート、アカウントなど</string>
@@ -97,7 +97,7 @@
     <string name="proxy_screen_type">タイプ</string>
     <string name="not_configure">構成しない</string>
     <string name="configured">構成済み</string>
-    <string name="data_screen_delete_article_before">削除後</string>
+    <string name="data_screen_delete_article_before">前の記事を削除</string>
     <string name="data_screen_delete_article_before_description">指定した日付より前の更新日を持つすべての記事を削除します</string>
     <string name="select_date">日付を選択</string>
     <string name="data_screen_clear_up_category">消去</string>
@@ -310,7 +310,7 @@
     <string name="feed_screen_sort_xml_articles_on_update">並べ替えを更新</string>
     <string name="feed_screen_sort_xml_articles_on_update_tip">並べ替えの更新を有効化すると更新時間が長くなる可能性があります。</string>
     <string name="proxy_screen_port_error_message">ポートの範囲は 0 から 65535 です</string>
-    <string name="more">さらに表示</string>
+    <string name="more">詳細</string>
     <string name="reorder_group_screen_name">グループを並べ替え</string>
     <string name="player_config_screen_cache_category">キャッシュ</string>
     <string name="player_config_screen_max_cache_size">最大キャッシュサイズ</string>
