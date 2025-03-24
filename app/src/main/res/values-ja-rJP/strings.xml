@@ -111,7 +111,7 @@
     <string name="rss_config_screen_sync_wifi_constraint">Wi-Fi 接続時のみ</string>
     <string name="rss_config_screen_sync_charging_constraint">充電中のみ</string>
     <string name="rss_config_screen_sync_battery_not_low_constraint">バッテリー低残量ではない場合のみ</string>
-    <string name="crashed"><![CDATA[クラッシュしました (＃＞＜)]]></string>
+    <string name="crashed"><![CDATA[クラッシュ (＃＞＜)]]></string>
     <string name="submit_an_issue_on_github">GitHub で報告する</string>
     <string name="copied">コピーしました</string>
     <string name="read_screen_article_id_illegal">記事の ID が無効です。削除された可能性があります。</string>
@@ -162,7 +162,7 @@
     <string name="behavior_screen_description">フィードを構成、記事一覧の動作</string>
     <string name="behavior_screen_article_screen_category">記事の一覧</string>
     <string name="behavior_screen_article_screen_deduplicate_title_in_desc">重複のタイトル</string>
-    <string name="behavior_screen_article_screen_deduplicate_title_in_desc_description">説明テキスト内のタイトルと同じ部分の文字列を削除します。</string>
+    <string name="behavior_screen_article_screen_deduplicate_title_in_desc_description">説明テキスト内のタイトルと同じ部分の文字列を削除します</string>
     <string name="article_action_read">既読</string>
     <string name="article_action_show_enclosures">エンクロージャーを表示</string>
     <string name="behavior_screen_article_tap_action">項目をタップ</string>
@@ -258,7 +258,7 @@
     <string name="article_screen_filter_unread">未読</string>
     <string name="article_screen_filter_all">すべて</string>
     <string name="article_screen_filter_clear_all_filter">すべてのフィルターを消去</string>
-    <string name="tonal_elevation">音調を向上</string>
+    <string name="tonal_elevation">高さの調整</string>
     <string name="feed_style_screen_top_bar_category">上部バー</string>
     <string name="article_style_screen_name">記事画面のスタイル</string>
     <string name="article_style_screen_top_bar_category">上部バー</string>
@@ -270,7 +270,7 @@
     <string name="read_all">すべて既読</string>
     <string name="article_style_screen_top_bar_refresh">上部バーでの更新</string>
     <string name="article_style_screen_pull_refresh">引っぱって更新</string>
-    <string name="article_style_screen_pull_refresh_description">引っぱって更新を有効化</string>
+    <string name="article_style_screen_pull_refresh_description">引っぱって更新を有効化します</string>
     <string name="article_style_screen_top_bar_refresh_description">上部バーに更新ボタンを表示する</string>
     <string name="sort">並べ替え</string>
     <string name="article_screen_sort_date_asc">古い順</string>
@@ -318,8 +318,8 @@
     <string name="torrent_download_channel_name">BT ダウンロードタスク</string>
     <string name="download_channel_name">ダウンロードタスク</string>
     <string name="download_channel_description">PodAura ダウンロードタスク通知</string>
-    <string name="player_seek_fast">高速 (不正確です)</string>
-    <string name="player_seek_exact">正確 (低速です)</string>
+    <string name="player_seek_fast">高速 (不正確)</string>
+    <string name="player_seek_exact">正確 (低速)</string>
     <string name="player_config_screen_seek_option">シークオプション</string>
     <string name="read_screen_open_image_in_browser">ブラウザで画像を開く</string>
     <string name="read_screen_download_image">ギャラリーに保存</string>
