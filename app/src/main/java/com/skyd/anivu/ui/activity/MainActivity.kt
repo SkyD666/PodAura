@@ -230,14 +230,12 @@ private fun MainNavHost() {
         composable<ExportOpmlRoute> { ExportOpmlScreen() }
         composable<ImportOpmlRoute> { ImportOpmlScreen(opmlUrl = it.toRoute<ImportOpmlRoute>().opmlUrl) }
         composable<ImportOpmlDeepLinkRoute>(
-            deepLinks = listOf(
-                *listOf("text/xml", "application/xml", "text/x-opml").map { type ->
-                    navDeepLink {
-                        action = Intent.ACTION_SEND
-                        mimeType = type
-                    }
-                }.toTypedArray()
-            ),
+            deepLinks = listOf("text/xml", "application/xml", "text/x-opml").map { type ->
+                navDeepLink {
+                    action = Intent.ACTION_SEND
+                    mimeType = type
+                }
+            },
         ) {
             val intent = it.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
             ImportOpmlScreen(opmlUrl = intent?.clipData?.takeIf { it.itemCount > 0 }
@@ -277,14 +275,12 @@ private fun MainNavHost() {
             DownloadScreen(downloadLink = route.downloadLink, mimetype = route.mimetype)
         }
         composable<DownloadDeepLinkRoute>(
-            deepLinks = listOf(
-                *listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
-                    navDeepLink {
-                        action = Intent.ACTION_VIEW
-                        uriPattern = it
-                    }
-                }.toTypedArray()
-            ),
+            deepLinks = listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
+                navDeepLink {
+                    action = Intent.ACTION_VIEW
+                    uriPattern = it
+                }
+            },
         ) {
             val intent = it.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
             DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)

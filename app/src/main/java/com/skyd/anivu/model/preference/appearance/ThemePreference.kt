@@ -67,6 +67,15 @@ object ThemePreference : BasePreference<String> {
         else -> context.getString(R.string.unknown)
     }
 
+    fun toColors(
+        context: Context,
+        value: String = context.dataStore.getOrDefault(this),
+    ): Triple<Color, Color?, Color?> = Triple(
+        toSeedColor(context, value),
+        toSecondaryColor(context, value),
+        toTertiaryColor(context, value),
+    )
+
     fun toSeedColor(
         context: Context,
         value: String = context.dataStore.getOrDefault(this),
@@ -79,5 +88,21 @@ object ThemePreference : BasePreference<String> {
         PURPLE -> Color(0xFF7E6195)
         MAHIRO -> Color(0xFFEAD4CE)
         else -> Color(0xFF006EBE)
+    }
+
+    fun toSecondaryColor(
+        context: Context,
+        value: String = context.dataStore.getOrDefault(this),
+    ): Color? = when (value) {
+        MAHIRO -> Color(0xFF7D859D)
+        else -> null
+    }
+
+    fun toTertiaryColor(
+        context: Context,
+        value: String = context.dataStore.getOrDefault(this),
+    ): Color? = when (value) {
+        MAHIRO -> Color(0xFFEC9CA8)
+        else -> null
     }
 }

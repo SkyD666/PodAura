@@ -40,13 +40,14 @@ fun PodAuraTheme(
     MaterialTheme(
         colorScheme = remember(themeName, darkTheme, isAmoled) {
             colors.getOrElse(themeName) {
+                val (primary, secondary, tertiary) =
+                    ThemePreference.toColors(context, ThemePreference.values[0])
                 dynamicColorScheme(
-                    seedColor = ThemePreference.toSeedColor(
-                        context = context,
-                        value = ThemePreference.values[0],
-                    ),
+                    seedColor = primary,
                     isDark = darkTheme,
                     isAmoled = isAmoled,
+                    secondary = secondary,
+                    tertiary = tertiary,
                 )
             }
         },
@@ -63,10 +64,13 @@ fun extractAllColors(darkTheme: Boolean): Map<String, ColorScheme> {
 @Composable
 fun extractColors(darkTheme: Boolean): Map<String, ColorScheme> {
     return ThemePreference.values.associateWith {
+        val (primary, secondary, tertiary) = ThemePreference.toColors(LocalContext.current, it)
         rememberDynamicColorScheme(
-            primary = ThemePreference.toSeedColor(LocalContext.current, it),
+            primary = primary,
             isDark = darkTheme,
             isAmoled = LocalAmoledDarkMode.current,
+            secondary = secondary,
+            tertiary = tertiary,
         )
     }.toMutableMap()
 }
