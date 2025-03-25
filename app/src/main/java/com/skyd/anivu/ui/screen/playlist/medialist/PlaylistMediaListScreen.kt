@@ -44,15 +44,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.rememberUpdateSemaphore
-import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.ext.toRelativeDateTimeString
 import com.skyd.anivu.ext.vThenP
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
@@ -71,21 +68,11 @@ import com.skyd.anivu.ui.local.LocalPlaylistMediaSortBy
 import com.skyd.anivu.ui.screen.playlist.PlaylistThumbnail
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlinx.coroutines.channels.Channel
+import kotlinx.serialization.Serializable
 
 
-const val PLAYLIST_MEDIA_LIST_SCREEN_ROUTE = "playlistMediaListScreen"
-const val PLAYLIST_ID_KEY = "playlistId"
-
-fun openPlaylistMediaListScreen(
-    navController: NavController,
-    playlistId: String,
-    navOptions: NavOptions? = null,
-) {
-    navController.navigate(
-        "$PLAYLIST_MEDIA_LIST_SCREEN_ROUTE/${playlistId.toEncodedUrl(allow = null)}",
-        navOptions = navOptions,
-    )
-}
+@Serializable
+data class PlaylistMediaListRoute(val playlistId: String)
 
 @Composable
 fun PlaylistMediaListScreen(

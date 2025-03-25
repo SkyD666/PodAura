@@ -1,7 +1,5 @@
 package com.skyd.anivu.ui.screen.search
 
-import android.os.Bundle
-import androidx.annotation.Keep
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -64,14 +62,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
@@ -91,43 +86,24 @@ import com.skyd.anivu.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
 import kotlinx.coroutines.launch
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
+@Serializable
+sealed interface SearchRoute {
+    @Serializable
+    data object Feed : SearchRoute
 
-const val SEARCH_SCREEN_ROUTE = "searchScreen"
-const val SEARCH_DOMAIN_KEY = "searchDomain"
-
-fun openSearchScreen(
-    navController: NavController,
-    searchDomain: SearchDomain,
-    navOptions: NavOptions? = null,
-) {
-    navController.navigate(
-        SEARCH_SCREEN_ROUTE,
-        Bundle().apply {
-            putSerializable(SEARCH_DOMAIN_KEY, searchDomain)
-        },
-        navOptions = navOptions,
-    )
-}
-
-@kotlinx.serialization.Serializable
-sealed interface SearchDomain : Serializable {
-    data object Feed : SearchDomain {
-        @Keep
-        private fun readResolve(): Any = Feed
-    }
-
+    @Serializable
     data class Article(
         val feedUrls: List<String>,
         val groupIds: List<String>,
         val articleIds: List<String>,
-    ) : SearchDomain
+    ) : SearchRoute
 }
 
 @Composable
 fun SearchScreen(
-    searchDomain: SearchDomain,
+    searchRoute: SearchRoute,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -144,12 +120,12 @@ fun SearchScreen(
     }
 
     val dispatch = viewModel.getDispatcher(
-        startWith = when (searchDomain) {
-            SearchDomain.Feed -> SearchIntent.ListenSearchFeed
-            is SearchDomain.Article -> SearchIntent.ListenSearchArticle(
-                feedUrls = searchDomain.feedUrls,
-                groupIds = searchDomain.groupIds,
-                articleIds = searchDomain.articleIds,
+        startWith = when (searchRoute) {
+            SearchRoute.Feed -> SearchIntent.ListenSearchFeed
+            is SearchRoute.Article -> SearchIntent.ListenSearchArticle(
+                feedUrls = searchRoute.feedUrls,
+                groupIds = searchRoute.groupIds,
+                articleIds = searchRoute.articleIds,
             )
         }
     )
@@ -233,7 +209,7 @@ fun SearchScreen(
             is SearchResultState.Success -> SuccessContent(
                 searchResultState = searchResultState,
                 searchResultListState = searchResultListState,
-                searchDomain = searchDomain,
+                searchRoute = searchRoute,
                 dispatch = dispatch,
                 innerPaddings = innerPaddings,
                 fabHeight = fabHeight,
@@ -261,7 +237,7 @@ fun SearchScreen(
 private fun SuccessContent(
     searchResultState: SearchResultState.Success,
     searchResultListState: LazyGridState,
-    searchDomain: SearchDomain,
+    searchRoute: SearchRoute,
     dispatch: (SearchIntent) -> Unit,
     innerPaddings: PaddingValues,
     fabHeight: Dp,
@@ -279,9 +255,9 @@ private fun SuccessContent(
             ),
         ) {
             @Suppress("UNCHECKED_CAST")
-            when (searchDomain) {
-                SearchDomain.Feed -> feedItems(result as LazyPagingItems<FeedViewBean>)
-                is SearchDomain.Article -> articleItems(
+            when (searchRoute) {
+                SearchRoute.Feed -> feedItems(result as LazyPagingItems<FeedViewBean>)
+                is SearchRoute.Article -> articleItems(
                     result = result as LazyPagingItems<ArticleWithFeed>,
                     onFavorite = { articleWithFeed, favorite ->
                         dispatch(

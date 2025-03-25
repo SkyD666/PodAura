@@ -72,12 +72,14 @@ import com.skyd.anivu.ui.local.LocalAutoDeleteArticleMaxCount
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseBefore
 import com.skyd.anivu.ui.local.LocalAutoDeleteArticleUseMaxCount
 import com.skyd.anivu.ui.local.LocalUseAutoDelete
+import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 
 
-const val AUTO_DELETE_SCREEN_ROUTE = "autoDeleteScreen"
+@Serializable
+data object AutoDeleteRoute
 
 @Composable
 fun AutoDeleteScreen() {

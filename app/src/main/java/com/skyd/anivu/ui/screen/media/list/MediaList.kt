@@ -41,10 +41,10 @@ import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.screen.article.openArticleScreen
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
-import com.skyd.anivu.ui.screen.media.sub.openSubMediaScreen
-import com.skyd.anivu.ui.screen.read.openReadScreen
+import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
+import com.skyd.anivu.ui.screen.read.ReadRoute
 
 class GroupInfo(
     val group: MediaGroupBean,
@@ -123,9 +123,7 @@ internal fun MediaList(
                                     },
                                 )
                             },
-                            onOpenDir = {
-                                openSubMediaScreen(navController = navController, media = it)
-                            },
+                            onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
                             onRename = { oldMedia, newName ->
                                 dispatch(MediaListIntent.RenameFile(oldMedia.file, newName))
                             },
@@ -189,10 +187,7 @@ internal fun MediaList(
         mediaBean.feedBean?.let {
             { it: MediaBean ->
                 it.feedUrl?.let { feedUrl ->
-                    openArticleScreen(
-                        navController = navController,
-                        feedUrls = listOf(feedUrl),
-                    )
+                    navController.navigate(ArticleRoute(feedUrls = listOf(feedUrl)))
                 }
             }
         }
@@ -200,12 +195,7 @@ internal fun MediaList(
     val onOpenArticle: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
         mediaBean.articleWithEnclosure?.let {
             { it: MediaBean ->
-                it.articleId?.let { articleId ->
-                    openReadScreen(
-                        navController = navController,
-                        articleId = articleId,
-                    )
-                }
+                it.articleId?.let { navController.navigate(ReadRoute(articleId = it)) }
             }
         }
     }

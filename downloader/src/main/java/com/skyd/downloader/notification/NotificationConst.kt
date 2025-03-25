@@ -10,6 +10,8 @@ object NotificationConst {
     const val DEFAULT_VALUE_NOTIFICATION_CHANNEL_DESCRIPTION = "Notify file download status"
     const val KEY_NOTIFICATION_CHANNEL_IMPORTANCE = "keyNotificationChannelImportance"
     const val DEFAULT_VALUE_NOTIFICATION_CHANNEL_IMPORTANCE = NotificationManager.IMPORTANCE_LOW
+    const val KEY_NOTIFICATION_CONTENT_ACTIVITY = "keyNotificationContentActivity"
+    const val KEY_NOTIFICATION_CONTENT_BASE_PATH = "keyNotificationContentBasePath"
     const val KEY_NOTIFICATION_SMALL_ICON = "keySmallNotificationIcon"
     const val DEFAULT_VALUE_NOTIFICATION_SMALL_ICON = -1
     const val KEY_NOTIFICATION_ID = "keyNotificationId"

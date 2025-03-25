@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.skyd.downloader.Downloader
 import com.skyd.downloader.R
 import com.skyd.downloader.download.DownloadWorker
+import com.skyd.downloader.notification.DownloadNotificationManager.Companion.createOpenIntent
 import com.skyd.downloader.util.TextUtil
 
 /**
@@ -92,6 +93,10 @@ internal class NotificationReceiver : BroadcastReceiver() {
                     val notificationImportance =
                         extras?.getInt(NotificationConst.KEY_NOTIFICATION_CHANNEL_IMPORTANCE)
                             ?: NotificationConst.DEFAULT_VALUE_NOTIFICATION_CHANNEL_IMPORTANCE
+                    val notificationContentActivity =
+                        extras?.getString(NotificationConst.KEY_NOTIFICATION_CONTENT_ACTIVITY)
+                    val notificationContentBasePath =
+                        extras?.getString(NotificationConst.KEY_NOTIFICATION_CONTENT_BASE_PATH)
                     val notificationChannelDescription =
                         extras?.getString(NotificationConst.KEY_NOTIFICATION_CHANNEL_DESCRIPTION)
                             ?: NotificationConst.DEFAULT_VALUE_NOTIFICATION_CHANNEL_DESCRIPTION
@@ -118,15 +123,15 @@ internal class NotificationReceiver : BroadcastReceiver() {
                     }
 
                     // Open Application (Send the unique download request id in intent)
-                    val intentOpen =
-                        context.packageManager.getLaunchIntentForPackage(context.packageName)
-                    intentOpen?.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    intentOpen?.putExtra(NotificationConst.KEY_DOWNLOAD_REQUEST_ID, requestId)
                     val pendingIntentOpen = PendingIntent.getActivity(
-                        context.applicationContext,
+                        context,
                         notificationId,
-                        intentOpen,
+                        createOpenIntent(
+                            context = context,
+                            requestId = requestId,
+                            notificationContentActivity = notificationContentActivity,
+                            notificationContentBasePath = notificationContentBasePath,
+                        ),
                         PendingIntent.FLAG_IMMUTABLE
                     )
 

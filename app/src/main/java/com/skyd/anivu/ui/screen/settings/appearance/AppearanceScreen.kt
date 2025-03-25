@@ -78,15 +78,17 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalNavigationBarLabel
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
 import com.skyd.anivu.ui.local.LocalTheme
-import com.skyd.anivu.ui.screen.settings.appearance.article.ARTICLE_STYLE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.appearance.feed.FEED_STYLE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.appearance.media.MEDIA_STYLE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.appearance.read.READ_STYLE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.appearance.search.SEARCH_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
+import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
+import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
+import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleRoute
+import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.theme.extractColors
+import kotlinx.serialization.Serializable
 
 
-const val APPEARANCE_SCREEN_ROUTE = "appearanceScreen"
+@Serializable
+data object AppearanceRoute
 
 @Composable
 fun AppearanceScreen() {
@@ -232,7 +234,7 @@ fun AppearanceScreen() {
                     icon = null,
                     text = stringResource(id = R.string.feed_style_screen_name),
                     description = null,
-                    onClick = { navController.navigate(FEED_STYLE_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(FeedStyleRoute) },
                 )
             }
             item {
@@ -240,7 +242,7 @@ fun AppearanceScreen() {
                     icon = null,
                     text = stringResource(id = R.string.article_style_screen_name),
                     description = null,
-                    onClick = { navController.navigate(ARTICLE_STYLE_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(ArticleStyleRoute) },
                 )
             }
             item {
@@ -248,7 +250,7 @@ fun AppearanceScreen() {
                     icon = null,
                     text = stringResource(id = R.string.read_style_screen_name),
                     description = null,
-                    onClick = { navController.navigate(READ_STYLE_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(ReadStyleRoute) },
                 )
             }
             item {
@@ -256,7 +258,7 @@ fun AppearanceScreen() {
                     icon = null,
                     text = stringResource(id = R.string.search_style_screen_name),
                     description = null,
-                    onClick = { navController.navigate(SEARCH_STYLE_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(SearchStyleRoute) },
                 )
             }
             item {
@@ -264,7 +266,7 @@ fun AppearanceScreen() {
                     icon = null,
                     text = stringResource(id = R.string.media_style_screen_name),
                     description = null,
-                    onClick = { navController.navigate(MEDIA_STYLE_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(MediaStyleRoute) },
                 )
             }
         }

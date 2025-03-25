@@ -94,7 +94,7 @@ import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.FeedIcon
-import com.skyd.anivu.ui.screen.feed.requestheaders.openRequestHeadersScreen
+import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.anivu.util.launchImagePicker
 import com.skyd.anivu.util.rememberImagePicker
 
@@ -164,7 +164,7 @@ fun EditFeedSheet(
                 },
                 onSortXmlArticlesOnUpdateChanged = onSortXmlArticlesOnUpdateChanged,
                 onEditRequestHeaders = {
-                    openRequestHeadersScreen(navController = navController, feedUrl = feed.url)
+                    navController.navigate(RequestHeadersRoute(feedUrl = feed.url))
                 },
             )
             Spacer(modifier = Modifier.height(12.dp))

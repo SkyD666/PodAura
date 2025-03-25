@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,6 +55,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
@@ -96,7 +99,7 @@ import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.anivu.ui.screen.read.openReadScreen
+import com.skyd.anivu.ui.screen.read.ReadRoute
 
 
 @Composable
@@ -340,45 +343,11 @@ private fun Article1ItemContent(
                 modifier = Modifier.padding(start = 11.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(3.dp))
-                            .clickable {
-                                openArticleScreen(
-                                    navController = navController,
-                                    feedUrls = listOf(data.feed.url),
-                                )
-                            }
-                            .padding(horizontal = 4.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        FeedIcon(
-                            data = data.feed,
-                            size = 22.dp
-                        )
-                        val feedName =
-                            data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
-                        if (feedName.isNotBlank()) {
-                            Text(
-                                modifier = Modifier.padding(start = 6.dp, end = 2.dp),
-                                text = feedName,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
+                ArticleItemFeedInfo(data = data, colorAlpha = colorAlpha)
                 val isFavorite = articleWithEnclosure.article.isFavorite
                 val isRead = articleWithEnclosure.article.isRead
-                Icon(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onFavorite(data, !isFavorite) }
-                        .padding(6.dp),
+                ArticleItemIconButton(
+                    onClick = { onFavorite(data, !isFavorite) },
                     imageVector = if (isFavorite) {
                         Icons.Outlined.Favorite
                     } else {
@@ -391,12 +360,8 @@ private fun Article1ItemContent(
                     },
                 )
                 Spacer(modifier = Modifier.width(3.dp))
-                Icon(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable { onRead(data, !isRead) }
-                        .padding(6.dp),
+                ArticleItemIconButton(
+                    onClick = { onRead(data, !isRead) },
                     imageVector = if (isRead) {
                         Icons.Outlined.Drafts
                     } else {
@@ -407,6 +372,56 @@ private fun Article1ItemContent(
                     } else {
                         stringResource(id = R.string.article_screen_mark_as_read)
                     },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ArticleItemIconButton(
+    onClick: () -> Unit,
+    imageVector: ImageVector,
+    contentDescription: String?,
+    tint: Color = LocalContentColor.current,
+) {
+    Icon(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .padding(6.dp),
+        imageVector = imageVector,
+        contentDescription = contentDescription,
+        tint = tint,
+    )
+}
+
+@Composable
+fun RowScope.ArticleItemFeedInfo(data: ArticleWithFeed, colorAlpha: Float = 1f) {
+    val navController = LocalNavController.current
+    Box(modifier = Modifier.weight(1f)) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(3.dp))
+                .clickable { navController.navigate(ArticleRoute(feedUrls = listOf(data.feed.url))) }
+                .padding(horizontal = 4.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FeedIcon(
+                data = data.feed,
+                size = 22.dp
+            )
+            val feedName =
+                data.feed.nickname.orEmpty().ifBlank { data.feed.title.orEmpty() }
+            if (feedName.isNotBlank()) {
+                Text(
+                    modifier = Modifier.padding(start = 6.dp, end = 2.dp),
+                    text = feedName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = colorAlpha),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -795,8 +810,5 @@ fun ArticleBean.openLinkInBrowser(context: Context) {
 }
 
 fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {
-    openReadScreen(
-        navController = navController,
-        articleId = data.article.articleId,
-    )
+    navController.navigate(ReadRoute(articleId = data.article.articleId))
 }

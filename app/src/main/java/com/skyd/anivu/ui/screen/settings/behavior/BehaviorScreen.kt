@@ -37,19 +37,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
-import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
 import com.skyd.anivu.ui.component.ClipboardTextField
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.local.LocalArticleSwipeLeftAction
@@ -59,9 +59,11 @@ import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalHideEmptyDefault
 import com.skyd.anivu.ui.local.LocalHideMutedFeed
 import com.skyd.anivu.ui.local.LocalMediaFileFilter
+import kotlinx.serialization.Serializable
 
 
-const val BEHAVIOR_SCREEN_ROUTE = "behaviorScreen"
+@Serializable
+data object BehaviorRoute
 
 @Composable
 fun BehaviorScreen() {

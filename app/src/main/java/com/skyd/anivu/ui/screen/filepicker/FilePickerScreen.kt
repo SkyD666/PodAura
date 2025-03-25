@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.filepicker
 
-import android.os.Bundle
 import android.os.Parcelable
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
@@ -41,18 +40,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.getMimeType
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.popBackStackWithLifecycle
-import com.skyd.anivu.ext.toEncodedUrl
-import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
@@ -63,16 +58,11 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 import java.io.File
 
 
-const val FILE_PICKER_SCREEN_ROUTE = "filePickerScreen"
-
-const val PATH_KEY = "path"
-const val PICK_FOLDER_KEY = "pickFolder"
-const val EXTENSION_NAME_KEY = "extensionName"
 const val FILE_PICKER_NEW_PATH_KEY = "newPath"
-const val FILE_PICKER_ID_KEY = "id"
 
 @Composable
 fun ListenToFilePicker(onNewPath: CoroutineScope.(FilePickerResult) -> Unit) {
@@ -90,24 +80,13 @@ fun ListenToFilePicker(onNewPath: CoroutineScope.(FilePickerResult) -> Unit) {
     }
 }
 
-fun openFilePicker(
-    navController: NavController,
-    path: String,
-    pickFolder: Boolean = true,
-    extensionName: String = "",
-    id: String? = null,
-) {
-    val currentPath = if (path == MediaLibLocationPreference.default) {
-        Const.INTERNAL_STORAGE
-    } else path
-    navController.navigate(
-        "${FILE_PICKER_SCREEN_ROUTE}/${currentPath.toEncodedUrl(allow = null)}/$pickFolder",
-        Bundle().apply {
-            putString(EXTENSION_NAME_KEY, extensionName)
-            putString(FILE_PICKER_ID_KEY, id)
-        }
-    )
-}
+@Serializable
+data class FilePickerRoute(
+    val path: String,
+    val pickFolder: Boolean = true,
+    val extensionName: String = "",
+    val id: String? = null,
+)
 
 @Parcelize
 data class FilePickerResult(

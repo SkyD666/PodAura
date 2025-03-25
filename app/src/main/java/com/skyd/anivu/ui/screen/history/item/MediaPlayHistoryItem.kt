@@ -57,7 +57,7 @@ import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
-import com.skyd.anivu.ui.screen.read.openReadScreen
+import com.skyd.anivu.ui.screen.read.ReadRoute
 import java.io.File
 
 @Composable
@@ -187,12 +187,7 @@ fun MediaPlayHistoryItem(
                     ActionIconButton(
                         imageVector = Icons.AutoMirrored.Outlined.Article,
                         contentDescription = stringResource(id = R.string.read_screen_name),
-                        onClick = {
-                            openReadScreen(
-                                navController = navController,
-                                articleId = articleWithEnclosure.article.articleId,
-                            )
-                        },
+                        onClick = { navController.navigate(ReadRoute(articleId = articleWithEnclosure.article.articleId)) },
                     )
                 }
             }

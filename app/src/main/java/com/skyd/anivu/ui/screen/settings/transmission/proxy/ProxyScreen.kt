@@ -36,11 +36,11 @@ import com.skyd.anivu.model.preference.proxy.ProxyPortPreference
 import com.skyd.anivu.model.preference.proxy.ProxyTypePreference
 import com.skyd.anivu.model.preference.proxy.ProxyUsernamePreference
 import com.skyd.anivu.model.preference.proxy.UseProxyPreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BannerItem
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.local.LocalProxyHostname
@@ -50,9 +50,11 @@ import com.skyd.anivu.ui.local.LocalProxyPort
 import com.skyd.anivu.ui.local.LocalProxyType
 import com.skyd.anivu.ui.local.LocalProxyUsername
 import com.skyd.anivu.ui.local.LocalUseProxy
+import kotlinx.serialization.Serializable
 
 
-const val PROXY_SCREEN_ROUTE = "proxyScreen"
+@Serializable
+data object ProxyRoute
 
 @Composable
 fun ProxyScreen() {

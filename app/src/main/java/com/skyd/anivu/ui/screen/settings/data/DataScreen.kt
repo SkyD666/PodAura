@@ -47,14 +47,16 @@ import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
 import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
-import com.skyd.anivu.ui.screen.filepicker.openFilePicker
-import com.skyd.anivu.ui.screen.settings.data.autodelete.AUTO_DELETE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DELETE_CONSTRAINT_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteRoute
+import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
+import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportRoute
+import kotlinx.serialization.Serializable
 
 
-const val DATA_SCREEN_ROUTE = "dataScreen"
+@Serializable
+data object DataRoute
 
 @Composable
 fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
@@ -102,12 +104,7 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                     icon = rememberVectorPainter(Icons.Outlined.PermMedia),
                     text = stringResource(id = R.string.data_screen_change_lib_location),
                     descriptionText = localMediaLibLocation,
-                    onClick = {
-                        openFilePicker(
-                            navController = navController,
-                            path = localMediaLibLocation,
-                        )
-                    }
+                    onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
                 ) {
                     PodAuraIconButton(
                         onClick = {
@@ -139,7 +136,7 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                     icon = null,
                     text = stringResource(id = R.string.delete_constraint_screen_name),
                     descriptionText = stringResource(id = R.string.delete_constraint_screen_name_description),
-                    onClick = { navController.navigate(DELETE_CONSTRAINT_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(DeleteConstraintRoute) },
                 )
             }
             item {
@@ -155,7 +152,7 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                     icon = rememberVectorPainter(Icons.Outlined.AutoDelete),
                     text = stringResource(id = R.string.auto_delete_screen_name),
                     descriptionText = stringResource(id = R.string.auto_delete_article_screen_description),
-                    onClick = { navController.navigate(AUTO_DELETE_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(AutoDeleteRoute) }
                 )
             }
             item {
@@ -176,7 +173,7 @@ fun DataScreen(viewModel: DataViewModel = hiltViewModel()) {
                     icon = rememberVectorPainter(Icons.Outlined.SwapVert),
                     text = stringResource(id = R.string.import_export_screen_name),
                     descriptionText = stringResource(id = R.string.import_export_screen_description),
-                    onClick = { navController.navigate(IMPORT_EXPORT_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(ImportExportRoute) }
                 )
             }
         }

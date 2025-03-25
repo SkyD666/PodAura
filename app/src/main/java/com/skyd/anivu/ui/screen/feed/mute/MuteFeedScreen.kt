@@ -50,9 +50,11 @@ import com.skyd.anivu.ui.component.TipSettingsItem
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.screen.article.FeedIcon
 import com.skyd.anivu.ui.screen.feed.mute.MuteFeedState.ListState
+import kotlinx.serialization.Serializable
 
 
-const val MUTE_FEED_SCREEN_ROUTE = "muteFeedScreen"
+@Serializable
+data object MuteFeedRoute
 
 @Composable
 fun MuteFeedScreen(viewModel: MuteFeedViewModel = hiltViewModel()) {

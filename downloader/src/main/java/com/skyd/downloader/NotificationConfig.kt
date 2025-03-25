@@ -9,6 +9,8 @@ data class NotificationConfig(
     val channelName: String,
     val channelDescription: String,
     val importance: Int = NotificationManager.IMPORTANCE_LOW,
+    val intentContentActivity: String?,
+    val intentContentBasePath: String?,
     val smallIcon: Int,
     val pauseText: Int,
     val resumeText: Int,

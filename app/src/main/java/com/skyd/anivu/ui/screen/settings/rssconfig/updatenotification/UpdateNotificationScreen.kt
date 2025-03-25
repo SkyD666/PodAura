@@ -46,16 +46,18 @@ import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
+import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import kotlinx.serialization.Serializable
 
 
-const val UPDATE_NOTIFICATION_SCREEN_ROUTE = "updateNotificationScreen"
+@Serializable
+data object UpdateNotificationRoute
 
 @Composable
 fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = hiltViewModel()) {

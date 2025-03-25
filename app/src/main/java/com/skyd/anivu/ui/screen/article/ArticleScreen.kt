@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.article
 
 import android.net.Uri
-import android.os.Bundle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -56,18 +55,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
-import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.article.ArticleSort
@@ -85,58 +80,34 @@ import com.skyd.anivu.ui.local.LocalArticleTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalShowArticlePullRefresh
 import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
-import com.skyd.anivu.ui.screen.search.SearchDomain
-import com.skyd.anivu.ui.screen.search.openSearchScreen
+import com.skyd.anivu.ui.screen.search.SearchRoute
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 
-const val ARTICLE_SCREEN_ROUTE = "articleScreen"
-const val FEED_URLS_KEY = "feedUrls"
-const val GROUP_IDS_KEY = "groupIds"
-const val ARTICLE_IDS_KEY = "articleIds"
-const val ARTICLE_SCREEN_DEEP_LINK = "anivu://article.screen"
-const val FEED_URLS_JSON_KEY = "feedUrlsJson"
-const val GROUP_IDS_JSON_KEY = "groupIdsJson"
-const val ARTICLE_IDS_JSON_KEY = "articleIdsJson"
-
-fun getArticleScreenDeepLink(
-    feedUrls: List<String>,
-    groupIds: List<String> = emptyList(),
-    articleIds: List<String> = emptyList(),
-): Uri {
-    return ARTICLE_SCREEN_DEEP_LINK.toUri().buildUpon()
-        .appendQueryParameter(
-            FEED_URLS_JSON_KEY,
-            Json.encodeToString(feedUrls).toEncodedUrl(allow = null)
-        )
-        .appendQueryParameter(
-            GROUP_IDS_JSON_KEY,
-            Json.encodeToString(groupIds).toEncodedUrl(allow = null)
-        )
-        .appendQueryParameter(
-            ARTICLE_IDS_JSON_KEY,
-            Json.encodeToString(articleIds).toEncodedUrl(allow = null)
-        )
-        .build()
-}
-
-fun openArticleScreen(
-    navController: NavController,
-    feedUrls: List<String>,
-    groupIds: List<String> = emptyList(),
-    articleIds: List<String> = emptyList(),
-    navOptions: NavOptions? = null,
+@Serializable
+data class ArticleRoute(
+    @SerialName("feedUrls")
+    val feedUrls: List<String>,
+    @SerialName("groupIds")
+    val groupIds: List<String> = emptyList(),
+    @SerialName("articleIds")
+    val articleIds: List<String> = emptyList(),
 ) {
-    navController.navigate(
-        ARTICLE_SCREEN_ROUTE,
-        Bundle().apply {
-            putStringArrayList(FEED_URLS_KEY, ArrayList(feedUrls))
-            putStringArrayList(GROUP_IDS_KEY, ArrayList(groupIds))
-            putStringArrayList(ARTICLE_IDS_KEY, ArrayList(articleIds))
-        },
-        navOptions = navOptions,
-    )
+    fun toDeeplink(): Uri {
+        return DEEP_LINK.toUri().buildUpon()
+            .appendPath(Json.encodeToString(feedUrls))
+            .appendPath(Json.encodeToString(groupIds))
+            .appendPath(Json.encodeToString(articleIds))
+            .build()
+    }
+
+    companion object {
+        const val DEEP_LINK = "podaura://article.screen"
+        const val BASE_PATH = "$DEEP_LINK/{feedUrls}/{groupIds}/{articleIds}"
+    }
 }
 
 private val DefaultBackClick = { }
@@ -216,9 +187,8 @@ fun ArticleScreen(
                     )
                     PodAuraIconButton(
                         onClick = {
-                            openSearchScreen(
-                                navController = navController,
-                                searchDomain = SearchDomain.Article(
+                            navController.navigate(
+                                SearchRoute.Article(
                                     feedUrls = feedUrls,
                                     groupIds = groupIds,
                                     articleIds = articleIds,

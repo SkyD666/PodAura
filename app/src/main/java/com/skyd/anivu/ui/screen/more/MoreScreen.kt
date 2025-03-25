@@ -58,14 +58,16 @@ import com.skyd.anivu.ui.component.shape.RoundedCornerStarShape
 import com.skyd.anivu.ui.component.shape.SquircleShape
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
-import com.skyd.anivu.ui.screen.about.ABOUT_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.download.openDownloadScreen
-import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.SETTINGS_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.about.AboutRoute
+import com.skyd.anivu.ui.screen.download.DownloadRoute
+import com.skyd.anivu.ui.screen.history.HistoryRoute
+import com.skyd.anivu.ui.screen.settings.SettingsRoute
+import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportRoute
+import kotlinx.serialization.Serializable
 
 
-const val MORE_SCREEN_ROUTE = "moreScreen"
+@Serializable
+data object MoreRoute
 
 @Composable
 fun MoreScreen() {
@@ -176,7 +178,7 @@ private fun getMoreBeanList(
             iconTint = colorScheme.onPrimary,
             shape = PolygonShape(sides = 8),
             shapeColor = colorScheme.primary,
-            action = { navController.navigate(HISTORY_SCREEN_ROUTE) },
+            action = { navController.navigate(HistoryRoute) },
         ),
         MoreBean(
             title = context.getString(R.string.download_screen_name),
@@ -184,7 +186,7 @@ private fun getMoreBeanList(
             iconTint = colorScheme.onSecondary,
             shape = RoundedCornerStarShape,
             shapeColor = colorScheme.secondary,
-            action = { openDownloadScreen(navController) },
+            action = { navController.navigate(DownloadRoute()) },
         ),
         MoreBean(
             title = context.getString(R.string.import_export_screen_name),
@@ -192,7 +194,7 @@ private fun getMoreBeanList(
             iconTint = colorScheme.onTertiary,
             shape = CloverShape,
             shapeColor = colorScheme.tertiary,
-            action = { navController.navigate(IMPORT_EXPORT_SCREEN_ROUTE) },
+            action = { navController.navigate(ImportExportRoute) },
         ),
         MoreBean(
             title = context.getString(R.string.settings_screen_name),
@@ -200,7 +202,7 @@ private fun getMoreBeanList(
             iconTint = colorScheme.onPrimary,
             shape = SquircleShape,
             shapeColor = colorScheme.primary,
-            action = { navController.navigate(SETTINGS_SCREEN_ROUTE) },
+            action = { navController.navigate(SettingsRoute) },
         ),
         MoreBean(
             title = context.getString(R.string.about_screen_name),
@@ -208,7 +210,7 @@ private fun getMoreBeanList(
             iconTint = colorScheme.onSecondary,
             shape = CurlyCornerShape(amp = with(density) { 1.6.dp.toPx() }, count = 10f),
             shapeColor = colorScheme.secondary,
-            action = { navController.navigate(ABOUT_SCREEN_ROUTE) }
+            action = { navController.navigate(AboutRoute) }
         ),
     )
 }

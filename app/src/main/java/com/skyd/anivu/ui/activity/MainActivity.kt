@@ -42,123 +42,100 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.os.BundleCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.util.Consumer
 import androidx.navigation.NavController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
+import com.skyd.anivu.config.Const
+import com.skyd.anivu.ext.listType
 import com.skyd.anivu.ext.safeLaunch
-import com.skyd.anivu.ext.toDecodedUrl
+import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.ext.type
 import com.skyd.anivu.model.bean.MediaBean
-import com.skyd.anivu.ui.activity.intenthandler.ImportOpmlIntentHandler
-import com.skyd.anivu.ui.activity.intenthandler.OpenDownloadIntentHandler
-import com.skyd.anivu.ui.activity.intenthandler.UrlDownloadIntentHandler
+import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.screen.MAIN_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.MainRoute
 import com.skyd.anivu.ui.screen.MainScreen
-import com.skyd.anivu.ui.screen.about.ABOUT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.about.AboutRoute
 import com.skyd.anivu.ui.screen.about.AboutScreen
-import com.skyd.anivu.ui.screen.about.license.LICENSE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.about.license.LicenseRoute
 import com.skyd.anivu.ui.screen.about.license.LicenseScreen
 import com.skyd.anivu.ui.screen.about.update.UpdateDialog
-import com.skyd.anivu.ui.screen.article.ARTICLE_IDS_JSON_KEY
-import com.skyd.anivu.ui.screen.article.ARTICLE_IDS_KEY
-import com.skyd.anivu.ui.screen.article.ARTICLE_SCREEN_DEEP_LINK
-import com.skyd.anivu.ui.screen.article.ARTICLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.ArticleScreen
-import com.skyd.anivu.ui.screen.article.FEED_URLS_JSON_KEY
-import com.skyd.anivu.ui.screen.article.FEED_URLS_KEY
-import com.skyd.anivu.ui.screen.article.GROUP_IDS_JSON_KEY
-import com.skyd.anivu.ui.screen.article.GROUP_IDS_KEY
-import com.skyd.anivu.ui.screen.download.DOWNLOAD_LINK_KEY
-import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_DEEP_LINK_DATA
-import com.skyd.anivu.ui.screen.download.DOWNLOAD_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.download.DownloadDeepLinkRoute
+import com.skyd.anivu.ui.screen.download.DownloadRoute
 import com.skyd.anivu.ui.screen.download.DownloadScreen
-import com.skyd.anivu.ui.screen.download.openDownloadScreen
-import com.skyd.anivu.ui.screen.feed.mute.MUTE_FEED_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.anivu.ui.screen.feed.mute.MuteFeedScreen
-import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupRoute
 import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupScreen
-import com.skyd.anivu.ui.screen.feed.requestheaders.FEED_URL_KEY
-import com.skyd.anivu.ui.screen.feed.requestheaders.REQUEST_HEADERS_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersScreen
-import com.skyd.anivu.ui.screen.filepicker.EXTENSION_NAME_KEY
-import com.skyd.anivu.ui.screen.filepicker.FILE_PICKER_ID_KEY
-import com.skyd.anivu.ui.screen.filepicker.FILE_PICKER_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
 import com.skyd.anivu.ui.screen.filepicker.FilePickerScreen
-import com.skyd.anivu.ui.screen.filepicker.PATH_KEY
-import com.skyd.anivu.ui.screen.filepicker.PICK_FOLDER_KEY
-import com.skyd.anivu.ui.screen.history.HISTORY_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.history.HistoryRoute
 import com.skyd.anivu.ui.screen.history.HistoryScreen
-import com.skyd.anivu.ui.screen.media.search.MEDIA_SEARCH_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
 import com.skyd.anivu.ui.screen.media.search.MediaSearchScreen
-import com.skyd.anivu.ui.screen.media.search.SEARCH_PATH_KEY
-import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_MEDIA_KEY
-import com.skyd.anivu.ui.screen.media.sub.SUB_MEDIA_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.media.sub.SubMediaScreenRoute
-import com.skyd.anivu.ui.screen.playlist.medialist.PLAYLIST_ID_KEY
-import com.skyd.anivu.ui.screen.playlist.medialist.PLAYLIST_MEDIA_LIST_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListScreen
-import com.skyd.anivu.ui.screen.read.ARTICLE_ID_KEY
-import com.skyd.anivu.ui.screen.read.READ_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.read.ReadRoute
 import com.skyd.anivu.ui.screen.read.ReadScreen
-import com.skyd.anivu.ui.screen.search.SEARCH_DOMAIN_KEY
-import com.skyd.anivu.ui.screen.search.SEARCH_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.search.SearchDomain
+import com.skyd.anivu.ui.screen.search.SearchRoute
 import com.skyd.anivu.ui.screen.search.SearchScreen
-import com.skyd.anivu.ui.screen.settings.SETTINGS_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.SettingsRoute
 import com.skyd.anivu.ui.screen.settings.SettingsScreen
-import com.skyd.anivu.ui.screen.settings.appearance.APPEARANCE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.anivu.ui.screen.settings.appearance.AppearanceScreen
-import com.skyd.anivu.ui.screen.settings.appearance.article.ARTICLE_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleScreen
-import com.skyd.anivu.ui.screen.settings.appearance.feed.FEED_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleScreen
-import com.skyd.anivu.ui.screen.settings.appearance.media.MEDIA_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleScreen
-import com.skyd.anivu.ui.screen.settings.appearance.read.READ_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleScreen
-import com.skyd.anivu.ui.screen.settings.appearance.search.SEARCH_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleScreen
-import com.skyd.anivu.ui.screen.settings.behavior.BEHAVIOR_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.anivu.ui.screen.settings.behavior.BehaviorScreen
-import com.skyd.anivu.ui.screen.settings.data.DATA_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.DataRoute
 import com.skyd.anivu.ui.screen.settings.data.DataScreen
-import com.skyd.anivu.ui.screen.settings.data.autodelete.AUTO_DELETE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteScreen
-import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DELETE_CONSTRAINT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
 import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintScreen
-import com.skyd.anivu.ui.screen.settings.data.importexport.IMPORT_EXPORT_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportScreen
-import com.skyd.anivu.ui.screen.settings.data.importexport.exportopml.EXPORT_OPML_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.importexport.exportopml.ExportOpmlRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.exportopml.ExportOpmlScreen
-import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.IMPORT_OPML_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.ImportOpmlDeepLinkRoute
+import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.ImportOpmlScreen
-import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.OPML_URL_KEY
-import com.skyd.anivu.ui.screen.settings.data.importexport.importopml.openImportOpmlScreen
-import com.skyd.anivu.ui.screen.settings.playerconfig.PLAYER_CONFIG_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute
 import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigScreen
-import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PLAYER_CONFIG_ADVANCED_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedScreen
-import com.skyd.anivu.ui.screen.settings.rssconfig.RSS_CONFIG_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute
 import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigScreen
-import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UPDATE_NOTIFICATION_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
-import com.skyd.anivu.ui.screen.settings.transmission.TRANSMISSION_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.anivu.ui.screen.settings.transmission.TransmissionScreen
-import com.skyd.anivu.ui.screen.settings.transmission.proxy.PROXY_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyScreen
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.serialization.json.Json
+import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : BaseComposeActivity() {
@@ -183,41 +160,17 @@ class MainActivity : BaseComposeActivity() {
         if (needHandleOnCreateIntent) {
             LaunchedEffect(Unit) {
                 needHandleOnCreateIntent = false
-                handleIntent(intent = intent, navController = navController)
+                navController.handleDeepLink(intent)
             }
         }
 
         DisposableEffect(navController) {
             val listener = Consumer<Intent> { newIntent ->
-                handleIntent(intent = newIntent, navController = navController)
+                navController.handleDeepLink(newIntent)
             }
             addOnNewIntentListener(listener)
             onDispose { removeOnNewIntentListener(listener) }
         }
-    }
-
-    private fun handleIntent(intent: Intent?, navController: NavController) {
-        intent ?: return
-        val data = intent.data
-
-        listOf(
-            UrlDownloadIntentHandler { downloadUrl ->
-                openDownloadScreen(
-                    navController = navController,
-                    downloadLink = downloadUrl,
-                    mimetype = data?.type,
-                )
-            },
-            OpenDownloadIntentHandler {
-                openDownloadScreen(navController = navController)
-            },
-            ImportOpmlIntentHandler { opmlUrl ->
-                openImportOpmlScreen(
-                    navController = navController,
-                    opmlUrl = opmlUrl,
-                )
-            }
-        ).forEach { it.handle(intent) }
     }
 }
 
@@ -228,7 +181,7 @@ private fun MainNavHost() {
     NavHost(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         navController = navController,
-        startDestination = MAIN_SCREEN_ROUTE,
+        startDestination = MainRoute,
         enterTransition = {
             fadeIn(animationSpec = tween(220, delayMillis = 30)) + scaleIn(
                 animationSpec = tween(220, delayMillis = 30),
@@ -249,154 +202,109 @@ private fun MainNavHost() {
             )
         },
     ) {
-        composable(route = MAIN_SCREEN_ROUTE) { MainScreen() }
-        composable(
-            route = "$ARTICLE_SCREEN_ROUTE?" +
-                    "$FEED_URLS_JSON_KEY={$FEED_URLS_JSON_KEY}&" +
-                    "$ARTICLE_IDS_JSON_KEY={$ARTICLE_IDS_JSON_KEY}",
-            arguments = listOf(
-                navArgument(FEED_URLS_JSON_KEY) { nullable = true },
-                navArgument(ARTICLE_IDS_JSON_KEY) { nullable = true },
-            ),
-            deepLinks = listOf(navDeepLink {
-                uriPattern = "$ARTICLE_SCREEN_DEEP_LINK?" +
-                        "$FEED_URLS_JSON_KEY={$FEED_URLS_JSON_KEY}&" +
-                        "$ARTICLE_IDS_JSON_KEY={$ARTICLE_IDS_JSON_KEY}"
-            }),
+        composable<MainRoute> { MainScreen() }
+        composable<ArticleRoute>(
+            typeMap = mapOf(typeOf<List<String>>() to listType<String>()),
+            deepLinks = listOf(navDeepLink<ArticleRoute>(basePath = ArticleRoute.BASE_PATH)),
         ) {
-            val feedUrls: List<String> = it.arguments?.getStringArrayList(FEED_URLS_KEY)
-                ?: runCatching {
-                    Json.decodeFromString<List<String>>(
-                        it.arguments?.getString(FEED_URLS_JSON_KEY)?.toDecodedUrl().orEmpty()
-                    )
-                }.getOrDefault(emptyList())
-            val groupIds: List<String> = it.arguments?.getStringArrayList(GROUP_IDS_KEY)
-                ?: runCatching {
-                    Json.decodeFromString<List<String>>(
-                        it.arguments?.getString(GROUP_IDS_JSON_KEY)?.toDecodedUrl().orEmpty()
-                    )
-                }.getOrDefault(emptyList())
-            val articleIds: List<String> = it.arguments?.getStringArrayList(ARTICLE_IDS_KEY)
-                ?: runCatching {
-                    Json.decodeFromString<List<String>>(
-                        it.arguments?.getString(ARTICLE_IDS_JSON_KEY)?.toDecodedUrl().orEmpty()
-                    )
-                }.getOrDefault(emptyList())
+            val route = it.toRoute<ArticleRoute>()
             ArticleScreen(
-                feedUrls = feedUrls,
-                groupIds = groupIds,
-                articleIds = articleIds,
+                feedUrls = route.feedUrls,
+                groupIds = route.groupIds,
+                articleIds = route.articleIds,
             )
         }
-        composable(route = LICENSE_SCREEN_ROUTE) { LicenseScreen() }
-        composable(route = ABOUT_SCREEN_ROUTE) { AboutScreen() }
-        composable(route = SETTINGS_SCREEN_ROUTE) { SettingsScreen() }
-        composable(route = APPEARANCE_SCREEN_ROUTE) { AppearanceScreen() }
-        composable(route = ARTICLE_STYLE_SCREEN_ROUTE) { ArticleStyleScreen() }
-        composable(route = FEED_STYLE_SCREEN_ROUTE) { FeedStyleScreen() }
-        composable(route = READ_STYLE_SCREEN_ROUTE) { ReadStyleScreen() }
-        composable(route = MEDIA_STYLE_SCREEN_ROUTE) { MediaStyleScreen() }
-        composable(route = REORDER_GROUP_SCREEN_ROUTE) { ReorderGroupScreen() }
-        composable(route = SEARCH_STYLE_SCREEN_ROUTE) { SearchStyleScreen() }
-        composable(route = BEHAVIOR_SCREEN_ROUTE) { BehaviorScreen() }
-        composable(route = AUTO_DELETE_SCREEN_ROUTE) { AutoDeleteScreen() }
-        composable(route = HISTORY_SCREEN_ROUTE) { HistoryScreen() }
-        composable(route = EXPORT_OPML_SCREEN_ROUTE) { ExportOpmlScreen() }
-        composable(
-            route = IMPORT_OPML_SCREEN_ROUTE,
-            arguments = listOf(navArgument(OPML_URL_KEY) { nullable = true }),
-        ) {
-            ImportOpmlScreen(opmlUrl = it.arguments?.getString(OPML_URL_KEY))
-        }
-        composable(route = IMPORT_EXPORT_SCREEN_ROUTE) { ImportExportScreen() }
-        composable(route = DATA_SCREEN_ROUTE) { DataScreen() }
-        composable(route = PLAYER_CONFIG_SCREEN_ROUTE) { PlayerConfigScreen() }
-        composable(route = PLAYER_CONFIG_ADVANCED_SCREEN_ROUTE) { PlayerConfigAdvancedScreen() }
-        composable(route = RSS_CONFIG_SCREEN_ROUTE) { RssConfigScreen() }
-        composable(route = PROXY_SCREEN_ROUTE) { ProxyScreen() }
-        composable(route = TRANSMISSION_SCREEN_ROUTE) { TransmissionScreen() }
-        composable(route = UPDATE_NOTIFICATION_SCREEN_ROUTE) { UpdateNotificationScreen() }
-        composable(route = MUTE_FEED_SCREEN_ROUTE) { MuteFeedScreen() }
-        composable(route = DELETE_CONSTRAINT_SCREEN_ROUTE) { DeleteConstraintScreen() }
-        composable(
-            route = "$PLAYLIST_MEDIA_LIST_SCREEN_ROUTE/{$PLAYLIST_ID_KEY}",
-            arguments = listOf(navArgument(PLAYLIST_ID_KEY) { type = NavType.StringType }),
-        ) {
-            val arguments = it.arguments
-            if (arguments != null) {
-                PlaylistMediaListScreen(arguments.getString(PLAYLIST_ID_KEY)!!.toDecodedUrl())
-            }
-        }
-        composable(
-            route = "$REQUEST_HEADERS_SCREEN_ROUTE/{$FEED_URL_KEY}",
-            arguments = listOf(navArgument(FEED_URL_KEY) { type = NavType.StringType }),
-        ) {
-            val arguments = it.arguments
-            if (arguments != null) {
-                RequestHeadersScreen(feedUrl = arguments.getString(FEED_URL_KEY)!!.toDecodedUrl())
-            }
-        }
-        composable(
-            route = "$FILE_PICKER_SCREEN_ROUTE/{$PATH_KEY}/{$PICK_FOLDER_KEY}",
-            arguments = listOf(
-                navArgument(PATH_KEY) { type = NavType.StringType },
-                navArgument(PICK_FOLDER_KEY) { type = NavType.BoolType },
-                navArgument(EXTENSION_NAME_KEY) { nullable = true },
-                navArgument(FILE_PICKER_ID_KEY) { nullable = true },
+        composable<LicenseRoute> { LicenseScreen() }
+        composable<AboutRoute> { AboutScreen() }
+        composable<SettingsRoute> { SettingsScreen() }
+        composable<AppearanceRoute> { AppearanceScreen() }
+        composable<ArticleStyleRoute> { ArticleStyleScreen() }
+        composable<FeedStyleRoute> { FeedStyleScreen() }
+        composable<ReadStyleRoute> { ReadStyleScreen() }
+        composable<MediaStyleRoute> { MediaStyleScreen() }
+        composable<ReorderGroupRoute> { ReorderGroupScreen() }
+        composable<SearchStyleRoute> { SearchStyleScreen() }
+        composable<BehaviorRoute> { BehaviorScreen() }
+        composable<AutoDeleteRoute> { AutoDeleteScreen() }
+        composable<HistoryRoute> { HistoryScreen() }
+        composable<ExportOpmlRoute> { ExportOpmlScreen() }
+        composable<ImportOpmlRoute> { ImportOpmlScreen(opmlUrl = it.toRoute<ImportOpmlRoute>().opmlUrl) }
+        composable<ImportOpmlDeepLinkRoute>(
+            deepLinks = listOf(
+                *listOf("text/xml", "application/xml", "text/x-opml").map { type ->
+                    navDeepLink {
+                        action = Intent.ACTION_SEND
+                        mimeType = type
+                    }
+                }.toTypedArray()
             ),
         ) {
-            val arguments = it.arguments
-            if (arguments != null) {
-                FilePickerScreen(
-                    path = arguments.getString(PATH_KEY)!!.toDecodedUrl(),
-                    pickFolder = arguments.getBoolean(PICK_FOLDER_KEY),
-                    extensionName = arguments.getString(EXTENSION_NAME_KEY),
-                    id = arguments.getString(FILE_PICKER_ID_KEY),
-                )
-            }
+            val intent = it.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+            ImportOpmlScreen(opmlUrl = intent?.clipData?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)?.uri?.toString())
         }
-        composable(
-            route = DOWNLOAD_SCREEN_ROUTE,
-            arguments = listOf(navArgument(DOWNLOAD_LINK_KEY) { nullable = true }),
-            deepLinks = listOf(navDeepLink {
-                uriPattern = DOWNLOAD_SCREEN_DEEP_LINK_DATA.deepLink
-            }),
-        ) {
-            DownloadScreen(downloadLink = it.arguments?.getString(DOWNLOAD_LINK_KEY))
+        composable<ImportExportRoute> { ImportExportScreen() }
+        composable<DataRoute> { DataScreen() }
+        composable<PlayerConfigRoute> { PlayerConfigScreen() }
+        composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
+        composable<RssConfigRoute> { RssConfigScreen() }
+        composable<ProxyRoute> { ProxyScreen() }
+        composable<TransmissionRoute> { TransmissionScreen() }
+        composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
+        composable<MuteFeedRoute> { MuteFeedScreen() }
+        composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
+        composable<PlaylistMediaListRoute> {
+            PlaylistMediaListScreen(playlistId = it.toRoute<PlaylistMediaListRoute>().playlistId)
         }
-        composable(
-            route = "$READ_SCREEN_ROUTE/{$ARTICLE_ID_KEY}",
-            arguments = listOf(navArgument(ARTICLE_ID_KEY) { type = NavType.StringType }),
-        ) {
-            ReadScreen(
-                articleId = it.arguments?.getString(ARTICLE_ID_KEY).orEmpty().toDecodedUrl()
+        composable<RequestHeadersRoute> {
+            RequestHeadersScreen(feedUrl = it.toRoute<RequestHeadersRoute>().feedUrl)
+        }
+        composable<FilePickerRoute> {
+            val filePickerRoute = it.toRoute<FilePickerRoute>()
+            FilePickerScreen(
+                path = filePickerRoute.path.takeIf {
+                    filePickerRoute.path != MediaLibLocationPreference.default
+                } ?: Const.INTERNAL_STORAGE,
+                pickFolder = filePickerRoute.pickFolder,
+                extensionName = filePickerRoute.extensionName,
+                id = filePickerRoute.id,
             )
         }
-        composable(
-            route = SEARCH_SCREEN_ROUTE,
-            arguments = listOf(navArgument(SEARCH_DOMAIN_KEY) {
-                type = NavType.SerializableType(SearchDomain::class.java)
-                defaultValue = SearchDomain.Feed
-            }),
+        composable<DownloadRoute>(
+            deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = DownloadRoute.BASE_PATH)),
         ) {
-            val searchDomain = it.arguments?.let { arguments ->
-                BundleCompat.getSerializable(arguments, SEARCH_DOMAIN_KEY, SearchDomain::class.java)
-            } ?: SearchDomain.Feed
-            SearchScreen(searchDomain = searchDomain)
+            val route = it.toRoute<DownloadRoute>()
+            DownloadScreen(downloadLink = route.downloadLink, mimetype = route.mimetype)
         }
-        composable(route = MEDIA_SEARCH_SCREEN_ROUTE) {
-            MediaSearchScreen(path = it.arguments?.getString(SEARCH_PATH_KEY)!!)
+        composable<DownloadDeepLinkRoute>(
+            deepLinks = listOf(
+                *listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
+                    navDeepLink {
+                        action = Intent.ACTION_VIEW
+                        uriPattern = it
+                    }
+                }.toTypedArray()
+            ),
+        ) {
+            val intent = it.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+            DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)
         }
-        composable(route = SUB_MEDIA_SCREEN_ROUTE) {
-            SubMediaScreenRoute(
-                media = it.arguments?.let { arguments ->
-                    BundleCompat.getSerializable(
-                        arguments,
-                        SUB_MEDIA_SCREEN_MEDIA_KEY,
-                        MediaBean::class.java
-                    )
-                }
-            )
+        composable<ReadRoute> { ReadScreen(articleId = it.toRoute<ReadRoute>().articleId) }
+        composable<SearchRoute.Feed>(
+            typeMap = mapOf(typeOf<SearchRoute.Feed>() to serializableType<SearchRoute.Feed>()),
+        ) {
+            SearchScreen(searchRoute = it.toRoute<SearchRoute.Feed>())
+        }
+        composable<SearchRoute.Article>(
+            typeMap = mapOf(typeOf<SearchRoute.Article>() to serializableType<SearchRoute.Article>())
+        ) {
+            SearchScreen(searchRoute = it.toRoute<SearchRoute.Article>())
+        }
+        composable<MediaSearchRoute> { MediaSearchScreen(path = it.toRoute<MediaSearchRoute>().path) }
+        composable<SubMediaRoute>(
+            typeMap = mapOf(typeOf<MediaBean>() to serializableType<MediaBean>())
+        ) {
+            SubMediaScreenRoute(media = it.toRoute<SubMediaRoute>().media)
         }
     }
 }

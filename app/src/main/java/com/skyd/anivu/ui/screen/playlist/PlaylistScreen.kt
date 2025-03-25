@@ -61,13 +61,15 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalPlaylistSortAsc
 import com.skyd.anivu.ui.local.LocalPlaylistSortBy
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
-import com.skyd.anivu.ui.screen.playlist.medialist.openPlaylistMediaListScreen
+import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import kotlinx.coroutines.channels.Channel
+import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
 
-const val PLAYLIST_SCREEN_ROUTE = "playlistScreen"
+@Serializable
+data object PlaylistRoute
 
 @Composable
 fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
@@ -153,10 +155,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
                         }
                     },
                     onClick = {
-                        openPlaylistMediaListScreen(
-                            navController = navController,
-                            playlistId = it.playlist.playlistId,
-                        )
+                        navController.navigate(PlaylistMediaListRoute(playlistId = it.playlist.playlistId))
                     },
                     onRename = {
                         renameDialogText = it.playlist.name

@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport.importopml
 
 import android.net.Uri
-import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,37 +40,27 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.showSnackbar
 import com.skyd.anivu.model.repository.importexport.ImportOpmlConflictStrategy
+import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.PodAuraExtendedFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.TipSettingsItem
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import kotlinx.serialization.Serializable
 
 
-const val IMPORT_OPML_SCREEN_ROUTE = "importOpmlScreen"
-const val OPML_URL_KEY = "opmlUrl"
+@Serializable
+data class ImportOpmlRoute(val opmlUrl: String? = null)
 
-fun openImportOpmlScreen(
-    navController: NavController,
-    opmlUrl: String? = null,
-) {
-    navController.navigate(
-        IMPORT_OPML_SCREEN_ROUTE,
-        Bundle().apply {
-            putString(OPML_URL_KEY, opmlUrl)
-        },
-    )
-}
+@Serializable
+data object ImportOpmlDeepLinkRoute
 
 @Composable
 fun ImportOpmlScreen(

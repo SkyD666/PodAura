@@ -92,21 +92,23 @@ import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.ArticleScreen
-import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Group1Item
-import com.skyd.anivu.ui.screen.feed.mute.MUTE_FEED_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.feed.reorder.REORDER_GROUP_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.search.SearchDomain
-import com.skyd.anivu.ui.screen.search.openSearchScreen
-import com.skyd.anivu.ui.screen.settings.appearance.feed.FEED_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.mute.MuteFeedRoute
+import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupRoute
+import com.skyd.anivu.ui.screen.search.SearchRoute
+import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
-const val FEED_SCREEN_ROUTE = "feedScreen"
+
+@Serializable
+data object FeedRoute
 
 @Composable
 fun FeedScreen() {
@@ -158,10 +160,7 @@ fun FeedScreen() {
                                 })
                             }
                         } else {
-                            openArticleScreen(
-                                navController = navController,
-                                feedUrls = ArrayList(feedUrls),
-                            )
+                            navController.navigate(ArticleRoute(feedUrls = feedUrls))
                         }
                     },
                     onShowArticleListByGroupId = { groupId ->
@@ -172,10 +171,12 @@ fun FeedScreen() {
                                 })
                             }
                         } else {
-                            openArticleScreen(
-                                navController = navController,
-                                feedUrls = emptyList(),
-                                groupIds = listOf(groupId),
+                            navController.navigate(
+                                ArticleRoute(
+                                    feedUrls = emptyList(),
+                                    groupIds = listOf(groupId),
+                                    articleIds = emptyList(),
+                                )
                             )
                         }
                     }
@@ -233,12 +234,7 @@ private fun FeedList(
                 title = { Text(text = stringResource(id = R.string.feed_screen_name)) },
                 actions = {
                     PodAuraIconButton(
-                        onClick = {
-                            openSearchScreen(
-                                navController = navController,
-                                searchDomain = SearchDomain.Feed,
-                            )
-                        },
+                        onClick = { navController.navigate(SearchRoute.Feed) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.feed_screen_search_feed),
                     )
@@ -697,7 +693,7 @@ private fun MoreMenu(
             },
             onClick = {
                 onDismissRequest()
-                navController.navigate(REORDER_GROUP_SCREEN_ROUTE)
+                navController.navigate(ReorderGroupRoute)
             },
         )
         DropdownMenuItem(
@@ -710,14 +706,14 @@ private fun MoreMenu(
             },
             onClick = {
                 onDismissRequest()
-                navController.navigate(MUTE_FEED_SCREEN_ROUTE)
+                navController.navigate(MuteFeedRoute)
             },
         )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.feed_style_screen_name)) },
             onClick = {
                 onDismissRequest()
-                navController.navigate(FEED_STYLE_SCREEN_ROUTE)
+                navController.navigate(FeedStyleRoute)
             },
         )
     }

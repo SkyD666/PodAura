@@ -76,8 +76,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
@@ -91,7 +89,6 @@ import com.skyd.anivu.ext.ifNullOfBlank
 import com.skyd.anivu.ext.isWifi
 import com.skyd.anivu.ext.openBrowser
 import com.skyd.anivu.ext.toDateTimeString
-import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
@@ -110,27 +107,17 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
 import com.skyd.anivu.ui.local.LocalReadTextSize
 import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.anivu.ui.screen.article.openArticleScreen
 import com.skyd.anivu.ui.screen.article.openLinkInBrowser
 import com.skyd.anivu.util.ShareUtil
+import kotlinx.serialization.Serializable
 import java.util.Locale
 
 
-const val READ_SCREEN_ROUTE = "readScreen"
-const val ARTICLE_ID_KEY = "articleId"
-
-fun openReadScreen(
-    navController: NavController,
-    articleId: String,
-    navOptions: NavOptions? = null,
-) {
-    navController.navigate(
-        "${READ_SCREEN_ROUTE}/${articleId.toEncodedUrl(allow = null)}",
-        navOptions = navOptions,
-    )
-}
+@Serializable
+data class ReadRoute(val articleId: String)
 
 @Composable
 fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
@@ -225,10 +212,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                         onOpenArticleScreen = {
                             val articleState = uiState.articleState
                             if (articleState is ArticleState.Success) {
-                                openArticleScreen(
-                                    navController = navController,
-                                    feedUrls = listOf(articleState.article.feed.url),
-                                )
+                                navController.navigate(ArticleRoute(feedUrls = listOf(articleState.article.feed.url)))
                             }
                         },
                     )

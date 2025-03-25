@@ -80,17 +80,20 @@ import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.mpv.resolveUri
+import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
 import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
-import com.skyd.anivu.ui.screen.filepicker.openFilePicker
 import com.skyd.anivu.ui.screen.media.list.GroupInfo
 import com.skyd.anivu.ui.screen.media.list.MediaList
-import com.skyd.anivu.ui.screen.media.search.openMediaSearchScreen
-import com.skyd.anivu.ui.screen.settings.appearance.media.MEDIA_STYLE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
+import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.io.File
 import kotlin.math.min
 
-const val MEDIA_SCREEN_ROUTE = "mediaScreen"
+
+@Serializable
+data object MediaRoute
 
 @Composable
 fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
@@ -163,9 +166,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 },
                 actions = {
                     PodAuraIconButton(
-                        onClick = {
-                            openMediaSearchScreen(navController = navController, path = path)
-                        },
+                        onClick = { navController.navigate(MediaSearchRoute(path = path)) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.media_screen_search_hint),
                     )
@@ -183,9 +184,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
                         onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
-                        onChangeLibLocation = {
-                            openFilePicker(navController = navController, path = path)
-                        }
+                        onChangeLibLocation = { navController.navigate(FilePickerRoute(path = path)) }
                     )
                 }
             )
@@ -204,11 +203,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
             ) {
                 SmallFloatingActionButton(
                     onClick = {
-                        openFilePicker(
-                            navController = navController,
-                            path = path,
-                            pickFolder = false,
-                        )
+                        navController.navigate(FilePickerRoute(path = path, pickFolder = false))
                     },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.secondary,
@@ -425,7 +420,7 @@ private fun MoreMenu(
             },
             onClick = {
                 onDismissRequest()
-                navController.navigate(MEDIA_STYLE_SCREEN_ROUTE)
+                navController.navigate(MediaStyleRoute)
             },
         )
     }

@@ -47,16 +47,19 @@ import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.anivu.ui.local.LocalMediaLibLocation
 import com.skyd.anivu.ui.local.LocalNavigationBarLabel
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
-import com.skyd.anivu.ui.screen.feed.FEED_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.feed.FeedRoute
 import com.skyd.anivu.ui.screen.feed.FeedScreen
-import com.skyd.anivu.ui.screen.media.MEDIA_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.media.MediaRoute
 import com.skyd.anivu.ui.screen.media.MediaScreen
-import com.skyd.anivu.ui.screen.more.MORE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.more.MoreRoute
 import com.skyd.anivu.ui.screen.more.MoreScreen
-import com.skyd.anivu.ui.screen.playlist.PLAYLIST_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.playlist.PlaylistRoute
 import com.skyd.anivu.ui.screen.playlist.PlaylistScreen
+import kotlinx.serialization.Serializable
 
-const val MAIN_SCREEN_ROUTE = "mainScreen"
+
+@Serializable
+data object MainRoute
 
 @Composable
 fun MainScreen() {
@@ -89,17 +92,17 @@ fun MainScreen() {
             }
             NavHost(
                 navController = mainNavController,
-                startDestination = FEED_SCREEN_ROUTE,
+                startDestination = FeedRoute,
                 modifier = Modifier.weight(1f),
                 enterTransition = { fadeIn(animationSpec = tween(170)) },
                 exitTransition = { fadeOut(animationSpec = tween(170)) },
                 popEnterTransition = { fadeIn(animationSpec = tween(170)) },
                 popExitTransition = { fadeOut(animationSpec = tween(170)) },
             ) {
-                composable(FEED_SCREEN_ROUTE) { FeedScreen() }
-                composable(PLAYLIST_SCREEN_ROUTE) { PlaylistScreen() }
-                composable(MEDIA_SCREEN_ROUTE) { MediaScreen(path = LocalMediaLibLocation.current) }
-                composable(MORE_SCREEN_ROUTE) { MoreScreen() }
+                composable<FeedRoute> { FeedScreen() }
+                composable<PlaylistRoute> { PlaylistScreen() }
+                composable<MediaRoute> { MediaScreen(path = LocalMediaLibLocation.current) }
+                composable<MoreRoute> { MoreScreen() }
             }
         }
     }
@@ -108,10 +111,10 @@ fun MainScreen() {
 @Composable
 private fun NavigationBarOrRail(navController: NavController) {
     val items = listOf(
-        stringResource(R.string.feed_screen_name) to FEED_SCREEN_ROUTE,
-        stringResource(R.string.playlist) to PLAYLIST_SCREEN_ROUTE,
-        stringResource(R.string.media_screen_name) to MEDIA_SCREEN_ROUTE,
-        stringResource(R.string.more_screen_name) to MORE_SCREEN_ROUTE,
+        stringResource(R.string.feed_screen_name) to FeedRoute,
+        stringResource(R.string.playlist) to PlaylistRoute,
+        stringResource(R.string.media_screen_name) to MediaRoute,
+        stringResource(R.string.more_screen_name) to MoreRoute,
     )
     val icons = remember {
         mapOf(

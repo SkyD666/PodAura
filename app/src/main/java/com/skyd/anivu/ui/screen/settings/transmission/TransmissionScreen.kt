@@ -36,10 +36,12 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalSeedingWhenComplete
 import com.skyd.anivu.ui.local.LocalTorrentDhtBootstraps
 import com.skyd.anivu.ui.local.LocalTorrentTrackers
-import com.skyd.anivu.ui.screen.settings.transmission.proxy.PROXY_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
+import kotlinx.serialization.Serializable
 
 
-const val TRANSMISSION_SCREEN_ROUTE = "transmissionScreen"
+@Serializable
+data object TransmissionRoute
 
 @Composable
 fun TransmissionScreen() {
@@ -130,7 +132,7 @@ fun TransmissionScreen() {
                     icon = rememberVectorPainter(image = Icons.Outlined.VpnKey),
                     text = stringResource(id = R.string.proxy_screen_name),
                     descriptionText = stringResource(id = R.string.proxy_screen_description),
-                    onClick = { navController.navigate(PROXY_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(ProxyRoute) },
                 )
             }
         }

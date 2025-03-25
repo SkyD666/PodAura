@@ -24,18 +24,20 @@ import com.skyd.anivu.model.preference.appearance.feed.TonalElevationPreferenceU
 import com.skyd.anivu.model.preference.appearance.search.SearchItemMinWidthPreference
 import com.skyd.anivu.model.preference.appearance.search.SearchListTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.search.SearchTopBarTonalElevationPreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
-import com.skyd.anivu.ui.screen.settings.appearance.article.ItemMinWidthDialog
-import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.local.LocalSearchItemMinWidth
 import com.skyd.anivu.ui.local.LocalSearchListTonalElevation
 import com.skyd.anivu.ui.local.LocalSearchTopBarTonalElevation
+import com.skyd.anivu.ui.screen.settings.appearance.article.ItemMinWidthDialog
+import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import kotlinx.serialization.Serializable
 
 
-const val SEARCH_STYLE_SCREEN_ROUTE = "searchStyleScreen"
+@Serializable
+data object SearchStyleRoute
 
 @Composable
 fun SearchStyleScreen() {

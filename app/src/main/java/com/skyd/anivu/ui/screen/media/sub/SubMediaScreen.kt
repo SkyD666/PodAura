@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.media.sub
 
-import android.os.Bundle
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
@@ -21,10 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import com.skyd.anivu.R
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
@@ -39,25 +35,12 @@ import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
 import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.list.MediaList
-import com.skyd.anivu.ui.screen.media.search.openMediaSearchScreen
+import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
+import kotlinx.serialization.Serializable
 
 
-const val SUB_MEDIA_SCREEN_ROUTE = "subMediaScreen"
-const val SUB_MEDIA_SCREEN_MEDIA_KEY = "media"
-
-fun openSubMediaScreen(
-    navController: NavController,
-    media: MediaBean,
-    navOptions: NavOptions? = null,
-) {
-    navController.navigate(
-        SUB_MEDIA_SCREEN_ROUTE,
-        Bundle().apply {
-            putSerializable(SUB_MEDIA_SCREEN_MEDIA_KEY, media)
-        },
-        navOptions = navOptions,
-    )
-}
+@Serializable
+data class SubMediaRoute(val media: MediaBean)
 
 @Composable
 fun SubMediaScreenRoute(media: MediaBean?) {
@@ -102,12 +85,7 @@ private fun SubMediaScreen(media: MediaBean) {
                 },
                 actions = {
                     PodAuraIconButton(
-                        onClick = {
-                            openMediaSearchScreen(
-                                navController = navController,
-                                path = media.file.path,
-                            )
-                        },
+                        onClick = { navController.navigate(MediaSearchRoute(path = media.file.path)) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.media_screen_search_hint),
                     )

@@ -116,16 +116,16 @@ class RssHelper @Inject constructor(
         val content = syndEntry.contents
             .takeIf { it.isNotEmpty() }
             ?.let { list -> list.joinToString("\n") { it.value } }
-        Log.i(
-            "RLog",
-            "request rss:\n" +
-                    "name: ${feed.title}\n" +
-                    "feedUrl: ${feed.url}\n" +
-                    "url: ${syndEntry.link}\n" +
-                    "title: ${syndEntry.title}\n" +
-                    "desc: ${desc}\n" +
-                    "content: ${content}\n"
-        )
+//        Log.i(
+//            "RLog",
+//            "request rss:\n" +
+//                    "name: ${feed.title}\n" +
+//                    "feedUrl: ${feed.url}\n" +
+//                    "url: ${syndEntry.link}\n" +
+//                    "title: ${syndEntry.title}\n" +
+//                    "desc: ${desc}\n" +
+//                    "content: ${content}\n"
+//        )
         val articleId = UUID.randomUUID().toString()
         val rssMedia = getRssMedia(articleId = articleId, modules = syndEntry.modules)
         val enclosures = syndEntry.enclosures.map {

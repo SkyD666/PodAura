@@ -62,7 +62,11 @@ class SearchRepository @Inject constructor(
         groupIds: List<String>,
         articleIds: List<String>,
     ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
-        val realFeedUrls = articleRepo.getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+        val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
+            feedDao.getAllFeedUrl()
+        } else {
+            articleRepo.getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+        }
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
                 genSql(

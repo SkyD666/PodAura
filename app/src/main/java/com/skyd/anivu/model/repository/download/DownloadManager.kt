@@ -9,6 +9,8 @@ import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.repository.media.IMediaRepository
+import com.skyd.anivu.ui.activity.MainActivity
+import com.skyd.anivu.ui.screen.download.DownloadRoute
 import com.skyd.downloader.Downloader
 import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
@@ -35,6 +37,8 @@ class DownloadManager private constructor(context: Context) {
             channelDescription = context.getString(R.string.download_channel_description),
             smallIcon = R.drawable.ic_icon_24,
             importance = NotificationManager.IMPORTANCE_LOW,
+            intentContentActivity = MainActivity::class.qualifiedName,
+            intentContentBasePath = DownloadRoute.BASE_PATH,
             pauseText = R.string.download_pause,
             resumeText = R.string.download_resume,
             cancelText = R.string.download_cancel,

@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.download
 
-import android.os.Bundle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -39,11 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.navOptions
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
@@ -57,33 +53,23 @@ import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.deeplink.DeepLinkData
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 
-const val DOWNLOAD_SCREEN_ROUTE = "downloadScreen"
-val DOWNLOAD_SCREEN_DEEP_LINK_DATA = DeepLinkData(
-    deepLink = "anivu://download.screen",
-    navOptions = navOptions { launchSingleTop = true },
-)
-const val DOWNLOAD_LINK_KEY = "downloadLink"
-const val MIMETYPE_KEY = "mimetype"
-
-fun openDownloadScreen(
-    navController: NavController,
-    downloadLink: String? = null,
-    mimetype: String? = null,
+@Serializable
+data class DownloadRoute(
+    val downloadLink: String? = null,
+    val mimetype: String? = null,
 ) {
-    navController.navigate(
-        DOWNLOAD_SCREEN_ROUTE,
-        Bundle().apply {
-            putString(DOWNLOAD_LINK_KEY, downloadLink)
-            putString(MIMETYPE_KEY, mimetype)
-        },
-        navOptions = navOptions { launchSingleTop = true },
-    )
+    companion object {
+        const val BASE_PATH = "podaura://download.screen"
+    }
 }
+
+@Serializable
+data object DownloadDeepLinkRoute
 
 @Composable
 fun DownloadScreen(

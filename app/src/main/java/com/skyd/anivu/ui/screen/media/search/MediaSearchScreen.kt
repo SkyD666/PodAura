@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.media.search
 
-import android.os.Bundle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,13 +40,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.NavOptions
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ext.navigate
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
@@ -58,26 +54,15 @@ import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.list.MediaList
-import com.skyd.anivu.ui.screen.media.sub.openSubMediaScreen
+import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.search.SearchBarInputField
 import com.skyd.anivu.ui.screen.search.TrailingIcon
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 
-const val MEDIA_SEARCH_SCREEN_ROUTE = "mediaSearchScreen"
-const val SEARCH_PATH_KEY = "searchPath"
-
-fun openMediaSearchScreen(
-    navController: NavController,
-    path: String,
-    navOptions: NavOptions? = null,
-) {
-    navController.navigate(
-        MEDIA_SEARCH_SCREEN_ROUTE,
-        Bundle().apply { putString(SEARCH_PATH_KEY, path) },
-        navOptions = navOptions,
-    )
-}
+@Serializable
+data class MediaSearchRoute(val path: String)
 
 @Composable
 fun MediaSearchScreen(
@@ -192,9 +177,7 @@ fun MediaSearchScreen(
                         },
                     )
                 },
-                onOpenDir = {
-                    openSubMediaScreen(navController = navController, media = it)
-                },
+                onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
                 onRename = { oldMedia, newName ->
                     dispatch(MediaSearchIntent.RenameFile(oldMedia.file, newName))
                 },

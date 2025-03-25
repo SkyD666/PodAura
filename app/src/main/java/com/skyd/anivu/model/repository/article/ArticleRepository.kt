@@ -98,12 +98,11 @@ class ArticleRepository @Inject constructor(
     ) { favorite, read, sortDateDesc ->
         arrayOf(favorite, read, sortDateDesc)
     }.flatMapLatest { (favorite, read, sortDateDesc) ->
-        val realFeedUrls =
-            if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
-                feedDao.getAllFeedUrl()
-            } else {
-                getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
-            }
+        val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
+            feedDao.getAllFeedUrl()
+        } else {
+            getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+        }
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
                 genSql(

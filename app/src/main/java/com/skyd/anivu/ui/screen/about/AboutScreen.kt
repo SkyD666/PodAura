@@ -81,13 +81,15 @@ import com.skyd.anivu.ui.component.shape.CurlyCornerShape
 import com.skyd.anivu.ui.component.shape.SquircleShape
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
-import com.skyd.anivu.ui.screen.about.license.LICENSE_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.about.license.LicenseRoute
 import com.skyd.anivu.ui.screen.about.update.UpdateDialog
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import java.util.Calendar
 
 
-const val ABOUT_SCREEN_ROUTE = "aboutScreen"
+@Serializable
+data object AboutRoute
 
 @Composable
 fun AboutScreen() {
@@ -110,7 +112,7 @@ fun AboutScreen() {
                     PodAuraIconButton(
                         imageVector = Icons.Outlined.Balance,
                         contentDescription = stringResource(id = R.string.license_screen_name),
-                        onClick = { navController.navigate(LICENSE_SCREEN_ROUTE) }
+                        onClick = { navController.navigate(LicenseRoute) }
                     )
                     PodAuraIconButton(
                         onClick = { openUpdateDialog = true },

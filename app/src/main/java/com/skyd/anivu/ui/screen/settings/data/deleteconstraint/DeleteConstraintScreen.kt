@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
+import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
@@ -28,9 +29,11 @@ import com.skyd.anivu.ui.component.TipSettingsItem
 import com.skyd.anivu.ui.local.LocalKeepFavoriteArticles
 import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
 import com.skyd.anivu.ui.local.LocalKeepUnreadArticles
+import kotlinx.serialization.Serializable
 
 
-const val DELETE_CONSTRAINT_SCREEN_ROUTE = "deleteConstraintScreen"
+@Serializable
+data object DeleteConstraintRoute
 
 @Composable
 fun DeleteConstraintScreen() {
@@ -60,7 +63,7 @@ fun DeleteConstraintScreen() {
                     checked = LocalKeepUnreadArticles.current,
                     imageVector = Icons.Outlined.MarkEmailUnread,
                     text = stringResource(id = R.string.delete_constraint_screen_keep_unread_articles),
-                    onCheckedChange = { KeepPlaylistArticlesPreference.put(context, scope, it) },
+                    onCheckedChange = { KeepUnreadArticlesPreference.put(context, scope, it) },
                 )
             }
             item {

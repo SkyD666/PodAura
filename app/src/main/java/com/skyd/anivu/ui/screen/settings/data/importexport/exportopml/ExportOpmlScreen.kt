@@ -44,9 +44,11 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalOpmlExportDir
+import kotlinx.serialization.Serializable
 
 
-const val EXPORT_OPML_SCREEN_ROUTE = "exportOpmlScreen"
+@Serializable
+data object ExportOpmlRoute
 
 @Composable
 fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {

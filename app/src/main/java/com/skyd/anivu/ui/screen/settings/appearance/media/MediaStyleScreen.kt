@@ -18,15 +18,17 @@ import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
+import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import kotlinx.serialization.Serializable
 
 
-const val MEDIA_STYLE_SCREEN_ROUTE = "mediaStyleScreen"
+@Serializable
+data object MediaStyleRoute
 
 @Composable
 fun MediaStyleScreen() {

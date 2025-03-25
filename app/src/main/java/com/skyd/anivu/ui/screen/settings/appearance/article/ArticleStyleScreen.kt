@@ -37,23 +37,25 @@ import com.skyd.anivu.model.preference.appearance.article.ArticleTopBarTonalElev
 import com.skyd.anivu.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.anivu.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
 import com.skyd.anivu.model.preference.appearance.feed.TonalElevationPreferenceUtil
+import com.skyd.anivu.ui.component.BaseSettingsItem
+import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.BaseSettingsItem
-import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
-import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
 import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
 import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
 import com.skyd.anivu.ui.local.LocalArticleListTonalElevation
 import com.skyd.anivu.ui.local.LocalArticleTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalShowArticlePullRefresh
 import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
+import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import kotlinx.serialization.Serializable
 
 
-const val ARTICLE_STYLE_SCREEN_ROUTE = "articleStyleScreen"
+@Serializable
+data object ArticleStyleRoute
 
 @Composable
 fun ArticleStyleScreen() {

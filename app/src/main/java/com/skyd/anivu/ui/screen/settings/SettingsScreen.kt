@@ -18,19 +18,21 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
+import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.BaseSettingsItem
-import com.skyd.anivu.ui.screen.settings.appearance.APPEARANCE_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.behavior.BEHAVIOR_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.data.DATA_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.playerconfig.PLAYER_CONFIG_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.rssconfig.RSS_CONFIG_SCREEN_ROUTE
-import com.skyd.anivu.ui.screen.settings.transmission.TRANSMISSION_SCREEN_ROUTE
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute
+import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute
+import com.skyd.anivu.ui.screen.settings.data.DataRoute
+import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute
+import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute
+import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
+import kotlinx.serialization.Serializable
 
 
-const val SETTINGS_SCREEN_ROUTE = "settingsScreen"
+@Serializable
+data object SettingsRoute
 
 @Composable
 fun SettingsScreen() {
@@ -56,7 +58,7 @@ fun SettingsScreen() {
                     icon = rememberVectorPainter(Icons.Outlined.Palette),
                     text = stringResource(id = R.string.appearance_screen_name),
                     descriptionText = stringResource(id = R.string.appearance_screen_description),
-                    onClick = { navController.navigate(APPEARANCE_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(AppearanceRoute) }
                 )
             }
             item {
@@ -64,7 +66,7 @@ fun SettingsScreen() {
                     icon = rememberVectorPainter(Icons.Outlined.TouchApp),
                     text = stringResource(id = R.string.behavior_screen_name),
                     descriptionText = stringResource(id = R.string.behavior_screen_description),
-                    onClick = { navController.navigate(BEHAVIOR_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(BehaviorRoute) }
                 )
             }
             item {
@@ -72,7 +74,7 @@ fun SettingsScreen() {
                     icon = rememberVectorPainter(Icons.Outlined.RssFeed),
                     text = stringResource(id = R.string.rss_config_screen_name),
                     descriptionText = stringResource(id = R.string.rss_config_screen_description),
-                    onClick = { navController.navigate(RSS_CONFIG_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(RssConfigRoute) }
                 )
             }
             item {
@@ -80,7 +82,7 @@ fun SettingsScreen() {
                     icon = rememberVectorPainter(Icons.Outlined.SmartDisplay),
                     text = stringResource(id = R.string.player_config_screen_name),
                     descriptionText = stringResource(id = R.string.player_config_screen_description),
-                    onClick = { navController.navigate(PLAYER_CONFIG_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(PlayerConfigRoute) }
                 )
             }
             item {
@@ -88,7 +90,7 @@ fun SettingsScreen() {
                     icon = painterResource(id = R.drawable.ic_database_24),
                     text = stringResource(id = R.string.data_screen_name),
                     descriptionText = stringResource(id = R.string.data_screen_description),
-                    onClick = { navController.navigate(DATA_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(DataRoute) }
                 )
             }
             item {
@@ -96,7 +98,7 @@ fun SettingsScreen() {
                     icon = rememberVectorPainter(Icons.Outlined.SwapVert),
                     text = stringResource(id = R.string.transmission_screen_name),
                     descriptionText = stringResource(id = R.string.transmission_screen_description),
-                    onClick = { navController.navigate(TRANSMISSION_SCREEN_ROUTE) }
+                    onClick = { navController.navigate(TransmissionRoute) }
                 )
             }
         }

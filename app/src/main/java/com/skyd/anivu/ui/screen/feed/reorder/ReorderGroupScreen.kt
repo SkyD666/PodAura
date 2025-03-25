@@ -53,11 +53,13 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import kotlinx.coroutines.channels.Channel
+import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
-const val REORDER_GROUP_SCREEN_ROUTE = "reorderGroupScreen"
+@Serializable
+data object ReorderGroupRoute
 
 @Composable
 fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {

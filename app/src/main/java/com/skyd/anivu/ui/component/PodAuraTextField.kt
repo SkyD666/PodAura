@@ -21,10 +21,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -72,8 +74,14 @@ fun PodAuraTextField(
     val clipboardManager = LocalClipboardManager.current
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(autoRequestFocus) {
-        if (autoRequestFocus) focusRequester.requestFocus()
+    // https://issuetracker.google.com/issues/204502668#comment15
+    val windowInfo = LocalWindowInfo.current
+    LaunchedEffect(windowInfo, autoRequestFocus) {
+        snapshotFlow { windowInfo.isWindowFocused }.collect { isWindowFocused ->
+            if (isWindowFocused && autoRequestFocus) {
+                focusRequester.requestFocus()
+            }
+        }
     }
 
     val newModifier = modifier.thenIf(autoRequestFocus) { focusRequester(focusRequester) }

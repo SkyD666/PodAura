@@ -67,10 +67,12 @@ import com.skyd.anivu.ui.local.LocalPlayerSeekOption
 import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
 import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
 import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
-import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PLAYER_CONFIG_ADVANCED_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
+import kotlinx.serialization.Serializable
 
 
-const val PLAYER_CONFIG_SCREEN_ROUTE = "playerConfigScreen"
+@Serializable
+data object PlayerConfigRoute
 
 @Composable
 fun PlayerConfigScreen() {
@@ -240,7 +242,7 @@ fun PlayerConfigScreen() {
                     icon = null,
                     text = stringResource(id = R.string.player_config_advanced_screen_name),
                     descriptionText = null,
-                    onClick = { navController.navigate(PLAYER_CONFIG_ADVANCED_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(PlayerConfigAdvancedRoute) },
                 )
             }
         }

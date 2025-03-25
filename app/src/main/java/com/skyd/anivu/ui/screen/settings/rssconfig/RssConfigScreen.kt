@@ -29,11 +29,11 @@ import com.skyd.anivu.model.preference.rss.RssSyncBatteryNotLowConstraintPrefere
 import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalParseLinkTagAsEnclosure
@@ -41,10 +41,12 @@ import com.skyd.anivu.ui.local.LocalRssSyncBatteryNotLowConstraint
 import com.skyd.anivu.ui.local.LocalRssSyncChargingConstraint
 import com.skyd.anivu.ui.local.LocalRssSyncFrequency
 import com.skyd.anivu.ui.local.LocalRssSyncWifiConstraint
-import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UPDATE_NOTIFICATION_SCREEN_ROUTE
+import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
+import kotlinx.serialization.Serializable
 
 
-const val RSS_CONFIG_SCREEN_ROUTE = "rssConfigScreen"
+@Serializable
+data object RssConfigRoute
 
 @Composable
 fun RssConfigScreen() {
@@ -138,7 +140,7 @@ fun RssConfigScreen() {
                     icon = rememberVectorPainter(image = Icons.Outlined.Notifications),
                     text = stringResource(id = R.string.update_notification_screen_name),
                     descriptionText = stringResource(id = R.string.rss_config_screen_update_notification_description),
-                    onClick = { navController.navigate(UPDATE_NOTIFICATION_SCREEN_ROUTE) },
+                    onClick = { navController.navigate(UpdateNotificationRoute) },
                 )
             }
             item {

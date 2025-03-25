@@ -17,7 +17,7 @@ import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.anivu.ui.activity.MainActivity
-import com.skyd.anivu.ui.screen.article.getArticleScreenDeepLink
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.util.uniqueInt
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -66,10 +66,11 @@ object ArticleNotificationManager {
             .joinToString(", ") { it.name }
         val intent = Intent(
             Intent.ACTION_VIEW,
-            getArticleScreenDeepLink(
+            ArticleRoute(
                 feedUrls = emptyList(),
+                groupIds = emptyList(),
                 articleIds = matchedData.map { it.first.article.articleId },
-            ),
+            ).toDeeplink(),
             appContext,
             MainActivity::class.java
         ).apply {

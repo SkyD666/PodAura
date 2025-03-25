@@ -47,9 +47,11 @@ import com.skyd.anivu.ui.screen.history.item.MediaPlayItemPlaceholder
 import com.skyd.anivu.ui.screen.history.item.ReadHistoryItem
 import com.skyd.anivu.ui.screen.history.item.ReadHistoryItemPlaceholder
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 
-const val HISTORY_SCREEN_ROUTE = "historyScreen"
+@Serializable
+data object HistoryRoute
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {

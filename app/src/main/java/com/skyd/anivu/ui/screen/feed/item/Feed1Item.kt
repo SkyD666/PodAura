@@ -40,8 +40,8 @@ import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.FeedIcon
-import com.skyd.anivu.ui.screen.article.openArticleScreen
 
 @Composable
 fun Feed1Item(
@@ -76,10 +76,7 @@ fun Feed1Item(
                 } else null,
                 onClick = {
                     if (onClick == null) {
-                        openArticleScreen(
-                            navController = navController,
-                            feedUrls = arrayListOf(feed.url)
-                        )
+                        navController.navigate(ArticleRoute(feedUrls = arrayListOf(feed.url)))
                     } else onClick(feed)
                 },
             )

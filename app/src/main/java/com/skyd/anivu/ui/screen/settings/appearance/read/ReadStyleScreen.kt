@@ -22,16 +22,18 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.appearance.feed.TonalElevationPreferenceUtil
 import com.skyd.anivu.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.read.ReadTopBarTonalElevationPreference
-import com.skyd.anivu.ui.component.PodAuraTopBar
-import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
+import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
 import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
 import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import kotlinx.serialization.Serializable
 
 
-const val READ_STYLE_SCREEN_ROUTE = "readStyleScreen"
+@Serializable
+data object ReadStyleRoute
 
 @Composable
 fun ReadStyleScreen() {

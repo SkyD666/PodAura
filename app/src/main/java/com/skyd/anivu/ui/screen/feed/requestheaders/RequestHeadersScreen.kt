@@ -39,34 +39,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
-import com.skyd.anivu.ext.toEncodedUrl
 import com.skyd.anivu.model.bean.feed.FeedBean
+import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import kotlinx.serialization.Serializable
 
 
-const val REQUEST_HEADERS_SCREEN_ROUTE = "requestHeadersScreen"
-const val FEED_URL_KEY = "feedUrl"
-
-fun openRequestHeadersScreen(
-    navController: NavController,
-    feedUrl: String,
-) {
-    navController.navigate(
-        "$REQUEST_HEADERS_SCREEN_ROUTE/${feedUrl.toEncodedUrl(allow = null)}",
-    )
-}
+@Serializable
+data class RequestHeadersRoute(val feedUrl: String)
 
 @Composable
 fun RequestHeadersScreen(feedUrl: String, viewModel: RequestHeadersViewModel = hiltViewModel()) {

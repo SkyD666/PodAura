@@ -30,9 +30,11 @@ import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.local.LocalHardwareDecode
+import kotlinx.serialization.Serializable
 
 
-const val PLAYER_CONFIG_ADVANCED_SCREEN_ROUTE = "playerConfigAdvancedScreen"
+@Serializable
+data object PlayerConfigAdvancedRoute
 
 @Composable
 fun PlayerConfigAdvancedScreen() {

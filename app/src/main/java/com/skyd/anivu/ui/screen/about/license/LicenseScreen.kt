@@ -29,9 +29,11 @@ import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.LicenseBean
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import kotlinx.serialization.Serializable
 
 
-const val LICENSE_SCREEN_ROUTE = "licenseScreen"
+@Serializable
+data object LicenseRoute
 
 @Composable
 fun LicenseScreen() {

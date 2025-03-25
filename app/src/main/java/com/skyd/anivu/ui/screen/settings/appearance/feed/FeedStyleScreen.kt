@@ -44,9 +44,11 @@ import com.skyd.anivu.ui.component.dialog.SliderDialog
 import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
 import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
+import kotlinx.serialization.Serializable
 
 
-const val FEED_STYLE_SCREEN_ROUTE = "feedStyleScreen"
+@Serializable
+data object FeedStyleRoute
 
 @Composable
 fun FeedStyleScreen() {

@@ -42,9 +42,9 @@ import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.screen.article.FeedIcon
+import com.skyd.anivu.ui.screen.article.ArticleItemFeedInfo
+import com.skyd.anivu.ui.screen.article.ArticleItemIconButton
 import com.skyd.anivu.ui.screen.article.navigateToReadScreen
-import com.skyd.anivu.ui.screen.article.openArticleScreen
 
 @Composable
 fun ReadHistoryItem(
@@ -157,42 +157,12 @@ fun ReadHistoryItem(
 
         // Bottom row
         Row(
-            modifier = Modifier.padding(start = 15.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
+            modifier = Modifier.padding(start = 11.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val feed = data.article.feed
-            Row(
-                modifier = Modifier.clickable {
-                    openArticleScreen(
-                        navController = navController,
-                        feedUrls = listOf(feed.url),
-                    )
-                },
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                FeedIcon(
-                    data = feed,
-                    size = 22.dp
-                )
-                val feedName = feed.nickname.orEmpty().ifBlank { feed.title.orEmpty() }
-                if (feedName.isNotBlank()) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 6.dp),
-                        text = feedName,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .clickable { onDelete(data) }
-                    .padding(6.dp),
+            ArticleItemFeedInfo(data = data.article)
+            ArticleItemIconButton(
+                onClick = { onDelete(data) },
                 imageVector = Icons.Outlined.Delete,
                 contentDescription = stringResource(id = R.string.delete),
                 tint = LocalContentColor.current.copy(alpha = 0.75f),
