@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -139,7 +138,6 @@ import kotlin.reflect.typeOf
 
 @AndroidEntryPoint
 class MainActivity : BaseComposeActivity() {
-    private var needHandleOnCreateIntent = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -157,13 +155,6 @@ class MainActivity : BaseComposeActivity() {
     @Composable
     private fun IntentHandler() {
         val navController = LocalNavController.current
-        if (needHandleOnCreateIntent) {
-            LaunchedEffect(Unit) {
-                needHandleOnCreateIntent = false
-                navController.handleDeepLink(intent)
-            }
-        }
-
         DisposableEffect(navController) {
             val listener = Consumer<Intent> { newIntent ->
                 navController.handleDeepLink(newIntent)
@@ -285,7 +276,11 @@ private fun MainNavHost() {
             val intent = it.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
             DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)
         }
-        composable<ReadRoute> { ReadScreen(articleId = it.toRoute<ReadRoute>().articleId) }
+        composable<ReadRoute>(
+            deepLinks = listOf(navDeepLink<ReadRoute>(basePath = ReadRoute.BASE_PATH)),
+        ) {
+            ReadScreen(articleId = it.toRoute<ReadRoute>().articleId)
+        }
         composable<SearchRoute.Feed>(
             typeMap = mapOf(typeOf<SearchRoute.Feed>() to serializableType<SearchRoute.Feed>()),
         ) {

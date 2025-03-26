@@ -14,8 +14,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.popBackStackWithLifecycle
 import com.skyd.anivu.ui.local.LocalNavController
 
@@ -77,8 +79,11 @@ fun PodAuraTopBar(
 @Composable
 fun BackIcon() {
     val navController = LocalNavController.current
+    val context = LocalContext.current
     BackIcon {
-        navController.popBackStackWithLifecycle()
+        if (!navController.popBackStackWithLifecycle()) {
+            context.activity.finish()
+        }
     }
 }
 

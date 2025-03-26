@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.theme
 
 import android.app.UiModeManager
-import android.app.WallpaperManager
 import android.content.Context
 import android.os.Build
 import androidx.compose.material3.ColorScheme
@@ -10,9 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import com.materialkolor.Contrast
 import com.materialkolor.dynamicColorScheme
 import com.materialkolor.rememberDynamicColorScheme
@@ -94,27 +91,12 @@ fun extractColors(darkTheme: Boolean): Map<String, ColorScheme> {
 }
 
 @Composable
-fun extractDynamicColor(darkTheme: Boolean): Map<String, ColorScheme> {
-    val preset = mutableMapOf<String, ColorScheme>()
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 && !LocalView.current.isInEditMode) {
+fun extractDynamicColor(darkTheme: Boolean): Map<String, ColorScheme> = buildMap {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val context = LocalContext.current
-        val colors = WallpaperManager.getInstance(context)
-            .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
-        val primary = colors?.primaryColor?.toArgb()
-        if (primary != null) {
-            preset[ThemePreference.DYNAMIC] = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                if (darkTheme) dynamicDarkColorScheme(context)
-                else dynamicLightColorScheme(context)
-            } else {
-                rememberDynamicColorScheme(
-                    primary = Color(primary),
-                    isDark = darkTheme,
-                    isAmoled = LocalAmoledDarkMode.current,
-                    contrastLevel = context.contrastLevel,
-                )
-            }
-        }
+        put(
+            ThemePreference.DYNAMIC,
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        )
     }
-    return preset
 }

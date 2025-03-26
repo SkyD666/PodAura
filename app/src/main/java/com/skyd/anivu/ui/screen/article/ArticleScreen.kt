@@ -105,7 +105,7 @@ data class ArticleRoute(
     }
 
     companion object {
-        const val DEEP_LINK = "podaura://article.screen"
+        private const val DEEP_LINK = "podaura://article.screen"
         const val BASE_PATH = "$DEEP_LINK/{feedUrls}/{groupIds}/{articleIds}"
     }
 }

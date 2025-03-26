@@ -11,10 +11,11 @@ import kotlin.reflect.KClass
 fun NavBackStackEntry.lifecycleIsResumed() =
     this.lifecycle.currentState == Lifecycle.State.RESUMED
 
-fun NavController.popBackStackWithLifecycle() {
+fun NavController.popBackStackWithLifecycle(): Boolean {
     if (currentBackStackEntry?.lifecycleIsResumed() == true) {
-        popBackStack()
+        return popBackStack()
     }
+    return true
 }
 
 inline fun <reified T : Any> serializableType(

@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.read
 
+import android.net.Uri
 import android.text.format.DateUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -74,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.EventListener
@@ -112,12 +114,24 @@ import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.article.openLinkInBrowser
 import com.skyd.anivu.util.ShareUtil
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale
 
 
 @Serializable
-data class ReadRoute(val articleId: String)
+data class ReadRoute(@SerialName("articleId") val articleId: String) {
+    fun toDeeplink(): Uri {
+        return DEEP_LINK.toUri().buildUpon()
+            .appendPath(articleId)
+            .build()
+    }
+
+    companion object {
+        private const val DEEP_LINK = "podaura://read.screen"
+        const val BASE_PATH = DEEP_LINK
+    }
+}
 
 @Composable
 fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
