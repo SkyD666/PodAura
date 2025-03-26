@@ -303,7 +303,7 @@
     <string name="search_style_screen_search_item_category">項目を検索</string>
     <string name="empty_tip_1">なし</string>
     <string name="sub_media_screen_path_illegal">不正なメディア</string>
-    <string name="player_config_screen_auto_pip">自動で PIP</string>
+    <string name="player_config_screen_auto_pip">自動で PIP を表示</string>
     <string name="player_config_screen_auto_pip_description">ホームまたは最近開いたアプリボタンが押された場合に PiP モードに切り替えます</string>
     <string name="player_picture_in_picture">ピクチャーインピクチャー</string>
     <string name="open_file">ファイルを開く</string>
@@ -394,7 +394,7 @@
     <string name="transmission_screen_edit_torrent_trackers_tips">各行はトラッカーを示します。</string>
     <string name="transmission_screen_torrent_dht_bootstraps">DHT bootstrap ノード</string>
     <string name="transmission_screen_edit_torrent_dht_bootstraps_tips">各ノードはコンマまたは改行で区切ることができます。空のままにするとデフォルトのノードが使用されることを意味します。</string>
-    <string name="transmission_screen_torrent_dht_bootstraps_default_description">デフォルトのノートを使用する</string>
+    <string name="transmission_screen_torrent_dht_bootstraps_default_description">デフォルトのノードを使用する</string>
     <string name="auto_delete_article_screen_delete_max_count">フィードごとの最大記事数</string>
     <string name="auto_delete_article_screen_delete_max_count_description">%d 個の項目</string>
     <string name="auto_delete_article_screen_strategy_category">ストラテジー</string>
