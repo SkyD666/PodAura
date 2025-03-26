@@ -457,6 +457,7 @@
     <string name="feed_screen_full_refresh_description">Full refresh updates local data with all the fetched articles instead of just adding new ones. \n\nNote that if the feed does not provide the article\'s GUID or LINK tag, duplicate articles may occur.</string>
     <string name="feed_screen_incremental_refresh">Inc refresh</string>
     <string name="feed_screen_incremental_refresh_description">Incremental refresh updates local data with articles newer than any locally stored article. Older missing articles will not be restored.</string>
+    <string name="checked">Checked</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

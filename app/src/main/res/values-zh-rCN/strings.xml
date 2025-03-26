@@ -450,6 +450,7 @@
     <string name="feed_screen_full_refresh_description">全量刷新使用请求到的所有文章来更新本地数据，而不是仅仅添加新文章。\n\n如果订阅源未提供文章的 GUID 或 LINK 标签，文章可能会出现重复。</string>
     <string name="feed_screen_incremental_refresh">增量刷新</string>
     <string name="feed_screen_incremental_refresh_description">增量刷新使用比本地任何文章发布时间都新的文章来更新本地数据，较旧的缺失的文章不会被恢复。</string>
+    <string name="checked">已选中</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

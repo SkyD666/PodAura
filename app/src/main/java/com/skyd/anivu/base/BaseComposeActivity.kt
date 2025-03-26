@@ -17,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 open class BaseComposeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // A known bug: https://issuetracker.google.com/issues/387281251
         enableEdgeToEdge()
     }
 

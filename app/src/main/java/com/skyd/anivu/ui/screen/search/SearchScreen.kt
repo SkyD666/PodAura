@@ -54,6 +54,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -78,6 +79,7 @@ import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import com.skyd.anivu.ui.component.safeRequestFocus
 import com.skyd.anivu.ui.local.LocalSearchItemMinWidth
 import com.skyd.anivu.ui.local.LocalSearchListTonalElevation
 import com.skyd.anivu.ui.local.LocalSearchTopBarTonalElevation
@@ -390,7 +392,8 @@ fun SearchBarInputField(
         shape = RectangleShape,
     )
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+    val windowInfo = LocalWindowInfo.current
+    LaunchedEffect(windowInfo) {
+        focusRequester.safeRequestFocus(windowInfo)
     }
 }

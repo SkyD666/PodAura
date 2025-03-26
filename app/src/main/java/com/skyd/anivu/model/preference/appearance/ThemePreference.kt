@@ -28,12 +28,6 @@ object ThemePreference : BasePreference<String> {
 
     val basicValues = arrayOf(BLUE, PINK, YELLOW, RED, GREEN, PURPLE, MAHIRO)
 
-    val values: Array<String>
-        get() {
-            return if (DynamicColors.isDynamicColorAvailable()) arrayOf(DYNAMIC, *basicValues)
-            else basicValues
-        }
-
     override val default = if (DynamicColors.isDynamicColorAvailable()) DYNAMIC else PINK
 
     override val key = stringPreferencesKey(THEME)

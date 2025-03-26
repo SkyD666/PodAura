@@ -1,13 +1,10 @@
 package com.skyd.anivu.ui.screen.settings.appearance
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -23,10 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
@@ -49,13 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.material.color.DynamicColors
 import com.materialkolor.ktx.from
+import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
@@ -83,7 +78,7 @@ import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
-import com.skyd.anivu.ui.theme.extractColors
+import com.skyd.anivu.ui.theme.extractAllColors
 import kotlinx.serialization.Serializable
 
 
@@ -139,7 +134,7 @@ fun AppearanceScreen() {
                 }
             }
             item {
-                Palettes(colors = extractColors(darkTheme = false))
+                Palettes(colors = extractAllColors(darkTheme = false))
             }
             if (DynamicColors.isDynamicColorAvailable()) {
                 item {
@@ -358,72 +353,78 @@ fun Palettes(
 
 @Composable
 fun SelectableMiniPalette(
-    modifier: Modifier = Modifier,
     selected: Boolean,
     onClick: () -> Unit,
     contentDescription: () -> String,
     accents: List<TonalPalette>,
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.inverseOnSurface,
+    TooltipBox(
+        modifier = Modifier,
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Text(contentDescription())
+            }
+        },
+        state = rememberTooltipState()
     ) {
-        TooltipBox(
-            modifier = modifier,
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
-            tooltip = {
-                PlainTooltip {
-                    Text(contentDescription())
-                }
-            },
-            state = rememberTooltipState()
+        Box(
+            modifier = Modifier
+                .size(74.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onClick),
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
-                    .clickable(onClick = onClick)
-                    .padding(12.dp)
-                    .size(50.dp),
-                shape = CircleShape,
-                color = Color(accents[0].tone(60)),
+                    .background(MaterialTheme.colorScheme.inverseOnSurface)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
-                Box {
-                    Surface(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .offset((-25).dp, 25.dp),
-                        color = Color(accents[1].tone(85)),
-                    ) {}
-                    Surface(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .offset(25.dp, 25.dp),
-                        color = Color(accents[2].tone(75)),
-                    ) {}
-                    val animationSpec = spring<Float>(stiffness = Spring.StiffnessMedium)
-                    AnimatedVisibility(
-                        visible = selected,
-                        enter = scaleIn(animationSpec) + fadeIn(animationSpec),
-                        exit = scaleOut(animationSpec) + fadeOut(animationSpec),
-                    ) {
-                        Box(
+                Surface(
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    color = accents[0].toneColor(36),
+                ) {
+                    Box {
+                        Surface(
                             modifier = Modifier
-                                .padding(10.dp)
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Check,
-                                contentDescription = "Checked",
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(16.dp),
-                                tint = MaterialTheme.colorScheme.surface
-                            )
-                        }
+                                .size(50.dp)
+                                .offset((-25).dp, 25.dp),
+                            color = accents[1].toneColor(80),
+                        ) {}
+                        Surface(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .offset(25.dp, 25.dp),
+                            color = accents[2].toneColor(65),
+                        ) {}
                     }
+                }
+            }
+            AnimatedVisibility(
+                visible = selected,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(
+                            width = 2.dp,
+                            color = accents[0].toneColor(50),
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .padding(2.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(15.dp),
+                            ),
+                    )
                 }
             }
         }

@@ -27,12 +27,23 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ui.local.LocalTextFieldStyle
+
+
+// https://issuetracker.google.com/issues/204502668#comment15
+suspend fun FocusRequester.safeRequestFocus(windowInfo: WindowInfo) {
+    snapshotFlow { windowInfo.isWindowFocused }.collect { isWindowFocused ->
+        if (isWindowFocused) {
+            requestFocus()
+        }
+    }
+}
 
 enum class PodAuraTextFieldStyle(val value: String) {
     Normal("Normal"),
@@ -74,13 +85,10 @@ fun PodAuraTextField(
     val clipboardManager = LocalClipboardManager.current
     val focusRequester = remember { FocusRequester() }
 
-    // https://issuetracker.google.com/issues/204502668#comment15
     val windowInfo = LocalWindowInfo.current
     LaunchedEffect(windowInfo, autoRequestFocus) {
-        snapshotFlow { windowInfo.isWindowFocused }.collect { isWindowFocused ->
-            if (isWindowFocused && autoRequestFocus) {
-                focusRequester.requestFocus()
-            }
+        if (autoRequestFocus) {
+            focusRequester.safeRequestFocus(windowInfo)
         }
     }
 

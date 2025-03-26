@@ -60,6 +60,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
@@ -87,6 +88,7 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import com.skyd.anivu.ui.component.safeRequestFocus
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
 import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
@@ -101,7 +103,6 @@ import com.skyd.anivu.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupRoute
 import com.skyd.anivu.ui.screen.search.SearchRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
-import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -531,10 +532,9 @@ private fun AddFeedDialog(
                     }
                 )
 
-                LaunchedEffect(focusRequester) {
-                    focusRequester.requestFocus()
-                    awaitFrame()
-                    keyboard?.show()
+                val windowInfo = LocalWindowInfo.current
+                LaunchedEffect(windowInfo) {
+                    focusRequester.safeRequestFocus(windowInfo)
                 }
             }
         },
