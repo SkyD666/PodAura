@@ -450,6 +450,7 @@
     <string name="feed_screen_full_refresh_description">完全に更新では、新しい記事を追加するだけでなく取得したすべての記事のローカルデータを更新します。\n\nフィードに記事の GUID またはリンクタグが指定されていない場合は、重複した記事が発生する可能性があることにご注意ください。</string>
     <string name="feed_screen_incremental_refresh">増分を更新</string>
     <string name="feed_screen_incremental_refresh_description">増分を更新はローカルに保存されている記事よりも新しい記事データがローカルに更新されます。古い欠落した記事は復元されません。</string>
+    <string name="checked">Checked</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
