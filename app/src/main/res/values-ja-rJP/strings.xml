@@ -15,13 +15,13 @@
     <string name="close">閉じる</string>
     <string name="exit">終了</string>
     <string name="remove">削除</string>
-    <string name="delete">消去</string>
+    <string name="delete">削除</string>
     <string name="edit">編集</string>
     <string name="article_screen_name">記事</string>
     <string name="search_screen_hint">検索</string>
     <string name="back">戻る</string>
     <string name="read_screen_name">既読</string>
-    <string name="bottom_sheet_enclosure_title">エンクロージャー</string>
+    <string name="bottom_sheet_enclosure_title">添付</string>
     <string name="download">ダウンロード</string>
     <string name="downloading">ダウンロード中…</string>
     <string name="download_screen_name">ダウンロードタスク</string>
@@ -74,8 +74,8 @@
     <string name="clear">消去</string>
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">RSS の同期を構成、解析ルール</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure">エンクロージャーとしてリンクを解析</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">リンクタグを解析してエンクロージャーとして表示します</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure">添付としてリンクを解析する</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">リンクタグを解析して添付として表示します</string>
     <string name="rss_config_screen_parse_category">解析</string>
     <string name="transmission_screen_name">転送</string>
     <string name="transmission_screen_description">データ転送のセットアップ、動作</string>
@@ -164,7 +164,7 @@
     <string name="behavior_screen_article_screen_deduplicate_title_in_desc">重複のタイトル</string>
     <string name="behavior_screen_article_screen_deduplicate_title_in_desc_description">説明テキスト内のタイトルと同じ部分の文字列を削除します</string>
     <string name="article_action_read">既読</string>
-    <string name="article_action_show_enclosures">エンクロージャーを表示</string>
+    <string name="article_action_show_enclosures">添付を表示</string>
     <string name="behavior_screen_article_tap_action">項目をタップ</string>
     <string name="behavior_screen_article_swipe_left_action">左にスワイプ</string>
     <string name="behavior_screen_article_swipe_right_action">右にスワイプ</string>
