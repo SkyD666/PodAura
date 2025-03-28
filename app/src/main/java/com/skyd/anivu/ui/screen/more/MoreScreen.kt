@@ -28,12 +28,14 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -51,11 +53,6 @@ import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MoreBean
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.shape.CloverShape
-import com.skyd.anivu.ui.component.shape.CurlyCornerShape
-import com.skyd.anivu.ui.component.shape.PolygonShape
-import com.skyd.anivu.ui.component.shape.RoundedCornerStarShape
-import com.skyd.anivu.ui.component.shape.SquircleShape
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.about.AboutRoute
@@ -140,7 +137,7 @@ fun More1Item(
                     .padding(5.dp)
                     .background(
                         color = data.shapeColor,
-                        shape = data.shape
+                        shape = data.shape.toShape(),
                     )
                     .padding(16.dp)
             ) {
@@ -176,7 +173,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.history_screen_name),
             icon = Icons.Outlined.History,
             iconTint = colorScheme.onPrimary,
-            shape = PolygonShape(sides = 8),
+            shape = MaterialShapes.Pill,
             shapeColor = colorScheme.primary,
             action = { navController.navigate(HistoryRoute) },
         ),
@@ -184,7 +181,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.download_screen_name),
             icon = Icons.Outlined.Download,
             iconTint = colorScheme.onSecondary,
-            shape = RoundedCornerStarShape,
+            shape = MaterialShapes.Clover8Leaf,
             shapeColor = colorScheme.secondary,
             action = { navController.navigate(DownloadRoute()) },
         ),
@@ -192,7 +189,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.import_export_screen_name),
             icon = Icons.Outlined.SwapVert,
             iconTint = colorScheme.onTertiary,
-            shape = CloverShape,
+            shape = MaterialShapes.Clover4Leaf,
             shapeColor = colorScheme.tertiary,
             action = { navController.navigate(ImportExportRoute) },
         ),
@@ -200,7 +197,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.settings_screen_name),
             icon = Icons.Outlined.Settings,
             iconTint = colorScheme.onPrimary,
-            shape = SquircleShape,
+            shape = MaterialShapes.Slanted,
             shapeColor = colorScheme.primary,
             action = { navController.navigate(SettingsRoute) },
         ),
@@ -208,7 +205,7 @@ private fun getMoreBeanList(
             title = context.getString(R.string.about_screen_name),
             icon = Icons.Outlined.Info,
             iconTint = colorScheme.onSecondary,
-            shape = CurlyCornerShape(amp = with(density) { 1.6.dp.toPx() }, count = 10f),
+            shape = MaterialShapes.Cookie12Sided,
             shapeColor = colorScheme.secondary,
             action = { navController.navigate(AboutRoute) }
         ),

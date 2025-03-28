@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Text
@@ -89,7 +89,7 @@ fun WaitingDialog(
 fun WaitingDialog(
     visible: Boolean,
     title: String = stringResource(R.string.waiting),
-    icon: @Composable (() -> Unit)? = { CircularProgressIndicator() },
+    icon: @Composable (() -> Unit)? = { LoadingIndicator() },
     text: @Composable (() -> Unit)? = null,
 ) {
     PodAuraDialog(
