@@ -229,7 +229,7 @@
     <string name="import_opml_conflict_strategy_skip">跳过</string>
     <string name="import_opml_screen_opml_not_selected">请选择一个 OPML 文件</string>
     <string name="data_screen_sync_category">同步</string>
-    <string name="import_export_screen_description">通过 OPML 文件来导入与导出订阅数据</string>
+    <string name="import_export_screen_description">导入和导出数据</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">添加音频文件</string>
     <string name="feed_screen_rss_description_hint">点击设置描述</string>
@@ -451,6 +451,12 @@
     <string name="feed_screen_incremental_refresh">增量刷新</string>
     <string name="feed_screen_incremental_refresh_description">增量刷新使用比本地任何文章发布时间都新的文章来更新本地数据，较旧的缺失的文章不会被恢复。</string>
     <string name="checked">已选中</string>
+    <string name="import_export_screen_feed_category">订阅</string>
+    <string name="import_export_screen_prefer_category">设置</string>
+    <string name="import_opml_screen_import_prefer">导入设置</string>
+    <string name="import_opml_screen_export_prefer">导出设置</string>
+    <string name="import_opml_screen_import_prefer_description">通过 JSON 文件导入，当前的设置将被覆盖</string>
+    <string name="import_opml_screen_export_prefer_description">通过 JSON 文件导出</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>
