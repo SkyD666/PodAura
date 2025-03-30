@@ -230,7 +230,7 @@
     <string name="import_opml_conflict_strategy_skip">Atla</string>
     <string name="import_opml_screen_opml_not_selected">Lütfen bir OPML dosyası seçin</string>
     <string name="data_screen_sync_category">Senkronizasyon</string>
-    <string name="import_export_screen_description">OPML dosyaları aracılığıyla RSS verilerini İçe ve Dışa Aktarın</string>
+    <string name="import_export_screen_description">Import and export data</string>
     <string name="player_speed">Hız</string>
     <string name="player_add_external_audio">Ses dosyası ekle</string>
     <string name="feed_screen_rss_description_hint">Açıklama eklemek için tıklayın</string>
@@ -452,6 +452,12 @@
     <string name="feed_screen_incremental_refresh">Inc refresh</string>
     <string name="feed_screen_incremental_refresh_description">Incremental refresh updates local data with articles newer than any locally stored article. Older missing articles will not be restored.</string>
     <string name="checked">Checked</string>
+    <string name="import_export_screen_feed_category">Feed</string>
+    <string name="import_export_screen_prefer_category">Preference</string>
+    <string name="import_opml_screen_import_prefer">Import preferences</string>
+    <string name="import_opml_screen_export_prefer">Export preferences</string>
+    <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
+    <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
