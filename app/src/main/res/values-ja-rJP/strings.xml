@@ -229,6 +229,7 @@
     <string name="import_opml_conflict_strategy_skip">スキップ</string>
     <string name="import_opml_screen_opml_not_selected">OPML ファイルを選択してください</string>
     <string name="data_screen_sync_category">同期</string>
+    <string name="import_export_screen_description">Import and export data</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">オーディオファイルを追加</string>
     <string name="feed_screen_rss_description_hint">タップで説明を設定します</string>
@@ -449,6 +450,13 @@
     <string name="feed_screen_full_refresh_description">完全に更新では、新しい記事を追加するだけでなく取得したすべての記事のローカルデータを更新します。\n\nフィードに記事の GUID またはリンクタグが指定されていない場合は、重複した記事が発生する可能性があることにご注意ください。</string>
     <string name="feed_screen_incremental_refresh">増分を更新</string>
     <string name="feed_screen_incremental_refresh_description">増分を更新はローカルに保存されている記事よりも新しい記事データがローカルに更新されます。古い欠落した記事は復元されません。</string>
+    <string name="checked">Checked</string>
+    <string name="import_export_screen_feed_category">Feed</string>
+    <string name="import_export_screen_prefer_category">Preference</string>
+    <string name="import_opml_screen_import_prefer">Import preferences</string>
+    <string name="import_opml_screen_export_prefer">Export preferences</string>
+    <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
+    <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
