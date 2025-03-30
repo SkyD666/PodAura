@@ -227,7 +227,7 @@
     <string name="import_opml_conflict_strategy_skip">跳過</string>
     <string name="import_opml_screen_opml_not_selected">請選擇一個 OPML 文件</string>
     <string name="data_screen_sync_category">同步</string>
-    <string name="import_export_screen_description">透過 OPML 檔案匯入和匯出 RSS 資料</string>
+    <string name="import_export_screen_description">匯入和匯出資料</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">添加音頻文件</string>
     <string name="feed_screen_rss_description_hint">點擊設定描述</string>

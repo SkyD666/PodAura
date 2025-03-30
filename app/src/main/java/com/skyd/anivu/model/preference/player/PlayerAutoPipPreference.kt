@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.player
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object PlayerAutoPipPreference : BasePreference<Boolean> {
     private const val PLAYER_AUTO_PIP = "playerAutoPip"
 

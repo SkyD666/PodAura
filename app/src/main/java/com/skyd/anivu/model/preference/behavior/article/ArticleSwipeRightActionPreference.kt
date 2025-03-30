@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object ArticleSwipeRightActionPreference : ArticleSwipeActionPreference() {
     private const val ARTICLE_SWIPE_RIGHT_ACTION = "articleSwipeRightAction"
 

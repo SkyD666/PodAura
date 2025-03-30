@@ -6,11 +6,13 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
+@Preference
 object RssSyncFrequencyPreference : BasePreference<Long> {
     private const val RSS_SYNC_FREQUENCY = "rssSyncFrequency"
 

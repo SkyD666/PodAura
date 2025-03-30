@@ -22,7 +22,7 @@ android {
         minSdk = 24
         targetSdk = 35
         versionCode = 26
-        versionName = "3.1-beta16"
+        versionName = "3.1-beta17"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -170,6 +170,7 @@ tasks.withType(KotlinCompile::class).configureEach {
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
             "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
             "-opt-in=kotlin.contracts.ExperimentalContracts",
+            "-opt-in=kotlin.ExperimentalStdlibApi",
         )
     }
 }
@@ -247,6 +248,8 @@ dependencies {
     implementation(libs.libtorrent4j.x8664)
 
     implementation(project(":downloader"))
+    implementation(project(":ksp"))
+    ksp(project(":ksp"))
 
 //    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
     testImplementation(libs.junit)

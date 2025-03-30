@@ -23,3 +23,4 @@ rootProject.name = "PodAura"
 include(":app")
 include(":downloader")
 include(":benchmark")
+include(":ksp")

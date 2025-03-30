@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.exportopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml
 
 
 internal sealed interface ExportOpmlPartialStateChange {

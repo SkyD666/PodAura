@@ -40,11 +40,11 @@ import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import com.skyd.anivu.ui.component.PodAuraImage
-import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleItemFeedInfo
 import com.skyd.anivu.ui.screen.article.ArticleItemIconButton
 import com.skyd.anivu.ui.screen.article.navigateToReadScreen
+import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
 
 @Composable
 fun ReadHistoryItem(

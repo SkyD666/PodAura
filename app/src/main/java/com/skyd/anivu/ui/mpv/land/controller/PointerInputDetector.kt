@@ -27,11 +27,11 @@ import com.skyd.anivu.ext.detectDoubleFingerTransformGestures
 import com.skyd.anivu.ext.getScreenBrightness
 import com.skyd.anivu.ext.toRect
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
-import com.skyd.anivu.ui.local.LocalPlayerDoubleTap
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
+import com.skyd.generated.preference.LocalPlayerDoubleTap
 import kotlin.math.abs
 
 private val inSystemBarArea: PointerInputScope.(

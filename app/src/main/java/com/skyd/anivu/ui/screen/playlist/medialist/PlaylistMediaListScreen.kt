@@ -63,10 +63,10 @@ import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.local.LocalPlaylistMediaSortAsc
-import com.skyd.anivu.ui.local.LocalPlaylistMediaSortBy
 import com.skyd.anivu.ui.screen.playlist.PlaylistThumbnail
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
+import com.skyd.generated.preference.LocalPlaylistMediaSortAsc
+import com.skyd.generated.preference.LocalPlaylistMediaSortBy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
 

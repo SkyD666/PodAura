@@ -80,13 +80,13 @@ import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.safeRequestFocus
-import com.skyd.anivu.ui.local.LocalSearchItemMinWidth
-import com.skyd.anivu.ui.local.LocalSearchListTonalElevation
-import com.skyd.anivu.ui.local.LocalSearchTopBarTonalElevation
 import com.skyd.anivu.ui.screen.article.Article1Item
 import com.skyd.anivu.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
+import com.skyd.generated.preference.LocalSearchItemMinWidth
+import com.skyd.generated.preference.LocalSearchListTonalElevation
+import com.skyd.generated.preference.LocalSearchTopBarTonalElevation
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 

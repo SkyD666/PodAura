@@ -46,8 +46,6 @@ import com.skyd.anivu.R
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
-import com.skyd.anivu.ui.local.LocalMediaLibLocation
-import com.skyd.anivu.ui.local.LocalNavigationBarLabel
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.feed.FeedRoute
 import com.skyd.anivu.ui.screen.feed.FeedScreen
@@ -57,6 +55,8 @@ import com.skyd.anivu.ui.screen.more.MoreRoute
 import com.skyd.anivu.ui.screen.more.MoreScreen
 import com.skyd.anivu.ui.screen.playlist.PlaylistRoute
 import com.skyd.anivu.ui.screen.playlist.PlaylistScreen
+import com.skyd.generated.preference.LocalMediaLibLocation
+import com.skyd.generated.preference.LocalNavigationBarLabel
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KClass
 

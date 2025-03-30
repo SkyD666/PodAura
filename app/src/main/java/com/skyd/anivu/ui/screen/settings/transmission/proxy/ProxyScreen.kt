@@ -43,13 +43,13 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
-import com.skyd.anivu.ui.local.LocalProxyHostname
-import com.skyd.anivu.ui.local.LocalProxyMode
-import com.skyd.anivu.ui.local.LocalProxyPassword
-import com.skyd.anivu.ui.local.LocalProxyPort
-import com.skyd.anivu.ui.local.LocalProxyType
-import com.skyd.anivu.ui.local.LocalProxyUsername
-import com.skyd.anivu.ui.local.LocalUseProxy
+import com.skyd.generated.preference.LocalProxyHostname
+import com.skyd.generated.preference.LocalProxyMode
+import com.skyd.generated.preference.LocalProxyPassword
+import com.skyd.generated.preference.LocalProxyPort
+import com.skyd.generated.preference.LocalProxyType
+import com.skyd.generated.preference.LocalProxyUsername
+import com.skyd.generated.preference.LocalUseProxy
 import kotlinx.serialization.Serializable
 
 

@@ -13,10 +13,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import com.skyd.anivu.R
-import com.skyd.anivu.ui.component.PodAuraTextFieldStyle
 import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.DefaultTrailingIcon
-import com.skyd.anivu.ui.local.LocalTextFieldStyle
+import com.skyd.anivu.ui.component.PodAuraTextFieldStyle
+import com.skyd.generated.preference.LocalTextFieldStyle
 
 @Composable
 fun TextFieldDialog(

@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.exportopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -43,7 +43,7 @@ import com.skyd.anivu.ui.component.PodAuraExtendedFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.local.LocalOpmlExportDir
+import com.skyd.generated.preference.LocalOpmlExportDir
 import kotlinx.serialization.Serializable
 
 

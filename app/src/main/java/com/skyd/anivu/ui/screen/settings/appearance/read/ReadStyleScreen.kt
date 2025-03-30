@@ -26,9 +26,9 @@ import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
-import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
 import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import com.skyd.generated.preference.LocalReadContentTonalElevation
+import com.skyd.generated.preference.LocalReadTopBarTonalElevation
 import kotlinx.serialization.Serializable
 
 

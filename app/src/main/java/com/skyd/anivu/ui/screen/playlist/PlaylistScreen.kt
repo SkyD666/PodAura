@@ -58,10 +58,10 @@ import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalPlaylistSortAsc
-import com.skyd.anivu.ui.local.LocalPlaylistSortBy
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListRoute
+import com.skyd.generated.preference.LocalPlaylistSortAsc
+import com.skyd.generated.preference.LocalPlaylistSortBy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem

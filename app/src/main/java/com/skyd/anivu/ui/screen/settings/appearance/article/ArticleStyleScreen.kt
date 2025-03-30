@@ -44,13 +44,13 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
-import com.skyd.anivu.ui.local.LocalArticleItemMinWidth
-import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
-import com.skyd.anivu.ui.local.LocalArticleListTonalElevation
-import com.skyd.anivu.ui.local.LocalArticleTopBarTonalElevation
-import com.skyd.anivu.ui.local.LocalShowArticlePullRefresh
-import com.skyd.anivu.ui.local.LocalShowArticleTopBarRefresh
 import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
+import com.skyd.generated.preference.LocalArticleItemMinWidth
+import com.skyd.generated.preference.LocalArticleItemTonalElevation
+import com.skyd.generated.preference.LocalArticleListTonalElevation
+import com.skyd.generated.preference.LocalArticleTopBarTonalElevation
+import com.skyd.generated.preference.LocalShowArticlePullRefresh
+import com.skyd.generated.preference.LocalShowArticleTopBarRefresh
 import kotlinx.serialization.Serializable
 
 

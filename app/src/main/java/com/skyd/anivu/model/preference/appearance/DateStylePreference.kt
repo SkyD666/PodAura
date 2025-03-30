@@ -6,7 +6,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object DateStylePreference : BasePreference<String> {
     private const val DATE_STYLE = "dateStyle"
 

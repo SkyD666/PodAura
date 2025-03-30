@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.data.delete.autodelete
 
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object AutoDeleteArticleMaxCountPreference : BasePreference<Int> {
     private const val AUTO_DELETE_ARTICLE_MAX_COUNT = "autoDeleteArticleMaxCount"
 

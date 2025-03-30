@@ -6,7 +6,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
-import com.skyd.anivu.ui.local.LocalDarkMode
+import com.skyd.generated.preference.LocalDarkMode
 
 @Stable
 @Composable

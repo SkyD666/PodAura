@@ -42,9 +42,6 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.view.WindowInsetsControllerCompat
 import com.skyd.anivu.ext.tickVibrate
 import com.skyd.anivu.ui.component.rememberSystemUiController
-import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
-import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
-import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.DialogState
@@ -62,6 +59,9 @@ import com.skyd.anivu.ui.mpv.land.controller.preview.VolumePreview
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
+import com.skyd.generated.preference.LocalPlayerShow85sButton
+import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
+import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.coroutines.delay
 
 

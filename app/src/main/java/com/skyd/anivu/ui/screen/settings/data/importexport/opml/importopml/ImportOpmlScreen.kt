@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.importopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -46,7 +46,7 @@ import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.showSnackbar
-import com.skyd.anivu.model.repository.importexport.ImportOpmlConflictStrategy
+import com.skyd.anivu.model.repository.importexport.opml.ImportOpmlConflictStrategy
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.PodAuraExtendedFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar

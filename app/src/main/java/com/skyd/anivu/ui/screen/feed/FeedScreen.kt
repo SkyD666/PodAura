@@ -59,7 +59,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -90,8 +89,6 @@ import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.safeRequestFocus
 import com.skyd.anivu.ui.component.showToast
-import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
-import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.article.ArticleRoute
@@ -103,6 +100,8 @@ import com.skyd.anivu.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupRoute
 import com.skyd.anivu.ui.screen.search.SearchRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
+import com.skyd.generated.preference.LocalFeedListTonalElevation
+import com.skyd.generated.preference.LocalFeedTopBarTonalElevation
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -516,7 +515,6 @@ private fun AddFeedDialog(
             Column {
                 val focusManager = LocalFocusManager.current
                 val focusRequester = remember { FocusRequester() }
-                val keyboard = LocalSoftwareKeyboardController.current
                 ClipboardTextField(
                     modifier = Modifier
                         .focusRequester(focusRequester)

@@ -74,9 +74,6 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.local.LocalMediaListSortAsc
-import com.skyd.anivu.ui.local.LocalMediaListSortBy
-import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.mpv.resolveUri
@@ -86,6 +83,9 @@ import com.skyd.anivu.ui.screen.media.list.GroupInfo
 import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
 import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
+import com.skyd.generated.preference.LocalMediaListSortAsc
+import com.skyd.generated.preference.LocalMediaListSortBy
+import com.skyd.generated.preference.LocalMediaShowGroupTab
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.io.File

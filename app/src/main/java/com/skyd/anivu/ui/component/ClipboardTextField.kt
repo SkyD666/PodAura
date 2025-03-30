@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.ui.local.LocalTextFieldStyle
+import com.skyd.generated.preference.LocalTextFieldStyle
 
 
 @Composable

@@ -14,7 +14,7 @@ import androidx.compose.runtime.Composable
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.ext.safeLaunch
-import com.skyd.anivu.ui.local.LocalPickImageMethod
+import com.skyd.generated.preference.LocalPickImageMethod
 
 @Composable
 fun rememberImagePicker(

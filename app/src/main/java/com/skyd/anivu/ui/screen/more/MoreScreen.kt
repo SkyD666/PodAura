@@ -41,10 +41,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.skyd.anivu.R
@@ -71,7 +69,6 @@ fun MoreScreen() {
     val navController = LocalNavController.current
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val density = LocalDensity.current
     val windowSizeClass = LocalWindowSizeClass.current
 
     Scaffold(
@@ -95,8 +92,8 @@ fun MoreScreen() {
         )
     ) {
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
-        val dataList = remember(context, colorScheme, density, navController) {
-            getMoreBeanList(context, colorScheme, density, navController)
+        val dataList = remember(context, colorScheme, navController) {
+            getMoreBeanList(context, colorScheme, navController)
         }
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),
@@ -165,7 +162,6 @@ fun More1Item(
 private fun getMoreBeanList(
     context: Context,
     colorScheme: ColorScheme,
-    density: Density,
     navController: NavController,
 ): MutableList<MoreBean> {
     return mutableListOf(

@@ -6,7 +6,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object FeedNumberBadgePreference : BasePreference<Int> {
     private const val FEED_NUMBER_BADGE = "feedNumberBadge"
 

@@ -24,8 +24,6 @@ import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.screenIsLand
 import com.skyd.anivu.ui.component.OnLifecycleEvent
 import com.skyd.anivu.ui.component.PodAuraImage
-import com.skyd.anivu.ui.local.LocalBackgroundPlay
-import com.skyd.anivu.ui.local.LocalPlayerAutoPip
 import com.skyd.anivu.ui.mpv.component.PlayerAndroidView
 import com.skyd.anivu.ui.mpv.component.dialog.AudioTrackDialog
 import com.skyd.anivu.ui.mpv.component.dialog.SpeedDialog
@@ -48,6 +46,8 @@ import com.skyd.anivu.ui.mpv.pip.pipParams
 import com.skyd.anivu.ui.mpv.pip.rememberIsInPipMode
 import com.skyd.anivu.ui.mpv.port.PortraitPlayerView
 import com.skyd.anivu.ui.mpv.service.PlayerService
+import com.skyd.generated.preference.LocalBackgroundPlay
+import com.skyd.generated.preference.LocalPlayerAutoPip
 import java.io.File
 
 

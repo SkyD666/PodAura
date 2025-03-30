@@ -57,7 +57,7 @@ import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
-import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import com.skyd.generated.preference.LocalMediaShowThumbnail
 import java.util.Locale
 
 @Composable

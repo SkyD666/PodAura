@@ -4,7 +4,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object PickImageMethodPreference : BasePreference<String> {
     val methodList = arrayOf(
         "PickVisualMedia",

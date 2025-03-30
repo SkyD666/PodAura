@@ -97,6 +97,7 @@ androidx-paging-test = { module = "androidx.paging:paging-testing", version.ref 
 androidx-work-test = { module = "androidx.work:work-testing", version.ref = "worker" }
 androidx-test-rules = { module = "androidx.test:rules", version = "1.6.1" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version = "2.1.10-1.0.31" }
 
 [plugins]
 android-application = { id = "com.android.application", version = "8.9.1" }

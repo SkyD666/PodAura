@@ -22,8 +22,8 @@ import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
-import com.skyd.anivu.ui.local.LocalMediaShowGroupTab
-import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
+import com.skyd.generated.preference.LocalMediaShowGroupTab
+import com.skyd.generated.preference.LocalMediaShowThumbnail
 import kotlinx.serialization.Serializable
 
 

@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.appearance.feed
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object FeedDefaultGroupExpandPreference : BasePreference<Boolean> {
     private const val FEED_DEFAULT_GROUP_EXPAND = "feedDefaultGroupExpand"
 

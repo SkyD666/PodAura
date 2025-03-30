@@ -57,17 +57,17 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
-import com.skyd.anivu.ui.local.LocalBackgroundPlay
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalPlayerAutoPip
-import com.skyd.anivu.ui.local.LocalPlayerDoubleTap
-import com.skyd.anivu.ui.local.LocalPlayerMaxBackCacheSize
-import com.skyd.anivu.ui.local.LocalPlayerMaxCacheSize
-import com.skyd.anivu.ui.local.LocalPlayerSeekOption
-import com.skyd.anivu.ui.local.LocalPlayerShow85sButton
-import com.skyd.anivu.ui.local.LocalPlayerShowProgressIndicator
-import com.skyd.anivu.ui.local.LocalPlayerShowScreenshotButton
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
+import com.skyd.generated.preference.LocalBackgroundPlay
+import com.skyd.generated.preference.LocalPlayerAutoPip
+import com.skyd.generated.preference.LocalPlayerDoubleTap
+import com.skyd.generated.preference.LocalPlayerMaxBackCacheSize
+import com.skyd.generated.preference.LocalPlayerMaxCacheSize
+import com.skyd.generated.preference.LocalPlayerSeekOption
+import com.skyd.generated.preference.LocalPlayerShow85sButton
+import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
+import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.serialization.Serializable
 
 

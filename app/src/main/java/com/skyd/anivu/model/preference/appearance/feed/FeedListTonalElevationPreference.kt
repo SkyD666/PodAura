@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.appearance.feed
 
 import androidx.datastore.preferences.core.floatPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object FeedListTonalElevationPreference : BasePreference<Float> {
     private const val FEED_LIST_TONAL_ELEVATION = "feedListTonalElevation"
 

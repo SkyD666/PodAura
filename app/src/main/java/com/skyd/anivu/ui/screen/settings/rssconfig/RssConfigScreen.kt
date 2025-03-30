@@ -36,12 +36,12 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalParseLinkTagAsEnclosure
-import com.skyd.anivu.ui.local.LocalRssSyncBatteryNotLowConstraint
-import com.skyd.anivu.ui.local.LocalRssSyncChargingConstraint
-import com.skyd.anivu.ui.local.LocalRssSyncFrequency
-import com.skyd.anivu.ui.local.LocalRssSyncWifiConstraint
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
+import com.skyd.generated.preference.LocalParseLinkTagAsEnclosure
+import com.skyd.generated.preference.LocalRssSyncBatteryNotLowConstraint
+import com.skyd.generated.preference.LocalRssSyncChargingConstraint
+import com.skyd.generated.preference.LocalRssSyncFrequency
+import com.skyd.generated.preference.LocalRssSyncWifiConstraint
 import kotlinx.serialization.Serializable
 
 

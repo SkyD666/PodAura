@@ -12,11 +12,13 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.put
+import com.skyd.ksp.preference.Preference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@Preference
 object DarkModePreference : BasePreference<Int> {
     private const val DARK_MODE = "darkMode"
 

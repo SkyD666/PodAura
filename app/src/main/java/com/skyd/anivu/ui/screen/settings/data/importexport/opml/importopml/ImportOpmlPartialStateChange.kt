@@ -1,6 +1,6 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.importopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml
 
-import com.skyd.anivu.model.repository.importexport.IImportRepository.ImportOpmlResult
+import com.skyd.anivu.model.repository.importexport.opml.IImportOpmlRepository.ImportOpmlResult
 
 
 internal sealed interface ImportOpmlPartialStateChange {

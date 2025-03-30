@@ -26,9 +26,9 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.TipSettingsItem
-import com.skyd.anivu.ui.local.LocalKeepFavoriteArticles
-import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
-import com.skyd.anivu.ui.local.LocalKeepUnreadArticles
+import com.skyd.generated.preference.LocalKeepFavoriteArticles
+import com.skyd.generated.preference.LocalKeepPlaylistArticles
+import com.skyd.generated.preference.LocalKeepUnreadArticles
 import kotlinx.serialization.Serializable
 
 

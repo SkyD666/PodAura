@@ -41,13 +41,14 @@ import androidx.core.net.toUri
 import com.skyd.anivu.R
 import com.skyd.anivu.config.Const.GITHUB_NEW_ISSUE_URL
 import com.skyd.anivu.ext.copy
+import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getAppVersionCode
 import com.skyd.anivu.ext.getAppVersionName
 import com.skyd.anivu.ext.openBrowser
-import com.skyd.anivu.model.preference.SettingsProvider
-import com.skyd.anivu.ui.local.LocalDarkMode
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.theme.PodAuraTheme
+import com.skyd.generated.preference.LocalDarkMode
+import com.skyd.generated.preference.SettingsProvider
 
 
 /**
@@ -85,7 +86,9 @@ class CrashActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalWindowSizeClass provides calculateWindowSizeClass(this)
             ) {
-                SettingsProvider {
+                val context = LocalContext.current
+                val dataStore = remember { context.dataStore }
+                SettingsProvider(dataStore) {
                     PodAuraTheme(darkTheme = LocalDarkMode.current) {
                         CrashScreen(
                             message = message,

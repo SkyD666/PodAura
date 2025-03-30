@@ -41,9 +41,9 @@ import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.SliderDialog
-import com.skyd.anivu.ui.local.LocalFeedListTonalElevation
-import com.skyd.anivu.ui.local.LocalFeedNumberBadge
-import com.skyd.anivu.ui.local.LocalFeedTopBarTonalElevation
+import com.skyd.generated.preference.LocalFeedListTonalElevation
+import com.skyd.generated.preference.LocalFeedNumberBadge
+import com.skyd.generated.preference.LocalFeedTopBarTonalElevation
 import kotlinx.serialization.Serializable
 
 

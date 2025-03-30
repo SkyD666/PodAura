@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.player
 
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object PlayerMaxBackCacheSizePreference : BasePreference<Long> {
     private const val PLAYER_MAX_CACHE_SIZE = "playerMaxBackCacheSize"
 

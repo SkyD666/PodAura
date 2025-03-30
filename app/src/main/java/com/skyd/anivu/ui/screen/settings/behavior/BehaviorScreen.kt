@@ -52,13 +52,13 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
-import com.skyd.anivu.ui.local.LocalArticleSwipeLeftAction
-import com.skyd.anivu.ui.local.LocalArticleSwipeRightAction
-import com.skyd.anivu.ui.local.LocalArticleTapAction
-import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
-import com.skyd.anivu.ui.local.LocalHideEmptyDefault
-import com.skyd.anivu.ui.local.LocalHideMutedFeed
-import com.skyd.anivu.ui.local.LocalMediaFileFilter
+import com.skyd.generated.preference.LocalArticleSwipeLeftAction
+import com.skyd.generated.preference.LocalArticleSwipeRightAction
+import com.skyd.generated.preference.LocalArticleTapAction
+import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
+import com.skyd.generated.preference.LocalHideEmptyDefault
+import com.skyd.generated.preference.LocalHideMutedFeed
+import com.skyd.generated.preference.LocalMediaFileFilter
 import kotlinx.serialization.Serializable
 
 

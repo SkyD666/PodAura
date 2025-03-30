@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.repository.importexport
+package com.skyd.anivu.model.repository.importexport.opml
 
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.group.GroupVo

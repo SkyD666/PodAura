@@ -6,9 +6,11 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 
+@Preference
 object AutoDeleteArticleBeforePreference : BasePreference<Long> {
     private const val AUTO_DELETE_ARTICLE_BEFORE = "autoDeleteArticleBefore"
 

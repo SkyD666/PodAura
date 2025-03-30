@@ -1,12 +1,12 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.exportopml
+package com.skyd.anivu.ui.screen.settings.data.importexport
 
 import com.skyd.anivu.base.mvi.MviViewState
 
-data class ExportOpmlState(
+data class ImportExportState(
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
-        fun initial() = ExportOpmlState(
+        fun initial() = ImportExportState(
             loadingDialog = false,
         )
     }

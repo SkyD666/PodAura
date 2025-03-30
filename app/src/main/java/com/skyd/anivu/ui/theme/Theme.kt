@@ -15,8 +15,8 @@ import com.materialkolor.dynamicColorScheme
 import com.materialkolor.rememberDynamicColorScheme
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
 import com.skyd.anivu.model.preference.appearance.ThemePreference
-import com.skyd.anivu.ui.local.LocalAmoledDarkMode
-import com.skyd.anivu.ui.local.LocalTheme
+import com.skyd.generated.preference.LocalAmoledDarkMode
+import com.skyd.generated.preference.LocalTheme
 
 @Composable
 fun PodAuraTheme(

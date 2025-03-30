@@ -53,11 +53,11 @@ import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
-import com.skyd.anivu.ui.local.LocalMediaShowThumbnail
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 import com.skyd.anivu.ui.screen.read.ReadRoute
+import com.skyd.generated.preference.LocalMediaShowThumbnail
 import java.io.File
 
 @Composable

@@ -1,9 +1,9 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.exportopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml
 
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.importexport.IExportRepository
+import com.skyd.anivu.model.repository.importexport.opml.IExportOpmlRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExportOpmlViewModel @Inject constructor(
-    private val exportRepo: IExportRepository
+    private val exportRepo: IExportOpmlRepository
 ) : AbstractMviViewModel<ExportOpmlIntent, ExportOpmlState, ExportOpmlEvent>() {
 
     override val viewState: StateFlow<ExportOpmlState>

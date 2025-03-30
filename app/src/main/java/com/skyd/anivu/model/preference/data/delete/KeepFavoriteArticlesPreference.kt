@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.data.delete
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object KeepFavoriteArticlesPreference : BasePreference<Boolean> {
     private const val KEEP_FAVORITE_ARTICLES = "keepFavoriteArticles"
 

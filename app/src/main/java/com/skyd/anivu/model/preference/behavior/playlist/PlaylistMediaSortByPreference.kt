@@ -1,7 +1,9 @@
 package com.skyd.anivu.model.preference.behavior.playlist
 
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object PlaylistMediaSortByPreference : BasePlaylistSortByPreference() {
     private const val PLAYLIST_MEDIA_SORT_BY = "playlistMediaSortBy"
 

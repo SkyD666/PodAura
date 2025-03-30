@@ -4,9 +4,9 @@ import com.skyd.anivu.model.repository.article.ArticleRepository
 import com.skyd.anivu.model.repository.article.IArticleRepository
 import com.skyd.anivu.model.repository.feed.FeedRepository
 import com.skyd.anivu.model.repository.feed.IFeedRepository
-import com.skyd.anivu.model.repository.importexport.IExportRepository
-import com.skyd.anivu.model.repository.importexport.IImportRepository
-import com.skyd.anivu.model.repository.importexport.ImportExportRepository
+import com.skyd.anivu.model.repository.importexport.opml.IExportOpmlRepository
+import com.skyd.anivu.model.repository.importexport.opml.IImportOpmlRepository
+import com.skyd.anivu.model.repository.importexport.opml.ImportExportOpmlRepository
 import com.skyd.anivu.model.repository.media.IMediaRepository
 import com.skyd.anivu.model.repository.media.MediaRepository
 import com.skyd.anivu.model.repository.player.IPlayerRepository
@@ -34,11 +34,11 @@ abstract class RepoModule {
 
     @Binds
     @Singleton
-    abstract fun provideIImportRepository(repo: ImportExportRepository): IImportRepository
+    abstract fun provideIImportRepository(repo: ImportExportOpmlRepository): IImportOpmlRepository
 
     @Binds
     @Singleton
-    abstract fun provideIExportRepository(repo: ImportExportRepository): IExportRepository
+    abstract fun provideIExportRepository(repo: ImportExportOpmlRepository): IExportOpmlRepository
 
     @Binds
     @Singleton

@@ -33,10 +33,10 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalSeedingWhenComplete
-import com.skyd.anivu.ui.local.LocalTorrentDhtBootstraps
-import com.skyd.anivu.ui.local.LocalTorrentTrackers
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
+import com.skyd.generated.preference.LocalSeedingWhenComplete
+import com.skyd.generated.preference.LocalTorrentDhtBootstraps
+import com.skyd.generated.preference.LocalTorrentTrackers
 import kotlinx.serialization.Serializable
 
 

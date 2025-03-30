@@ -26,9 +26,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
-import com.skyd.anivu.ui.local.LocalKeepFavoriteArticles
-import com.skyd.anivu.ui.local.LocalKeepPlaylistArticles
-import com.skyd.anivu.ui.local.LocalKeepUnreadArticles
+import com.skyd.generated.preference.LocalKeepFavoriteArticles
+import com.skyd.generated.preference.LocalKeepPlaylistArticles
+import com.skyd.generated.preference.LocalKeepUnreadArticles
 
 @Composable
 fun DeleteWarningDialog(

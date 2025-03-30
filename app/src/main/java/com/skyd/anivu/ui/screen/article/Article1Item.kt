@@ -91,15 +91,15 @@ import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.component.showToast
-import com.skyd.anivu.ui.local.LocalArticleItemTonalElevation
-import com.skyd.anivu.ui.local.LocalArticleSwipeLeftAction
-import com.skyd.anivu.ui.local.LocalArticleSwipeRightAction
-import com.skyd.anivu.ui.local.LocalArticleTapAction
-import com.skyd.anivu.ui.local.LocalDeduplicateTitleInDesc
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.read.ReadRoute
+import com.skyd.generated.preference.LocalArticleItemTonalElevation
+import com.skyd.generated.preference.LocalArticleSwipeLeftAction
+import com.skyd.generated.preference.LocalArticleSwipeRightAction
+import com.skyd.generated.preference.LocalArticleTapAction
+import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
 
 
 @Composable

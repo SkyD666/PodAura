@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.screen.settings.data.importexport.exportopml
+package com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml
 
 import android.net.Uri
 import com.skyd.anivu.base.mvi.MviIntent

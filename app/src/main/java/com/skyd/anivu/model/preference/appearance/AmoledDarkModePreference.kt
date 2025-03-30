@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.appearance
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object AmoledDarkModePreference : BasePreference<Boolean> {
     private const val AMOLED_DARK_MODE = "amoledDarkMode"
 

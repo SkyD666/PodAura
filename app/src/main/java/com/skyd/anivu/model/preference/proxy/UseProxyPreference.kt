@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.proxy
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object UseProxyPreference : BasePreference<Boolean> {
     private const val USE_PROXY = "useProxy"
 

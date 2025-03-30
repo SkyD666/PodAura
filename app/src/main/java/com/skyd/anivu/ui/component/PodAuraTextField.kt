@@ -33,7 +33,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.thenIf
-import com.skyd.anivu.ui.local.LocalTextFieldStyle
+import com.skyd.generated.preference.LocalTextFieldStyle
 
 
 // https://issuetracker.google.com/issues/204502668#comment15

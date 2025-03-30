@@ -2,7 +2,9 @@ package com.skyd.anivu.model.preference.rss
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.skyd.anivu.base.BasePreference
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object RssSyncBatteryNotLowConstraintPreference : BasePreference<Boolean> {
     private const val RSS_SYNC_BATTERY_NOT_LOW_CONSTRAINT = "rssSyncBatteryNotLowConstraint"
 

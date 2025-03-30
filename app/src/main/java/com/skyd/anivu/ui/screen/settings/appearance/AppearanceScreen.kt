@@ -66,19 +66,19 @@ import com.skyd.anivu.ui.component.CheckableListMenu
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
-import com.skyd.anivu.ui.local.LocalAmoledDarkMode
-import com.skyd.anivu.ui.local.LocalDarkMode
-import com.skyd.anivu.ui.local.LocalDateStyle
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalNavigationBarLabel
-import com.skyd.anivu.ui.local.LocalTextFieldStyle
-import com.skyd.anivu.ui.local.LocalTheme
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.theme.extractAllColors
+import com.skyd.generated.preference.LocalAmoledDarkMode
+import com.skyd.generated.preference.LocalDarkMode
+import com.skyd.generated.preference.LocalDateStyle
+import com.skyd.generated.preference.LocalNavigationBarLabel
+import com.skyd.generated.preference.LocalTextFieldStyle
+import com.skyd.generated.preference.LocalTheme
 import kotlinx.serialization.Serializable
 
 

@@ -24,12 +24,12 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.MpvConfigPreference
 import com.skyd.anivu.model.preference.player.MpvInputConfigPreference
+import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
-import com.skyd.anivu.ui.local.LocalHardwareDecode
+import com.skyd.generated.preference.LocalHardwareDecode
 import kotlinx.serialization.Serializable
 
 

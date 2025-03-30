@@ -1,4 +1,4 @@
-package com.skyd.anivu.model.repository.importexport
+package com.skyd.anivu.model.repository.importexport.opml
 
 import android.os.Parcelable
 import com.skyd.anivu.R

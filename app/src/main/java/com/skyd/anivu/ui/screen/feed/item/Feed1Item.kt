@@ -38,10 +38,10 @@ import com.skyd.anivu.ext.readable
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
-import com.skyd.anivu.ui.local.LocalFeedNumberBadge
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.FeedIcon
+import com.skyd.generated.preference.LocalFeedNumberBadge
 
 @Composable
 fun Feed1Item(

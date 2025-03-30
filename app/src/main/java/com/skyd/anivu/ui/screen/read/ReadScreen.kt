@@ -106,14 +106,14 @@ import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.html.HtmlText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.local.LocalNavController
-import com.skyd.anivu.ui.local.LocalReadContentTonalElevation
-import com.skyd.anivu.ui.local.LocalReadTextSize
-import com.skyd.anivu.ui.local.LocalReadTopBarTonalElevation
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.article.openLinkInBrowser
 import com.skyd.anivu.util.ShareUtil
+import com.skyd.generated.preference.LocalReadContentTonalElevation
+import com.skyd.generated.preference.LocalReadTextSize
+import com.skyd.generated.preference.LocalReadTopBarTonalElevation
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale

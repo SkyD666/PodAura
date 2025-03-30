@@ -31,11 +31,11 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.SortDialog
-import com.skyd.anivu.ui.local.LocalMediaSubListSortAsc
-import com.skyd.anivu.ui.local.LocalMediaSubListSortBy
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
+import com.skyd.generated.preference.LocalMediaSubListSortAsc
+import com.skyd.generated.preference.LocalMediaSubListSortBy
 import kotlinx.serialization.Serializable
 
 

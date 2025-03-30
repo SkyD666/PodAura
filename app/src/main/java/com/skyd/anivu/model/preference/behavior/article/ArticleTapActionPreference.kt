@@ -6,7 +6,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object ArticleTapActionPreference : BasePreference<String> {
     private const val ARTICLE_TAP_ACTION = "articleTapAction"
 

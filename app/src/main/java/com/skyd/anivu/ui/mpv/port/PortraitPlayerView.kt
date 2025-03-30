@@ -131,6 +131,7 @@ internal fun PortraitPlayerView(
                 onOpenPlaylist = { showPlaylistSheet = true },
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
         if (showPlaylistSheet) {

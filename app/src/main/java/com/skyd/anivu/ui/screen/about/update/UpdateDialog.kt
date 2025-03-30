@@ -44,7 +44,7 @@ import com.skyd.anivu.model.bean.UpdateBean
 import com.skyd.anivu.model.preference.IgnoreUpdateVersionPreference
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.local.LocalIgnoreUpdateVersion
+import com.skyd.generated.preference.LocalIgnoreUpdateVersion
 import okhttp3.internal.toLongOrDefault
 
 

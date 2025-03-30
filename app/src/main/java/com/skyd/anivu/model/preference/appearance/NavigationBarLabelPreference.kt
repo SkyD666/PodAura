@@ -6,7 +6,9 @@ import com.skyd.anivu.R
 import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object NavigationBarLabelPreference : BasePreference<String> {
     private const val NAVIGATION_BAR_LABEL = "navigationBarLabel"
 

@@ -7,7 +7,9 @@ import com.skyd.anivu.base.BasePreference
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ui.component.PodAuraTextFieldStyle
+import com.skyd.ksp.preference.Preference
 
+@Preference
 object TextFieldStylePreference : BasePreference<String> {
     private const val TEXT_FIELD_STYLE = "textFieldStyle"
 

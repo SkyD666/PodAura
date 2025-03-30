@@ -228,7 +228,6 @@
     <string name="import_opml_conflict_strategy_skip">Atla</string>
     <string name="import_opml_screen_opml_not_selected">Lütfen bir OPML dosyası seçin</string>
     <string name="data_screen_sync_category">Senkronizasyon</string>
-    <string name="import_export_screen_description">OPML dosyaları aracılığıyla RSS verilerini İçe ve Dışa Aktarın</string>
     <string name="player_speed">Hız</string>
     <string name="player_add_external_audio">Ses dosyası ekle</string>
     <string name="feed_screen_rss_description_hint">Açıklama eklemek için tıklayın</string>

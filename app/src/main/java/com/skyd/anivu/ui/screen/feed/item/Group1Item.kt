@@ -23,7 +23,7 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.anivu.ui.component.PodAuraIconButton
-import com.skyd.anivu.ui.local.LocalFeedDefaultGroupExpand
+import com.skyd.generated.preference.LocalFeedDefaultGroupExpand
 
 
 val SHAPE_CORNER_DP = 26.dp

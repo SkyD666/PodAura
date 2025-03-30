@@ -7,10 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import com.skyd.anivu.model.preference.SettingsProvider
-import com.skyd.anivu.ui.local.LocalDarkMode
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.theme.PodAuraTheme
+import com.skyd.generated.preference.LocalDarkMode
+import com.skyd.generated.preference.SettingsProvider
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -25,7 +28,11 @@ open class BaseComposeActivity : AppCompatActivity() {
         CompositionLocalProvider(
             LocalWindowSizeClass provides calculateWindowSizeClass(this@BaseComposeActivity)
         ) {
-            SettingsProvider { PodAuraTheme(darkTheme = LocalDarkMode.current, content) }
+            val context = LocalContext.current
+            val dataStore = remember { context.dataStore }
+            SettingsProvider(dataStore) {
+                PodAuraTheme(darkTheme = LocalDarkMode.current, content)
+            }
         }
     }
 }
