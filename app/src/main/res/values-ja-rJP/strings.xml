@@ -15,13 +15,13 @@
     <string name="close">閉じる</string>
     <string name="exit">終了</string>
     <string name="remove">削除</string>
-    <string name="delete">削除</string>
+    <string name="delete">消去</string>
     <string name="edit">編集</string>
     <string name="article_screen_name">記事</string>
     <string name="search_screen_hint">検索</string>
     <string name="back">戻る</string>
     <string name="read_screen_name">既読</string>
-    <string name="bottom_sheet_enclosure_title">添付</string>
+    <string name="bottom_sheet_enclosure_title">エンクロージャー</string>
     <string name="download">ダウンロード</string>
     <string name="downloading">ダウンロード中…</string>
     <string name="download_screen_name">ダウンロードタスク</string>
@@ -74,8 +74,8 @@
     <string name="clear">消去</string>
     <string name="rss_config_screen_name">RSS</string>
     <string name="rss_config_screen_description">RSS の同期を構成、解析ルール</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure">添付としてリンクを解析する</string>
-    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">リンクタグを解析して添付として表示します</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure">エンクロージャーとしてリンクを解析</string>
+    <string name="rss_config_screen_parse_link_tag_as_enclosure_description">リンクタグを解析してエンクロージャーとして表示します</string>
     <string name="rss_config_screen_parse_category">解析</string>
     <string name="transmission_screen_name">転送</string>
     <string name="transmission_screen_description">データ転送のセットアップ、動作</string>
@@ -164,7 +164,7 @@
     <string name="behavior_screen_article_screen_deduplicate_title_in_desc">重複のタイトル</string>
     <string name="behavior_screen_article_screen_deduplicate_title_in_desc_description">説明テキスト内のタイトルと同じ部分の文字列を削除します</string>
     <string name="article_action_read">既読</string>
-    <string name="article_action_show_enclosures">添付を表示</string>
+    <string name="article_action_show_enclosures">エンクロージャーを表示</string>
     <string name="behavior_screen_article_tap_action">項目をタップ</string>
     <string name="behavior_screen_article_swipe_left_action">左にスワイプ</string>
     <string name="behavior_screen_article_swipe_right_action">右にスワイプ</string>
@@ -229,7 +229,7 @@
     <string name="import_opml_conflict_strategy_skip">スキップ</string>
     <string name="import_opml_screen_opml_not_selected">OPML ファイルを選択してください</string>
     <string name="data_screen_sync_category">同期</string>
-    <string name="import_export_screen_description">OPML ファイル経由で RSS データをインポートとエクスポートします</string>
+    <string name="import_export_screen_description">Import and export data</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">オーディオファイルを追加</string>
     <string name="feed_screen_rss_description_hint">タップで説明を設定します</string>
@@ -303,7 +303,7 @@
     <string name="search_style_screen_search_item_category">項目を検索</string>
     <string name="empty_tip_1">なし</string>
     <string name="sub_media_screen_path_illegal">不正なメディア</string>
-    <string name="player_config_screen_auto_pip">自動で PIP を表示</string>
+    <string name="player_config_screen_auto_pip">自動で PIP</string>
     <string name="player_config_screen_auto_pip_description">ホームまたは最近開いたアプリボタンが押された場合に PiP モードに切り替えます</string>
     <string name="player_picture_in_picture">ピクチャーインピクチャー</string>
     <string name="open_file">ファイルを開く</string>
@@ -394,7 +394,7 @@
     <string name="transmission_screen_edit_torrent_trackers_tips">各行はトラッカーを示します。</string>
     <string name="transmission_screen_torrent_dht_bootstraps">DHT bootstrap ノード</string>
     <string name="transmission_screen_edit_torrent_dht_bootstraps_tips">各ノードはコンマまたは改行で区切ることができます。空のままにするとデフォルトのノードが使用されることを意味します。</string>
-    <string name="transmission_screen_torrent_dht_bootstraps_default_description">デフォルトのノードを使用する</string>
+    <string name="transmission_screen_torrent_dht_bootstraps_default_description">デフォルトのノートを使用する</string>
     <string name="auto_delete_article_screen_delete_max_count">フィードごとの最大記事数</string>
     <string name="auto_delete_article_screen_delete_max_count_description">%d 個の項目</string>
     <string name="auto_delete_article_screen_strategy_category">ストラテジー</string>
@@ -451,6 +451,12 @@
     <string name="feed_screen_incremental_refresh">増分を更新</string>
     <string name="feed_screen_incremental_refresh_description">増分を更新はローカルに保存されている記事よりも新しい記事データがローカルに更新されます。古い欠落した記事は復元されません。</string>
     <string name="checked">Checked</string>
+    <string name="import_export_screen_feed_category">Feed</string>
+    <string name="import_export_screen_prefer_category">Preference</string>
+    <string name="import_opml_screen_import_prefer">Import preferences</string>
+    <string name="import_opml_screen_export_prefer">Export preferences</string>
+    <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
+    <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
