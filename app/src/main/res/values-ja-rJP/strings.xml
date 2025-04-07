@@ -229,7 +229,7 @@
     <string name="import_opml_conflict_strategy_skip">スキップ</string>
     <string name="import_opml_screen_opml_not_selected">OPML ファイルを選択してください</string>
     <string name="data_screen_sync_category">同期</string>
-    <string name="import_export_screen_description">Import and export data</string>
+    <string name="import_export_screen_description">データをインポートとエクスポート</string>
     <string name="player_speed">速度</string>
     <string name="player_add_external_audio">オーディオファイルを追加</string>
     <string name="feed_screen_rss_description_hint">タップで説明を設定します</string>
@@ -455,8 +455,8 @@
     <string name="import_export_screen_prefer_category">設定</string>
     <string name="import_opml_screen_import_prefer">設定をインポート</string>
     <string name="import_opml_screen_export_prefer">設定をエクスポート</string>
-    <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
-    <string name="import_opml_screen_export_prefer_description">JSON ファイルでエクスポート</string>
+    <string name="import_opml_screen_import_prefer_description">JSON ファイル経由でインポートを行うと現在の設定が上書きされます</string>
+    <string name="import_opml_screen_export_prefer_description">JSON ファイルをエクスポート</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
