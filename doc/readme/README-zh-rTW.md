@@ -72,11 +72,11 @@
 
 <a title="Crowdin" target="_blank" href="https://crowdin.com/project/anivu"><img src="https://badges.crowdin.net/anivu/localized.svg"></a>
 
-## 🛠主要技術棧
+## 🛠主要技術堆疊
 
 - **MVI** Architecture
 - Jetpack **Compose**
-- Kotlin ﻿**Coroutines and Flow**
+- Kotlin **Coroutines and Flow**
 - **Material You**
 - **ViewModel**
 - **Room**
@@ -106,12 +106,12 @@
 <tbody>
   <tr>
     <td><img src="../image/Rays.svg" style="height: 100px"/></td>
-    <td><b>Rays (Record All Your Stickers)</b>，一個在本地<b>記錄、查詢、管理表情包</b>的工具。<br/>🥰 您還在為手機中的<b>表情包太多</b>，找不到想要的表情包而苦惱嗎？使用這款工具將幫助您<b>管理您儲存的表情包</b>，再也不因為找不到表情包而煩惱！😋</td>
+    <td><b>Rays (Record All Your Stickers)</b>，一個在本機<b>記錄、查詢、管理表情包</b>的工具。<br/>🥰 您還在為手機中的<b>表情包太多</b>，找不到想要的表情包而苦惱嗎？使用這款工具將幫助您<b>管理您儲存的表情包</b>，再也不因為找不到表情包而煩惱！😋</td>
     <td><a href="https://github.com/SkyD666/Rays-Android">https://github.com/SkyD666/Rays-Android</a></td>
   </tr>
   <tr>
     <td><img src="../image/Raca.svg" style="height: 100px"/></td>
-    <td><b>Raca (Record All Classic Articles)</b>，一個在本地<b>記錄、查詢抽象段落/評論區小作文</b>的工具。<br/>🤗 您還在為記不住小作文內容，面臨<b>前面、中間、後面都忘了</b>的尷尬處境嗎？使用這款工具將<b>幫助您記錄您所遇到的小作文</b>，再也不因為忘記而煩惱！😋</td>
+    <td><b>Raca (Record All Classic Articles)</b>，一個在本機<b>記錄、查詢抽象段落/評論區小作文</b>的工具。<br/>🤗 您還在為記不住小作文內容，面臨<b>前面、中間、後面都忘了</b>的尷尬處境嗎？使用這款工具將<b>幫助您記錄您所遇到的小作文</b>，再也不因為忘記而煩惱！😋</td>
     <td><a href="https://github.com/SkyD666/Raca-Android">https://github.com/SkyD666/Raca-Android</a></td>
   </tr>
   <tr>
@@ -122,8 +122,8 @@
 </tbody>
 </table>
 
-## 📃許可證
+## 📃授權條款
 
-使用此軟體程式碼需**遵循以下許可證協議**
+使用此軟體程式碼需**遵循以下授權條款協議**
 
 [**GNU General Public License v3.0**](../../LICENSE)
