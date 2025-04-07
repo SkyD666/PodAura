@@ -37,11 +37,9 @@
         PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Jetpack Compose</b>.
     </p>
     <p>
-        <b><a href="doc/readme/README-zh-rCN.md">简体中文</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="doc/readme/README-zh-rTW.md">正體中文</a></b>&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp<b><a href="https://crowdin.com/project/anivu">Help us translate</a></b>
+        <b><a href="https://crowdin.com/project/anivu">Help us translate</a></b>
     </p>
 </div>
-
-
 
 <a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
 
@@ -99,7 +97,7 @@ If you are interested, please help us **translate**, thank you.
 
 ## ✨ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SkyD666/PodAura)](https://star-history.com/?repos=SkyD666/PodAura#SkyD666/PodAura&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=SkyD666/PodAura&type=Date)](https://star-history.com/?repos=SkyD666/PodAura#SkyD666/PodAura&Date)
 
 ## 🎈 Other works
 

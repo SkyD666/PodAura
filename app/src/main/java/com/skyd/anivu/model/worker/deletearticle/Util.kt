@@ -30,7 +30,7 @@ private data class DeleteArticleConfiguration(
     val deleteArticleFrequency: Long,
 )
 
-fun listenerDeleteArticleFrequency(context: Context) = coroutineScope.launch {
+fun listenDeleteArticleFrequency(context: Context) = coroutineScope.launch {
     context.dataStore.data.map {
         DeleteArticleConfiguration(
             useDeleteArticle = it[UseAutoDeletePreference],

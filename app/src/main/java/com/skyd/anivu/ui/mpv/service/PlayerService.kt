@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.math.pow
 
 @AndroidEntryPoint
@@ -379,7 +380,7 @@ class PlayerService : Service() {
     private fun loadLastPosition(path: String?) = if (path != null) {
         scope.launch {
             val lastPos = playerRepo.requestLastPlayPosition(path).first()
-            if (lastPos > 0 && lastPos.toDouble() / (player.duration * 1000) < 0.9) {
+            if (lastPos > 0 && abs(player.duration - lastPos / 1000) > 20) {
                 player.seek((lastPos / 1000).toInt().coerceAtLeast(0))
             }
         }

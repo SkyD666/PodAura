@@ -36,7 +36,7 @@ private data class RssSyncConfiguration(
     val requireBatteryNotLow: Boolean,
 )
 
-fun listenerRssSyncConfig(context: Context) = coroutineScope.launch {
+fun listenRssSyncConfig(context: Context) = coroutineScope.launch {
     context.dataStore.data.map {
         RssSyncConfiguration(
             rssSyncFrequency = it[RssSyncFrequencyPreference],

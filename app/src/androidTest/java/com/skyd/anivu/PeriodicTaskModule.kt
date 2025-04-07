@@ -37,9 +37,9 @@ import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.model.repository.feed.FeedRepository
 import com.skyd.anivu.model.worker.deletearticle.DeleteArticleWorker
-import com.skyd.anivu.model.worker.deletearticle.listenerDeleteArticleFrequency
+import com.skyd.anivu.model.worker.deletearticle.listenDeleteArticleFrequency
 import com.skyd.anivu.model.worker.rsssync.RssSyncWorker
-import com.skyd.anivu.model.worker.rsssync.listenerRssSyncConfig
+import com.skyd.anivu.model.worker.rsssync.listenRssSyncConfig
 import com.skyd.anivu.util.favicon.FaviconExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -295,7 +295,7 @@ class PeriodicTaskModule {
     @Test
     fun test9() = runTest {
         withContext(Dispatchers.Default) {
-            listenerRssSyncConfig(context)
+            listenRssSyncConfig(context)
             context.dataStore.put(RssSyncFrequencyPreference.key, RssSyncFrequencyPreference.MANUAL)
             delay(2000)
 
@@ -314,7 +314,7 @@ class PeriodicTaskModule {
     @Test
     fun test10() = runTest {
         withContext(Dispatchers.Default) {
-            listenerRssSyncConfig(context)
+            listenRssSyncConfig(context)
             context.dataStore.put(
                 RssSyncFrequencyPreference.key,
                 RssSyncFrequencyPreference.EVERY_15_MINUTE,
@@ -336,7 +336,7 @@ class PeriodicTaskModule {
     @Test
     fun test11() = runTest {
         withContext(Dispatchers.Default) {
-            listenerDeleteArticleFrequency(context)
+            listenDeleteArticleFrequency(context)
             context.dataStore.put(UseAutoDeletePreference.key, true)
             delay(2000)
 
@@ -355,7 +355,7 @@ class PeriodicTaskModule {
     @Test
     fun test12() = runTest {
         withContext(Dispatchers.Default) {
-            listenerDeleteArticleFrequency(context)
+            listenDeleteArticleFrequency(context)
             context.dataStore.put(UseAutoDeletePreference.key, false)
             delay(2000)
 
