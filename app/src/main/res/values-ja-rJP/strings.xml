@@ -450,13 +450,13 @@
     <string name="feed_screen_full_refresh_description">完全に更新では、新しい記事を追加するだけでなく取得したすべての記事のローカルデータを更新します。\n\nフィードに記事の GUID またはリンクタグが指定されていない場合は、重複した記事が発生する可能性があることにご注意ください。</string>
     <string name="feed_screen_incremental_refresh">増分を更新</string>
     <string name="feed_screen_incremental_refresh_description">増分を更新はローカルに保存されている記事よりも新しい記事データがローカルに更新されます。古い欠落した記事は復元されません。</string>
-    <string name="checked">Checked</string>
-    <string name="import_export_screen_feed_category">Feed</string>
-    <string name="import_export_screen_prefer_category">Preference</string>
-    <string name="import_opml_screen_import_prefer">Import preferences</string>
-    <string name="import_opml_screen_export_prefer">Export preferences</string>
+    <string name="checked">チェック済み</string>
+    <string name="import_export_screen_feed_category">フィード</string>
+    <string name="import_export_screen_prefer_category">設定</string>
+    <string name="import_opml_screen_import_prefer">設定をインポート</string>
+    <string name="import_opml_screen_export_prefer">設定をエクスポート</string>
     <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
-    <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
+    <string name="import_opml_screen_export_prefer_description">JSON ファイルでエクスポート</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
