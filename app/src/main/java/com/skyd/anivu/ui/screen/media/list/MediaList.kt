@@ -36,6 +36,7 @@ import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -44,6 +45,7 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
 import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
+import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.read.ReadRoute
 
 class GroupInfo(
@@ -182,6 +184,7 @@ internal fun MediaList(
     }
     var openCreateGroupDialog by rememberSaveable { mutableStateOf(false) }
     var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
+    var openAddToPlaylistSheet by rememberSaveable { mutableStateOf<MediaBean?>(null) }
 
     val onOpenFeed: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
         mediaBean.feedBean?.let {
@@ -198,6 +201,13 @@ internal fun MediaList(
                 it.articleId?.let { navController.navigate(ReadRoute(articleId = it)) }
             }
         }
+    }
+    val onOpenAddToPlaylistSheet: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
+        if (mediaBean.isMedia) {
+            { it: MediaBean ->
+                openAddToPlaylistSheet = it
+            }
+        } else null
     }
 
     LazyVerticalGrid(
@@ -218,6 +228,7 @@ internal fun MediaList(
                 onLongClick = if (groupInfo == null) null else {
                     { openEditMediaDialog = it }
                 },
+                onOpenAddToPlaylistSheet = onOpenAddToPlaylistSheet(item),
             )
         }
     }
@@ -230,6 +241,7 @@ internal fun MediaList(
             groups = groups,
             onRename = onRename,
             onSetFileDisplayName = onSetFileDisplayName,
+            onAddToPlaylistClicked = onOpenAddToPlaylistSheet(videoBean),
             onDelete = {
                 onRemove(it)
                 openEditMediaDialog = null
@@ -244,6 +256,14 @@ internal fun MediaList(
             },
             onOpenFeed = onOpenFeed(videoBean),
             onOpenArticle = onOpenArticle(videoBean),
+        )
+    }
+
+    if (openAddToPlaylistSheet != null) {
+        AddToPlaylistSheet(
+            onDismissRequest = { openAddToPlaylistSheet = null },
+            currentPlaylistId = null,
+            selectedMediaList = listOf(openAddToPlaylistSheet!!.toMediaUrlWithArticleIdBean()),
         )
     }
 

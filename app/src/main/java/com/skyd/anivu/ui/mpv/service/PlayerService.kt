@@ -18,11 +18,12 @@ import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
 import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.repository.player.IPlayerRepository
-import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
+import com.skyd.anivu.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
@@ -46,7 +47,7 @@ class PlayerService : Service() {
     lateinit var playerRepo: IPlayerRepository
 
     @Inject
-    lateinit var playlistMediaRepo: IPlaylistMediaRepository
+    lateinit var addToPlaylistRepo: IAddToPlaylistRepository
 
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
 
@@ -283,7 +284,10 @@ class PlayerService : Service() {
                     cachedPlaylistMap.remove(it.playlistMediaBean.url)
                 }
                 scope.launch {
-                    playlistMediaRepo.removeMediaFromPlaylist(command.playlist).collect()
+                    addToPlaylistRepo.removeMediaFromPlaylist(
+                        playlistId = playlistId,
+                        mediaList = command.playlist.map { it.toMediaUrlWithArticleIdBean() },
+                    ).collect()
                 }
                 removeFromList(command.playlist.map { it.playlistMediaBean.url })
             }

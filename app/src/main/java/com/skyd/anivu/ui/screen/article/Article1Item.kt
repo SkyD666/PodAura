@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Drafts
 import androidx.compose.material.icons.outlined.Favorite
@@ -82,6 +83,7 @@ import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedBean
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
@@ -94,6 +96,7 @@ import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
+import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.read.ReadRoute
 import com.skyd.generated.preference.LocalArticleItemTonalElevation
 import com.skyd.generated.preference.LocalArticleSwipeLeftAction
@@ -114,6 +117,7 @@ fun Article1Item(
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val dataWrapper by rememberUpdatedState(newValue = data)
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf<List<Any>?>(null) }
+    var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
 
     val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
@@ -140,7 +144,8 @@ fun Article1Item(
                         },
                         onShowEnclosureBottomSheet = {
                             openEnclosureBottomSheet = getEnclosuresList(context, it)
-                        }
+                        },
+                        onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true }
                     )
                 }
 
@@ -194,7 +199,8 @@ fun Article1Item(
                 onDelete = onDelete,
                 onShowEnclosureBottomSheet = {
                     openEnclosureBottomSheet = getEnclosuresList(context, it)
-                }
+                },
+                onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
             )
         }
     }
@@ -204,6 +210,16 @@ fun Article1Item(
             onDismissRequest = { openEnclosureBottomSheet = null },
             dataList = openEnclosureBottomSheet.orEmpty(),
             article = data,
+        )
+    }
+    if (openAddToPlaylistSheet) {
+        val enclosures = data.articleWithEnclosure.enclosures
+        AddToPlaylistSheet(
+            onDismissRequest = { openAddToPlaylistSheet = false },
+            currentPlaylistId = null,
+            selectedMediaList = remember(enclosures) {
+                enclosures.map { it.toMediaUrlWithArticleIdBean() }
+            },
         )
     }
 }
@@ -437,6 +453,7 @@ private fun ArticleMenu(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
+    onOpenAddToPlaylistSheet: () -> Unit,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -518,6 +535,19 @@ private fun ArticleMenu(
             },
             onClick = {
                 onShowEnclosureBottomSheet(articleWithEnclosure)
+                onDismissRequest()
+            },
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(id = R.string.add_to_playlist)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                    contentDescription = null,
+                )
+            },
+            onClick = {
+                onOpenAddToPlaylistSheet()
                 onDismissRequest()
             },
         )
@@ -645,8 +675,8 @@ private fun SwipeBackgroundContent(
                         if (article.isFavorite) Icons.Outlined.FavoriteBorder
                         else Icons.Outlined.Favorite
 
-                    ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER ->
-                        Icons.Outlined.OpenInBrowser
+                    ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> Icons.Outlined.OpenInBrowser
+                    ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> Icons.AutoMirrored.Outlined.PlaylistAdd
 
                     else -> Icons.Outlined.ImportContacts
                 }
@@ -776,6 +806,7 @@ private fun swipeAction(
     onMarkAsRead: () -> Unit,
     onMarkAsFavorite: () -> Unit,
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
+    onOpenAddToPlaylistSheet: () -> Unit,
 ) {
     when (articleSwipeAction) {
         ArticleSwipeActionPreference.READ ->
@@ -785,6 +816,7 @@ private fun swipeAction(
         ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.openLinkInBrowser(context)
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()
+        ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> onOpenAddToPlaylistSheet()
         else -> navigateToReadScreen(navController = navController, data = data)
     }
 }

@@ -14,6 +14,7 @@ abstract class ArticleSwipeActionPreference : BasePreference<String> {
         const val OPEN_LINK_IN_BROWSER = "OpenLinkInBrowser"
         const val SWITCH_READ_STATE = "SwitchReadState"
         const val SWITCH_FAVORITE_STATE = "SwitchFavoriteState"
+        const val ADD_TO_PLAYLIST = "AddToPlaylist"
 
         fun toDisplayName(
             context: Context,
@@ -25,6 +26,7 @@ abstract class ArticleSwipeActionPreference : BasePreference<String> {
             OPEN_LINK_IN_BROWSER -> context.getString(R.string.open_link_in_browser)
             SWITCH_READ_STATE -> context.getString(R.string.article_action_switch_read_state)
             SWITCH_FAVORITE_STATE -> context.getString(R.string.article_action_switch_favorite_state)
+            ADD_TO_PLAYLIST -> context.getString(R.string.add_to_playlist)
             else -> context.getString(R.string.unknown)
         }
     }
@@ -36,6 +38,7 @@ abstract class ArticleSwipeActionPreference : BasePreference<String> {
         OPEN_LINK_IN_BROWSER,
         SWITCH_READ_STATE,
         SWITCH_FAVORITE_STATE,
+        ADD_TO_PLAYLIST,
     )
 
     abstract override val key: Preferences.Key<String>

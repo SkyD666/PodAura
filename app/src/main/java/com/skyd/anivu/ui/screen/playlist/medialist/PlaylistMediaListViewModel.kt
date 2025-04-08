@@ -5,6 +5,7 @@ import androidx.paging.cachedIn
 import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
+import com.skyd.anivu.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class PlaylistMediaListViewModel @Inject constructor(
     private val playlistRepo: IPlaylistRepository,
     private val playlistMediaRepo: PlaylistMediaRepository,
+    private val addToPlaylist: IAddToPlaylistRepository,
 ) : AbstractMviViewModel<PlaylistMediaListIntent, PlaylistMediaListState, PlaylistMediaListEvent>() {
 
     override val viewState: StateFlow<PlaylistMediaListState>
@@ -77,7 +79,7 @@ class PlaylistMediaListViewModel @Inject constructor(
                     }
             },
             filterIsInstance<PlaylistMediaListIntent.Delete>().flatMapConcat { intent ->
-                playlistMediaRepo.removeMediaFromPlaylist(intent.deletes).map {
+                addToPlaylist.removeMediaFromPlaylist(intent.playlistId, intent.deletes).map {
                     PlaylistMediaListPartialStateChange.DeleteMedia.Success
                 }.startWith(PlaylistMediaListPartialStateChange.LoadingDialog.Show).catchMap {
                     PlaylistMediaListPartialStateChange.DeleteMedia.Failed(it.message.toString())

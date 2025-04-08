@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
@@ -94,7 +94,7 @@ import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
-import com.skyd.anivu.model.bean.article.RssMediaBean
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
@@ -110,6 +110,7 @@ import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.article.openLinkInBrowser
+import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.util.ShareUtil
 import com.skyd.generated.preference.LocalReadContentTonalElevation
 import com.skyd.generated.preference.LocalReadTextSize
@@ -516,27 +517,21 @@ private fun ReadTextSizeSliderDialog(
 }
 
 @Composable
-private fun RssMediaEpisode(modifier: Modifier = Modifier, rssMedia: RssMediaBean) {
-    val episode = rssMedia.episode
-    if (episode != null) {
-        Text(
-            modifier = modifier,
-            text = stringResource(id = R.string.read_screen_episode, episode),
-            color = Color.White,
-        )
-    }
+private fun RssMediaEpisode(modifier: Modifier = Modifier, episode: String) {
+    Text(
+        modifier = modifier,
+        text = stringResource(id = R.string.read_screen_episode, episode),
+        color = Color.White,
+    )
 }
 
 @Composable
-private fun RssMediaDuration(modifier: Modifier = Modifier, rssMedia: RssMediaBean) {
-    val duration = rssMedia.duration
-    if (duration != null) {
-        Text(
-            modifier = modifier,
-            text = DateUtils.formatElapsedTime(duration / 1000),
-            color = Color.White,
-        )
-    }
+private fun RssMediaDuration(modifier: Modifier = Modifier, duration: Long) {
+    Text(
+        modifier = modifier,
+        text = DateUtils.formatElapsedTime(duration / 1000),
+        color = Color.White,
+    )
 }
 
 @Composable
@@ -562,12 +557,16 @@ private fun MediaRow(articleWithFeed: ArticleWithFeed, onPlay: (String) -> Unit)
                 )
             }
         }
-        articleWithEnclosure.media?.let { media ->
+        val episode = articleWithEnclosure.media?.episode
+        val duration = articleWithEnclosure.media?.duration
+        if (episode != null || duration != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Row {
-                RssMediaEpisode(rssMedia = media)
-                Spacer(modifier = Modifier.width(12.dp))
-                RssMediaDuration(rssMedia = media)
+                if (episode != null) RssMediaEpisode(episode = episode)
+                if (duration != null) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    RssMediaDuration(duration = duration)
+                }
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -586,23 +585,10 @@ private fun MediaRow(articleWithFeed: ArticleWithFeed, onPlay: (String) -> Unit)
                     .align(Alignment.Center),
                 cover = cover,
                 enclosure = item,
+                episode = articleWithEnclosure.media?.episode,
+                duration = articleWithEnclosure.media?.duration,
                 onClick = { onPlay(item.url) },
-            ) {
-                articleWithEnclosure.media?.let { media ->
-                    RssMediaEpisode(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(end = 10.dp, top = 10.dp),
-                        rssMedia = media,
-                    )
-                    RssMediaDuration(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 10.dp, bottom = 10.dp),
-                        rssMedia = media,
-                    )
-                }
-            }
+            )
         }
     }
 }
@@ -612,10 +598,13 @@ private fun MediaCover(
     modifier: Modifier = Modifier,
     cover: String?,
     enclosure: EnclosureBean,
+    episode: String? = null,
+    duration: Long? = null,
     onClick: () -> Unit,
-    content: @Composable (BoxScope.() -> Unit) = {},
 ) {
     val context = LocalContext.current
+    var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -625,7 +614,6 @@ private fun MediaCover(
             modifier = Modifier
                 .clickable(onClick = onClick)
                 .align(Alignment.Center),
-            contentAlignment = Alignment.Center,
         ) {
             var realImage by rememberSaveable(enclosure) {
                 mutableStateOf(if (context.isWifi() && enclosure.isVideo) enclosure.url else cover)
@@ -652,13 +640,47 @@ private fun MediaCover(
                 ),
             )
             Icon(
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.Center),
                 imageVector = Icons.Outlined.PlayCircleOutline,
                 contentDescription = stringResource(id = R.string.play),
                 tint = Color.White,
             )
-            content()
+            PodAuraIconButton(
+                onClick = { openAddToPlaylistSheet = true },
+                modifier = Modifier.align(Alignment.BottomStart),
+                tint = Color.White,
+                imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                contentDescription = stringResource(R.string.add_to_playlist),
+            )
+            if (episode != null) {
+                RssMediaEpisode(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(end = 10.dp, top = 10.dp),
+                    episode = episode,
+                )
+            }
+            if (duration != null) {
+                RssMediaDuration(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 10.dp, bottom = 10.dp),
+                    duration = duration,
+                )
+            }
         }
+    }
+
+    if (openAddToPlaylistSheet) {
+        AddToPlaylistSheet(
+            onDismissRequest = { openAddToPlaylistSheet = false },
+            currentPlaylistId = null,
+            selectedMediaList = remember(enclosure) {
+                listOf(enclosure.toMediaUrlWithArticleIdBean())
+            },
+        )
     }
 }
 

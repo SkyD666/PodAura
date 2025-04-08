@@ -6,9 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
@@ -20,16 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -38,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.getOrNull
@@ -46,11 +40,11 @@ import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.thenIfNotNull
 import com.skyd.anivu.ext.withoutTop
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.anivu.ui.component.CircularProgressPlaceholder
-import com.skyd.anivu.ui.component.ErrorPlaceholder
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaItem
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaItemPlaceholder
 import sh.calvin.reorderable.ReorderableItem
@@ -69,7 +63,7 @@ fun PlaylistMediaList(
     viewModel: ListViewModel = hiltViewModel(),
 ) {
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
-    val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init(currentPlaylistId))
+    val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
     BackHandler(uiState.selectedItems.isNotEmpty()) {
@@ -102,9 +96,11 @@ fun PlaylistMediaList(
 
     if (openAddToPlaylistSheet) {
         AddToPlaylistSheet(
-            uiState = uiState,
             onDismissRequest = { openAddToPlaylistSheet = false },
-            dispatch = dispatch,
+            currentPlaylistId = currentPlaylistId,
+            selectedMediaList = remember(uiState.selectedItems) {
+                uiState.selectedItems.map { it.toMediaUrlWithArticleIdBean() }
+            },
         )
     }
 }
@@ -126,7 +122,7 @@ fun PlaylistMediaList(
     viewModel: ListViewModel = hiltViewModel(),
 ) {
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
-    val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init(currentPlaylistId))
+    val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
     BackHandler(uiState.selectedItems.isNotEmpty()) {
@@ -159,9 +155,11 @@ fun PlaylistMediaList(
 
     if (openAddToPlaylistSheet) {
         AddToPlaylistSheet(
-            uiState = uiState,
             onDismissRequest = { openAddToPlaylistSheet = false },
-            dispatch = dispatch,
+            currentPlaylistId = currentPlaylistId,
+            selectedMediaList = remember(uiState.selectedItems) {
+                uiState.selectedItems.map { it.toMediaUrlWithArticleIdBean() }
+            },
         )
     }
 }
@@ -261,43 +259,6 @@ private fun PlaylistMediaList(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun AddToPlaylistSheet(
-    uiState: ListState,
-    onDismissRequest: () -> Unit,
-    dispatch: (ListIntent) -> Unit,
-) {
-    LaunchedEffect(uiState.selectedItems) {
-        dispatch(ListIntent.RefreshAddedPlaylist(uiState.selectedItems))
-    }
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
-        Text(
-            text = stringResource(R.string.add_to_playlist),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        when (val playlistState = uiState.playlistState) {
-            is PlaylistState.Failed -> ErrorPlaceholder(playlistState.msg)
-            PlaylistState.Init -> CircularProgressPlaceholder()
-            is PlaylistState.Success -> AddToPlaylistSheetContent(
-                playlist = playlistState.playlistPagingDataFlow.collectAsLazyPagingItems(),
-                selected = { it.playlist.playlistId in uiState.addedPlaylists },
-                onSelect = {
-                    dispatch(
-                        ListIntent.AddToPlaylist(medias = uiState.selectedItems, playlist = it)
-                    )
-                },
-                onRemove = {
-                    dispatch(
-                        ListIntent.RemoveFromPlaylist(medias = uiState.selectedItems)
-                    )
-                },
-            )
         }
     }
 }

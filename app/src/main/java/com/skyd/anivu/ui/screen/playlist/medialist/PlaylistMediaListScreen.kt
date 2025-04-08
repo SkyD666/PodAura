@@ -52,6 +52,7 @@ import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.toRelativeDateTimeString
 import com.skyd.anivu.ext.vThenP
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
@@ -152,7 +153,14 @@ fun PlaylistMediaListScreen(
                             mediaUrl = it.playlistMediaBean.url,
                         )
                     },
-                    onDelete = { dispatch(PlaylistMediaListIntent.Delete(it)) },
+                    onDelete = {
+                        dispatch(
+                            PlaylistMediaListIntent.Delete(
+                                playlistId = playlistId,
+                                deletes = it.map { it.toMediaUrlWithArticleIdBean() },
+                            )
+                        )
+                    },
                     onMoved = onMoved@{ fromIndex, toIndex ->
                         if (fromIndex == toIndex) return@onMoved
                         reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {

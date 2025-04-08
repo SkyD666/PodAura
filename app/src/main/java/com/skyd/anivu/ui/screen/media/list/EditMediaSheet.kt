@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Check
@@ -59,6 +60,7 @@ fun EditMediaSheet(
     groups: List<MediaGroupBean>,
     onRename: (MediaBean, String) -> Unit,
     onSetFileDisplayName: (MediaBean, String?) -> Unit,
+    onAddToPlaylistClicked: ((MediaBean) -> Unit)?,
     onDelete: (MediaBean) -> Unit,
     onGroupChange: (MediaGroupBean) -> Unit,
     openCreateGroupDialog: () -> Unit,
@@ -89,6 +91,12 @@ fun EditMediaSheet(
                 onRenameClicked = { openRenameInputDialog = mediaBean.file.name },
                 onSetFileDisplayNameClicked = {
                     openSetFileDisplayNameInputDialog = mediaBean.displayName.orEmpty()
+                },
+                onAddToPlaylistClicked = onAddToPlaylistClicked?.let {
+                    {
+                        it(mediaBean)
+                        onDismissRequest()
+                    }
                 },
                 onDelete = {
                     onDelete(mediaBean)
@@ -196,6 +204,7 @@ internal fun OptionArea(
     onOpenWith: (() -> Unit)? = null,
     onRenameClicked: (() -> Unit)? = null,
     onSetFileDisplayNameClicked: (() -> Unit)? = null,
+    onAddToPlaylistClicked: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onOpenFeed: (() -> Unit)? = null,
     onOpenArticle: (() -> Unit)? = null,
@@ -233,6 +242,13 @@ internal fun OptionArea(
                     icon = Icons.Outlined.Badge,
                     text = stringResource(id = R.string.nickname),
                     onClick = onSetFileDisplayNameClicked,
+                )
+            }
+            if (onAddToPlaylistClicked != null) {
+                SheetChip(
+                    icon = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                    text = stringResource(id = R.string.add_to_playlist),
+                    onClick = onAddToPlaylistClicked,
                 )
             }
             if (onDelete != null) {

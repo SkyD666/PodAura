@@ -12,6 +12,7 @@ import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
+import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
@@ -32,14 +33,14 @@ interface PlaylistMediaDao {
     suspend fun deletePlaylistMedia(playlistId: String, url: String): Int
 
     @Transaction
-    suspend fun deletePlaylistMediaByIdAndUrl(playlist: List<PlaylistMediaWithArticleBean>): Int {
+    suspend fun deletePlaylistMedia(
+        playlistId: String,
+        mediaList: List<MediaUrlWithArticleIdBean>,
+    ): Int {
         var count = 0
-        playlist.forEach { item ->
-            if (item.playlistMediaBean.playlistId.isEmpty()) return@forEach
-            count += deletePlaylistMedia(
-                playlistId = item.playlistMediaBean.playlistId,
-                url = item.playlistMediaBean.url,
-            )
+        mediaList.forEach { media ->
+            if (playlistId.isEmpty()) return@forEach
+            count += deletePlaylistMedia(playlistId = playlistId, url = media.url)
         }
         return count
     }

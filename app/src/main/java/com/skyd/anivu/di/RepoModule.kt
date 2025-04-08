@@ -11,6 +11,8 @@ import com.skyd.anivu.model.repository.media.IMediaRepository
 import com.skyd.anivu.model.repository.media.MediaRepository
 import com.skyd.anivu.model.repository.player.IPlayerRepository
 import com.skyd.anivu.model.repository.player.PlayerRepository
+import com.skyd.anivu.model.repository.playlist.AddToPlaylistRepository
+import com.skyd.anivu.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
@@ -51,6 +53,10 @@ abstract class RepoModule {
     @Binds
     @Singleton
     abstract fun provideIPlaylistRepository(repo: PlaylistRepository): IPlaylistRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideIAddToPlaylistRepository(repo: AddToPlaylistRepository): IAddToPlaylistRepository
 
     @Binds
     @Singleton

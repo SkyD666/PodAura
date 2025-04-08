@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.component
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -93,17 +94,18 @@ fun PodAuraIconButton(
     if (contentDescription.isNullOrEmpty()) {
         iconButton(modifier)
     } else {
-        TooltipBox(
-            modifier = modifier,
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
-            tooltip = {
-                PlainTooltip {
-                    Text(contentDescription)
-                }
-            },
-            state = rememberTooltipState()
-        ) {
-            iconButton(Modifier)
+        Box(modifier = modifier) {  // It is necessary to use Modifier.align
+            TooltipBox(
+                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+                tooltip = {
+                    PlainTooltip {
+                        Text(contentDescription)
+                    }
+                },
+                state = rememberTooltipState()
+            ) {
+                iconButton(Modifier)
+            }
         }
     }
 }

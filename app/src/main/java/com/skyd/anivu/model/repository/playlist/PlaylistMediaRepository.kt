@@ -12,7 +12,6 @@ import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
-import com.skyd.anivu.model.db.dao.playlist.PlaylistDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_DELTA
 import com.skyd.anivu.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_MIN_DELTA
@@ -22,7 +21,6 @@ import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPre
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -34,7 +32,6 @@ import javax.inject.Inject
 class PlaylistMediaRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
-    private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository(), IPlaylistMediaRepository {
@@ -96,59 +93,6 @@ class PlaylistMediaRepository @Inject constructor(
     ): Flow<List<PlaylistMediaWithArticleBean>> = flow {
         val playlist = playlistMediaDao.getPlaylistMediaList(playlistId)
         emit(playlist.map { withContext(Dispatchers.IO) { it.updateMediaMetadata() } })
-    }.flowOn(Dispatchers.IO)
-
-    override fun getCommonPlaylists(
-        medias: List<PlaylistMediaWithArticleBean>
-    ): Flow<List<String>> = playlistMediaDao.getCommonMediaPlaylistIdList(
-        medias.map { it.playlistMediaBean.url },
-        medias.size
-    ).flowOn(Dispatchers.IO)
-
-    fun insertPlaylistMedia(playlistId: String, url: String, articleId: String?): Flow<Boolean> =
-        flow {
-            if (playlistDao.exists(playlistId) == 0 ||
-                playlistMediaDao.exists(playlistId = playlistId, url = url) != 0
-            ) {
-                emit(false)
-                return@flow
-            }
-            val orderPosition = playlistMediaDao.getMaxOrder(playlistId = playlistId) + ORDER_DELTA
-            val realArticleId = articleId?.takeIf { articleDao.exists(it) > 0 }
-            playlistMediaDao.insertPlaylistMedia(
-                PlaylistMediaBean(
-                    playlistId = playlistId,
-                    url = url,
-                    articleId = realArticleId,
-                    orderPosition = orderPosition,
-                    createTime = System.currentTimeMillis(),
-                )
-            )
-            emit(true)
-        }.flowOn(Dispatchers.IO)
-
-    override fun insertPlaylistMedias(
-        toPlaylistId: String,
-        medias: List<PlaylistMediaWithArticleBean>
-    ): Flow<Unit> = flow {
-        if (playlistDao.exists(toPlaylistId) == 0) {
-            emit(Unit)
-            return@flow
-        }
-        medias.forEach {
-            insertPlaylistMedia(
-                playlistId = toPlaylistId,
-                url = it.playlistMediaBean.url,
-                articleId = it.playlistMediaBean.articleId,
-            ).collect()
-        }
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
-
-    override fun removeMediaFromPlaylist(
-        mediaList: List<PlaylistMediaWithArticleBean>,
-    ): Flow<Int> = flow {
-        emit(playlistMediaDao.deletePlaylistMediaByIdAndUrl(playlist = mediaList))
     }.flowOn(Dispatchers.IO)
 
     fun reorderPlaylistMedia(

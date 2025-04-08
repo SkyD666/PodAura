@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.DropdownMenu
@@ -68,6 +69,7 @@ fun Media1Item(
     onRemove: (MediaBean) -> Unit,
     onOpenFeed: ((MediaBean) -> Unit)?,
     onOpenArticle: ((MediaBean) -> Unit)?,
+    onOpenAddToPlaylistSheet: ((MediaBean) -> Unit)?,
     onLongClick: ((MediaBean) -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -171,6 +173,7 @@ fun Media1Item(
                 onRemove = onRemove,
                 onOpenFeed = onOpenFeed,
                 onOpenArticle = onOpenArticle,
+                onOpenAddToPlaylistSheet = onOpenAddToPlaylistSheet,
             )
         }
     }
@@ -184,6 +187,7 @@ private fun Menu(
     onRemove: (MediaBean) -> Unit,
     onOpenFeed: ((MediaBean) -> Unit)?,
     onOpenArticle: ((MediaBean) -> Unit)?,
+    onOpenAddToPlaylistSheet: ((MediaBean) -> Unit)?,
 ) {
     val context = LocalContext.current
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
@@ -220,6 +224,21 @@ private fun Menu(
                 onDismissRequest()
             },
         )
+        if (onOpenAddToPlaylistSheet != null && data.isMedia) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(id = R.string.add_to_playlist)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    onOpenAddToPlaylistSheet(data)
+                    onDismissRequest()
+                },
+            )
+        }
         if (onOpenFeed != null) {
             DropdownMenuItem(
                 text = { Text(text = stringResource(id = R.string.feed_screen_name)) },
