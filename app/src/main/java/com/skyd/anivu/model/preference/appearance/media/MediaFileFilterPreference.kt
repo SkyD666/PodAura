@@ -12,8 +12,8 @@ import com.skyd.ksp.preference.Preference
 object MediaFileFilterPreference : BasePreference<String> {
     private const val MEDIA_FILE_FILTER = "mediaFileFilter"
 
-    const val VIDEO_REGEX = ".*\\.(mp4|avi|mkv|mov|flv|wmv|webm|mpg|mpeg|3gp|rmvb|ts|mov|m3u8)\$"
-    const val AUDIO_REGEX = ".*\\.(mp3|wav|flac|aac|ogg|m4a|wma|opus|alac|aiff|aif)\$"
+    const val VIDEO_REGEX = ".*\\.(mp4|avi|mkv|mov|flv|wmv|webm|mpg|mpeg|3gp|rmvb|ts|mov|m3u8)$"
+    const val AUDIO_REGEX = ".*\\.(mp3|wav|flac|aac|ogg|m4a|wma|opus|alac|aiff|aif)$"
     const val MEDIA_REGEX = "($VIDEO_REGEX)|($AUDIO_REGEX)"
     const val ALL_REGEX = ".*"
 

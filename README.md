@@ -91,6 +91,7 @@ If you are interested, please help us **translate**, thank you.
 - **MPV**
 - **WorkManager**
 - **DataStore**
+- **KSP**
 - Splash Screen
 - Navigation
 - Coil

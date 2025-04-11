@@ -255,7 +255,9 @@ class MediaRepository @Inject constructor(
         appContext.dataStore.flowOf(MediaFileFilterPreference),
     ) { videoList, displayFilter ->
         videoList.filter {
-            runCatching { it.file.name.matches(Regex(displayFilter)) }.getOrNull() == true
+            runCatching {
+                it.file.isDirectory || it.file.name.matches(Regex(displayFilter))
+            }.getOrNull() == true
         }
     }.combine(
         appContext.dataStore.flowOf(

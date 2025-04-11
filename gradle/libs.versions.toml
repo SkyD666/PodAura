@@ -10,14 +10,14 @@ coroutines = "1.10.1"
 okhttp3 = "4.12.0"
 paging = "3.3.6"
 rome = "2.1.0"
-room = "2.6.1"
+room = "2.7.0"
 tracingPerfetto = "1.0.0"
 worker = "2.10.0"
 kotlin = "2.1.10"
 agp = "8.9.1"
 
 [libraries]
-androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.16.0" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.0" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.10.1" }
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version = "1.1.1" }

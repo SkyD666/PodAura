@@ -123,8 +123,6 @@ interface PlaylistMediaDao {
     @RawQuery(observedEntities = [PlaylistMediaBean::class])
     fun getPlaylistMediaListPaging(sql: SupportSQLiteQuery): PagingSource<Int, PlaylistMediaWithArticleBean>
 
-
-    @Transaction
     fun getPlaylistMediaListPaging(
         playlistId: String,
         orderByColumnName: String = PlaylistMediaBean.ORDER_POSITION_COLUMN,

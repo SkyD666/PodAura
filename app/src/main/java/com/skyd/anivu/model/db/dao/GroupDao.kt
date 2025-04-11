@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
@@ -151,6 +152,7 @@ interface GroupDao {
     suspend fun collapseAllGroup(collapse: Boolean): Int
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         "WITH default_group_order(`order`) AS (SELECT COALESCE(MIN(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) - $ORDER_DELTA FROM `$GROUP_TABLE_NAME`) " +
                 "SELECT " +
