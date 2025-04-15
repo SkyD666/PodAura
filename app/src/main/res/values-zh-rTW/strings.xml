@@ -64,7 +64,7 @@
     <string name="failed_msg">操作失敗：%s</string>
     <string name="success_time_msg">操作成功：耗時 %.2f 秒</string>
     <string name="open_with">開啟方式</string>
-    <string name="settings_screen_name">設定</string>
+    <string name="settings">設定</string>
     <string name="data_screen_name">資料</string>
     <string name="data_screen_description">管理資料、檔案、快取等</string>
     <string name="data_screen_clear_cache">清空快取</string>
@@ -457,6 +457,12 @@
     <string name="import_opml_screen_export_prefer">Export preferences</string>
     <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
     <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
+    <string name="player_config_advanced_screen_mpv_config_dir">Config directory</string>
+    <string name="player_config_advanced_screen_mpv_cache_dir">Cache directory</string>
+    <string name="player_audio_delay">Audio delay</string>
+    <string name="minus">Minus</string>
+    <string name="plus">Plus</string>
+    <string name="player_subtitle_delay">Subtitle delay</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d items</item>
     </plurals>
