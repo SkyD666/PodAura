@@ -64,7 +64,7 @@
     <string name="failed_msg">Başarısız: %s</string>
     <string name="success_time_msg">Başarı: %.2fs sürdü</string>
     <string name="open_with">Şununla Aç</string>
-    <string name="settings_screen_name">Ayarlar</string>
+    <string name="settings">Ayarlar</string>
     <string name="data_screen_name">Veri</string>
     <string name="data_screen_description">Veri, dosya, önbellek yönetimi</string>
     <string name="data_screen_clear_cache">Önbelleği Temizle</string>
@@ -458,6 +458,12 @@
     <string name="import_opml_screen_export_prefer">Export preferences</string>
     <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
     <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
+    <string name="player_config_advanced_screen_mpv_config_dir">Config directory</string>
+    <string name="player_config_advanced_screen_mpv_cache_dir">Cache directory</string>
+    <string name="player_audio_delay">Audio delay</string>
+    <string name="minus">Minus</string>
+    <string name="plus">Plus</string>
+    <string name="player_subtitle_delay">Subtitle delay</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
