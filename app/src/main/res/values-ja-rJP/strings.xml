@@ -64,7 +64,7 @@
     <string name="failed_msg">失敗: %s</string>
     <string name="success_time_msg">成功: %.2f 秒かかります</string>
     <string name="open_with">開く</string>
-    <string name="settings_screen_name">設定</string>
+    <string name="settings">設定</string>
     <string name="data_screen_name">データ</string>
     <string name="data_screen_description">データの管理、ファイル、キャッシュ</string>
     <string name="data_screen_clear_cache">キャッシュを消去</string>
@@ -457,6 +457,12 @@
     <string name="import_opml_screen_export_prefer">設定をエクスポート</string>
     <string name="import_opml_screen_import_prefer_description">JSON ファイル経由でインポートを行うと現在の設定が上書きされます</string>
     <string name="import_opml_screen_export_prefer_description">JSON ファイルをエクスポート</string>
+    <string name="player_config_advanced_screen_mpv_config_dir">Config directory</string>
+    <string name="player_config_advanced_screen_mpv_cache_dir">Cache directory</string>
+    <string name="player_audio_delay">Audio delay</string>
+    <string name="minus">Minus</string>
+    <string name="plus">Plus</string>
+    <string name="player_subtitle_delay">Subtitle delay</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
