@@ -145,6 +145,8 @@ class MediaSessionManager(
         is PlayerEvent.VideoOffsetX -> old.copy(offsetX = value)
         is PlayerEvent.VideoOffsetY -> old.copy(offsetY = value)
         is PlayerEvent.Zoom -> old.copy(zoom = value)
+        is PlayerEvent.AudioDelay -> old.copy(audioDelay = value)
+        is PlayerEvent.SubtitleDelay -> old.copy(subTitleDelay = value)
         is PlayerEvent.PlaybackRestart -> old.copy(mediaStarted = true)
         is PlayerEvent.StartFile -> old.copy(mediaStarted = true, path = path)
         is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)

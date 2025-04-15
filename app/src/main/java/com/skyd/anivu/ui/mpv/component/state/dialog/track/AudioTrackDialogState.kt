@@ -5,10 +5,12 @@ import com.skyd.anivu.ui.mpv.MPVPlayer
 
 data class AudioTrackDialogState(
     val show: Boolean,
+    val showSetting: Boolean,
 ) {
     companion object {
         val initial = AudioTrackDialogState(
             show = false,
+            showSetting = false,
         )
     }
 }
@@ -17,4 +19,5 @@ data class AudioTrackDialogState(
 data class AudioTrackDialogCallback(
     val onAudioTrackChanged: (MPVPlayer.Track) -> Unit,
     val onAddAudioTrack: (String) -> Unit,
+    val onAudioDelayChanged: (Long) -> Unit,
 )

@@ -64,7 +64,7 @@
     <string name="failed_msg">操作失败：%s</string>
     <string name="success_time_msg">操作成功：耗时 %.2f 秒</string>
     <string name="open_with">打开方式</string>
-    <string name="settings_screen_name">设置</string>
+    <string name="settings">设置</string>
     <string name="data_screen_name">数据</string>
     <string name="data_screen_description">管理数据、文件、缓存等</string>
     <string name="data_screen_clear_cache">清空缓存</string>
@@ -457,6 +457,12 @@
     <string name="import_opml_screen_export_prefer">导出设置</string>
     <string name="import_opml_screen_import_prefer_description">通过 JSON 文件导入，当前的设置将被覆盖</string>
     <string name="import_opml_screen_export_prefer_description">通过 JSON 文件导出</string>
+    <string name="player_config_advanced_screen_mpv_config_dir">配置目录</string>
+    <string name="player_config_advanced_screen_mpv_cache_dir">缓存目录</string>
+    <string name="player_audio_delay">音频延迟</string>
+    <string name="minus">减</string>
+    <string name="plus">加</string>
+    <string name="player_subtitle_delay">字幕延迟</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>

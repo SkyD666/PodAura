@@ -9,7 +9,6 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import coil3.ImageLoader
 import com.skyd.anivu.appContext
-import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.getImage
 import com.skyd.anivu.ui.mpv.service.PlayerState
 import com.skyd.anivu.util.image.decodeSampledBitmap
@@ -106,14 +105,14 @@ suspend fun createThumbnail(
 ): Bitmap? =
     createThumbnailFile(thumbnailPath)?.let { decodeSampledBitmap(it, reqWidth, reqHeight) }
 
-fun copyAssetsForMpv(context: Context) {
+fun copyAssetsForMpv(context: Context, configDir: String) {
     val assetManager = context.assets
     arrayOf(
         "subfont.ttf", "cacert.pem"
     ).forEach { filename ->
         try {
             assetManager.open(filename, AssetManager.ACCESS_STREAMING).use { ins ->
-                val outFile = File("${Const.MPV_CONFIG_DIR.path}/$filename")
+                val outFile = File("$configDir/$filename")
                 // Note that .available() officially returns an *estimated* number of bytes available
                 // this is only true for generic streams, asset streams return the full file size
                 if (outFile.length() == ins.available().toLong()) {

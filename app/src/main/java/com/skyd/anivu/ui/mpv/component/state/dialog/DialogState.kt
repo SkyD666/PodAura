@@ -25,4 +25,6 @@ data class OnDialogVisibilityChanged(
     val onSpeedDialog: (Boolean) -> Unit,
     val onSubtitleTrackDialog: (Boolean) -> Unit,
     val onAudioTrackDialog: (Boolean) -> Unit,
+    val onSubtitleSettingDialog: (Boolean) -> Unit,
+    val onAudioSettingDialog: (Boolean) -> Unit,
 )

@@ -43,7 +43,7 @@ fun SettingsScreen() {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.settings_screen_name)) },
+                title = { Text(text = stringResource(R.string.settings)) },
             )
         }
     ) { paddingValues ->

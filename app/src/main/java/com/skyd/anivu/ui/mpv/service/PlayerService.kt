@@ -141,6 +141,8 @@ class PlayerService : Service() {
                 )
 
                 "speed" -> sendEvent(PlayerEvent.Speed(value.toFloat()))
+                "audio-delay" -> sendEvent(PlayerEvent.AudioDelay((value * 1000).toLong()))
+                "sub-delay" -> sendEvent(PlayerEvent.SubtitleDelay((value * 1000).toLong()))
                 "demuxer-cache-duration" -> sendEvent(PlayerEvent.Buffer(value.toInt()))
             }
         }
@@ -316,6 +318,8 @@ class PlayerService : Service() {
                 command.offset.y.toInt()
             )
 
+            is PlayerCommand.AudioDelay -> audioDelay(command.delayMillis)
+            is PlayerCommand.SubtitleDelay -> subtitleDelay(command.delayMillis)
             is PlayerCommand.SetSpeed -> playbackSpeed = command.speed.toDouble()
             is PlayerCommand.SetSubtitleTrack -> sid = command.trackId
             is PlayerCommand.SetAudioTrack -> aid = command.trackId

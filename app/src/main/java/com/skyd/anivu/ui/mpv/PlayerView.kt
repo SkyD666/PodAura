@@ -25,9 +25,9 @@ import com.skyd.anivu.ext.screenIsLand
 import com.skyd.anivu.ui.component.OnLifecycleEvent
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.mpv.component.PlayerAndroidView
-import com.skyd.anivu.ui.mpv.component.dialog.AudioTrackDialog
+import com.skyd.anivu.ui.mpv.component.dialog.audio.AudioTrackDialog
 import com.skyd.anivu.ui.mpv.component.dialog.SpeedDialog
-import com.skyd.anivu.ui.mpv.component.dialog.SubtitleTrackDialog
+import com.skyd.anivu.ui.mpv.component.dialog.subtitle.SubtitleTrackDialog
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.DialogCallback
@@ -113,10 +113,12 @@ fun PlayerView(
             audioTrackDialogCallback = AudioTrackDialogCallback(
                 onAudioTrackChanged = { service.onCommand(PlayerCommand.SetAudioTrack(it.trackId)) },
                 onAddAudioTrack = { service.onCommand(PlayerCommand.AddAudio(it)) },
+                onAudioDelayChanged = { service.onCommand(PlayerCommand.AudioDelay(it)) },
             ),
             subtitleTrackDialogCallback = SubtitleTrackDialogCallback(
                 onSubtitleTrackChanged = { service.onCommand(PlayerCommand.SetSubtitleTrack(it.trackId)) },
                 onAddSubtitle = { service.onCommand(PlayerCommand.AddSubtitle(it)) },
+                onSubtitleDelayChanged = { service.onCommand(PlayerCommand.SubtitleDelay(it)) },
             )
         )
     }
@@ -164,6 +166,12 @@ fun PlayerView(
                     },
                     onSubtitleTrackDialog = {
                         subtitleTrackDialogState = subtitleTrackDialogState.copy(show = it)
+                    },
+                    onSubtitleSettingDialog = {
+                        subtitleTrackDialogState = subtitleTrackDialogState.copy(showSetting = it)
+                    },
+                    onAudioSettingDialog = {
+                        audioTrackDialogState = audioTrackDialogState.copy(showSetting = it)
                     },
                 )
             },
@@ -303,12 +311,14 @@ private fun Content(
         playState = { playState },
         audioTrackDialogState = dialogState.audioTrackDialogState,
         audioTrackDialogCallback = dialogCallback.audioTrackDialogCallback,
+        onDialogVisibilityChanged = onDialogVisibilityChanged,
     )
     SubtitleTrackDialog(
         onDismissRequest = { onDialogVisibilityChanged.onSubtitleTrackDialog(false) },
         playState = { playState },
         subtitleTrackDialogState = dialogState.subtitleTrackDialogState,
         subtitleTrackDialogCallback = dialogCallback.subtitleTrackDialogCallback,
+        onDialogVisibilityChanged = onDialogVisibilityChanged,
     )
 }
 

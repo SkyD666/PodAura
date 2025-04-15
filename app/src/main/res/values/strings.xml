@@ -68,7 +68,7 @@
     <string name="failed_msg">Failed: %s</string>
     <string name="success_time_msg">Success: takes %.2fs</string>
     <string name="open_with">Open with</string>
-    <string name="settings_screen_name">Settings</string>
+    <string name="settings">Settings</string>
     <string name="data_screen_name">Data</string>
     <string name="data_screen_description">Managing data, files, caches</string>
     <string name="data_screen_clear_cache">Clear cache</string>
@@ -464,6 +464,12 @@
     <string name="import_opml_screen_export_prefer">Export preferences</string>
     <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>
     <string name="import_opml_screen_export_prefer_description">Export via JSON file</string>
+    <string name="player_config_advanced_screen_mpv_config_dir">Config directory</string>
+    <string name="player_config_advanced_screen_mpv_cache_dir">Cache directory</string>
+    <string name="player_audio_delay">Audio delay</string>
+    <string name="minus">Minus</string>
+    <string name="plus">Plus</string>
+    <string name="player_subtitle_delay">Subtitle delay</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>

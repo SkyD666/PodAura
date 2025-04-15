@@ -29,6 +29,8 @@ data class PlayState(
     val offsetX = state.offsetX
     val offsetY = state.offsetY
     val speed = state.speed
+    val audioDelay = state.audioDelay
+    val subTitleDelay = state.subTitleDelay
     val videoTracks = state.videoTracks
     val audioTracks = state.audioTracks
     val subtitleTracks = state.subtitleTracks

@@ -2,12 +2,10 @@ package com.skyd.anivu.ui.screen.feed
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -32,7 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowSize
@@ -44,7 +41,6 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,16 +48,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -78,16 +67,13 @@ import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
-import com.skyd.anivu.ui.component.ClipboardTextField
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.component.safeRequestFocus
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
@@ -505,54 +491,14 @@ private fun AddFeedDialog(
     onConfirm: (url: String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    PodAuraDialog(
-        visible = true,
+    TextFieldDialog(
         icon = { Icon(imageVector = Icons.Outlined.RssFeed, contentDescription = null) },
-        title = { Text(text = stringResource(id = R.string.add)) },
+        titleText = stringResource(id = R.string.add),
+        placeholder = stringResource(id = R.string.feed_screen_rss_url),
+        value = url,
+        onValueChange = onUrlChange,
         onDismissRequest = onDismissRequest,
-        selectable = false,
-        text = {
-            Column {
-                val focusManager = LocalFocusManager.current
-                val focusRequester = remember { FocusRequester() }
-                ClipboardTextField(
-                    modifier = Modifier
-                        .focusRequester(focusRequester)
-                        .fillMaxWidth(),
-                    value = url,
-                    onValueChange = onUrlChange,
-                    autoRequestFocus = false,
-                    label = stringResource(id = R.string.feed_screen_rss_url),
-                    focusManager = focusManager,
-                    imeAction = ImeAction.Next,
-                    keyboardAction = { _, _ ->
-                        focusManager.moveFocus(FocusDirection.Next)
-                    }
-                )
-
-                val windowInfo = LocalWindowInfo.current
-                LaunchedEffect(windowInfo) {
-                    focusRequester.safeRequestFocus(windowInfo)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                enabled = url.isNotBlank(),
-                onClick = { onConfirm(url) }
-            ) {
-                Text(
-                    text = stringResource(R.string.ok),
-                    color = if (url.isNotBlank()) Color.Unspecified
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(R.string.cancel))
-            }
-        },
+        onConfirm = onConfirm,
     )
 }
 

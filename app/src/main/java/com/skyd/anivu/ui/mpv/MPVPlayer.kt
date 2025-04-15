@@ -12,6 +12,8 @@ import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
+import com.skyd.anivu.model.preference.player.MpvCacheDirPreference
+import com.skyd.anivu.model.preference.player.MpvConfigDirPreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
@@ -59,8 +61,8 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
                 }
             }
             instance?.initialize(
-                configDir = Const.MPV_CONFIG_DIR.path,
-                cacheDir = Const.MPV_CACHE_DIR.path,
+                configDir = context.dataStore.getOrDefault(MpvConfigDirPreference),
+                cacheDir = context.dataStore.getOrDefault(MpvCacheDirPreference),
                 fontDir = Const.MPV_FONT_DIR.path,
             )
             return instance!!
@@ -81,6 +83,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             if (initialized) return
             initialized = true
         }
+        copyAssetsForMpv(context, configDir)
 
         MPVLib.create(context, logLvl)
         MPVLib.setOptionString("config", "yes")
@@ -215,6 +218,8 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             Property("video-params/aspect", MPV_FORMAT_DOUBLE),
             Property("video-pan-x", MPV_FORMAT_DOUBLE),
             Property("video-pan-y", MPV_FORMAT_DOUBLE),
+            Property("audio-delay", MPV_FORMAT_DOUBLE),
+            Property("sub-delay", MPV_FORMAT_DOUBLE),
             Property("speed", MPV_FORMAT_DOUBLE),
             Property("demuxer-cache-duration", MPV_FORMAT_DOUBLE),
             Property("playlist"),
@@ -585,6 +590,14 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         if (dw == null || dh == null) return
         MPVLib.setOptionString("video-pan-x", (x.toFloat() / dw).toString())
         MPVLib.setOptionString("video-pan-y", (y.toFloat() / dh).toString())
+    }
+
+    fun audioDelay(delayMillis: Long) {
+        MPVLib.setOptionString("audio-delay", (delayMillis / 1000.0).toString())
+    }
+
+    fun subtitleDelay(delayMillis: Long) {
+        MPVLib.setOptionString("sub-delay", (delayMillis / 1000.0).toString())
     }
 
     fun playMediaAtIndex(index: Int? = null) {

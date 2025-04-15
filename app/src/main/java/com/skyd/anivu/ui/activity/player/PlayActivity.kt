@@ -33,7 +33,6 @@ import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerViewRoute
-import com.skyd.anivu.ui.mpv.copyAssetsForMpv
 import com.skyd.anivu.ui.mpv.service.PlayerService
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -140,8 +139,6 @@ class PlayActivity : BaseComposeActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        copyAssetsForMpv(this)
-
         super.onCreate(savedInstanceState)
 
         // Keep screen on

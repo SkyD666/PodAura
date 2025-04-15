@@ -18,6 +18,8 @@ data class PlayerState(
     val offsetX: Float = 0f,
     val offsetY: Float = 0f,
     val speed: Float = 1f,
+    val audioDelay: Long = 0L,
+    val subTitleDelay: Long = 0L,
     val videoTracks: List<MPVPlayer.Track> = listOf(),
     val audioTracks: List<MPVPlayer.Track> = listOf(),
     val subtitleTracks: List<MPVPlayer.Track> = listOf(),

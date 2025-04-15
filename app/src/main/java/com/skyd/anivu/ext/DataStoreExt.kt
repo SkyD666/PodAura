@@ -43,19 +43,21 @@ fun <T> DataStore<Preferences>.getOrNull(key: Preferences.Key<T>): T? {
     }
 }
 
-fun <T> DataStore<Preferences>.getOrDefault(pref: BasePreference<T>): T {
-    return runBlocking {
-        this@getOrDefault.data.catch { exception ->
-            if (exception is IOException) {
-                exception.printStackTrace()
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }.map {
-            pref.fromPreferences(it)
-        }.first()
-    }
+fun <T> DataStore<Preferences>.getOrDefault(pref: BasePreference<T>): T = runBlocking {
+    getOrDefaultSuspend(pref)
+}
+
+suspend fun <T> DataStore<Preferences>.getOrDefaultSuspend(pref: BasePreference<T>): T {
+    return data.catch { exception ->
+        if (exception is IOException) {
+            exception.printStackTrace()
+            emit(emptyPreferences())
+        } else {
+            throw exception
+        }
+    }.map {
+        pref.fromPreferences(it)
+    }.first()
 }
 
 operator fun <T> Preferences.get(pref: BasePreference<T>): T {

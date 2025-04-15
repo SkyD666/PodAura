@@ -64,7 +64,7 @@
     <string name="failed_msg">操作失敗：%s</string>
     <string name="success_time_msg">操作成功：耗時 %.2f 秒</string>
     <string name="open_with">開啟方式</string>
-    <string name="settings_screen_name">設定</string>
+    <string name="settings">設定</string>
     <string name="data_screen_name">資料</string>
     <string name="data_screen_description">管理資料、檔案、快取等</string>
     <string name="data_screen_clear_cache">清空快取</string>

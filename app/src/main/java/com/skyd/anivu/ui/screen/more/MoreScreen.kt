@@ -190,7 +190,7 @@ private fun getMoreBeanList(
             action = { navController.navigate(ImportExportRoute) },
         ),
         MoreBean(
-            title = context.getString(R.string.settings_screen_name),
+            title = context.getString(R.string.settings),
             icon = Icons.Outlined.Settings,
             iconTint = colorScheme.onPrimary,
             shape = MaterialShapes.Slanted,

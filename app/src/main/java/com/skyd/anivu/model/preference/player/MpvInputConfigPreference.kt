@@ -1,6 +1,8 @@
 package com.skyd.anivu.model.preference.player
 
-import com.skyd.anivu.config.Const
+import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.ext.getOrDefaultSuspend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,14 +15,14 @@ object MpvInputConfigPreference {
     fun put(scope: CoroutineScope, value: String) {
         this.value = value
         scope.launch(Dispatchers.IO) {
-            File(Const.MPV_CONFIG_DIR, "input.conf")
+            File(appContext.dataStore.getOrDefaultSuspend(MpvConfigDirPreference), "input.conf")
                 .apply { if (!exists()) createNewFile() }
                 .writeText(value)
         }
     }
 
     fun getValue(): String = value ?: runBlocking(Dispatchers.IO) {
-        value = File(Const.MPV_CONFIG_DIR, "input.conf")
+        value = File(appContext.dataStore.getOrDefaultSuspend(MpvConfigDirPreference), "input.conf")
             .apply { if (!exists()) createNewFile() }
             .readText()
         value.orEmpty()

@@ -1,4 +1,4 @@
-package com.skyd.anivu.ui.mpv.component.dialog
+package com.skyd.anivu.ui.mpv.component.dialog.audio
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,11 @@ import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ui.component.PodAuraIconButton
+import com.skyd.anivu.ui.mpv.component.dialog.BasicPlayerDialog
+import com.skyd.anivu.ui.mpv.component.dialog.DelayMillisDialog
+import com.skyd.anivu.ui.mpv.component.dialog.TrackDialogListItem
 import com.skyd.anivu.ui.mpv.component.state.PlayState
+import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.AudioTrackDialogCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.anivu.ui.mpv.resolveUri
@@ -34,6 +39,7 @@ internal fun AudioTrackDialog(
     playState: () -> PlayState,
     audioTrackDialogState: () -> AudioTrackDialogState,
     audioTrackDialogCallback: AudioTrackDialogCallback,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
 ) {
     val state = audioTrackDialogState()
     val context = LocalContext.current
@@ -61,8 +67,13 @@ internal fun AudioTrackDialog(
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     PodAuraIconButton(
+                        onClick = { onDialogVisibilityChanged.onAudioSettingDialog(true) },
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = stringResource(id = R.string.settings),
+                    )
+                    PodAuraIconButton(
                         onClick = { pickAudioFileLauncher.safeLaunch("*/*") },
-                        imageVector = Icons.Rounded.Add,
+                        imageVector = Icons.Outlined.Add,
                         contentDescription = stringResource(id = R.string.player_add_external_audio),
                     )
                 }
@@ -74,7 +85,7 @@ internal fun AudioTrackDialog(
                     }
                     TrackDialogListItem(
                         imageVector = if (currentTrack?.trackId == track.trackId)
-                            Icons.Rounded.Check else null,
+                            Icons.Outlined.Check else null,
                         iconContentDescription = stringResource(id = R.string.item_selected),
                         text = track.name,
                         onClick = { audioTrackDialogCallback.onAudioTrackChanged(track) }
@@ -82,5 +93,15 @@ internal fun AudioTrackDialog(
                 }
             }
         }
+    }
+
+    if (state.showSetting) {
+        val currentPlayState = playState()
+        DelayMillisDialog(
+            title = stringResource(R.string.player_audio_delay),
+            delay = currentPlayState.audioDelay,
+            onConform = { audioTrackDialogCallback.onAudioDelayChanged(it) },
+            onDismiss = { onDialogVisibilityChanged.onAudioSettingDialog(false) },
+        )
     }
 }

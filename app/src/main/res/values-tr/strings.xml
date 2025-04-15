@@ -63,7 +63,7 @@
     <string name="failed_msg">Başarısız: %s</string>
     <string name="success_time_msg">Başarı: %.2fs sürdü</string>
     <string name="open_with">Şununla Aç</string>
-    <string name="settings_screen_name">Ayarlar</string>
+    <string name="settings">Ayarlar</string>
     <string name="data_screen_name">Veri</string>
     <string name="data_screen_description">Veri, dosya, önbellek yönetimi</string>
     <string name="data_screen_clear_cache">Önbelleği Temizle</string>

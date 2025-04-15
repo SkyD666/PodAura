@@ -64,7 +64,7 @@
     <string name="failed_msg">失敗: %s</string>
     <string name="success_time_msg">成功: %.2f 秒かかります</string>
     <string name="open_with">開く</string>
-    <string name="settings_screen_name">設定</string>
+    <string name="settings">設定</string>
     <string name="data_screen_name">データ</string>
     <string name="data_screen_description">データの管理、ファイル、キャッシュ</string>
     <string name="data_screen_clear_cache">キャッシュを消去</string>

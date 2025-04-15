@@ -26,6 +26,7 @@ fun TextFieldDialog(
     maxLines: Int = Int.MAX_VALUE,
     singleLine: Boolean = maxLines == 1,
     style: PodAuraTextFieldStyle = PodAuraTextFieldStyle.toEnum(LocalTextFieldStyle.current),
+    autoRequestFocus: Boolean = true,
     icon: @Composable (() -> Unit)? = null,
     titleText: String? = null,
     value: String = "",
@@ -49,6 +50,7 @@ fun TextFieldDialog(
         maxLines = maxLines,
         singleLine = singleLine,
         style = style,
+        autoRequestFocus = autoRequestFocus,
         icon = icon,
         title = if (titleText == null) null else {
             { Text(text = titleText, maxLines = 2, overflow = TextOverflow.Ellipsis) }
@@ -77,6 +79,7 @@ fun TextFieldDialog(
     maxLines: Int = Int.MAX_VALUE,
     singleLine: Boolean = maxLines == 1,
     style: PodAuraTextFieldStyle = PodAuraTextFieldStyle.toEnum(LocalTextFieldStyle.current),
+    autoRequestFocus: Boolean = true,
     icon: @Composable (() -> Unit)? = null,
     title: @Composable (() -> Unit)? = null,
     value: String = "",
@@ -109,6 +112,7 @@ fun TextFieldDialog(
                 maxLines = maxLines,
                 singleLine = singleLine,
                 style = style,
+                autoRequestFocus = autoRequestFocus,
                 onValueChange = onValueChange,
                 placeholder = placeholder,
                 trailingIcon = trailingIcon,

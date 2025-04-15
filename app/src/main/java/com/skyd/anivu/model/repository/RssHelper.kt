@@ -50,9 +50,7 @@ class RssHelper @Inject constructor(
             title = syndFeed.title,
             description = syndFeed.description,
             link = syndFeed.link,
-            icon = getMediaRssIcon(syndFeed)
-                ?: syndFeed.icon?.link
-                ?: iconAsync.await(),
+            icon = getIcon(syndFeed) ?: iconAsync.await(),
         )
         val list = syndFeed.entries.map { article(feed, it) }
         FeedWithArticleBean(feed, list)
@@ -82,9 +80,7 @@ class RssHelper @Inject constructor(
                                 title = syndFeed.title,
                                 description = syndFeed.description,
                                 link = syndFeed.link,
-                                icon = getMediaRssIcon(syndFeed)
-                                    ?: syndFeed.icon?.link
-                                    ?: iconAsync.await(),
+                                icon = getIcon(syndFeed) ?: iconAsync.await(),
                             ),
                             articles = syndFeed.entries
                                 .asSequence()
@@ -107,6 +103,11 @@ class RssHelper @Inject constructor(
             throw e
         }.getOrNull()
     }
+
+    private fun getIcon(syndFeed: SyndFeed): String? =
+        getMediaRssIcon(syndFeed)
+            ?: syndFeed.image?.url
+            ?: syndFeed.icon?.url
 
     private fun article(
         feed: FeedBean,
