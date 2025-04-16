@@ -31,6 +31,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -87,6 +88,19 @@ class ArticleRepository @Inject constructor(
         }
     }
 
+    fun requestRealFeedUrls(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+        articleIds: List<String>,
+    ): Flow<List<String>> = flow {
+        val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
+            feedDao.getAllFeedUrl()
+        } else {
+            getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+        }
+        emit(realFeedUrls)
+    }.flowOn(Dispatchers.IO)
+
     fun requestArticleList(
         feedUrls: List<String>,
         groupIds: List<String>,
@@ -98,11 +112,11 @@ class ArticleRepository @Inject constructor(
     ) { favorite, read, sortDateDesc ->
         arrayOf(favorite, read, sortDateDesc)
     }.flatMapLatest { (favorite, read, sortDateDesc) ->
-        val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
-            feedDao.getAllFeedUrl()
-        } else {
-            getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
-        }
+        val realFeedUrls = requestRealFeedUrls(
+            feedUrls = feedUrls,
+            groupIds = groupIds,
+            articleIds = articleIds,
+        ).first()
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
                 genSql(
@@ -123,24 +137,12 @@ class ArticleRepository @Inject constructor(
         refreshArticleList(feedUrls = it, full = full)
     }.flowOn(Dispatchers.IO)
 
-    override fun refreshArticleList(
-        feedUrls: List<String>,
-        groupIds: List<String?>,
-        full: Boolean,
-    ): Flow<Unit> = flow {
+    override fun refreshArticleList(feedUrls: List<String>, full: Boolean): Flow<Unit> = flow {
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
             val failMsg = mutableListOf<Pair<String, String>>()
-            val realGroupIds = groupIds.filterNotNull()
-                .filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
-            val hasDefault = realGroupIds.size != groupIds.size
-            val realFeedUrls = buildList {
-                addAll(feedUrls)
-                addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
-                if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
-            }
             val semaphore = Semaphore(5)
-            realFeedUrls.forEach { feedUrl ->
+            feedUrls.forEach { feedUrl ->
                 requests += async {
                     semaphore.withPermit {
                         val articleBeanList = runCatching {

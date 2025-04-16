@@ -87,7 +87,13 @@ class ArticleViewModel @Inject constructor(
                 }
             },
             filterIsInstance<ArticleIntent.Refresh>().flatMapConcat { intent ->
-                articleRepo.refreshArticleList(intent.feedUrls, intent.groupIds, full = false).map {
+                articleRepo.requestRealFeedUrls(
+                    feedUrls = intent.feedUrls,
+                    groupIds = intent.groupIds,
+                    articleIds = intent.articleIds,
+                ).flatMapConcat { realFeedUrls ->
+                    articleRepo.refreshArticleList(realFeedUrls, full = false)
+                }.map {
                     ArticlePartialStateChange.RefreshArticleList.Success
                 }.startWith(ArticlePartialStateChange.RefreshArticleList.Loading).catchMap {
                     it.printStackTrace()

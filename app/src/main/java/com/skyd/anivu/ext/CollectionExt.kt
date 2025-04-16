@@ -20,3 +20,9 @@ fun List<String>.longestCommonPrefix(): String {
     }
     return first.substring(0, minLen)
 }
+
+inline fun <T> List<T>.onSubList(step: Int = 900, onEachSub: (List<T>) -> Unit) {
+    for (i in indices step step) {
+        onEachSub(subList(fromIndex = i, toIndex = minOf(i + step, size)))
+    }
+}

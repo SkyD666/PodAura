@@ -13,8 +13,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.onSubList
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
-import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
+import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.anivu.ui.activity.MainActivity
 import com.skyd.anivu.ui.screen.article.ArticleRoute
@@ -25,42 +26,72 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 object ArticleNotificationManager {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ArticleNotificationManagerEntryPoint {
         val articleNotificationRuleDao: ArticleNotificationRuleDao
+        val articleDao: ArticleDao
     }
 
     private const val CHANNEL_ID = "articleNotification"
 
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val channel = Channel<List<String>>(capacity = Channel.UNLIMITED)
 
-    fun onNewData(data: List<ArticleWithEnclosureBean>) {
-        scope.launch {
-            val hiltEntryPoint = EntryPointAccessors.fromApplication(
-                appContext, ArticleNotificationManagerEntryPoint::class.java
-            )
-            val rules =
-                hiltEntryPoint.articleNotificationRuleDao.getAllArticleNotificationRules().first()
-            val matchedData = data.mapNotNull { item ->
-                val matchedRule = rules.firstOrNull { it.match(item) }
-                if (matchedRule != null) {
-                    item to matchedRule
-                } else null
+    init {
+        onBatch()
+    }
+
+    fun send(articleIds: List<String>) = scope.launch {
+        channel.send(articleIds)
+    }
+
+    private fun onBatch() = scope.launch {
+        val hiltEntryPoint = EntryPointAccessors.fromApplication(
+            appContext, ArticleNotificationManagerEntryPoint::class.java
+        )
+        while (isActive) {
+            val articleIds = mutableListOf<List<String>>()
+
+            if (isActive) articleIds += channel.receive()
+            while (isActive) {
+                var data: List<String>? = null
+                for (i in 1..4) {
+                    data = channel.tryReceive().getOrNull()
+                    if (data == null) {
+                        delay((i shl 1).seconds)
+                    } else {
+                        break
+                    }
+                }
+                articleIds += data ?: break
+            }
+
+            val rules = hiltEntryPoint.articleNotificationRuleDao
+                .getAllArticleNotificationRules().first()
+            val matchedData = mutableListOf<Pair<String, ArticleNotificationRuleBean>>()
+            articleIds.flatten().onSubList { subArticleIds ->
+                val data = hiltEntryPoint.articleDao.getArticleWithEnclosureListByIds(subArticleIds)
+                matchedData += data.mapNotNull { item ->
+                    val matchedRule = rules.firstOrNull { it.match(item) }
+                    matchedRule?.let { item.article.articleId to matchedRule }
+                }
             }
             if (matchedData.isNotEmpty()) {
-                sendNotification(matchedData)
+                matchedData.onSubList(step = 1000) { sendNotification(it) }
             }
         }
     }
 
-    private fun sendNotification(
-        matchedData: List<Pair<ArticleWithEnclosureBean, ArticleNotificationRuleBean>>,
-    ) {
+    private fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
         val content = matchedData.map { it.second }
             .distinctBy { it.id }
             .joinToString(", ") { it.name }
@@ -69,7 +100,7 @@ object ArticleNotificationManager {
             ArticleRoute(
                 feedUrls = emptyList(),
                 groupIds = emptyList(),
-                articleIds = matchedData.map { it.first.article.articleId },
+                articleIds = matchedData.map { it.first },
             ).toDeeplink(),
             appContext,
             MainActivity::class.java

@@ -5,11 +5,7 @@ import kotlinx.coroutines.flow.Flow
 interface IArticleRepository {
     suspend fun getFeedUrls(feedUrls: List<String>, groupIds: List<String>): List<String>
 
-    fun refreshArticleList(
-        feedUrls: List<String>,
-        groupIds: List<String?> = emptyList(),
-        full: Boolean,
-    ): Flow<Unit>
+    fun refreshArticleList(feedUrls: List<String>, full: Boolean): Flow<Unit>
 
     fun refreshGroupArticles(groupId: String?, full: Boolean): Flow<Unit>
 

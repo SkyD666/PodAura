@@ -29,8 +29,10 @@ class RssSyncWorker(context: Context, parameters: WorkerParameters) :
     override suspend fun doWork(): Result {
         var hasError = false
         hiltEntryPoint.articleRepo
-            .refreshArticleList(hiltEntryPoint.feedDao.getAllUnmutedFeedUrl(), full = false)
-            .catch {
+            .refreshArticleList(
+                feedUrls = hiltEntryPoint.feedDao.getAllUnmutedFeedUrl(),
+                full = false,
+            ).catch {
                 hasError = true
                 it.printStackTrace()
             }.collect()

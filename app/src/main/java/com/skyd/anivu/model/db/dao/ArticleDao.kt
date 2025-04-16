@@ -4,7 +4,6 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RawQuery
-import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import androidx.room.Upsert
 import androidx.sqlite.db.SupportSQLiteQuery
@@ -67,6 +66,7 @@ interface ArticleDao {
     suspend fun insertListIfNotExist(articleWithEnclosureList: List<ArticleWithEnclosureBean>) {
         val hiltEntryPoint =
             EntryPointAccessors.fromApplication(appContext, ArticleDaoEntryPoint::class.java)
+        val updatedArticleIds = mutableListOf<String>()
         articleWithEnclosureList.forEach { articleWithEnclosure ->
             val article = articleWithEnclosure.article
             // Duplicate article by guid or link
@@ -97,6 +97,7 @@ interface ArticleDao {
                 innerUpsertArticle(newArticle)
                 articleWithEnclosure.article = newArticle
             }
+            updatedArticleIds += newArticle.articleId
 
             // Update modules
             val media = articleWithEnclosure.media
@@ -120,7 +121,7 @@ interface ArticleDao {
                 }
             )
         }
-        ArticleNotificationManager.onNewData(articleWithEnclosureList)
+        ArticleNotificationManager.send(updatedArticleIds)
     }
 
     @Transaction
@@ -232,6 +233,13 @@ interface ArticleDao {
 
     @Transaction
     @Query(
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun getArticleWithEnclosureListByIds(articleIds: List<String>): List<ArticleWithEnclosureBean>
+
+    @Transaction
+    @Query(
         """
         SELECT * FROM $ARTICLE_TABLE_NAME 
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId
@@ -283,15 +291,10 @@ interface ArticleDao {
     )
     fun getArticleWithFeed(articleId: String): Flow<ArticleWithFeed?>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query(
-        """
-        SELECT a.*
-        FROM $ARTICLE_TABLE_NAME AS a LEFT JOIN $FEED_TABLE_NAME AS f 
-        ON a.${ArticleBean.FEED_URL_COLUMN} = f.${FeedBean.URL_COLUMN}
-        WHERE a.${ArticleBean.FEED_URL_COLUMN} = :feedUrl 
-        ORDER BY date DESC LIMIT 1
-        """
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.FEED_URL_COLUMN} = :feedUrl " +
+                "ORDER BY `${ArticleBean.DATE_COLUMN}` DESC LIMIT 1"
     )
     suspend fun queryLatestByFeedUrl(feedUrl: String): ArticleBean?
 
