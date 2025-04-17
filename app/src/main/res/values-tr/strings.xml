@@ -140,8 +140,8 @@
     <string name="theme_purple">Mor</string>
     <string name="theme_mahiro">Mahiro</string>
     <string name="player_config_screen_appearance_category">Görünüm</string>
-    <string name="player_config_screen_show_85s_button">+85sn düğmesi</string>
-    <string name="player_config_screen_show_85s_button_description">İlerleme çubuğunun üstünde +85sn düğmesini göster</string>
+    <string name="player_config_screen_show_forward_seconds_button">%ssn düğmesi</string>
+    <string name="player_config_screen_show_forward_seconds_button_description">İlerleme çubuğunun üstünde %ssn düğmesini göster</string>
     <string name="dark_mode_light">Açık</string>
     <string name="dark_mode_dark">Koyu</string>
     <string name="dark_mode_follow_system">Sistem</string>
@@ -464,6 +464,7 @@
     <string name="minus">Minus</string>
     <string name="plus">Plus</string>
     <string name="player_subtitle_delay">Subtitle delay</string>
+    <string name="player_config_screen_forward_second_button_value">Forward seconds</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
