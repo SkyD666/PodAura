@@ -74,21 +74,7 @@ class ArticleRepository @Inject constructor(
         articleSortDateDesc.value = articleSort
     }
 
-    override suspend fun getFeedUrls(
-        feedUrls: List<String>,
-        groupIds: List<String>,
-    ): List<String> {
-        val realGroupIds =
-            groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
-        val hasDefault = realGroupIds.size != groupIds.size
-        return buildList {
-            addAll(feedUrls)
-            if (realGroupIds.isNotEmpty()) addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
-            if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
-        }
-    }
-
-    fun requestRealFeedUrls(
+    override fun requestRealFeedUrls(
         feedUrls: List<String>,
         groupIds: List<String>,
         articleIds: List<String>,
@@ -96,7 +82,14 @@ class ArticleRepository @Inject constructor(
         val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
             feedDao.getAllFeedUrl()
         } else {
-            getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
+            val realGroupIds =
+                groupIds.filter { it.isNotEmpty() && GroupVo.DefaultGroup.groupId != it }
+            val hasDefault = realGroupIds.size != groupIds.size
+            buildList {
+                addAll(feedUrls)
+                if (realGroupIds.isNotEmpty()) addAll(feedDao.getFeedUrlsInGroup(realGroupIds))
+                if (hasDefault) addAll(feedDao.getFeedUrlsInDefaultGroup())
+            }
         }
         emit(realFeedUrls)
     }.flowOn(Dispatchers.IO)

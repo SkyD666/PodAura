@@ -158,11 +158,7 @@ fun FeedScreen() {
                             }
                         } else {
                             navController.navigate(
-                                ArticleRoute(
-                                    feedUrls = emptyList(),
-                                    groupIds = listOf(groupId),
-                                    articleIds = emptyList(),
-                                )
+                                ArticleRoute(groupIds = listOf(groupId))
                             )
                         }
                     }

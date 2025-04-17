@@ -14,12 +14,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.toSignedString
 import com.skyd.anivu.ui.mpv.land.controller.ControllerLabelGray
 
 
 @Composable
-internal fun Forward85s(
+internal fun ForwardSeconds(
     modifier: Modifier = Modifier,
+    forwardSeconds: Int,
     onClick: () -> Unit,
 ) {
     Text(
@@ -28,7 +30,10 @@ internal fun Forward85s(
             .background(color = ControllerLabelGray)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
-        text = stringResource(id = R.string.player_forward_85s),
+        text = stringResource(
+            id = R.string.player_forward_seconds,
+            forwardSeconds.toSignedString()
+        ),
         style = MaterialTheme.typography.labelLarge,
         fontSize = 18.sp,
         color = Color.White,

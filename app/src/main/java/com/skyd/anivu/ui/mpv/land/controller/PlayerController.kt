@@ -49,7 +49,7 @@ import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.land.controller.bar.BottomBar
 import com.skyd.anivu.ui.mpv.land.controller.bar.TopBar
 import com.skyd.anivu.ui.mpv.land.controller.bar.TopBarCallback
-import com.skyd.anivu.ui.mpv.land.controller.button.Forward85s
+import com.skyd.anivu.ui.mpv.land.controller.button.ForwardSeconds
 import com.skyd.anivu.ui.mpv.land.controller.button.ResetTransform
 import com.skyd.anivu.ui.mpv.land.controller.button.Screenshot
 import com.skyd.anivu.ui.mpv.land.controller.preview.BrightnessPreview
@@ -59,7 +59,8 @@ import com.skyd.anivu.ui.mpv.land.controller.preview.VolumePreview
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.generated.preference.LocalPlayerShow85sButton
+import com.skyd.generated.preference.LocalPlayerForwardSecondsButtonValue
+import com.skyd.generated.preference.LocalPlayerShowForwardSecondsButton
 import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
 import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.coroutines.delay
@@ -316,7 +317,7 @@ private fun AutoHiddenBox(
             exit = fadeOut(),
         ) {
             ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-                val (topBar, bottomBar, screenshot, forward85s, resetTransform) = createRefs()
+                val (topBar, bottomBar, screenshot, forwardSeconds, resetTransform) = createRefs()
 
                 TopBar(
                     modifier = Modifier.constrainAs(topBar) { top.linkTo(parent.top) },
@@ -346,17 +347,20 @@ private fun AutoHiddenBox(
                     )
                 }
 
-                // +85s button
-                if (LocalPlayerShow85sButton.current) {
-                    Forward85s(
+                // Forward seconds button
+                if (LocalPlayerShowForwardSecondsButton.current) {
+                    val forwardSecondButtonValue = LocalPlayerForwardSecondsButtonValue.current
+                    ForwardSeconds(
                         modifier = Modifier
-                            .constrainAs(forward85s) {
+                            .constrainAs(forwardSeconds) {
                                 bottom.linkTo(bottomBar.top)
                                 end.linkTo(parent.end)
                             }
                             .padding(end = 20.dp),
+                        forwardSeconds = forwardSecondButtonValue,
                         onClick = {
-                            with(playState()) { playStateCallback.onSeekTo(position + 85) }
+                            with(playState()) { playStateCallback.onSeekTo(position + forwardSecondButtonValue) }
+                            onRestartAutoHideControllerRunnable()
                         },
                     )
                 }

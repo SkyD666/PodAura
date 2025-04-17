@@ -139,8 +139,8 @@
     <string name="theme_purple">刻晴</string>
     <string name="theme_mahiro">緒山まひろ</string>
     <string name="player_config_screen_appearance_category">フルスクリーンの外観</string>
-    <string name="player_config_screen_show_85s_button">+85s ボタン</string>
-    <string name="player_config_screen_show_85s_button_description">進捗バーの上に +85s ボタンを表示します</string>
+    <string name="player_config_screen_show_forward_seconds_button">%ss ボタン</string>
+    <string name="player_config_screen_show_forward_seconds_button_description">進捗バーの上に %ss ボタンを表示します</string>
     <string name="dark_mode_light">ライト</string>
     <string name="dark_mode_dark">ダーク</string>
     <string name="dark_mode_follow_system">システム</string>

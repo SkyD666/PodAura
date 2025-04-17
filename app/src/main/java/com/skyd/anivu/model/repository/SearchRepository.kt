@@ -30,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
@@ -62,11 +63,11 @@ class SearchRepository @Inject constructor(
         groupIds: List<String>,
         articleIds: List<String>,
     ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
-        val realFeedUrls = if (feedUrls.isEmpty() && groupIds.isEmpty() && articleIds.isEmpty()) {
-            feedDao.getAllFeedUrl()
-        } else {
-            articleRepo.getFeedUrls(feedUrls = feedUrls, groupIds = groupIds)
-        }
+        val realFeedUrls = articleRepo.requestRealFeedUrls(
+            feedUrls = feedUrls,
+            groupIds = groupIds,
+            articleIds = articleIds,
+        ).first()
         Pager(pagingConfig) {
             articleDao.getArticlePagingSource(
                 genSql(

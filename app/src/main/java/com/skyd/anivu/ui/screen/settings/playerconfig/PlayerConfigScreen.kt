@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Redo
 import androidx.compose.material.icons.outlined.FastForward
+import androidx.compose.material.icons.outlined.FastRewind
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.Restore
@@ -26,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,13 +42,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
+import com.skyd.anivu.ext.toSignedString
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.preference.player.PlayerAutoPipPreference
 import com.skyd.anivu.model.preference.player.PlayerDoubleTapPreference
+import com.skyd.anivu.model.preference.player.PlayerForwardSecondsButtonValuePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
-import com.skyd.anivu.model.preference.player.PlayerShow85sButtonPreference
+import com.skyd.anivu.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.anivu.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.anivu.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.anivu.ui.component.BaseSettingsItem
@@ -55,6 +59,7 @@ import com.skyd.anivu.ui.component.CheckableListMenu
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
+import com.skyd.anivu.ui.component.SwitchBaseSettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
 import com.skyd.anivu.ui.local.LocalNavController
@@ -62,10 +67,11 @@ import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvan
 import com.skyd.generated.preference.LocalBackgroundPlay
 import com.skyd.generated.preference.LocalPlayerAutoPip
 import com.skyd.generated.preference.LocalPlayerDoubleTap
+import com.skyd.generated.preference.LocalPlayerForwardSecondsButtonValue
 import com.skyd.generated.preference.LocalPlayerMaxBackCacheSize
 import com.skyd.generated.preference.LocalPlayerMaxCacheSize
 import com.skyd.generated.preference.LocalPlayerSeekOption
-import com.skyd.generated.preference.LocalPlayerShow85sButton
+import com.skyd.generated.preference.LocalPlayerShowForwardSecondsButton
 import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
 import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.serialization.Serializable
@@ -82,6 +88,7 @@ fun PlayerConfigScreen() {
     val navController = LocalNavController.current
     var expandDoubleTapMenu by rememberSaveable { mutableStateOf(false) }
     var expandSeekOptionMenu by rememberSaveable { mutableStateOf(false) }
+    var openForwardSecondButtonValueDialog by rememberSaveable { mutableStateOf(false) }
     var openMaxCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
     var openMaxBackCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -201,18 +208,26 @@ fun PlayerConfigScreen() {
                 )
             }
             item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.FastForward,
-                    text = stringResource(id = R.string.player_config_screen_show_85s_button),
-                    description = stringResource(id = R.string.player_config_screen_show_85s_button_description),
-                    checked = LocalPlayerShow85sButton.current,
+                val forwardSeconds = LocalPlayerForwardSecondsButtonValue.current
+                SwitchBaseSettingsItem(
+                    imageVector = if (forwardSeconds >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
+                    text = stringResource(
+                        R.string.player_config_screen_show_forward_seconds_button,
+                        forwardSeconds.toSignedString()
+                    ),
+                    description = stringResource(
+                        R.string.player_config_screen_show_forward_seconds_button_description,
+                        forwardSeconds.toSignedString()
+                    ),
+                    checked = LocalPlayerShowForwardSecondsButton.current,
                     onCheckedChange = {
-                        PlayerShow85sButtonPreference.put(
+                        PlayerShowForwardSecondsButtonPreference.put(
                             context = context,
                             scope = scope,
                             value = it,
                         )
-                    }
+                    },
+                    onClick = { openForwardSecondButtonValueDialog = true },
                 )
             }
             item {
@@ -247,6 +262,12 @@ fun PlayerConfigScreen() {
             }
         }
 
+        if (openForwardSecondButtonValueDialog) {
+            ForwardSecondButtonValueDialog(onDismissRequest = {
+                openForwardSecondButtonValueDialog = false
+            })
+        }
+
         if (openMaxCacheSizeDialog) {
             MaxCacheSizeDialog(
                 onDismissRequest = { openMaxCacheSizeDialog = false },
@@ -259,7 +280,6 @@ fun PlayerConfigScreen() {
                         scope = scope,
                         value = it,
                     )
-                    openMaxCacheSizeDialog = false
                 }
             )
         }
@@ -275,7 +295,6 @@ fun PlayerConfigScreen() {
                         scope = scope,
                         value = it,
                     )
-                    openMaxBackCacheSizeDialog = false
                 }
             )
         }
@@ -311,6 +330,58 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
         displayName = { PlayerSeekOptionPreference.toDisplayName(context, it) },
         onChecked = { PlayerSeekOptionPreference.put(context, scope, it) },
         onDismissRequest = onDismissRequest,
+    )
+}
+
+@Composable
+internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val forwardSeconds = LocalPlayerForwardSecondsButtonValue.current
+    var value by rememberSaveable { mutableIntStateOf(forwardSeconds) }
+
+    SliderDialog(
+        onDismissRequest = onDismissRequest,
+        value = value.toFloat(),
+        onValueChange = { value = it.toInt() },
+        valueRange = PlayerForwardSecondsButtonValuePreference.range,
+        valueLabel = {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .animateContentSize(),
+                    text = "${value.toInt().toSignedString()}s",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                PodAuraIconButton(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    onClick = { value = PlayerForwardSecondsButtonValuePreference.default },
+                    imageVector = Icons.Outlined.Restore,
+                    contentDescription = stringResource(R.string.reset),
+                )
+            }
+        },
+        icon = {
+            Icon(
+                imageVector = if (value >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
+                contentDescription = null,
+            )
+        },
+        title = { Text(text = stringResource(R.string.player_config_screen_forward_second_button_value)) },
+        confirmButton = {
+            TextButton(onClick = {
+                PlayerForwardSecondsButtonValuePreference.put(context, scope, value)
+                onDismissRequest()
+            }) {
+                Text(text = stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(id = R.string.cancel))
+            }
+        }
     )
 }
 
@@ -353,8 +424,16 @@ internal fun MaxCacheSizeDialog(
         icon = { Icon(imageVector = Icons.Outlined.Save, contentDescription = null) },
         title = { Text(text = title) },
         confirmButton = {
-            TextButton(onClick = { onConfirm(value) }) {
+            TextButton(onClick = {
+                onConfirm(value)
+                onDismissRequest()
+            }) {
                 Text(text = stringResource(id = R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = stringResource(id = R.string.cancel))
             }
         }
     )

@@ -53,10 +53,12 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
 import com.skyd.anivu.config.Const
+import com.skyd.anivu.ext.UuidList
 import com.skyd.anivu.ext.listType
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.ext.type
+import com.skyd.anivu.ext.uuidListType
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.local.LocalNavController
@@ -195,14 +197,25 @@ private fun MainNavHost() {
     ) {
         composable<MainRoute> { MainScreen() }
         composable<ArticleRoute>(
-            typeMap = mapOf(typeOf<List<String>>() to listType<String>()),
-            deepLinks = listOf(navDeepLink<ArticleRoute>(basePath = ArticleRoute.BASE_PATH)),
+            typeMap = mapOf(
+                typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
+                typeOf<List<String>?>() to listType<String>(isNullableAllowed = true)
+            ),
+            deepLinks = listOf(
+                navDeepLink<ArticleRoute>(
+                    basePath = ArticleRoute.BASE_PATH,
+                    typeMap = mapOf(
+                        typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
+                        typeOf<List<String>?>() to listType<String>(isNullableAllowed = true)
+                    )
+                )
+            ),
         ) {
             val route = it.toRoute<ArticleRoute>()
             ArticleScreen(
-                feedUrls = route.feedUrls,
-                groupIds = route.groupIds,
-                articleIds = route.articleIds,
+                feedUrls = route.feedUrls.orEmpty(),
+                groupIds = route.groupIds.orEmpty(),
+                articleIds = route.articleIds?.uuids.orEmpty(),
             )
         }
         composable<LicenseRoute> { LicenseScreen() }

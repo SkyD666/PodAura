@@ -3,7 +3,11 @@ package com.skyd.anivu.model.repository.article
 import kotlinx.coroutines.flow.Flow
 
 interface IArticleRepository {
-    suspend fun getFeedUrls(feedUrls: List<String>, groupIds: List<String>): List<String>
+    fun requestRealFeedUrls(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+        articleIds: List<String>,
+    ): Flow<List<String>>
 
     fun refreshArticleList(feedUrls: List<String>, full: Boolean): Flow<Unit>
 

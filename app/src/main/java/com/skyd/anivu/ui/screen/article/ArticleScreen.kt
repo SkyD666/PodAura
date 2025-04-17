@@ -60,6 +60,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ext.UuidList
+import com.skyd.anivu.ext.UuidListType
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
@@ -85,28 +87,34 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 
 @Serializable
 data class ArticleRoute(
     @SerialName("feedUrls")
-    val feedUrls: List<String>,
+    val feedUrls: List<String>? = null,
     @SerialName("groupIds")
-    val groupIds: List<String> = emptyList(),
+    val groupIds: List<String>? = null,
     @SerialName("articleIds")
-    val articleIds: List<String> = emptyList(),
+    val articleIds: UuidList? = null,
 ) {
     fun toDeeplink(): Uri {
-        return DEEP_LINK.toUri().buildUpon()
-            .appendPath(Json.encodeToString(feedUrls))
-            .appendPath(Json.encodeToString(groupIds))
-            .appendPath(Json.encodeToString(articleIds))
-            .build()
+        return DEEP_LINK.toUri().buildUpon().apply {
+            feedUrls?.let { appendQueryParameter("feedUrls", Json.encodeToString(feedUrls)) }
+            groupIds?.let { appendQueryParameter("groupIds", Json.encodeToString(groupIds)) }
+            articleIds?.let {
+                appendQueryParameter(
+                    "articleIds",
+                    UuidListType.encodeUuidList(articleIds.uuids.map { UUID.fromString(it) })
+                )
+            }
+        }.build()
     }
 
     companion object {
         private const val DEEP_LINK = "podaura://article.screen"
-        const val BASE_PATH = "$DEEP_LINK/{feedUrls}/{groupIds}/{articleIds}"
+        const val BASE_PATH = DEEP_LINK
     }
 }
 

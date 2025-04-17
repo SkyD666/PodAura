@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.UuidList
 import com.skyd.anivu.ext.onSubList
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.model.db.dao.ArticleDao
@@ -27,10 +28,10 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 object ArticleNotificationManager {
@@ -61,18 +62,11 @@ object ArticleNotificationManager {
         while (isActive) {
             val articleIds = mutableListOf<List<String>>()
 
-            if (isActive) articleIds += channel.receive()
+            if (isActive) articleIds += channel.receive()  // Suspend here when no data
             while (isActive) {
-                var data: List<String>? = null
-                for (i in 1..4) {
-                    data = channel.tryReceive().getOrNull()
-                    if (data == null) {
-                        delay((i shl 1).seconds)
-                    } else {
-                        break
-                    }
-                }
-                articleIds += data ?: break
+                articleIds += withTimeoutOrNull(20.seconds) {
+                    channel.receive()
+                } ?: break
             }
 
             val rules = hiltEntryPoint.articleNotificationRuleDao
@@ -86,7 +80,7 @@ object ArticleNotificationManager {
                 }
             }
             if (matchedData.isNotEmpty()) {
-                matchedData.onSubList(step = 1000) { sendNotification(it) }
+                matchedData.onSubList(step = 5000) { sendNotification(it) }
             }
         }
     }
@@ -97,11 +91,7 @@ object ArticleNotificationManager {
             .joinToString(", ") { it.name }
         val intent = Intent(
             Intent.ACTION_VIEW,
-            ArticleRoute(
-                feedUrls = emptyList(),
-                groupIds = emptyList(),
-                articleIds = matchedData.map { it.first },
-            ).toDeeplink(),
+            ArticleRoute(articleIds = UuidList(matchedData.map { it.first })).toDeeplink(),
             appContext,
             MainActivity::class.java
         ).apply {

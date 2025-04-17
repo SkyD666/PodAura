@@ -143,10 +143,10 @@
     <string name="theme_red">Kita</string>
     <string name="theme_purple">Keqing</string>
     <string name="theme_mahiro">Mahiro</string>
-    <string name="player_forward_85s" translatable="false">+85s</string>
+    <string name="player_forward_seconds" translatable="false">%ss</string>
     <string name="player_config_screen_appearance_category">Fullscreen appearance</string>
-    <string name="player_config_screen_show_85s_button">+85s button</string>
-    <string name="player_config_screen_show_85s_button_description">Show +85s button above the progress bar</string>
+    <string name="player_config_screen_show_forward_seconds_button">%ss button</string>
+    <string name="player_config_screen_show_forward_seconds_button_description">Show %ss button above the progress bar</string>
     <string name="dark_mode_light">Light</string>
     <string name="dark_mode_dark">Dark</string>
     <string name="dark_mode_follow_system">System</string>
@@ -470,6 +470,7 @@
     <string name="minus">Minus</string>
     <string name="plus">Plus</string>
     <string name="player_subtitle_delay">Subtitle delay</string>
+    <string name="player_config_screen_forward_second_button_value">Forward seconds</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%d item</item>
         <item quantity="other">%d items</item>
