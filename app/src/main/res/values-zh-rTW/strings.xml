@@ -139,8 +139,8 @@
     <string name="theme_purple">基佬紫</string>
     <string name="theme_mahiro">Mahiro</string>
     <string name="player_config_screen_appearance_category">外觀</string>
-    <string name="player_config_screen_show_85s_button">+85s 按鈕</string>
-    <string name="player_config_screen_show_85s_button_description">在播放進度條上方顯示 +85s 按鈕</string>
+    <string name="player_config_screen_show_forward_seconds_button">%ss 按鈕</string>
+    <string name="player_config_screen_show_forward_seconds_button_description">在播放進度條上方顯示 %ss 按鈕</string>
     <string name="dark_mode_light">淺色</string>
     <string name="dark_mode_dark">深色</string>
     <string name="dark_mode_follow_system">跟隨系統</string>
@@ -463,6 +463,7 @@
     <string name="minus">Minus</string>
     <string name="plus">Plus</string>
     <string name="player_subtitle_delay">Subtitle delay</string>
+    <string name="player_config_screen_forward_second_button_value">Forward seconds</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d items</item>
     </plurals>
