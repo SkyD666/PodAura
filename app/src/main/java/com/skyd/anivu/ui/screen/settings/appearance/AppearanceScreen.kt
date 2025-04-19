@@ -1,5 +1,7 @@
 package com.skyd.anivu.ui.screen.settings.appearance
 
+import android.os.Parcelable
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -60,9 +62,11 @@ import com.skyd.anivu.model.preference.appearance.DateStylePreference
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.anivu.model.preference.appearance.TextFieldStylePreference
 import com.skyd.anivu.model.preference.appearance.ThemePreference
+import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
@@ -79,14 +83,21 @@ import com.skyd.generated.preference.LocalDateStyle
 import com.skyd.generated.preference.LocalNavigationBarLabel
 import com.skyd.generated.preference.LocalTextFieldStyle
 import com.skyd.generated.preference.LocalTheme
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object AppearanceRoute
+@Parcelize
+data object AppearanceRoute : Parcelable {
+    @Composable
+    fun AnimatedContentScope.AppearanceLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
+        AppearanceScreen(onBack = onBack)
+    }
+}
 
 @Composable
-fun AppearanceScreen() {
+fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val navController = LocalNavController.current
@@ -101,6 +112,7 @@ fun AppearanceScreen() {
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.appearance_screen_name)) },
+                navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->

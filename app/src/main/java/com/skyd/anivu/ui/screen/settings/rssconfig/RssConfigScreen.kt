@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.rssconfig
 
+import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -29,9 +30,11 @@ import com.skyd.anivu.model.preference.rss.RssSyncBatteryNotLowConstraintPrefere
 import com.skyd.anivu.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.anivu.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.anivu.model.preference.rss.RssSyncWifiConstraintPreference
+import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
@@ -42,14 +45,21 @@ import com.skyd.generated.preference.LocalRssSyncBatteryNotLowConstraint
 import com.skyd.generated.preference.LocalRssSyncChargingConstraint
 import com.skyd.generated.preference.LocalRssSyncFrequency
 import com.skyd.generated.preference.LocalRssSyncWifiConstraint
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object RssConfigRoute
+@Parcelize
+data object RssConfigRoute : Parcelable {
+    @Composable
+    fun RssConfigLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
+        RssConfigScreen(onBack = onBack)
+    }
+}
 
 @Composable
-fun RssConfigScreen() {
+fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val navController = LocalNavController.current
@@ -62,6 +72,7 @@ fun RssConfigScreen() {
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.rss_config_screen_name)) },
+                navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->

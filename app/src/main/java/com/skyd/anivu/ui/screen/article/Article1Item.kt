@@ -93,6 +93,7 @@ import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.component.showToast
+import com.skyd.anivu.ui.local.LocalGlobalNavController
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
@@ -112,7 +113,7 @@ fun Article1Item(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val globalNavController = LocalGlobalNavController.current
     val context = LocalContext.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val dataWrapper by rememberUpdatedState(newValue = data)
@@ -134,7 +135,7 @@ fun Article1Item(
                     swipeAction(
                         articleSwipeAction = articleSwipeAction,
                         context = context,
-                        navController = navController,
+                        navController = globalNavController,
                         data = articleWithEnclosure,
                         onMarkAsRead = {
                             onRead(dataWrapper, !articleWithEnclosure.article.isRead)
@@ -233,7 +234,7 @@ private fun Article1ItemContent(
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
 ) {
     val context = LocalContext.current
-    val navController = LocalNavController.current
+    val globalNavController = LocalGlobalNavController.current
     val articleTapAction = LocalArticleTapAction.current
     val articleWithEnclosure = data.articleWithEnclosure
     val article = articleWithEnclosure.article
@@ -257,7 +258,7 @@ private fun Article1ItemContent(
                     onClick = {
                         tapAction(
                             articleTapAction,
-                            navController,
+                            globalNavController,
                             articleWithEnclosure,
                             onShowEnclosureBottomSheet,
                         )
@@ -455,7 +456,7 @@ private fun ArticleMenu(
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
     onOpenAddToPlaylistSheet: () -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val globalNavController = LocalGlobalNavController.current
     val context = LocalContext.current
     val articleWithEnclosure = data.articleWithEnclosure
     val isFavorite = articleWithEnclosure.article.isFavorite
@@ -519,7 +520,7 @@ private fun ArticleMenu(
             },
             onClick = {
                 navigateToReadScreen(
-                    navController = navController,
+                    navController = globalNavController,
                     data = articleWithEnclosure,
                 )
                 onDismissRequest()

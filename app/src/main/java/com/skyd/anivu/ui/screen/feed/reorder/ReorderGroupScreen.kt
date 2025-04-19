@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.feed.reorder
 
+import android.os.Parcelable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -53,13 +54,15 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import kotlinx.coroutines.channels.Channel
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 @Serializable
-data object ReorderGroupRoute
+@Parcelize
+data object ReorderGroupRoute : Parcelable
 
 @Composable
 fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {

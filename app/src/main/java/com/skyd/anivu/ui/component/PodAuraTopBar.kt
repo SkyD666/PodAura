@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.popBackStackWithLifecycle
+import com.skyd.anivu.ui.local.LocalGlobalNavController
 import com.skyd.anivu.ui.local.LocalNavController
 
 enum class PodAuraTopBarStyle {
@@ -79,13 +80,16 @@ fun PodAuraTopBar(
 @Composable
 fun BackIcon() {
     val navController = LocalNavController.current
+    val globalNavController = LocalGlobalNavController.current
     val context = LocalContext.current
     BackIcon {
-        if (!navController.popBackStackWithLifecycle()) {
+        if (!navController.popBackStackWithLifecycle() && globalNavController == navController) {
             context.activity.finish()
         }
     }
 }
+
+val DefaultBackClick = { }
 
 @Composable
 fun BackIcon(onClick: () -> Unit = {}) {

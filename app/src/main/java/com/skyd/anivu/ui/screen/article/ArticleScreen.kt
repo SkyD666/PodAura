@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.screen.article
 
 import android.net.Uri
+import android.os.Parcelable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -55,6 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
@@ -62,14 +66,17 @@ import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.UuidList
 import com.skyd.anivu.ext.UuidListType
+import com.skyd.anivu.ext.listType
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
+import com.skyd.anivu.ext.uuidListType
 import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.ErrorPlaceholder
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
@@ -84,13 +91,16 @@ import com.skyd.generated.preference.LocalArticleTopBarTonalElevation
 import com.skyd.generated.preference.LocalShowArticlePullRefresh
 import com.skyd.generated.preference.LocalShowArticleTopBarRefresh
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import kotlin.reflect.typeOf
 
 
 @Serializable
+@Parcelize
 data class ArticleRoute(
     @SerialName("feedUrls")
     val feedUrls: List<String>? = null,
@@ -98,7 +108,7 @@ data class ArticleRoute(
     val groupIds: List<String>? = null,
     @SerialName("articleIds")
     val articleIds: UuidList? = null,
-) {
+) : Parcelable {
     fun toDeeplink(): Uri {
         return DEEP_LINK.toUri().buildUpon().apply {
             feedUrls?.let { appendQueryParameter("feedUrls", Json.encodeToString(feedUrls)) }
@@ -115,17 +125,39 @@ data class ArticleRoute(
     companion object {
         private const val DEEP_LINK = "podaura://article.screen"
         const val BASE_PATH = DEEP_LINK
+
+        val typeMap = mapOf(
+            typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
+            typeOf<List<String>?>() to listType<String>(isNullableAllowed = true),
+        )
+
+        val deepLinks = listOf(
+            navDeepLink<ArticleRoute>(basePath = BASE_PATH, typeMap = typeMap),
+        )
+
+        @Composable
+        fun ArticleLauncher(entity: NavBackStackEntry, onBack: (() -> Unit)? = DefaultBackClick) {
+            ArticleLauncher(entity.toRoute<ArticleRoute>(), onBack)
+        }
+
+        @Composable
+        fun ArticleLauncher(route: ArticleRoute, onBack: (() -> Unit)? = DefaultBackClick) {
+            ArticleScreen(
+                feedUrls = route.feedUrls.orEmpty(),
+                groupIds = route.groupIds.orEmpty(),
+                articleIds = route.articleIds?.uuids.orEmpty(),
+                onBackClick = onBack,
+            )
+        }
     }
 }
-
-private val DefaultBackClick = { }
 
 @Composable
 fun ArticleScreen(
     feedUrls: List<String>,
     groupIds: List<String>,
     articleIds: List<String>,
-    onBackClick: () -> Unit = DefaultBackClick,
+    onBackClick: (() -> Unit)? = DefaultBackClick,
     viewModel: ArticleViewModel = hiltViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -138,7 +170,8 @@ fun ArticleScreen(
     var showFilterBar by rememberSaveable { mutableStateOf(false) }
 
     val dispatch = viewModel.getDispatcher(
-        feedUrls, startWith = ArticleIntent.Init(
+        feedUrls, groupIds, articleIds,
+        startWith = ArticleIntent.Init(
             urls = feedUrls,
             groupIds = groupIds,
             articleIds = articleIds,
@@ -153,7 +186,7 @@ fun ArticleScreen(
                 title = { Text(text = stringResource(R.string.article_screen_name)) },
                 navigationIcon = {
                     if (onBackClick == DefaultBackClick) BackIcon()
-                    else BackIcon(onClick = onBackClick)
+                    else if (onBackClick != null) BackIcon(onClick = onBackClick)
                 },
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(

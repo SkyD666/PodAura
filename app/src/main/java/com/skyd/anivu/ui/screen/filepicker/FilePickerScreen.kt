@@ -40,6 +40,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -48,6 +50,7 @@ import com.skyd.anivu.ext.getMimeType
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.popBackStackWithLifecycle
+import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
@@ -86,7 +89,22 @@ data class FilePickerRoute(
     val pickFolder: Boolean = true,
     val extensionName: String = "",
     val id: String? = null,
-)
+) {
+    companion object {
+        @Composable
+        fun FilePickerLauncher(entity: NavBackStackEntry) {
+            val filePickerRoute = entity.toRoute<FilePickerRoute>()
+            FilePickerScreen(
+                path = filePickerRoute.path.takeIf {
+                    filePickerRoute.path != MediaLibLocationPreference.default
+                } ?: Const.INTERNAL_STORAGE,
+                pickFolder = filePickerRoute.pickFolder,
+                extensionName = filePickerRoute.extensionName,
+                id = filePickerRoute.id,
+            )
+        }
+    }
+}
 
 @Parcelize
 data class FilePickerResult(

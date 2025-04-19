@@ -1,13 +1,18 @@
 package com.skyd.anivu.ext
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Base64
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import com.skyd.anivu.ext.UuidListType.Companion.decodeUuidList
 import com.skyd.anivu.ext.UuidListType.Companion.encodeUuidList
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.nio.ByteBuffer
@@ -22,6 +27,12 @@ fun NavController.popBackStackWithLifecycle(): Boolean {
     }
     return true
 }
+
+val <T> ThreePaneScaffoldNavigator<T>.isDetailPaneVisible: Boolean
+    get() = scaffoldValue[ListDetailPaneScaffoldRole.Detail] == PaneAdaptedValue.Expanded
+
+val <T> ThreePaneScaffoldNavigator<T>.isSinglePane: Boolean
+    get() = scaffoldDirective.maxHorizontalPartitions == 1
 
 inline fun <reified T> serializableType(
     isNullableAllowed: Boolean = false,
@@ -71,7 +82,8 @@ inline fun <reified T> listType(
 }
 
 @Serializable
-data class UuidList(val uuids: List<String>)
+@Parcelize
+data class UuidList(val uuids: List<String>) : Parcelable
 
 abstract class UuidListType<T>(
     isNullableAllowed: Boolean = false,

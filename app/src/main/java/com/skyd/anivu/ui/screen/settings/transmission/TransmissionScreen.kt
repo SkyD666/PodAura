@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.transmission
 
+import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -26,8 +27,10 @@ import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.transmission.SeedingWhenCompletePreference
 import com.skyd.anivu.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.anivu.model.preference.transmission.TorrentTrackersPreference
+import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
@@ -37,14 +40,21 @@ import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.generated.preference.LocalSeedingWhenComplete
 import com.skyd.generated.preference.LocalTorrentDhtBootstraps
 import com.skyd.generated.preference.LocalTorrentTrackers
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object TransmissionRoute
+@Parcelize
+data object TransmissionRoute : Parcelable {
+    @Composable
+    fun TransmissionLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
+        TransmissionScreen(onBack = onBack)
+    }
+}
 
 @Composable
-fun TransmissionScreen() {
+fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -63,6 +73,7 @@ fun TransmissionScreen() {
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.transmission_screen_name)) },
+                navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->

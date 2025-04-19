@@ -98,7 +98,7 @@ fun MoreScreen() {
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),
             contentPadding = it + PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-            columns = GridCells.Adaptive(130.dp),
+            columns = GridCells.Adaptive(135.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -147,7 +147,6 @@ fun More1Item(
             }
             Text(
                 modifier = Modifier
-                    .padding(horizontal = 5.dp)
                     .padding(top = 15.dp)
                     .basicMarquee(iterations = Int.MAX_VALUE),
                 text = data.title,

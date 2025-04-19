@@ -73,6 +73,15 @@ fun BannerItem(content: @Composable () -> Unit) {
 }
 
 @Composable
+fun SelectedItem(selected: Boolean, content: @Composable () -> Unit) {
+    Box(modifier = Modifier.thenIf(selected) {
+        background(MaterialTheme.colorScheme.surfaceContainerHighest)
+    }) {
+        content()
+    }
+}
+
+@Composable
 fun SliderSettingsItem(
     imageVector: ImageVector?,
     text: String,

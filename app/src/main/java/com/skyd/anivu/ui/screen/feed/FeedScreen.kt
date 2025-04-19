@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.feed
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,16 +31,18 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.currentWindowSize
-import androidx.compose.material3.adaptive.layout.AnimatedPane
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
+import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
+import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,18 +50,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.rememberNavController
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
+import com.skyd.anivu.ext.isDetailPaneVisible
+import com.skyd.anivu.ext.isSinglePane
 import com.skyd.anivu.ext.lastIndex
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
@@ -68,6 +71,7 @@ import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
+import com.skyd.anivu.ui.component.PodAuraAnimatedPane
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
@@ -75,10 +79,10 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.showToast
+import com.skyd.anivu.ui.local.LocalGlobalNavController
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.article.ArticleRoute
-import com.skyd.anivu.ui.screen.article.ArticleScreen
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Group1Item
@@ -98,86 +102,91 @@ data object FeedRoute
 
 @Composable
 fun FeedScreen() {
-    val navigator = rememberListDetailPaneScaffoldNavigator<Map<String, List<String>>>(
+    val navigator = rememberListDetailPaneScaffoldNavigator<ArticleRoute>(
         scaffoldDirective = calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()).copy(
             horizontalPartitionSpacerSize = 0.dp,
         )
     )
+    val paneExpansionState = rememberPaneExpansionState()
+    LaunchedEffect(Unit) {
+        paneExpansionState.setFirstPaneProportion(0.335f)
+    }
+
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val globalNavController = LocalGlobalNavController.current
+    var nestedNavKey by remember { mutableStateOf(UUID.randomUUID()) }
+    val navController = key(nestedNavKey) { rememberNavController() }
     val windowSizeClass = LocalWindowSizeClass.current
-    val density = LocalDensity.current
 
-    var listPaneSelected by remember { mutableStateOf<Map<String, List<String>>?>(null) }
-
-    val onNavigatorBack: () -> Unit = {
-        scope.launch {
-            navigator.navigateBack()
+    var currentRoute by remember { mutableStateOf(ArticleRoute()) }
+    val onNavigate: (ArticleRoute) -> Unit = {
+        if (navigator.isDetailPaneVisible) {
+            // If the detail pane was visible, then use the nestedNavController navigate call
+            // directly
+            navController.navigate(it) { popUpTo(currentRoute) { inclusive = true } }
+        } else {
+            // Otherwise, recreate the NavHost entirely, and start at the new destination
+            nestedNavKey = UUID.randomUUID()
         }
-        listPaneSelected = navigator.currentDestination?.contentKey
+        currentRoute = it
+        scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) }
+    }
+    LaunchedEffect(navigator.isSinglePane) {
+        if (!navigator.isSinglePane) onNavigate(currentRoute)
     }
 
-    BackHandler(navigator.canNavigateBack()) {
-        onNavigatorBack()
-    }
-
-    val windowWidth = with(density) { currentWindowSize().width.toDp() }
-    val feedListWidth by remember(windowWidth) { mutableStateOf(windowWidth * 0.335f) }
-
-    ListDetailPaneScaffold(
+    NavigableListDetailPaneScaffold(
         modifier = Modifier.windowInsetsPadding(
             WindowInsets.safeDrawing.only(
                 WindowInsetsSides.Right.run {
                     if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
                 }
             )),
-        directive = navigator.scaffoldDirective,
-        value = navigator.scaffoldValue,
+        navigator = navigator,
         listPane = {
-            AnimatedPane(modifier = Modifier.preferredWidth(feedListWidth)) {
+            PodAuraAnimatedPane {
                 FeedList(
-                    listPaneSelectedFeedUrls = listPaneSelected?.get("feedUrls"),
-                    listPaneSelectedGroupIds = listPaneSelected?.get("groupIds"),
+                    listPaneSelectedFeedUrls = currentRoute.feedUrls.takeIf { !navigator.isSinglePane },
+                    listPaneSelectedGroupIds = currentRoute.groupIds.takeIf { !navigator.isSinglePane },
                     onShowArticleListByFeedUrls = { feedUrls ->
-                        if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
-                            scope.launch {
-                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
-                                    put("feedUrls", feedUrls)
-                                })
-                            }
+                        val route = ArticleRoute(feedUrls = feedUrls)
+                        if (navigator.isDetailPaneVisible || !windowSizeClass.isCompact) {
+                            onNavigate(route)
                         } else {
-                            navController.navigate(ArticleRoute(feedUrls = feedUrls))
+                            globalNavController.navigate(route)
                         }
                     },
                     onShowArticleListByGroupId = { groupId ->
-                        if (navigator.scaffoldDirective.maxHorizontalPartitions > 1) {
-                            scope.launch {
-                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, buildMap {
-                                    put("groupIds", listOf(groupId))
-                                })
-                            }
+                        val route = ArticleRoute(groupIds = listOf(groupId))
+                        if (navigator.isDetailPaneVisible || !windowSizeClass.isCompact) {
+                            onNavigate(route)
                         } else {
-                            navController.navigate(
-                                ArticleRoute(groupIds = listOf(groupId))
-                            )
+                            globalNavController.navigate(route)
                         }
                     }
                 )
             }
         },
         detailPane = {
-            AnimatedPane {
-                navigator.currentDestination?.contentKey?.let {
-                    listPaneSelected = it
-                    ArticleScreen(
-                        feedUrls = it["feedUrls"].orEmpty(),
-                        groupIds = it["groupIds"].orEmpty(),
-                        articleIds = emptyList(),
-                        onBackClick = onNavigatorBack,
-                    )
+            PodAuraAnimatedPane {
+                // https://issuetracker.google.com/issues/334146670
+                key(nestedNavKey) {
+                    CompositionLocalProvider(LocalNavController provides navController) {
+                        FeedPaneNavHost(
+                            navController = navController,
+                            startDestination = currentRoute,
+                            onPaneBack = if (navigator.isSinglePane) {
+                                {
+                                    scope.launch { navigator.navigateBack() }
+                                }
+                            } else null,
+                            articleRoute = currentRoute,
+                        )
+                    }
                 }
             }
         },
+        paneExpansionState = paneExpansionState,
     )
 }
 

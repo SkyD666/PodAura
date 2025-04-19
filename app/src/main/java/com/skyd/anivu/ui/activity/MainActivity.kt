@@ -7,12 +7,6 @@ import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.util.Consumer
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
@@ -52,15 +45,12 @@ import androidx.navigation.toRoute
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.skyd.anivu.R
 import com.skyd.anivu.base.BaseComposeActivity
-import com.skyd.anivu.config.Const
-import com.skyd.anivu.ext.UuidList
-import com.skyd.anivu.ext.listType
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.ext.type
-import com.skyd.anivu.ext.uuidListType
 import com.skyd.anivu.model.bean.MediaBean
-import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.anivu.ui.component.PodAuraNavHost
+import com.skyd.anivu.ui.local.LocalGlobalNavController
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.MainRoute
 import com.skyd.anivu.ui.screen.MainScreen
@@ -70,7 +60,7 @@ import com.skyd.anivu.ui.screen.about.license.LicenseRoute
 import com.skyd.anivu.ui.screen.about.license.LicenseScreen
 import com.skyd.anivu.ui.screen.about.update.UpdateDialog
 import com.skyd.anivu.ui.screen.article.ArticleRoute
-import com.skyd.anivu.ui.screen.article.ArticleScreen
+import com.skyd.anivu.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
 import com.skyd.anivu.ui.screen.download.DownloadDeepLinkRoute
 import com.skyd.anivu.ui.screen.download.DownloadRoute
 import com.skyd.anivu.ui.screen.download.DownloadScreen
@@ -81,7 +71,7 @@ import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupScreen
 import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersScreen
 import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
-import com.skyd.anivu.ui.screen.filepicker.FilePickerScreen
+import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute.Companion.FilePickerLauncher
 import com.skyd.anivu.ui.screen.history.HistoryRoute
 import com.skyd.anivu.ui.screen.history.HistoryScreen
 import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
@@ -93,11 +83,12 @@ import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListScreen
 import com.skyd.anivu.ui.screen.read.ReadRoute
 import com.skyd.anivu.ui.screen.read.ReadScreen
 import com.skyd.anivu.ui.screen.search.SearchRoute
-import com.skyd.anivu.ui.screen.search.SearchScreen
+import com.skyd.anivu.ui.screen.search.SearchRoute.Article.Companion.SearchArticleLauncher
+import com.skyd.anivu.ui.screen.search.SearchRoute.Feed.SearchFeedLauncher
 import com.skyd.anivu.ui.screen.settings.SettingsRoute
 import com.skyd.anivu.ui.screen.settings.SettingsScreen
 import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute
-import com.skyd.anivu.ui.screen.settings.appearance.AppearanceScreen
+import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute.AppearanceLauncher
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleScreen
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
@@ -109,9 +100,9 @@ import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleScreen
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleScreen
 import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute
-import com.skyd.anivu.ui.screen.settings.behavior.BehaviorScreen
+import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute.BehaviorLauncher
 import com.skyd.anivu.ui.screen.settings.data.DataRoute
-import com.skyd.anivu.ui.screen.settings.data.DataScreen
+import com.skyd.anivu.ui.screen.settings.data.DataRoute.DataLauncher
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteScreen
 import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
@@ -124,15 +115,15 @@ import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.Impor
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.ImportOpmlRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.ImportOpmlScreen
 import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute
-import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigScreen
+import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute.PlayerConfigLauncher
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedScreen
 import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute
-import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigScreen
+import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute.RssConfigLauncher
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
 import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
-import com.skyd.anivu.ui.screen.settings.transmission.TransmissionScreen
+import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute.TransmissionLauncher
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -146,8 +137,10 @@ class MainActivity : BaseComposeActivity() {
         super.onCreate(savedInstanceState)
 
         setContentBase {
+            val navController = rememberNavController()
             CompositionLocalProvider(
-                LocalNavController provides rememberNavController(),
+                LocalGlobalNavController provides navController,
+                LocalNavController provides navController,
             ) {
                 MainContent(onHandleIntent = { IntentHandler() })
             }
@@ -171,64 +164,28 @@ class MainActivity : BaseComposeActivity() {
 private fun MainNavHost() {
     val navController = LocalNavController.current
 
-    NavHost(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+    PodAuraNavHost(
         navController = navController,
         startDestination = MainRoute,
-        enterTransition = {
-            fadeIn(animationSpec = tween(220, delayMillis = 30)) + scaleIn(
-                animationSpec = tween(220, delayMillis = 30),
-                initialScale = 0.92f,
-            )
-        },
-        exitTransition = { fadeOut(animationSpec = tween(90)) },
-        popEnterTransition = {
-            fadeIn(animationSpec = tween(220)) + scaleIn(
-                animationSpec = tween(220),
-                initialScale = 0.92f,
-            )
-        },
-        popExitTransition = {
-            fadeOut(animationSpec = tween(220)) + scaleOut(
-                animationSpec = tween(220),
-                targetScale = 0.92f,
-            )
-        },
     ) {
         composable<MainRoute> { MainScreen() }
         composable<ArticleRoute>(
-            typeMap = mapOf(
-                typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
-                typeOf<List<String>?>() to listType<String>(isNullableAllowed = true)
-            ),
-            deepLinks = listOf(
-                navDeepLink<ArticleRoute>(
-                    basePath = ArticleRoute.BASE_PATH,
-                    typeMap = mapOf(
-                        typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
-                        typeOf<List<String>?>() to listType<String>(isNullableAllowed = true)
-                    )
-                )
-            ),
+            typeMap = ArticleRoute.typeMap,
+            deepLinks = ArticleRoute.deepLinks,
         ) {
-            val route = it.toRoute<ArticleRoute>()
-            ArticleScreen(
-                feedUrls = route.feedUrls.orEmpty(),
-                groupIds = route.groupIds.orEmpty(),
-                articleIds = route.articleIds?.uuids.orEmpty(),
-            )
+            ArticleLauncher(entity = it)
         }
         composable<LicenseRoute> { LicenseScreen() }
         composable<AboutRoute> { AboutScreen() }
         composable<SettingsRoute> { SettingsScreen() }
-        composable<AppearanceRoute> { AppearanceScreen() }
+        composable<AppearanceRoute> { AppearanceLauncher() }
         composable<ArticleStyleRoute> { ArticleStyleScreen() }
         composable<FeedStyleRoute> { FeedStyleScreen() }
         composable<ReadStyleRoute> { ReadStyleScreen() }
         composable<MediaStyleRoute> { MediaStyleScreen() }
         composable<ReorderGroupRoute> { ReorderGroupScreen() }
         composable<SearchStyleRoute> { SearchStyleScreen() }
-        composable<BehaviorRoute> { BehaviorScreen() }
+        composable<BehaviorRoute> { BehaviorLauncher() }
         composable<AutoDeleteRoute> { AutoDeleteScreen() }
         composable<HistoryRoute> { HistoryScreen() }
         composable<ExportOpmlRoute> { ExportOpmlScreen() }
@@ -246,12 +203,12 @@ private fun MainNavHost() {
                 ?.getItemAt(0)?.uri?.toString())
         }
         composable<ImportExportRoute> { ImportExportScreen() }
-        composable<DataRoute> { DataScreen() }
-        composable<PlayerConfigRoute> { PlayerConfigScreen() }
+        composable<DataRoute> { DataLauncher() }
+        composable<PlayerConfigRoute> { PlayerConfigLauncher() }
         composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
-        composable<RssConfigRoute> { RssConfigScreen() }
+        composable<RssConfigRoute> { RssConfigLauncher() }
         composable<ProxyRoute> { ProxyScreen() }
-        composable<TransmissionRoute> { TransmissionScreen() }
+        composable<TransmissionRoute> { TransmissionLauncher() }
         composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
         composable<MuteFeedRoute> { MuteFeedScreen() }
         composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
@@ -261,17 +218,7 @@ private fun MainNavHost() {
         composable<RequestHeadersRoute> {
             RequestHeadersScreen(feedUrl = it.toRoute<RequestHeadersRoute>().feedUrl)
         }
-        composable<FilePickerRoute> {
-            val filePickerRoute = it.toRoute<FilePickerRoute>()
-            FilePickerScreen(
-                path = filePickerRoute.path.takeIf {
-                    filePickerRoute.path != MediaLibLocationPreference.default
-                } ?: Const.INTERNAL_STORAGE,
-                pickFolder = filePickerRoute.pickFolder,
-                extensionName = filePickerRoute.extensionName,
-                id = filePickerRoute.id,
-            )
-        }
+        composable<FilePickerRoute> { FilePickerLauncher(it) }
         composable<DownloadRoute>(
             deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = DownloadRoute.BASE_PATH)),
         ) {
@@ -294,15 +241,11 @@ private fun MainNavHost() {
         ) {
             ReadScreen(articleId = it.toRoute<ReadRoute>().articleId)
         }
-        composable<SearchRoute.Feed>(
-            typeMap = mapOf(typeOf<SearchRoute.Feed>() to serializableType<SearchRoute.Feed>()),
-        ) {
-            SearchScreen(searchRoute = it.toRoute<SearchRoute.Feed>())
+        composable<SearchRoute.Feed>(typeMap = SearchRoute.Feed.typeMap) {
+            SearchFeedLauncher(it)
         }
-        composable<SearchRoute.Article>(
-            typeMap = mapOf(typeOf<SearchRoute.Article>() to serializableType<SearchRoute.Article>())
-        ) {
-            SearchScreen(searchRoute = it.toRoute<SearchRoute.Article>())
+        composable<SearchRoute.Article>(typeMap = SearchRoute.Article.typeMap) {
+            SearchArticleLauncher(it)
         }
         composable<MediaSearchRoute> { MediaSearchScreen(path = it.toRoute<MediaSearchRoute>().path) }
         composable<SubMediaRoute>(
@@ -310,7 +253,6 @@ private fun MainNavHost() {
         ) {
             SubMediaScreenRoute(media = it.toRoute<SubMediaRoute>().media)
         }
-
     }
 }
 

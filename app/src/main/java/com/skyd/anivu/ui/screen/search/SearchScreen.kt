@@ -63,6 +63,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
@@ -70,6 +72,7 @@ import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
+import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.ui.component.BackIcon
@@ -89,18 +92,35 @@ import com.skyd.generated.preference.LocalSearchListTonalElevation
 import com.skyd.generated.preference.LocalSearchTopBarTonalElevation
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.reflect.typeOf
 
 @Serializable
 sealed interface SearchRoute {
     @Serializable
-    data object Feed : SearchRoute
+    data object Feed : SearchRoute {
+        val typeMap = mapOf(typeOf<Feed>() to serializableType<Feed>())
+
+        @Composable
+        fun SearchFeedLauncher(entity: NavBackStackEntry) {
+            SearchScreen(searchRoute = entity.toRoute<Feed>())
+        }
+    }
 
     @Serializable
     data class Article(
         val feedUrls: List<String>,
         val groupIds: List<String>,
         val articleIds: List<String>,
-    ) : SearchRoute
+    ) : SearchRoute {
+        companion object {
+           val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
+
+            @Composable
+            fun SearchArticleLauncher(entity: NavBackStackEntry) {
+                SearchScreen(searchRoute = entity.toRoute<Article>())
+            }
+        }
+    }
 }
 
 @Composable

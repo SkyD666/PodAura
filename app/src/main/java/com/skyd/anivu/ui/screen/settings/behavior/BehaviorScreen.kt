@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.behavior
 
+import android.os.Parcelable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -44,10 +45,12 @@ import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreferen
 import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
 import com.skyd.anivu.ui.component.ClipboardTextField
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
@@ -59,14 +62,21 @@ import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
 import com.skyd.generated.preference.LocalHideEmptyDefault
 import com.skyd.generated.preference.LocalHideMutedFeed
 import com.skyd.generated.preference.LocalMediaFileFilter
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object BehaviorRoute
+@Parcelize
+data object BehaviorRoute : Parcelable {
+    @Composable
+    fun BehaviorLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
+        BehaviorScreen(onBack = onBack)
+    }
+}
 
 @Composable
-fun BehaviorScreen() {
+fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -81,6 +91,7 @@ fun BehaviorScreen() {
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.behavior_screen_name)) },
+                navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->

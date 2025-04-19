@@ -1,6 +1,7 @@
 package com.skyd.anivu.ui.screen.settings.playerconfig
 
 import android.os.Build
+import android.os.Parcelable
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,9 +54,11 @@ import com.skyd.anivu.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.anivu.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.anivu.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.anivu.model.preference.player.PlayerShowScreenshotButtonPreference
+import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.CheckableListMenu
+import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
@@ -74,14 +77,21 @@ import com.skyd.generated.preference.LocalPlayerSeekOption
 import com.skyd.generated.preference.LocalPlayerShowForwardSecondsButton
 import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
 import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object PlayerConfigRoute
+@Parcelize
+data object PlayerConfigRoute : Parcelable {
+    @Composable
+    fun PlayerConfigLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
+        PlayerConfigScreen(onBack = onBack)
+    }
+}
 
 @Composable
-fun PlayerConfigScreen() {
+fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -98,6 +108,7 @@ fun PlayerConfigScreen() {
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(R.string.player_config_screen_name)) },
+                navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->
