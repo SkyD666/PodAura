@@ -1,17 +1,12 @@
-package com.skyd.anivu.ui.screen.media.list
+package com.skyd.anivu.ui.screen.media.list.item
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -34,10 +29,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,7 +60,7 @@ import com.skyd.generated.preference.LocalMediaShowThumbnail
 import java.util.Locale
 
 @Composable
-fun Media1Item(
+fun MediaItemContainer(
     data: MediaBean,
     onPlay: (MediaBean) -> Unit,
     onOpenDir: (MediaBean) -> Unit,
@@ -71,22 +69,44 @@ fun Media1Item(
     onOpenArticle: ((MediaBean) -> Unit)?,
     onOpenAddToPlaylistSheet: ((MediaBean) -> Unit)?,
     onLongClick: ((MediaBean) -> Unit)? = null,
+    content: @Composable MediaItemScope.() -> Unit,
 ) {
     val context = LocalContext.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
 
-    val fileNameWithoutExtension = rememberSaveable(data) {
-        if (data.isDir) data.name else data.name.substringBeforeLast(".")
-    }
-    val fileExtension = rememberSaveable(data) {
-        if (data.isDir) "" else data.name.substringAfterLast(".", "")
-    }
+    remember(
+        context,
+        data,
+        onPlay,
+        onOpenDir,
+        onRemove,
+        onOpenFeed,
+        onOpenArticle,
+        onOpenAddToPlaylistSheet,
+        onLongClick,
+    ) {
+        val fileNameWithoutExtension =
+            if (data.isDir) data.name else data.name.substringBeforeLast(".")
+        val fileExtension = if (data.isDir) "" else data.name.substringAfterLast(".", "")
 
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.secondary.copy(0.1f))
-            .combinedClickable(
+        object : MediaItemScopeDefaultImpl() {
+            override val data = data
+            override val onPlay = onPlay
+            override val onOpenDir = onOpenDir
+            override val onRemove = onRemove
+            override val onOpenFeed = onOpenFeed
+            override val onOpenArticle = onOpenArticle
+            override val onOpenAddToPlaylistSheet = onOpenAddToPlaylistSheet
+            override val onLongClick = onLongClick
+            override val fileNameWithoutExtension: String = fileNameWithoutExtension
+            override val fileExtension: String = fileExtension
+            override var expandMenu: Boolean
+                get() = expandMenu
+                set(value) {
+                    expandMenu = value
+                }
+
+            override fun Modifier.itemClickable(): Modifier = combinedClickable(
                 onLongClick = {
                     if (onLongClick == null) {
                         expandMenu = true
@@ -107,76 +127,137 @@ fun Media1Item(
                     }
                 },
             )
-            .padding(horizontal = 13.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MediaCover(
-            data = data,
-            modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .size(50.dp),
-        )
-        Spacer(modifier = Modifier.width(11.dp))
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (data.displayName.isNullOrBlank()) {
-                        fileNameWithoutExtension
-                    } else {
-                        data.displayName
-                    },
-                    modifier = Modifier.weight(1f),
-                    maxLines = 3,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                MediaFolderNumberBadge(mediaBean = data)
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (fileExtension.isNotBlank()) {
-                    TagText(
-                        text = remember(fileExtension) { fileExtension.uppercase(Locale.getDefault()) },
-                        fontSize = 10.sp,
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                } else if (data.isDir) {
-                    TagText(text = stringResource(id = R.string.folder), fontSize = 10.sp)
-                }
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .basicMarquee(),
-                ) {
-                    if (!data.isDir) {
-                        Text(
-                            modifier = Modifier.alignByBaseline(),
-                            text = remember(data) { data.size.fileSize(context) },
-                            style = MaterialTheme.typography.labelMedium,
-                            maxLines = 1,
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .alignByBaseline(),
-                        text = remember(data) { data.date.toDateTimeString(context = context) },
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                    )
-                }
-            }
-            Menu(
-                expanded = expandMenu,
-                onDismissRequest = { expandMenu = false },
-                data = data,
-                onRemove = onRemove,
-                onOpenFeed = onOpenFeed,
-                onOpenArticle = onOpenArticle,
-                onOpenAddToPlaylistSheet = onOpenAddToPlaylistSheet,
-            )
         }
+    }.content()
+}
+
+
+@Composable
+fun MediaItemScope.Title(
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    overflow: TextOverflow = TextOverflow.Ellipsis,
+    maxLines: Int = 3,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
+) {
+    val displayName = data.displayName
+    Text(
+        text = if (displayName.isNullOrBlank()) fileNameWithoutExtension else displayName,
+        modifier = modifier,
+        color = color,
+        overflow = overflow,
+        maxLines = maxLines,
+        style = style,
+    )
+}
+
+@Composable
+fun MediaItemScope.Tag(
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = Color.Unspecified,
+) {
+    if (fileExtension.isNotBlank()) {
+        TagText(
+            modifier = modifier,
+            text = remember(fileExtension) { fileExtension.uppercase(Locale.getDefault()) },
+            fontSize = 10.sp,
+            containerColor = containerColor,
+            contentColor = contentColor,
+        )
+    } else if (data.isDir) {
+        TagText(
+            modifier = modifier,
+            text = stringResource(id = R.string.folder),
+            fontSize = 10.sp,
+            containerColor = containerColor,
+            contentColor = contentColor,
+        )
     }
+}
+
+
+@Composable
+fun MediaItemScope.GridTag(modifier: Modifier = Modifier) {
+    Tag(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface.copy(0.65f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+fun MediaItemScope.FileSize(
+    modifier: Modifier = Modifier,
+    style: TextStyle = MaterialTheme.typography.labelMedium,
+) {
+    val context = LocalContext.current
+    Text(
+        modifier = modifier,
+        text = remember(data) { data.size.fileSize(context) },
+        style = style,
+        maxLines = 1,
+    )
+}
+
+@Composable
+fun MediaItemScope.GridFileSize(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    TagText(
+        modifier = modifier,
+        text = remember(data) { data.size.fileSize(context) },
+        fontSize = 10.sp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(0.65f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+fun MediaItemScope.FolderNumberBadge(
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = MaterialTheme.colorScheme.outline,
+) {
+    MediaFolderNumberBadge(
+        modifier = modifier,
+        mediaBean = data,
+        containerColor = containerColor,
+        contentColor = contentColor,
+    )
+}
+
+@Composable
+fun MediaItemScope.GridFolderNumberBadge(modifier: Modifier = Modifier) {
+    MediaFolderNumberBadge(
+        modifier = modifier,
+        mediaBean = data,
+        containerColor = MaterialTheme.colorScheme.surface.copy(0.65f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+fun MediaItemScope.Date(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Text(
+        modifier = modifier,
+        text = remember(data) { data.date.toDateTimeString(context = context) },
+        style = MaterialTheme.typography.labelMedium,
+        maxLines = 1,
+    )
+}
+
+@Composable
+fun MediaItemScope.Menu() {
+    Menu(
+        expanded = expandMenu,
+        onDismissRequest = { expandMenu = false },
+        data = data,
+        onRemove = onRemove,
+        onOpenFeed = onOpenFeed,
+        onOpenArticle = onOpenArticle,
+        onOpenAddToPlaylistSheet = onOpenAddToPlaylistSheet,
+    )
 }
 
 @Composable
@@ -291,20 +372,22 @@ private fun Menu(
 }
 
 @Composable
-private fun MediaFolderNumberBadge(mediaBean: MediaBean) {
+private fun MediaFolderNumberBadge(
+    modifier: Modifier,
+    mediaBean: MediaBean,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = MaterialTheme.colorScheme.outline,
+) {
     if (mediaBean.fileCount > 0) {
-        Row {
-            Spacer(modifier = Modifier.width(6.dp))
-            Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))) {
-                Text(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                        .padding(horizontal = 3.dp),
-                    text = mediaBean.fileCount.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
-            }
+        Row(modifier = modifier.clip(RoundedCornerShape(20.dp))) {
+            Text(
+                modifier = Modifier
+                    .background(containerColor)
+                    .padding(horizontal = 3.dp),
+                text = mediaBean.fileCount.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor,
+            )
         }
     }
 }
@@ -312,43 +395,46 @@ private fun MediaFolderNumberBadge(mediaBean: MediaBean) {
 @Composable
 fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25.dp) {
     val context = LocalContext.current
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center,
-    ) {
-        var showThumbnail by remember(data) { mutableStateOf(true) }
-        val fileIcon = @Composable {
+    var showThumbnail by remember(data) { mutableStateOf(true) }
+
+    @Composable
+    fun FileIcon(modifier: Modifier) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(
                 modifier = Modifier.size(iconSize),
                 painter = painterResource(id = data.icon),
                 contentDescription = null
             )
         }
-        if (data.cover != null && LocalMediaShowThumbnail.current) {
-            if (showThumbnail) {
-                PodAuraImage(
-                    modifier = Modifier.fillMaxSize(),
-                    model = remember(data.cover) {
-                        ImageRequest.Builder(context)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .data(data.cover)
-                            .crossfade(true)
-                            .build()
-                    },
-                    imageLoader = rememberPodAuraImageLoader(listener = object :
-                        EventListener() {
-                        override fun onError(request: ImageRequest, result: ErrorResult) {
-                            showThumbnail = false
-                        }
-                    }),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                fileIcon()
-            }
+    }
+
+    if (data.cover != null && LocalMediaShowThumbnail.current) {
+        if (showThumbnail) {
+            PodAuraImage(
+                modifier = modifier.fillMaxSize(),
+                model = remember(data.cover) {
+                    ImageRequest.Builder(context)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .data(data.cover)
+                        .crossfade(true)
+                        .build()
+                },
+                imageLoader = rememberPodAuraImageLoader(listener = object :
+                    EventListener() {
+                    override fun onError(request: ImageRequest, result: ErrorResult) {
+                        showThumbnail = false
+                    }
+                }),
+                contentScale = ContentScale.Crop,
+            )
         } else {
-            fileIcon()
+            FileIcon(modifier)
         }
+    } else {
+        FileIcon(modifier)
     }
 }

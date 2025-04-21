@@ -39,6 +39,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -52,11 +54,19 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class RequestHeadersRoute(val feedUrl: String)
+data class RequestHeadersRoute(val feedUrl: String) {
+    companion object {
+        @Composable
+        fun RequestHeadersLauncher(entry: NavBackStackEntry) {
+            RequestHeadersScreen(feedUrl = entry.toRoute<RequestHeadersRoute>().feedUrl)
+        }
+    }
+}
 
 @Composable
 fun RequestHeadersScreen(feedUrl: String, viewModel: RequestHeadersViewModel = hiltViewModel()) {

@@ -172,7 +172,7 @@ fun FeedScreen() {
                 // https://issuetracker.google.com/issues/334146670
                 key(nestedNavKey) {
                     CompositionLocalProvider(LocalNavController provides navController) {
-                        FeedPaneNavHost(
+                        FeedDetailPaneNavHost(
                             navController = navController,
                             startDestination = currentRoute,
                             onPaneBack = if (navigator.isSinglePane) {

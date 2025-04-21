@@ -37,6 +37,7 @@ import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
+import com.skyd.anivu.model.preference.appearance.media.item.BaseMediaItemTypePreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -44,9 +45,12 @@ import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
+import com.skyd.anivu.ui.screen.media.list.item.MediaItem
 import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.read.ReadRoute
+import com.skyd.generated.preference.LocalMediaListItemType
+import com.skyd.generated.preference.LocalMediaSubListItemType
 
 class GroupInfo(
     val group: MediaGroupBean,
@@ -105,11 +109,14 @@ internal fun MediaList(
                             contentPadding = innerPadding + contentPadding
                         )
                     } else {
+                        val listItemType = if (isSubList) LocalMediaSubListItemType.current
+                        else LocalMediaListItemType.current
                         MediaList(
                             modifier = modifier,
                             list = listState.list,
                             groups = uiState.groups,
                             groupInfo = groupInfo,
+                            listItemType = listItemType,
                             onPlay = { media ->
                                 PlayActivity.playMediaList(
                                     context.activity,
@@ -171,6 +178,7 @@ internal fun MediaList(
     list: List<MediaBean>,
     groups: List<MediaGroupBean>,
     groupInfo: GroupInfo?,
+    listItemType: String,
     onPlay: (MediaBean) -> Unit,
     onOpenDir: (MediaBean) -> Unit,
     onRename: (MediaBean, String) -> Unit,
@@ -213,12 +221,13 @@ internal fun MediaList(
     LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-        columns = GridCells.Fixed(1),
+        columns = GridCells.Adaptive(BaseMediaItemTypePreference.toMinWidth(listItemType).dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(list) { item ->
-            Media1Item(
+            MediaItem(
+                itemType = listItemType,
                 data = item,
                 onPlay = onPlay,
                 onOpenDir = onOpenDir,

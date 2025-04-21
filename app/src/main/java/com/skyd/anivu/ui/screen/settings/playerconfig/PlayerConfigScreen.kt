@@ -83,12 +83,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object PlayerConfigRoute : Parcelable {
-    @Composable
-    fun PlayerConfigLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        PlayerConfigScreen(onBack = onBack)
-    }
-}
+data object PlayerConfigRoute : Parcelable
 
 @Composable
 fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {

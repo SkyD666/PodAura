@@ -166,7 +166,9 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 },
                 actions = {
                     PodAuraIconButton(
-                        onClick = { navController.navigate(MediaSearchRoute(path = path)) },
+                        onClick = {
+                            navController.navigate(MediaSearchRoute(path = path, isSubList = false))
+                        },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.media_screen_search_hint),
                     )

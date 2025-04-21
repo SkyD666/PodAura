@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -57,10 +62,31 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class ImportOpmlRoute(val opmlUrl: String? = null)
+data class ImportOpmlRoute(val opmlUrl: String? = null) {
+    companion object {
+        @Composable
+        fun ImportOpmlLauncher(entry: NavBackStackEntry) {
+            ImportOpmlScreen(opmlUrl = entry.toRoute<ImportOpmlRoute>().opmlUrl)
+        }
+    }
+}
 
 @Serializable
-data object ImportOpmlDeepLinkRoute
+data object ImportOpmlDeepLinkRoute {
+    val deepLinks = listOf("text/xml", "application/xml", "text/x-opml").map { type ->
+        navDeepLink {
+            action = Intent.ACTION_SEND
+            mimeType = type
+        }
+    }
+
+    @Composable
+    fun ImportOpmlDeepLinkLauncher(entry: NavBackStackEntry) {
+        val intent = entry.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+        ImportOpmlScreen(opmlUrl = intent?.clipData?.takeIf { it.itemCount > 0 }
+            ?.getItemAt(0)?.uri?.toString())
+    }
+}
 
 @Composable
 fun ImportOpmlScreen(

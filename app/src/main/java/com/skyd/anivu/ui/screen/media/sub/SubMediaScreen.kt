@@ -20,8 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.ext.popBackStackWithLifecycle
+import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
@@ -37,10 +40,20 @@ import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
 import com.skyd.generated.preference.LocalMediaSubListSortAsc
 import com.skyd.generated.preference.LocalMediaSubListSortBy
 import kotlinx.serialization.Serializable
+import kotlin.reflect.typeOf
 
 
 @Serializable
-data class SubMediaRoute(val media: MediaBean)
+data class SubMediaRoute(val media: MediaBean) {
+    companion object {
+        val typeMap = mapOf(typeOf<MediaBean>() to serializableType<MediaBean>())
+
+        @Composable
+        fun SubMediaLauncher(entry: NavBackStackEntry) {
+            SubMediaScreenRoute(media = entry.toRoute<SubMediaRoute>().media)
+        }
+    }
+}
 
 @Composable
 fun SubMediaScreenRoute(media: MediaBean?) {
@@ -85,7 +98,11 @@ private fun SubMediaScreen(media: MediaBean) {
                 },
                 actions = {
                     PodAuraIconButton(
-                        onClick = { navController.navigate(MediaSearchRoute(path = media.file.path)) },
+                        onClick = {
+                            navController.navigate(
+                                MediaSearchRoute(path = media.file.path, isSubList = true)
+                            )
+                        },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(id = R.string.media_screen_search_hint),
                     )

@@ -90,7 +90,7 @@ fun SettingsScreen() {
         detailPane = {
             PodAuraAnimatedPane {
                 CompositionLocalProvider(LocalNavController provides navController) {
-                    SettingsPaneNavHost(
+                    SettingsDetailPaneNavHost(
                         navController = navController,
                         startDestination = currentRoute,
                         onPaneBack = if (navigator.isSinglePane) {

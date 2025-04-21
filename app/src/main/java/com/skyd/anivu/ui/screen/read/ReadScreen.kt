@@ -78,6 +78,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
@@ -131,6 +134,13 @@ data class ReadRoute(@SerialName("articleId") val articleId: String) {
     companion object {
         private const val DEEP_LINK = "podaura://read.screen"
         const val BASE_PATH = DEEP_LINK
+
+        val deepLinks = listOf(navDeepLink<ReadRoute>(basePath = BASE_PATH))
+
+        @Composable
+        fun ReadLauncher(entry: NavBackStackEntry) {
+            ReadScreen(articleId = entry.toRoute<ReadRoute>().articleId)
+        }
     }
 }
 

@@ -1,5 +1,6 @@
 package com.skyd.anivu.ui.screen.download
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -38,10 +39,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
+import com.skyd.anivu.ext.type
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.repository.download.DownloadManager
@@ -65,11 +71,32 @@ data class DownloadRoute(
 ) {
     companion object {
         const val BASE_PATH = "podaura://download.screen"
+
+        val deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = DownloadRoute.BASE_PATH))
+
+        @Composable
+        fun DownloadLauncher(entry: NavBackStackEntry) {
+            val route = entry.toRoute<DownloadRoute>()
+            DownloadScreen(downloadLink = route.downloadLink, mimetype = route.mimetype)
+        }
     }
 }
 
 @Serializable
-data object DownloadDeepLinkRoute
+data object DownloadDeepLinkRoute {
+    val deepLinks = listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
+        navDeepLink {
+            action = Intent.ACTION_VIEW
+            uriPattern = it
+        }
+    }
+
+    @Composable
+    fun DownloadDeepLinkLauncher(entry: NavBackStackEntry) {
+        val intent = entry.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+        DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)
+    }
+}
 
 @Composable
 fun DownloadScreen(

@@ -51,6 +51,7 @@ import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.screen.feed.SheetChip
+import com.skyd.anivu.ui.screen.media.list.item.MediaCover
 
 @Composable
 fun EditMediaSheet(

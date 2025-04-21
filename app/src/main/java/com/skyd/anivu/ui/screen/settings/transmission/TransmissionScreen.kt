@@ -46,12 +46,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object TransmissionRoute : Parcelable {
-    @Composable
-    fun TransmissionLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        TransmissionScreen(onBack = onBack)
-    }
-}
+data object TransmissionRoute : Parcelable
 
 @Composable
 fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {

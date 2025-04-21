@@ -1,9 +1,9 @@
 package com.skyd.anivu.ui.component.dialog
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Done
@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 
@@ -77,7 +78,11 @@ fun SortDialog(
                 }
                 sortByValues.forEach {
                     ListItem(
-                        modifier = Modifier.clickable { onSortBy(it) },
+                        modifier = Modifier.selectable(
+                            selected = sortBy == it,
+                            onClick = { onSortBy(it) },
+                            role = Role.RadioButton
+                        ),
                         headlineContent = { Text(onSortByDisplayName(it)) },
                         leadingContent = {
                             onSortByIcon(it)?.let { icon ->

@@ -44,6 +44,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
@@ -73,7 +75,14 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class PlaylistMediaListRoute(val playlistId: String)
+data class PlaylistMediaListRoute(val playlistId: String) {
+    companion object {
+        @Composable
+        fun PlaylistMediaListLauncher(entry: NavBackStackEntry) {
+            PlaylistMediaListScreen(playlistId = entry.toRoute<PlaylistMediaListRoute>().playlistId)
+        }
+    }
+}
 
 @Composable
 fun PlaylistMediaListScreen(

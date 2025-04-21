@@ -28,7 +28,7 @@ import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.CategorySettingsItem
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
-import com.skyd.anivu.ui.screen.settings.appearance.article.ItemMinWidthDialog
+import com.skyd.anivu.ui.component.dialog.ItemMinWidthDialog
 import com.skyd.anivu.ui.screen.settings.appearance.feed.TonalElevationDialog
 import com.skyd.generated.preference.LocalSearchItemMinWidth
 import com.skyd.generated.preference.LocalSearchListTonalElevation
@@ -97,7 +97,7 @@ fun SearchStyleScreen() {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.WidthNormal),
                     text = stringResource(id = R.string.min_width_dp),
-                    descriptionText = "${LocalSearchItemMinWidth.current} dp",
+                    descriptionText = "%.2f".format(LocalSearchItemMinWidth.current) + " dp",
                     onClick = { openSearchItemMinWidthDialog = true }
                 )
             }

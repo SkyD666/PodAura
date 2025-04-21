@@ -61,12 +61,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object DataRoute : Parcelable {
-    @Composable
-    fun DataLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        DataScreen(onBack = onBack)
-    }
-}
+data object DataRoute : Parcelable
 
 @Composable
 fun DataScreen(

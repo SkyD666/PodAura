@@ -136,8 +136,8 @@ data class ArticleRoute(
         )
 
         @Composable
-        fun ArticleLauncher(entity: NavBackStackEntry, onBack: (() -> Unit)? = DefaultBackClick) {
-            ArticleLauncher(entity.toRoute<ArticleRoute>(), onBack)
+        fun ArticleLauncher(entry: NavBackStackEntry, onBack: (() -> Unit)? = DefaultBackClick) {
+            ArticleLauncher(entry.toRoute<ArticleRoute>(), onBack)
         }
 
         @Composable

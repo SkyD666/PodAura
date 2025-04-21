@@ -40,6 +40,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.toRoute
 import com.skyd.anivu.R
 import com.skyd.anivu.base.mvi.MviEventListener
 import com.skyd.anivu.base.mvi.getDispatcher
@@ -57,16 +59,27 @@ import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.search.SearchBarInputField
 import com.skyd.anivu.ui.screen.search.TrailingIcon
+import com.skyd.generated.preference.LocalMediaListItemType
+import com.skyd.generated.preference.LocalMediaSubListItemType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class MediaSearchRoute(val path: String)
+data class MediaSearchRoute(val path: String, val isSubList: Boolean) {
+    companion object {
+        @Composable
+        fun MediaSearchLauncher(entry: NavBackStackEntry) {
+            val route = entry.toRoute<MediaSearchRoute>()
+            MediaSearchScreen(path = route.path, isSubList = route.isSubList)
+        }
+    }
+}
 
 @Composable
 fun MediaSearchScreen(
     path: String,
+    isSubList: Boolean,
     viewModel: MediaSearchViewModel = hiltViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -162,6 +175,8 @@ fun MediaSearchScreen(
                 list = searchResultState.result,
                 groups = emptyList(),
                 groupInfo = null,
+                listItemType = if (isSubList) LocalMediaSubListItemType.current
+                else LocalMediaListItemType.current,
                 onPlay = { media ->
                     PlayActivity.playMediaList(
                         context.activity,

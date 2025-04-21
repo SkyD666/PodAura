@@ -92,8 +92,8 @@ data class FilePickerRoute(
 ) {
     companion object {
         @Composable
-        fun FilePickerLauncher(entity: NavBackStackEntry) {
-            val filePickerRoute = entity.toRoute<FilePickerRoute>()
+        fun FilePickerLauncher(entry: NavBackStackEntry) {
+            val filePickerRoute = entry.toRoute<FilePickerRoute>()
             FilePickerScreen(
                 path = filePickerRoute.path.takeIf {
                     filePickerRoute.path != MediaLibLocationPreference.default

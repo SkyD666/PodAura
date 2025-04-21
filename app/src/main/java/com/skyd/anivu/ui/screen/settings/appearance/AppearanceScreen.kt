@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.appearance
 
 import android.os.Parcelable
-import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -89,12 +88,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object AppearanceRoute : Parcelable {
-    @Composable
-    fun AnimatedContentScope.AppearanceLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        AppearanceScreen(onBack = onBack)
-    }
-}
+data object AppearanceRoute : Parcelable
 
 @Composable
 fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {

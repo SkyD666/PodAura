@@ -9,7 +9,7 @@ import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupScreen
 import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
 import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute.Companion.FilePickerLauncher
 import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute
-import com.skyd.anivu.ui.screen.settings.appearance.AppearanceRoute.AppearanceLauncher
+import com.skyd.anivu.ui.screen.settings.appearance.AppearanceScreen
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleScreen
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
@@ -21,9 +21,9 @@ import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleScreen
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleScreen
 import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute
-import com.skyd.anivu.ui.screen.settings.behavior.BehaviorRoute.BehaviorLauncher
+import com.skyd.anivu.ui.screen.settings.behavior.BehaviorScreen
 import com.skyd.anivu.ui.screen.settings.data.DataRoute
-import com.skyd.anivu.ui.screen.settings.data.DataRoute.DataLauncher
+import com.skyd.anivu.ui.screen.settings.data.DataScreen
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteScreen
 import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
@@ -35,20 +35,20 @@ import com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml.Expor
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.ImportOpmlRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.ImportOpmlScreen
 import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute
-import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigRoute.PlayerConfigLauncher
+import com.skyd.anivu.ui.screen.settings.playerconfig.PlayerConfigScreen
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedScreen
 import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute
-import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute.RssConfigLauncher
+import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigScreen
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
 import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
-import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute.TransmissionLauncher
+import com.skyd.anivu.ui.screen.settings.transmission.TransmissionScreen
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyScreen
 
 @Composable
-internal fun SettingsPaneNavHost(
+internal fun SettingsDetailPaneNavHost(
     navController: NavHostController,
     startDestination: Any,
     onPaneBack: (() -> Unit)?,
@@ -57,24 +57,24 @@ internal fun SettingsPaneNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        composable<AppearanceRoute> { AppearanceLauncher(onPaneBack) }
+        composable<AppearanceRoute> { AppearanceScreen(onBack = onPaneBack) }
         composable<ArticleStyleRoute> { ArticleStyleScreen() }
         composable<FeedStyleRoute> { FeedStyleScreen() }
         composable<ReadStyleRoute> { ReadStyleScreen() }
         composable<MediaStyleRoute> { MediaStyleScreen() }
         composable<ReorderGroupRoute> { ReorderGroupScreen() }
         composable<SearchStyleRoute> { SearchStyleScreen() }
-        composable<BehaviorRoute> { BehaviorLauncher(onPaneBack) }
+        composable<BehaviorRoute> { BehaviorScreen(onBack = onPaneBack) }
         composable<AutoDeleteRoute> { AutoDeleteScreen() }
         composable<ExportOpmlRoute> { ExportOpmlScreen() }
         composable<ImportOpmlRoute> { ImportOpmlScreen() }
         composable<ImportExportRoute> { ImportExportScreen() }
-        composable<DataRoute> { DataLauncher(onPaneBack) }
-        composable<PlayerConfigRoute> { PlayerConfigLauncher(onPaneBack) }
+        composable<DataRoute> { DataScreen(onBack = onPaneBack) }
+        composable<PlayerConfigRoute> { PlayerConfigScreen(onBack = onPaneBack) }
         composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
-        composable<RssConfigRoute> { RssConfigLauncher(onPaneBack) }
+        composable<RssConfigRoute> { RssConfigScreen(onBack = onPaneBack) }
         composable<ProxyRoute> { ProxyScreen() }
-        composable<TransmissionRoute> { TransmissionLauncher(onPaneBack) }
+        composable<TransmissionRoute> { TransmissionScreen(onBack = onPaneBack) }
         composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
         composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
         composable<FilePickerRoute> { FilePickerLauncher(it) }

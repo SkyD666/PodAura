@@ -10,7 +10,7 @@ import com.skyd.anivu.ui.screen.search.SearchRoute
 import com.skyd.anivu.ui.screen.search.SearchRoute.Article.Companion.SearchArticleLauncher
 
 @Composable
-internal fun FeedPaneNavHost(
+internal fun FeedDetailPaneNavHost(
     navController: NavHostController,
     startDestination: Any,
     onPaneBack: (() -> Unit)?,

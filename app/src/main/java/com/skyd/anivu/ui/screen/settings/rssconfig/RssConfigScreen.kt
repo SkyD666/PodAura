@@ -51,12 +51,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object RssConfigRoute : Parcelable {
-    @Composable
-    fun RssConfigLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        RssConfigScreen(onBack = onBack)
-    }
-}
+data object RssConfigRoute : Parcelable
 
 @Composable
 fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {

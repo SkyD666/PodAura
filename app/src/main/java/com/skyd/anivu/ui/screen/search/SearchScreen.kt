@@ -101,8 +101,8 @@ sealed interface SearchRoute {
         val typeMap = mapOf(typeOf<Feed>() to serializableType<Feed>())
 
         @Composable
-        fun SearchFeedLauncher(entity: NavBackStackEntry) {
-            SearchScreen(searchRoute = entity.toRoute<Feed>())
+        fun SearchFeedLauncher(entry: NavBackStackEntry) {
+            SearchScreen(searchRoute = entry.toRoute<Feed>())
         }
     }
 
@@ -113,11 +113,11 @@ sealed interface SearchRoute {
         val articleIds: List<String>,
     ) : SearchRoute {
         companion object {
-           val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
+            val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
 
             @Composable
-            fun SearchArticleLauncher(entity: NavBackStackEntry) {
-                SearchScreen(searchRoute = entity.toRoute<Article>())
+            fun SearchArticleLauncher(entry: NavBackStackEntry) {
+                SearchScreen(searchRoute = entry.toRoute<Article>())
             }
         }
     }

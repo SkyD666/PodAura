@@ -68,12 +68,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Parcelize
-data object BehaviorRoute : Parcelable {
-    @Composable
-    fun BehaviorLauncher(onBack: (() -> Unit)? = DefaultBackClick) {
-        BehaviorScreen(onBack = onBack)
-    }
-}
+data object BehaviorRoute : Parcelable
 
 @Composable
 fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
