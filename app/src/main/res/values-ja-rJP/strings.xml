@@ -464,6 +464,18 @@
     <string name="plus">プラス</string>
     <string name="player_subtitle_delay">字幕の遅延</string>
     <string name="player_config_screen_forward_second_button_value">秒を進める</string>
+    <string name="list_item_type_list">List</string>
+    <string name="list_item_type_compact_grid">Compact grid</string>
+    <string name="list_item_type_comfortable_grid">Comfortable grid</string>
+    <string name="list_item_type_cover_grid">Cover grid</string>
+    <string name="media_style_screen_media_list_item_category">Media item</string>
+    <string name="media_style_screen_media_list_item_type">Media item type</string>
+    <string name="media_style_screen_media_item_list_type_min_width_dp">List type min width</string>
+    <string name="media_style_screen_media_item_grid_type_min_width_dp">Grid type min width</string>
+    <string name="media_style_screen_media_primary_list">Primary list</string>
+    <string name="media_style_screen_media_sub_list">Sub list</string>
+    <string name="media_style_screen_media_item_grid_type_cover_ratio">Grid type cover ratio</string>
+    <string name="unlimited">Unlimited</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 個の項目</item>
     </plurals>
