@@ -476,6 +476,8 @@
     <string name="media_style_screen_media_sub_list">Sub list</string>
     <string name="media_style_screen_media_item_grid_type_cover_ratio">Grid type cover ratio</string>
     <string name="unlimited">Unlimited</string>
+    <string name="behavior_screen_common_category">Common</string>
+    <string name="behavior_screen_load_net_image_on_wifi_only">Load images only on Wi‑Fi</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d items</item>
     </plurals>
