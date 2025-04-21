@@ -463,7 +463,19 @@
     <string name="minus">减</string>
     <string name="plus">加</string>
     <string name="player_subtitle_delay">字幕延迟</string>
-    <string name="player_config_screen_forward_second_button_value">Forward seconds</string>
+    <string name="player_config_screen_forward_second_button_value">快进秒数</string>
+    <string name="list_item_type_list">列表</string>
+    <string name="list_item_type_compact_grid">紧凑网格</string>
+    <string name="list_item_type_comfortable_grid">松散网格</string>
+    <string name="list_item_type_cover_grid">仅封面网格</string>
+    <string name="media_style_screen_media_list_item_category">媒体项</string>
+    <string name="media_style_screen_media_list_item_type">媒体项类型</string>
+    <string name="media_style_screen_media_item_list_type_min_width_dp">列表类型最小宽度</string>
+    <string name="media_style_screen_media_item_grid_type_min_width_dp">网格类型最小宽度</string>
+    <string name="media_style_screen_media_primary_list">主列表</string>
+    <string name="media_style_screen_media_sub_list">子列表</string>
+    <string name="media_style_screen_media_item_grid_type_cover_ratio">网格类型封面比例</string>
+    <string name="unlimited">无限制</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>
