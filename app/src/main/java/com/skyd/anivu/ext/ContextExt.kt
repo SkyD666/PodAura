@@ -12,14 +12,6 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.view.Window
 import androidx.core.content.pm.PackageInfoCompat
-import coil3.ImageLoader
-import coil3.gif.AnimatedImageDecoder
-import coil3.gif.GifDecoder
-import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import coil3.svg.SvgDecoder
-import coil3.video.VideoFrameDecoder
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 
 val Context.activity: Activity
     get() {
@@ -102,24 +94,11 @@ fun Context.isWifi(): Boolean {
     return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
 }
 
-fun Context.imageLoaderBuilder(): ImageLoader.Builder {
-    return ImageLoader.Builder(this)
-        .components {
-            if (SDK_INT >= 28) {
-                add(AnimatedImageDecoder.Factory())
-            } else {
-                add(GifDecoder.Factory())
-            }
-            add(SvgDecoder.Factory())
-            add(VideoFrameDecoder.Factory())
-        }
-        .components {
-            add(OkHttpNetworkFetcherFactory(callFactory = {
-                OkHttpClient.Builder().addNetworkInterceptor(Interceptor { chain ->
-                    chain.proceed(chain.request()).newBuilder()
-                        .header("Cache-Control", "max-age=31536000,public")
-                        .build()
-                }).build()
-            }))
-        }
+fun Context.isWifiAvailable(): Boolean {
+    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+    return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
 }

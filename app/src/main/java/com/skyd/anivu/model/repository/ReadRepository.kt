@@ -10,7 +10,7 @@ import com.skyd.anivu.config.Const.TEMP_PICTURES_DIR
 import com.skyd.anivu.ext.copyToClipboard
 import com.skyd.anivu.ext.deleteDirs
 import com.skyd.anivu.ext.getImage
-import com.skyd.anivu.ext.imageLoaderBuilder
+import com.skyd.anivu.ui.component.imageLoaderBuilder
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.ext.share
 import com.skyd.anivu.ext.toUri

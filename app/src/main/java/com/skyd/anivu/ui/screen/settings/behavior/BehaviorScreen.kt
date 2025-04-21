@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.SwipeLeft
 import androidx.compose.material.icons.outlined.SwipeRight
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
+import com.skyd.anivu.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
@@ -61,6 +63,7 @@ import com.skyd.generated.preference.LocalArticleTapAction
 import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
 import com.skyd.generated.preference.LocalHideEmptyDefault
 import com.skyd.generated.preference.LocalHideMutedFeed
+import com.skyd.generated.preference.LocalLoadNetImageOnWifiOnly
 import com.skyd.generated.preference.LocalMediaFileFilter
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -97,6 +100,18 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             contentPadding = paddingValues,
         ) {
             item {
+                CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_common_category))
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.Outlined.Wifi,
+                    text = stringResource(id = R.string.behavior_screen_load_net_image_on_wifi_only),
+                    description = null,
+                    checked = LocalLoadNetImageOnWifiOnly.current,
+                    onCheckedChange = { LoadNetImageOnWifiOnlyPreference.put(context, scope, it) }
+                )
+            }
+            item {
                 CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_feed_screen_category))
             }
             item {
@@ -109,28 +124,15 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     text = stringResource(id = R.string.behavior_screen_feed_screen_hide_empty_default),
                     description = stringResource(id = R.string.behavior_screen_feed_screen_hide_empty_default_description),
                     checked = LocalHideEmptyDefault.current,
-                    onCheckedChange = {
-                        HideEmptyDefaultPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    onCheckedChange = { HideEmptyDefaultPreference.put(context, scope, it) }
                 )
             }
-
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
                     text = stringResource(id = R.string.behavior_screen_feed_screen_hide_muted_feed),
                     checked = LocalHideMutedFeed.current,
-                    onCheckedChange = {
-                        HideMutedFeedPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    onCheckedChange = { HideMutedFeedPreference.put(context, scope, it) }
                 )
             }
             item {
@@ -142,13 +144,7 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     text = stringResource(id = R.string.behavior_screen_article_screen_deduplicate_title_in_desc),
                     description = stringResource(id = R.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
                     checked = LocalDeduplicateTitleInDesc.current,
-                    onCheckedChange = {
-                        DeduplicateTitleInDescPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    onCheckedChange = { DeduplicateTitleInDescPreference.put(context, scope, it) }
                 )
             }
             item {

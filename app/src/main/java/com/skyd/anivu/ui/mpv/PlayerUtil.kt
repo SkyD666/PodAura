@@ -7,9 +7,9 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import coil3.ImageLoader
 import com.skyd.anivu.appContext
 import com.skyd.anivu.ext.getImage
+import com.skyd.anivu.ui.component.imageLoaderBuilder
 import com.skyd.anivu.ui.mpv.service.PlayerState
 import com.skyd.anivu.util.image.decodeSampledBitmap
 import java.io.File
@@ -94,7 +94,7 @@ suspend fun createThumbnailFile(
     thumbnailPath: String?,
 ): File? {
     thumbnailPath ?: return null
-    return ImageLoader.Builder(appContext).build()
+    return appContext.imageLoaderBuilder().build()
         .getImage(appContext, thumbnailPath)
 }
 

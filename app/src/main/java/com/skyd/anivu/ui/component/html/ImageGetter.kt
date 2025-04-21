@@ -17,7 +17,7 @@ import coil3.request.error
 import coil3.request.placeholder
 import coil3.size.ScaleDrawable
 import com.skyd.anivu.R
-import com.skyd.anivu.ext.imageLoaderBuilder
+import com.skyd.anivu.ui.component.imageLoaderBuilder
 
 class ImageGetter(
     private val context: Context,

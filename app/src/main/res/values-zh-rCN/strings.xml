@@ -476,6 +476,8 @@
     <string name="media_style_screen_media_sub_list">子列表</string>
     <string name="media_style_screen_media_item_grid_type_cover_ratio">网格类型封面比例</string>
     <string name="unlimited">无限制</string>
+    <string name="behavior_screen_common_category">通用</string>
+    <string name="behavior_screen_load_net_image_on_wifi_only">仅 Wi‑Fi 下加载图片</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%d 项</item>
     </plurals>
