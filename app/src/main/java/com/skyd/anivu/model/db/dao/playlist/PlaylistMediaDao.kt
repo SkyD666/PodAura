@@ -6,9 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
@@ -22,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 interface PlaylistMediaDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertPlaylistMedia(playlistMediaBean: PlaylistMediaBean)
+    suspend fun insertPlaylistMedia(playlistMediaBean: PlaylistMediaBean)
 
     @Transaction
     @Query(
@@ -117,21 +116,22 @@ interface PlaylistMediaDao {
                 "${PlaylistMediaBean.URL_COLUMN} = :url" +
                 ")"
     )
-    fun getNextOrderPosition(playlistId: String, url: String): Double?
+    suspend fun getNextOrderPosition(playlistId: String, url: String): Double?
 
     @Transaction
     @RawQuery(observedEntities = [PlaylistMediaBean::class])
-    fun getPlaylistMediaListPaging(sql: SupportSQLiteQuery): PagingSource<Int, PlaylistMediaWithArticleBean>
+    fun getPlaylistMediaListPaging(sql: RoomRawQuery): PagingSource<Int, PlaylistMediaWithArticleBean>
 
     fun getPlaylistMediaListPaging(
         playlistId: String,
         orderByColumnName: String = PlaylistMediaBean.ORDER_POSITION_COLUMN,
         asc: Boolean = true,
     ): PagingSource<Int, PlaylistMediaWithArticleBean> = getPlaylistMediaListPaging(
-        SimpleSQLiteQuery(
-            "SELECT * FROM $PLAYLIST_MEDIA_TABLE_NAME " +
-                    "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = \"$playlistId\" " +
-                    "ORDER BY $orderByColumnName ${if (asc) "ASC" else "DESC"}"
+        RoomRawQuery(
+            sql = "SELECT * FROM $PLAYLIST_MEDIA_TABLE_NAME " +
+                    "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = ? " +
+                    "ORDER BY $orderByColumnName ${if (asc) "ASC" else "DESC"}",
+            onBindStatement = { it.bindText(1, playlistId) },
         )
     )
 
@@ -141,7 +141,7 @@ interface PlaylistMediaDao {
                 "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId " +
                 "ORDER BY ${PlaylistMediaBean.ORDER_POSITION_COLUMN}"
     )
-    fun getPlaylistMediaList(playlistId: String): List<PlaylistMediaWithArticleBean>
+    suspend fun getPlaylistMediaList(playlistId: String): List<PlaylistMediaWithArticleBean>
 
     @Transaction
     @Query(

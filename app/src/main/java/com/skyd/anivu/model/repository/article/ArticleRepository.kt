@@ -6,7 +6,7 @@ import android.widget.Toast
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.room.RoomRawQuery
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
@@ -209,7 +209,7 @@ class ArticleRepository @Inject constructor(
             isFavorite: Boolean?,
             isRead: Boolean?,
             orderBy: ArticleSort,
-        ): SimpleSQLiteQuery {
+        ): RoomRawQuery {
             val sql = buildString {
                 append("SELECT DISTINCT * FROM `$ARTICLE_TABLE_NAME` WHERE 1 ")
                 if (isFavorite != null) {
@@ -240,7 +240,7 @@ class ArticleRepository @Inject constructor(
                 }
                 append("\nORDER BY `$orderField` $ascOrDesc")
             }
-            return SimpleSQLiteQuery(sql)
+            return RoomRawQuery(sql)
         }
     }
 }

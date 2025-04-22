@@ -172,7 +172,7 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
         }
     }
 
-    private fun howToDownload(saveDir: File) = runBlocking {
+    private fun howToDownload(saveDir: File) = runBlocking(Dispatchers.IO) {
         sessionManager.apply {
             val lastSessionParams = BtDownloadManager.getSessionParams(link = torrentLink)
             val sessionParams = if (lastSessionParams == null) SessionParams()

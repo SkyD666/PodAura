@@ -14,7 +14,7 @@ import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 interface ReadHistoryDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun updateReadHistory(readHistoryBean: ReadHistoryBean)
+    suspend fun updateReadHistory(readHistoryBean: ReadHistoryBean)
 
     @Transaction
     @Query(

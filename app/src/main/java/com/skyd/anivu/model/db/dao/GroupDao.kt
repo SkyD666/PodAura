@@ -133,11 +133,11 @@ interface GroupDao {
 
     @Transaction
     @Query("SELECT COUNT(*) FROM `$GROUP_TABLE_NAME` WHERE ${GroupBean.NAME_COLUMN} LIKE :name")
-    fun containsByName(name: String): Int
+    suspend fun containsByName(name: String): Int
 
     @Transaction
     @Query("SELECT COUNT(*) FROM `$GROUP_TABLE_NAME` WHERE ${GroupBean.GROUP_ID_COLUMN} LIKE :groupId")
-    fun containsById(groupId: String): Int
+    suspend fun containsById(groupId: String): Int
 
     @Transaction
     @Query(
@@ -145,7 +145,7 @@ interface GroupDao {
                 "WHERE ${GroupBean.NAME_COLUMN} LIKE :name " +
                 "LIMIT 1"
     )
-    fun queryGroupIdByName(name: String): String
+    suspend fun queryGroupIdByName(name: String): String
 
     @Transaction
     @Query("UPDATE `$GROUP_TABLE_NAME` SET ${GroupBean.IS_EXPANDED_COLUMN} = NOT :collapse")

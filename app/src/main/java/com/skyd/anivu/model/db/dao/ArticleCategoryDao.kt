@@ -11,7 +11,7 @@ import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 interface ArticleCategoryDao {
     @Transaction
     @Upsert
-    fun upsert(categories: List<ArticleCategoryBean>)
+    suspend fun upsert(categories: List<ArticleCategoryBean>)
 
     @Transaction
     @Query(
@@ -20,5 +20,5 @@ interface ArticleCategoryDao {
         WHERE ${ArticleCategoryBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    fun getArticleCategoryBean(articleId: String): List<ArticleCategoryBean>
+    suspend fun getArticleCategoryBean(articleId: String): List<ArticleCategoryBean>
 }

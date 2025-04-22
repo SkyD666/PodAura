@@ -6,9 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.model.bean.playlist.PLAYLIST_TABLE_NAME
 import com.skyd.anivu.model.bean.playlist.PLAYLIST_VIEW_NAME
 import com.skyd.anivu.model.bean.playlist.PlaylistBean
@@ -18,7 +17,7 @@ import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 interface PlaylistDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun createPlaylist(playlistBean: PlaylistBean)
+    suspend fun createPlaylist(playlistBean: PlaylistBean)
 
     @Transaction
     @Query("DELETE FROM $PLAYLIST_TABLE_NAME WHERE ${PlaylistBean.PLAYLIST_ID_COLUMN} = :playlistId")
@@ -69,7 +68,7 @@ interface PlaylistDao {
                 "WHERE ${PlaylistBean.PLAYLIST_ID_COLUMN} = :playlistId" +
                 ")"
     )
-    fun getNextOrderPosition(playlistId: String): Double?
+    suspend fun getNextOrderPosition(playlistId: String): Double?
 
     @Transaction
     @Query(
@@ -81,19 +80,19 @@ interface PlaylistDao {
 
     @Transaction
     @Query("SELECT * FROM $PLAYLIST_VIEW_NAME WHERE ${PlaylistBean.PLAYLIST_ID_COLUMN} = :playlistId")
-    fun getPlaylistView(playlistId: String): PlaylistViewBean
+    suspend fun getPlaylistView(playlistId: String): PlaylistViewBean
 
     @Transaction
     @RawQuery(observedEntities = [PlaylistViewBean::class])
-    fun getPlaylistList(sql: SupportSQLiteQuery): PagingSource<Int, PlaylistViewBean>
+    fun getPlaylistList(sql: RoomRawQuery): PagingSource<Int, PlaylistViewBean>
 
     fun getPlaylistList(
         orderByColumnName: String = PlaylistBean.ORDER_POSITION_COLUMN,
         asc: Boolean = true,
     ): PagingSource<Int, PlaylistViewBean> = getPlaylistList(
-        SimpleSQLiteQuery(
+        RoomRawQuery(
             "SELECT * FROM $PLAYLIST_VIEW_NAME " +
-                    "ORDER BY $orderByColumnName ${if (asc) "ASC" else "DESC"}"
+                    "ORDER BY `$orderByColumnName` ${if (asc) "ASC" else "DESC"}"
         )
     )
 

@@ -13,7 +13,7 @@ import com.skyd.anivu.model.bean.download.bt.SessionParamsBean
 interface SessionParamsDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun updateSessionParams(sessionParamsBean: SessionParamsBean)
+    suspend fun updateSessionParams(sessionParamsBean: SessionParamsBean)
 
     @Transaction
     @Delete
@@ -26,9 +26,7 @@ interface SessionParamsDao {
         WHERE ${SessionParamsBean.LINK_COLUMN} = :link
         """
     )
-    fun deleteSessionParams(
-        link: String,
-    ): Int
+    suspend fun deleteSessionParams(link: String): Int
 
     @Transaction
     @Query(
@@ -37,7 +35,5 @@ interface SessionParamsDao {
         WHERE ${SessionParamsBean.LINK_COLUMN} = :link
         """
     )
-    fun getSessionParams(
-        link: String,
-    ): SessionParamsBean?
+    suspend fun getSessionParams(link: String): SessionParamsBean?
 }

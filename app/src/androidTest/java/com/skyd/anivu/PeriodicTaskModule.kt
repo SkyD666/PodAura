@@ -3,7 +3,7 @@ package com.skyd.anivu
 import android.content.Context
 import android.util.Log
 import androidx.paging.PagingConfig
-import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.room.RoomRawQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.Configuration
@@ -111,7 +111,7 @@ class PeriodicTaskModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         feedRepository.clearFeedArticles(url1).first()
         val sql =
-            SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
+            RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         assertTrue(articleDao.getArticleList(sql).isEmpty())
 
         val worker = TestListenableWorkerBuilder<RssSyncWorker>(context).build()
@@ -131,7 +131,7 @@ class PeriodicTaskModule {
         val url1 = "https://www.ximalaya.com/album/68370676.xml"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val sql =
-            SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
+            RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         val size = articleDao.getArticleList(sql).size
         assertTrue(size > 0)
         context.dataStore.apply {
@@ -154,7 +154,7 @@ class PeriodicTaskModule {
         val url1 = "https://www.ximalaya.com/album/68370676.xml"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val sql =
-            SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
+            RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         assertTrue(articleDao.getArticleList(sql).isNotEmpty())
         context.dataStore.apply {
             put(AutoDeleteArticleBeforePreference.key, 0)
@@ -176,7 +176,7 @@ class PeriodicTaskModule {
         val url1 = "https://www.ximalaya.com/album/68370676.xml"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val sql =
-            SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
+            RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         val size = articleDao.getArticleList(sql).size
         assertTrue(size > 0)
         context.dataStore.apply {
@@ -198,7 +198,7 @@ class PeriodicTaskModule {
         val url1 = "https://www.ximalaya.com/album/68370676.xml"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val sql =
-            SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
+            RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         val articleList = articleDao.getArticleList(sql)
         val firstId = articleList.first().articleWithEnclosure.article.articleId
         val size = articleList.size

@@ -13,11 +13,11 @@ import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
 interface TorrentFileDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun updateTorrentFile(torrentFileBean: TorrentFileBean)
+    suspend fun updateTorrentFile(torrentFileBean: TorrentFileBean)
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun updateTorrentFiles(torrentFileList: List<TorrentFileBean>)
+    suspend fun updateTorrentFiles(torrentFileList: List<TorrentFileBean>)
 
     @Transaction
     @Delete
@@ -30,7 +30,7 @@ interface TorrentFileDao {
         WHERE ${TorrentFileBean.LINK_COLUMN} = :link
         """
     )
-    fun deleteTorrentFileByLink(link: String): Int
+    suspend fun deleteTorrentFileByLink(link: String): Int
 
     @Transaction
     @Query(
@@ -39,7 +39,7 @@ interface TorrentFileDao {
         WHERE ${TorrentFileBean.LINK_COLUMN} = :link
         """
     )
-    fun getTorrentFilesByLink(link: String): List<TorrentFileBean>
+    suspend fun getTorrentFilesByLink(link: String): List<TorrentFileBean>
 
     @Transaction
     @Query(
@@ -48,5 +48,5 @@ interface TorrentFileDao {
         WHERE ${TorrentFileBean.PATH_COLUMN} = :path
         """
     )
-    fun count(path: String): Int
+    suspend fun count(path: String): Int
 }

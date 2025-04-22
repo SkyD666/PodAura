@@ -14,7 +14,7 @@ import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 interface MediaPlayHistoryDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun updateMediaPlayHistory(mediaPlayHistoryBean: MediaPlayHistoryBean)
+    suspend fun updateMediaPlayHistory(mediaPlayHistoryBean: MediaPlayHistoryBean)
 
     @Transaction
     @Query(
@@ -31,7 +31,7 @@ interface MediaPlayHistoryDao {
 
     @Transaction
     @Query("SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME WHERE ${MediaPlayHistoryBean.PATH_COLUMN} = :path")
-    fun getMediaPlayHistory(path: String): MediaPlayHistoryBean?
+    suspend fun getMediaPlayHistory(path: String): MediaPlayHistoryBean?
 
     @Transaction
     @Query("SELECT * FROM $MEDIA_PLAY_HISTORY_TABLE_NAME ORDER BY ${MediaPlayHistoryBean.LAST_TIME_COLUMN} DESC")
@@ -45,5 +45,5 @@ interface MediaPlayHistoryDao {
         WHERE ${MediaPlayHistoryBean.PATH_COLUMN} = :path
         """
     )
-    fun updateLastPlayPosition(path: String, lastPlayPosition: Long): Int
+    suspend fun updateLastPlayPosition(path: String, lastPlayPosition: Long): Int
 }

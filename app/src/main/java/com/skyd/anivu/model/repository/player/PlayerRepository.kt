@@ -21,26 +21,27 @@ class PlayerRepository @Inject constructor(
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
 ) : BaseRepository(), IPlayerRepository {
-    override fun insertPlayHistory(path: String, duration: Long, articleId: String?): Flow<Unit> = flow {
-        val realArticleId = articleId?.takeIf {
-            articleDao.exists(it) > 0
-        } ?: enclosureDao.getMediaArticleId(path)
+    override fun insertPlayHistory(path: String, duration: Long, articleId: String?): Flow<Unit> =
+        flow {
+            val realArticleId = articleId?.takeIf {
+                articleDao.exists(it) > 0
+            } ?: enclosureDao.getMediaArticleId(path)
 
-        val old = mediaPlayHistoryDao.getMediaPlayHistory(path)
-        val currentHistory = old?.copy(
-            duration = duration,
-            lastTime = System.currentTimeMillis(),
-            articleId = realArticleId,
-        ) ?: MediaPlayHistoryBean(
-            path = path,
-            duration = duration,
-            lastPlayPosition = 0L,
-            lastTime = System.currentTimeMillis(),
-            articleId = realArticleId,
-        )
-        mediaPlayHistoryDao.updateMediaPlayHistory(currentHistory)
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
+            val old = mediaPlayHistoryDao.getMediaPlayHistory(path)
+            val currentHistory = old?.copy(
+                duration = duration,
+                lastTime = System.currentTimeMillis(),
+                articleId = realArticleId,
+            ) ?: MediaPlayHistoryBean(
+                path = path,
+                duration = duration,
+                lastPlayPosition = 0L,
+                lastTime = System.currentTimeMillis(),
+                articleId = realArticleId,
+            )
+            mediaPlayHistoryDao.updateMediaPlayHistory(currentHistory)
+            emit(Unit)
+        }.flowOn(Dispatchers.IO)
 
     override fun updateLastPlayPosition(path: String, lastPlayPosition: Long): Flow<Unit> = flow {
         mediaPlayHistoryDao.updateLastPlayPosition(path, lastPlayPosition)
@@ -51,7 +52,7 @@ class PlayerRepository @Inject constructor(
         emit(mediaPlayHistoryDao.getMediaPlayHistory(path)?.lastPlayPosition ?: 0L)
     }.flowOn(Dispatchers.IO)
 
-    fun requestPlaylistByArticleId(articleId: String): List<PlaylistMediaWithArticleBean> =
+    suspend fun requestPlaylistByArticleId(articleId: String): List<PlaylistMediaWithArticleBean> =
         articleDao.getArticlesForPlaylist(articleId).map { articleWithFeed ->
             val enclosures = articleWithFeed.articleWithEnclosure.enclosures
             enclosures.mapIndexed { index, enclosure ->

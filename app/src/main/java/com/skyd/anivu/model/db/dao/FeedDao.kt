@@ -7,9 +7,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Update
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
@@ -184,11 +184,11 @@ interface FeedDao {
 
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class])
-    fun getFeedPagingSource(sql: SupportSQLiteQuery): PagingSource<Int, FeedViewBean>
+    fun getFeedPagingSource(sql: RoomRawQuery): PagingSource<Int, FeedViewBean>
 
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class])
-    fun getFeedList(sql: SupportSQLiteQuery): List<FeedViewBean>
+    suspend fun getFeedList(sql: RoomRawQuery): List<FeedViewBean>
 
     @Transaction
     @Query("SELECT * FROM $FEED_TABLE_NAME")
@@ -196,19 +196,19 @@ interface FeedDao {
 
     @Transaction
     @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME")
-    fun getAllFeedUrl(): List<String>
+    suspend fun getAllFeedUrl(): List<String>
 
     @Transaction
     @Query("SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME WHERE ${FeedBean.MUTE_COLUMN} = 0")
-    fun getAllUnmutedFeedUrl(): List<String>
+    suspend fun getAllUnmutedFeedUrl(): List<String>
 
     @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} LIKE :url")
-    fun containsByUrl(url: String): Int
+    suspend fun containsByUrl(url: String): Int
 
     @Transaction
     @Query("SELECT COUNT(*) FROM $FEED_TABLE_NAME WHERE ${FeedBean.CUSTOM_ICON_COLUMN} LIKE :customIcon")
-    fun containsByCustomIcon(customIcon: String): Int
+    suspend fun containsByCustomIcon(customIcon: String): Int
 
     @Transaction
     @Query(

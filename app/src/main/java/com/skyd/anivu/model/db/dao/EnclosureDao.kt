@@ -55,5 +55,5 @@ interface EnclosureDao {
         "SELECT ${EnclosureBean.ARTICLE_ID_COLUMN} FROM $ENCLOSURE_TABLE_NAME " +
                 "WHERE ${EnclosureBean.URL_COLUMN} = :path"
     )
-    fun getMediaArticleId(path: String): String?
+    suspend fun getMediaArticleId(path: String): String?
 }

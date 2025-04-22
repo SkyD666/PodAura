@@ -4,9 +4,9 @@ import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.skyd.anivu.appContext
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
@@ -217,12 +217,12 @@ interface ArticleDao {
 
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class, EnclosureBean::class])
-    fun getArticlePagingSource(sql: SupportSQLiteQuery): PagingSource<Int, ArticleWithFeed>
+    fun getArticlePagingSource(sql: RoomRawQuery): PagingSource<Int, ArticleWithFeed>
 
 
     @Transaction
     @RawQuery(observedEntities = [ArticleBean::class])
-    fun getArticleList(sql: SupportSQLiteQuery): List<ArticleWithFeed>
+    suspend fun getArticleList(sql: RoomRawQuery): List<ArticleWithFeed>
 
     @Transaction
     @Query(
@@ -252,7 +252,7 @@ interface ArticleDao {
         "SELECT EXISTS (SELECT 1 FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} LIKE :articleId)"
     )
-    fun exists(articleId: String): Int
+    suspend fun exists(articleId: String): Int
 
     @Transaction
     @Query(
@@ -280,7 +280,10 @@ interface ArticleDao {
                 "    LIMIT :neighborCount " +
                 ");"
     )
-    fun getArticlesForPlaylist(articleId: String, neighborCount: Int = 50): List<ArticleWithFeed>
+    suspend fun getArticlesForPlaylist(
+        articleId: String,
+        neighborCount: Int = 50
+    ): List<ArticleWithFeed>
 
     @Transaction
     @Query(
@@ -305,7 +308,7 @@ interface ArticleDao {
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    fun favoriteArticle(articleId: String, favorite: Boolean)
+    suspend fun favoriteArticle(articleId: String, favorite: Boolean)
 
     @Transaction
     @Query(
@@ -314,7 +317,7 @@ interface ArticleDao {
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    fun readArticle(articleId: String, read: Boolean)
+    suspend fun readArticle(articleId: String, read: Boolean)
 
     @Transaction
     @Query(
@@ -323,7 +326,7 @@ interface ArticleDao {
         WHERE ${ArticleBean.IS_READ_COLUMN} = 0 AND ${ArticleBean.FEED_URL_COLUMN} = :feedUrl
         """
     )
-    fun readAllInFeed(feedUrl: String): Int
+    suspend fun readAllInFeed(feedUrl: String): Int
 
     @Transaction
     @Query(
@@ -336,5 +339,5 @@ interface ArticleDao {
         )
         """
     )
-    fun readAllInGroup(groupId: String?): Int
+    suspend fun readAllInGroup(groupId: String?): Int
 }

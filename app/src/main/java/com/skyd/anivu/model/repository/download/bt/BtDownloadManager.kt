@@ -383,15 +383,15 @@ object BtDownloadManager {
         return downloadInfoMap[link]
     }
 
-    fun getDownloadLinkByUuid(uuid: String): String? {
+    suspend fun getDownloadLinkByUuid(uuid: String): String? {
         return downloadInfoDao.getDownloadLinkByUuid(uuid)
     }
 
-    fun getDownloadUuidByLink(link: String): String? {
+    suspend fun getDownloadUuidByLink(link: String): String? {
         return downloadInfoDao.getDownloadUuidByLink(link)
     }
 
-    fun setDownloadLinkUuidMap(bean: DownloadLinkUuidMapBean) {
+    suspend fun setDownloadLinkUuidMap(bean: DownloadLinkUuidMapBean) {
         return downloadInfoDao.setDownloadLinkUuidMap(bean)
     }
 
@@ -415,11 +415,11 @@ object BtDownloadManager {
         return downloadInfoMap.containsKey(link)
     }
 
-    fun getSessionParams(link: String): SessionParamsBean? {
+    suspend fun getSessionParams(link: String): SessionParamsBean? {
         return sessionParamsDao.getSessionParams(link)
     }
 
-    fun getTorrentFilesByLink(link: String): List<TorrentFileBean> {
+    suspend fun getTorrentFilesByLink(link: String): List<TorrentFileBean> {
         return torrentFileDao.getTorrentFilesByLink(link = link)
     }
 
@@ -429,11 +429,11 @@ object BtDownloadManager {
         return downloadInfoDao.deleteDownloadInfo(link)
     }
 
-    fun deleteSessionParams(link: String): Int {
+    suspend fun deleteSessionParams(link: String): Int {
         return sessionParamsDao.deleteSessionParams(link)
     }
 
-    fun removeDownloadLinkUuidMap(link: String): Int {
+    suspend fun removeDownloadLinkUuidMap(link: String): Int {
         return downloadInfoDao.removeDownloadLinkUuidMap(link)
     }
 

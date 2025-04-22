@@ -4,7 +4,7 @@ import android.database.DatabaseUtils
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.room.RoomRawQuery
 import com.skyd.anivu.appContext
 import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.config.allSearchDomain
@@ -53,9 +53,8 @@ class SearchRepository @Inject constructor(
     }
 
     fun listenSearchFeed(): Flow<PagingData<FeedViewBean>> = searchQuery.flatMapLatest { query ->
-        Pager(pagingConfig) {
-            feedDao.getFeedPagingSource(genSql(tableName = FEED_VIEW_NAME, k = query))
-        }.flow
+        val sql = genSql(tableName = FEED_VIEW_NAME, k = query)
+        Pager(pagingConfig) { feedDao.getFeedPagingSource(sql) }.flow
     }.flowOn(Dispatchers.IO)
 
     fun listenSearchArticle(
@@ -68,33 +67,31 @@ class SearchRepository @Inject constructor(
             groupIds = groupIds,
             articleIds = articleIds,
         ).first()
-        Pager(pagingConfig) {
-            articleDao.getArticlePagingSource(
-                genSql(
-                    tableName = ARTICLE_TABLE_NAME,
-                    k = query,
-                    leadingFilter = buildString {
-                        if (realFeedUrls.isEmpty()) {
-                            append("(0 ")
-                        } else {
-                            val feedUrlsStr = realFeedUrls.joinToString(", ") {
-                                DatabaseUtils.sqlEscapeString(it)
-                            }
-                            append("(`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
-                        }
-                        if (articleIds.isNotEmpty()) {
-                            val articleIdsStr = articleIds.joinToString(", ") {
-                                DatabaseUtils.sqlEscapeString(it)
-                            }
-                            append("OR `${ArticleBean.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
-                        }
-                        append(")")
-                    },
-                    orderBy = {
-                        ArticleBean.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
+        val sql = genSql(
+            tableName = ARTICLE_TABLE_NAME,
+            k = query,
+            leadingFilter = buildString {
+                if (realFeedUrls.isEmpty()) {
+                    append("(0 ")
+                } else {
+                    val feedUrlsStr = realFeedUrls.joinToString(", ") {
+                        DatabaseUtils.sqlEscapeString(it)
                     }
-                ))
-        }.flow
+                    append("(`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
+                }
+                if (articleIds.isNotEmpty()) {
+                    val articleIdsStr = articleIds.joinToString(", ") {
+                        DatabaseUtils.sqlEscapeString(it)
+                    }
+                    append("OR `${ArticleBean.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
+                }
+                append(")")
+            },
+            orderBy = {
+                ArticleBean.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
+            }
+        )
+        Pager(pagingConfig) { articleDao.getArticlePagingSource(sql) }.flow
     }.flowOn(Dispatchers.IO)
 
     class SearchRegexInvalidException(message: String?) : IllegalArgumentException(message)
@@ -106,13 +103,13 @@ class SearchRepository @Inject constructor(
             val searchDomainDao: SearchDomainDao
         }
 
-        fun genSql(
+        suspend fun genSql(
             tableName: String,
             k: String,
             useRegexSearch: Boolean = appContext.dataStore.getOrDefault(UseRegexSearchPreference),
             intersectSearchBySpace: Boolean = appContext.dataStore
                 .getOrDefault(IntersectSearchBySpacePreference),
-            useSearchDomain: (table: String, column: String) -> Boolean = { table, column ->
+            useSearchDomain: suspend (table: String, column: String) -> Boolean = { table, column ->
                 EntryPointAccessors.fromApplication(
                     appContext, SearchRepositoryEntryPoint::class.java
                 ).searchDomainDao.getSearchDomain(table, column)
@@ -121,7 +118,7 @@ class SearchRepository @Inject constructor(
             leadingFilterLogicalConnective: String = "AND",
             limit: (() -> Pair<Int, Int>)? = null,
             orderBy: (() -> Pair<String, String>)? = null,
-        ): SimpleSQLiteQuery {
+        ): RoomRawQuery {
             if (useRegexSearch) {
                 // Check Regex format
                 runCatching { k.toRegex() }.onFailure {
@@ -172,14 +169,14 @@ class SearchRepository @Inject constructor(
                     append("\nORDER BY $field $desc")
                 }
             }
-            return SimpleSQLiteQuery(sql)
+            return RoomRawQuery(sql)
         }
 
-        private fun getFilter(
+        private suspend fun getFilter(
             tableName: String,
             k: String,
             useRegexSearch: Boolean,
-            useSearchDomain: (tableName: String, columnName: String) -> Boolean,
+            useSearchDomain: suspend (tableName: String, columnName: String) -> Boolean,
             leadingFilter: String = "1",
             leadingFilterLogicalConnective: String = "AND",
         ): String {

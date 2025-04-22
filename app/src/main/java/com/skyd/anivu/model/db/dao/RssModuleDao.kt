@@ -11,7 +11,7 @@ import com.skyd.anivu.model.bean.article.RssMediaBean
 interface RssModuleDao {
     @Transaction
     @Upsert
-    fun upsert(rssMediaBean: RssMediaBean)
+    suspend fun upsert(rssMediaBean: RssMediaBean)
 
     @Transaction
     @Query(
@@ -20,5 +20,5 @@ interface RssModuleDao {
         WHERE ${RssMediaBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    fun getRssMediaBean(articleId: String): RssMediaBean
+    suspend fun getRssMediaBean(articleId: String): RssMediaBean
 }

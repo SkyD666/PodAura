@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.paging.PagingConfig
 import androidx.paging.testing.asSnapshot
-import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.room.RoomRawQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -710,7 +710,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         searchRepository.updateQuery("")
         val excepted =
-            articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
+            articleDao.getArticleList(RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
         val itemsSnapshot =
             searchRepository.listenSearchArticle(feedDao.getAllFeedUrl(), emptyList(), emptyList())
                 .asSnapshot { scrollTo(excepted.size) }
@@ -731,7 +731,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         feedRepository.setFeed(url = url2, groupId = null, nickname = null).first()
         searchRepository.updateQuery("")
-        val excepted = feedDao.getFeedList(SimpleSQLiteQuery("SELECT * FROM $FEED_VIEW_NAME"))
+        val excepted = feedDao.getFeedList(RoomRawQuery("SELECT * FROM $FEED_VIEW_NAME"))
         val itemsSnapshot = searchRepository.listenSearchFeed().asSnapshot {
             scrollTo(excepted.size)
         }
@@ -751,7 +751,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         articleRepository.updateSort(ArticleSort.Date(asc = true))
         val excepted =
-            articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
+            articleDao.getArticleList(RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
                 .sortedBy { it.articleWithEnclosure.article.date }
         val itemsSnapshot =
             articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
@@ -772,7 +772,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = "Nvidia").first()
         articleRepository.updateSort(ArticleSort.Title(asc = false))
         val excepted =
-            articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
+            articleDao.getArticleList(RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME"))
                 .sortedByDescending { it.articleWithEnclosure.article.title }
         val itemsSnapshot =
             articleRepository.requestArticleList(listOf(url1), emptyList(), emptyList())
@@ -797,7 +797,7 @@ class RssModule {
         articleDao.readAllInFeed(url1)
         articleRepository.filterRead(true)
         val excepted =
-            articleDao.getArticleList(SimpleSQLiteQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\""))
+            articleDao.getArticleList(RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\""))
         val itemsSnapshot =
             articleRepository.requestArticleList(listOf(url1, url2), emptyList(), emptyList())
                 .asSnapshot { scrollTo(excepted.size) }
