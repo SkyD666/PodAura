@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.search
 
 import androidx.paging.PagingData
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 
 data class SearchState(

@@ -19,8 +19,9 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.google.accompanist.permissions.rememberPermissionState
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.di.inject
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.longestCommonPrefix
 import com.skyd.anivu.ext.sampleWithoutFirst
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
@@ -34,17 +35,14 @@ import com.skyd.anivu.model.db.dao.DownloadInfoDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
 import com.skyd.anivu.model.db.dao.SessionParamsDao
 import com.skyd.anivu.model.db.dao.TorrentFileDao
-import com.skyd.anivu.model.repository.media.IMediaRepository
+import com.skyd.anivu.model.repository.download.DownloadRepository
+import com.skyd.anivu.model.repository.media.MediaRepository
 import com.skyd.anivu.model.worker.download.BtDownloadWorker
 import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.SAVE_DIR
 import com.skyd.anivu.model.worker.download.BtDownloadWorker.Companion.TORRENT_LINK_UUID
 import com.skyd.anivu.model.worker.download.getWhatPausedState
 import com.skyd.anivu.model.worker.download.updateDownloadState
 import com.skyd.anivu.ui.component.showToast
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -63,29 +61,21 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.io.files.Path
 import org.libtorrent4j.TorrentStatus
-import java.io.File
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download_no_notification_permission_tip
 import java.util.UUID
 
 object BtDownloadManager {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface DownloadManagerPoint {
-        val downloadInfoDao: DownloadInfoDao
-        val sessionParamsDao: SessionParamsDao
-        val torrentFileDao: TorrentFileDao
-        val enclosureDao: EnclosureDao
-        val articleDao: ArticleDao
-        val mediaRepository: IMediaRepository
-    }
+    private val downloadInfoDao by inject<DownloadInfoDao>()
+    private val sessionParamsDao by inject<SessionParamsDao>()
+    private val torrentFileDao by inject<TorrentFileDao>()
+    private val enclosureDao by inject<EnclosureDao>()
+    private val articleDao by inject<ArticleDao>()
+    private val mediaRepository by inject<MediaRepository>()
+    private val downloadRepository by inject<DownloadRepository>()
 
-    private val hiltEntryPoint = EntryPointAccessors.fromApplication(
-        appContext, DownloadManagerPoint::class.java
-    )
-
-    private val downloadInfoDao = hiltEntryPoint.downloadInfoDao
-    private val sessionParamsDao = hiltEntryPoint.sessionParamsDao
-    private val torrentFileDao = hiltEntryPoint.torrentFileDao
     private val scope = CoroutineScope(Dispatchers.IO)
     private val intentFlow = MutableSharedFlow<BtDownloadManagerIntent>()
     private lateinit var downloadInfoMap: LinkedHashMap<String, BtDownloadInfoBean>
@@ -120,7 +110,7 @@ object BtDownloadManager {
                 if (it) {
                     starter()
                 } else {
-                    context.getString(R.string.download_no_notification_permission_tip)
+                    context.getString(Res.string.download_no_notification_permission_tip)
                         .showToast()
                 }
             }
@@ -152,7 +142,7 @@ object BtDownloadManager {
                     context, Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                context.getString(R.string.download_no_notification_permission_tip).showToast()
+                context.getString(Res.string.download_no_notification_permission_tip).showToast()
                 return
             }
         }
@@ -235,11 +225,8 @@ object BtDownloadManager {
             worker.cancelWorkById(requestUuid)
             worker.getWorkInfoByIdFlow(requestUuid)
                 .filter { it == null || it.state.isFinished }
-                .flatMapConcat {
-                    BtDownloadWorker.hiltEntryPoint.downloadRepository.deleteBtDownloadTaskInfo(
-                        link = link
-                    )
-                }.take(1)
+                .flatMapConcat { downloadRepository.deleteBtDownloadTaskInfo(link = link) }
+                .take(1)
                 .collect()
         }
     }
@@ -520,19 +507,18 @@ object BtDownloadManager {
     private suspend fun addFileToMediaLibrary(link: String) {
         val torrents = torrentFileDao.getTorrentFilesByLink(link)
         val savePathDir = torrents.map { it.path }.longestCommonPrefix()
-        val needsAdd = torrents.map { File(it.path) }.filter { it.parent == savePathDir }
+        val needsAdd = torrents.map { Path(it.path) }
+            .filter { it.parent?.toString() == savePathDir }
         needsAdd.forEach { file ->
-            with(hiltEntryPoint) {
-                val articleId = enclosureDao.getMediaArticleId(link)
-                if (articleId != null) {
-                    val article = articleDao.getArticleWithFeed(articleId).first()
-                    mediaRepository.addNewFile(
-                        file = file,
-                        groupName = null,
-                        articleId = articleId,
-                        displayName = article?.articleWithEnclosure?.article?.title
-                    ).collect()
-                }
+            val articleId = enclosureDao.getMediaArticleId(link)
+            if (articleId != null) {
+                val article = articleDao.getArticleWithFeed(articleId).first()
+                mediaRepository.addNewFile(
+                    file = file,
+                    groupName = null,
+                    articleId = articleId,
+                    displayName = article?.articleWithEnclosure?.article?.title
+                ).collect()
             }
         }
     }

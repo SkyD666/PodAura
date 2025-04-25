@@ -40,11 +40,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.ui.component.ListMenu
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_screen_filter_all
+import podaura.shared.generated.resources.article_screen_filter_clear_all_filter
+import podaura.shared.generated.resources.article_screen_filter_favorite
+import podaura.shared.generated.resources.article_screen_filter_read
+import podaura.shared.generated.resources.article_screen_filter_unfavorite
+import podaura.shared.generated.resources.article_screen_filter_unread
+import podaura.shared.generated.resources.article_screen_hide_filter_bar
+import podaura.shared.generated.resources.article_screen_show_filter_bar
+import podaura.shared.generated.resources.article_screen_sort_date_asc
+import podaura.shared.generated.resources.article_screen_sort_date_desc
+import podaura.shared.generated.resources.article_screen_sort_title_asc
+import podaura.shared.generated.resources.article_screen_sort_title_desc
 
 @Composable
 fun FilterIcon(
@@ -67,7 +80,7 @@ fun FilterIcon(
         ) {
             Icon(
                 imageVector = Icons.Outlined.FilterAlt,
-                contentDescription = stringResource(id = R.string.article_screen_show_filter_bar),
+                contentDescription = stringResource(Res.string.article_screen_show_filter_bar),
             )
         }
     }
@@ -89,7 +102,7 @@ fun FilterIcon(
         onDismissRequest = { expandMenu = false },
     ) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.article_screen_filter_clear_all_filter)) },
+            text = { Text(text = stringResource(Res.string.article_screen_filter_clear_all_filter)) },
             leadingIcon = {
                 Icon(imageVector = Icons.Outlined.ClearAll, contentDescription = null)
             },
@@ -104,8 +117,8 @@ fun FilterIcon(
             text = {
                 Text(
                     text = stringResource(
-                        if (showFilterBar) R.string.article_screen_hide_filter_bar
-                        else R.string.article_screen_show_filter_bar
+                        if (showFilterBar) Res.string.article_screen_hide_filter_bar
+                        else Res.string.article_screen_show_filter_bar
                     )
                 )
             },
@@ -167,19 +180,19 @@ internal fun SortSetting(
     val items = remember {
         mapOf(
             ArticleSort.default to Pair(
-                context.getString(R.string.article_screen_sort_date_desc),
+                context.getString(Res.string.article_screen_sort_date_desc),
                 Icons.Outlined.CalendarMonth,
             ),
             ArticleSort.Date(true) to Pair(
-                context.getString(R.string.article_screen_sort_date_asc),
+                context.getString(Res.string.article_screen_sort_date_asc),
                 Icons.Outlined.CalendarMonth,
             ),
             ArticleSort.Title(true) to Pair(
-                context.getString(R.string.article_screen_sort_title_asc),
+                context.getString(Res.string.article_screen_sort_title_asc),
                 Icons.Outlined.Title,
             ),
             ArticleSort.Title(false) to Pair(
-                context.getString(R.string.article_screen_sort_title_desc),
+                context.getString(Res.string.article_screen_sort_title_desc),
                 Icons.Outlined.Title,
             ),
         )
@@ -230,15 +243,15 @@ internal fun FavoriteFilter(
     val items = remember {
         mapOf(
             null to Pair(
-                context.getString(R.string.article_screen_filter_all),
+                context.getString(Res.string.article_screen_filter_all),
                 Icons.Outlined.FavoriteBorder,
             ),
             true to Pair(
-                context.getString(R.string.article_screen_filter_favorite),
+                context.getString(Res.string.article_screen_filter_favorite),
                 Icons.Outlined.Favorite,
             ),
             false to Pair(
-                context.getString(R.string.article_screen_filter_unfavorite),
+                context.getString(Res.string.article_screen_filter_unfavorite),
                 Icons.Outlined.FavoriteBorder,
             ),
         )
@@ -259,15 +272,15 @@ internal fun ReadFilter(
     val items = remember {
         mapOf(
             null to Pair(
-                context.getString(R.string.article_screen_filter_all),
+                context.getString(Res.string.article_screen_filter_all),
                 Icons.Outlined.Markunread,
             ),
             true to Pair(
-                context.getString(R.string.article_screen_filter_read),
+                context.getString(Res.string.article_screen_filter_read),
                 Icons.Outlined.Drafts,
             ),
             false to Pair(
-                context.getString(R.string.article_screen_filter_unread),
+                context.getString(Res.string.article_screen_filter_unread),
                 Icons.Outlined.MarkEmailUnread,
             ),
         )

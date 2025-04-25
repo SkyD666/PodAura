@@ -26,14 +26,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.downloader.Status
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.download
+import podaura.shared.generated.resources.download_completed
+import podaura.shared.generated.resources.download_download_payload_rate
+import podaura.shared.generated.resources.download_error_paused
+import podaura.shared.generated.resources.download_initializing
+import podaura.shared.generated.resources.download_pause
+import podaura.shared.generated.resources.download_paused
+import podaura.shared.generated.resources.download_retry
+import podaura.shared.generated.resources.downloading
 
 @Composable
 fun DownloadItem(
@@ -44,7 +56,7 @@ fun DownloadItem(
     onDelete: (DownloadInfoBean) -> Unit,
 ) {
     val context = LocalContext.current
-    var description by remember { mutableStateOf(context.getString(R.string.download_initializing)) }
+    var description by remember { mutableStateOf(context.getString(Res.string.download_initializing)) }
     var pauseButtonIcon by remember { mutableStateOf(Icons.Outlined.Pause) }
     var pauseButtonContentDescription by rememberSaveable { mutableStateOf("") }
     var pauseButtonEnabled by rememberSaveable { mutableStateOf(true) }
@@ -55,22 +67,22 @@ fun DownloadItem(
             Status.Downloading -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Pause
-                pauseButtonContentDescription = context.getString(R.string.download_pause)
-                description = context.getString(R.string.downloading)
+                pauseButtonContentDescription = getString(Res.string.download_pause)
+                description = getString(Res.string.downloading)
             }
 
             Status.Failed -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Refresh
-                pauseButtonContentDescription = context.getString(R.string.download_retry)
-                description = context.getString(R.string.download_error_paused)
+                pauseButtonContentDescription = getString(Res.string.download_retry)
+                description = getString(Res.string.download_error_paused)
             }
 
             Status.Paused -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = context.getString(R.string.download)
-                description = context.getString(R.string.download_paused)
+                pauseButtonContentDescription = getString(Res.string.download)
+                description = getString(Res.string.download_paused)
             }
 
             Status.Init,
@@ -78,15 +90,15 @@ fun DownloadItem(
             Status.Queued -> {
                 pauseButtonEnabled = false
                 pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = context.getString(R.string.download)
-                description = context.getString(R.string.download_initializing)
+                pauseButtonContentDescription = getString(Res.string.download)
+                description = getString(Res.string.download_initializing)
             }
 
             Status.Success -> {
                 pauseButtonEnabled = false
                 pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = context.getString(R.string.delete)
-                description = context.getString(R.string.download_completed)
+                pauseButtonContentDescription = getString(Res.string.delete)
+                description = getString(Res.string.download_completed)
             }
 
         }
@@ -123,7 +135,7 @@ fun DownloadItem(
                             .padding(start = 12.dp)
                             .alignByBaseline(),
                         text = stringResource(
-                            R.string.download_download_payload_rate,
+                            Res.string.download_download_payload_rate,
                             (data.speedInBytePerMs * 1000).toLong().fileSize(context) + "/s"
                         ),
                         style = MaterialTheme.typography.labelMedium,
@@ -168,7 +180,7 @@ fun DownloadItem(
                     cancelButtonEnabled = false
                 },
                 imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(id = R.string.delete)
+                contentDescription = stringResource(Res.string.delete)
             )
         }
         ProgressIndicator(

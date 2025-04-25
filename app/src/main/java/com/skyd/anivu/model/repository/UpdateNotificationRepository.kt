@@ -1,15 +1,15 @@
 package com.skyd.anivu.model.repository
 
-import com.skyd.anivu.base.BaseRepository
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class UpdateNotificationRepository @Inject constructor(
+@Factory(binds = [])
+class UpdateNotificationRepository(
     private val articleNotificationRuleDao: ArticleNotificationRuleDao,
 ) : BaseRepository() {
     fun getAllRules(): Flow<List<ArticleNotificationRuleBean>> =

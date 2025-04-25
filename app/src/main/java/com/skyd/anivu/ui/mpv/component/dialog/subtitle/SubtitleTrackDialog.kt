@@ -18,9 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.mpv.component.dialog.BasicPlayerDialog
@@ -31,6 +29,13 @@ import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.SubtitleTrackDialogCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.track.SubtitleTrackDialogState
 import com.skyd.anivu.ui.mpv.resolveUri
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.item_selected
+import podaura.shared.generated.resources.player_add_external_subtitle
+import podaura.shared.generated.resources.player_subtitle_delay
+import podaura.shared.generated.resources.player_subtitle_track
+import podaura.shared.generated.resources.settings
 
 
 @Composable
@@ -63,18 +68,18 @@ internal fun SubtitleTrackDialog(
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 16.dp, bottom = 6.dp),
-                        text = stringResource(id = R.string.player_subtitle_track),
+                        text = stringResource(Res.string.player_subtitle_track),
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     PodAuraIconButton(
                         onClick = { onDialogVisibilityChanged.onSubtitleSettingDialog(true) },
                         imageVector = Icons.Outlined.Settings,
-                        contentDescription = stringResource(id = R.string.settings),
+                        contentDescription = stringResource(Res.string.settings),
                     )
                     PodAuraIconButton(
                         onClick = { pickSubtitleFileLauncher.safeLaunch("*/*") },
                         imageVector = Icons.Outlined.Add,
-                        contentDescription = stringResource(id = R.string.player_add_external_subtitle),
+                        contentDescription = stringResource(Res.string.player_add_external_subtitle),
                     )
                 }
                 val currentPlayState = playState()
@@ -86,7 +91,7 @@ internal fun SubtitleTrackDialog(
                     TrackDialogListItem(
                         imageVector = if (currentTrack?.trackId == track.trackId)
                             Icons.Outlined.Check else null,
-                        iconContentDescription = stringResource(id = R.string.item_selected),
+                        iconContentDescription = stringResource(Res.string.item_selected),
                         text = track.name,
                         onClick = { subtitleTrackDialogCallback.onSubtitleTrackChanged(track) }
                     )
@@ -98,7 +103,7 @@ internal fun SubtitleTrackDialog(
     if (state.showSetting) {
         val currentPlayState = playState()
         DelayMillisDialog(
-            title = stringResource(R.string.player_subtitle_delay),
+            title = stringResource(Res.string.player_subtitle_delay),
             delay = currentPlayState.subTitleDelay,
             onConform = { subtitleTrackDialogCallback.onSubtitleDelayChanged(it) },
             onDismiss = { onDialogVisibilityChanged.onSubtitleSettingDialog(false) },

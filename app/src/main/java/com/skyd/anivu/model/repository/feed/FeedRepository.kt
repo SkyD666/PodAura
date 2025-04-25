@@ -6,11 +6,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.config.Const
+import com.skyd.anivu.config.FEED_ICON_DIR
 import com.skyd.anivu.ext.copyTo
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.isLocal
@@ -29,6 +28,7 @@ import com.skyd.anivu.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.repository.RssHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -37,11 +37,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import org.koin.core.annotation.Factory
 import java.io.File
 import java.util.UUID
-import javax.inject.Inject
 
-class FeedRepository @Inject constructor(
+@Factory(binds = [IFeedRepository::class])
+class FeedRepository(
     private val groupDao: GroupDao,
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
@@ -50,7 +51,7 @@ class FeedRepository @Inject constructor(
 ) : BaseRepository(), IFeedRepository {
     fun allGroupCollapsed(): Flow<Boolean> = combine(
         groupDao.existsExpandedGroup(),
-        appContext.dataStore.flowOf(FeedDefaultGroupExpandPreference),
+        dataStore.flowOf(FeedDefaultGroupExpandPreference),
     ) { existsExpandedGroup, defaultGroupExpanded ->
         existsExpandedGroup == 0 && !defaultGroupExpanded
     }.flowOn(Dispatchers.IO)
@@ -59,7 +60,7 @@ class FeedRepository @Inject constructor(
         groupDao.getGroups()
     }.flow.map { pagingData -> pagingData.map { it.toVo() } }.flowOn(Dispatchers.IO)
 
-    fun requestGroupAnyPaging(): Flow<PagingData<Any>> = appContext.dataStore.run {
+    fun requestGroupAnyPaging(): Flow<PagingData<Any>> = dataStore.run {
         combine(
             flowOf(FeedDefaultGroupExpandPreference),
             flowOf(HideEmptyDefaultPreference),
@@ -90,7 +91,7 @@ class FeedRepository @Inject constructor(
     fun requestGroupAnyList(): Flow<List<Any>> = combine(
         groupDao.getGroupWithFeeds(),
         feedDao.getFeedsInDefaultGroup(),
-        appContext.dataStore.flowOf(HideMutedFeedPreference),
+        dataStore.flowOf(HideMutedFeedPreference),
     ) { groupList, defaultFeeds, hideMute ->
         mutableListOf<Any>().apply {
             add(GroupVo.DefaultGroup)
@@ -108,7 +109,7 @@ class FeedRepository @Inject constructor(
 
     fun clearGroupArticles(groupId: String): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
-        val count = with(appContext.dataStore) {
+        val count = with(dataStore) {
             articleDao.deleteArticlesInGroup(
                 groupId = realGroupId,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
@@ -258,7 +259,7 @@ class FeedRepository @Inject constructor(
     }
 
     fun clearFeedArticles(url: String): Flow<Int> = flow {
-        val count = with(appContext.dataStore) {
+        val count = with(dataStore) {
             articleDao.deleteArticleInFeed(
                 feedUrl = url,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
@@ -283,7 +284,7 @@ class FeedRepository @Inject constructor(
 
     fun changeGroupExpanded(groupId: String?, expanded: Boolean): Flow<Unit> = flow {
         if (groupId == null || groupId == GroupVo.DEFAULT_GROUP_ID) {
-            appContext.dataStore.put(
+            dataStore.put(
                 FeedDefaultGroupExpandPreference.key,
                 value = expanded,
             )
@@ -312,7 +313,7 @@ class FeedRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun collapseAllGroup(collapse: Boolean): Flow<Int> = flow {
-        appContext.dataStore.put(FeedDefaultGroupExpandPreference.key, !collapse)
+        dataStore.put(FeedDefaultGroupExpandPreference.key, !collapse)
         emit(groupDao.collapseAllGroup(collapse) + 1)
     }.flowOn(Dispatchers.IO)
 }

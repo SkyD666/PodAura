@@ -33,12 +33,9 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.skyd.anivu.ui.component.shape.ForwardRippleDirect
 import com.skyd.anivu.ui.component.shape.ForwardRippleShape
 import kotlin.math.sqrt
-
-enum class ForwardRippleDirect {
-    Forward, Backward
-}
 
 @Composable
 fun ForwardRipple(

@@ -20,15 +20,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
-import com.skyd.anivu.R
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_delete_group_warning
+import podaura.shared.generated.resources.feed_screen_group_feeds_move_to
+import podaura.shared.generated.resources.feed_screen_rss_title
 
 @Composable
 fun EditGroupSheet(
@@ -70,7 +73,7 @@ fun EditGroupSheet(
             // Options
             OptionArea(
                 deleteWarningText = stringResource(
-                    id = R.string.feed_screen_delete_group_warning,
+                    Res.string.feed_screen_delete_group_warning,
                     group.name,
                 ),
                 onReadAll = { onReadAll(group.groupId) },
@@ -89,7 +92,7 @@ fun EditGroupSheet(
 
             // Group
             GroupArea(
-                title = stringResource(id = R.string.feed_screen_group_feeds_move_to),
+                title = stringResource(Res.string.feed_screen_group_feeds_move_to),
                 currentGroupId = group.groupId,
                 groups = groups,
                 onGroupChange = {
@@ -109,7 +112,7 @@ fun EditGroupSheet(
         },
         visible = openNameDialog,
         maxLines = 1,
-        titleText = stringResource(id = R.string.feed_screen_rss_title),
+        titleText = stringResource(Res.string.feed_screen_rss_title),
         value = name,
         onValueChange = { name = it },
         enableConfirm = { name.isNotEmpty() },

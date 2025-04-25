@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.media.search
 
 import com.skyd.anivu.model.bean.MediaBean
-import java.io.File
+import kotlinx.io.files.Path
 
 
 internal sealed interface MediaSearchPartialStateChange {
@@ -45,7 +45,7 @@ internal sealed interface MediaSearchPartialStateChange {
             }
         }
 
-        data class Success(val file: File) : DeleteFileResult
+        data class Success(val file: Path) : DeleteFileResult
         data class Failed(val msg: String) : DeleteFileResult
     }
 
@@ -59,7 +59,7 @@ internal sealed interface MediaSearchPartialStateChange {
             }
         }
 
-        data class Success(val oldFile: File, val newFile: File) : RenameFileResult
+        data class Success(val oldFile: Path, val newFile: Path) : RenameFileResult
         data class Failed(val msg: String) : RenameFileResult
     }
 

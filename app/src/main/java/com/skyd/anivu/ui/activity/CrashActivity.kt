@@ -34,21 +34,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import com.skyd.anivu.R
-import com.skyd.anivu.config.Const.GITHUB_NEW_ISSUE_URL
-import com.skyd.anivu.ext.copy
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.config.Const
 import com.skyd.anivu.ext.getAppVersionCode
 import com.skyd.anivu.ext.getAppVersionName
-import com.skyd.anivu.ext.openBrowser
+import com.skyd.anivu.ext.safeOpenUri
+import com.skyd.anivu.model.preference.appearance.DarkModePreference
+import com.skyd.anivu.model.preference.dataStore
+import com.skyd.anivu.ui.component.SettingsProvider
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.theme.PodAuraTheme
-import com.skyd.generated.preference.LocalDarkMode
-import com.skyd.generated.preference.SettingsProvider
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.crash_screen_copy_crash_log
+import podaura.shared.generated.resources.crash_screen_crash_log
+import podaura.shared.generated.resources.crashed
+import podaura.shared.generated.resources.submit_an_issue_on_github
 
 
 /**
@@ -86,15 +90,13 @@ class CrashActivity : ComponentActivity() {
             CompositionLocalProvider(
                 LocalWindowSizeClass provides calculateWindowSizeClass(this)
             ) {
-                val context = LocalContext.current
-                val dataStore = remember { context.dataStore }
+                val dataStore = remember { dataStore }
                 SettingsProvider(dataStore) {
-                    PodAuraTheme(darkTheme = LocalDarkMode.current) {
+                    PodAuraTheme(darkTheme = DarkModePreference.current) {
+                        val uriHandler = LocalUriHandler.current
                         CrashScreen(
                             message = message,
-                            onReport = {
-                                GITHUB_NEW_ISSUE_URL.toUri().openBrowser(this)
-                            }
+                            onReport = { uriHandler.safeOpenUri(Const.GITHUB_NEW_ISSUE_URL) },
                         )
                     }
                 }
@@ -109,7 +111,6 @@ private fun CrashScreen(
     onReport: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -129,29 +130,30 @@ private fun CrashScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
             Text(
-                text = stringResource(id = R.string.crashed),
+                text = stringResource(Res.string.crashed),
                 style = MaterialTheme.typography.headlineLarge,
             )
 
             Spacer(modifier = Modifier.height(30.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = { message.copy(context) }) {
-                    Text(text = stringResource(id = R.string.crash_screen_copy_crash_log))
+                val clipboardManager = LocalClipboardManager.current
+                TextButton(onClick = { clipboardManager.setText(AnnotatedString(message)) }) {
+                    Text(text = stringResource(Res.string.crash_screen_copy_crash_log))
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Button(onClick = {
-                    message.copy(context)
+                    clipboardManager.setText(AnnotatedString(message))
                     onReport()
                 }) {
-                    Text(text = stringResource(id = R.string.submit_an_issue_on_github))
+                    Text(text = stringResource(Res.string.submit_an_issue_on_github))
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = stringResource(R.string.crash_screen_crash_log),
+                text = stringResource(Res.string.crash_screen_crash_log),
                 style = MaterialTheme.typography.titleLarge,
             )
 

@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.media
 
-import com.skyd.anivu.base.mvi.MviSingleEvent
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 import com.skyd.anivu.model.bean.MediaGroupBean
 
 sealed interface MediaEvent : MviSingleEvent {

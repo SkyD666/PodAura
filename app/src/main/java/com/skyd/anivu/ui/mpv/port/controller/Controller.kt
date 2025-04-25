@@ -35,14 +35,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.component.shape.CurlyCornerShape
-import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.player.LoopMode
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.loop_playlist_mode
+import podaura.shared.generated.resources.pause
+import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.shuffle_playlist
+import podaura.shared.generated.resources.skip_next
+import podaura.shared.generated.resources.skip_previous
 
 
 @Composable
@@ -72,12 +78,12 @@ internal fun Controller(
             checked = playState.shuffle,
             onCheckedChange = playStateCallback.onShuffle,
             imageVector = Icons.Outlined.Shuffle,
-            contentDescription = stringResource(R.string.shuffle_playlist),
+            contentDescription = stringResource(Res.string.shuffle_playlist),
             iconSize = 25.dp,
         )
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipPrevious,
-            contentDescription = stringResource(R.string.skip_previous),
+            contentDescription = stringResource(Res.string.skip_previous),
             enabled = !playState.playlistFirst,
             onClick = playStateCallback.onPreviousMedia,
         )
@@ -99,7 +105,7 @@ internal fun Controller(
                 imageVector = if (playState.isPlaying) Icons.Filled.Pause
                 else Icons.Filled.PlayArrow,
                 contentDescription = stringResource(
-                    if (playState.isPlaying) R.string.pause else R.string.play
+                    if (playState.isPlaying) Res.string.pause else Res.string.play
                 ),
                 modifier = Modifier.size(36.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -107,7 +113,7 @@ internal fun Controller(
         }
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipNext,
-            contentDescription = stringResource(R.string.skip_next),
+            contentDescription = stringResource(Res.string.skip_next),
             enabled = !playState.playlistLast,
             onClick = playStateCallback.onNextMedia,
         )
@@ -120,7 +126,7 @@ internal fun Controller(
                 LoopMode.LoopPlaylist, LoopMode.None -> Icons.Outlined.Repeat
                 LoopMode.LoopFile -> Icons.Outlined.RepeatOne
             },
-            contentDescription = stringResource(R.string.loop_playlist_mode),
+            contentDescription = stringResource(Res.string.loop_playlist_mode),
             iconSize = 25.dp,
         )
     }

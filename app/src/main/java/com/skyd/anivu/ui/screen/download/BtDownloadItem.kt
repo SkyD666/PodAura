@@ -25,14 +25,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.toPercentage
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.download
+import podaura.shared.generated.resources.download_click_to_seeding
+import podaura.shared.generated.resources.download_completed
+import podaura.shared.generated.resources.download_download_payload_rate
+import podaura.shared.generated.resources.download_error_paused
+import podaura.shared.generated.resources.download_initializing
+import podaura.shared.generated.resources.download_pause
+import podaura.shared.generated.resources.download_paused
+import podaura.shared.generated.resources.download_peer_count
+import podaura.shared.generated.resources.download_retry
+import podaura.shared.generated.resources.download_seeding
+import podaura.shared.generated.resources.download_upload_payload_rate
+import podaura.shared.generated.resources.downloading
 
 @Composable
 fun BtDownloadItem(
@@ -53,53 +68,51 @@ fun BtDownloadItem(
             BtDownloadInfoBean.DownloadState.Seeding -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Pause
-                pauseButtonContentDescription = context.getString(R.string.download_pause)
-                description = context.getString(R.string.download_seeding)
+                pauseButtonContentDescription = getString(Res.string.download_pause)
+                description = getString(Res.string.download_seeding)
             }
 
             BtDownloadInfoBean.DownloadState.Downloading -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Pause
-                pauseButtonContentDescription = context.getString(R.string.download_pause)
-                description = context.getString(R.string.downloading)
+                pauseButtonContentDescription = getString(Res.string.download_pause)
+                description = getString(Res.string.downloading)
             }
 
             BtDownloadInfoBean.DownloadState.StorageMovedFailed,
             BtDownloadInfoBean.DownloadState.ErrorPaused -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Refresh
-                pauseButtonContentDescription = context.getString(R.string.download_retry)
-                description = context.getString(R.string.download_error_paused)
+                pauseButtonContentDescription = getString(Res.string.download_retry)
+                description = getString(Res.string.download_error_paused)
             }
 
             BtDownloadInfoBean.DownloadState.SeedingPaused -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.CloudUpload
-                pauseButtonContentDescription =
-                    context.getString(R.string.download_click_to_seeding)
-                description = context.getString(R.string.download_paused)
+                pauseButtonContentDescription = getString(Res.string.download_click_to_seeding)
+                description = getString(Res.string.download_paused)
             }
 
             BtDownloadInfoBean.DownloadState.Paused -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = context.getString(R.string.download)
-                description = context.getString(R.string.download_paused)
+                pauseButtonContentDescription = getString(Res.string.download)
+                description = getString(Res.string.download_paused)
             }
 
             BtDownloadInfoBean.DownloadState.Init -> {
                 pauseButtonEnabled = false
                 pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = context.getString(R.string.download)
-                description = context.getString(R.string.download_initializing)
+                pauseButtonContentDescription = getString(Res.string.download)
+                description = getString(Res.string.download_initializing)
             }
 
             BtDownloadInfoBean.DownloadState.Completed -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.CloudUpload
-                pauseButtonContentDescription =
-                    context.getString(R.string.download_click_to_seeding)
-                description = context.getString(R.string.download_completed)
+                pauseButtonContentDescription = getString(Res.string.download_click_to_seeding)
+                description = getString(Res.string.download_completed)
             }
         }
     }
@@ -126,7 +139,7 @@ fun BtDownloadItem(
                     }
                     Text(
                         text = stringResource(
-                            R.string.download_peer_count,
+                            Res.string.download_peer_count,
                             data.peerInfoList.count()
                         ),
                         style = MaterialTheme.typography.bodySmall,
@@ -148,7 +161,7 @@ fun BtDownloadItem(
                             .padding(start = 12.dp)
                             .alignByBaseline(),
                         text = stringResource(
-                            R.string.download_download_payload_rate,
+                            Res.string.download_download_payload_rate,
                             data.downloadPayloadRate.toLong().fileSize(context) + "/s"
                         ),
                         style = MaterialTheme.typography.labelMedium,
@@ -160,7 +173,7 @@ fun BtDownloadItem(
                             .padding(start = 12.dp)
                             .alignByBaseline(),
                         text = stringResource(
-                            R.string.download_upload_payload_rate,
+                            Res.string.download_upload_payload_rate,
                             data.uploadPayloadRate.toLong().fileSize(context) + "/s"
                         ),
                         style = MaterialTheme.typography.labelMedium,
@@ -197,7 +210,7 @@ fun BtDownloadItem(
                     cancelButtonEnabled = false
                 },
                 imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(id = R.string.delete)
+                contentDescription = stringResource(Res.string.delete)
             )
         }
         ProgressIndicator(

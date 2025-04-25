@@ -19,16 +19,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.screen.media.list.GroupArea
 import com.skyd.anivu.ui.screen.media.list.OptionArea
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_rss_title
+import podaura.shared.generated.resources.media_screen_delete_group_warning
+import podaura.shared.generated.resources.media_screen_group_media_move_to
 
 @Composable
 fun EditMediaGroupSheet(
@@ -63,7 +66,7 @@ fun EditMediaGroupSheet(
             // Options
             OptionArea(
                 deleteWarningText = stringResource(
-                    id = R.string.media_screen_delete_group_warning,
+                    Res.string.media_screen_delete_group_warning,
                     group.name,
                 ),
                 // Default group cannot be deleted
@@ -78,7 +81,7 @@ fun EditMediaGroupSheet(
 
             // Group
             GroupArea(
-                title = stringResource(id = R.string.media_screen_group_media_move_to),
+                title = stringResource(Res.string.media_screen_group_media_move_to),
                 currentGroup = group,
                 // Exclude the current group
                 groups = groups.filter {
@@ -101,7 +104,7 @@ fun EditMediaGroupSheet(
         },
         visible = openNameDialog,
         maxLines = 1,
-        titleText = stringResource(id = R.string.feed_screen_rss_title),
+        titleText = stringResource(Res.string.feed_screen_rss_title),
         value = name,
         onValueChange = { name = it },
         enableConfirm = { name.isNotEmpty() },

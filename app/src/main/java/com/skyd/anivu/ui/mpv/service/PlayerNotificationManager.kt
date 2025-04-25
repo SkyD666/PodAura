@@ -19,9 +19,10 @@ import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import coil3.Bitmap
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.notify
 import com.skyd.anivu.ui.activity.player.PlayActivity
-import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.player.LoopMode
 import com.skyd.anivu.ui.mpv.PlayerEvent
 import com.skyd.anivu.ui.mpv.createThumbnail
 import com.skyd.anivu.ui.mpv.isPlaying
@@ -30,6 +31,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.close
+import podaura.shared.generated.resources.loop_playlist_mode
+import podaura.shared.generated.resources.pause
+import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.player_notification_channel_description
+import podaura.shared.generated.resources.player_notification_channel_name
+import podaura.shared.generated.resources.skip_next
+import podaura.shared.generated.resources.skip_previous
 
 class PlayerNotificationManager(
     private val context: Context,
@@ -183,24 +193,24 @@ class PlayerNotificationManager(
 
         val previousPendingIntent = buildNotificationAction(
             icon = R.drawable.ic_skip_previous_24,
-            title = context.getString(R.string.skip_previous),
+            title = context.getString(Res.string.skip_previous),
             intentAction = PlayerService.PREVIOUS_ACTION
         )
         val nextPendingIntent = buildNotificationAction(
             icon = R.drawable.ic_skip_next_24,
-            title = context.getString(R.string.skip_next),
+            title = context.getString(Res.string.skip_next),
             intentAction = PlayerService.NEXT_ACTION
         )
         val playPendingIntent = if (playerState.isPlaying) {
             buildNotificationAction(
                 icon = R.drawable.ic_play_arrow_24,
-                title = context.getString(R.string.play),
+                title = context.getString(Res.string.play),
                 intentAction = PlayerService.PLAY_ACTION
             )
         } else {
             buildNotificationAction(
                 icon = R.drawable.ic_pause_24,
-                title = context.getString(R.string.pause),
+                title = context.getString(Res.string.pause),
                 intentAction = PlayerService.PLAY_ACTION
             )
         }
@@ -210,12 +220,12 @@ class PlayerNotificationManager(
                 LoopMode.LoopFile -> R.drawable.ic_repeat_one_on_24
                 LoopMode.None -> R.drawable.ic_repeat_24
             },
-            title = context.getString(R.string.loop_playlist_mode),
+            title = context.getString(Res.string.loop_playlist_mode),
             intentAction = PlayerService.LOOP_ACTION
         )
         val closePendingIntent = buildNotificationAction(
             icon = R.drawable.ic_close_24,
-            title = context.getString(R.string.close),
+            title = context.getString(Res.string.close),
             intentAction = PlayerService.CLOSE_ACTION
         )
         if (!playerState.playlistFirst) {
@@ -242,9 +252,9 @@ class PlayerNotificationManager(
             if (notificationManager.getNotificationChannel(CHANNEL_ID) != null) {
                 return
             }
-            val name = context.getString(R.string.player_notification_channel_name)
+            val name = context.getString(Res.string.player_notification_channel_name)
             val descriptionText =
-                context.getString(R.string.player_notification_channel_description)
+                context.getString(Res.string.player_notification_channel_description)
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText

@@ -33,14 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.safeItemKey
@@ -56,6 +53,10 @@ import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import kotlinx.coroutines.channels.Channel
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.reorder_group_screen_name
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
@@ -65,7 +66,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 data object ReorderGroupRoute : Parcelable
 
 @Composable
-fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {
+fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -78,7 +79,7 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.reorder_group_screen_name)) },
+                title = { Text(text = stringResource(Res.string.reorder_group_screen_name)) },
             )
         }
     ) { paddingValues ->

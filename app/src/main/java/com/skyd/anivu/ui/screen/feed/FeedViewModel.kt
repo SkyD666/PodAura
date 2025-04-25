@@ -2,12 +2,11 @@ package com.skyd.anivu.ui.screen.feed
 
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.article.IArticleRepository
 import com.skyd.anivu.model.repository.feed.FeedRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -20,10 +19,10 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class FeedViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class FeedViewModel(
     private val feedRepo: FeedRepository,
     private val articleRepo: IArticleRepository,
 ) : AbstractMviViewModel<FeedIntent, FeedState, FeedEvent>() {

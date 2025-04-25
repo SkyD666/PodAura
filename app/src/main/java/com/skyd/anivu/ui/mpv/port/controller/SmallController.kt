@@ -14,9 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.landOrientation
 import com.skyd.anivu.ui.component.PodAuraIconButton
@@ -24,6 +22,12 @@ import com.skyd.anivu.ui.mpv.component.ControllerIconButton
 import com.skyd.anivu.ui.mpv.component.ControllerTextButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.fullscreen
+import podaura.shared.generated.resources.player_audio_track
+import podaura.shared.generated.resources.player_subtitle_track
+import podaura.shared.generated.resources.playlist
 import java.util.Locale
 
 
@@ -44,14 +48,14 @@ internal fun SmallController(
         ControllerIconButton(
             onClick = onOpenPlaylist,
             imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
-            contentDescription = stringResource(R.string.playlist),
+            contentDescription = stringResource(Res.string.playlist),
         )
         // Audio track button
         ControllerIconButton(
             enabled = playState.mediaLoaded,
             onClick = { onDialogVisibilityChanged.onAudioTrackDialog(true) },
             imageVector = Icons.Outlined.MusicNote,
-            contentDescription = stringResource(R.string.player_audio_track),
+            contentDescription = stringResource(Res.string.player_audio_track),
         )
         // Speed button
         ControllerTextButton(
@@ -68,12 +72,12 @@ internal fun SmallController(
             enabled = playState.mediaLoaded,
             onClick = { onDialogVisibilityChanged.onSubtitleTrackDialog(true) },
             imageVector = Icons.Outlined.ClosedCaption,
-            contentDescription = stringResource(R.string.player_subtitle_track),
+            contentDescription = stringResource(Res.string.player_subtitle_track),
         )
         PodAuraIconButton(
             onClick = { context.activity.landOrientation() },
             imageVector = Icons.Outlined.Fullscreen,
-            contentDescription = stringResource(R.string.fullscreen),
+            contentDescription = stringResource(Res.string.fullscreen),
         )
     }
 }

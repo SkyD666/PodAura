@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.article
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 import com.skyd.anivu.model.repository.article.ArticleSort
 
 sealed interface ArticleIntent : MviIntent {

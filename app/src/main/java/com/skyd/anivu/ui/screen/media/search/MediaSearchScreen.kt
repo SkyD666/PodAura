@@ -34,19 +34,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.plus
+import com.skyd.anivu.model.preference.appearance.media.item.MediaListItemTypePreference
+import com.skyd.anivu.model.preference.appearance.media.item.MediaSubListItemTypePreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.BackIcon
@@ -59,10 +58,13 @@ import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.search.SearchBarInputField
 import com.skyd.anivu.ui.screen.search.TrailingIcon
-import com.skyd.generated.preference.LocalMediaListItemType
-import com.skyd.generated.preference.LocalMediaSubListItemType
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.media_screen_search_hint
+import podaura.shared.generated.resources.to_top
 
 
 @Serializable
@@ -80,7 +82,7 @@ data class MediaSearchRoute(val path: String, val isSubList: Boolean) {
 fun MediaSearchScreen(
     path: String,
     isSubList: Boolean,
-    viewModel: MediaSearchViewModel = hiltViewModel(),
+    viewModel: MediaSearchViewModel = koinViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -116,7 +118,7 @@ fun MediaSearchScreen(
                         fabWidth = width
                         fabHeight = height
                     },
-                    contentDescription = stringResource(R.string.to_top),
+                    contentDescription = stringResource(Res.string.to_top),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
@@ -141,7 +143,7 @@ fun MediaSearchScreen(
                     },
                     query = searchFieldValueState,
                     onSearch = { keyboardController?.hide() },
-                    placeholder = { Text(text = stringResource(R.string.media_screen_search_hint)) },
+                    placeholder = { Text(text = stringResource(Res.string.media_screen_search_hint)) },
                     leadingIcon = { BackIcon() },
                     trailingIcon = {
                         TrailingIcon(showClearButton = searchFieldValueState.text.isNotEmpty()) {
@@ -175,15 +177,15 @@ fun MediaSearchScreen(
                 list = searchResultState.result,
                 groups = emptyList(),
                 groupInfo = null,
-                listItemType = if (isSubList) LocalMediaSubListItemType.current
-                else LocalMediaListItemType.current,
+                listItemType = if (isSubList) MediaSubListItemTypePreference.current
+                else MediaListItemTypePreference.current,
                 onPlay = { media ->
                     PlayActivity.playMediaList(
                         context.activity,
-                        startMediaPath = media.file.path,
+                        startMediaPath = media.filePath,
                         mediaList = searchResultState.result.filter { it.isMedia }.map {
                             PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                path = it.file.path,
+                                path = it.filePath,
                                 articleId = it.articleId,
                                 title = it.displayName,
                                 thumbnail = it.feedBean?.customIcon
@@ -194,10 +196,10 @@ fun MediaSearchScreen(
                 },
                 onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
                 onRename = { oldMedia, newName ->
-                    dispatch(MediaSearchIntent.RenameFile(oldMedia.file, newName))
+                    dispatch(MediaSearchIntent.RenameFile(oldMedia.path, newName))
                 },
                 onSetFileDisplayName = { media, displayName -> },
-                onRemove = { dispatch(MediaSearchIntent.DeleteFile(it.file)) },
+                onRemove = { dispatch(MediaSearchIntent.DeleteFile(it.path)) },
                 contentPadding = innerPaddings + PaddingValues(bottom = fabHeight),
             )
         }

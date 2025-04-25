@@ -5,10 +5,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.RoomRawQuery
-import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.config.allSearchDomain
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.di.get
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.ext.splitByBlank
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
@@ -19,13 +18,10 @@ import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.SearchDomainDao
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.search.IntersectSearchBySpacePreference
 import com.skyd.anivu.model.preference.search.UseRegexSearchPreference
 import com.skyd.anivu.model.repository.article.IArticleRepository
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,9 +29,10 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class SearchRepository @Inject constructor(
+@Factory(binds = [])
+class SearchRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
     private val articleRepo: IArticleRepository,
@@ -97,22 +94,14 @@ class SearchRepository @Inject constructor(
     class SearchRegexInvalidException(message: String?) : IllegalArgumentException(message)
 
     companion object {
-        @EntryPoint
-        @InstallIn(SingletonComponent::class)
-        interface SearchRepositoryEntryPoint {
-            val searchDomainDao: SearchDomainDao
-        }
-
         suspend fun genSql(
             tableName: String,
             k: String,
-            useRegexSearch: Boolean = appContext.dataStore.getOrDefault(UseRegexSearchPreference),
-            intersectSearchBySpace: Boolean = appContext.dataStore
+            useRegexSearch: Boolean = dataStore.getOrDefault(UseRegexSearchPreference),
+            intersectSearchBySpace: Boolean = dataStore
                 .getOrDefault(IntersectSearchBySpacePreference),
             useSearchDomain: suspend (table: String, column: String) -> Boolean = { table, column ->
-                EntryPointAccessors.fromApplication(
-                    appContext, SearchRepositoryEntryPoint::class.java
-                ).searchDomainDao.getSearchDomain(table, column)
+                get<SearchDomainDao>().getSearchDomain(table, column)
             },
             leadingFilter: String = "1",
             leadingFilterLogicalConnective: String = "AND",

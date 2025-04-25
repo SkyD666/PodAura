@@ -4,9 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.playlist.PlaylistBean
@@ -21,6 +19,7 @@ import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPrefe
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.NAME
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistSortByPreference
+import com.skyd.anivu.model.preference.dataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -29,10 +28,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import org.koin.core.annotation.Factory
 import java.util.UUID
-import javax.inject.Inject
 
-class PlaylistRepository @Inject constructor(
+@Factory(binds = [IPlaylistRepository::class])
+class PlaylistRepository(
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,
     private val pagingConfig: PagingConfig,
@@ -49,7 +49,7 @@ class PlaylistRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     override fun requestPlaylistList(): Flow<PagingData<PlaylistViewBean>> {
-        return appContext.dataStore.flowOf(
+        return dataStore.flowOf(
             PlaylistSortByPreference, PlaylistSortAscPreference
         ).distinctUntilChanged().flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {
@@ -97,7 +97,7 @@ class PlaylistRepository @Inject constructor(
         fromIndex: Int,
         toIndex: Int,
     ): Flow<Int> = flow {
-        if (appContext.dataStore.getOrDefault(PlaylistSortByPreference) != MANUAL ||
+        if (dataStore.getOrDefault(PlaylistSortByPreference) != MANUAL ||
             fromIndex == toIndex
         ) {
             emit(0)

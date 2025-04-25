@@ -2,14 +2,16 @@ package com.skyd.anivu.model.bean.group
 
 import android.os.Parcelable
 import androidx.annotation.Keep
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseBean
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.model.bean.BaseBean
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
+import com.skyd.anivu.model.preference.dataStore
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.default_feed_group
 
 @Parcelize
 @Serializable
@@ -34,15 +36,15 @@ open class GroupVo(
     @Parcelize
     object DefaultGroup : GroupVo(
         DEFAULT_GROUP_ID,
-        appContext.getString(R.string.default_feed_group),
-        appContext.dataStore.getOrDefault(FeedDefaultGroupExpandPreference),
+        appContext.getString(Res.string.default_feed_group),
+        dataStore.getOrDefault(FeedDefaultGroupExpandPreference),
     ) {
         @Keep
         private fun readResolve(): Any = DefaultGroup
         override val name: String
-            get() = appContext.getString(R.string.default_feed_group)
+            get() = appContext.getString(Res.string.default_feed_group)
         override val isExpanded: Boolean
-            get() = appContext.dataStore.getOrDefault(FeedDefaultGroupExpandPreference)
+            get() = dataStore.getOrDefault(FeedDefaultGroupExpandPreference)
     }
 
     companion object {

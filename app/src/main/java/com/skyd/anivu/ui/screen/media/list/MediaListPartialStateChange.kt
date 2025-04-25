@@ -3,7 +3,7 @@ package com.skyd.anivu.ui.screen.media.list
 import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
-import java.io.File
+import kotlinx.io.files.Path
 
 
 internal sealed interface MediaListPartialStateChange {
@@ -57,7 +57,7 @@ internal sealed interface MediaListPartialStateChange {
                     oldState.copy(
                         listState = if (listState is ListState.Success) {
                             ListState.Success(listState.list.toMutableList().apply {
-                                fastFirstOrNull { it.file == file }?.let { remove(it) }
+                                fastFirstOrNull { it.filePath == file.toString() }?.let { remove(it) }
                             })
                         } else {
                             listState
@@ -72,7 +72,7 @@ internal sealed interface MediaListPartialStateChange {
             }
         }
 
-        data class Success(val file: File) : DeleteFileResult
+        data class Success(val file: Path) : DeleteFileResult
         data class Failed(val msg: String) : DeleteFileResult
     }
 
@@ -97,11 +97,11 @@ internal sealed interface MediaListPartialStateChange {
                     oldState.copy(
                         listState = if (listState is ListState.Success) {
                             ListState.Success(listState.list.toMutableList().apply {
-                                val oldIndex = indexOfFirst { it.file == oldFile }
+                                val oldIndex = indexOfFirst { it.filePath == oldFile.toString() }
                                 if (oldIndex in indices) {
                                     val old = get(oldIndex)
                                     removeAt(oldIndex)
-                                    add(oldIndex, old.copy(file = newFile))
+                                    add(oldIndex, old.copy(filePath = newFile.toString()))
                                 }
                             })
                         } else {
@@ -117,7 +117,7 @@ internal sealed interface MediaListPartialStateChange {
             }
         }
 
-        data class Success(val oldFile: File, val newFile: File) : RenameFileResult
+        data class Success(val oldFile: Path, val newFile: Path) : RenameFileResult
         data class Failed(val msg: String) : RenameFileResult
     }
 
@@ -129,7 +129,7 @@ internal sealed interface MediaListPartialStateChange {
                     oldState.copy(
                         listState = if (listState is ListState.Success) {
                             ListState.Success(listState.list.toMutableList().apply {
-                                val index = indexOfFirst { it.file == media.file }
+                                val index = indexOfFirst { it.filePath == media.filePath }
                                 if (index in indices) {
                                     val old = get(index)
                                     removeAt(index)

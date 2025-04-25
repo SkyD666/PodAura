@@ -30,10 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.readable
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedViewBean
@@ -41,7 +39,9 @@ import com.skyd.anivu.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.FeedIcon
-import com.skyd.generated.preference.LocalFeedNumberBadge
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_feed_muted
 
 @Composable
 fun Feed1Item(
@@ -100,7 +100,7 @@ fun Feed1Item(
                 if (feed.mute) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                        contentDescription = stringResource(R.string.feed_screen_feed_muted),
+                        contentDescription = stringResource(Res.string.feed_screen_feed_muted),
                         modifier = Modifier.size(16.dp),
                     )
                 }
@@ -131,7 +131,7 @@ private fun FeedNumberBadge(feedView: FeedViewBean) {
     if (feedView.articleCount > 0) {
         val startEndPadding = 3.dp
         val midPadding = 2.dp
-        val feedNumberBadge = LocalFeedNumberBadge.current
+        val feedNumberBadge = FeedNumberBadgePreference.current
         var allCountContent: (@Composable RowScope.() -> Unit)? = null
         var unreadCountContent: (@Composable RowScope.() -> Unit)? = null
         val showUnread = feedNumberBadge and FeedNumberBadgePreference.UNREAD != 0

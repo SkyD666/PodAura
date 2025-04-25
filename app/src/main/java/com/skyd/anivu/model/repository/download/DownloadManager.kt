@@ -4,11 +4,12 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import com.skyd.anivu.R
-import com.skyd.anivu.appContext
+import com.skyd.anivu.di.get
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.EnclosureDao
-import com.skyd.anivu.model.repository.media.IMediaRepository
+import com.skyd.anivu.model.repository.media.MediaRepository
 import com.skyd.anivu.ui.activity.MainActivity
 import com.skyd.anivu.ui.screen.download.DownloadRoute
 import com.skyd.downloader.Downloader
@@ -16,10 +17,6 @@ import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.Event
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -27,22 +24,29 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.io.File
+import kotlinx.io.files.Path
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download_cancel
+import podaura.shared.generated.resources.download_channel_description
+import podaura.shared.generated.resources.download_channel_name
+import podaura.shared.generated.resources.download_pause
+import podaura.shared.generated.resources.download_resume
+import podaura.shared.generated.resources.download_retry
 
 class DownloadManager private constructor(context: Context) {
     private val downloader = Downloader.init(
         context.applicationContext as Application,
         NotificationConfig(
-            channelName = context.getString(R.string.download_channel_name),
-            channelDescription = context.getString(R.string.download_channel_description),
+            channelName = context.getString(Res.string.download_channel_name),
+            channelDescription = context.getString(Res.string.download_channel_description),
             smallIcon = R.drawable.ic_icon_24,
             importance = NotificationManager.IMPORTANCE_LOW,
             intentContentActivity = MainActivity::class.qualifiedName,
             intentContentBasePath = DownloadRoute.BASE_PATH,
-            pauseText = R.string.download_pause,
-            resumeText = R.string.download_resume,
-            cancelText = R.string.download_cancel,
-            retryText = R.string.download_retry,
+            pauseText = context.getString(Res.string.download_pause),
+            resumeText = context.getString(Res.string.download_resume),
+            cancelText = context.getString(Res.string.download_cancel),
+            retryText = context.getString(Res.string.download_retry),
         )
     )
     val downloadInfoListFlow: Flow<List<DownloadInfoBean>> = downloader.observeDownloads()
@@ -88,28 +92,16 @@ class DownloadManager private constructor(context: Context) {
     companion object {
         private val scope = CoroutineScope(Dispatchers.IO)
 
-        @EntryPoint
-        @InstallIn(SingletonComponent::class)
-        interface WorkerEntryPoint {
-            val enclosureDao: EnclosureDao
-            val articleDao: ArticleDao
-            val mediaRepository: IMediaRepository
-        }
-
-        private val hiltEntryPoint = EntryPointAccessors.fromApplication(
-            appContext, WorkerEntryPoint::class.java
-        )
-
         fun listenDownloadEvent() = scope.launch {
             Downloader.observeEvent().collect { event ->
                 when (event) {
                     is Event.Remove -> Unit
-                    is Event.Success -> with(hiltEntryPoint) {
-                        val articleId = enclosureDao.getMediaArticleId(event.entity.url)
+                    is Event.Success -> {
+                        val articleId = get<EnclosureDao>().getMediaArticleId(event.entity.url)
                         if (articleId != null) {
-                            val article = articleDao.getArticleWithFeed(articleId).first()
-                            mediaRepository.addNewFile(
-                                file = File(event.entity.path, event.entity.fileName),
+                            val article = get<ArticleDao>().getArticleWithFeed(articleId).first()
+                            get<MediaRepository>().addNewFile(
+                                file = Path(event.entity.path, event.entity.fileName),
                                 groupName = null,
                                 articleId = articleId,
                                 displayName = article?.articleWithEnclosure?.article?.title

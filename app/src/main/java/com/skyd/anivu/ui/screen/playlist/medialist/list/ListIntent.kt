@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.playlist.medialist.list
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 
 sealed interface ListIntent : MviIntent {

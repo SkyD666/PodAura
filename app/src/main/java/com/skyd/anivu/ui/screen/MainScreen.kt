@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -42,10 +41,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
+import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.feed.FeedRoute
 import com.skyd.anivu.ui.screen.feed.FeedScreen
@@ -55,9 +54,13 @@ import com.skyd.anivu.ui.screen.more.MoreRoute
 import com.skyd.anivu.ui.screen.more.MoreScreen
 import com.skyd.anivu.ui.screen.playlist.PlaylistRoute
 import com.skyd.anivu.ui.screen.playlist.PlaylistScreen
-import com.skyd.generated.preference.LocalMediaLibLocation
-import com.skyd.generated.preference.LocalNavigationBarLabel
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.media_screen_name
+import podaura.shared.generated.resources.more_screen_name
+import podaura.shared.generated.resources.playlist
 import kotlin.reflect.KClass
 
 
@@ -104,7 +107,7 @@ fun MainScreen() {
             ) {
                 composable<FeedRoute> { FeedScreen() }
                 composable<PlaylistRoute> { PlaylistScreen() }
-                composable<MediaRoute> { MediaScreen(path = LocalMediaLibLocation.current) }
+                composable<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
                 composable<MoreRoute> { MoreScreen() }
             }
         }
@@ -117,10 +120,10 @@ private fun <T : Any> NavBackStackEntry?.selected(route: KClass<T>) =
 @Composable
 private fun NavigationBarOrRail(navController: NavController) {
     val items = listOf(
-        stringResource(R.string.feed_screen_name) to FeedRoute,
-        stringResource(R.string.playlist) to PlaylistRoute,
-        stringResource(R.string.media_screen_name) to MediaRoute,
-        stringResource(R.string.more_screen_name) to MoreRoute,
+        stringResource(Res.string.feed_screen_name) to FeedRoute,
+        stringResource(Res.string.playlist) to PlaylistRoute,
+        stringResource(Res.string.media_screen_name) to MediaRoute,
+        stringResource(Res.string.more_screen_name) to MoreRoute,
     )
     val icons = remember {
         mapOf(
@@ -159,7 +162,7 @@ private fun NavigationBarOrRail(navController: NavController) {
         }
     }
 
-    val navigationBarLabel = LocalNavigationBarLabel.current
+    val navigationBarLabel = NavigationBarLabelPreference.current
     if (LocalWindowSizeClass.current.isCompact) {
         NavigationBar {
             items.forEachIndexed { index, item ->

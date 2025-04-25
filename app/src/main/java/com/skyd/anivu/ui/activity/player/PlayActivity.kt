@@ -14,7 +14,6 @@ import android.os.IBinder
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,20 +21,23 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
-import com.skyd.anivu.R
-import com.skyd.anivu.base.BaseComposeActivity
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.savePictureToMediaStore
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
+import com.skyd.anivu.ui.activity.BaseComposeActivity
 import com.skyd.anivu.ui.component.showToast
 import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerViewRoute
 import com.skyd.anivu.ui.mpv.service.PlayerService
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_no_permission_cannot_save_screenshot
 import java.io.File
 
 
@@ -84,7 +86,7 @@ class PlayActivity : BaseComposeActivity() {
         }
     }
 
-    private val viewModel: PlayerViewModel by viewModels()
+    private val viewModel: PlayerViewModel by viewModel()
     private lateinit var picture: File
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -92,7 +94,7 @@ class PlayActivity : BaseComposeActivity() {
         if (isGranted) {
             picture.savePictureToMediaStore(this)
         } else {
-            getString(R.string.player_no_permission_cannot_save_screenshot).showToast()
+            getString(Res.string.player_no_permission_cannot_save_screenshot).showToast()
         }
     }
 

@@ -1,17 +1,14 @@
 package com.skyd.anivu.model.bean.playlist
 
-import android.os.Parcelable
 import androidx.room.Embedded
 import androidx.room.Relation
 import com.skyd.anivu.ext.isLocalFile
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.util.coil.localmedia.LocalMedia
-import kotlinx.parcelize.Parcelize
+import kotlinx.io.files.Path
 import kotlinx.serialization.Serializable
-import java.io.File
 
-@Parcelize
 @Serializable
 data class PlaylistMediaWithArticleBean(
     @Embedded
@@ -22,7 +19,7 @@ data class PlaylistMediaWithArticleBean(
         entityColumn = ArticleBean.ARTICLE_ID_COLUMN,
     )
     val article: ArticleWithFeed?,
-) : java.io.Serializable, Parcelable {
+) : java.io.Serializable {
     val title: String
         get() = article?.articleWithEnclosure?.article?.title
             ?: playlistMediaBean.title
@@ -38,7 +35,7 @@ data class PlaylistMediaWithArticleBean(
 
     val thumbnailAny: Any?
         get() = article?.getThumbnail()
-            ?: if (playlistMediaBean.url.isLocalFile()) LocalMedia(File(playlistMediaBean.url)) else null
+            ?: if (playlistMediaBean.url.isLocalFile()) LocalMedia(Path(playlistMediaBean.url)) else null
 
     val thumbnail: String?
         get() = article?.getThumbnail()

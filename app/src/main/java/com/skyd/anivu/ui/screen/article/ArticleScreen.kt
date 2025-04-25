@@ -51,28 +51,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
-import com.skyd.anivu.ext.UuidList
-import com.skyd.anivu.ext.UuidListType
-import com.skyd.anivu.ext.listType
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
-import com.skyd.anivu.ext.uuidListType
 import com.skyd.anivu.ext.withoutTop
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
+import com.skyd.anivu.model.preference.appearance.article.ArticleItemMinWidthPreference
+import com.skyd.anivu.model.preference.appearance.article.ArticleListTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.article.ArticleTopBarTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.article.ShowArticlePullRefreshPreference
+import com.skyd.anivu.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
 import com.skyd.anivu.model.repository.article.ArticleSort
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -82,19 +80,25 @@ import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
+import com.skyd.anivu.ui.component.UuidList
+import com.skyd.anivu.ui.component.UuidListType
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
+import com.skyd.anivu.ui.component.listType
+import com.skyd.anivu.ui.component.uuidListType
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.search.SearchRoute
-import com.skyd.generated.preference.LocalArticleItemMinWidth
-import com.skyd.generated.preference.LocalArticleListTonalElevation
-import com.skyd.generated.preference.LocalArticleTopBarTonalElevation
-import com.skyd.generated.preference.LocalShowArticlePullRefresh
-import com.skyd.generated.preference.LocalShowArticleTopBarRefresh
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_screen_name
+import podaura.shared.generated.resources.article_screen_search_article
+import podaura.shared.generated.resources.refresh
+import podaura.shared.generated.resources.to_top
 import java.util.UUID
 import kotlin.reflect.typeOf
 
@@ -158,7 +162,7 @@ fun ArticleScreen(
     groupIds: List<String>,
     articleIds: List<String>,
     onBackClick: (() -> Unit)? = DefaultBackClick,
-    viewModel: ArticleViewModel = hiltViewModel(),
+    viewModel: ArticleViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
@@ -183,21 +187,21 @@ fun ArticleScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                title = { Text(text = stringResource(R.string.article_screen_name)) },
+                title = { Text(text = stringResource(Res.string.article_screen_name)) },
                 navigationIcon = {
                     if (onBackClick == DefaultBackClick) BackIcon()
                     else if (onBackClick != null) BackIcon(onClick = onBackClick)
                 },
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalArticleTopBarTonalElevation.current.dp
+                        ArticleTopBarTonalElevationPreference.current.dp
                     ),
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalArticleTopBarTonalElevation.current.dp + 4.dp
+                        ArticleTopBarTonalElevationPreference.current.dp + 4.dp
                     ),
                 ),
                 actions = {
-                    if (LocalShowArticleTopBarRefresh.current) {
+                    if (ShowArticleTopBarRefreshPreference.current) {
                         val angle = if (uiState.articleListState.loading) {
                             val infiniteTransition =
                                 rememberInfiniteTransition(label = "topBarRefreshTransition")
@@ -221,7 +225,7 @@ fun ArticleScreen(
                                 )
                             },
                             imageVector = Icons.Outlined.Refresh,
-                            contentDescription = stringResource(id = R.string.refresh),
+                            contentDescription = stringResource(Res.string.refresh),
                             rotate = angle,
                             enabled = !uiState.articleListState.loading,
                         )
@@ -245,7 +249,7 @@ fun ArticleScreen(
                             )
                         },
                         imageVector = Icons.Outlined.Search,
-                        contentDescription = stringResource(id = R.string.article_screen_search_article),
+                        contentDescription = stringResource(Res.string.article_screen_search_article),
                     )
                 },
                 scrollBehavior = scrollBehavior,
@@ -260,7 +264,7 @@ fun ArticleScreen(
                 PodAuraFloatingActionButton(
                     onClick = { scope.launch { listState.animateScrollToItem(0) } },
                     onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                    contentDescription = stringResource(R.string.to_top),
+                    contentDescription = stringResource(Res.string.to_top),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
@@ -271,7 +275,7 @@ fun ArticleScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
-                    LocalArticleListTonalElevation.current.dp
+                    ArticleListTonalElevationPreference.current.dp
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { paddingValues ->
@@ -353,7 +357,7 @@ private fun Content(
         modifier = Modifier
             .pullToRefresh(
                 state = state,
-                enabled = LocalShowArticlePullRefresh.current,
+                enabled = ShowArticlePullRefreshPreference.current,
                 onRefresh = onRefresh,
                 isRefreshing = uiState.articleListState.loading
             )
@@ -396,7 +400,7 @@ private fun Content(
             }
         }
 
-        if (LocalShowArticlePullRefresh.current) {
+        if (ShowArticlePullRefreshPreference.current) {
             Indicator(
                 isRefreshing = uiState.articleListState.loading,
                 state = state,
@@ -422,7 +426,7 @@ private fun ArticleList(
     ) {
         LazyVerticalGrid(
             modifier = modifier.fillMaxSize(),
-            columns = GridCells.Adaptive(LocalArticleItemMinWidth.current.dp),
+            columns = GridCells.Adaptive(ArticleItemMinWidthPreference.current.dp),
             state = listState,
             contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

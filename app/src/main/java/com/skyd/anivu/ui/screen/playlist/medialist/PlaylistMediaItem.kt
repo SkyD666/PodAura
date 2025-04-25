@@ -38,13 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
@@ -54,6 +52,11 @@ import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 import com.skyd.anivu.util.coil.localmedia.LocalMediaFetcher
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.history_screen_local_file
+import podaura.shared.generated.resources.media_not_exists
+import podaura.shared.generated.resources.playing
 import java.io.File
 
 @Composable
@@ -120,7 +123,7 @@ fun PlaylistMediaItem(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = stringResource(R.string.playing),
+                        contentDescription = stringResource(Res.string.playing),
                         modifier = Modifier.size(32.dp),
                         tint = Color.White,
                     )
@@ -206,13 +209,13 @@ private fun TagRow(isLocal: Boolean, mediaExists: Boolean) {
     val tagRow: List<@Composable RowScope.() -> Unit> = buildList {
         if (isLocal) {
             add {
-                TagText(text = stringResource(R.string.history_screen_local_file))
+                TagText(text = stringResource(Res.string.history_screen_local_file))
             }
         }
         if (!mediaExists) {
             add {
                 TagText(
-                    text = stringResource(R.string.media_not_exists),
+                    text = stringResource(Res.string.media_not_exists),
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.error,
                 )

@@ -28,29 +28,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.preference.appearance.media.item.BaseMediaItemTypePreference
+import com.skyd.anivu.model.preference.appearance.media.item.MediaListItemTypePreference
+import com.skyd.anivu.model.preference.appearance.media.item.MediaSubListItemTypePreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.EmptyPlaceholder
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.media.CreateGroupDialog
 import com.skyd.anivu.ui.screen.media.list.item.MediaItem
 import com.skyd.anivu.ui.screen.media.sub.SubMediaRoute
 import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.read.ReadRoute
-import com.skyd.generated.preference.LocalMediaListItemType
-import com.skyd.generated.preference.LocalMediaSubListItemType
+import org.koin.compose.viewmodel.koinViewModel
 
 class GroupInfo(
     val group: MediaGroupBean,
@@ -67,7 +67,7 @@ internal fun MediaList(
     path: String,
     isSubList: Boolean,
     groupInfo: GroupInfo? = null,
-    viewModel: MediaListViewModel = hiltViewModel(key = path + groupInfo?.group)
+    viewModel: MediaListViewModel = koinViewModel(key = path + groupInfo?.group)
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
@@ -109,8 +109,8 @@ internal fun MediaList(
                             contentPadding = innerPadding + contentPadding
                         )
                     } else {
-                        val listItemType = if (isSubList) LocalMediaSubListItemType.current
-                        else LocalMediaListItemType.current
+                        val listItemType = if (isSubList) MediaSubListItemTypePreference.current
+                        else MediaListItemTypePreference.current
                         MediaList(
                             modifier = modifier,
                             list = listState.list,
@@ -120,10 +120,10 @@ internal fun MediaList(
                             onPlay = { media ->
                                 PlayActivity.playMediaList(
                                     context.activity,
-                                    startMediaPath = media.file.path,
+                                    startMediaPath = media.filePath,
                                     mediaList = listState.list.filter { it.isMedia }.map {
                                         PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                            path = it.file.path,
+                                            path = it.filePath,
                                             articleId = it.articleId,
                                             title = it.displayName,
                                             thumbnail = it.feedBean?.customIcon
@@ -134,7 +134,7 @@ internal fun MediaList(
                             },
                             onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
                             onRename = { oldMedia, newName ->
-                                dispatch(MediaListIntent.RenameFile(oldMedia.file, newName))
+                                dispatch(MediaListIntent.RenameFile(oldMedia.path, newName))
                             },
                             onSetFileDisplayName = { media, displayName ->
                                 dispatch(
@@ -144,7 +144,7 @@ internal fun MediaList(
                                     )
                                 )
                             },
-                            onRemove = { dispatch(MediaListIntent.DeleteFile(it.file)) },
+                            onRemove = { dispatch(MediaListIntent.DeleteFile(it.path)) },
                             contentPadding = innerPadding + contentPadding + fabPadding,
                         )
                     }

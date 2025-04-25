@@ -40,8 +40,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.toSignedString
 import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
@@ -65,20 +63,37 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchBaseSettingsItem
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.SliderDialog
+import com.skyd.anivu.ui.component.suspendString
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
-import com.skyd.generated.preference.LocalBackgroundPlay
-import com.skyd.generated.preference.LocalPlayerAutoPip
-import com.skyd.generated.preference.LocalPlayerDoubleTap
-import com.skyd.generated.preference.LocalPlayerForwardSecondsButtonValue
-import com.skyd.generated.preference.LocalPlayerMaxBackCacheSize
-import com.skyd.generated.preference.LocalPlayerMaxCacheSize
-import com.skyd.generated.preference.LocalPlayerSeekOption
-import com.skyd.generated.preference.LocalPlayerShowForwardSecondsButton
-import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
-import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.ok
+import podaura.shared.generated.resources.player_config_advanced_screen_name
+import podaura.shared.generated.resources.player_config_screen_advanced_category
+import podaura.shared.generated.resources.player_config_screen_appearance_category
+import podaura.shared.generated.resources.player_config_screen_auto_pip
+import podaura.shared.generated.resources.player_config_screen_auto_pip_description
+import podaura.shared.generated.resources.player_config_screen_background_play
+import podaura.shared.generated.resources.player_config_screen_background_play_description
+import podaura.shared.generated.resources.player_config_screen_behavior_category
+import podaura.shared.generated.resources.player_config_screen_cache_category
+import podaura.shared.generated.resources.player_config_screen_double_tap
+import podaura.shared.generated.resources.player_config_screen_forward_second_button_value
+import podaura.shared.generated.resources.player_config_screen_max_back_cache_size
+import podaura.shared.generated.resources.player_config_screen_max_cache_size
+import podaura.shared.generated.resources.player_config_screen_name
+import podaura.shared.generated.resources.player_config_screen_seek_option
+import podaura.shared.generated.resources.player_config_screen_show_forward_seconds_button
+import podaura.shared.generated.resources.player_config_screen_show_forward_seconds_button_description
+import podaura.shared.generated.resources.player_config_screen_show_progress_indicator
+import podaura.shared.generated.resources.player_config_screen_show_progress_indicator_description
+import podaura.shared.generated.resources.player_config_screen_show_screenshot_button
+import podaura.shared.generated.resources.player_config_screen_show_screenshot_button_description
+import podaura.shared.generated.resources.reset
 
 
 @Serializable
@@ -102,7 +117,7 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.player_config_screen_name)) },
+                title = { Text(text = stringResource(Res.string.player_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
@@ -114,31 +129,24 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             contentPadding = paddingValues,
         ) {
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.player_config_screen_behavior_category))
+                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_behavior_category))
             }
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.Speaker,
-                    text = stringResource(id = R.string.player_config_screen_background_play),
-                    description = stringResource(id = R.string.player_config_screen_background_play_description),
-                    checked = LocalBackgroundPlay.current,
-                    onCheckedChange = {
-                        BackgroundPlayPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.player_config_screen_background_play),
+                    description = stringResource(Res.string.player_config_screen_background_play_description),
+                    checked = BackgroundPlayPreference.current,
+                    onCheckedChange = { BackgroundPlayPreference.put(scope, it) }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.Outlined.TouchApp),
-                    text = stringResource(id = R.string.player_config_screen_double_tap),
-                    descriptionText = PlayerDoubleTapPreference.toDisplayName(
-                        context,
-                        LocalPlayerDoubleTap.current,
-                    ),
+                    text = stringResource(Res.string.player_config_screen_double_tap),
+                    descriptionText = suspendString(PlayerDoubleTapPreference.current) {
+                        PlayerDoubleTapPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         DoubleTapMenu(
                             expanded = expandDoubleTapMenu,
@@ -151,26 +159,19 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.PictureInPictureAlt,
-                    text = stringResource(id = R.string.player_config_screen_auto_pip),
-                    description = stringResource(id = R.string.player_config_screen_auto_pip_description),
-                    checked = LocalPlayerAutoPip.current,
-                    onCheckedChange = {
-                        PlayerAutoPipPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.player_config_screen_auto_pip),
+                    description = stringResource(Res.string.player_config_screen_auto_pip_description),
+                    checked = PlayerAutoPipPreference.current,
+                    onCheckedChange = { PlayerAutoPipPreference.put(scope, it) }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.Redo),
-                    text = stringResource(id = R.string.player_config_screen_seek_option),
-                    descriptionText = PlayerSeekOptionPreference.toDisplayName(
-                        context = context,
-                        value = LocalPlayerSeekOption.current,
-                    ),
+                    text = stringResource(Res.string.player_config_screen_seek_option),
+                    descriptionText = suspendString(PlayerSeekOptionPreference.current) {
+                        PlayerSeekOptionPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         SeekOptionMenu(
                             expanded = expandSeekOptionMenu,
@@ -181,87 +182,69 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.player_config_screen_appearance_category))
+                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_appearance_category))
             }
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.PhotoCamera,
-                    text = stringResource(id = R.string.player_config_screen_show_screenshot_button),
-                    description = stringResource(id = R.string.player_config_screen_show_screenshot_button_description),
-                    checked = LocalPlayerShowScreenshotButton.current,
-                    onCheckedChange = {
-                        PlayerShowScreenshotButtonPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.player_config_screen_show_screenshot_button),
+                    description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
+                    checked = PlayerShowScreenshotButtonPreference.current,
+                    onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
                 )
             }
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.Timelapse,
-                    text = stringResource(id = R.string.player_config_screen_show_progress_indicator),
-                    description = stringResource(id = R.string.player_config_screen_show_progress_indicator_description),
-                    checked = LocalPlayerShowProgressIndicator.current,
-                    onCheckedChange = {
-                        PlayerShowProgressIndicatorPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.player_config_screen_show_progress_indicator),
+                    description = stringResource(Res.string.player_config_screen_show_progress_indicator_description),
+                    checked = PlayerShowProgressIndicatorPreference.current,
+                    onCheckedChange = { PlayerShowProgressIndicatorPreference.put(scope, it) }
                 )
             }
             item {
-                val forwardSeconds = LocalPlayerForwardSecondsButtonValue.current
+                val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
                 SwitchBaseSettingsItem(
                     imageVector = if (forwardSeconds >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
                     text = stringResource(
-                        R.string.player_config_screen_show_forward_seconds_button,
+                        Res.string.player_config_screen_show_forward_seconds_button,
                         forwardSeconds.toSignedString()
                     ),
                     description = stringResource(
-                        R.string.player_config_screen_show_forward_seconds_button_description,
+                        Res.string.player_config_screen_show_forward_seconds_button_description,
                         forwardSeconds.toSignedString()
                     ),
-                    checked = LocalPlayerShowForwardSecondsButton.current,
-                    onCheckedChange = {
-                        PlayerShowForwardSecondsButtonPreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    },
+                    checked = PlayerShowForwardSecondsButtonPreference.current,
+                    onCheckedChange = { PlayerShowForwardSecondsButtonPreference.put(scope, it) },
                     onClick = { openForwardSecondButtonValueDialog = true },
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.player_config_screen_cache_category))
+                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_cache_category))
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowRight),
-                    text = stringResource(id = R.string.player_config_screen_max_cache_size),
-                    descriptionText = LocalPlayerMaxCacheSize.current.fileSize(context),
+                    text = stringResource(Res.string.player_config_screen_max_cache_size),
+                    descriptionText = PlayerMaxCacheSizePreference.current.fileSize(context),
                     onClick = { openMaxCacheSizeDialog = true }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowLeft),
-                    text = stringResource(id = R.string.player_config_screen_max_back_cache_size),
-                    descriptionText = LocalPlayerMaxBackCacheSize.current.fileSize(context),
+                    text = stringResource(Res.string.player_config_screen_max_back_cache_size),
+                    descriptionText = PlayerMaxBackCacheSizePreference.current.fileSize(context),
                     onClick = { openMaxBackCacheSizeDialog = true }
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.player_config_screen_advanced_category))
+                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_advanced_category))
             }
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.player_config_advanced_screen_name),
+                    text = stringResource(Res.string.player_config_advanced_screen_name),
                     descriptionText = null,
                     onClick = { navController.navigate(PlayerConfigAdvancedRoute) },
                 )
@@ -277,31 +260,19 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
         if (openMaxCacheSizeDialog) {
             MaxCacheSizeDialog(
                 onDismissRequest = { openMaxCacheSizeDialog = false },
-                title = stringResource(id = R.string.player_config_screen_max_cache_size),
-                initValue = LocalPlayerMaxCacheSize.current,
+                title = stringResource(Res.string.player_config_screen_max_cache_size),
+                initValue = PlayerMaxCacheSizePreference.current,
                 defaultValue = { PlayerMaxCacheSizePreference.default },
-                onConfirm = {
-                    PlayerMaxCacheSizePreference.put(
-                        context = context,
-                        scope = scope,
-                        value = it,
-                    )
-                }
+                onConfirm = { PlayerMaxCacheSizePreference.put(scope, it) }
             )
         }
         if (openMaxBackCacheSizeDialog) {
             MaxCacheSizeDialog(
                 onDismissRequest = { openMaxBackCacheSizeDialog = false },
-                title = stringResource(id = R.string.player_config_screen_max_back_cache_size),
-                initValue = LocalPlayerMaxBackCacheSize.current,
+                title = stringResource(Res.string.player_config_screen_max_back_cache_size),
+                initValue = PlayerMaxBackCacheSizePreference.current,
                 defaultValue = { PlayerMaxBackCacheSizePreference.default },
-                onConfirm = {
-                    PlayerMaxBackCacheSizePreference.put(
-                        context = context,
-                        scope = scope,
-                        value = it,
-                    )
-                }
+                onConfirm = { PlayerMaxBackCacheSizePreference.put(scope, it) }
             )
         }
     }
@@ -309,32 +280,28 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
 @Composable
 private fun DoubleTapMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val playerDoubleTap = LocalPlayerDoubleTap.current
 
     CheckableListMenu(
         expanded = expanded,
-        current = playerDoubleTap,
+        current = PlayerDoubleTapPreference.current,
         values = remember { PlayerDoubleTapPreference.values.toList() },
-        displayName = { PlayerDoubleTapPreference.toDisplayName(context, it) },
-        onChecked = { PlayerDoubleTapPreference.put(context, scope, it) },
+        displayName = { PlayerDoubleTapPreference.toDisplayName(it) },
+        onChecked = { PlayerDoubleTapPreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
 private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val playerSeekOption = LocalPlayerSeekOption.current
 
     CheckableListMenu(
         expanded = expanded,
-        current = playerSeekOption,
+        current = PlayerSeekOptionPreference.current,
         values = remember { PlayerSeekOptionPreference.values.toList() },
-        displayName = { PlayerSeekOptionPreference.toDisplayName(context, it) },
-        onChecked = { PlayerSeekOptionPreference.put(context, scope, it) },
+        displayName = { PlayerSeekOptionPreference.toDisplayName(it) },
+        onChecked = { PlayerSeekOptionPreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
@@ -342,8 +309,7 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 @Composable
 internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val forwardSeconds = LocalPlayerForwardSecondsButtonValue.current
+    val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
     var value by rememberSaveable { mutableIntStateOf(forwardSeconds) }
 
     SliderDialog(
@@ -364,7 +330,7 @@ internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = PlayerForwardSecondsButtonValuePreference.default },
                     imageVector = Icons.Outlined.Restore,
-                    contentDescription = stringResource(R.string.reset),
+                    contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
@@ -374,18 +340,18 @@ internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
                 contentDescription = null,
             )
         },
-        title = { Text(text = stringResource(R.string.player_config_screen_forward_second_button_value)) },
+        title = { Text(text = stringResource(Res.string.player_config_screen_forward_second_button_value)) },
         confirmButton = {
             TextButton(onClick = {
-                PlayerForwardSecondsButtonValuePreference.put(context, scope, value)
+                PlayerForwardSecondsButtonValuePreference.put(scope, value)
                 onDismissRequest()
             }) {
-                Text(text = stringResource(id = R.string.ok))
+                Text(text = stringResource(Res.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(id = R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         }
     )
@@ -423,7 +389,7 @@ internal fun MaxCacheSizeDialog(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = defaultValue() },
                     imageVector = Icons.Outlined.Restore,
-                    contentDescription = stringResource(R.string.reset),
+                    contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
@@ -434,12 +400,12 @@ internal fun MaxCacheSizeDialog(
                 onConfirm(value)
                 onDismissRequest()
             }) {
-                Text(text = stringResource(id = R.string.ok))
+                Text(text = stringResource(Res.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(id = R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         }
     )

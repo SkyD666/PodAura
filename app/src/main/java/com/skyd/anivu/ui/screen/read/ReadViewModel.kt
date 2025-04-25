@@ -1,13 +1,10 @@
 package com.skyd.anivu.ui.screen.read
 
-import com.skyd.anivu.R
-import com.skyd.anivu.appContext
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.ReadRepository
 import com.skyd.anivu.model.repository.article.IArticleRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -18,10 +15,13 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import javax.inject.Inject
+import org.jetbrains.compose.resources.getString
+import org.koin.android.annotation.KoinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.read_screen_article_id_illegal
 
-@HiltViewModel
-class ReadViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class ReadViewModel(
     private val readRepo: ReadRepository,
     private val articleRepo: IArticleRepository,
 ) : AbstractMviViewModel<ReadIntent, ReadState, ReadEvent>() {
@@ -81,7 +81,7 @@ class ReadViewModel @Inject constructor(
                 }.map {
                     if (it == null) {
                         ReadPartialStateChange.ArticleResult.Failed(
-                            appContext.getString(R.string.read_screen_article_id_illegal)
+                            getString(Res.string.read_screen_article_id_illegal)
                         )
                     } else {
                         ReadPartialStateChange.ArticleResult.Success(article = it)

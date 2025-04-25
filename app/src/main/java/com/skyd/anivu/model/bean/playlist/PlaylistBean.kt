@@ -4,7 +4,7 @@ import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.skyd.anivu.base.BaseBean
+import com.skyd.anivu.model.bean.BaseBean
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 

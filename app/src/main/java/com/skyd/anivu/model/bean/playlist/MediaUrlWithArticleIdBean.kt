@@ -19,7 +19,7 @@ data class MediaUrlWithArticleIdBean(
         )
 
         fun MediaBean.toMediaUrlWithArticleIdBean() = MediaUrlWithArticleIdBean(
-            url = file.path,
+            url = filePath.toString(),
             articleId = articleId,
         )
     }

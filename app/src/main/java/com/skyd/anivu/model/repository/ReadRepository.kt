@@ -5,12 +5,11 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
-import com.skyd.anivu.config.Const.TEMP_PICTURES_DIR
+import com.skyd.anivu.config.Const
+import com.skyd.anivu.config.TEMP_PICTURES_DIR
 import com.skyd.anivu.ext.copyToClipboard
 import com.skyd.anivu.ext.deleteDirs
 import com.skyd.anivu.ext.getImage
-import com.skyd.anivu.ui.component.imageLoaderBuilder
 import com.skyd.anivu.ext.savePictureToMediaStore
 import com.skyd.anivu.ext.share
 import com.skyd.anivu.ext.toUri
@@ -19,6 +18,7 @@ import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.history.ReadHistoryBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.ReadHistoryDao
+import com.skyd.anivu.ui.component.imageLoaderBuilder
 import com.skyd.anivu.util.image.ImageFormatChecker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -27,13 +27,14 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import org.koin.core.annotation.Factory
 import java.io.File
-import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
-class ReadRepository @Inject constructor(
+@Factory(binds = [])
+class ReadRepository(
     private val articleDao: ArticleDao,
     private val readHistoryDao: ReadHistoryDao,
 ) : BaseRepository() {
@@ -68,7 +69,7 @@ class ReadRepository @Inject constructor(
     fun shareImage(url: String): Flow<Unit> = flow {
         val imageFile = getImageByCoil(url)
         val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-        val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
+        val tempImg = File(Const.TEMP_PICTURES_DIR, imageFile.name + format.toString())
         imageFile.copyTo(tempImg, overwrite = true)
 
         coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
@@ -80,7 +81,7 @@ class ReadRepository @Inject constructor(
     fun copyImage(url: String): Flow<Unit> = flow {
         val imageFile = getImageByCoil(url)
         val format = imageFile.inputStream().use { ImageFormatChecker.check(it) }
-        val tempImg = File(TEMP_PICTURES_DIR, imageFile.name + format.toString())
+        val tempImg = File(Const.TEMP_PICTURES_DIR, imageFile.name + format.toString())
         imageFile.copyTo(tempImg, overwrite = true)
 
         coroutineScope { deleteOldTempFiles(currentFile = imageFile) }
@@ -107,8 +108,8 @@ class ReadRepository @Inject constructor(
 
     private fun deleteOldTempFiles(currentFile: File) {
         val nowTime = System.currentTimeMillis().milliseconds
-        TEMP_PICTURES_DIR.deleteDirs { file ->
-            file.name == currentFile.name || file == TEMP_PICTURES_DIR ||
+        File(Const.TEMP_PICTURES_DIR).deleteDirs { file ->
+            file.name == currentFile.name || file == File(Const.TEMP_PICTURES_DIR) ||
                     nowTime - file.lastModified().milliseconds < 1.hours
         }
     }

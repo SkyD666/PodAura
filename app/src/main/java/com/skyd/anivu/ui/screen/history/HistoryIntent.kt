@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.history
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 
 sealed interface HistoryIntent : MviIntent {
     data object Init : HistoryIntent

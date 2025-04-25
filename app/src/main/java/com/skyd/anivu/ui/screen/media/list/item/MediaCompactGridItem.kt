@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.skyd.anivu.model.bean.MediaBean
-import com.skyd.generated.preference.LocalMediaItemGridTypeCoverRatio
+import com.skyd.anivu.model.preference.appearance.media.item.MediaItemGridTypeCoverRatioPreference
 
 @Composable
 fun MediaCompactGridItem(
@@ -47,7 +47,7 @@ fun MediaCompactGridItem(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
-                .gridTypeCoverRatio(LocalMediaItemGridTypeCoverRatio.current)
+                .gridTypeCoverRatio(MediaItemGridTypeCoverRatioPreference.current)
                 .background(MaterialTheme.colorScheme.secondary.copy(0.1f))
                 .itemClickable(),
         ) {

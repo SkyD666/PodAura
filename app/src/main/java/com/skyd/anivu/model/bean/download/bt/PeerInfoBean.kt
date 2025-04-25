@@ -1,7 +1,7 @@
 package com.skyd.anivu.model.bean.download.bt
 
 import android.os.Parcelable
-import com.skyd.anivu.base.BaseBean
+import com.skyd.anivu.model.bean.BaseBean
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.libtorrent4j.PeerInfo.ConnectionType

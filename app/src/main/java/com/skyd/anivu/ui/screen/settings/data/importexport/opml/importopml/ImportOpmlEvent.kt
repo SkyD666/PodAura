@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml
 
-import com.skyd.anivu.base.mvi.MviSingleEvent
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 import com.skyd.anivu.model.repository.importexport.opml.IImportOpmlRepository.ImportOpmlResult
 
 sealed interface ImportOpmlEvent : MviSingleEvent {

@@ -8,16 +8,15 @@ import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.model.repository.player.PlayerRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.anivu.ui.activity.player.PlayActivity.Companion.PLAY_DATA_MODE_KEY
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class PlayerViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class PlayerViewModel(
     private val playerRepo: PlayerRepository,
     private val playlistMediaRepo: IPlaylistMediaRepository,
 ) : ViewModel() {

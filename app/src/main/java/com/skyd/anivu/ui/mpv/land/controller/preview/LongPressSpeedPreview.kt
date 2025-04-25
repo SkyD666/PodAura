@@ -19,11 +19,12 @@ import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.mpv.land.controller.ControllerLabelGray
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_long_press_playback_speed
 
 
 @Composable
@@ -39,7 +40,7 @@ internal fun BoxScope.LongPressSpeedPreview(speed: () -> Float) {
         Icon(
             modifier = Modifier.size(30.dp),
             imageVector = Icons.Rounded.FastForward,
-            contentDescription = stringResource(id = R.string.player_long_press_playback_speed),
+            contentDescription = stringResource(Res.string.player_long_press_playback_speed),
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(

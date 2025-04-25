@@ -7,11 +7,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.RoomRawQuery
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
@@ -21,6 +20,7 @@ import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.anivu.model.preference.data.delete.KeepUnreadArticlesPreference
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.repository.RssHelper
 import com.skyd.anivu.ui.component.showToast
 import kotlinx.coroutines.Deferred
@@ -39,7 +39,9 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.parcelize.Parcelize
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.rss_update_failed
 import kotlin.coroutines.cancellation.CancellationException
 
 @Parcelize
@@ -52,7 +54,8 @@ sealed class ArticleSort(open val asc: Boolean) : Parcelable {
     }
 }
 
-class ArticleRepository @Inject constructor(
+@Factory(binds = [IArticleRepository::class])
+class ArticleRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
@@ -168,7 +171,7 @@ class ArticleRepository @Inject constructor(
             requests.awaitAll()
             if (failMsg.isNotEmpty()) {
                 appContext.getString(
-                    R.string.rss_update_failed,
+                    Res.string.rss_update_failed,
                     failMsg.size,
                     failMsg.joinToString(
                         separator = "\n",
@@ -190,7 +193,7 @@ class ArticleRepository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     override fun deleteArticle(articleId: String): Flow<Int> = flow {
-        with(appContext.dataStore) {
+        with(dataStore) {
             emit(
                 articleDao.deleteArticle(
                     articleId,

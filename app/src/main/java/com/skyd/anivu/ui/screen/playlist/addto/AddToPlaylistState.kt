@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.playlist.addto
 
 import androidx.paging.PagingData
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 import kotlinx.coroutines.flow.Flow
 

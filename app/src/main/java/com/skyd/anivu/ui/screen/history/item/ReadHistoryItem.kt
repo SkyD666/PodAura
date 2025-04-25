@@ -29,29 +29,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.readable
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
+import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.ArticleItemFeedInfo
 import com.skyd.anivu.ui.screen.article.ArticleItemIconButton
 import com.skyd.anivu.ui.screen.article.navigateToReadScreen
-import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete
 
 @Composable
 fun ReadHistoryItem(
     data: ReadHistoryWithArticle,
     onDelete: (ReadHistoryWithArticle) -> Unit,
 ) {
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val articleWithEnclosure = data.article.articleWithEnclosure
     val article = articleWithEnclosure.article
@@ -92,7 +91,7 @@ fun ReadHistoryItem(
                         )
                     }
                     val lastTime = data.readHistoryBean.lastTime
-                    val date = lastTime.toDateTimeString(context = context)
+                    val date = lastTime.toDateTimeString()
                     if (lastTime > 0 && date.isNotBlank()) {
                         if (!author.isNullOrBlank()) {
                             Text(
@@ -113,7 +112,7 @@ fun ReadHistoryItem(
                 Spacer(modifier = Modifier.height(3.dp))
 
                 val description = article.description?.readable()?.let { desc ->
-                    if (LocalDeduplicateTitleInDesc.current) desc.replace(title, "") else desc
+                    if (DeduplicateTitleInDescPreference.current) desc.replace(title, "") else desc
                 }?.trim()
                 if (!description.isNullOrBlank()) {
                     Text(
@@ -164,7 +163,7 @@ fun ReadHistoryItem(
             ArticleItemIconButton(
                 onClick = { onDelete(data) },
                 imageVector = Icons.Outlined.Delete,
-                contentDescription = stringResource(id = R.string.delete),
+                contentDescription = stringResource(Res.string.delete),
                 tint = LocalContentColor.current.copy(alpha = 0.75f),
             )
         }

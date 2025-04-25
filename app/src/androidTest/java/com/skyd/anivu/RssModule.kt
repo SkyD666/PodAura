@@ -8,7 +8,6 @@ import androidx.room.RoomRawQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.skyd.anivu.config.Const
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.feed.FEED_VIEW_NAME

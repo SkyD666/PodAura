@@ -1,6 +1,5 @@
 package com.skyd.anivu.model.bean
 
-import com.skyd.anivu.base.BaseBean
 import com.skyd.anivu.model.bean.article.EnclosureBean
 
 data class LinkEnclosureBean(

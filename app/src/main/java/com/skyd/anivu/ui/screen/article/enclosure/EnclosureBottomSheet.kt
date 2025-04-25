@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.article.enclosure
 
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,32 +24,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ext.copy
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.LinkEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.anivu.model.repository.download.DownloadStarter
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.TagText
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.bottom_sheet_enclosure_title
+import podaura.shared.generated.resources.download
+import podaura.shared.generated.resources.enclosure_item_link_tag
+import podaura.shared.generated.resources.play
 
-fun getEnclosuresList(
-    context: Context,
-    articleWithEnclosureBean: ArticleWithEnclosureBean,
-): List<Any> {
+fun getEnclosuresList(articleWithEnclosureBean: ArticleWithEnclosureBean): List<Any> {
     val dataList: MutableList<Any> = articleWithEnclosureBean.enclosures.toMutableList()
-    if (context.dataStore.getOrDefault(ParseLinkTagAsEnclosurePreference)) {
+    if (dataStore.getOrDefault(ParseLinkTagAsEnclosurePreference)) {
         articleWithEnclosureBean.article.link?.let { link ->
             dataList += LinkEnclosureBean(link = link)
         }
@@ -92,7 +93,7 @@ fun EnclosureBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(id = R.string.bottom_sheet_enclosure_title),
+                text = stringResource(Res.string.bottom_sheet_enclosure_title),
                 style = MaterialTheme.typography.titleLarge,
             )
             Spacer(modifier = Modifier.height(6.dp))
@@ -131,8 +132,9 @@ private fun EnclosureItem(
 
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
+            val clipboardManager = LocalClipboardManager.current
             Text(
-                modifier = Modifier.clickable { enclosure.url.copy(context) },
+                modifier = Modifier.clickable { clipboardManager.setText(AnnotatedString(enclosure.url)) },
                 text = enclosure.url,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 4,
@@ -168,13 +170,13 @@ private fun EnclosureItem(
                     }
                 },
                 imageVector = Icons.Outlined.PlayArrow,
-                contentDescription = stringResource(id = R.string.play),
+                contentDescription = stringResource(Res.string.play),
             )
         }
         PodAuraIconButton(
             onClick = { onDownload(enclosure) },
             imageVector = Icons.Outlined.Download,
-            contentDescription = stringResource(id = R.string.download),
+            contentDescription = stringResource(Res.string.download),
         )
     }
 }
@@ -193,14 +195,15 @@ private fun LinkEnclosureItem(
     }
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
+            val clipboardManager = LocalClipboardManager.current
             Text(
-                modifier = Modifier.clickable { enclosure.link.copy(context) },
+                modifier = Modifier.clickable { clipboardManager.setText(AnnotatedString(enclosure.link)) },
                 text = enclosure.link,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 5,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            TagText(text = stringResource(R.string.enclosure_item_link_tag), fontSize = 10.sp)
+            TagText(text = stringResource(Res.string.enclosure_item_link_tag), fontSize = 10.sp)
         }
         Spacer(modifier = Modifier.width(12.dp))
         if (enclosure.isMedia) {
@@ -217,14 +220,14 @@ private fun LinkEnclosureItem(
                     }
                 },
                 imageVector = Icons.Outlined.PlayArrow,
-                contentDescription = stringResource(id = R.string.play),
+                contentDescription = stringResource(Res.string.play),
             )
         }
         if (isMagnetOrTorrent) {
             PodAuraIconButton(
                 onClick = { onDownload(enclosure) },
                 imageVector = Icons.Outlined.Download,
-                contentDescription = stringResource(id = R.string.download),
+                contentDescription = stringResource(Res.string.download),
             )
         }
     }

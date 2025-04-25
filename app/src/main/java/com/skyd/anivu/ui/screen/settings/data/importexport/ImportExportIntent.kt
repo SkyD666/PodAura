@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport
 
 import android.net.Uri
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 
 sealed interface ImportExportIntent : MviIntent {
     data object Init : ImportExportIntent

@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.feed.reorder
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 
 sealed interface ReorderGroupIntent : MviIntent {
     data object Init : ReorderGroupIntent

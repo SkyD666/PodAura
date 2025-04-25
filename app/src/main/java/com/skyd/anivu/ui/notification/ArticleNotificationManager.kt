@@ -13,18 +13,16 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.skyd.anivu.R
 import com.skyd.anivu.appContext
-import com.skyd.anivu.ext.UuidList
+import com.skyd.anivu.di.get
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.onSubList
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.model.db.dao.ArticleDao
 import com.skyd.anivu.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.anivu.ui.activity.MainActivity
+import com.skyd.anivu.ui.component.UuidList
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.util.uniqueInt
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -32,16 +30,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_notification_channel_name
+import podaura.shared.generated.resources.article_notification_content_text
+import podaura.shared.generated.resources.article_notification_new_articles
 import kotlin.time.Duration.Companion.seconds
 
 object ArticleNotificationManager {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface ArticleNotificationManagerEntryPoint {
-        val articleNotificationRuleDao: ArticleNotificationRuleDao
-        val articleDao: ArticleDao
-    }
-
     private const val CHANNEL_ID = "articleNotification"
 
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -56,9 +51,8 @@ object ArticleNotificationManager {
     }
 
     private fun onBatch() = scope.launch {
-        val hiltEntryPoint = EntryPointAccessors.fromApplication(
-            appContext, ArticleNotificationManagerEntryPoint::class.java
-        )
+        val articleNotificationRuleDao = get<ArticleNotificationRuleDao>()
+        val articleDao = get<ArticleDao>()
         while (isActive) {
             val articleIds = mutableListOf<List<String>>()
 
@@ -69,11 +63,10 @@ object ArticleNotificationManager {
                 } ?: break
             }
 
-            val rules = hiltEntryPoint.articleNotificationRuleDao
-                .getAllArticleNotificationRules().first()
+            val rules = articleNotificationRuleDao.getAllArticleNotificationRules().first()
             val matchedData = mutableListOf<Pair<String, ArticleNotificationRuleBean>>()
             articleIds.flatten().onSubList { subArticleIds ->
-                val data = hiltEntryPoint.articleDao.getArticleWithEnclosureListByIds(subArticleIds)
+                val data = articleDao.getArticleWithEnclosureListByIds(subArticleIds)
                 matchedData += data.mapNotNull { item ->
                     val matchedRule = rules.firstOrNull { it.match(item) }
                     matchedRule?.let { item.article.articleId to matchedRule }
@@ -106,9 +99,9 @@ object ArticleNotificationManager {
 
         val builder = NotificationCompat.Builder(appContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_icon_24)
-            .setContentTitle(appContext.getString(R.string.article_notification_new_articles))
+            .setContentTitle(appContext.getString(Res.string.article_notification_new_articles))
             .setContentText(
-                appContext.getString(R.string.article_notification_content_text, content)
+                appContext.getString(Res.string.article_notification_content_text, content)
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
@@ -127,7 +120,7 @@ object ArticleNotificationManager {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = appContext.getString(R.string.article_notification_channel_name)
+            val name = appContext.getString(Res.string.article_notification_channel_name)
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(CHANNEL_ID, name, importance)
             val notificationManager =

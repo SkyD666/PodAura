@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.article
 
-import com.skyd.anivu.base.mvi.MviSingleEvent
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 
 sealed interface ArticleEvent : MviSingleEvent {
     sealed interface InitArticleListResultEvent : ArticleEvent {

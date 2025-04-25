@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.media.list
 
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.MediaGroupBean
 import com.skyd.anivu.model.bean.MediaBean
 

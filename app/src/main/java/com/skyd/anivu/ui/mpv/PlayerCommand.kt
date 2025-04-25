@@ -6,6 +6,7 @@ import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.mpv.MPVPlayer.Track
+import com.skyd.anivu.ui.player.LoopMode
 import java.io.File
 
 sealed interface PlayerCommand {
@@ -42,8 +43,6 @@ sealed interface PlayerCommand {
     data class PlayFileInPlaylist(val path: String) : PlayerCommand
     data object CycleLoop : PlayerCommand
 }
-
-enum class LoopMode { LoopPlaylist, LoopFile, None }
 
 sealed interface PlayerEvent {
     data object ServiceDestroy : PlayerEvent

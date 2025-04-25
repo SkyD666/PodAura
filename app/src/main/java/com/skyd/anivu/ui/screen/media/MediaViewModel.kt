@@ -1,10 +1,9 @@
 package com.skyd.anivu.ui.screen.media
 
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.media.MediaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -16,10 +15,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class MediaViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class MediaViewModel(
     private val mediaRepo: MediaRepository
 ) : AbstractMviViewModel<MediaIntent, MediaState, MediaEvent>() {
 

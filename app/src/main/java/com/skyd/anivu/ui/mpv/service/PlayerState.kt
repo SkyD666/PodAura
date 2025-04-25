@@ -2,7 +2,7 @@ package com.skyd.anivu.ui.mpv.service
 
 import coil3.Bitmap
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.player.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 
 

@@ -5,7 +5,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
-import com.skyd.anivu.base.BaseBean
+import com.skyd.anivu.model.bean.BaseBean
 import com.skyd.anivu.ext.isLocalFile
 import com.skyd.anivu.model.bean.article.ArticleBean
 import kotlinx.serialization.Serializable

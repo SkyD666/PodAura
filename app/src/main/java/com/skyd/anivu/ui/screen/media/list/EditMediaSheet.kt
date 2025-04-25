@@ -37,11 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.openWith
 import com.skyd.anivu.ext.toUri
@@ -52,6 +50,22 @@ import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.screen.feed.SheetChip
 import com.skyd.anivu.ui.screen.media.list.item.MediaCover
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.item_selected
+import podaura.shared.generated.resources.media_group
+import podaura.shared.generated.resources.media_options
+import podaura.shared.generated.resources.media_screen_add_group
+import podaura.shared.generated.resources.media_screen_delete_directory_warning
+import podaura.shared.generated.resources.media_screen_delete_file_warning
+import podaura.shared.generated.resources.nickname
+import podaura.shared.generated.resources.open_with
+import podaura.shared.generated.resources.read_screen_name
+import podaura.shared.generated.resources.rename
+import java.io.File
 
 @Composable
 fun EditMediaSheet(
@@ -85,11 +99,11 @@ fun EditMediaSheet(
             // Options
             OptionArea(
                 deleteWarningText = stringResource(
-                    if (mediaBean.isFile) R.string.media_screen_delete_file_warning
-                    else R.string.media_screen_delete_directory_warning
+                    if (mediaBean.isFile) Res.string.media_screen_delete_file_warning
+                    else Res.string.media_screen_delete_directory_warning
                 ),
-                onOpenWith = { mediaBean.file.toUri(context).openWith(context) },
-                onRenameClicked = { openRenameInputDialog = mediaBean.file.name },
+                onOpenWith = { File(mediaBean.filePath).toUri(context).openWith(context) },
+                onRenameClicked = { openRenameInputDialog = mediaBean.name },
                 onSetFileDisplayNameClicked = {
                     openSetFileDisplayNameInputDialog = mediaBean.displayName.orEmpty()
                 },
@@ -130,7 +144,7 @@ fun EditMediaSheet(
 
         if (openRenameInputDialog != null) {
             TextFieldDialog(
-                titleText = stringResource(R.string.rename),
+                titleText = stringResource(Res.string.rename),
                 value = openRenameInputDialog.orEmpty(),
                 onValueChange = { openRenameInputDialog = it },
                 singleLine = false,
@@ -146,7 +160,7 @@ fun EditMediaSheet(
 
         if (openSetFileDisplayNameInputDialog != null) {
             TextFieldDialog(
-                titleText = stringResource(R.string.nickname),
+                titleText = stringResource(Res.string.nickname),
                 value = openSetFileDisplayNameInputDialog.orEmpty(),
                 onValueChange = { openSetFileDisplayNameInputDialog = it },
                 singleLine = false,
@@ -178,12 +192,12 @@ private fun InfoArea(mediaBean: MediaBean) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(6.dp)),
-                text = mediaBean.displayName ?: mediaBean.file.name.orEmpty(),
+                text = mediaBean.displayName ?: mediaBean.name,
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val description = mediaBean.file.length().fileSize(LocalContext.current)
+            val description = mediaBean.size.fileSize(LocalContext.current)
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 modifier = Modifier
@@ -214,7 +228,7 @@ internal fun OptionArea(
 
     if (onOpenWith != null || onDelete != null) {
         Text(
-            text = stringResource(id = R.string.media_options),
+            text = stringResource(Res.string.media_options),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
         )
@@ -227,28 +241,28 @@ internal fun OptionArea(
             if (onOpenWith != null) {
                 SheetChip(
                     icon = Icons.AutoMirrored.Outlined.OpenInNew,
-                    text = stringResource(id = R.string.open_with),
+                    text = stringResource(Res.string.open_with),
                     onClick = onOpenWith,
                 )
             }
             if (onRenameClicked != null) {
                 SheetChip(
                     icon = Icons.Outlined.DriveFileRenameOutline,
-                    text = stringResource(id = R.string.rename),
+                    text = stringResource(Res.string.rename),
                     onClick = onRenameClicked,
                 )
             }
             if (onSetFileDisplayNameClicked != null) {
                 SheetChip(
                     icon = Icons.Outlined.Badge,
-                    text = stringResource(id = R.string.nickname),
+                    text = stringResource(Res.string.nickname),
                     onClick = onSetFileDisplayNameClicked,
                 )
             }
             if (onAddToPlaylistClicked != null) {
                 SheetChip(
                     icon = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                    text = stringResource(id = R.string.add_to_playlist),
+                    text = stringResource(Res.string.add_to_playlist),
                     onClick = onAddToPlaylistClicked,
                 )
             }
@@ -257,21 +271,21 @@ internal fun OptionArea(
                     icon = Icons.Outlined.Delete,
                     iconTint = MaterialTheme.colorScheme.onError,
                     iconBackgroundColor = MaterialTheme.colorScheme.error,
-                    text = stringResource(id = R.string.delete),
+                    text = stringResource(Res.string.delete),
                     onClick = { openDeleteWarningDialog = true },
                 )
             }
             if (onOpenFeed != null) {
                 SheetChip(
                     icon = Icons.Outlined.RssFeed,
-                    text = stringResource(id = R.string.feed_screen_name),
+                    text = stringResource(Res.string.feed_screen_name),
                     onClick = onOpenFeed,
                 )
             }
             if (onOpenArticle != null) {
                 SheetChip(
                     icon = Icons.AutoMirrored.Outlined.Article,
-                    text = stringResource(id = R.string.read_screen_name),
+                    text = stringResource(Res.string.read_screen_name),
                     onClick = onOpenArticle,
                 )
             }
@@ -289,7 +303,7 @@ internal fun OptionArea(
 
 @Composable
 internal fun GroupArea(
-    title: String = stringResource(id = R.string.media_group),
+    title: String = stringResource(Res.string.media_group),
     currentGroup: MediaGroupBean,
     groups: List<MediaGroupBean>,
     onGroupChange: (MediaGroupBean) -> Unit,
@@ -309,7 +323,7 @@ internal fun GroupArea(
         SheetChip(
             icon = Icons.Outlined.Add,
             text = null,
-            contentDescription = stringResource(id = R.string.media_screen_add_group),
+            contentDescription = stringResource(Res.string.media_screen_add_group),
             onClick = openCreateGroupDialog,
         )
         groups.forEach { group ->
@@ -319,7 +333,7 @@ internal fun GroupArea(
                 modifier = Modifier.animateContentSize(),
                 icon = if (selected) Icons.Outlined.Check else null,
                 text = group.name,
-                contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
+                contentDescription = if (selected) stringResource(Res.string.item_selected) else null,
                 onClick = { onGroupChange(group) },
             )
         }

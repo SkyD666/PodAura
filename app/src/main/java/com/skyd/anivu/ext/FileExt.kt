@@ -7,10 +7,14 @@ import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import com.skyd.anivu.R
-import com.skyd.anivu.config.Const.PODAURA_PICTURES_DIR
+import com.skyd.anivu.config.Const
+import com.skyd.anivu.config.PODAURA_PICTURES_DIR
 import com.skyd.anivu.ext.content.saveToGallery
 import com.skyd.anivu.ui.component.showToast
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.save_picture_to_media_store_saved
 import java.io.File
 
 
@@ -36,16 +40,6 @@ fun File.deleteDirs(
     }
 }
 
-fun File.getMimeType(): String? {
-    if (isDirectory) return DocumentsContract.Document.MIME_TYPE_DIR
-    var type: String? = null
-    val extension = path.substringAfterLast(".", "")
-    if (extension.isNotBlank()) {
-        type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
-    }
-    return type
-}
-
 fun File.savePictureToMediaStore(
     context: Context,
     mimetype: String? = null,
@@ -62,8 +56,8 @@ fun File.savePictureToMediaStore(
             }
         )
     } else {
-        this.copyTo(File(PODAURA_PICTURES_DIR, fileName))
+        this.copyTo(File(Const.PODAURA_PICTURES_DIR, fileName))
     }
-    context.getString(R.string.save_picture_to_media_store_saved).showToast()
+    runBlocking { getString(Res.string.save_picture_to_media_store_saved) }.showToast()
     if (autoDelete) delete()
 }

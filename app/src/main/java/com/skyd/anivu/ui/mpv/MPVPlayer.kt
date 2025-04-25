@@ -9,8 +9,11 @@ import android.view.KeyEvent
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.config.Const
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.config.MPV_CACHE_DIR
+import com.skyd.anivu.config.MPV_FONT_DIR
+import com.skyd.anivu.config.PICTURES_DIR
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.MpvCacheDirPreference
 import com.skyd.anivu.model.preference.player.MpvConfigDirPreference
@@ -61,9 +64,9 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
                 }
             }
             instance?.initialize(
-                configDir = context.dataStore.getOrDefault(MpvConfigDirPreference),
-                cacheDir = context.dataStore.getOrDefault(MpvCacheDirPreference),
-                fontDir = Const.MPV_FONT_DIR.path,
+                configDir = dataStore.getOrDefault(MpvConfigDirPreference),
+                cacheDir = dataStore.getOrDefault(MpvCacheDirPreference),
+                fontDir = Const.MPV_FONT_DIR,
             )
             return instance!!
         }
@@ -121,7 +124,6 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         val disp = ContextCompat.getDisplayOrDefault(context)
         val refreshRate = disp.mode.refreshRate
 
-        val dataStore = context.dataStore
         Log.v(TAG, "Display ${disp.displayId} reports FPS of $refreshRate")
         MPVLib.setOptionString("display-fps-override", refreshRate.toString())
         MPVLib.setOptionString("video-sync", "audio")
@@ -144,7 +146,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             dataStore.getOrDefault(PlayerMaxBackCacheSizePreference).toString(),
         )
 
-        MPVLib.setOptionString("screenshot-directory", Const.PICTURES_DIR.path)
+        MPVLib.setOptionString("screenshot-directory", Const.PICTURES_DIR)
     }
 
     // Called when back button is pressed, or app is shutting down
@@ -565,7 +567,12 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         MPVLib.command(arrayOf("stop"))
     }
 
-    fun seek(position: Int, precise: Boolean = PlayerSeekOptionPreference.isPrecise(context)) {
+    fun seek(
+        position: Int,
+        precise: Boolean = PlayerSeekOptionPreference.isPrecise(
+            dataStore.getOrDefault(PlayerSeekOptionPreference)
+        )
+    ) {
         if (precise) {
             timePos = position
         } else {

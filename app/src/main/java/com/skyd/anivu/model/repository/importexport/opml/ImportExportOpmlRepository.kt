@@ -9,7 +9,7 @@ import be.ceau.opml.entity.Head
 import be.ceau.opml.entity.Opml
 import be.ceau.opml.entity.Outline
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.ext.getAppName
 import com.skyd.anivu.ext.toAbsoluteDateTimeString
 import com.skyd.anivu.ext.validateFileName
@@ -25,13 +25,20 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import org.koin.core.annotation.Factory
 import java.io.InputStream
 import java.util.Date
-import javax.inject.Inject
 import kotlin.random.Random
 import kotlin.time.measureTime
 
-class ImportExportOpmlRepository @Inject constructor(
+@Factory(
+    binds = [
+        ImportExportOpmlRepository::class,
+        IImportOpmlRepository::class,
+        IExportOpmlRepository::class,
+    ]
+)
+class ImportExportOpmlRepository(
     private val feedDao: FeedDao,
     private val groupDao: GroupDao,
 ) : BaseRepository(), IImportOpmlRepository, IExportOpmlRepository {

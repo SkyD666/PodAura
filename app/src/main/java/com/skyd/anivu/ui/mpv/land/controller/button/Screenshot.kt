@@ -16,10 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.mpv.land.controller.ControllerLabelGray
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_screenshot
 
 
 @Composable
@@ -35,7 +36,7 @@ internal fun Screenshot(
             .clickable(onClick = onClick)
             .padding(10.dp),
         imageVector = Icons.Rounded.CameraAlt,
-        contentDescription = stringResource(id = R.string.player_screenshot),
+        contentDescription = stringResource(Res.string.player_screenshot),
         tint = Color.White,
     )
 }

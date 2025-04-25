@@ -29,13 +29,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ui.mpv.component.ControllerIconButton
 import com.skyd.anivu.ui.mpv.land.controller.ControllerBarGray
 import com.skyd.anivu.ui.mpv.pip.manualEnterPictureInPictureMode
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.back
+import podaura.shared.generated.resources.player_picture_in_picture
 
 data class TopBarCallback(
     val onBack: () -> Unit,
@@ -72,7 +74,7 @@ internal fun TopBar(
                 .clickable(onClick = topBarCallback.onBack)
                 .padding(15.dp),
             imageVector = Icons.AutoMirrored.Outlined.ArrowBackIos,
-            contentDescription = stringResource(id = R.string.back),
+            contentDescription = stringResource(Res.string.back),
         )
         Spacer(modifier = Modifier.width(3.dp))
         Text(
@@ -90,7 +92,7 @@ internal fun TopBar(
                 modifier = Modifier.padding(2.dp),
                 onClick = { context.activity.manualEnterPictureInPictureMode() },
                 imageVector = Icons.Outlined.PictureInPictureAlt,
-                contentDescription = stringResource(id = R.string.player_picture_in_picture),
+                contentDescription = stringResource(Res.string.player_picture_in_picture),
             )
         }
     }

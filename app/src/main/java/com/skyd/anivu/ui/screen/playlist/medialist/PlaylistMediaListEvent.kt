@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.playlist.medialist
 
-import com.skyd.anivu.base.mvi.MviSingleEvent
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 
 sealed interface PlaylistMediaListEvent : MviSingleEvent {
     sealed interface ReorderResultEvent : PlaylistMediaListEvent {

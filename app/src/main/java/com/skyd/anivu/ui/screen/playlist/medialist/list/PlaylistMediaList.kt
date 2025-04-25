@@ -28,13 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.getOrNull
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.thenIf
@@ -47,6 +44,11 @@ import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaItem
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaItemPlaceholder
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.delete
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
@@ -60,7 +62,7 @@ fun PlaylistMediaList(
     onPlay: (PlaylistMediaWithArticleBean) -> Unit,
     onDelete: (List<PlaylistMediaWithArticleBean>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
-    viewModel: ListViewModel = hiltViewModel(),
+    viewModel: ListViewModel = koinViewModel(),
 ) {
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
     val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
@@ -119,7 +121,7 @@ fun PlaylistMediaList(
     onDelete: (List<PlaylistMediaWithArticleBean>) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
     nestedScrollConnection: NestedScrollConnection? = null,
-    viewModel: ListViewModel = hiltViewModel(),
+    viewModel: ListViewModel = koinViewModel(),
 ) {
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
     val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
@@ -205,12 +207,12 @@ private fun PlaylistMediaList(
                         dispatch(ListIntent.ClearSelected)
                     },
                     imageVector = Icons.Outlined.Delete,
-                    contentDescription = stringResource(R.string.delete),
+                    contentDescription = stringResource(Res.string.delete),
                 )
                 PodAuraIconButton(
                     onClick = onOpenAddToPlaylistSheet,
                     imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                    contentDescription = stringResource(R.string.add_to_playlist),
+                    contentDescription = stringResource(Res.string.add_to_playlist),
                 )
             }
         }

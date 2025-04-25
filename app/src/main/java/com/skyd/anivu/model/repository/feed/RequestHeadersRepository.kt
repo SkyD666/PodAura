@@ -1,15 +1,16 @@
 package com.skyd.anivu.model.repository.feed
 
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.db.dao.FeedDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class RequestHeadersRepository @Inject constructor(
+@Factory(binds = [])
+class RequestHeadersRepository(
     private val feedDao: FeedDao,
 ) : BaseRepository() {
     fun getFeedHeaders(feedUrl: String): Flow<FeedBean.RequestHeaders?> =

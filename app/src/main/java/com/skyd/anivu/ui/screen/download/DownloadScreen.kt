@@ -34,17 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.onlyHorizontal
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.type
@@ -62,6 +59,15 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download
+import podaura.shared.generated.resources.download_screen_add_download
+import podaura.shared.generated.resources.download_screen_add_download_hint
+import podaura.shared.generated.resources.download_screen_bt_tasks
+import podaura.shared.generated.resources.download_screen_download_tasks
+import podaura.shared.generated.resources.download_screen_name
 
 
 @Serializable
@@ -72,7 +78,7 @@ data class DownloadRoute(
     companion object {
         const val BASE_PATH = "podaura://download.screen"
 
-        val deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = DownloadRoute.BASE_PATH))
+        val deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = BASE_PATH))
 
         @Composable
         fun DownloadLauncher(entry: NavBackStackEntry) {
@@ -102,7 +108,7 @@ data object DownloadDeepLinkRoute {
 fun DownloadScreen(
     downloadLink: String? = null,
     mimetype: String? = null,
-    viewModel: DownloadViewModel = hiltViewModel()
+    viewModel: DownloadViewModel = koinViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
@@ -125,13 +131,13 @@ fun DownloadScreen(
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.CenterAligned,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.download_screen_name)) },
+                title = { Text(text = stringResource(Res.string.download_screen_name)) },
             )
         },
         floatingActionButton = {
             PodAuraFloatingActionButton(
                 onClick = { openLinkDialog = "" },
-                contentDescription = stringResource(id = R.string.download_screen_add_download),
+                contentDescription = stringResource(Res.string.download_screen_add_download),
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
             ) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
@@ -149,14 +155,14 @@ fun DownloadScreen(
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })
                 val tabs = listOf<Pair<String, @Composable PagerScope.() -> Unit>>(
-                    stringResource(R.string.download_screen_download_tasks) to {
+                    stringResource(Res.string.download_screen_download_tasks) to {
                         DownloadList(
                             downloadInfoBeanList = downloadListState.downloadInfoBeanList,
                             nestedScrollConnection = nestedScrollConnection,
                             contentPadding = listContentPadding,
                         )
                     },
-                    stringResource(R.string.download_screen_bt_tasks) to {
+                    stringResource(Res.string.download_screen_bt_tasks) to {
                         BtDownloadList(
                             btDownloadInfoBeanList = downloadListState.btDownloadInfoBeanList,
                             nestedScrollConnection = nestedScrollConnection,
@@ -191,10 +197,10 @@ fun DownloadScreen(
     TextFieldDialog(
         visible = openLinkDialog != null,
         icon = { Icon(imageVector = Icons.Outlined.Download, contentDescription = null) },
-        titleText = stringResource(id = R.string.download),
+        titleText = stringResource(Res.string.download),
         value = openLinkDialog.orEmpty(),
         onValueChange = { openLinkDialog = it },
-        placeholder = stringResource(id = R.string.download_screen_add_download_hint),
+        placeholder = stringResource(Res.string.download_screen_add_download_hint),
         onDismissRequest = { openLinkDialog = null },
         onConfirm = { text ->
             openLinkDialog = null

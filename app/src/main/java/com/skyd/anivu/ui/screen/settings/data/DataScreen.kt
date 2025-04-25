@@ -31,13 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.BaseSettingsItem
@@ -54,9 +50,34 @@ import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.anivu.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.anivu.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportRoute
-import com.skyd.generated.preference.LocalMediaLibLocation
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.auto_delete_article_screen_description
+import podaura.shared.generated.resources.auto_delete_screen_name
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.data_screen_change_lib_location
+import podaura.shared.generated.resources.data_screen_clear_cache
+import podaura.shared.generated.resources.data_screen_clear_cache_description
+import podaura.shared.generated.resources.data_screen_clear_cache_warning
+import podaura.shared.generated.resources.data_screen_clear_play_history
+import podaura.shared.generated.resources.data_screen_clear_play_history_description
+import podaura.shared.generated.resources.data_screen_clear_play_history_success
+import podaura.shared.generated.resources.data_screen_clear_play_history_warning
+import podaura.shared.generated.resources.data_screen_clear_up_category
+import podaura.shared.generated.resources.data_screen_delete_article_before
+import podaura.shared.generated.resources.data_screen_delete_article_before_description
+import podaura.shared.generated.resources.data_screen_media_lib_category
+import podaura.shared.generated.resources.data_screen_name
+import podaura.shared.generated.resources.data_screen_sync_category
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.delete_constraint_screen_name
+import podaura.shared.generated.resources.delete_constraint_screen_name_description
+import podaura.shared.generated.resources.import_export_screen_description
+import podaura.shared.generated.resources.import_export_screen_name
 
 
 @Serializable
@@ -66,19 +87,18 @@ data object DataRoute : Parcelable
 @Composable
 fun DataScreen(
     onBack: (() -> Unit)? = DefaultBackClick,
-    viewModel: DataViewModel = hiltViewModel(),
+    viewModel: DataViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = DataIntent.Init)
 
     ListenToFilePicker { result ->
-        MediaLibLocationPreference.put(context, this, result.result)
+        MediaLibLocationPreference.put(this, result.result)
     }
 
     Scaffold(
@@ -87,7 +107,7 @@ fun DataScreen(
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.data_screen_name)) },
+                title = { Text(text = stringResource(Res.string.data_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
@@ -104,23 +124,22 @@ fun DataScreen(
         ) {
             item {
                 CategorySettingsItem(
-                    text = stringResource(id = R.string.data_screen_media_lib_category),
+                    text = stringResource(Res.string.data_screen_media_lib_category),
                 )
             }
             item {
-                val localMediaLibLocation = LocalMediaLibLocation.current
+                val localMediaLibLocation = MediaLibLocationPreference.current
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.PermMedia),
-                    text = stringResource(id = R.string.data_screen_change_lib_location),
+                    text = stringResource(Res.string.data_screen_change_lib_location),
                     descriptionText = localMediaLibLocation,
                     onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
                 ) {
                     PodAuraIconButton(
                         onClick = {
                             MediaLibLocationPreference.put(
-                                context,
                                 scope,
-                                MediaLibLocationPreference.default,
+                                MediaLibLocationPreference.default
                             )
                         },
                         imageVector = Icons.Outlined.Replay,
@@ -129,59 +148,59 @@ fun DataScreen(
             }
             item {
                 CategorySettingsItem(
-                    text = stringResource(id = R.string.data_screen_clear_up_category),
+                    text = stringResource(Res.string.data_screen_clear_up_category),
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.Delete),
-                    text = stringResource(id = R.string.data_screen_clear_cache),
-                    descriptionText = stringResource(id = R.string.data_screen_clear_cache_description),
+                    text = stringResource(Res.string.data_screen_clear_cache),
+                    descriptionText = stringResource(Res.string.data_screen_clear_cache_description),
                     onClick = { openDeleteWarningDialog = true }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.delete_constraint_screen_name),
-                    descriptionText = stringResource(id = R.string.delete_constraint_screen_name_description),
+                    text = stringResource(Res.string.delete_constraint_screen_name),
+                    descriptionText = stringResource(Res.string.delete_constraint_screen_name_description),
                     onClick = { navController.navigate(DeleteConstraintRoute) },
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.Today),
-                    text = stringResource(id = R.string.data_screen_delete_article_before),
-                    descriptionText = stringResource(id = R.string.data_screen_delete_article_before_description),
+                    text = stringResource(Res.string.data_screen_delete_article_before),
+                    descriptionText = stringResource(Res.string.data_screen_delete_article_before_description),
                     onClick = { openDeleteBeforeDatePickerDialog = true },
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.AutoDelete),
-                    text = stringResource(id = R.string.auto_delete_screen_name),
-                    descriptionText = stringResource(id = R.string.auto_delete_article_screen_description),
+                    text = stringResource(Res.string.auto_delete_screen_name),
+                    descriptionText = stringResource(Res.string.auto_delete_article_screen_description),
                     onClick = { navController.navigate(AutoDeleteRoute) }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.History),
-                    text = stringResource(id = R.string.data_screen_clear_play_history),
-                    descriptionText = stringResource(id = R.string.data_screen_clear_play_history_description),
+                    text = stringResource(Res.string.data_screen_clear_play_history),
+                    descriptionText = stringResource(Res.string.data_screen_clear_play_history_description),
                     onClick = { openDeletePlayHistoryWarningDialog = true }
                 )
             }
             item {
                 CategorySettingsItem(
-                    text = stringResource(id = R.string.data_screen_sync_category),
+                    text = stringResource(Res.string.data_screen_sync_category),
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.SwapVert),
-                    text = stringResource(id = R.string.import_export_screen_name),
-                    descriptionText = stringResource(id = R.string.import_export_screen_description),
+                    text = stringResource(Res.string.import_export_screen_name),
+                    descriptionText = stringResource(Res.string.import_export_screen_description),
                     onClick = { navController.navigate(ImportExportRoute) }
                 )
             }
@@ -196,7 +215,7 @@ fun DataScreen(
 
         DeleteWarningDialog(
             visible = openDeleteWarningDialog,
-            text = stringResource(id = R.string.data_screen_clear_cache_warning),
+            text = stringResource(Res.string.data_screen_clear_cache_warning),
             onDismissRequest = { openDeleteWarningDialog = false },
             onDismiss = { openDeleteWarningDialog = false },
             onConfirm = { dispatch(DataIntent.ClearCache) },
@@ -204,7 +223,7 @@ fun DataScreen(
 
         DeleteWarningDialog(
             visible = openDeletePlayHistoryWarningDialog,
-            text = stringResource(id = R.string.data_screen_clear_play_history_warning),
+            text = stringResource(Res.string.data_screen_clear_play_history_warning),
             onDismissRequest = { openDeletePlayHistoryWarningDialog = false },
             onDismiss = { openDeletePlayHistoryWarningDialog = false },
             onConfirm = { dispatch(DataIntent.DeletePlayHistory) },
@@ -231,10 +250,7 @@ fun DataScreen(
 
                 is DataEvent.DeletePlayHistoryResultEvent.Success ->
                     snackbarHostState.showSnackbar(
-                        context.getString(
-                            R.string.data_screen_clear_play_history_success,
-                            event.count
-                        )
+                        getString(Res.string.data_screen_clear_play_history_success, event.count)
                     )
             }
         }
@@ -255,12 +271,12 @@ private fun DeleteArticleBeforeDatePickerDialog(
                 onClick = { onConfirm(datePickerState.selectedDateMillis!!) },
                 enabled = confirmEnabled.value,
             ) {
-                Text(stringResource(id = R.string.delete))
+                Text(stringResource(Res.string.delete))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(stringResource(id = R.string.cancel))
+                Text(stringResource(Res.string.cancel))
             }
         }
     ) {

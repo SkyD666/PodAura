@@ -11,14 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
@@ -27,6 +24,10 @@ import com.skyd.anivu.ui.component.ErrorPlaceholder
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.screen.playlist.PlaylistItem
 import com.skyd.anivu.ui.screen.playlist.PlaylistItemPlaceholder
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
 
 
 @Composable
@@ -34,7 +35,7 @@ fun AddToPlaylistSheet(
     onDismissRequest: () -> Unit,
     currentPlaylistId: String?,
     selectedMediaList: List<MediaUrlWithArticleIdBean>,
-    viewModel: AddToPlaylistViewModel = hiltViewModel(),
+    viewModel: AddToPlaylistViewModel = koinViewModel(),
 ) {
     val dispatch = viewModel.getDispatcher(
         currentPlaylistId,
@@ -45,7 +46,7 @@ fun AddToPlaylistSheet(
 
     ModalBottomSheet(onDismissRequest = onDismissRequest) {
         Text(
-            text = stringResource(R.string.add_to_playlist),
+            text = stringResource(Res.string.add_to_playlist),
             modifier = Modifier.align(Alignment.CenterHorizontally),
             style = MaterialTheme.typography.titleLarge,
         )

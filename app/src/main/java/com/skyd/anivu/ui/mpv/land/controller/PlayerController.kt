@@ -41,7 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.view.WindowInsetsControllerCompat
 import com.skyd.anivu.ext.tickVibrate
+import com.skyd.anivu.model.preference.player.PlayerForwardSecondsButtonValuePreference
+import com.skyd.anivu.model.preference.player.PlayerShowForwardSecondsButtonPreference
+import com.skyd.anivu.model.preference.player.PlayerShowProgressIndicatorPreference
+import com.skyd.anivu.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.anivu.ui.component.rememberSystemUiController
+import com.skyd.anivu.ui.component.shape.ForwardRippleDirect
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.DialogState
@@ -59,10 +64,6 @@ import com.skyd.anivu.ui.mpv.land.controller.preview.VolumePreview
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.generated.preference.LocalPlayerForwardSecondsButtonValue
-import com.skyd.generated.preference.LocalPlayerShowForwardSecondsButton
-import com.skyd.generated.preference.LocalPlayerShowProgressIndicator
-import com.skyd.generated.preference.LocalPlayerShowScreenshotButton
 import kotlinx.coroutines.delay
 
 
@@ -223,7 +224,7 @@ internal fun PlayerController(
                 onOpenPlaylist = { showPlaylistSheet = true },
             )
 
-            if (LocalPlayerShowProgressIndicator.current && !showController) {
+            if (PlayerShowProgressIndicatorPreference.current && !showController) {
                 ProgressIndicator(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     playState = playState,
@@ -334,7 +335,7 @@ private fun AutoHiddenBox(
                     onOpenPlaylist = onOpenPlaylist,
                 )
 
-                if (LocalPlayerShowScreenshotButton.current) {
+                if (PlayerShowScreenshotButtonPreference.current) {
                     Screenshot(
                         modifier = Modifier
                             .constrainAs(screenshot) {
@@ -348,8 +349,8 @@ private fun AutoHiddenBox(
                 }
 
                 // Forward seconds button
-                if (LocalPlayerShowForwardSecondsButton.current) {
-                    val forwardSecondButtonValue = LocalPlayerForwardSecondsButtonValue.current
+                if (PlayerShowForwardSecondsButtonPreference.current) {
+                    val forwardSecondButtonValue = PlayerForwardSecondsButtonValuePreference.current
                     ForwardSeconds(
                         modifier = Modifier
                             .constrainAs(forwardSeconds) {

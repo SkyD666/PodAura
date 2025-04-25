@@ -50,17 +50,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.model.bean.MediaGroupBean
+import com.skyd.anivu.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaListSortByPreference
@@ -83,11 +81,22 @@ import com.skyd.anivu.ui.screen.media.list.GroupInfo
 import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
 import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
-import com.skyd.generated.preference.LocalMediaListSortAsc
-import com.skyd.generated.preference.LocalMediaListSortBy
-import com.skyd.generated.preference.LocalMediaShowGroupTab
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.data_screen_change_lib_location
+import podaura.shared.generated.resources.edit
+import podaura.shared.generated.resources.media_group
+import podaura.shared.generated.resources.media_screen_add_group
+import podaura.shared.generated.resources.media_screen_name
+import podaura.shared.generated.resources.media_screen_refresh_group
+import podaura.shared.generated.resources.media_screen_search_hint
+import podaura.shared.generated.resources.media_screen_style
+import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.open_file
+import podaura.shared.generated.resources.sort
 import java.io.File
 import kotlin.math.min
 
@@ -96,7 +105,7 @@ import kotlin.math.min
 data object MediaRoute
 
 @Composable
-fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
+fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = LocalNavController.current
@@ -117,7 +126,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
 
     ListenToFilePicker { result ->
         if (result.pickFolder) {
-            MediaLibLocationPreference.put(context, this, result.result)
+            MediaLibLocationPreference.put(this, result.result)
         } else {
             val url = File(result.result).toUri().resolveUri(context)
             if (url != null) {
@@ -143,10 +152,10 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
                 title = {
-                    val title = stringResource(R.string.media_screen_name)
+                    val title = stringResource(Res.string.media_screen_name)
                     Text(
                         modifier = Modifier.basicMarquee(),
-                        text = if (LocalMediaShowGroupTab.current) title else {
+                        text = if (MediaShowGroupTabPreference.current) title else {
                             val groupName = uiState.groups
                                 .getOrNull(pagerState.currentPage)?.first?.name
                             if (groupName.isNullOrBlank()) title else groupName
@@ -170,17 +179,17 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                             navController.navigate(MediaSearchRoute(path = path, isSubList = false))
                         },
                         imageVector = Icons.Outlined.Search,
-                        contentDescription = stringResource(id = R.string.media_screen_search_hint),
+                        contentDescription = stringResource(Res.string.media_screen_search_hint),
                     )
                     PodAuraIconButton(
                         onClick = { showSortMediaDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
-                        contentDescription = stringResource(id = R.string.sort),
+                        contentDescription = stringResource(Res.string.sort),
                     )
                     PodAuraIconButton(
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(R.string.more),
+                        contentDescription = stringResource(Res.string.more),
                     )
                     MoreMenu(
                         expanded = openMoreMenu,
@@ -212,14 +221,14 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.FileOpen,
-                        contentDescription = stringResource(id = R.string.open_file),
+                        contentDescription = stringResource(Res.string.open_file),
                     )
                 }
                 PodAuraFloatingActionButton(
                     onClick = {
                         openEditGroupDialog = uiState.groups[pagerState.currentPage].first
                     },
-                    contentDescription = stringResource(R.string.edit),
+                    contentDescription = stringResource(Res.string.edit),
                 ) {
                     Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)
                 }
@@ -241,7 +250,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
                 .padding(innerPadding),
         ) {
             if (uiState.groups.isNotEmpty()) {
-                if (LocalMediaShowGroupTab.current) {
+                if (MediaShowGroupTabPreference.current) {
                     PrimaryScrollableTabRow(
                         modifier = Modifier.fillMaxWidth(),
                         selectedTabIndex = min(uiState.groups.size - 1, pagerState.currentPage),
@@ -354,11 +363,11 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = hiltViewModel()) {
         visible = showSortMediaDialog,
         onDismissRequest = { showSortMediaDialog = false },
         sortByValues = MediaListSortByPreference.values,
-        sortBy = LocalMediaListSortBy.current,
-        sortAsc = LocalMediaListSortAsc.current,
-        onSortBy = { MediaListSortByPreference.put(context, scope, it) },
-        onSortAsc = { MediaListSortAscPreference.put(context, scope, it) },
-        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(context, it) },
+        sortBy = MediaListSortByPreference.current,
+        sortAsc = MediaListSortAscPreference.current,
+        onSortBy = { MediaListSortByPreference.put(scope, it) },
+        onSortAsc = { MediaListSortAscPreference.put(scope, it) },
+        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(it) },
         onSortByIcon = { BaseMediaListSortByPreference.toIcon(it) },
     )
 
@@ -376,8 +385,8 @@ internal fun CreateGroupDialog(
     TextFieldDialog(
         visible = visible,
         icon = { Icon(imageVector = Icons.Outlined.Workspaces, contentDescription = null) },
-        titleText = stringResource(id = R.string.media_screen_add_group),
-        placeholder = stringResource(id = R.string.media_group),
+        titleText = stringResource(Res.string.media_screen_add_group),
+        placeholder = stringResource(Res.string.media_group),
         maxLines = 1,
         value = value,
         onValueChange = onValueChange,
@@ -396,7 +405,7 @@ private fun MoreMenu(
     val navController = LocalNavController.current
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.data_screen_change_lib_location)) },
+            text = { Text(text = stringResource(Res.string.data_screen_change_lib_location)) },
             leadingIcon = {
                 Icon(imageVector = Icons.Outlined.MyLocation, contentDescription = null)
             },
@@ -406,7 +415,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.media_screen_refresh_group)) },
+            text = { Text(text = stringResource(Res.string.media_screen_refresh_group)) },
             leadingIcon = {
                 Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
             },
@@ -416,7 +425,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.media_screen_style)) },
+            text = { Text(text = stringResource(Res.string.media_screen_style)) },
             leadingIcon = {
                 Icon(imageVector = Icons.Outlined.Palette, contentDescription = null)
             },

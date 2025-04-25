@@ -4,7 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.db.dao.GroupDao
 import com.skyd.anivu.model.db.dao.GroupDao.Companion.ORDER_DELTA
@@ -15,9 +15,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class ReorderGroupRepository @Inject constructor(
+@Factory(binds = [])
+class ReorderGroupRepository(
     private val groupDao: GroupDao,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository() {

@@ -3,7 +3,7 @@ package com.skyd.anivu.model.bean
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.skyd.anivu.base.BaseBean
+import com.skyd.anivu.model.bean.BaseBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import kotlinx.serialization.Serializable
 

@@ -23,15 +23,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.ext.withoutTop
@@ -48,13 +45,19 @@ import com.skyd.anivu.ui.screen.history.item.ReadHistoryItem
 import com.skyd.anivu.ui.screen.history.item.ReadHistoryItemPlaceholder
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.history_screen_media_play
+import podaura.shared.generated.resources.history_screen_name
+import podaura.shared.generated.resources.history_screen_read
 
 
 @Serializable
 data object HistoryRoute
 
 @Composable
-fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
+fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -68,7 +71,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.CenterAligned,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.history_screen_name)) },
+                title = { Text(text = stringResource(Res.string.history_screen_name)) },
             )
         },
     ) { paddingValues ->
@@ -83,7 +86,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })
                 val tabs = listOf<Pair<String, @Composable PagerScope.() -> Unit>>(
-                    stringResource(R.string.history_screen_read) to {
+                    stringResource(Res.string.history_screen_read) to {
                         ReadHistoryList(
                             historyList = historyListState.readHistoryList.collectAsLazyPagingItems(),
                             nestedScrollConnection = nestedScrollConnection,
@@ -91,7 +94,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
                             onDelete = { dispatch(HistoryIntent.DeleteReadHistory(it.readHistoryBean.articleId)) }
                         )
                     },
-                    stringResource(R.string.history_screen_media_play) to {
+                    stringResource(Res.string.history_screen_media_play) to {
                         MediaPlayHistoryList(
                             historyList = historyListState.mediaPlayHistoryList.collectAsLazyPagingItems(),
                             nestedScrollConnection = nestedScrollConnection,

@@ -3,7 +3,9 @@ package com.skyd.anivu.util
 import android.content.Context
 import android.util.Log
 import androidx.core.app.ShareCompat
-import com.skyd.anivu.R
+import com.skyd.anivu.ext.getString
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.share
 
 object ShareUtil {
     fun shareText(
@@ -16,7 +18,7 @@ object ShareUtil {
         val shareIntent = ShareCompat.IntentBuilder(context)
             .setType("text/plain")
             .setText(text)
-            .setChooserTitle(R.string.share)
+            .setChooserTitle(context.getString(Res.string.share))
             .createChooserIntent()
 
         if (!packageName.isNullOrBlank() && !className.isNullOrBlank()) {

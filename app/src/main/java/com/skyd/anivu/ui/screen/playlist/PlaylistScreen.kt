@@ -28,16 +28,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.safeItemKey
@@ -60,10 +56,17 @@ import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.local.LocalWindowSizeClass
 import com.skyd.anivu.ui.screen.playlist.medialist.PlaylistMediaListRoute
-import com.skyd.generated.preference.LocalPlaylistSortAsc
-import com.skyd.generated.preference.LocalPlaylistSortBy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.playlist_screen_add_a_playlist
+import podaura.shared.generated.resources.playlist_screen_delete_playlist_warning
+import podaura.shared.generated.resources.playlist_screen_name
+import podaura.shared.generated.resources.rename
+import podaura.shared.generated.resources.sort
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
@@ -72,12 +75,11 @@ import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 data object PlaylistRoute
 
 @Composable
-fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
+fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     val lazyListState = rememberLazyStaggeredGridState()
@@ -96,14 +98,14 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                title = { Text(text = stringResource(R.string.playlist_screen_name)) },
+                title = { Text(text = stringResource(Res.string.playlist_screen_name)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {},
                 actions = {
                     PodAuraIconButton(
                         onClick = { showSortDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
-                        contentDescription = stringResource(id = R.string.sort),
+                        contentDescription = stringResource(Res.string.sort),
                     )
                 },
                 windowInsets = WindowInsets.safeDrawing.run {
@@ -117,7 +119,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             PodAuraFloatingActionButton(
                 onClick = { openAddDialog = true },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                contentDescription = stringResource(R.string.add),
+                contentDescription = stringResource(Res.string.add),
             ) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
             }
@@ -142,7 +144,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
                 PlayList(
                     playlist = lazyPagingItems,
                     state = lazyListState,
-                    draggable = LocalPlaylistSortBy.current == BasePlaylistSortByPreference.MANUAL,
+                    draggable = PlaylistSortByPreference.current == BasePlaylistSortByPreference.MANUAL,
                     onMoved = onMoved@{ fromIndex, toIndex ->
                         if (fromIndex == toIndex) return@onMoved
                         reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {
@@ -173,7 +175,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             TextFieldDialog(
                 value = addDialogText,
                 onValueChange = { addDialogText = it },
-                titleText = stringResource(R.string.playlist_screen_add_a_playlist),
+                titleText = stringResource(Res.string.playlist_screen_add_a_playlist),
                 onDismissRequest = {
                     openAddDialog = false
                     addDialogText = ""
@@ -189,7 +191,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             TextFieldDialog(
                 value = renameDialogText,
                 onValueChange = { renameDialogText = it },
-                titleText = stringResource(R.string.rename),
+                titleText = stringResource(Res.string.rename),
                 onDismissRequest = {
                     openRenameDialog = null
                     renameDialogText = ""
@@ -209,7 +211,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
 
         if (openDeleteWarningDialog != null) {
             DeleteWarningDialog(
-                text = stringResource(R.string.playlist_screen_delete_playlist_warning),
+                text = stringResource(Res.string.playlist_screen_delete_playlist_warning),
                 onDismissRequest = { openDeleteWarningDialog = null },
                 onDismiss = { openDeleteWarningDialog = null },
                 onConfirm = {
@@ -223,12 +225,12 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = hiltViewModel()) {
             visible = showSortDialog,
             onDismissRequest = { showSortDialog = false },
             sortByValues = PlaylistSortByPreference.values,
-            sortBy = LocalPlaylistSortBy.current,
-            sortAsc = LocalPlaylistSortAsc.current,
-            enableSortAsc = LocalPlaylistSortBy.current != BasePlaylistSortByPreference.MANUAL,
-            onSortBy = { PlaylistSortByPreference.put(context, scope, it) },
-            onSortAsc = { PlaylistSortAscPreference.put(context, scope, it) },
-            onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(context, it) },
+            sortBy = PlaylistSortByPreference.current,
+            sortAsc = PlaylistSortAscPreference.current,
+            enableSortAsc = PlaylistSortByPreference.current != BasePlaylistSortByPreference.MANUAL,
+            onSortBy = { PlaylistSortByPreference.put(scope, it) },
+            onSortAsc = { PlaylistSortAscPreference.put(scope, it) },
+            onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(it) },
             onSortByIcon = { BasePlaylistSortByPreference.toIcon(it) },
         )
 

@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.read
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 
 sealed interface ReadIntent : MviIntent {
     data class Init(val articleId: String) : ReadIntent

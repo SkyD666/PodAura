@@ -1,6 +1,6 @@
 package com.skyd.anivu.model.repository.playlist
 
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.db.dao.ArticleDao
@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class AddToPlaylistRepository @Inject constructor(
+@Factory(binds = [IAddToPlaylistRepository::class])
+class AddToPlaylistRepository(
     private val articleDao: ArticleDao,
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,

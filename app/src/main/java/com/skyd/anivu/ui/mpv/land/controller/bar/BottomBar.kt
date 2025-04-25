@@ -49,12 +49,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.portOrientation
-import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.player.LoopMode
 import com.skyd.anivu.ui.mpv.component.ControllerIconButton
 import com.skyd.anivu.ui.mpv.component.ControllerIconToggleButton
 import com.skyd.anivu.ui.mpv.component.ControllerTextButton
@@ -62,6 +60,18 @@ import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.anivu.ui.mpv.land.controller.ControllerBarGray
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.exit_fullscreen
+import podaura.shared.generated.resources.loop_playlist_mode
+import podaura.shared.generated.resources.pause
+import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.player_audio_track
+import podaura.shared.generated.resources.player_subtitle_track
+import podaura.shared.generated.resources.playlist
+import podaura.shared.generated.resources.shuffle_playlist
+import podaura.shared.generated.resources.skip_next
+import podaura.shared.generated.resources.skip_previous
 import java.util.Locale
 import kotlin.math.abs
 
@@ -167,21 +177,21 @@ fun BottomBar(
                     .clickable(onClick = playStateCallback.onPlayStateChanged)
                     .padding(7.dp),
                 imageVector = if (playStateValue.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                contentDescription = stringResource(if (playStateValue.isPlaying) R.string.pause else R.string.play),
+                contentDescription = stringResource(if (playStateValue.isPlaying) Res.string.pause else Res.string.play),
             )
             // Previous button
             ControllerIconButton(
                 enabled = !playStateValue.playlistFirst,
                 onClick = playStateCallback.onPreviousMedia,
                 imageVector = Icons.Rounded.SkipPrevious,
-                contentDescription = stringResource(R.string.skip_previous),
+                contentDescription = stringResource(Res.string.skip_previous),
             )
             // Next button
             ControllerIconButton(
                 enabled = !playStateValue.playlistLast,
                 onClick = playStateCallback.onNextMedia,
                 imageVector = Icons.Rounded.SkipNext,
-                contentDescription = stringResource(R.string.skip_next),
+                contentDescription = stringResource(Res.string.skip_next),
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -200,7 +210,7 @@ fun BottomBar(
             ControllerIconButton(
                 onClick = onOpenPlaylist,
                 imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                contentDescription = stringResource(R.string.playlist),
+                contentDescription = stringResource(Res.string.playlist),
             )
             // Shuffle button
             ControllerIconToggleButton(
@@ -208,7 +218,7 @@ fun BottomBar(
                 checked = playStateValue.shuffle,
                 onCheckedChange = playStateCallback.onShuffle,
                 imageVector = Icons.Rounded.Shuffle,
-                contentDescription = stringResource(R.string.shuffle_playlist),
+                contentDescription = stringResource(Res.string.shuffle_playlist),
             )
             // Loop button
             ControllerIconToggleButton(
@@ -219,27 +229,27 @@ fun BottomBar(
                     LoopMode.LoopPlaylist, LoopMode.None -> Icons.Rounded.Repeat
                     LoopMode.LoopFile -> Icons.Rounded.RepeatOne
                 },
-                contentDescription = stringResource(R.string.loop_playlist_mode),
+                contentDescription = stringResource(Res.string.loop_playlist_mode),
             )
             // Audio track button
             ControllerIconButton(
                 enabled = enabled(),
                 onClick = { onDialogVisibilityChanged.onAudioTrackDialog(true) },
                 imageVector = Icons.Rounded.MusicNote,
-                contentDescription = stringResource(R.string.player_audio_track),
+                contentDescription = stringResource(Res.string.player_audio_track),
             )
             // Subtitle track button
             ControllerIconButton(
                 enabled = enabled(),
                 onClick = { onDialogVisibilityChanged.onSubtitleTrackDialog(true) },
                 imageVector = Icons.Rounded.ClosedCaption,
-                contentDescription = stringResource(R.string.player_subtitle_track),
+                contentDescription = stringResource(Res.string.player_subtitle_track),
             )
             // To portrait
             ControllerIconButton(
                 onClick = { context.activity.portOrientation() },
                 imageVector = Icons.Rounded.FullscreenExit,
-                contentDescription = stringResource(R.string.exit_fullscreen),
+                contentDescription = stringResource(Res.string.exit_fullscreen),
             )
         }
     }

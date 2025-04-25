@@ -1,11 +1,10 @@
 package com.skyd.anivu.ui.screen.download
 
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
-import com.skyd.anivu.base.mvi.MviSingleEvent
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.download.DownloadRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -15,10 +14,10 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class DownloadViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class DownloadViewModel(
     private val downloadRepo: DownloadRepository
 ) : AbstractMviViewModel<DownloadIntent, DownloadState, MviSingleEvent>() {
 

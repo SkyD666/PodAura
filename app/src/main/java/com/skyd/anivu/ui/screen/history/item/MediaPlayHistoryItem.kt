@@ -36,18 +36,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.EventListener
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.isLocalFile
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
+import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.anivu.model.repository.player.PlayDataMode
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraImage
@@ -57,8 +56,15 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.mpv.isFdFileExists
 import com.skyd.anivu.ui.mpv.land.controller.bar.toDurationString
 import com.skyd.anivu.ui.screen.read.ReadRoute
-import com.skyd.generated.preference.LocalMediaShowThumbnail
-import java.io.File
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.history_screen_last_seen
+import podaura.shared.generated.resources.history_screen_local_file
+import podaura.shared.generated.resources.media_not_exists
+import podaura.shared.generated.resources.read_screen_name
 
 @Composable
 fun MediaPlayHistoryItem(
@@ -73,7 +79,9 @@ fun MediaPlayHistoryItem(
     }
     val isLocal = path.isLocalFile()
     val mediaExists = remember(path) {
-        !isLocal || (path.startsWith("fd://") && isFdFileExists(path) || File(path).exists())
+        !isLocal ||
+                (path.startsWith("fd://") && isFdFileExists(path)
+                        || SystemFileSystem.exists(Path(path)))
     }
     Row(
         modifier = Modifier
@@ -112,7 +120,7 @@ fun MediaPlayHistoryItem(
         val feed = data.article?.feed
         val image = articleWithEnclosure?.media?.image ?: feed?.icon ?: path
         var showThumbnail by remember(image) { mutableStateOf(true) }
-        if (showThumbnail && LocalMediaShowThumbnail.current) {
+        if (showThumbnail && MediaShowThumbnailPreference.current) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -160,7 +168,7 @@ fun MediaPlayHistoryItem(
                     val lastPlayPosition = data.mediaPlayHistoryBean.lastPlayPosition
                     Text(
                         text = stringResource(
-                            R.string.history_screen_last_seen,
+                            Res.string.history_screen_last_seen,
                             (lastPlayPosition / 1000).toDurationString(),
                         ),
                         style = MaterialTheme.typography.labelMedium,
@@ -171,7 +179,7 @@ fun MediaPlayHistoryItem(
                     val lastTime = data.mediaPlayHistoryBean.lastTime
                     if (lastTime > 0) {
                         Text(
-                            text = remember(lastTime) { lastTime.toDateTimeString(context = context) },
+                            text = remember(lastTime) { lastTime.toDateTimeString() },
                             style = MaterialTheme.typography.labelMedium,
                             maxLines = 1,
                         )
@@ -179,14 +187,14 @@ fun MediaPlayHistoryItem(
                 }
                 ActionIconButton(
                     imageVector = Icons.Outlined.Delete,
-                    contentDescription = stringResource(id = R.string.delete),
+                    contentDescription = stringResource(Res.string.delete),
                     onClick = { onDelete(data) },
                 )
                 if (articleWithEnclosure != null) {
                     val navController = LocalNavController.current
                     ActionIconButton(
                         imageVector = Icons.AutoMirrored.Outlined.Article,
-                        contentDescription = stringResource(id = R.string.read_screen_name),
+                        contentDescription = stringResource(Res.string.read_screen_name),
                         onClick = { navController.navigate(ReadRoute(articleId = articleWithEnclosure.article.articleId)) },
                     )
                 }
@@ -200,13 +208,13 @@ private fun TagRow(isLocal: Boolean, mediaExists: Boolean) {
     val tagRow: List<@Composable RowScope.() -> Unit> = buildList {
         if (isLocal) {
             add {
-                TagText(text = stringResource(R.string.history_screen_local_file))
+                TagText(text = stringResource(Res.string.history_screen_local_file))
             }
         }
         if (!mediaExists) {
             add {
                 TagText(
-                    text = stringResource(R.string.media_not_exists),
+                    text = stringResource(Res.string.media_not_exists),
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.error,
                 )
@@ -292,7 +300,7 @@ fun MediaPlayItemPlaceholder() {
                         .padding(6.dp),
                     imageVector = Icons.Outlined.Delete,
                     tint = color,
-                    contentDescription = stringResource(id = R.string.delete),
+                    contentDescription = stringResource(Res.string.delete),
                 )
             }
         }

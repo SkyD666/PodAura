@@ -1,19 +1,17 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    kotlin("jvm")
-}
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    kotlin("multiplatform")
 }
 kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
-    }
-}
+    jvm()
 
-dependencies {
-    implementation(libs.symbol.processing.api)
-    implementation(libs.androidx.datastore.preferences)
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.symbol.processing.api)
+                implementation(libs.androidx.datastore.preferences)
+            }
+            kotlin.srcDir("src/main/java")
+            resources.srcDir("src/main/resources")
+        }
+    }
 }

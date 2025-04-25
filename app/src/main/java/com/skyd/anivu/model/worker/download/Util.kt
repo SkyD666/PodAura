@@ -4,15 +4,16 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.ProxyInfo
 import android.util.Log
-import com.skyd.anivu.R
 import com.skyd.anivu.config.Const
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.config.TORRENT_RESUME_DATA_DIR
+import com.skyd.anivu.ext.decodeURL
 import com.skyd.anivu.ext.getOrDefault
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.ifNullOfBlank
-import com.skyd.anivu.ext.toDecodedUrl
 import com.skyd.anivu.ext.validateFileName
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.TorrentFileBean
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.proxy.ProxyHostnamePreference
 import com.skyd.anivu.model.preference.proxy.ProxyModePreference
 import com.skyd.anivu.model.preference.proxy.ProxyPasswordPreference
@@ -32,6 +33,13 @@ import org.libtorrent4j.swig.add_torrent_params
 import org.libtorrent4j.swig.error_code
 import org.libtorrent4j.swig.libtorrent
 import org.libtorrent4j.swig.settings_pack
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download_seeding
+import podaura.shared.generated.resources.torrent_status_checking_files
+import podaura.shared.generated.resources.torrent_status_checking_resume_data
+import podaura.shared.generated.resources.torrent_status_downloading
+import podaura.shared.generated.resources.torrent_status_downloading_metadata
+import podaura.shared.generated.resources.torrent_status_finished
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -41,61 +49,19 @@ fun isTorrentMimetype(mimetype: String?): Boolean {
     return Regex("^application(s)?/x-bittorrent$").matches(mimetype.orEmpty())
 }
 
-fun doIfMagnetOrTorrentLink(
-    link: String,
-    mimetype: String? = null,
-    onMagnet: ((String) -> Unit)? = null,
-    onTorrent: ((String) -> Unit)? = null,
-    onSupported: ((String) -> Unit)? = null,
-    onUnsupported: ((String) -> Unit)? = null,
-) {
-    ifMagnetLink(
-        link = link,
-        onMagnet = {
-            onMagnet?.invoke(link)
-            onSupported?.invoke(link)
-        },
-        onUnsupported = {
-            if (
-                isTorrentMimetype(mimetype) ||
-                Regex("^(http|https)://.*\\.torrent$").matches(link)
-            ) {
-                onTorrent?.invoke(link)
-                onSupported?.invoke(link)
-            } else {
-                onUnsupported?.invoke(link)
-            }
-        },
-    )
-}
-
-fun ifMagnetLink(
-    link: String,
-    onMagnet: ((String) -> Unit)? = null,
-    onUnsupported: ((String) -> Unit)? = null,
-) {
-    if (link.startsWith("magnet:")) {
-        onMagnet?.invoke(link)
-    } else {
-        onUnsupported?.invoke(link)
-    }
-}
-
 fun TorrentStatus.State.toDisplayString(context: Context): String {
     return when (this) {
-        TorrentStatus.State.CHECKING_FILES -> context.getString(R.string.torrent_status_checking_files)
-        TorrentStatus.State.DOWNLOADING_METADATA -> context.getString(R.string.torrent_status_downloading_metadata)
-        TorrentStatus.State.DOWNLOADING -> context.getString(R.string.torrent_status_downloading)
-        TorrentStatus.State.FINISHED -> context.getString(R.string.torrent_status_finished)
-        TorrentStatus.State.SEEDING -> context.getString(R.string.download_seeding)
-        TorrentStatus.State.CHECKING_RESUME_DATA -> context.getString(R.string.torrent_status_checking_resume_data)
+        TorrentStatus.State.CHECKING_FILES -> context.getString(Res.string.torrent_status_checking_files)
+        TorrentStatus.State.DOWNLOADING_METADATA -> context.getString(Res.string.torrent_status_downloading_metadata)
+        TorrentStatus.State.DOWNLOADING -> context.getString(Res.string.torrent_status_downloading)
+        TorrentStatus.State.FINISHED -> context.getString(Res.string.torrent_status_finished)
+        TorrentStatus.State.SEEDING -> context.getString(Res.string.download_seeding)
+        TorrentStatus.State.CHECKING_RESUME_DATA -> context.getString(Res.string.torrent_status_checking_resume_data)
         TorrentStatus.State.UNKNOWN -> ""
     }
 }
 
 internal fun initProxySettings(context: Context, settings: SettingsPack): SettingsPack {
-    val dataStore = context.dataStore
-
     if (!dataStore.getOrDefault(UseProxyPreference)) {
         return settings
     }
@@ -290,7 +256,7 @@ internal suspend fun addNewDownloadInfoToDbIfNotExists(
                 link = link,
                 name = name.ifNullOfBlank {
                     link.substringAfterLast('/')
-                        .toDecodedUrl()
+                        .decodeURL()
                         .validateFileName()
                 },
                 path = path,

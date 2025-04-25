@@ -14,11 +14,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraTextField
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.minus
+import podaura.shared.generated.resources.ok
+import podaura.shared.generated.resources.plus
+import podaura.shared.generated.resources.reset
 
 @Composable
 fun DelayMillisDialog(
@@ -37,7 +42,7 @@ fun DelayMillisDialog(
                 PodAuraIconButton(
                     onClick = { currentDelay = "0" },
                     imageVector = Icons.Outlined.Restore,
-                    contentDescription = stringResource(R.string.reset),
+                    contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
@@ -49,7 +54,7 @@ fun DelayMillisDialog(
                         currentDelay = ((currentDelay.toLongOrNull() ?: 0) - 500).toString()
                     },
                     imageVector = Icons.Outlined.RemoveCircleOutline,
-                    contentDescription = stringResource(R.string.minus),
+                    contentDescription = stringResource(Res.string.minus),
                 )
                 PodAuraTextField(
                     modifier = Modifier.weight(1f),
@@ -64,7 +69,7 @@ fun DelayMillisDialog(
                         currentDelay = ((currentDelay.toLongOrNull() ?: 0) + 500).toString()
                     },
                     imageVector = Icons.Outlined.AddCircleOutline,
-                    contentDescription = stringResource(R.string.plus),
+                    contentDescription = stringResource(Res.string.plus),
                 )
             }
         },
@@ -73,12 +78,12 @@ fun DelayMillisDialog(
                 onConform(currentDelay.toLongOrNull() ?: 0)
                 onDismiss()
             }) {
-                Text(text = stringResource(id = R.string.ok))
+                Text(text = stringResource(Res.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(id = R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         },
     )

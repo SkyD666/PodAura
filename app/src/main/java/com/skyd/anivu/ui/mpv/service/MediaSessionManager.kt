@@ -5,8 +5,9 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.toUri
-import com.skyd.anivu.ui.mpv.LoopMode
+import com.skyd.anivu.ui.player.LoopMode
 import com.skyd.anivu.ui.mpv.PlayerEvent
 import com.skyd.anivu.ui.mpv.createThumbnailFile
 import com.skyd.anivu.ui.mpv.playbackState
@@ -21,6 +22,9 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.close
+import podaura.shared.generated.resources.loop_playlist_mode
 
 class MediaSessionManager(
     private val context: Context,
@@ -100,7 +104,7 @@ class MediaSessionManager(
             addCustomAction(
                 PlaybackStateCompat.CustomAction.Builder(
                     PlayerService.LOOP_ACTION,
-                    context.getString(R.string.loop_playlist_mode),
+                    context.getString(Res.string.loop_playlist_mode),
                     when (loop) {
                         LoopMode.LoopPlaylist -> R.drawable.ic_repeat_on_24
                         LoopMode.LoopFile -> R.drawable.ic_repeat_one_on_24
@@ -111,7 +115,7 @@ class MediaSessionManager(
             addCustomAction(
                 PlaybackStateCompat.CustomAction.Builder(
                     PlayerService.CLOSE_ACTION,
-                    context.getString(R.string.close),
+                    context.getString(Res.string.close),
                     R.drawable.ic_close_24,
                 ).build()
             )

@@ -1,6 +1,7 @@
 package com.skyd.ksp.preference
 
 import androidx.datastore.preferences.core.Preferences
+import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -10,6 +11,7 @@ import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSName
+import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 
 class PreferenceProcessor(
     private val codeGenerator: CodeGenerator,
@@ -21,7 +23,28 @@ class PreferenceProcessor(
         val dataType: KSName,
     )
 
+    private fun KSPropertyDeclaration.findRootOverridee(): KSPropertyDeclaration? {
+        var lastOverridee = findOverridee() ?: return null
+        var overridee: KSPropertyDeclaration? = lastOverridee
+        while (overridee != null) {
+            lastOverridee = overridee
+            overridee = overridee.findOverridee()
+        }
+        return lastOverridee
+    }
+
+    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        logger.info("PreferenceProcessor start: ${resolver.getModuleName().asString()}")
+
+        val preferencesListSymbols =
+            resolver.getSymbolsWithAnnotation(PreferencesList::class.qualifiedName!!)
+        logger.warn(preferencesListSymbols.count().toString())
+        val preferencesListSymbol = preferencesListSymbols
+            .filterIsInstance<KSPropertyDeclaration>().firstOrNull() ?: return emptyList()
+        val preferencesListPkg = preferencesListSymbol
+            .qualifiedName!!.asString().substringBeforeLast(".")
+
         val annotationName = Preference::class.qualifiedName!!
         val symbols = resolver.getSymbolsWithAnnotation(annotationName)
         val entries = mutableListOf<Entity>()
@@ -43,16 +66,19 @@ class PreferenceProcessor(
                 logger.error("Property named 'key' not found.", classDeclaration)
                 return@forEach
             }
+            val baseKey: KSPropertyDeclaration = keyProperty.findRootOverridee()!!
             if (basePreference == null) {
-                basePreference = keyProperty.findOverridee()!!.parentDeclaration!!.qualifiedName!!
+                basePreference = baseKey.parentDeclaration!!.qualifiedName!!
             }
-            val keyPropertyReturnType = keyProperty.getter!!.returnType!!.resolve()
-            if (keyPropertyReturnType.declaration.qualifiedName?.asString() !=
+            val baseKeyPropertyReturnType = baseKey.getter!!.returnType!!.resolve()
+            if (baseKeyPropertyReturnType.declaration.qualifiedName?.asString() !=
                 Preferences.Key::class.qualifiedName
             ) {
                 logger.error(
                     "The getter's return type of 'key' is not " +
-                            "${Preferences.Key::class.qualifiedName}.", classDeclaration
+                            "${Preferences.Key::class.qualifiedName}. " +
+                            "It's ${baseKeyPropertyReturnType.declaration.qualifiedName}",
+                    classDeclaration
                 )
                 return@forEach
             }
@@ -66,53 +92,39 @@ class PreferenceProcessor(
             }
 
             val defaultPropertyReturnType = defaultProperty.getter!!.returnType!!.resolve()
-            val defaultPropertyReturnTypeQualifiedName =
-                defaultPropertyReturnType.declaration.qualifiedName!!
-            val keyPropertyGenericTypeQualifiedName =
-                keyPropertyReturnType.arguments[0].type!!.resolve().declaration.qualifiedName!!
-
-            if (defaultPropertyReturnTypeQualifiedName.asString() !=
-                keyPropertyGenericTypeQualifiedName.asString()
-            ) {
-                logger.error(
-                    "The type of 'default' is different from the generic type of 'key': " +
-                            "default: ${defaultPropertyReturnTypeQualifiedName.asString()} " +
-                            "key: ${keyPropertyGenericTypeQualifiedName.asString()}",
-                    classDeclaration
-                )
-                return@forEach
-            }
-
             entries += Entity(
                 preferenceQualifiedName = classDeclaration.qualifiedName!!,
                 preferenceSimpleName = classDeclaration.simpleName,
                 dataType = defaultPropertyReturnType.declaration.qualifiedName!!,
             )
         }
-
         if (entries.isNotEmpty()) {
-            generatePreferencesFile(entries, basePreference!!)
-            generateCompositionLocalFile(entries)
-            generateSettingsProviderFile(entries)
+            generatePreferencesFile(entries, basePreference!!, preferencesListPkg)
+//            generateCompositionLocalFile(entries)
+//            generateSettingsProviderFile(entries)
         }
         return emptyList()
     }
 
     private val packageName = "com.skyd.generated.preference"
-    private fun generatePreferencesFile(entries: List<Entity>, basePreference: KSName) {
+    private fun generatePreferencesFile(
+        entries: List<Entity>,
+        basePreference: KSName,
+        pkg: String
+    ) {
         val file = codeGenerator.createNewFile(
             dependencies = Dependencies.ALL_FILES,
-            packageName = packageName,
+            packageName = pkg,
             fileName = "Preferences",
             extensionName = "kt",
         )
         file.bufferedWriter().use { writer ->
-            writer.appendLine("package $packageName")
+            writer.appendLine("package $pkg")
             writer.appendLine("")
             writer.appendLine("import androidx.datastore.preferences.core.Preferences")
             writer.appendLine("import kotlin.reflect.KClass")
             writer.appendLine("")
-            writer.appendLine("val preferences: List<Pair<${basePreference.asString()}<*>, KClass<*>>> = listOf(")
+            writer.appendLine("actual val preferences: List<Pair<${basePreference.asString()}<*>, KClass<*>>> = listOf(")
             for (entity in entries) {
                 writer.append("    ")
                 writer.appendLine("${entity.preferenceQualifiedName.asString()} to ${entity.dataType.asString()}::class,")

@@ -9,10 +9,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.get
 import com.skyd.anivu.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.anivu.model.preference.data.delete.autodelete.UseAutoDeletePreference
+import com.skyd.anivu.model.preference.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
@@ -31,7 +31,7 @@ private data class DeleteArticleConfiguration(
 )
 
 fun listenDeleteArticleFrequency(context: Context) = coroutineScope.launch {
-    context.dataStore.data.map {
+    dataStore.data.map {
         DeleteArticleConfiguration(
             useDeleteArticle = it[UseAutoDeletePreference],
             deleteArticleFrequency = it[AutoDeleteArticleFrequencyPreference],

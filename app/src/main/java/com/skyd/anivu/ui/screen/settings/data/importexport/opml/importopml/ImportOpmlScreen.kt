@@ -35,19 +35,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.showSnackbar
@@ -59,6 +55,19 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.TipSettingsItem
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.failed_msg
+import podaura.shared.generated.resources.import_opml_result
+import podaura.shared.generated.resources.import_opml_screen_desc
+import podaura.shared.generated.resources.import_opml_screen_import
+import podaura.shared.generated.resources.import_opml_screen_name
+import podaura.shared.generated.resources.import_opml_screen_on_conflict
+import podaura.shared.generated.resources.import_opml_screen_opml_not_selected
+import podaura.shared.generated.resources.import_opml_screen_select_file
 
 
 @Serializable
@@ -91,11 +100,10 @@ data object ImportOpmlDeepLinkRoute {
 @Composable
 fun ImportOpmlScreen(
     opmlUrl: String? = null,
-    viewModel: ImportOpmlViewModel = hiltViewModel(),
+    viewModel: ImportOpmlViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val importedStickerProxyList = rememberSaveable {
@@ -127,18 +135,18 @@ fun ImportOpmlScreen(
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.import_opml_screen_name)) },
+                title = { Text(text = stringResource(Res.string.import_opml_screen_name)) },
             )
         },
         floatingActionButton = {
             PodAuraExtendedFloatingActionButton(
-                text = { Text(text = stringResource(R.string.import_opml_screen_import)) },
+                text = { Text(text = stringResource(Res.string.import_opml_screen_import)) },
                 icon = { Icon(imageVector = Icons.Default.Done, contentDescription = null) },
                 onClick = {
                     if (opmlUri == Uri.EMPTY) {
                         snackbarHostState.showSnackbar(
                             scope = scope,
-                            message = context.getString(R.string.import_opml_screen_opml_not_selected),
+                            message = Res.string.import_opml_screen_opml_not_selected,
                         )
                     } else {
                         dispatch(
@@ -150,7 +158,7 @@ fun ImportOpmlScreen(
                     }
                 },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                contentDescription = stringResource(R.string.import_opml_screen_import)
+                contentDescription = stringResource(Res.string.import_opml_screen_import)
             )
         },
     ) { paddingValues ->
@@ -164,7 +172,7 @@ fun ImportOpmlScreen(
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Segment),
-                    text = stringResource(id = R.string.import_opml_screen_select_file),
+                    text = stringResource(Res.string.import_opml_screen_select_file),
                     descriptionText = opmlUri.toString().ifBlank { null },
                     onClick = { pickFileLauncher.safeLaunch("*/*") }
                 )
@@ -172,7 +180,7 @@ fun ImportOpmlScreen(
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.HelpOutline),
-                    text = stringResource(R.string.import_opml_screen_on_conflict),
+                    text = stringResource(Res.string.import_opml_screen_on_conflict),
                     description = {
                         SingleChoiceSegmentedButtonRow(
                             modifier = Modifier
@@ -197,7 +205,7 @@ fun ImportOpmlScreen(
             }
             item {
                 TipSettingsItem(
-                    text = stringResource(id = R.string.import_opml_screen_desc)
+                    text = stringResource(Res.string.import_opml_screen_desc)
                 )
             }
         }
@@ -208,8 +216,8 @@ fun ImportOpmlScreen(
     MviEventListener(viewModel.singleEvent) { event ->
         when (event) {
             is ImportOpmlEvent.ImportOpmlResultEvent.Success -> snackbarHostState.showSnackbar(
-                context.resources.getQuantityString(
-                    R.plurals.import_opml_result,
+                getPluralString(
+                    Res.plurals.import_opml_result,
                     event.result.importedFeedCount,
                     event.result.importedFeedCount,
                     event.result.time / 1000f,
@@ -217,7 +225,7 @@ fun ImportOpmlScreen(
             )
 
             is ImportOpmlEvent.ImportOpmlResultEvent.Failed ->
-                snackbarHostState.showSnackbar(context.getString(R.string.failed_msg, event.msg))
+                snackbarHostState.showSnackbar(getString(Res.string.failed_msg, event.msg))
         }
     }
 }

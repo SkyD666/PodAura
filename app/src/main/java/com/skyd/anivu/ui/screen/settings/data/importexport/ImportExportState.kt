@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.data.importexport
 
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 
 data class ImportExportState(
     val loadingDialog: Boolean,

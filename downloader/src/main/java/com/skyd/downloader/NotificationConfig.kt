@@ -12,8 +12,8 @@ data class NotificationConfig(
     val intentContentActivity: String?,
     val intentContentBasePath: String?,
     val smallIcon: Int,
-    val pauseText: Int,
-    val resumeText: Int,
-    val cancelText: Int,
-    val retryText: Int,
+    val pauseText: String,
+    val resumeText: String,
+    val cancelText: String,
+    val retryText: String,
 )

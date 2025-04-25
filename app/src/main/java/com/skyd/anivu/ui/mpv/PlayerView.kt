@@ -22,11 +22,12 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.screenIsLand
+import com.skyd.anivu.model.preference.player.BackgroundPlayPreference
 import com.skyd.anivu.ui.component.OnLifecycleEvent
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.mpv.component.PlayerAndroidView
-import com.skyd.anivu.ui.mpv.component.dialog.audio.AudioTrackDialog
 import com.skyd.anivu.ui.mpv.component.dialog.SpeedDialog
+import com.skyd.anivu.ui.mpv.component.dialog.audio.AudioTrackDialog
 import com.skyd.anivu.ui.mpv.component.dialog.subtitle.SubtitleTrackDialog
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
@@ -46,8 +47,6 @@ import com.skyd.anivu.ui.mpv.pip.pipParams
 import com.skyd.anivu.ui.mpv.pip.rememberIsInPipMode
 import com.skyd.anivu.ui.mpv.port.PortraitPlayerView
 import com.skyd.anivu.ui.mpv.service.PlayerService
-import com.skyd.generated.preference.LocalBackgroundPlay
-import com.skyd.generated.preference.LocalPlayerAutoPip
 import java.io.File
 
 
@@ -139,7 +138,7 @@ fun PlayerView(
     }
 
     val inPipMode = rememberIsInPipMode()
-    val autoPip = LocalPlayerAutoPip.current
+    val autoPip = BackgroundPlayPreference.current
     val shouldEnterPipMode = autoPip && playerState.mediaStarted && playState.isPlaying
     PipListenerPreAPI12(shouldEnterPipMode = shouldEnterPipMode)
 
@@ -189,7 +188,7 @@ fun PlayerView(
 
     var needPlayWhenResume by rememberSaveable { mutableStateOf(false) }
 
-    val backgroundPlay = LocalBackgroundPlay.current
+    val backgroundPlay = BackgroundPlayPreference.current
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {

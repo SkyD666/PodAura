@@ -11,14 +11,16 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.safeLaunch
-import com.skyd.generated.preference.LocalPickImageMethod
+import com.skyd.anivu.model.preference.behavior.PickImageMethodPreference
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.use_the_following_to_open
 
 @Composable
 fun rememberImagePicker(
-    method: String = LocalPickImageMethod.current,
+    method: String = PickImageMethodPreference.current,
     multiple: Boolean = false,
     onResult: (List<Uri?>) -> Unit
 ): ManagedActivityResultLauncher<*, *> {
@@ -109,7 +111,7 @@ class PickFromGallery : ActivityResultContract<Unit?, Uri?>() {
         return Intent.createChooser(
             Intent(Intent.ACTION_PICK)
                 .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*"),
-            appContext.getString(R.string.use_the_following_to_open)
+            appContext.getString(Res.string.use_the_following_to_open)
         )
     }
 
@@ -124,7 +126,7 @@ class PickMultipleFromGallery : ActivityResultContract<Unit?, List<Uri>>() {
             Intent(Intent.ACTION_PICK)
                 .setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
                 .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true),
-            appContext.getString(R.string.use_the_following_to_open)
+            appContext.getString(Res.string.use_the_following_to_open)
         )
     }
 

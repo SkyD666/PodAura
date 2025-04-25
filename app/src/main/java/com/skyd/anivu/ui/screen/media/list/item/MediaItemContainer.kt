@@ -32,8 +32,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -44,19 +42,30 @@ import coil3.request.CachePolicy
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.openWith
 import com.skyd.anivu.ext.share
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.ext.toUri
 import com.skyd.anivu.model.bean.MediaBean
+import com.skyd.anivu.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.TagText
 import com.skyd.anivu.ui.component.dialog.DeleteWarningDialog
 import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
-import com.skyd.generated.preference.LocalMediaShowThumbnail
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.folder
+import podaura.shared.generated.resources.media_screen_delete_directory_warning
+import podaura.shared.generated.resources.media_screen_delete_file_warning
+import podaura.shared.generated.resources.open_with
+import podaura.shared.generated.resources.read_screen_name
+import podaura.shared.generated.resources.share
+import java.io.File
 import java.util.Locale
 
 @Composable
@@ -121,7 +130,7 @@ fun MediaItemContainer(
                     } else if (data.isMedia) {
                         onPlay(data)
                     } else {
-                        data.file
+                        File(data.filePath.toString())
                             .toUri(context)
                             .openWith(context)
                     }
@@ -168,7 +177,7 @@ fun MediaItemScope.Tag(
     } else if (data.isDir) {
         TagText(
             modifier = modifier,
-            text = stringResource(id = R.string.folder),
+            text = stringResource(Res.string.folder),
             fontSize = 10.sp,
             containerColor = containerColor,
             contentColor = contentColor,
@@ -238,10 +247,9 @@ fun MediaItemScope.GridFolderNumberBadge(modifier: Modifier = Modifier) {
 
 @Composable
 fun MediaItemScope.Date(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
     Text(
         modifier = modifier,
-        text = remember(data) { data.date.toDateTimeString(context = context) },
+        text = remember(data) { data.date.toDateTimeString() },
         style = MaterialTheme.typography.labelMedium,
         maxLines = 1,
     )
@@ -278,7 +286,7 @@ private fun Menu(
         onDismissRequest = onDismissRequest,
     ) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.open_with)) },
+            text = { Text(text = stringResource(Res.string.open_with)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -286,14 +294,14 @@ private fun Menu(
                 )
             },
             onClick = {
-                data.file
+                File(data.filePath.toString())
                     .toUri(context)
                     .openWith(context)
                 onDismissRequest()
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.share)) },
+            text = { Text(text = stringResource(Res.string.share)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Share,
@@ -301,13 +309,13 @@ private fun Menu(
                 )
             },
             onClick = {
-                data.file.toUri(context).share(context)
+                File(data.filePath.toString()).toUri(context).share(context)
                 onDismissRequest()
             },
         )
         if (onOpenAddToPlaylistSheet != null && data.isMedia) {
             DropdownMenuItem(
-                text = { Text(text = stringResource(id = R.string.add_to_playlist)) },
+                text = { Text(text = stringResource(Res.string.add_to_playlist)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
@@ -322,7 +330,7 @@ private fun Menu(
         }
         if (onOpenFeed != null) {
             DropdownMenuItem(
-                text = { Text(text = stringResource(id = R.string.feed_screen_name)) },
+                text = { Text(text = stringResource(Res.string.feed_screen_name)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.RssFeed,
@@ -337,7 +345,7 @@ private fun Menu(
         }
         if (onOpenArticle != null) {
             DropdownMenuItem(
-                text = { Text(text = stringResource(id = R.string.read_screen_name)) },
+                text = { Text(text = stringResource(Res.string.read_screen_name)) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.Article,
@@ -362,8 +370,8 @@ private fun Menu(
     DeleteWarningDialog(
         visible = openDeleteWarningDialog,
         text = stringResource(
-            if (data.isFile) R.string.media_screen_delete_file_warning
-            else R.string.media_screen_delete_directory_warning
+            if (data.isFile) Res.string.media_screen_delete_file_warning
+            else Res.string.media_screen_delete_directory_warning
         ),
         onDismissRequest = { openDeleteWarningDialog = false },
         onDismiss = { openDeleteWarningDialog = false },
@@ -405,13 +413,13 @@ fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25
         ) {
             Icon(
                 modifier = Modifier.size(iconSize),
-                painter = painterResource(id = data.icon),
+                painter = painterResource(data.icon),
                 contentDescription = null
             )
         }
     }
 
-    if (data.cover != null && LocalMediaShowThumbnail.current) {
+    if (data.cover != null && MediaShowThumbnailPreference.current) {
         if (showThumbnail) {
             PodAuraImage(
                 modifier = modifier.fillMaxSize(),

@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.more
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.combinedClickable
@@ -37,15 +36,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.MoreBean
@@ -59,6 +59,15 @@ import com.skyd.anivu.ui.screen.history.HistoryRoute
 import com.skyd.anivu.ui.screen.settings.SettingsRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.ImportExportRoute
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.about_screen_name
+import podaura.shared.generated.resources.download_screen_name
+import podaura.shared.generated.resources.history_screen_name
+import podaura.shared.generated.resources.import_export_screen_name
+import podaura.shared.generated.resources.more_screen_name
+import podaura.shared.generated.resources.settings
 
 
 @Serializable
@@ -68,7 +77,6 @@ data object MoreRoute
 fun MoreScreen() {
     val navController = LocalNavController.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val windowSizeClass = LocalWindowSizeClass.current
 
     Scaffold(
@@ -76,7 +84,7 @@ fun MoreScreen() {
         topBar = {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
-                title = { Text(text = stringResource(id = R.string.more_screen_name)) },
+                title = { Text(text = stringResource(Res.string.more_screen_name)) },
                 navigationIcon = {},
                 windowInsets = WindowInsets.safeDrawing.only(
                     (WindowInsetsSides.Top + WindowInsetsSides.Right).run {
@@ -92,9 +100,12 @@ fun MoreScreen() {
         )
     ) {
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
-        val dataList = remember(context, colorScheme, navController) {
-            getMoreBeanList(context, colorScheme, navController)
+        var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
+
+        LaunchedEffect(Unit) {
+            dataList = getMoreBeanList(colorScheme, navController)
         }
+
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),
             contentPadding = it + PaddingValues(horizontal = 16.dp, vertical = 10.dp),
@@ -158,14 +169,13 @@ fun More1Item(
     }
 }
 
-private fun getMoreBeanList(
-    context: Context,
+private suspend fun getMoreBeanList(
     colorScheme: ColorScheme,
     navController: NavController,
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
-            title = context.getString(R.string.history_screen_name),
+            title = getString(Res.string.history_screen_name),
             icon = Icons.Outlined.History,
             iconTint = colorScheme.onPrimary,
             shape = MaterialShapes.Pill,
@@ -173,7 +183,7 @@ private fun getMoreBeanList(
             action = { navController.navigate(HistoryRoute) },
         ),
         MoreBean(
-            title = context.getString(R.string.download_screen_name),
+            title = getString(Res.string.download_screen_name),
             icon = Icons.Outlined.Download,
             iconTint = colorScheme.onSecondary,
             shape = MaterialShapes.Clover8Leaf,
@@ -181,7 +191,7 @@ private fun getMoreBeanList(
             action = { navController.navigate(DownloadRoute()) },
         ),
         MoreBean(
-            title = context.getString(R.string.import_export_screen_name),
+            title = getString(Res.string.import_export_screen_name),
             icon = Icons.Outlined.SwapVert,
             iconTint = colorScheme.onTertiary,
             shape = MaterialShapes.Clover4Leaf,
@@ -189,7 +199,7 @@ private fun getMoreBeanList(
             action = { navController.navigate(ImportExportRoute) },
         ),
         MoreBean(
-            title = context.getString(R.string.settings),
+            title = getString(Res.string.settings),
             icon = Icons.Outlined.Settings,
             iconTint = colorScheme.onPrimary,
             shape = MaterialShapes.Slanted,
@@ -197,7 +207,7 @@ private fun getMoreBeanList(
             action = { navController.navigate(SettingsRoute) },
         ),
         MoreBean(
-            title = context.getString(R.string.about_screen_name),
+            title = getString(Res.string.about_screen_name),
             icon = Icons.Outlined.Info,
             iconTint = colorScheme.onSecondary,
             shape = MaterialShapes.Cookie12Sided,

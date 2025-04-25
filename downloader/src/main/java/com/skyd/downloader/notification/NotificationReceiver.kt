@@ -205,7 +205,7 @@ internal class NotificationReceiver : BroadcastReceiver() {
                     if (intent.action == NotificationConst.ACTION_DOWNLOAD_FAILED) {
                         notificationBuilder = notificationBuilder.addAction(
                             -1,
-                            context.getString(downloader.notificationConfig.retryText),
+                            downloader.notificationConfig.retryText,
                             pendingIntentRetry
                         ).setProgress(
                             NotificationConst.MAX_VALUE_PROGRESS,
@@ -213,7 +213,7 @@ internal class NotificationReceiver : BroadcastReceiver() {
                             false
                         ).addAction(
                             -1,
-                            context.getString(downloader.notificationConfig.cancelText),
+                            downloader.notificationConfig.cancelText,
                             pendingIntentCancel
                         ).setSubText("$currentProgress%")
                     }
@@ -221,7 +221,7 @@ internal class NotificationReceiver : BroadcastReceiver() {
                     if (intent.action == NotificationConst.ACTION_DOWNLOAD_PAUSED) {
                         notificationBuilder = notificationBuilder.addAction(
                             -1,
-                            context.getString(downloader.notificationConfig.resumeText),
+                            downloader.notificationConfig.resumeText,
                             pendingIntentResume,
                         ).setProgress(
                             NotificationConst.MAX_VALUE_PROGRESS,
@@ -229,7 +229,7 @@ internal class NotificationReceiver : BroadcastReceiver() {
                             false
                         ).addAction(
                             -1,
-                            context.getString(downloader.notificationConfig.cancelText),
+                            downloader.notificationConfig.cancelText,
                             pendingIntentCancel
                         ).setSubText("$currentProgress%")
                     }

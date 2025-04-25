@@ -16,14 +16,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.isDefaultGroup
+import com.skyd.anivu.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.anivu.ui.component.PodAuraIconButton
-import com.skyd.generated.preference.LocalFeedDefaultGroupExpand
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.collapse
+import podaura.shared.generated.resources.expend
 
 
 val SHAPE_CORNER_DP = 26.dp
@@ -38,7 +40,7 @@ fun Group1Item(
     onEdit: ((GroupVo) -> Unit)? = null,
 ) {
     val isExpanded =
-        if (data.isDefaultGroup()) LocalFeedDefaultGroupExpand.current else data.isExpanded
+        if (data.isDefaultGroup()) FeedDefaultGroupExpandPreference.current else data.isExpanded
     val backgroundShapeCorner: Dp by animateDpAsState(
         targetValue = if (isExpanded && !isEmpty(index)) 0.dp else SHAPE_CORNER_DP,
         label = "background shape corner",
@@ -81,7 +83,7 @@ fun Group1Item(
         PodAuraIconButton(
             onClick = { onExpandChange(data, !isExpanded) },
             imageVector = Icons.Outlined.KeyboardArrowUp,
-            contentDescription = stringResource(if (isExpanded) R.string.collapse else R.string.expend),
+            contentDescription = stringResource(if (isExpanded) Res.string.collapse else Res.string.expend),
             rotate = expandIconRotate,
         )
     }

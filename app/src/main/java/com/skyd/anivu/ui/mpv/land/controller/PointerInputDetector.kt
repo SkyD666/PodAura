@@ -1,7 +1,6 @@
 package com.skyd.anivu.ui.mpv.land.controller
 
 import android.content.Context
-import android.graphics.Rect
 import android.media.AudioManager
 import android.os.Build
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -18,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +31,6 @@ import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.PlayStateCallback
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformState
 import com.skyd.anivu.ui.mpv.land.controller.state.TransformStateCallback
-import com.skyd.generated.preference.LocalPlayerDoubleTap
 import kotlin.math.abs
 
 private val inSystemBarArea: PointerInputScope.(
@@ -69,7 +68,7 @@ internal fun Modifier.detectPressGestures(
 ): Modifier {
     var beforeLongPressingSpeed by rememberSaveable { mutableFloatStateOf(playState().speed) }
 
-    val playerDoubleTap = LocalPlayerDoubleTap.current
+    val playerDoubleTap = PlayerDoubleTapPreference.current
     val onDoubleTapPausePlay: () -> Unit = remember { { playStateCallback.onPlayOrPause() } }
 
     val onDoubleTapBackwardForward: PlayState.(Offset) -> Unit = { offset ->

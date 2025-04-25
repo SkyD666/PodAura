@@ -4,9 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
-import com.skyd.anivu.ext.dataStore
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.ext.flowOf
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
@@ -19,6 +17,7 @@ import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPrefe
 import com.skyd.anivu.model.preference.behavior.playlist.BasePlaylistSortByPreference.Companion.MANUAL
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
 import com.skyd.anivu.model.preference.behavior.playlist.PlaylistMediaSortByPreference
+import com.skyd.anivu.model.preference.dataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -27,9 +26,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class PlaylistMediaRepository @Inject constructor(
+@Factory(binds = [IPlaylistMediaRepository::class])
+class PlaylistMediaRepository(
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
     private val playlistMediaDao: PlaylistMediaDao,
@@ -67,7 +67,7 @@ class PlaylistMediaRepository @Inject constructor(
     }
 
     fun requestPlaylistMediaListPaging(playlistId: String): Flow<PagingData<PlaylistMediaWithArticleBean>> {
-        return appContext.dataStore.flowOf(
+        return dataStore.flowOf(
             PlaylistMediaSortByPreference, PlaylistMediaSortAscPreference
         ).flatMapLatest { (sortBy, sortAsc) ->
             val sortByColumnName = when (sortBy) {

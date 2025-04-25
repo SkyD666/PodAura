@@ -7,8 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.compose.multiplatform)
 }
 
 apply(from = "../secret.gradle.kts")
@@ -21,8 +21,8 @@ android {
         applicationId = "com.skyd.anivu"
         minSdk = 24
         targetSdk = 35
-        versionCode = 27
-        versionName = "3.1"
+        versionCode = properties["versionCode"]!!.toString().toInt()
+        versionName = properties["versionName"]!!.toString()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -181,17 +181,21 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.constraintlayout.compose)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.compose.ui)
+    implementation(libs.jetbrains.navigation.compose)
+    implementation(libs.jetbrains.lifecycle.runtime.compose)
+    implementation(libs.compose.material.icons)
+    implementation(compose.runtime)
+    implementation(compose.ui)
+    implementation(compose.foundation)
+    implementation(compose.material)
+    implementation(libs.material3)
+//    implementation(compose.material3)  // waiting for update
+    implementation(compose.components.resources)
     implementation(libs.androidx.compose.runtime.tracing)
-    implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.compose.icons)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.window.size)
-    implementation(libs.androidx.compose.adaptive)
-    implementation(libs.androidx.compose.adaptive.layout)
-    implementation(libs.androidx.compose.adaptive.navigation)
+    implementation(libs.jetbrains.compose.window.size)
+    implementation(libs.jetbrains.compose.adaptive)
+    implementation(libs.jetbrains.compose.adaptive.layout)
+    implementation(libs.jetbrains.compose.adaptive.navigation)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.paging)
@@ -202,35 +206,35 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.paging.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.media)
 
-    implementation(libs.material)
+    implementation(libs.android.material)
     implementation(libs.material.kolor)
     implementation(libs.accompanist.permissions)
 
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
+    implementation(libs.koin.compose.viewmodel.navigation)
+    api(libs.koin.annotations)
+    ksp(libs.koin.ksp.compiler)
 
-    implementation(libs.okhttp3)
-    implementation(libs.okhttp3.coroutines.jvm)
-    implementation(libs.okhttp3.logging)
-    implementation(libs.retrofit2)
-    implementation(libs.retrofit2.kotlinx.serialization.converter)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.json.io)
     implementation(libs.kotlinx.coroutines.guava)
 
     implementation(libs.aniyomi.mpv.lib)
     implementation(libs.ffmpeg.kit)
 
     implementation(libs.coil.compose)
-    implementation(libs.coil.network)
-    implementation(libs.coil.gif)
-    implementation(libs.coil.svg)
+    implementation(libs.coil.network.ktor3)
     implementation(libs.coil.video)
 
-    implementation(libs.lottie.compose)
+    implementation(libs.kermit)
+    implementation(libs.kotlinx.io.core)
 
     implementation(libs.rome)
     implementation(libs.rome.modules)
@@ -247,9 +251,10 @@ dependencies {
     implementation(libs.libtorrent4j.x86)
     implementation(libs.libtorrent4j.x8664)
 
+    implementation(compose.components.resources)
+
+    implementation(project(":shared"))
     implementation(project(":downloader"))
-    implementation(project(":ksp"))
-    ksp(project(":ksp"))
 
 //    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
     testImplementation(libs.junit)

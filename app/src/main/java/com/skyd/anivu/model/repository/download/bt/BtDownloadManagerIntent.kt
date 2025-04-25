@@ -1,6 +1,6 @@
 package com.skyd.anivu.model.repository.download.bt
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean.DownloadState
 import com.skyd.anivu.model.bean.download.bt.TorrentFileBean

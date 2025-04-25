@@ -10,11 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.mpv.land.controller.ControllerLabelGray
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_reset_zoom
 
 
 @Composable
@@ -29,7 +30,7 @@ internal fun ResetTransform(
             .background(color = ControllerLabelGray)
             .clickable(enabled = enabled(), onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
-        text = stringResource(id = R.string.player_reset_zoom),
+        text = stringResource(Res.string.player_reset_zoom),
         style = MaterialTheme.typography.labelLarge,
         fontSize = 16.sp,
         color = Color.White,

@@ -16,19 +16,18 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.content.ContextCompat
 import com.skyd.anivu.BuildConfig
 import com.skyd.anivu.appContext
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.getOrDefault
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.model.preference.player.PlayerLoopModePreference
 import com.skyd.anivu.model.repository.player.IPlayerRepository
 import com.skyd.anivu.model.repository.playlist.IAddToPlaylistRepository
-import com.skyd.anivu.ui.mpv.LoopMode
 import com.skyd.anivu.ui.mpv.MPVPlayer
 import com.skyd.anivu.ui.mpv.PlayerCommand
 import com.skyd.anivu.ui.mpv.PlayerEvent
-import dagger.hilt.android.AndroidEntryPoint
+import com.skyd.anivu.ui.player.LoopMode
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,17 +36,14 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.koin.android.ext.android.inject
 import kotlin.math.abs
 import kotlin.math.pow
 
-@AndroidEntryPoint
-class PlayerService : Service() {
-    @Inject
-    lateinit var playerRepo: IPlayerRepository
 
-    @Inject
-    lateinit var addToPlaylistRepo: IAddToPlaylistRepository
+class PlayerService : Service() {
+    private val playerRepo: IPlayerRepository by inject()
+    private val addToPlaylistRepo: IAddToPlaylistRepository by inject()
 
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
 
@@ -93,7 +89,7 @@ class PlayerService : Service() {
                     else LoopMode.None
 
                     sendEvent(PlayerEvent.Loop(mode))
-                    PlayerLoopModePreference.put(this@PlayerService, scope, mode)
+                    PlayerLoopModePreference.put(scope, mode)
                 }
 
                 "metadata" -> {

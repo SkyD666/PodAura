@@ -8,9 +8,12 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
 import com.skyd.anivu.R
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ui.mpv.component.state.PlayState
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.pause
+import podaura.shared.generated.resources.play
 
 
 // Constant for broadcast receiver
@@ -32,7 +35,7 @@ fun listOfRemoteActions(
         if (playState.isPlaying) {
             buildRemoteAction(
                 R.drawable.ic_pause_24,
-                R.string.pause,
+                context.getString(Res.string.pause),
                 REQUEST_PAUSE,
                 EXTRA_CONTROL_PAUSE,
                 context = context,
@@ -40,7 +43,7 @@ fun listOfRemoteActions(
         } else {
             buildRemoteAction(
                 R.drawable.ic_play_arrow_24,
-                R.string.play,
+                context.getString(Res.string.play),
                 REQUEST_PLAY,
                 EXTRA_CONTROL_PLAY,
                 context = context,
@@ -52,15 +55,15 @@ fun listOfRemoteActions(
 @RequiresApi(Build.VERSION_CODES.O)
 private fun buildRemoteAction(
     @DrawableRes iconResId: Int,
-    @StringRes titleResId: Int,
+    title: String,
     requestCode: Int,
     controlType: Int,
     context: Context,
 ): RemoteAction {
     return RemoteAction(
         Icon.createWithResource(context, iconResId),
-        context.getString(titleResId),
-        context.getString(titleResId),
+        title,
+        title,
         PendingIntent.getBroadcast(
             context,
             requestCode,

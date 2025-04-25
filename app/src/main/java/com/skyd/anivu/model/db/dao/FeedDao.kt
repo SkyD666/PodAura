@@ -10,7 +10,7 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Update
-import com.skyd.anivu.appContext
+import com.skyd.anivu.di.get
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.anivu.model.bean.feed.FEED_VIEW_NAME
@@ -19,20 +19,10 @@ import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.feed.FeedWithArticleBean
 import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.anivu.model.bean.group.GroupBean
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FeedDao {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface FeedDaoEntryPoint {
-        val articleDao: ArticleDao
-    }
-
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setFeed(feedBean: FeedBean)
@@ -48,10 +38,8 @@ interface FeedDao {
         } else {
             updateFeed(feedWithArticleBean.feed)
         }
-        val hiltEntryPoint =
-            EntryPointAccessors.fromApplication(appContext, FeedDaoEntryPoint::class.java)
         val feedUrl = feedWithArticleBean.feed.url
-        hiltEntryPoint.articleDao.insertListIfNotExist(
+        get<ArticleDao>().insertListIfNotExist(
             feedWithArticleBean.articles.map { articleWithEnclosure ->
                 val articleId = articleWithEnclosure.article.articleId
 

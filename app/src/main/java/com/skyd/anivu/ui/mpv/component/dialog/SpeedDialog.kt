@@ -16,13 +16,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.mpv.component.state.PlayState
 import com.skyd.anivu.ui.mpv.component.state.dialog.SpeedDialogCallback
 import com.skyd.anivu.ui.mpv.component.state.dialog.SpeedDialogState
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_speed
+import podaura.shared.generated.resources.reset
 import java.util.Locale
 
 
@@ -44,7 +46,7 @@ internal fun SpeedDialog(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .padding(bottom = 6.dp),
-                        text = stringResource(id = R.string.player_speed),
+                        text = stringResource(Res.string.player_speed),
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     Text(
@@ -57,7 +59,7 @@ internal fun SpeedDialog(
                             speedDialogCallback.onSpeedChanged(value)
                         },
                         imageVector = Icons.Rounded.RestartAlt,
-                        contentDescription = stringResource(id = R.string.reset),
+                        contentDescription = stringResource(Res.string.reset),
                     )
                 }
                 Slider(

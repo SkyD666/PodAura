@@ -38,18 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.ext.rememberUpdateSemaphore
 import com.skyd.anivu.ext.toRelativeDateTimeString
@@ -68,10 +64,16 @@ import com.skyd.anivu.ui.component.dialog.SortDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.screen.playlist.PlaylistThumbnail
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.generated.preference.LocalPlaylistMediaSortAsc
-import com.skyd.generated.preference.LocalPlaylistMediaSortBy
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.created_on
+import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.playlist_screen_item_count
+import podaura.shared.generated.resources.sort
 
 
 @Serializable
@@ -87,7 +89,7 @@ data class PlaylistMediaListRoute(val playlistId: String) {
 @Composable
 fun PlaylistMediaListScreen(
     playlistId: String,
-    viewModel: PlaylistMediaListViewModel = hiltViewModel(),
+    viewModel: PlaylistMediaListViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
@@ -121,7 +123,7 @@ fun PlaylistMediaListScreen(
                     PodAuraIconButton(
                         onClick = { showSortDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
-                        contentDescription = stringResource(id = R.string.sort),
+                        contentDescription = stringResource(Res.string.sort),
                     )
                 }
             )
@@ -141,7 +143,7 @@ fun PlaylistMediaListScreen(
                 PlaylistMediaList(
                     currentPlaylistId = playlistId,
                     playlist = lazyPagingItems,
-                    draggable = LocalPlaylistMediaSortBy.current == BasePlaylistSortByPreference.MANUAL,
+                    draggable = PlaylistMediaSortByPreference.current == BasePlaylistSortByPreference.MANUAL,
                     state = lazyGridState,
                     header = {
                         PlaylistInfo(
@@ -190,12 +192,12 @@ fun PlaylistMediaListScreen(
             visible = showSortDialog,
             onDismissRequest = { showSortDialog = false },
             sortByValues = PlaylistMediaSortByPreference.values,
-            sortBy = LocalPlaylistMediaSortBy.current,
-            sortAsc = LocalPlaylistMediaSortAsc.current,
-            enableSortAsc = LocalPlaylistMediaSortBy.current != BasePlaylistSortByPreference.MANUAL,
-            onSortBy = { PlaylistMediaSortByPreference.put(context, scope, it) },
-            onSortAsc = { PlaylistMediaSortAscPreference.put(context, scope, it) },
-            onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(context, it) },
+            sortBy = PlaylistMediaSortByPreference.current,
+            sortAsc = PlaylistMediaSortAscPreference.current,
+            enableSortAsc = PlaylistMediaSortByPreference.current != BasePlaylistSortByPreference.MANUAL,
+            onSortBy = { PlaylistMediaSortByPreference.put(scope, it) },
+            onSortAsc = { PlaylistMediaSortAscPreference.put(scope, it) },
+            onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(it) },
             onSortByIcon = { BasePlaylistSortByPreference.toIcon(it) },
         )
 
@@ -245,7 +247,7 @@ private fun PlaylistInfo(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(
-                            R.string.created_on,
+                            Res.string.created_on,
                             playlistViewBean.playlist.createTime.toRelativeDateTimeString(),
                         ),
                         style = MaterialTheme.typography.labelMedium,
@@ -256,7 +258,7 @@ private fun PlaylistInfo(
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = pluralStringResource(
-                            R.plurals.playlist_screen_item_count,
+                            Res.plurals.playlist_screen_item_count,
                             playlistViewBean.itemCount,
                             playlistViewBean.itemCount
                         ),
@@ -274,7 +276,7 @@ private fun PlaylistInfo(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.PlayArrow,
-                        contentDescription = stringResource(R.string.play),
+                        contentDescription = stringResource(Res.string.play),
                         modifier = Modifier.size(30.dp),
                     )
                 }

@@ -19,9 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.player.HardwareDecodePreference
 import com.skyd.anivu.model.preference.player.MpvCacheDirPreference
 import com.skyd.anivu.model.preference.player.MpvConfigDirPreference
@@ -36,10 +33,17 @@ import com.skyd.anivu.ui.component.dialog.TextFieldDialog
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.filepicker.FilePickerRoute
 import com.skyd.anivu.ui.screen.filepicker.ListenToFilePicker
-import com.skyd.generated.preference.LocalHardwareDecode
-import com.skyd.generated.preference.LocalMpvCacheDir
-import com.skyd.generated.preference.LocalMpvConfigDir
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_config_advanced_screen_hardware_decode
+import podaura.shared.generated.resources.player_config_advanced_screen_hardware_decode_description
+import podaura.shared.generated.resources.player_config_advanced_screen_mpv_cache_dir
+import podaura.shared.generated.resources.player_config_advanced_screen_mpv_config
+import podaura.shared.generated.resources.player_config_advanced_screen_mpv_config_dir
+import podaura.shared.generated.resources.player_config_advanced_screen_mpv_input_config
+import podaura.shared.generated.resources.player_config_advanced_screen_name
+import podaura.shared.generated.resources.reset
 
 
 @Serializable
@@ -48,7 +52,6 @@ data object PlayerConfigAdvancedRoute
 @Composable
 fun PlayerConfigAdvancedScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     var mpvConfEditDialogValue by rememberSaveable { mutableStateOf("") }
@@ -58,8 +61,8 @@ fun PlayerConfigAdvancedScreen() {
 
     ListenToFilePicker { result ->
         when (result.id) {
-            "configDir" -> MpvConfigDirPreference.put(context, scope, result.result)
-            "cacheDir" -> MpvCacheDirPreference.put(context, scope, result.result)
+            "configDir" -> MpvConfigDirPreference.put(scope, result.result)
+            "cacheDir" -> MpvCacheDirPreference.put(scope, result.result)
             else -> Unit
         }
     }
@@ -69,7 +72,7 @@ fun PlayerConfigAdvancedScreen() {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.player_config_advanced_screen_name)) },
+                title = { Text(text = stringResource(Res.string.player_config_advanced_screen_name)) },
             )
         }
     ) { paddingValues ->
@@ -82,22 +85,16 @@ fun PlayerConfigAdvancedScreen() {
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Rounded.DeveloperBoard,
-                    text = stringResource(id = R.string.player_config_advanced_screen_hardware_decode),
-                    description = stringResource(id = R.string.player_config_advanced_screen_hardware_decode_description),
-                    checked = LocalHardwareDecode.current,
-                    onCheckedChange = {
-                        HardwareDecodePreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.player_config_advanced_screen_hardware_decode),
+                    description = stringResource(Res.string.player_config_advanced_screen_hardware_decode_description),
+                    checked = HardwareDecodePreference.current,
+                    onCheckedChange = { HardwareDecodePreference.put(scope, it) }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.PlayCircle),
-                    text = stringResource(id = R.string.player_config_advanced_screen_mpv_config),
+                    text = stringResource(Res.string.player_config_advanced_screen_mpv_config),
                     descriptionText = null,
                     onClick = {
                         mpvConfEditDialogValue = MpvConfigPreference.getValue()
@@ -108,7 +105,7 @@ fun PlayerConfigAdvancedScreen() {
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.Keyboard),
-                    text = stringResource(id = R.string.player_config_advanced_screen_mpv_input_config),
+                    text = stringResource(Res.string.player_config_advanced_screen_mpv_input_config),
                     descriptionText = null,
                     onClick = {
                         mpvInputConfEditDialogValue = MpvInputConfigPreference.getValue()
@@ -117,10 +114,10 @@ fun PlayerConfigAdvancedScreen() {
                 )
             }
             item {
-                val configDir = LocalMpvConfigDir.current
+                val configDir = MpvConfigDirPreference.current
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.player_config_advanced_screen_mpv_config_dir),
+                    text = stringResource(Res.string.player_config_advanced_screen_mpv_config_dir),
                     descriptionText = configDir,
                     onClick = {
                         navController.navigate(FilePickerRoute(path = configDir, id = "configDir"))
@@ -128,21 +125,19 @@ fun PlayerConfigAdvancedScreen() {
                     content = {
                         PodAuraIconButton(
                             onClick = {
-                                MpvConfigDirPreference.put(
-                                    context, scope, MpvConfigDirPreference.default,
-                                )
+                                MpvConfigDirPreference.put(scope, MpvConfigDirPreference.default)
                             },
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.reset),
+                            contentDescription = stringResource(Res.string.reset),
                         )
                     },
                 )
             }
             item {
-                val cacheDir = LocalMpvCacheDir.current
+                val cacheDir = MpvCacheDirPreference.current
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.player_config_advanced_screen_mpv_cache_dir),
+                    text = stringResource(Res.string.player_config_advanced_screen_mpv_cache_dir),
                     descriptionText = cacheDir,
                     onClick = {
                         navController.navigate(FilePickerRoute(path = cacheDir, id = "cacheDir"))
@@ -150,12 +145,10 @@ fun PlayerConfigAdvancedScreen() {
                     content = {
                         PodAuraIconButton(
                             onClick = {
-                                MpvCacheDirPreference.put(
-                                    context, scope, MpvCacheDirPreference.default,
-                                )
+                                MpvCacheDirPreference.put(scope, MpvCacheDirPreference.default)
                             },
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.reset),
+                            contentDescription = stringResource(Res.string.reset),
                         )
                     },
                 )

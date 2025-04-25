@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.read
 
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 
 data class ReadState(

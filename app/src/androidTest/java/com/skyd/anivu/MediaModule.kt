@@ -141,10 +141,10 @@ class MediaModule {
         })
         mediaRepository.changeMediaGroup(
             path,
-            MediaBean(file = file1, fileCount = 0, articleWithEnclosure = null, feedBean = null),
+            MediaBean(filePath = file1, fileCount = 0, articleWithEnclosure = null, feedBean = null),
             group
         ).first()
-        assertTrue(mediaRepository.requestFiles(path, group).first().first().file == file1)
+        assertTrue(mediaRepository.requestFiles(path, group).first().first().filePath == file1)
     }
 
     /**
@@ -185,7 +185,7 @@ class MediaModule {
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         mediaRepository.deleteFile(file1).first()
         assertNull(
-            mediaRepository.requestFiles(path, group).first().firstOrNull { it.file == file1 })
+            mediaRepository.requestFiles(path, group).first().firstOrNull { it.filePath == file1 })
     }
 
     /**
@@ -207,7 +207,7 @@ class MediaModule {
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         mediaRepository.renameFile(file1, "NewFile1").first()
         assertNotNull(mediaRepository.requestFiles(path, group).first()
-            .firstOrNull { it.file.name == "NewFile1" })
+            .firstOrNull { it.filePath.name == "NewFile1" })
     }
 
     /**
@@ -250,7 +250,7 @@ class MediaModule {
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         val displayName = ":/*-\\`~"
         mediaRepository.setDisplayName(
-            MediaBean(file = file2, fileCount = 0, articleWithEnclosure = null, feedBean = null),
+            MediaBean(filePath = file2, fileCount = 0, articleWithEnclosure = null, feedBean = null),
             displayName
         ).first()
         assertNotNull(mediaRepository.requestFiles(path, group).first()
@@ -320,7 +320,7 @@ class MediaModule {
         mediaRepository.moveFilesToGroup(path, MediaGroupBean.DefaultMediaGroup, group).first()
         assertNotNull(mediaRepository.renameFile(file1, "/*\\*?1Test").first())
         assertNotNull(mediaRepository.requestFiles(path, group).first()
-            .firstOrNull { it.file.name == "1Test" })
+            .firstOrNull { it.filePath.name == "1Test" })
     }
 
     /**

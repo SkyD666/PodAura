@@ -50,17 +50,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.isCompact
 import com.skyd.anivu.ext.isDetailPaneVisible
 import com.skyd.anivu.ext.isSinglePane
@@ -70,6 +67,8 @@ import com.skyd.anivu.ext.safeItemKey
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
+import com.skyd.anivu.model.preference.appearance.feed.FeedListTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.anivu.ui.component.PagingRefreshStateIndicator
 import com.skyd.anivu.ui.component.PodAuraAnimatedPane
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
@@ -90,10 +89,24 @@ import com.skyd.anivu.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.anivu.ui.screen.feed.reorder.ReorderGroupRoute
 import com.skyd.anivu.ui.screen.search.SearchRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
-import com.skyd.generated.preference.LocalFeedListTonalElevation
-import com.skyd.generated.preference.LocalFeedTopBarTonalElevation
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.collapse_all_groups
+import podaura.shared.generated.resources.expand_all_groups
+import podaura.shared.generated.resources.feed_group
+import podaura.shared.generated.resources.feed_screen_add_group
+import podaura.shared.generated.resources.feed_screen_all_articles
+import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.feed_screen_rss_url
+import podaura.shared.generated.resources.feed_screen_search_feed
+import podaura.shared.generated.resources.feed_style_screen_name
+import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.mute_feed_screen_name
+import podaura.shared.generated.resources.reorder_group_screen_name
 import java.util.UUID
 
 
@@ -196,7 +209,7 @@ private fun FeedList(
     listPaneSelectedGroupIds: List<String>? = null,
     onShowArticleListByFeedUrls: (List<String>) -> Unit,
     onShowArticleListByGroupId: (String) -> Unit,
-    viewModel: FeedViewModel = hiltViewModel(),
+    viewModel: FeedViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val navController = LocalNavController.current
@@ -222,22 +235,22 @@ private fun FeedList(
         topBar = {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
-                title = { Text(text = stringResource(id = R.string.feed_screen_name)) },
+                title = { Text(text = stringResource(Res.string.feed_screen_name)) },
                 actions = {
                     PodAuraIconButton(
                         onClick = { navController.navigate(SearchRoute.Feed) },
                         imageVector = Icons.Outlined.Search,
-                        contentDescription = stringResource(id = R.string.feed_screen_search_feed),
+                        contentDescription = stringResource(Res.string.feed_screen_search_feed),
                     )
                     PodAuraIconButton(
                         onClick = { onShowArticleListByFeedUrls(emptyList()) },
                         imageVector = Icons.AutoMirrored.Outlined.Article,
-                        contentDescription = stringResource(id = R.string.feed_screen_all_articles),
+                        contentDescription = stringResource(Res.string.feed_screen_all_articles),
                     )
                     PodAuraIconButton(
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(id = R.string.more),
+                        contentDescription = stringResource(Res.string.more),
                     )
                     MoreMenu(
                         expanded = openMoreMenu,
@@ -254,10 +267,10 @@ private fun FeedList(
                 ),
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalFeedTopBarTonalElevation.current.dp
+                        FeedTopBarTonalElevationPreference.current.dp
                     ),
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalFeedTopBarTonalElevation.current.dp + 4.dp
+                        FeedTopBarTonalElevationPreference.current.dp + 4.dp
                     ),
                 ),
                 scrollBehavior = scrollBehavior,
@@ -270,14 +283,14 @@ private fun FeedList(
                     fabWidth = width
                     fabHeight = height
                 },
-                contentDescription = stringResource(R.string.add),
+                contentDescription = stringResource(Res.string.add),
             ) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
-                    LocalFeedListTonalElevation.current.dp
+                    FeedListTonalElevationPreference.current.dp
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPadding ->
@@ -498,8 +511,8 @@ private fun AddFeedDialog(
 ) {
     TextFieldDialog(
         icon = { Icon(imageVector = Icons.Outlined.RssFeed, contentDescription = null) },
-        titleText = stringResource(id = R.string.add),
-        placeholder = stringResource(id = R.string.feed_screen_rss_url),
+        titleText = stringResource(Res.string.add),
+        placeholder = stringResource(Res.string.feed_screen_rss_url),
         value = url,
         onValueChange = onUrlChange,
         onDismissRequest = onDismissRequest,
@@ -518,8 +531,8 @@ private fun CreateGroupDialog(
     TextFieldDialog(
         visible = visible,
         icon = { Icon(imageVector = Icons.Outlined.Workspaces, contentDescription = null) },
-        titleText = stringResource(id = R.string.feed_screen_add_group),
-        placeholder = stringResource(id = R.string.feed_group),
+        titleText = stringResource(Res.string.feed_screen_add_group),
+        placeholder = stringResource(Res.string.feed_group),
         value = value,
         onValueChange = onValueChange,
         onConfirm = { text ->
@@ -615,8 +628,8 @@ private fun MoreMenu(
             text = {
                 Text(
                     text = stringResource(
-                        if (allGroupCollapsed) R.string.expand_all_groups
-                        else R.string.collapse_all_groups
+                        if (allGroupCollapsed) Res.string.expand_all_groups
+                        else Res.string.collapse_all_groups
                     )
                 )
             },
@@ -633,7 +646,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.reorder_group_screen_name)) },
+            text = { Text(text = stringResource(Res.string.reorder_group_screen_name)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.Sort,
@@ -646,7 +659,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.mute_feed_screen_name)) },
+            text = { Text(text = stringResource(Res.string.mute_feed_screen_name)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
@@ -659,7 +672,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.feed_style_screen_name)) },
+            text = { Text(text = stringResource(Res.string.feed_style_screen_name)) },
             onClick = {
                 onDismissRequest()
                 navController.navigate(FeedStyleRoute)

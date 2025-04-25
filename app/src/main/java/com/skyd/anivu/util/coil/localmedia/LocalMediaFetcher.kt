@@ -17,7 +17,7 @@ class LocalMediaFetcher(
     private val options: Options,
 ) : Fetcher {
     override suspend fun fetch(): FetchResult? {
-        return getLocalMediaThumbnail(data.file.path)?.let { bitmap ->
+        return getLocalMediaThumbnail(data.file.toString())?.let { bitmap ->
             ImageFetchResult(
                 image = bitmap.toDrawable(options.context.resources).asImage(),
                 isSampled = false,

@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.feed
 
 import android.net.Uri
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 import com.skyd.anivu.model.bean.group.GroupVo
 
 sealed interface FeedIntent : MviIntent {

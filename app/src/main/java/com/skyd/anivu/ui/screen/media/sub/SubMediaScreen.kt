@@ -18,13 +18,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
-import com.skyd.anivu.R
+import com.skyd.anivu.ext.exists
 import com.skyd.anivu.ext.popBackStackWithLifecycle
-import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.model.bean.MediaBean
 import com.skyd.anivu.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.anivu.model.preference.behavior.media.MediaSubListSortAscPreference
@@ -34,12 +31,18 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.SortDialog
+import com.skyd.anivu.ui.component.serializableType
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.media.list.MediaList
 import com.skyd.anivu.ui.screen.media.search.MediaSearchRoute
-import com.skyd.generated.preference.LocalMediaSubListSortAsc
-import com.skyd.generated.preference.LocalMediaSubListSortBy
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.exit
+import podaura.shared.generated.resources.media_screen_search_hint
+import podaura.shared.generated.resources.sort
+import podaura.shared.generated.resources.sub_media_screen_path_illegal
+import podaura.shared.generated.resources.warning
 import kotlin.reflect.typeOf
 
 
@@ -58,16 +61,16 @@ data class SubMediaRoute(val media: MediaBean) {
 @Composable
 fun SubMediaScreenRoute(media: MediaBean?) {
     val navController = LocalNavController.current
-    if (media == null || !media.file.exists() || !media.isDir) {
+    if (media == null || !media.path.exists() || !media.isDir) {
         PodAuraDialog(
             icon = {
                 Icon(imageVector = Icons.Outlined.WarningAmber, contentDescription = null)
             },
-            title = { Text(text = stringResource(id = R.string.warning)) },
-            text = { Text(text = stringResource(id = R.string.sub_media_screen_path_illegal)) },
+            title = { Text(text = stringResource(Res.string.warning)) },
+            text = { Text(text = stringResource(Res.string.sub_media_screen_path_illegal)) },
             confirmButton = {
                 TextButton(onClick = { navController.popBackStackWithLifecycle() }) {
-                    Text(text = stringResource(id = R.string.exit))
+                    Text(text = stringResource(Res.string.exit))
                 }
             },
         )
@@ -78,7 +81,6 @@ fun SubMediaScreenRoute(media: MediaBean?) {
 
 @Composable
 private fun SubMediaScreen(media: MediaBean) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -100,16 +102,16 @@ private fun SubMediaScreen(media: MediaBean) {
                     PodAuraIconButton(
                         onClick = {
                             navController.navigate(
-                                MediaSearchRoute(path = media.file.path, isSubList = true)
+                                MediaSearchRoute(path = media.filePath, isSubList = true)
                             )
                         },
                         imageVector = Icons.Outlined.Search,
-                        contentDescription = stringResource(id = R.string.media_screen_search_hint),
+                        contentDescription = stringResource(Res.string.media_screen_search_hint),
                     )
                     PodAuraIconButton(
                         onClick = { showSortMediaDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
-                        contentDescription = stringResource(id = R.string.sort),
+                        contentDescription = stringResource(Res.string.sort),
                     )
                 }
             )
@@ -118,7 +120,7 @@ private fun SubMediaScreen(media: MediaBean) {
         MediaList(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
-            path = media.file.path,
+            path = media.filePath,
             isSubList = true,
         )
     }
@@ -127,11 +129,11 @@ private fun SubMediaScreen(media: MediaBean) {
         visible = showSortMediaDialog,
         onDismissRequest = { showSortMediaDialog = false },
         sortByValues = MediaSubListSortByPreference.values,
-        sortBy = LocalMediaSubListSortBy.current,
-        sortAsc = LocalMediaSubListSortAsc.current,
-        onSortBy = { MediaSubListSortByPreference.put(context, scope, it) },
-        onSortAsc = { MediaSubListSortAscPreference.put(context, scope, it) },
-        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(context, it) },
+        sortBy = MediaSubListSortByPreference.current,
+        sortAsc = MediaSubListSortAscPreference.current,
+        onSortBy = { MediaSubListSortByPreference.put(scope, it) },
+        onSortAsc = { MediaSubListSortAscPreference.put(scope, it) },
+        onSortByDisplayName = { BaseMediaListSortByPreference.toDisplayName(it) },
         onSortByIcon = { BaseMediaListSortByPreference.toIcon(it) },
     )
 }

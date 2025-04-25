@@ -32,7 +32,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -40,8 +39,6 @@ import androidx.core.util.Consumer
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.skyd.anivu.R
-import com.skyd.anivu.base.BaseComposeActivity
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ui.component.PodAuraNavHost
 import com.skyd.anivu.ui.local.LocalGlobalNavController
@@ -122,9 +119,14 @@ import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.anivu.ui.screen.settings.transmission.TransmissionScreen
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.anivu.ui.screen.settings.transmission.proxy.ProxyScreen
-import dagger.hilt.android.AndroidEntryPoint
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.storage_permission_request_screen_first_tip
+import podaura.shared.generated.resources.storage_permission_request_screen_rationale
+import podaura.shared.generated.resources.storage_permission_request_screen_request_permission
+import podaura.shared.generated.resources.storage_permission_request_screen_title
 
-@AndroidEntryPoint
+
 class MainActivity : BaseComposeActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -290,7 +292,7 @@ fun RequestStoragePermissionScreen(
             Spacer(Modifier.height(50.dp))
 
             Text(
-                text = stringResource(R.string.storage_permission_request_screen_title),
+                text = stringResource(Res.string.storage_permission_request_screen_title),
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
             )
@@ -306,12 +308,12 @@ fun RequestStoragePermissionScreen(
             val textToShow = if (shouldShowRationale) {
                 // If the user has denied the permission but the rationale can be shown,
                 // then gently explain why the app requires this permission
-                stringResource(R.string.storage_permission_request_screen_rationale)
+                stringResource(Res.string.storage_permission_request_screen_rationale)
             } else {
                 // If it's the first time the user lands on this feature, or the user
                 // doesn't want to be asked again for this permission, explain that the
                 // permission is required
-                stringResource(R.string.storage_permission_request_screen_first_tip)
+                stringResource(Res.string.storage_permission_request_screen_first_tip)
             }
             Text(
                 text = textToShow,
@@ -329,7 +331,7 @@ fun RequestStoragePermissionScreen(
                 modifier = Modifier.padding(vertical = 30.dp),
                 onClick = onPermissionRequest,
             ) {
-                Text(stringResource(R.string.storage_permission_request_screen_request_permission))
+                Text(stringResource(Res.string.storage_permission_request_screen_request_permission))
             }
         }
     }

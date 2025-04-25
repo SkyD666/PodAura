@@ -7,7 +7,7 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.skyd.anivu.appContext
+import com.skyd.anivu.di.get
 import com.skyd.anivu.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
@@ -19,22 +19,10 @@ import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.ui.notification.ArticleNotificationManager
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ArticleDao {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface ArticleDaoEntryPoint {
-        val enclosureDao: EnclosureDao
-        val articleCategoryDao: ArticleCategoryDao
-        val rssModuleDao: RssModuleDao
-    }
-
     // null always compares false in '='
     @Query(
         "SELECT * from `$ARTICLE_TABLE_NAME` " +
@@ -64,8 +52,6 @@ interface ArticleDao {
 
     @Transaction
     suspend fun insertListIfNotExist(articleWithEnclosureList: List<ArticleWithEnclosureBean>) {
-        val hiltEntryPoint =
-            EntryPointAccessors.fromApplication(appContext, ArticleDaoEntryPoint::class.java)
         val updatedArticleIds = mutableListOf<String>()
         articleWithEnclosureList.forEach { articleWithEnclosure ->
             val article = articleWithEnclosure.article
@@ -102,7 +88,7 @@ interface ArticleDao {
             // Update modules
             val media = articleWithEnclosure.media
             if (media != null) {
-                hiltEntryPoint.rssModuleDao.upsert(
+                get<RssModuleDao>().upsert(
                     media.copy(articleId = newArticle.articleId)
                 )
             }
@@ -110,12 +96,11 @@ interface ArticleDao {
             // Update category
             val categories = articleWithEnclosure.categories
             if (categories.isNotEmpty()) {
-                hiltEntryPoint.articleCategoryDao.upsert(
+                get<ArticleCategoryDao>().upsert(
                     categories.map { it.copy(articleId = newArticle.articleId) }
                 )
             }
-
-            hiltEntryPoint.enclosureDao.upsert(
+            get<EnclosureDao>().upsert(
                 articleWithEnclosure.enclosures.map { enclosure ->
                     enclosure.copy(articleId = newArticle.articleId)
                 }

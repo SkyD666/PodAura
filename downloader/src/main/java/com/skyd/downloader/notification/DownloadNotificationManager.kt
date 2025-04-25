@@ -85,12 +85,12 @@ internal class DownloadNotificationManager(
             .setOngoing(true)
             .addAction(
                 -1,
-                context.getString(notificationConfig.pauseText),
+                notificationConfig.pauseText,
                 getBroadcastPendingIntent(intentPause),
             )
             .addAction(
                 -1,
-                context.getString(notificationConfig.cancelText),
+                notificationConfig.cancelText,
                 getBroadcastPendingIntent(intentCancel),
             )
             .setContentIntent(

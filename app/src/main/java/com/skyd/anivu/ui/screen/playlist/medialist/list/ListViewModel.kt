@@ -1,9 +1,7 @@
 package com.skyd.anivu.ui.screen.playlist.medialist.list
 
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.startWith
-import com.skyd.anivu.model.repository.playlist.IPlaylistRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -15,12 +13,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class ListViewModel @Inject constructor(
-    private val playlistRepo: IPlaylistRepository,
-) : AbstractMviViewModel<ListIntent, ListState, ListEvent>() {
+@KoinViewModel(binds = [])
+class ListViewModel : AbstractMviViewModel<ListIntent, ListState, ListEvent>() {
 
     override val viewState: StateFlow<ListState>
 

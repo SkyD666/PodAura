@@ -12,7 +12,8 @@ import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
 import com.rometools.rome.io.SyndFeedInput
 import com.rometools.rome.io.XmlReader
-import com.skyd.anivu.ext.toEncodedUrl
+import com.skyd.anivu.di.get
+import com.skyd.anivu.ext.encodeURL
 import com.skyd.anivu.model.bean.article.ArticleBean
 import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
@@ -21,30 +22,32 @@ import com.skyd.anivu.model.bean.article.RssMediaBean
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.feed.FeedWithArticleBean
 import com.skyd.anivu.util.favicon.FaviconExtractor
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.utils.io.jvm.javaio.toInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.executeAsync
+import org.koin.core.annotation.Factory
 import java.io.InputStream
 import java.util.Date
 import java.util.UUID
-import javax.inject.Inject
 
 /**
  * Some operations on RSS.
  */
-class RssHelper @Inject constructor(
-    private val okHttpClient: OkHttpClient,
+@Factory(binds = [])
+class RssHelper(
+    private val httpClient: HttpClient,
     private val faviconExtractor: FaviconExtractor,
 ) {
-
     @Throws(Exception::class)
     suspend fun searchFeed(url: String): FeedWithArticleBean = withContext(Dispatchers.IO) {
         val iconAsync = async { getRssIcon(url) }
-        val syndFeed = SyndFeedInput().build(XmlReader(inputStream(okHttpClient, url)))
+        val syndFeed = SyndFeedInput().build(XmlReader(inputStream(httpClient, url)))
         val feed = FeedBean(
             url = url,
             title = syndFeed.title,
@@ -63,15 +66,19 @@ class RssHelper @Inject constructor(
     ): FeedWithArticleBean? = withContext(Dispatchers.IO) {
         runCatching {
             val iconAsync = async { getRssIcon(feed.url) }
-            val currentOkHttpClient = okHttpClient.newBuilder().addNetworkInterceptor(
-                Interceptor { chain ->
-                    val authorized = chain.request().newBuilder().apply {
-                        feed.requestHeaders?.headers?.forEach { (t, u) -> addHeader(t, u) }
-                    }.build()
-                    chain.proceed(authorized)
-                }
-            ).build()
-            inputStream(currentOkHttpClient, feed.url).use { inputStream ->
+            val currentHttpClient = HttpClient {
+                get<HttpClientConfig<*>.() -> Unit>()
+                install(
+                    createClientPlugin("RssPlugin") {
+                        onRequest { request, _ ->
+                            feed.requestHeaders?.headers?.forEach { (t, u) ->
+                                request.headers[t] = u
+                            }
+                        }
+                    }
+                )
+            }
+            inputStream(currentHttpClient, feed.url).use { inputStream ->
                 SyndFeedInput().apply { isPreserveWireFeed = true }
                     .build(XmlReader(inputStream))
                     .let { syndFeed ->
@@ -132,7 +139,7 @@ class RssHelper @Inject constructor(
         val enclosures = syndEntry.enclosures.map {
             EnclosureBean(
                 articleId = articleId,
-                url = it.url.orEmpty().toEncodedUrl(),
+                url = it.url.orEmpty().encodeURL(),
                 length = it.length,
                 type = it.type,
             )
@@ -207,7 +214,7 @@ class RssHelper @Inject constructor(
                                 ?: return@mapNotNull null
                             EnclosureBean(
                                 articleId = articleId,
-                                url = url.toEncodedUrl(),
+                                url = url.encodeURL(),
                                 length = content.fileSize ?: 0L,
                                 type = content.type,
                             )
@@ -217,7 +224,7 @@ class RssHelper @Inject constructor(
                         group.metadata.peerLinks.orEmpty().map { peerLink ->
                             EnclosureBean(
                                 articleId = articleId,
-                                url = peerLink.href.toString().toEncodedUrl(),
+                                url = peerLink.href.toString().encodeURL(),
                                 length = 0,
                                 type = peerLink.type,
                             )
@@ -256,12 +263,7 @@ class RssHelper @Inject constructor(
     }
 
     private suspend fun inputStream(
-        client: OkHttpClient,
+        client: HttpClient,
         url: String,
-    ): InputStream = response(client, url).body.byteStream()
-
-    private suspend fun response(
-        client: OkHttpClient,
-        url: String,
-    ) = client.newCall(Request.Builder().url(url).build()).executeAsync()
+    ): InputStream = client.prepareGet(url).execute().bodyAsChannel().toInputStream()
 }

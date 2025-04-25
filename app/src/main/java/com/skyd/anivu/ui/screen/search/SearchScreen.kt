@@ -55,26 +55,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeItemKey
-import com.skyd.anivu.ext.serializableType
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedViewBean
+import com.skyd.anivu.model.preference.appearance.search.SearchItemMinWidthPreference
+import com.skyd.anivu.model.preference.appearance.search.SearchListTonalElevationPreference
+import com.skyd.anivu.model.preference.appearance.search.SearchTopBarTonalElevationPreference
 import com.skyd.anivu.ui.component.BackIcon
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
 import com.skyd.anivu.ui.component.ErrorPlaceholder
@@ -83,15 +82,19 @@ import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.component.safeRequestFocus
+import com.skyd.anivu.ui.component.serializableType
 import com.skyd.anivu.ui.screen.article.Article1Item
 import com.skyd.anivu.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.anivu.ui.screen.feed.item.Feed1Item
 import com.skyd.anivu.ui.screen.feed.item.Feed1ItemPlaceholder
-import com.skyd.generated.preference.LocalSearchItemMinWidth
-import com.skyd.generated.preference.LocalSearchListTonalElevation
-import com.skyd.generated.preference.LocalSearchTopBarTonalElevation
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.clear_input_text
+import podaura.shared.generated.resources.search_screen_hint
+import podaura.shared.generated.resources.to_top
 import kotlin.reflect.typeOf
 
 @Serializable
@@ -126,7 +129,7 @@ sealed interface SearchRoute {
 @Composable
 fun SearchScreen(
     searchRoute: SearchRoute,
-    viewModel: SearchViewModel = hiltViewModel(),
+    viewModel: SearchViewModel = koinViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -169,7 +172,7 @@ fun SearchScreen(
                         fabWidth = width
                         fabHeight = height
                     },
-                    contentDescription = stringResource(R.string.to_top),
+                    contentDescription = stringResource(Res.string.to_top),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
@@ -183,7 +186,7 @@ fun SearchScreen(
                 modifier = Modifier
                     .background(
                         MaterialTheme.colorScheme.surfaceColorAtElevation(
-                            LocalSearchTopBarTonalElevation.current.dp
+                            SearchTopBarTonalElevationPreference.current.dp
                         )
                     )
                     .windowInsetsPadding(
@@ -198,7 +201,7 @@ fun SearchScreen(
                     },
                     query = searchFieldValueState,
                     onSearch = { keyboardController?.hide() },
-                    placeholder = { Text(text = stringResource(R.string.search_screen_hint)) },
+                    placeholder = { Text(text = stringResource(Res.string.search_screen_hint)) },
                     leadingIcon = { BackIcon() },
                     trailingIcon = {
                         TrailingIcon(showClearButton = searchFieldValueState.text.isNotEmpty()) {
@@ -214,7 +217,7 @@ fun SearchScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
-                    LocalSearchListTonalElevation.current.dp
+                    SearchListTonalElevationPreference.current.dp
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPaddings ->
@@ -317,7 +320,7 @@ private fun SearchResultList(
 ) {
     LazyVerticalGrid(
         modifier = modifier,
-        columns = GridCells.Adaptive(LocalSearchItemMinWidth.current.dp),
+        columns = GridCells.Adaptive(SearchItemMinWidthPreference.current.dp),
         state = listState,
         contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -368,7 +371,7 @@ fun TrailingIcon(
     if (showClearButton) {
         PodAuraIconButton(
             imageVector = Icons.Outlined.Clear,
-            contentDescription = stringResource(R.string.clear_input_text),
+            contentDescription = stringResource(Res.string.clear_input_text),
             onClick = { onClick?.invoke() }
         )
     }

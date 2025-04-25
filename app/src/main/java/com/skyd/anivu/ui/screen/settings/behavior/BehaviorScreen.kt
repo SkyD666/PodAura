@@ -34,13 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.skyd.anivu.R
 import com.skyd.anivu.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.anivu.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
+import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
@@ -57,16 +56,29 @@ import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
-import com.skyd.generated.preference.LocalArticleSwipeLeftAction
-import com.skyd.generated.preference.LocalArticleSwipeRightAction
-import com.skyd.generated.preference.LocalArticleTapAction
-import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
-import com.skyd.generated.preference.LocalHideEmptyDefault
-import com.skyd.generated.preference.LocalHideMutedFeed
-import com.skyd.generated.preference.LocalLoadNetImageOnWifiOnly
-import com.skyd.generated.preference.LocalMediaFileFilter
+import com.skyd.anivu.ui.component.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.behavior_screen_article_screen_category
+import podaura.shared.generated.resources.behavior_screen_article_screen_deduplicate_title_in_desc
+import podaura.shared.generated.resources.behavior_screen_article_screen_deduplicate_title_in_desc_description
+import podaura.shared.generated.resources.behavior_screen_article_swipe_left_action
+import podaura.shared.generated.resources.behavior_screen_article_swipe_right_action
+import podaura.shared.generated.resources.behavior_screen_article_tap_action
+import podaura.shared.generated.resources.behavior_screen_common_category
+import podaura.shared.generated.resources.behavior_screen_feed_screen_category
+import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_empty_default
+import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_empty_default_description
+import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_muted_feed
+import podaura.shared.generated.resources.behavior_screen_load_net_image_on_wifi_only
+import podaura.shared.generated.resources.behavior_screen_media_file_filter
+import podaura.shared.generated.resources.behavior_screen_media_file_filter_placeholder
+import podaura.shared.generated.resources.behavior_screen_media_screen_category
+import podaura.shared.generated.resources.behavior_screen_name
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.ok
 
 
 @Serializable
@@ -76,7 +88,6 @@ data object BehaviorRoute : Parcelable
 @Composable
 fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var expandArticleTapActionMenu by rememberSaveable { mutableStateOf(false) }
     var expandArticleSwipeLeftActionMenu by rememberSaveable { mutableStateOf(false) }
@@ -88,7 +99,7 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.behavior_screen_name)) },
+                title = { Text(text = stringResource(Res.string.behavior_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
@@ -100,61 +111,60 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             contentPadding = paddingValues,
         ) {
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_common_category))
+                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_common_category))
             }
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.Outlined.Wifi,
-                    text = stringResource(id = R.string.behavior_screen_load_net_image_on_wifi_only),
+                    text = stringResource(Res.string.behavior_screen_load_net_image_on_wifi_only),
                     description = null,
-                    checked = LocalLoadNetImageOnWifiOnly.current,
-                    onCheckedChange = { LoadNetImageOnWifiOnlyPreference.put(context, scope, it) }
+                    checked = LoadNetImageOnWifiOnlyPreference.current,
+                    onCheckedChange = { LoadNetImageOnWifiOnlyPreference.put(scope, it) }
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_feed_screen_category))
+                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_feed_screen_category))
             }
             item {
                 SwitchSettingsItem(
-                    imageVector = if (LocalHideEmptyDefault.current) {
+                    imageVector = if (HideEmptyDefaultPreference.current) {
                         Icons.Outlined.VisibilityOff
                     } else {
                         Icons.Outlined.Visibility
                     },
-                    text = stringResource(id = R.string.behavior_screen_feed_screen_hide_empty_default),
-                    description = stringResource(id = R.string.behavior_screen_feed_screen_hide_empty_default_description),
-                    checked = LocalHideEmptyDefault.current,
-                    onCheckedChange = { HideEmptyDefaultPreference.put(context, scope, it) }
+                    text = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default),
+                    description = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default_description),
+                    checked = HideEmptyDefaultPreference.current,
+                    onCheckedChange = { HideEmptyDefaultPreference.put(scope, it) }
                 )
             }
             item {
                 SwitchSettingsItem(
                     imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                    text = stringResource(id = R.string.behavior_screen_feed_screen_hide_muted_feed),
-                    checked = LocalHideMutedFeed.current,
-                    onCheckedChange = { HideMutedFeedPreference.put(context, scope, it) }
+                    text = stringResource(Res.string.behavior_screen_feed_screen_hide_muted_feed),
+                    checked = HideMutedFeedPreference.current,
+                    onCheckedChange = { HideMutedFeedPreference.put(scope, it) }
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_article_screen_category))
+                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_article_screen_category))
             }
             item {
                 SwitchSettingsItem(
                     painter = painterResource(id = R.drawable.ic_ink_eraser_24),
-                    text = stringResource(id = R.string.behavior_screen_article_screen_deduplicate_title_in_desc),
-                    description = stringResource(id = R.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
-                    checked = LocalDeduplicateTitleInDesc.current,
-                    onCheckedChange = { DeduplicateTitleInDescPreference.put(context, scope, it) }
+                    text = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc),
+                    description = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
+                    checked = DeduplicateTitleInDescPreference.current,
+                    onCheckedChange = { DeduplicateTitleInDescPreference.put(scope, it) }
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Article),
-                    text = stringResource(id = R.string.behavior_screen_article_tap_action),
-                    descriptionText = ArticleTapActionPreference.toDisplayName(
-                        context = context,
-                        value = LocalArticleTapAction.current,
-                    ),
+                    text = stringResource(Res.string.behavior_screen_article_tap_action),
+                    descriptionText = suspendString(ArticleTapActionPreference.current) {
+                        ArticleTapActionPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         ArticleTapActionMenu(
                             expanded = expandArticleTapActionMenu,
@@ -167,21 +177,20 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.Outlined.SwipeLeft),
-                    text = stringResource(id = R.string.behavior_screen_article_swipe_left_action),
-                    descriptionText = ArticleSwipeLeftActionPreference.toDisplayName(
-                        context = context,
-                        value = LocalArticleSwipeLeftAction.current,
-                    ),
+                    text = stringResource(Res.string.behavior_screen_article_swipe_left_action),
+                    descriptionText = suspendString(ArticleSwipeLeftActionPreference.current) {
+                        ArticleSwipeActionPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         ArticleSwipeActionMenu(
                             expanded = expandArticleSwipeLeftActionMenu,
                             onDismissRequest = { expandArticleSwipeLeftActionMenu = false },
-                            articleSwipeAction = LocalArticleSwipeLeftAction.current,
+                            articleSwipeAction = ArticleSwipeLeftActionPreference.current,
                             values = ArticleSwipeLeftActionPreference.values,
                             toDisplayName = {
-                                ArticleSwipeLeftActionPreference.toDisplayName(context, it)
+                                ArticleSwipeActionPreference.toDisplayName(it)
                             },
-                            onClick = { ArticleSwipeLeftActionPreference.put(context, scope, it) },
+                            onClick = { ArticleSwipeLeftActionPreference.put(scope, it) },
                         )
                     },
                     onClick = { expandArticleSwipeLeftActionMenu = true },
@@ -190,38 +199,36 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.Outlined.SwipeRight),
-                    text = stringResource(id = R.string.behavior_screen_article_swipe_right_action),
-                    descriptionText = ArticleSwipeRightActionPreference.toDisplayName(
-                        context = context,
-                        value = LocalArticleSwipeRightAction.current,
-                    ),
+                    text = stringResource(Res.string.behavior_screen_article_swipe_right_action),
+                    descriptionText = suspendString(ArticleSwipeRightActionPreference.current) {
+                        ArticleSwipeActionPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         ArticleSwipeActionMenu(
                             expanded = expandArticleSwipeRightActionMenu,
                             onDismissRequest = { expandArticleSwipeRightActionMenu = false },
-                            articleSwipeAction = LocalArticleSwipeRightAction.current,
+                            articleSwipeAction = ArticleSwipeRightActionPreference.current,
                             values = ArticleSwipeRightActionPreference.values,
                             toDisplayName = {
-                                ArticleSwipeRightActionPreference.toDisplayName(context, it)
+                                ArticleSwipeActionPreference.toDisplayName(it)
                             },
-                            onClick = { ArticleSwipeRightActionPreference.put(context, scope, it) },
+                            onClick = { ArticleSwipeRightActionPreference.put(scope, it) },
                         )
                     },
                     onClick = { expandArticleSwipeRightActionMenu = true },
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.behavior_screen_media_screen_category))
+                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_media_screen_category))
             }
             item {
-                val mediaFileFilter = LocalMediaFileFilter.current
+                val mediaFileFilter = MediaFileFilterPreference.current
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.Outlined.FilterAlt),
-                    text = stringResource(id = R.string.behavior_screen_media_file_filter),
-                    descriptionText = MediaFileFilterPreference.toDisplayName(
-                        context = context,
-                        value = mediaFileFilter,
-                    ),
+                    text = stringResource(Res.string.behavior_screen_media_file_filter),
+                    descriptionText = suspendString {
+                        MediaFileFilterPreference.toDisplayName(mediaFileFilter)
+                    },
                     onClick = { openMediaFileFilterDialog = mediaFileFilter },
                 )
             }
@@ -232,27 +239,22 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
         MediaFileFilterDialog(
             onDismissRequest = { openMediaFileFilterDialog = null },
             initValue = openMediaFileFilterDialog!!,
-            onConfirm = {
-                MediaFileFilterPreference.put(
-                    context = context, scope = scope, value = it,
-                )
-            }
+            onConfirm = { MediaFileFilterPreference.put(scope, it) }
         )
     }
 }
 
 @Composable
 private fun ArticleTapActionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val articleTapAction = LocalArticleTapAction.current
+    val articleTapAction = ArticleTapActionPreference.current
 
     CheckableListMenu(
         expanded = expanded,
         current = articleTapAction,
         values = remember { ArticleTapActionPreference.values.toList() },
-        displayName = { ArticleTapActionPreference.toDisplayName(context, it) },
-        onChecked = { ArticleTapActionPreference.put(context, scope, it) },
+        displayName = { ArticleTapActionPreference.toDisplayName(it) },
+        onChecked = { ArticleTapActionPreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
@@ -263,14 +265,14 @@ private fun ArticleSwipeActionMenu(
     onDismissRequest: () -> Unit,
     articleSwipeAction: String,
     values: Array<String>,
-    toDisplayName: (String) -> String,
+    toDisplayName: suspend (String) -> String,
     onClick: (String) -> Unit,
 ) {
     CheckableListMenu(
         expanded = expanded,
         current = articleSwipeAction,
         values = remember { values.toList() },
-        displayName = { toDisplayName(it) },
+        displayName = toDisplayName,
         onChecked = onClick,
         onDismissRequest = onDismissRequest,
     )
@@ -282,13 +284,12 @@ internal fun MediaFileFilterDialog(
     initValue: String,
     onConfirm: (String) -> Unit,
 ) {
-    val context = LocalContext.current
     var value by rememberSaveable { mutableStateOf(initValue) }
 
     PodAuraDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(Icons.Outlined.FilterAlt, contentDescription = null) },
-        title = { Text(stringResource(R.string.behavior_screen_media_file_filter)) },
+        title = { Text(stringResource(Res.string.behavior_screen_media_file_filter)) },
         text = {
             Column {
                 ClipboardTextField(
@@ -297,14 +298,14 @@ internal fun MediaFileFilterDialog(
                     singleLine = true,
                     onValueChange = { value = it },
                     onConfirm = onConfirm,
-                    placeholder = stringResource(R.string.behavior_screen_media_file_filter_placeholder)
+                    placeholder = stringResource(Res.string.behavior_screen_media_file_filter_placeholder)
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     MediaFileFilterPreference.values.forEach { filter ->
                         SuggestionChip(
                             onClick = { value = filter },
                             label = {
-                                Text(MediaFileFilterPreference.toDisplayName(context, filter))
+                                Text(suspendString { MediaFileFilterPreference.toDisplayName(filter) })
                             }
                         )
                     }
@@ -322,7 +323,7 @@ internal fun MediaFileFilterDialog(
                 }
             ) {
                 Text(
-                    text = stringResource(R.string.ok),
+                    text = stringResource(Res.string.ok),
                     color = if (enabled) {
                         Color.Unspecified
                     } else {
@@ -333,7 +334,7 @@ internal fun MediaFileFilterDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         },
     )

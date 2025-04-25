@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.history
 
-import com.skyd.anivu.base.mvi.MviSingleEvent
+import com.skyd.anivu.ui.mvi.MviSingleEvent
 
 sealed interface HistoryEvent : MviSingleEvent {
     sealed interface DeleteReadHistory : HistoryEvent {

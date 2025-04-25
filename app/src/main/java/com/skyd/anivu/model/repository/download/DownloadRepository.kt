@@ -1,8 +1,9 @@
 package com.skyd.anivu.model.repository.download
 
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.config.Const
+import com.skyd.anivu.config.TORRENT_RESUME_DATA_DIR
 import com.skyd.anivu.ext.sampleWithoutFirst
 import com.skyd.anivu.model.bean.download.DownloadInfoBean
 import com.skyd.anivu.model.bean.download.bt.BtDownloadInfoBean
@@ -13,10 +14,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import org.koin.core.annotation.Factory
 import java.io.File
-import javax.inject.Inject
 
-class DownloadRepository @Inject constructor() : BaseRepository() {
+@Factory(binds = [])
+class DownloadRepository : BaseRepository() {
     suspend fun requestBtDownloadTasksList(): Flow<List<BtDownloadInfoBean>> = combine(
         BtDownloadManager.getDownloadInfoList().distinctUntilChanged(),
         BtDownloadManager.peerInfoMapFlow.sampleWithoutFirst(1000),

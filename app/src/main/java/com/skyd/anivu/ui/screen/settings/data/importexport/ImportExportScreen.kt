@@ -19,12 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.getAppName
 import com.skyd.anivu.ext.getAppVersionName
 import com.skyd.anivu.ext.safeLaunch
@@ -39,13 +36,27 @@ import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.exportopml.ExportOpmlRoute
 import com.skyd.anivu.ui.screen.settings.data.importexport.opml.importopml.ImportOpmlRoute
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.export_opml_screen_name
+import podaura.shared.generated.resources.import_export_screen_feed_category
+import podaura.shared.generated.resources.import_export_screen_name
+import podaura.shared.generated.resources.import_export_screen_prefer_category
+import podaura.shared.generated.resources.import_opml_screen_export_prefer
+import podaura.shared.generated.resources.import_opml_screen_export_prefer_description
+import podaura.shared.generated.resources.import_opml_screen_import_prefer
+import podaura.shared.generated.resources.import_opml_screen_import_prefer_description
+import podaura.shared.generated.resources.import_opml_screen_name
+import podaura.shared.generated.resources.success_time_msg
 
 
 @Serializable
 data object ImportExportRoute
 
 @Composable
-fun ImportExportScreen(viewModel: ImportExportViewModel = hiltViewModel()) {
+fun ImportExportScreen(viewModel: ImportExportViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -74,7 +85,7 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.import_export_screen_name)) },
+                title = { Text(text = stringResource(Res.string.import_export_screen_name)) },
             )
         }
     ) { paddingValues ->
@@ -84,11 +95,11 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = hiltViewModel()) {
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item { CategorySettingsItem(stringResource(R.string.import_export_screen_feed_category)) }
+            item { CategorySettingsItem(stringResource(Res.string.import_export_screen_feed_category)) }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.FileDownload),
-                    text = stringResource(id = R.string.import_opml_screen_name),
+                    text = stringResource(Res.string.import_opml_screen_name),
                     descriptionText = null,
                     onClick = { navController.navigate(ImportOpmlRoute()) }
                 )
@@ -96,25 +107,25 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = hiltViewModel()) {
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.FileUpload),
-                    text = stringResource(id = R.string.export_opml_screen_name),
+                    text = stringResource(Res.string.export_opml_screen_name),
                     descriptionText = null,
                     onClick = { navController.navigate(ExportOpmlRoute) }
                 )
             }
-            item { CategorySettingsItem(stringResource(R.string.import_export_screen_prefer_category)) }
+            item { CategorySettingsItem(stringResource(Res.string.import_export_screen_prefer_category)) }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.FileDownload),
-                    text = stringResource(id = R.string.import_opml_screen_import_prefer),
-                    descriptionText = stringResource(R.string.import_opml_screen_import_prefer_description),
+                    text = stringResource(Res.string.import_opml_screen_import_prefer),
+                    descriptionText = stringResource(Res.string.import_opml_screen_import_prefer_description),
                     onClick = { pickImportFileLauncher.safeLaunch("application/json") },
                 )
             }
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(Icons.Outlined.FileUpload),
-                    text = stringResource(id = R.string.import_opml_screen_export_prefer),
-                    descriptionText = stringResource(R.string.import_opml_screen_export_prefer_description),
+                    text = stringResource(Res.string.import_opml_screen_export_prefer),
+                    descriptionText = stringResource(Res.string.import_opml_screen_export_prefer_description),
                     onClick = {
                         pickExportFileLauncher.safeLaunch(buildString {
                             append("${context.getAppName()}_")
@@ -136,11 +147,11 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = hiltViewModel()) {
             is ImportExportEvent.ExportResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
             is ImportExportEvent.ImportResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
             is ImportExportEvent.ExportResultEvent.Success -> snackbarHostState.showSnackbar(
-                context.getString(R.string.success_time_msg, event.time / 1000f),
+                getString(Res.string.success_time_msg, event.time / 1000f),
             )
 
             is ImportExportEvent.ImportResultEvent.Success -> snackbarHostState.showSnackbar(
-                context.getString(R.string.success_time_msg, event.time / 1000f),
+                getString(Res.string.success_time_msg, event.time / 1000f),
             )
 
         }

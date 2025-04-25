@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
-import com.skyd.anivu.appContext
+import com.skyd.anivu.di.get
 import com.skyd.anivu.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.group.GROUP_TABLE_NAME
@@ -15,21 +15,11 @@ import com.skyd.anivu.model.bean.group.GroupBean
 import com.skyd.anivu.model.bean.group.GroupWithFeedBean
 import com.skyd.anivu.model.bean.group.groupfeed.GroupOrFeedBean
 import com.skyd.anivu.model.repository.feed.tryDeleteFeedIconFile
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
 @Dao
 interface GroupDao {
-    @EntryPoint
-    @InstallIn(SingletonComponent::class)
-    interface GroupDaoEntryPoint {
-        val feedDao: FeedDao
-    }
-
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun setGroup(groupBean: GroupBean)
@@ -53,12 +43,11 @@ interface GroupDao {
     @Transaction
     suspend fun removeGroupWithFeed(groupId: String): Int {
         innerRemoveGroup(groupId)
-        return EntryPointAccessors.fromApplication(appContext, GroupDaoEntryPoint::class.java).run {
-            feedDao.getFeedsInGroup(listOf(groupId)).forEach {
-                it.feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
-            }
-            feedDao.removeFeedByGroupId(groupId)
+        val feedDao = get<FeedDao>()
+        feedDao.getFeedsInGroup(listOf(groupId)).forEach {
+            it.feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
         }
+        return feedDao.removeFeedByGroupId(groupId)
     }
 
     @Transaction
@@ -97,9 +86,8 @@ interface GroupDao {
 
     @Transaction
     suspend fun moveGroupFeedsTo(fromGroupId: String?, toGroupId: String?): Int {
-        return EntryPointAccessors.fromApplication(appContext, GroupDaoEntryPoint::class.java).run {
-            feedDao.moveFeedToGroup(fromGroupId = fromGroupId, toGroupId = toGroupId)
-        }
+        val feedDao = get<FeedDao>()
+        return feedDao.moveFeedToGroup(fromGroupId = fromGroupId, toGroupId = toGroupId)
     }
 
     @Transaction

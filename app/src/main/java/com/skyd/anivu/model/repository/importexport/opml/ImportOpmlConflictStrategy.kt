@@ -1,12 +1,15 @@
 package com.skyd.anivu.model.repository.importexport.opml
 
 import android.os.Parcelable
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.model.bean.group.GroupVo
 import com.skyd.anivu.model.db.dao.FeedDao
 import com.skyd.anivu.model.db.dao.GroupDao
 import kotlinx.parcelize.Parcelize
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.import_opml_conflict_strategy_replace
+import podaura.shared.generated.resources.import_opml_conflict_strategy_skip
 import java.util.UUID
 
 
@@ -74,7 +77,7 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         }
 
         override val displayName: String
-            get() = appContext.getString(R.string.import_opml_conflict_strategy_skip)
+            get() = appContext.getString(Res.string.import_opml_conflict_strategy_skip)
     }
 
     // Replace on conflict
@@ -98,6 +101,6 @@ sealed interface ImportOpmlConflictStrategy : Parcelable {
         }
 
         override val displayName: String
-            get() = appContext.getString(R.string.import_opml_conflict_strategy_replace)
+            get() = appContext.getString(Res.string.import_opml_conflict_strategy_replace)
     }
 }

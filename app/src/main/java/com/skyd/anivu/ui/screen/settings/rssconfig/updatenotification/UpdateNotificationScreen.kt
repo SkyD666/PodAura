@@ -35,15 +35,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 import com.skyd.anivu.ui.component.ClipboardTextField
@@ -54,13 +51,23 @@ import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.PodAuraDialog
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.ok
+import podaura.shared.generated.resources.remove
+import podaura.shared.generated.resources.request_headers_screen_value
+import podaura.shared.generated.resources.update_notification_rule_name
+import podaura.shared.generated.resources.update_notification_screen_name
 
 
 @Serializable
 data object UpdateNotificationRoute
 
 @Composable
-fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = hiltViewModel()) {
+fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -76,14 +83,14 @@ fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = hiltViewMo
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.update_notification_screen_name)) },
+                title = { Text(text = stringResource(Res.string.update_notification_screen_name)) },
             )
         },
         floatingActionButton = {
             PodAuraFloatingActionButton(
                 onClick = { openAddDialog = true },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                contentDescription = stringResource(R.string.add),
+                contentDescription = stringResource(Res.string.add),
             ) {
                 Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
             }
@@ -138,7 +145,7 @@ private fun AddRuleDialog(
     PodAuraDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Pattern, contentDescription = null) },
-        title = { Text(text = stringResource(id = R.string.add)) },
+        title = { Text(text = stringResource(Res.string.add)) },
         text = {
             Column {
                 ClipboardTextField(
@@ -146,7 +153,7 @@ private fun AddRuleDialog(
                     value = name,
                     onValueChange = { name = it },
                     maxLines = 1,
-                    placeholder = stringResource(id = R.string.update_notification_rule_name),
+                    placeholder = stringResource(Res.string.update_notification_rule_name),
                     focusManager = focusManager,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -154,7 +161,7 @@ private fun AddRuleDialog(
                     modifier = Modifier.fillMaxWidth(),
                     value = regex,
                     onValueChange = { regex = it },
-                    placeholder = stringResource(id = R.string.request_headers_screen_value),
+                    placeholder = stringResource(Res.string.request_headers_screen_value),
                     autoRequestFocus = false,
                     focusManager = focusManager,
                     imeAction = ImeAction.None,
@@ -172,7 +179,7 @@ private fun AddRuleDialog(
                 }
             ) {
                 Text(
-                    text = stringResource(id = R.string.ok),
+                    text = stringResource(Res.string.ok),
                     color = if (confirmButtonEnabled) {
                         Color.Unspecified
                     } else {
@@ -183,7 +190,7 @@ private fun AddRuleDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(id = R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         },
     )
@@ -237,7 +244,7 @@ private fun RuleItem(
             PodAuraIconButton(
                 onClick = { onRemove(rule.id) },
                 imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(id = R.string.remove),
+                contentDescription = stringResource(Res.string.remove),
             )
         }
 

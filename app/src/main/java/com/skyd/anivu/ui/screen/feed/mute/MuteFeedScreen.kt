@@ -31,15 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.ui.component.CircularProgressPlaceholder
@@ -51,13 +48,20 @@ import com.skyd.anivu.ui.component.dialog.WaitingDialog
 import com.skyd.anivu.ui.screen.article.FeedIcon
 import com.skyd.anivu.ui.screen.feed.mute.MuteFeedState.ListState
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_feed_muted
+import podaura.shared.generated.resources.feed_screen_feed_unmuted
+import podaura.shared.generated.resources.mute_feed_screen_name
+import podaura.shared.generated.resources.mute_feed_screen_tip
 
 
 @Serializable
 data object MuteFeedRoute
 
 @Composable
-fun MuteFeedScreen(viewModel: MuteFeedViewModel = hiltViewModel()) {
+fun MuteFeedScreen(viewModel: MuteFeedViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -70,7 +74,7 @@ fun MuteFeedScreen(viewModel: MuteFeedViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.mute_feed_screen_name)) },
+                title = { Text(text = stringResource(Res.string.mute_feed_screen_name)) },
             )
         }
     ) { paddingValues ->
@@ -103,7 +107,7 @@ private fun FeedList(
         state = lazyListState,
         contentPadding = contentPadding + PaddingValues(vertical = 6.dp),
     ) {
-        item { TipSettingsItem(text = stringResource(R.string.mute_feed_screen_tip)) }
+        item { TipSettingsItem(text = stringResource(Res.string.mute_feed_screen_tip)) }
         when (listState) {
             is ListState.Failed -> item { ErrorPlaceholder(listState.msg) }
             ListState.Init -> item { CircularProgressPlaceholder() }
@@ -152,7 +156,7 @@ private fun MuteFeedItem(
             thumbContent = {
                 Icon(
                     imageVector = if (feed.mute) Icons.AutoMirrored.Outlined.VolumeOff else Icons.AutoMirrored.Outlined.VolumeUp,
-                    contentDescription = stringResource(if (feed.mute) R.string.feed_screen_feed_muted else R.string.feed_screen_feed_unmuted),
+                    contentDescription = stringResource(if (feed.mute) Res.string.feed_screen_feed_muted else Res.string.feed_screen_feed_unmuted),
                     modifier = Modifier.size(SwitchDefaults.IconSize),
                 )
             },

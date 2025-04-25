@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.feed.requestheaders
 
-import com.skyd.anivu.base.mvi.MviIntent
+import com.skyd.anivu.ui.mvi.MviIntent
 import com.skyd.anivu.model.bean.feed.FeedBean
 
 sealed interface RequestHeadersIntent : MviIntent {

@@ -2,13 +2,12 @@ package com.skyd.anivu.ui.screen.playlist.medialist
 
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.IPlaylistRepository
 import com.skyd.anivu.model.repository.playlist.PlaylistMediaRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -21,10 +20,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class PlaylistMediaListViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class PlaylistMediaListViewModel(
     private val playlistRepo: IPlaylistRepository,
     private val playlistMediaRepo: PlaylistMediaRepository,
     private val addToPlaylist: IAddToPlaylistRepository,

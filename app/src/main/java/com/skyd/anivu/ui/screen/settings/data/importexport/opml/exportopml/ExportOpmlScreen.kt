@@ -26,14 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ext.plus
 import com.skyd.anivu.ext.safeLaunch
 import com.skyd.anivu.ext.showSnackbar
@@ -43,15 +40,23 @@ import com.skyd.anivu.ui.component.PodAuraExtendedFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.generated.preference.LocalOpmlExportDir
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.export_opml_screen_dir_not_selected
+import podaura.shared.generated.resources.export_opml_screen_export
+import podaura.shared.generated.resources.export_opml_screen_name
+import podaura.shared.generated.resources.export_opml_screen_select_dir
+import podaura.shared.generated.resources.success_time_msg
 
 
 @Serializable
 data object ExportOpmlRoute
 
 @Composable
-fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
+fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -59,7 +64,7 @@ fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = ExportOpmlIntent.Init)
 
-    val exportDir = LocalOpmlExportDir.current
+    val exportDir = OpmlExportDirPreference.current
     val pickExportDirLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -68,7 +73,7 @@ fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            OpmlExportDirPreference.put(context, scope, uri.toString())
+            OpmlExportDirPreference.put(scope, uri.toString())
         }
     }
     val lazyListState = rememberLazyListState()
@@ -80,25 +85,25 @@ fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.export_opml_screen_name)) },
+                title = { Text(text = stringResource(Res.string.export_opml_screen_name)) },
             )
         },
         floatingActionButton = {
             PodAuraExtendedFloatingActionButton(
-                text = { Text(text = stringResource(R.string.export_opml_screen_export)) },
+                text = { Text(text = stringResource(Res.string.export_opml_screen_export)) },
                 icon = { Icon(imageVector = Icons.Default.Done, contentDescription = null) },
                 onClick = {
                     if (exportDir.isBlank()) {
                         snackbarHostState.showSnackbar(
                             scope = scope,
-                            message = context.getString(R.string.export_opml_screen_dir_not_selected),
+                            message = Res.string.export_opml_screen_dir_not_selected,
                         )
                     } else {
                         dispatch(ExportOpmlIntent.ExportOpml(outputDir = exportDir.toUri()))
                     }
                 },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                contentDescription = stringResource(R.string.export_opml_screen_export)
+                contentDescription = stringResource(Res.string.export_opml_screen_export)
             )
         },
     ) { paddingValues ->
@@ -112,7 +117,7 @@ fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
             item {
                 BaseSettingsItem(
                     icon = rememberVectorPainter(image = Icons.Outlined.Folder),
-                    text = stringResource(id = R.string.export_opml_screen_select_dir),
+                    text = stringResource(Res.string.export_opml_screen_select_dir),
                     descriptionText = exportDir.ifBlank { null },
                     onClick = { pickExportDirLauncher.safeLaunch(exportDir.toUri()) }
                 )
@@ -126,7 +131,7 @@ fun ExportOpmlScreen(viewModel: ExportOpmlViewModel = hiltViewModel()) {
         when (event) {
             is ExportOpmlEvent.ExportOpmlResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
             is ExportOpmlEvent.ExportOpmlResultEvent.Success -> snackbarHostState.showSnackbar(
-                context.getString(R.string.success_time_msg, event.time / 1000f),
+                getString(Res.string.success_time_msg, event.time / 1000f),
             )
         }
     }

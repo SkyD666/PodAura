@@ -1,32 +1,36 @@
 package com.skyd.anivu.model.bean
 
-import com.skyd.anivu.base.BaseBean
-import com.skyd.anivu.ext.getMimeType
+import com.skyd.anivu.ext.lastModifiedTime
 import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.feed.FeedBean
-import com.skyd.anivu.model.serializer.FileSerializer
-import com.skyd.anivu.util.fileicon.getFileIcon
+import com.skyd.anivu.util.fileicon.fileIcon
+import com.skyd.anivu.util.fileicon.mimeType
+import kotlinx.io.files.FileMetadata
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
-import java.io.File
+import org.jetbrains.compose.resources.DrawableResource
 
 @Serializable
 data class MediaBean(
     val displayName: String? = null,
-    @Serializable(with = FileSerializer::class)
-    val file: File,
+    val filePath: String,
     val fileCount: Int,
     val articleWithEnclosure: ArticleWithEnclosureBean?,
     val feedBean: FeedBean?,
 ) : BaseBean {
-    val name: String get() = file.name
-    val mimetype: String by lazy { file.getMimeType() ?: "*/*" }
-    val size: Long get() = file.length()
-    val date: Long get() = file.lastModified()
+    val path: Path get() = Path(filePath)
+    val fileMetadata: FileMetadata? get() = SystemFileSystem.metadataOrNull(path)
+    val name: String get() = path.name
+    val mimetype: String by lazy { path.mimeType() ?: "*/*" }
+    val size: Long get() = fileMetadata?.size ?: 0
+    val date: Long get() = path.lastModifiedTime ?: 0
     val isMedia: Boolean get() = mimetype.startsWith("video/") || mimetype.startsWith("audio/")
-    val isDir: Boolean get() = file.isDirectory
-    val isFile: Boolean get() = file.isFile
-    val icon: Int by lazy { getFileIcon(mimetype).resourceId }
+    val isDir: Boolean get() = fileMetadata?.isDirectory == true
+    val isFile: Boolean get() = fileMetadata?.isRegularFile == true
+    val icon: DrawableResource by lazy { path.fileIcon().resource }
     val articleId get() = articleWithEnclosure?.article?.articleId
     val feedUrl get() = feedBean?.url
-    val cover: String? get() = articleWithEnclosure?.media?.image ?: feedBean?.icon ?: file.path
+    val cover: String?
+        get() = articleWithEnclosure?.media?.image ?: feedBean?.icon ?: filePath.toString()
 }

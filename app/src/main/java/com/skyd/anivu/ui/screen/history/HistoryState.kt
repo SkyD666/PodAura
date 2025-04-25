@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.history
 
 import androidx.paging.PagingData
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.anivu.model.bean.history.ReadHistoryWithArticle
 import kotlinx.coroutines.flow.Flow

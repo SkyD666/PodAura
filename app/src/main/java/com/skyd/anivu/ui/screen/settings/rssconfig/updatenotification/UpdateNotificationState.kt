@@ -1,6 +1,6 @@
 package com.skyd.anivu.ui.screen.settings.rssconfig.updatenotification
 
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.ArticleNotificationRuleBean
 
 data class UpdateNotificationState(

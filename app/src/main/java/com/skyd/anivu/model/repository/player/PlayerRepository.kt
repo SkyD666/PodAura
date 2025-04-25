@@ -2,7 +2,7 @@ package com.skyd.anivu.model.repository.player
 
 import android.net.Uri
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
+import com.skyd.anivu.model.repository.BaseRepository
 import com.skyd.anivu.model.bean.history.MediaPlayHistoryBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaBean
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
@@ -14,9 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
+import org.koin.core.annotation.Factory
 
-class PlayerRepository @Inject constructor(
+@Factory(binds = [IPlayerRepository::class])
+class PlayerRepository(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,

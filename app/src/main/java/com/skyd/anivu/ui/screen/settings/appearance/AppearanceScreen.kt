@@ -47,15 +47,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.android.material.color.DynamicColors
 import com.materialkolor.ktx.from
 import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.model.preference.appearance.AmoledDarkModePreference
+import com.skyd.anivu.model.preference.appearance.BaseDarkModePreference
+import com.skyd.anivu.model.preference.appearance.BaseThemePreference
 import com.skyd.anivu.model.preference.appearance.DarkModePreference
 import com.skyd.anivu.model.preference.appearance.DateStylePreference
 import com.skyd.anivu.model.preference.appearance.NavigationBarLabelPreference
@@ -69,6 +69,7 @@ import com.skyd.anivu.ui.component.DefaultBackClick
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.SwitchSettingsItem
+import com.skyd.anivu.ui.component.suspendString
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.feed.FeedStyleRoute
@@ -76,14 +77,25 @@ import com.skyd.anivu.ui.screen.settings.appearance.media.MediaStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.read.ReadStyleRoute
 import com.skyd.anivu.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.anivu.ui.theme.extractAllColors
-import com.skyd.generated.preference.LocalAmoledDarkMode
-import com.skyd.generated.preference.LocalDarkMode
-import com.skyd.generated.preference.LocalDateStyle
-import com.skyd.generated.preference.LocalNavigationBarLabel
-import com.skyd.generated.preference.LocalTextFieldStyle
-import com.skyd.generated.preference.LocalTheme
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.appearance_screen_amoled_dark
+import podaura.shared.generated.resources.appearance_screen_date_style
+import podaura.shared.generated.resources.appearance_screen_name
+import podaura.shared.generated.resources.appearance_screen_navigation_bar_label
+import podaura.shared.generated.resources.appearance_screen_screen_style_category
+import podaura.shared.generated.resources.appearance_screen_style_category
+import podaura.shared.generated.resources.appearance_screen_text_field_style
+import podaura.shared.generated.resources.appearance_screen_theme_category
+import podaura.shared.generated.resources.appearance_screen_use_dynamic_theme
+import podaura.shared.generated.resources.appearance_screen_use_dynamic_theme_description
+import podaura.shared.generated.resources.article_style_screen_name
+import podaura.shared.generated.resources.feed_style_screen_name
+import podaura.shared.generated.resources.media_style_screen_name
+import podaura.shared.generated.resources.read_style_screen_name
+import podaura.shared.generated.resources.search_style_screen_name
 
 
 @Serializable
@@ -105,7 +117,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.appearance_screen_name)) },
+                title = { Text(text = stringResource(Res.string.appearance_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
@@ -117,7 +129,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             contentPadding = paddingValues,
         ) {
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.appearance_screen_theme_category))
+                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_theme_category))
             }
             item {
                 SingleChoiceSegmentedButtonRow(
@@ -131,10 +143,10 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                                 index = index,
                                 count = DarkModePreference.values.size,
                             ),
-                            onClick = { DarkModePreference.put(context, scope, darkModeValue) },
-                            selected = index == DarkModePreference.values.indexOf(LocalDarkMode.current)
+                            onClick = { DarkModePreference.put(scope, darkModeValue) },
+                            selected = index == DarkModePreference.values.indexOf(DarkModePreference.current)
                         ) {
-                            Text(DarkModePreference.toDisplayName(context, darkModeValue))
+                            Text(suspendString { BaseDarkModePreference.toDisplayName(darkModeValue) })
                         }
                     }
                 }
@@ -146,14 +158,13 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 item {
                     SwitchSettingsItem(
                         imageVector = Icons.Outlined.Colorize,
-                        text = stringResource(id = R.string.appearance_screen_use_dynamic_theme),
-                        description = stringResource(id = R.string.appearance_screen_use_dynamic_theme_description),
-                        checked = LocalTheme.current == ThemePreference.DYNAMIC,
+                        text = stringResource(Res.string.appearance_screen_use_dynamic_theme),
+                        description = stringResource(Res.string.appearance_screen_use_dynamic_theme_description),
+                        checked = ThemePreference.current == BaseThemePreference.DYNAMIC,
                         onCheckedChange = {
                             ThemePreference.put(
-                                context = context,
                                 scope = scope,
-                                value = if (it) ThemePreference.DYNAMIC
+                                value = if (it) BaseThemePreference.DYNAMIC
                                 else ThemePreference.basicValues.first(),
                             ) {
                                 context.activity.recreate()
@@ -165,27 +176,21 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 SwitchSettingsItem(
                     imageVector = null,
-                    text = stringResource(id = R.string.appearance_screen_amoled_dark),
-                    checked = LocalAmoledDarkMode.current,
-                    onCheckedChange = {
-                        AmoledDarkModePreference.put(
-                            context = context,
-                            scope = scope,
-                            value = it,
-                        )
-                    }
+                    text = stringResource(Res.string.appearance_screen_amoled_dark),
+                    checked = AmoledDarkModePreference.current,
+                    onCheckedChange = { AmoledDarkModePreference.put(scope = scope, value = it) }
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.appearance_screen_style_category))
+                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_style_category))
             }
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.appearance_screen_text_field_style),
-                    descriptionText = TextFieldStylePreference.toDisplayName(
-                        context, LocalTextFieldStyle.current,
-                    ),
+                    text = stringResource(Res.string.appearance_screen_text_field_style),
+                    descriptionText = suspendString(TextFieldStylePreference.current) {
+                        TextFieldStylePreference.toDisplayName(it)
+                    },
                     extraContent = {
                         TextFieldStyleMenu(
                             expanded = expandTextFieldStyleMenu,
@@ -198,10 +203,10 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.appearance_screen_date_style),
-                    descriptionText = DateStylePreference.toDisplayName(
-                        context, LocalDateStyle.current,
-                    ),
+                    text = stringResource(Res.string.appearance_screen_date_style),
+                    descriptionText = suspendString(DateStylePreference.current) {
+                        DateStylePreference.toDisplayName(it)
+                    },
                     extraContent = {
                         DateStyleStyleMenu(
                             expanded = expandDateStyleMenu,
@@ -214,10 +219,10 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.appearance_screen_navigation_bar_label),
-                    descriptionText = NavigationBarLabelPreference.toDisplayName(
-                        context, LocalNavigationBarLabel.current,
-                    ),
+                    text = stringResource(Res.string.appearance_screen_navigation_bar_label),
+                    descriptionText = suspendString(NavigationBarLabelPreference.current) {
+                        NavigationBarLabelPreference.toDisplayName(it)
+                    },
                     extraContent = {
                         NavigationBarLabelStyleMenu(
                             expanded = expandNavigationBarLabelMenu,
@@ -228,12 +233,12 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 )
             }
             item {
-                CategorySettingsItem(text = stringResource(id = R.string.appearance_screen_screen_style_category))
+                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_screen_style_category))
             }
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.feed_style_screen_name),
+                    text = stringResource(Res.string.feed_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(FeedStyleRoute) },
                 )
@@ -241,7 +246,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.article_style_screen_name),
+                    text = stringResource(Res.string.article_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(ArticleStyleRoute) },
                 )
@@ -249,7 +254,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.read_style_screen_name),
+                    text = stringResource(Res.string.read_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(ReadStyleRoute) },
                 )
@@ -257,7 +262,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.search_style_screen_name),
+                    text = stringResource(Res.string.search_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(SearchStyleRoute) },
                 )
@@ -265,7 +270,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             item {
                 BaseSettingsItem(
                     icon = null,
-                    text = stringResource(id = R.string.media_style_screen_name),
+                    text = stringResource(Res.string.media_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(MediaStyleRoute) },
                 )
@@ -276,48 +281,45 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
 @Composable
 private fun TextFieldStyleMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val textFieldStyle = LocalTextFieldStyle.current
+    val textFieldStyle = TextFieldStylePreference.current
 
     CheckableListMenu(
         expanded = expanded,
         current = textFieldStyle,
         values = TextFieldStylePreference.values,
-        displayName = { TextFieldStylePreference.toDisplayName(context, it) },
-        onChecked = { TextFieldStylePreference.put(context, scope, it) },
+        displayName = { TextFieldStylePreference.toDisplayName(it) },
+        onChecked = { TextFieldStylePreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
 private fun DateStyleStyleMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val dateStyle = LocalDateStyle.current
+    val dateStyle = DateStylePreference.current
 
     CheckableListMenu(
         expanded = expanded,
         current = dateStyle,
         values = remember { DateStylePreference.values.toList() },
-        displayName = { DateStylePreference.toDisplayName(context, it) },
-        onChecked = { DateStylePreference.put(context, scope, it) },
+        displayName = { DateStylePreference.toDisplayName(it) },
+        onChecked = { DateStylePreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
 
 @Composable
 private fun NavigationBarLabelStyleMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val navigationBarLabel = LocalNavigationBarLabel.current
+    val navigationBarLabel = NavigationBarLabelPreference.current
 
     CheckableListMenu(
         expanded = expanded,
         current = navigationBarLabel,
         values = remember { NavigationBarLabelPreference.values.toList() },
-        displayName = { NavigationBarLabelPreference.toDisplayName(context, it) },
-        onChecked = { NavigationBarLabelPreference.put(context, scope, it) },
+        displayName = { NavigationBarLabelPreference.toDisplayName(it) },
+        onChecked = { NavigationBarLabelPreference.put(scope, it) },
         onDismissRequest = onDismissRequest,
     )
 }
@@ -325,7 +327,7 @@ private fun NavigationBarLabelStyleMenu(expanded: Boolean, onDismissRequest: () 
 @Composable
 fun Palettes(
     colors: Map<String, ColorScheme>,
-    themeName: String = LocalTheme.current,
+    themeName: String = ThemePreference.current,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -340,11 +342,11 @@ fun Palettes(
             SelectableMiniPalette(
                 selected = t == themeName,
                 onClick = {
-                    ThemePreference.put(context, scope, t) {
+                    ThemePreference.put(scope, t) {
                         context.activity.recreate()
                     }
                 },
-                contentDescription = { ThemePreference.toDisplayName(context, t) },
+                contentDescription = { ThemePreference.toDisplayName(t) },
                 accents = remember(u) {
                     listOf(
                         TonalPalette.from(u.primary),
@@ -361,7 +363,7 @@ fun Palettes(
 fun SelectableMiniPalette(
     selected: Boolean,
     onClick: () -> Unit,
-    contentDescription: () -> String,
+    contentDescription: suspend () -> String,
     accents: List<TonalPalette>,
 ) {
     TooltipBox(
@@ -369,7 +371,7 @@ fun SelectableMiniPalette(
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
         tooltip = {
             PlainTooltip {
-                Text(contentDescription())
+                Text(suspendString { contentDescription() })
             }
         },
         state = rememberTooltipState()

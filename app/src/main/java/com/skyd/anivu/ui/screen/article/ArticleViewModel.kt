@@ -2,11 +2,10 @@ package com.skyd.anivu.ui.screen.article
 
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.article.ArticleRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -18,11 +17,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.flow.take
-import javax.inject.Inject
+import org.koin.android.annotation.KoinViewModel
 
-@HiltViewModel
-class ArticleViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class ArticleViewModel(
     private val articleRepo: ArticleRepository
 ) : AbstractMviViewModel<ArticleIntent, ArticleState, ArticleEvent>() {
 

@@ -1,6 +1,5 @@
 package com.skyd.anivu.ui.screen.article
 
-import android.content.Context
 import androidx.compose.animation.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -61,8 +60,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -71,12 +69,10 @@ import androidx.navigation.NavController
 import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
-import com.skyd.anivu.R
-import com.skyd.anivu.ext.dataStore
 import com.skyd.anivu.ext.firstCodePointOrNull
 import com.skyd.anivu.ext.getOrDefault
-import com.skyd.anivu.ext.openBrowser
 import com.skyd.anivu.ext.readable
+import com.skyd.anivu.ext.safeOpenUri
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.article.ArticleBean
@@ -84,26 +80,38 @@ import com.skyd.anivu.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.feed.FeedBean
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
+import com.skyd.anivu.model.preference.appearance.article.ArticleItemTonalElevationPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.anivu.model.preference.behavior.article.ArticleTapActionPreference
+import com.skyd.anivu.model.preference.behavior.article.DeduplicateTitleInDescPreference
+import com.skyd.anivu.model.preference.dataStore
 import com.skyd.anivu.ui.component.PodAuraImage
+import com.skyd.anivu.ui.component.blockString
 import com.skyd.anivu.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.anivu.ui.component.menu.DropdownMenuDeleteItem
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
 import com.skyd.anivu.ui.component.showToast
+import com.skyd.anivu.ui.component.suspendString
 import com.skyd.anivu.ui.local.LocalGlobalNavController
 import com.skyd.anivu.ui.local.LocalNavController
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.ui.screen.read.ReadRoute
-import com.skyd.generated.preference.LocalArticleItemTonalElevation
-import com.skyd.generated.preference.LocalArticleSwipeLeftAction
-import com.skyd.generated.preference.LocalArticleSwipeRightAction
-import com.skyd.generated.preference.LocalArticleTapAction
-import com.skyd.generated.preference.LocalDeduplicateTitleInDesc
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.article_item_delete_warning
+import podaura.shared.generated.resources.article_screen_favorite
+import podaura.shared.generated.resources.article_screen_mark_as_read
+import podaura.shared.generated.resources.article_screen_mark_as_unread
+import podaura.shared.generated.resources.article_screen_no_link_tip
+import podaura.shared.generated.resources.article_screen_read
+import podaura.shared.generated.resources.article_screen_unfavorite
+import podaura.shared.generated.resources.bottom_sheet_enclosure_title
+import podaura.shared.generated.resources.open_link_in_browser
 
 
 @Composable
@@ -114,7 +122,7 @@ fun Article1Item(
     onDelete: (ArticleWithFeed) -> Unit,
 ) {
     val globalNavController = LocalGlobalNavController.current
-    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val dataWrapper by rememberUpdatedState(newValue = data)
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf<List<Any>?>(null) }
@@ -122,7 +130,7 @@ fun Article1Item(
 
     val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
-            val articleSwipeAction = context.dataStore.getOrDefault(
+            val articleSwipeAction = dataStore.getOrDefault(
                 if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
                     ArticleSwipeRightActionPreference
                 } else {
@@ -134,7 +142,6 @@ fun Article1Item(
                     val articleWithEnclosure = dataWrapper.articleWithEnclosure
                     swipeAction(
                         articleSwipeAction = articleSwipeAction,
-                        context = context,
                         navController = globalNavController,
                         data = articleWithEnclosure,
                         onMarkAsRead = {
@@ -144,8 +151,9 @@ fun Article1Item(
                             onFavorite(dataWrapper, !articleWithEnclosure.article.isFavorite)
                         },
                         onShowEnclosureBottomSheet = {
-                            openEnclosureBottomSheet = getEnclosuresList(context, it)
+                            openEnclosureBottomSheet = getEnclosuresList(it)
                         },
+                        onOpenLink = { uriHandler.safeOpenUri(it) },
                         onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true }
                     )
                 }
@@ -166,9 +174,9 @@ fun Article1Item(
 
     Box(modifier = Modifier.clip(RoundedCornerShape(12.dp))) {
         val enableDismissFromStartToEnd =
-            LocalArticleSwipeRightAction.current != ArticleSwipeActionPreference.NONE
+            ArticleSwipeRightActionPreference.current != ArticleSwipeActionPreference.NONE
         val enableDismissFromEndToStart =
-            LocalArticleSwipeLeftAction.current != ArticleSwipeActionPreference.NONE
+            ArticleSwipeLeftActionPreference.current != ArticleSwipeActionPreference.NONE
         SwipeToDismissBox(
             state = swipeToDismissBoxState,
             backgroundContent = {
@@ -188,7 +196,7 @@ fun Article1Item(
                 onFavorite = onFavorite,
                 onRead = onRead,
                 onShowEnclosureBottomSheet = {
-                    openEnclosureBottomSheet = getEnclosuresList(context, it)
+                    openEnclosureBottomSheet = getEnclosuresList(it)
                 }
             )
             ArticleMenu(
@@ -199,7 +207,7 @@ fun Article1Item(
                 onRead = onRead,
                 onDelete = onDelete,
                 onShowEnclosureBottomSheet = {
-                    openEnclosureBottomSheet = getEnclosuresList(context, it)
+                    openEnclosureBottomSheet = getEnclosuresList(it)
                 },
                 onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
             )
@@ -233,9 +241,8 @@ private fun Article1ItemContent(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
 ) {
-    val context = LocalContext.current
     val globalNavController = LocalGlobalNavController.current
-    val articleTapAction = LocalArticleTapAction.current
+    val articleTapAction = ArticleTapActionPreference.current
     val articleWithEnclosure = data.articleWithEnclosure
     val article = articleWithEnclosure.article
     val colorAlpha = if (data.articleWithEnclosure.article.isRead) 0.5f else 1f
@@ -248,7 +255,7 @@ private fun Article1ItemContent(
                 .background(
                     MaterialTheme.colorScheme.surfaceColorAtElevation(
                         LocalAbsoluteTonalElevation.current +
-                                LocalArticleItemTonalElevation.current.dp
+                                ArticleItemTonalElevationPreference.current.dp
                     )
                 )
                 .fillMaxWidth()
@@ -292,7 +299,7 @@ private fun Article1ItemContent(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        val date = article.date?.toDateTimeString(context = context)
+                        val date = article.date?.toDateTimeString()
                         if (!date.isNullOrBlank()) {
                             if (!author.isNullOrBlank()) {
                                 Text(
@@ -313,7 +320,8 @@ private fun Article1ItemContent(
                     Spacer(modifier = Modifier.height(3.dp))
 
                     val description = article.description?.readable()?.let { desc ->
-                        if (LocalDeduplicateTitleInDesc.current) desc.replace(title, "") else desc
+                        if (DeduplicateTitleInDescPreference.current) desc.replace(title, "")
+                        else desc
                     }?.trim()
                     if (!description.isNullOrBlank()) {
                         Text(
@@ -371,9 +379,9 @@ private fun Article1ItemContent(
                         Icons.Outlined.FavoriteBorder
                     },
                     contentDescription = if (isFavorite) {
-                        stringResource(id = R.string.article_screen_favorite)
+                        stringResource(Res.string.article_screen_favorite)
                     } else {
-                        stringResource(id = R.string.article_screen_unfavorite)
+                        stringResource(Res.string.article_screen_unfavorite)
                     },
                 )
                 Spacer(modifier = Modifier.width(3.dp))
@@ -385,9 +393,9 @@ private fun Article1ItemContent(
                         Icons.Outlined.MarkEmailUnread
                     },
                     contentDescription = if (isRead) {
-                        stringResource(id = R.string.article_screen_mark_as_unread)
+                        stringResource(Res.string.article_screen_mark_as_unread)
                     } else {
-                        stringResource(id = R.string.article_screen_mark_as_read)
+                        stringResource(Res.string.article_screen_mark_as_read)
                     },
                 )
             }
@@ -457,10 +465,11 @@ private fun ArticleMenu(
     onOpenAddToPlaylistSheet: () -> Unit,
 ) {
     val globalNavController = LocalGlobalNavController.current
-    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     val articleWithEnclosure = data.articleWithEnclosure
     val isFavorite = articleWithEnclosure.article.isFavorite
     val isRead = articleWithEnclosure.article.isRead
+    val articleLink = articleWithEnclosure.article.link
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
 
     DropdownMenu(
@@ -471,8 +480,8 @@ private fun ArticleMenu(
             text = {
                 Text(
                     text = stringResource(
-                        if (isFavorite) R.string.article_screen_unfavorite
-                        else R.string.article_screen_favorite
+                        if (isFavorite) Res.string.article_screen_unfavorite
+                        else Res.string.article_screen_favorite
                     )
                 )
             },
@@ -492,8 +501,8 @@ private fun ArticleMenu(
             text = {
                 Text(
                     text = stringResource(
-                        if (isRead) R.string.article_screen_mark_as_unread
-                        else R.string.article_screen_mark_as_read
+                        if (isRead) Res.string.article_screen_mark_as_unread
+                        else Res.string.article_screen_mark_as_read
                     )
                 )
             },
@@ -511,7 +520,7 @@ private fun ArticleMenu(
         )
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.article_screen_read)) },
+            text = { Text(text = stringResource(Res.string.article_screen_read)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.ImportContacts,
@@ -527,7 +536,7 @@ private fun ArticleMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.bottom_sheet_enclosure_title)) },
+            text = { Text(text = stringResource(Res.string.bottom_sheet_enclosure_title)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.AttachFile,
@@ -540,7 +549,7 @@ private fun ArticleMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.add_to_playlist)) },
+            text = { Text(text = stringResource(Res.string.add_to_playlist)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
@@ -553,7 +562,7 @@ private fun ArticleMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(id = R.string.open_link_in_browser)) },
+            text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.OpenInBrowser,
@@ -561,9 +570,10 @@ private fun ArticleMenu(
                 )
             },
             onClick = {
-                data.articleWithEnclosure.article.openLinkInBrowser(context)
+                articleLink?.let { uriHandler.safeOpenUri(it) }
                 onDismissRequest()
             },
+            enabled = articleLink != null
         )
         HorizontalDivider()
         DropdownMenuDeleteItem(
@@ -575,7 +585,7 @@ private fun ArticleMenu(
     }
     if (openDeleteWarningDialog) {
         DeleteArticleWarningDialog(
-            text = stringResource(id = R.string.article_item_delete_warning),
+            text = stringResource(Res.string.article_item_delete_warning),
             onDismissRequest = { openDeleteWarningDialog = false },
             onDismiss = { openDeleteWarningDialog = false },
             onConfirm = {
@@ -637,14 +647,13 @@ private fun SwipeBackgroundContent(
     direction: SwipeToDismissBoxValue,
     isActive: Boolean,
 ) {
-    val context = LocalContext.current
     val containerColor = MaterialTheme.colorScheme.background
     val containerColorElevated = MaterialTheme.colorScheme.tertiaryContainer
     val backgroundColor = remember(isActive) { Animatable(containerColor) }
     val articleSwipeAction = if (direction == SwipeToDismissBoxValue.StartToEnd) {
-        LocalArticleSwipeRightAction.current
+        ArticleSwipeRightActionPreference.current
     } else {
-        LocalArticleSwipeLeftAction.current
+        ArticleSwipeLeftActionPreference.current
     }
 
     LaunchedEffect(isActive) {
@@ -687,8 +696,9 @@ private fun SwipeBackgroundContent(
         }
         val contentDescription = when (direction) {
             SwipeToDismissBoxValue.StartToEnd,
-            SwipeToDismissBoxValue.EndToStart -> ArticleSwipeActionPreference
-                .toDisplayName(context, articleSwipeAction)
+            SwipeToDismissBoxValue.EndToStart -> suspendString {
+                ArticleSwipeActionPreference.toDisplayName(articleSwipeAction)
+            }
 
             SwipeToDismissBoxValue.Settled -> null
         }
@@ -712,7 +722,7 @@ fun Article1ItemPlaceholder() {
             .background(
                 MaterialTheme.colorScheme.surfaceColorAtElevation(
                     LocalAbsoluteTonalElevation.current +
-                            LocalArticleItemTonalElevation.current.dp
+                            ArticleItemTonalElevationPreference.current.dp
                 )
             )
             .fillMaxWidth(),
@@ -801,12 +811,12 @@ fun Article1ItemPlaceholder() {
 
 private fun swipeAction(
     articleSwipeAction: String,
-    context: Context,
     navController: NavController,
     data: ArticleWithEnclosureBean,
     onMarkAsRead: () -> Unit,
     onMarkAsFavorite: () -> Unit,
     onShowEnclosureBottomSheet: (ArticleWithEnclosureBean) -> Unit,
+    onOpenLink: (String) -> Unit,
     onOpenAddToPlaylistSheet: () -> Unit,
 ) {
     when (articleSwipeAction) {
@@ -814,7 +824,9 @@ private fun swipeAction(
             navigateToReadScreen(navController = navController, data = data)
 
         ArticleSwipeActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet(data)
-        ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.openLinkInBrowser(context)
+        ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.link?.let { onOpenLink(it) }
+            ?: blockString(Res.string.article_screen_no_link_tip).showToast()
+
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()
         ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> onOpenAddToPlaylistSheet()
@@ -835,11 +847,6 @@ private fun tapAction(
         ArticleTapActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet(data)
         else -> navigateToReadScreen(navController = navController, data = data)
     }
-}
-
-fun ArticleBean.openLinkInBrowser(context: Context) {
-    link?.openBrowser(context)
-        ?: context.getString(R.string.article_screen_no_link_tip).showToast()
 }
 
 fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {

@@ -29,9 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.activity
 import com.skyd.anivu.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.anivu.ui.activity.MainActivity
@@ -48,6 +46,12 @@ import com.skyd.anivu.ui.mpv.port.controller.SmallController
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.playlist.medialist.list.PlaylistMediaList
 import com.skyd.anivu.ui.screen.read.ReadRoute
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.player_picture_in_picture
+import podaura.shared.generated.resources.read_screen_name
 
 
 @Composable
@@ -76,13 +80,13 @@ internal fun PortraitPlayerView(
                         PodAuraIconButton(
                             onClick = { context.activity.manualEnterPictureInPictureMode() },
                             imageVector = Icons.Outlined.PictureInPictureAlt,
-                            contentDescription = stringResource(R.string.player_picture_in_picture),
+                            contentDescription = stringResource(Res.string.player_picture_in_picture),
                         )
                     }
                     PodAuraIconButton(
                         onClick = { showMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(R.string.more),
+                        contentDescription = stringResource(Res.string.more),
                     )
                     Menu(
                         expanded = showMenu,
@@ -165,7 +169,7 @@ private fun Menu(
     ) {
         val feedUrl = media?.article?.feed?.url
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.feed_screen_name)) },
+            text = { Text(text = stringResource(Res.string.feed_screen_name)) },
             leadingIcon = { Icon(imageVector = Icons.Outlined.RssFeed, contentDescription = null) },
             onClick = {
                 val intent = Intent(
@@ -181,7 +185,7 @@ private fun Menu(
         )
         val articleId = media?.article?.articleWithEnclosure?.article?.articleId
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.read_screen_name)) },
+            text = { Text(text = stringResource(Res.string.read_screen_name)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.Article,

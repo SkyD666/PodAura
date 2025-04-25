@@ -28,11 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.isSinglePane
 import com.skyd.anivu.ui.component.BaseSettingsItem
 import com.skyd.anivu.ui.component.PodAuraAnimatedPane
@@ -48,6 +45,23 @@ import com.skyd.anivu.ui.screen.settings.rssconfig.RssConfigRoute
 import com.skyd.anivu.ui.screen.settings.transmission.TransmissionRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.appearance_screen_description
+import podaura.shared.generated.resources.appearance_screen_name
+import podaura.shared.generated.resources.behavior_screen_description
+import podaura.shared.generated.resources.behavior_screen_name
+import podaura.shared.generated.resources.data_screen_description
+import podaura.shared.generated.resources.data_screen_name
+import podaura.shared.generated.resources.ic_database_24
+import podaura.shared.generated.resources.player_config_screen_description
+import podaura.shared.generated.resources.player_config_screen_name
+import podaura.shared.generated.resources.rss_config_screen_description
+import podaura.shared.generated.resources.rss_config_screen_name
+import podaura.shared.generated.resources.settings
+import podaura.shared.generated.resources.transmission_screen_description
+import podaura.shared.generated.resources.transmission_screen_name
 
 
 @Serializable
@@ -117,7 +131,7 @@ fun SettingsList(
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Large,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.settings)) },
+                title = { Text(text = stringResource(Res.string.settings)) },
             )
         }
     ) { paddingValues ->
@@ -131,8 +145,8 @@ fun SettingsList(
                 SelectedItem(currentItem is AppearanceRoute) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.Palette),
-                        text = stringResource(id = R.string.appearance_screen_name),
-                        descriptionText = stringResource(id = R.string.appearance_screen_description),
+                        text = stringResource(Res.string.appearance_screen_name),
+                        descriptionText = stringResource(Res.string.appearance_screen_description),
                         onClick = {
                             onItemSelected(AppearanceRoute)
                         }
@@ -143,8 +157,8 @@ fun SettingsList(
                 SelectedItem(currentItem is BehaviorRoute) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.TouchApp),
-                        text = stringResource(id = R.string.behavior_screen_name),
-                        descriptionText = stringResource(id = R.string.behavior_screen_description),
+                        text = stringResource(Res.string.behavior_screen_name),
+                        descriptionText = stringResource(Res.string.behavior_screen_description),
                         onClick = {
                             onItemSelected(BehaviorRoute)
                         }
@@ -155,8 +169,8 @@ fun SettingsList(
                 SelectedItem(currentItem is RssConfigRoute) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.RssFeed),
-                        text = stringResource(id = R.string.rss_config_screen_name),
-                        descriptionText = stringResource(id = R.string.rss_config_screen_description),
+                        text = stringResource(Res.string.rss_config_screen_name),
+                        descriptionText = stringResource(Res.string.rss_config_screen_description),
                         onClick = {
                             onItemSelected(RssConfigRoute)
                         }
@@ -167,8 +181,8 @@ fun SettingsList(
                 SelectedItem(currentItem is PlayerConfigRoute) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.SmartDisplay),
-                        text = stringResource(id = R.string.player_config_screen_name),
-                        descriptionText = stringResource(id = R.string.player_config_screen_description),
+                        text = stringResource(Res.string.player_config_screen_name),
+                        descriptionText = stringResource(Res.string.player_config_screen_description),
                         onClick = {
                             onItemSelected(PlayerConfigRoute)
                         }
@@ -178,9 +192,9 @@ fun SettingsList(
             item {
                 SelectedItem(currentItem is DataRoute) {
                     BaseSettingsItem(
-                        icon = painterResource(id = R.drawable.ic_database_24),
-                        text = stringResource(id = R.string.data_screen_name),
-                        descriptionText = stringResource(id = R.string.data_screen_description),
+                        icon = painterResource(Res.drawable.ic_database_24),
+                        text = stringResource(Res.string.data_screen_name),
+                        descriptionText = stringResource(Res.string.data_screen_description),
                         onClick = { onItemSelected(DataRoute) }
                     )
                 }
@@ -189,8 +203,8 @@ fun SettingsList(
                 SelectedItem(currentItem is TransmissionRoute) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.SwapVert),
-                        text = stringResource(id = R.string.transmission_screen_name),
-                        descriptionText = stringResource(id = R.string.transmission_screen_description),
+                        text = stringResource(Res.string.transmission_screen_name),
+                        descriptionText = stringResource(Res.string.transmission_screen_description),
                         onClick = {
                             onItemSelected(TransmissionRoute)
                         }

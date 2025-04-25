@@ -1,7 +1,7 @@
 package com.skyd.anivu.ui.screen.article
 
 import androidx.paging.PagingData
-import com.skyd.anivu.base.mvi.MviViewState
+import com.skyd.anivu.ui.mvi.MviViewState
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.repository.article.ArticleSort
 import kotlinx.coroutines.flow.Flow

@@ -70,13 +70,13 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.navDeepLink
@@ -85,20 +85,18 @@ import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.video.VideoFrameDecoder
-import com.skyd.anivu.R
-import com.skyd.anivu.base.mvi.MviEventListener
-import com.skyd.anivu.base.mvi.getDispatcher
 import com.skyd.anivu.ext.activity
-import com.skyd.anivu.ext.copy
+import com.skyd.anivu.ext.httpDomain
 import com.skyd.anivu.ext.ifNullOfBlank
-import com.skyd.anivu.ext.isWifi
-import com.skyd.anivu.ext.openBrowser
+import com.skyd.anivu.ext.safeOpenUri
 import com.skyd.anivu.ext.toDateTimeString
 import com.skyd.anivu.model.bean.article.ArticleCategoryBean
 import com.skyd.anivu.model.bean.article.ArticleWithFeed
 import com.skyd.anivu.model.bean.article.EnclosureBean
 import com.skyd.anivu.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
+import com.skyd.anivu.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.anivu.model.preference.appearance.read.ReadTextSizePreference
+import com.skyd.anivu.model.preference.appearance.read.ReadTopBarTonalElevationPreference
 import com.skyd.anivu.ui.activity.player.PlayActivity
 import com.skyd.anivu.ui.component.PodAuraFloatingActionButton
 import com.skyd.anivu.ui.component.PodAuraIconButton
@@ -106,20 +104,37 @@ import com.skyd.anivu.ui.component.PodAuraImage
 import com.skyd.anivu.ui.component.PodAuraTopBar
 import com.skyd.anivu.ui.component.PodAuraTopBarStyle
 import com.skyd.anivu.ui.component.dialog.WaitingDialog
-import com.skyd.anivu.ui.component.html.HtmlText
 import com.skyd.anivu.ui.component.rememberPodAuraImageLoader
+import com.skyd.anivu.ui.component.webview.PodAuraWebView
 import com.skyd.anivu.ui.local.LocalNavController
+import com.skyd.anivu.ui.mvi.MviEventListener
+import com.skyd.anivu.ui.mvi.getDispatcher
 import com.skyd.anivu.ui.screen.article.ArticleRoute
 import com.skyd.anivu.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.anivu.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.anivu.ui.screen.article.openLinkInBrowser
 import com.skyd.anivu.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.anivu.util.ShareUtil
-import com.skyd.generated.preference.LocalReadContentTonalElevation
-import com.skyd.generated.preference.LocalReadTextSize
-import com.skyd.generated.preference.LocalReadTopBarTonalElevation
+import com.skyd.anivu.util.isWifiAvailable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.article_screen_favorite
+import podaura.shared.generated.resources.article_screen_unfavorite
+import podaura.shared.generated.resources.bottom_sheet_enclosure_title
+import podaura.shared.generated.resources.copy
+import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.open_link_in_browser
+import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.read_screen_download_image
+import podaura.shared.generated.resources.read_screen_episode
+import podaura.shared.generated.resources.read_screen_name
+import podaura.shared.generated.resources.read_screen_open_article_screen
+import podaura.shared.generated.resources.read_screen_open_image_in_browser
+import podaura.shared.generated.resources.read_screen_text_size
+import podaura.shared.generated.resources.share
 import java.util.Locale
 
 
@@ -145,10 +160,11 @@ data class ReadRoute(@SerialName("articleId") val articleId: String) {
 }
 
 @Composable
-fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
+fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
     val navController = LocalNavController.current
+    val uriHandler = LocalUriHandler.current
 
     val snackbarHostState = remember { SnackbarHostState() }
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
@@ -166,13 +182,13 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
             PodAuraTopBar(
                 style = PodAuraTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = stringResource(R.string.read_screen_name)) },
+                title = { Text(text = stringResource(Res.string.read_screen_name)) },
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalReadTopBarTonalElevation.current.dp
+                        ReadTopBarTonalElevationPreference.current.dp
                     ),
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
-                        LocalReadTopBarTonalElevation.current.dp + 4.dp
+                        ReadTopBarTonalElevationPreference.current.dp + 4.dp
                     ),
                 ),
                 actions = {
@@ -193,7 +209,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                             }
                         },
                         imageVector = Icons.Outlined.Share,
-                        contentDescription = stringResource(R.string.share),
+                        contentDescription = stringResource(Res.string.share),
                     )
                     val isFavorite = (uiState.articleState as? ArticleState.Success)
                         ?.article?.articleWithEnclosure?.article?.isFavorite == true
@@ -213,26 +229,22 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                         imageVector = if (isFavorite) Icons.Outlined.Favorite
                         else Icons.Outlined.FavoriteBorder,
                         contentDescription = stringResource(
-                            if (isFavorite) R.string.article_screen_unfavorite
-                            else R.string.article_screen_favorite
+                            if (isFavorite) Res.string.article_screen_unfavorite
+                            else Res.string.article_screen_favorite
                         ),
                     )
                     PodAuraIconButton(
                         enabled = uiState.articleState is ArticleState.Success,
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(R.string.more),
+                        contentDescription = stringResource(Res.string.more),
                     )
+                    val articleLink = (uiState.articleState as? ArticleState.Success)
+                        ?.article?.articleWithEnclosure?.article?.link
                     MoreMenu(
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
-                        onOpenInBrowserClick = {
-                            val articleState = uiState.articleState
-                            if (articleState is ArticleState.Success) {
-                                articleState.article.articleWithEnclosure.article
-                                    .openLinkInBrowser(context)
-                            }
-                        },
+                        onOpenInBrowserClick = articleLink?.let { { uriHandler.safeOpenUri(it) } },
                         onReadTextSizeClick = { openReadTextSizeSliderDialog = true },
                         onOpenArticleScreen = {
                             val articleState = uiState.articleState
@@ -251,20 +263,20 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
                     val articleState = uiState.articleState
                     if (articleState is ArticleState.Success) {
                         openEnclosureBottomSheet = getEnclosuresList(
-                            context, articleState.article.articleWithEnclosure,
+                            articleState.article.articleWithEnclosure,
                         )
                     }
                 },
             ) {
                 Icon(
                     imageVector = Icons.Outlined.AttachFile,
-                    contentDescription = stringResource(R.string.bottom_sheet_enclosure_title),
+                    contentDescription = stringResource(Res.string.bottom_sheet_enclosure_title),
                 )
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
-                    LocalReadContentTonalElevation.current.dp
+                    ReadContentTonalElevationPreference.current.dp
         ),
     ) { paddingValues ->
         Column(
@@ -339,15 +351,15 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = hiltViewModel()) {
 
 @Composable
 private fun CategoryArea(categories: List<ArticleCategoryBean>) {
-    val context = LocalContext.current
     if (categories.isNotEmpty()) {
         FlowRow(
             modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            val clipboardManager = LocalClipboardManager.current
             categories.forEach { category ->
                 SuggestionChip(
-                    onClick = { category.category.copy(context) },
+                    onClick = { clipboardManager.setText(AnnotatedString(category.category)) },
                     label = { Text(text = category.category) },
                 )
             }
@@ -389,7 +401,7 @@ private fun Content(
                 Row(modifier = Modifier.padding(vertical = 10.dp)) {
                     if (date != null) {
                         Text(
-                            text = date.toDateTimeString(context = context),
+                            text = date.toDateTimeString(),
                             style = MaterialTheme.typography.labelLarge,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -419,14 +431,13 @@ private fun Content(
             url = url,
         )
     })
-    HtmlText(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        text = article.article.content.ifNullOfBlank {
+    PodAuraWebView(
+        content = article.article.content.ifNullOfBlank {
             article.article.description.orEmpty()
         },
-        color = MaterialTheme.colorScheme.onSurface,
-        fontSize = LocalReadTextSize.current.sp,
-        onImageClick = { imageUrl -> openImageSheet = imageUrl }
+        refererDomain = article.article.link?.httpDomain(),
+        horizontalPadding = 16f,
+        onImageClick = { imageUrl, alt -> openImageSheet = imageUrl }
     )
     CategoryArea(article.categories)
 
@@ -445,13 +456,13 @@ private fun Content(
 private fun MoreMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
-    onOpenInBrowserClick: () -> Unit,
+    onOpenInBrowserClick: (() -> Unit)?,
     onReadTextSizeClick: () -> Unit,
     onOpenArticleScreen: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.open_link_in_browser)) },
+            text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.OpenInBrowser,
@@ -460,11 +471,12 @@ private fun MoreMenu(
             },
             onClick = {
                 onDismissRequest()
-                onOpenInBrowserClick()
+                onOpenInBrowserClick?.invoke()
             },
+            enabled = onOpenInBrowserClick != null,
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.read_screen_text_size)) },
+            text = { Text(text = stringResource(Res.string.read_screen_text_size)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.FormatSize,
@@ -477,7 +489,7 @@ private fun MoreMenu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.read_screen_open_article_screen)) },
+            text = { Text(text = stringResource(Res.string.read_screen_open_article_screen)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.RssFeed,
@@ -505,9 +517,8 @@ private fun ReadTextSizeSliderDialog(
             modifier = modifier.padding(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val context = LocalContext.current
             val scope = rememberCoroutineScope()
-            val textSize = LocalReadTextSize.current
+            val textSize = ReadTextSizePreference.current
             Text(
                 modifier = Modifier.padding(start = 16.dp),
                 text = String.format(Locale.getDefault(), "%.2f Sp", textSize),
@@ -518,9 +529,7 @@ private fun ReadTextSizeSliderDialog(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 valueRange = 12f..50f,
                 value = textSize,
-                onValueChange = {
-                    ReadTextSizePreference.put(context = context, scope = scope, value = it)
-                },
+                onValueChange = { ReadTextSizePreference.put(scope = scope, value = it) },
             )
         }
     }
@@ -530,7 +539,7 @@ private fun ReadTextSizeSliderDialog(
 private fun RssMediaEpisode(modifier: Modifier = Modifier, episode: String) {
     Text(
         modifier = modifier,
-        text = stringResource(id = R.string.read_screen_episode, episode),
+        text = stringResource(Res.string.read_screen_episode, episode),
         color = Color.White,
     )
 }
@@ -612,7 +621,6 @@ private fun MediaCover(
     duration: Long? = null,
     onClick: () -> Unit,
 ) {
-    val context = LocalContext.current
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
 
     Box(
@@ -626,7 +634,7 @@ private fun MediaCover(
                 .align(Alignment.Center),
         ) {
             var realImage by rememberSaveable(enclosure) {
-                mutableStateOf(if (context.isWifi() && enclosure.isVideo) enclosure.url else cover)
+                mutableStateOf(if (isWifiAvailable() && enclosure.isVideo) enclosure.url else cover)
             }
             PodAuraImage(
                 modifier = Modifier
@@ -654,7 +662,7 @@ private fun MediaCover(
                     .size(50.dp)
                     .align(Alignment.Center),
                 imageVector = Icons.Outlined.PlayCircleOutline,
-                contentDescription = stringResource(id = R.string.play),
+                contentDescription = stringResource(Res.string.play),
                 tint = Color.White,
             )
             PodAuraIconButton(
@@ -662,7 +670,7 @@ private fun MediaCover(
                 modifier = Modifier.align(Alignment.BottomStart),
                 tint = Color.White,
                 imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
-                contentDescription = stringResource(R.string.add_to_playlist),
+                contentDescription = stringResource(Res.string.add_to_playlist),
             )
             if (episode != null) {
                 RssMediaEpisode(
@@ -702,7 +710,7 @@ private fun ImageBottomSheet(
     copyImage: (url: String) -> Unit,
     downloadImage: (url: String) -> Unit,
 ) {
-    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     ModalBottomSheet(onDismissRequest = onDismissRequest) {
         Column(
             modifier = Modifier
@@ -711,7 +719,7 @@ private fun ImageBottomSheet(
         ) {
             ImageBottomSheetItem(
                 icon = Icons.Outlined.Download,
-                title = stringResource(id = R.string.read_screen_download_image),
+                title = stringResource(Res.string.read_screen_download_image),
                 onClick = {
                     downloadImage(imageUrl)
                     onDismissRequest()
@@ -719,7 +727,7 @@ private fun ImageBottomSheet(
             )
             ImageBottomSheetItem(
                 icon = Icons.Outlined.Share,
-                title = stringResource(id = R.string.share),
+                title = stringResource(Res.string.share),
                 onClick = {
                     shareImage(imageUrl)
                     onDismissRequest()
@@ -727,7 +735,7 @@ private fun ImageBottomSheet(
             )
             ImageBottomSheetItem(
                 icon = Icons.Outlined.ContentCopy,
-                title = stringResource(id = android.R.string.copy),
+                title = stringResource(Res.string.copy),
                 onClick = {
                     copyImage(imageUrl)
                     onDismissRequest()
@@ -735,9 +743,9 @@ private fun ImageBottomSheet(
             )
             ImageBottomSheetItem(
                 icon = Icons.Outlined.Public,
-                title = stringResource(id = R.string.read_screen_open_image_in_browser),
+                title = stringResource(Res.string.read_screen_open_image_in_browser),
                 onClick = {
-                    imageUrl.openBrowser(context)
+                    uriHandler.safeOpenUri(imageUrl)
                     onDismissRequest()
                 }
             )

@@ -40,15 +40,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.skyd.anivu.R
 import com.skyd.anivu.ext.thenIf
 import com.skyd.anivu.model.bean.playlist.PlaylistViewBean
 import com.skyd.anivu.ui.component.PodAuraIconButton
 import com.skyd.anivu.ui.component.PodAuraImage
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.playlist_screen_item_count
+import podaura.shared.generated.resources.rename
 import kotlin.math.min
 
 @Composable
@@ -87,7 +90,7 @@ fun PlaylistItem(
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = pluralStringResource(
-                    R.plurals.playlist_screen_item_count,
+                    Res.plurals.playlist_screen_item_count,
                     playlistViewBean.itemCount,
                     playlistViewBean.itemCount,
                 ),
@@ -166,7 +169,7 @@ private fun Menu(
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.rename)) },
+            text = { Text(text = stringResource(Res.string.rename)) },
             leadingIcon = {
                 Icon(imageVector = Icons.Outlined.DriveFileRenameOutline, contentDescription = null)
             },
@@ -176,7 +179,7 @@ private fun Menu(
             },
         )
         DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.delete)) },
+            text = { Text(text = stringResource(Res.string.delete)) },
             leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) },
             onClick = {
                 onDelete()

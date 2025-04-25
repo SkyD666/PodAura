@@ -1,13 +1,11 @@
 package com.skyd.anivu.ui.screen.settings.data
 
-import com.skyd.anivu.R
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.mvi.AbstractMviViewModel
+import com.skyd.anivu.ui.mvi.AbstractMviViewModel
 import com.skyd.anivu.ext.catchMap
 import com.skyd.anivu.ext.fileSize
 import com.skyd.anivu.ext.startWith
 import com.skyd.anivu.model.repository.DataRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -18,10 +16,15 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import javax.inject.Inject
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
+import org.koin.android.annotation.KoinViewModel
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.data_screen_data_cleared_size
+import podaura.shared.generated.resources.data_screen_deleted_count
 
-@HiltViewModel
-class DataViewModel @Inject constructor(
+@KoinViewModel(binds = [])
+class DataViewModel(
     private val dataRepo: DataRepository
 ) : AbstractMviViewModel<DataIntent, DataState, DataEvent>() {
 
@@ -47,8 +50,8 @@ class DataViewModel @Inject constructor(
             val event = when (change) {
                 is DataPartialStateChange.ClearCacheResult.Success -> {
                     DataEvent.ClearCacheResultEvent.Success(
-                        appContext.getString(
-                            R.string.data_screen_data_cleared_size,
+                        getString(
+                            Res.string.data_screen_data_cleared_size,
                             change.deletedSize.fileSize(appContext),
                         )
                     )
@@ -68,8 +71,8 @@ class DataViewModel @Inject constructor(
 
                 is DataPartialStateChange.DeleteArticleBeforeResult.Success -> {
                     DataEvent.DeleteArticleBeforeResultEvent.Success(
-                        appContext.resources.getQuantityString(
-                            R.plurals.data_screen_deleted_count,
+                        getPluralString(
+                            Res.plurals.data_screen_deleted_count,
                             change.count,
                             change.count,
                         )

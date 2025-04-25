@@ -72,17 +72,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.paging.compose.LazyPagingItems
-import com.skyd.anivu.R
-import com.skyd.anivu.ext.copy
-import com.skyd.anivu.ext.openBrowser
+import com.skyd.anivu.ext.getString
 import com.skyd.anivu.ext.readable
+import com.skyd.anivu.ext.safeOpenUri
 import com.skyd.anivu.ext.thenIfNotNull
 import com.skyd.anivu.model.bean.feed.FeedViewBean
 import com.skyd.anivu.model.bean.group.GroupVo
@@ -97,6 +98,41 @@ import com.skyd.anivu.ui.screen.article.FeedIcon
 import com.skyd.anivu.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.anivu.util.launchImagePicker
 import com.skyd.anivu.util.rememberImagePicker
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.clear
+import podaura.shared.generated.resources.collapse
+import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.expend
+import podaura.shared.generated.resources.feed_group
+import podaura.shared.generated.resources.feed_options
+import podaura.shared.generated.resources.feed_screen_add_group
+import podaura.shared.generated.resources.feed_screen_clear_articles_warning
+import podaura.shared.generated.resources.feed_screen_delete_feed_warning
+import podaura.shared.generated.resources.feed_screen_full_refresh
+import podaura.shared.generated.resources.feed_screen_full_refresh_description
+import podaura.shared.generated.resources.feed_screen_incremental_refresh
+import podaura.shared.generated.resources.feed_screen_incremental_refresh_description
+import podaura.shared.generated.resources.feed_screen_mute_all_feeds
+import podaura.shared.generated.resources.feed_screen_mute_feed
+import podaura.shared.generated.resources.feed_screen_rss_description
+import podaura.shared.generated.resources.feed_screen_rss_description_hint
+import podaura.shared.generated.resources.feed_screen_rss_edit_icon
+import podaura.shared.generated.resources.feed_screen_rss_icon_source_local
+import podaura.shared.generated.resources.feed_screen_rss_icon_source_network
+import podaura.shared.generated.resources.feed_screen_rss_icon_source_network_hint
+import podaura.shared.generated.resources.feed_screen_rss_title
+import podaura.shared.generated.resources.feed_screen_rss_url
+import podaura.shared.generated.resources.feed_screen_sort_xml_articles_on_update
+import podaura.shared.generated.resources.feed_screen_sort_xml_articles_on_update_tip
+import podaura.shared.generated.resources.feed_screen_unmute_all_feeds
+import podaura.shared.generated.resources.feed_screen_unmute_feed
+import podaura.shared.generated.resources.item_selected
+import podaura.shared.generated.resources.read_all
+import podaura.shared.generated.resources.refresh
+import podaura.shared.generated.resources.request_headers_screen_name
+import podaura.shared.generated.resources.reset
 
 @Composable
 fun EditFeedSheet(
@@ -186,7 +222,7 @@ fun EditFeedSheet(
             url = feed.url
         },
         visible = openUrlDialog,
-        titleText = stringResource(id = R.string.feed_screen_rss_url),
+        titleText = stringResource(Res.string.feed_screen_rss_url),
         value = url,
         onValueChange = { url = it },
         onConfirm = {
@@ -204,7 +240,7 @@ fun EditFeedSheet(
         maxLines = 1,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = stringResource(id = R.string.feed_screen_rss_title))
+                Text(text = stringResource(Res.string.feed_screen_rss_title))
                 Spacer(modifier = Modifier.weight(1f))
                 PodAuraIconButton(
                     onClick = {
@@ -213,7 +249,7 @@ fun EditFeedSheet(
                         openNicknameDialog = false
                     },
                     imageVector = Icons.Outlined.History,
-                    contentDescription = stringResource(id = R.string.reset),
+                    contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
@@ -234,7 +270,7 @@ fun EditFeedSheet(
         visible = openCustomDescriptionDialog,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = stringResource(id = R.string.feed_screen_rss_description))
+                Text(text = stringResource(Res.string.feed_screen_rss_description))
                 Spacer(modifier = Modifier.weight(1f))
                 PodAuraIconButton(
                     onClick = {
@@ -243,7 +279,7 @@ fun EditFeedSheet(
                         openCustomDescriptionDialog = false
                     },
                     imageVector = Icons.Outlined.History,
-                    contentDescription = stringResource(id = R.string.reset),
+                    contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
@@ -286,7 +322,7 @@ private fun InfoArea(
                     .size(20.dp)
                     .padding(4.dp),
                 imageVector = Icons.Filled.Edit,
-                contentDescription = stringResource(id = R.string.feed_screen_rss_edit_icon),
+                contentDescription = stringResource(Res.string.feed_screen_rss_edit_icon),
                 tint = MaterialTheme.colorScheme.onPrimary,
             )
         }
@@ -311,7 +347,7 @@ private fun InfoArea(
                     .clip(RoundedCornerShape(6.dp))
                     .clickable(onClick = onCustomDescriptionChanged),
                 text = description.ifBlank {
-                    stringResource(id = R.string.feed_screen_rss_description_hint)
+                    stringResource(Res.string.feed_screen_rss_description_hint)
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (description.isBlank()) MaterialTheme.colorScheme.outline
@@ -345,10 +381,10 @@ private fun InfoArea(
         if (openNetworkIconDialog) {
             TextFieldDialog(
                 onDismissRequest = { openNetworkIconDialog = false },
-                titleText = stringResource(id = R.string.feed_screen_rss_icon_source_network),
+                titleText = stringResource(Res.string.feed_screen_rss_icon_source_network),
                 value = networkIcon,
                 onValueChange = { networkIcon = it },
-                placeholder = stringResource(id = R.string.feed_screen_rss_icon_source_network_hint),
+                placeholder = stringResource(Res.string.feed_screen_rss_icon_source_network_hint),
                 enableConfirm = { URLUtil.isNetworkUrl(networkIcon) },
                 onConfirm = {
                     runCatching {
@@ -367,21 +403,22 @@ private fun InfoArea(
 
 @Composable
 private fun LinkArea(link: String, onLinkClick: () -> Unit) {
-    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val uriHandler = LocalUriHandler.current
     SheetChip(
         modifier = Modifier.fillMaxWidth(),
         icon = Icons.Outlined.Link,
         text = link,
-        contentDescription = stringResource(id = R.string.feed_screen_rss_url),
+        contentDescription = stringResource(Res.string.feed_screen_rss_url),
         onClick = onLinkClick,
-        onLongClick = { link.copy(context) },
-        onIconClick = { link.openBrowser(context) },
+        onLongClick = { clipboardManager.setText(AnnotatedString(link)) },
+        onIconClick = { uriHandler.safeOpenUri(link) },
     )
 }
 
 @Composable
 internal fun OptionArea(
-    deleteWarningText: String = stringResource(id = R.string.feed_screen_delete_feed_warning),
+    deleteWarningText: String = stringResource(Res.string.feed_screen_delete_feed_warning),
     sortXmlArticlesOnUpdate: Boolean? = null,
     mute: Boolean? = null,
     onReadAll: () -> Unit,
@@ -399,7 +436,7 @@ internal fun OptionArea(
     var openRefreshDialog by rememberSaveable { mutableStateOf(false) }
 
     Text(
-        text = stringResource(id = R.string.feed_options),
+        text = stringResource(Res.string.feed_options),
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onPrimaryContainer,
     )
@@ -411,37 +448,37 @@ internal fun OptionArea(
     ) {
         SheetChip(
             icon = Icons.Outlined.DoneAll,
-            text = stringResource(id = R.string.read_all),
+            text = stringResource(Res.string.read_all),
             onClick = onReadAll,
         )
         SheetChip(
             icon = Icons.Outlined.Refresh,
-            text = stringResource(id = R.string.refresh),
+            text = stringResource(Res.string.refresh),
             onClick = { onRefresh(false) },
             onLongClick = { openRefreshDialog = true },
         )
         if (onMuteChanged != null && mute != null) {
             SheetChip(
                 icon = if (mute) Icons.AutoMirrored.Outlined.VolumeUp else Icons.AutoMirrored.Outlined.VolumeOff,
-                text = stringResource(id = if (mute) R.string.feed_screen_unmute_feed else R.string.feed_screen_mute_feed),
+                text = stringResource(if (mute) Res.string.feed_screen_unmute_feed else Res.string.feed_screen_mute_feed),
                 onClick = { onMuteChanged(!mute) },
             )
         }
         if (onMuteAll != null) {
             SheetChip(
                 icon = Icons.AutoMirrored.Outlined.VolumeOff,
-                text = stringResource(id = R.string.feed_screen_mute_all_feeds),
+                text = stringResource(Res.string.feed_screen_mute_all_feeds),
                 onClick = { onMuteAll(true) },
             )
             SheetChip(
                 icon = Icons.AutoMirrored.Outlined.VolumeUp,
-                text = stringResource(id = R.string.feed_screen_unmute_all_feeds),
+                text = stringResource(Res.string.feed_screen_unmute_all_feeds),
                 onClick = { onMuteAll(false) },
             )
         }
         SheetChip(
             icon = Icons.Outlined.ClearAll,
-            text = stringResource(id = R.string.clear),
+            text = stringResource(Res.string.clear),
             onClick = { openClearWarningDialog = true },
         )
         if (onDelete != null) {
@@ -449,7 +486,7 @@ internal fun OptionArea(
                 icon = Icons.Outlined.Delete,
                 iconTint = MaterialTheme.colorScheme.onError,
                 iconBackgroundColor = MaterialTheme.colorScheme.error,
-                text = stringResource(id = R.string.delete),
+                text = stringResource(Res.string.delete),
                 onClick = { openDeleteWarningDialog = true },
             )
         }
@@ -457,11 +494,11 @@ internal fun OptionArea(
             SheetChip(
                 icon = if (sortXmlArticlesOnUpdate) Icons.Filled.ToggleOn
                 else Icons.Outlined.ToggleOff,
-                text = stringResource(id = R.string.feed_screen_sort_xml_articles_on_update),
+                text = stringResource(Res.string.feed_screen_sort_xml_articles_on_update),
                 onClick = {
                     onSortXmlArticlesOnUpdateChanged?.invoke(!sortXmlArticlesOnUpdate)
                     if (!sortXmlArticlesOnUpdate) {
-                        context.getString(R.string.feed_screen_sort_xml_articles_on_update_tip)
+                        context.getString(Res.string.feed_screen_sort_xml_articles_on_update_tip)
                             .showToast()
                     }
                 },
@@ -470,7 +507,7 @@ internal fun OptionArea(
         if (onEditRequestHeaders != null) {
             SheetChip(
                 icon = Icons.Outlined.Http,
-                text = stringResource(id = R.string.request_headers_screen_name),
+                text = stringResource(Res.string.request_headers_screen_name),
                 onClick = onEditRequestHeaders,
             )
         }
@@ -478,7 +515,7 @@ internal fun OptionArea(
 
     DeleteArticleWarningDialog(
         visible = openClearWarningDialog,
-        text = stringResource(id = R.string.feed_screen_clear_articles_warning),
+        text = stringResource(Res.string.feed_screen_clear_articles_warning),
         onDismissRequest = { openClearWarningDialog = false },
         onDismiss = { openClearWarningDialog = false },
         onConfirm = onClear,
@@ -509,8 +546,8 @@ private fun RefreshDialog(
 
     val texts = remember {
         listOf(
-            context.getString(R.string.feed_screen_incremental_refresh),
-            context.getString(R.string.feed_screen_full_refresh)
+            context.getString(Res.string.feed_screen_incremental_refresh),
+            context.getString(Res.string.feed_screen_full_refresh)
         )
     }
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -519,7 +556,7 @@ private fun RefreshDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null) },
-        title = { Text(text = stringResource(id = R.string.refresh)) },
+        title = { Text(text = stringResource(Res.string.refresh)) },
         selectable = false,
         text = {
             Column {
@@ -544,15 +581,15 @@ private fun RefreshDialog(
                 Spacer(modifier = Modifier.height(22.dp))
                 Text(
                     stringResource(
-                        if (currentIndex == 0) R.string.feed_screen_incremental_refresh_description
-                        else R.string.feed_screen_full_refresh_description
+                        if (currentIndex == 0) Res.string.feed_screen_incremental_refresh_description
+                        else Res.string.feed_screen_full_refresh_description
                     )
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(text = stringResource(R.string.cancel))
+                Text(text = stringResource(Res.string.cancel))
             }
         },
         confirmButton = {
@@ -560,7 +597,7 @@ private fun RefreshDialog(
                 onDismissRequest()
                 onRefresh(currentIndex == 1)
             }) {
-                Text(text = stringResource(R.string.refresh))
+                Text(text = stringResource(Res.string.refresh))
             }
         },
     )
@@ -568,7 +605,7 @@ private fun RefreshDialog(
 
 @Composable
 internal fun GroupArea(
-    title: String = stringResource(id = R.string.feed_group),
+    title: String = stringResource(Res.string.feed_group),
     currentGroupId: String?,
     groups: LazyPagingItems<GroupVo>,
     onGroupChange: (GroupVo) -> Unit,
@@ -587,7 +624,7 @@ internal fun GroupArea(
             else Icons.Outlined.ExpandMore,
             text = null,
             contentDescription = stringResource(
-                if (remainingItems == 0) R.string.collapse else R.string.expend
+                if (remainingItems == 0) Res.string.collapse else Res.string.expend
             ),
             onClick = {
                 if (remainingItems == 0) {
@@ -617,7 +654,7 @@ internal fun GroupArea(
             0 -> SheetChip(
                 icon = Icons.Outlined.Add,
                 text = null,
-                contentDescription = stringResource(id = R.string.feed_screen_add_group),
+                contentDescription = stringResource(Res.string.feed_screen_add_group),
                 onClick = openCreateGroupDialog,
             )
 
@@ -627,7 +664,7 @@ internal fun GroupArea(
                 SheetChip(
                     icon = if (selected) Icons.Outlined.Check else null,
                     text = GroupVo.DefaultGroup.name,
-                    contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
+                    contentDescription = if (selected) stringResource(Res.string.item_selected) else null,
                     onClick = {
                         if (GroupVo.DefaultGroup.groupId != currentGroupId) {
                             onGroupChange(GroupVo.DefaultGroup)
@@ -644,7 +681,7 @@ internal fun GroupArea(
                         modifier = Modifier.animateContentSize(),
                         icon = if (selected) Icons.Outlined.Check else null,
                         text = group.name,
-                        contentDescription = if (selected) stringResource(id = R.string.item_selected) else null,
+                        contentDescription = if (selected) stringResource(Res.string.item_selected) else null,
                         onClick = { if (group.groupId != currentGroupId) onGroupChange(group) },
                     )
                 }
@@ -715,12 +752,12 @@ private fun EditIconDialog(
     PodAuraDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Image, contentDescription = null) },
-        title = { Text(text = stringResource(id = R.string.feed_screen_rss_edit_icon)) },
+        title = { Text(text = stringResource(Res.string.feed_screen_rss_edit_icon)) },
         text = {
             Column {
                 ListItem(
                     modifier = Modifier.clickable(onClick = onLocal),
-                    headlineContent = { Text(text = stringResource(R.string.feed_screen_rss_icon_source_local)) },
+                    headlineContent = { Text(text = stringResource(Res.string.feed_screen_rss_icon_source_local)) },
                     leadingContent = {
                         Icon(imageVector = Icons.Outlined.PhoneAndroid, contentDescription = null)
                     },
@@ -729,7 +766,7 @@ private fun EditIconDialog(
                 HorizontalDivider()
                 ListItem(
                     modifier = Modifier.clickable(onClick = onNetwork),
-                    headlineContent = { Text(text = stringResource(R.string.feed_screen_rss_icon_source_network)) },
+                    headlineContent = { Text(text = stringResource(Res.string.feed_screen_rss_icon_source_network)) },
                     leadingContent = {
                         Icon(imageVector = Icons.Outlined.Public, contentDescription = null)
                     },
@@ -738,7 +775,7 @@ private fun EditIconDialog(
                 HorizontalDivider()
                 ListItem(
                     modifier = Modifier.clickable(onClick = onRemove),
-                    headlineContent = { Text(text = stringResource(R.string.delete)) },
+                    headlineContent = { Text(text = stringResource(Res.string.delete)) },
                     leadingContent = {
                         Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
                     },

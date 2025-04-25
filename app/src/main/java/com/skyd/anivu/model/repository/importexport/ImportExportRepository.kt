@@ -4,9 +4,9 @@ import android.net.Uri
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.skyd.anivu.appContext
-import com.skyd.anivu.base.BaseRepository
-import com.skyd.anivu.ext.dataStore
-import com.skyd.generated.preference.preferences
+import com.skyd.anivu.model.repository.BaseRepository
+import com.skyd.anivu.model.preference.dataStore
+import com.skyd.anivu.model.preference.preferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -22,11 +22,12 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import org.koin.core.annotation.Factory
 import java.io.InputStream
-import javax.inject.Inject
 import kotlin.time.measureTime
 
-class ImportExportRepository @Inject constructor() : BaseRepository() {
+@Factory(binds = [])
+class ImportExportRepository : BaseRepository() {
 
     fun importPreferMeasureTime(preferUri: Uri): Flow<Long> = flow {
         val time = measureTime {
@@ -45,7 +46,7 @@ class ImportExportRepository @Inject constructor() : BaseRepository() {
          * https://youtrack.jetbrains.com/issue/KTOR-3063
          */
         val map: Map<String, JsonElement> = Json.decodeFromStream(inputStream)
-        appContext.dataStore.edit { dsPreferences ->
+        dataStore.edit { dsPreferences ->
             preferences.forEach { (pref, kClazz) ->
                 val value: JsonElement = map[pref.key.name] ?: return@forEach
                 when (kClazz) {
@@ -83,7 +84,7 @@ class ImportExportRepository @Inject constructor() : BaseRepository() {
     fun exportPreferMeasureTime(outputFile: Uri): Flow<Long> = flow {
         val time = measureTime {
             appContext.contentResolver.openOutputStream(outputFile)!!.use { outputStream ->
-                val dataStorePreferences = appContext.dataStore.data.first()
+                val dataStorePreferences = dataStore.data.first()
                 val json = buildJsonObject {
                     preferences.forEach { (pref, _) ->
                         val k = pref.key.name
