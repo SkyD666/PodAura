@@ -179,7 +179,7 @@ compose.resources {
 }
 
 android {
-    namespace = "com.skyd.anivu"
+    namespace = "com.skyd.podaura.shared"
     compileSdk = 35
 
     defaultConfig {
@@ -209,7 +209,7 @@ project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
 }
 
 buildkonfig {
-    packageName = "com.skyd.anivu"
+    packageName = "com.skyd.podaura"
 
     defaultConfigs {
         buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())

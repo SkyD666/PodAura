@@ -14,7 +14,7 @@ plugins {
 apply(from = "../secret.gradle.kts")
 
 android {
-    namespace = "com.skyd.anivu"
+    namespace = "com.skyd.podaura"
     compileSdk = 35
 
     defaultConfig {
