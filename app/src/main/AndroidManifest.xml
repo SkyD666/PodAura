@@ -183,7 +183,7 @@
         <activity android:name=".ui.activity.CrashActivity" />
 
         <service
-            android:name=".ui.mpv.service.PlayerService"
+            android:name=".ui.player.service.PlayerService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 

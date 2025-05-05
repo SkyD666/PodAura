@@ -45,7 +45,7 @@
     <string name="player_long_press_playback_speed">倍速播放中…</string>
     <string name="about_screen_name">关于</string>
     <string name="app_short_description">一个集 RSS 订阅与更新、媒体下载与播放为一体的播客应用。</string>
-    <string name="app_tech_stack_description">PodAura 使用 MVI 架构，完全采用 Material You 设计风格。使用 Android View 和 Compose 混合开发。</string>
+    <string name="app_tech_stack_description">PodAura 使用 MVI 架构，完全采用 Material You 设计风格。使用 Compose Multiplatform 开发。</string>
     <string name="about_screen_visit_github">访问 GitHub 仓库</string>
     <string name="about_screen_join_telegram">加入 Telegram 群组</string>
     <string name="about_screen_join_discord">加入 Discord 服务器</string>
@@ -219,9 +219,6 @@
     <string name="import_export_screen_name"><![CDATA[导入与导出]]></string>
     <string name="import_opml_screen_name">导入 OPML</string>
     <string name="export_opml_screen_name">导出 OPML</string>
-    <string name="export_opml_screen_export">导出</string>
-    <string name="export_opml_screen_dir_not_selected">请选择导出目录</string>
-    <string name="export_opml_screen_select_dir">选择导出目录</string>
     <string name="import_opml_screen_import">导入</string>
     <string name="import_opml_screen_select_file">选择 OPML 文件</string>
     <string name="import_opml_screen_on_conflict">冲突时</string>
@@ -479,6 +476,7 @@
     <string name="unlimited">无限制</string>
     <string name="behavior_screen_common_category">通用</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">仅 Wi‑Fi 下加载图片</string>
+    <string name="history_search_screen_hint">搜索历史记录</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

@@ -3,7 +3,7 @@ PodAura utilizes the MVI architecture and fully adopts the Material You design s
 <h3>💡 Features</h3>
 * <strong>Subscribe to RSS</strong>, Update RSS, <strong>Read</strong> RSS
 * <strong>Automatically update RSS</strong> subscriptions
-* <strong>Download enclosures</strong> (enclosure tags) in RSS articles, also supports <strong>torrent or magnet links</strong>
+* <strong>Download enclosures</strong> (enclosure tags) in RSS articles
 * <strong>Seeding</strong> downloaded files
 * <strong>Play media enclosures or downloaded videos</strong>
 * Support variable playback <strong>speed</strong>, setup <strong>audio track</strong>, <strong>subtitle track</strong>, etc

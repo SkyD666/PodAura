@@ -46,7 +46,7 @@
     <string name="player_long_press_playback_speed">Fast forwarding…</string>
     <string name="about_screen_name">About</string>
     <string name="app_short_description">All-in-one Android podcast app for RSS, media dl &amp; play.</string>
-    <string name="app_tech_stack_description">PodAura utilizes the MVI architecture and fully adopts the Material You design style. All pages are developed using Android View and Compose.</string>
+    <string name="app_tech_stack_description">PodAura utilizes the MVI architecture and fully adopts the Material You design style. All pages are developed using Compose Multiplatform.</string>
     <string name="about_screen_visit_github">GitHub repository</string>
     <string name="about_screen_join_telegram">Telegram group</string>
     <string name="about_screen_join_discord">Discord server</string>
@@ -226,9 +226,6 @@
     <string name="import_export_screen_name"><![CDATA[Import & Export]]></string>
     <string name="import_opml_screen_name">Import OPML</string>
     <string name="export_opml_screen_name">Export OPML</string>
-    <string name="export_opml_screen_export">Export</string>
-    <string name="export_opml_screen_dir_not_selected">Please select the export folder</string>
-    <string name="export_opml_screen_select_dir">Select export folder</string>
     <string name="import_opml_screen_import">Import</string>
     <string name="import_opml_screen_select_file">Select OPML file</string>
     <string name="import_opml_screen_on_conflict">On conflict</string>
@@ -486,6 +483,7 @@
     <string name="unlimited">Unlimited</string>
     <string name="behavior_screen_common_category">Common</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">Load images only on Wi‑Fi</string>
+    <string name="history_search_screen_hint">Search history</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>

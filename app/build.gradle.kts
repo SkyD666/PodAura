@@ -14,7 +14,7 @@ plugins {
 apply(from = "../secret.gradle.kts")
 
 android {
-    namespace = "com.skyd.anivu"
+    namespace = "com.skyd.podaura"
     compileSdk = 35
 
     defaultConfig {
@@ -171,6 +171,8 @@ tasks.withType(KotlinCompile::class).configureEach {
             "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
             "-opt-in=kotlin.contracts.ExperimentalContracts",
             "-opt-in=kotlin.ExperimentalStdlibApi",
+            "-opt-in=kotlin.uuid.ExperimentalUuidApi",
+            "-opt-in=kotlin.time.ExperimentalTime",
         )
     }
 }
@@ -184,12 +186,11 @@ dependencies {
     implementation(libs.jetbrains.navigation.compose)
     implementation(libs.jetbrains.lifecycle.runtime.compose)
     implementation(libs.compose.material.icons)
-    implementation(compose.runtime)
-    implementation(compose.ui)
-    implementation(compose.foundation)
-    implementation(compose.material)
-    implementation(libs.material3)
-//    implementation(compose.material3)  // waiting for update
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+//    implementation(compose.material)
+    implementation(libs.compose.material3)
     implementation(compose.components.resources)
     implementation(libs.androidx.compose.runtime.tracing)
     implementation(libs.jetbrains.compose.window.size)
@@ -225,6 +226,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.json.io)
     implementation(libs.kotlinx.coroutines.guava)
+    implementation(libs.kotlinx.datetime)
 
     implementation(libs.aniyomi.mpv.lib)
     implementation(libs.ffmpeg.kit)
@@ -235,14 +237,20 @@ dependencies {
 
     implementation(libs.kermit)
     implementation(libs.kotlinx.io.core)
+    implementation(libs.kotlinx.io.okio)
 
     implementation(libs.rome)
     implementation(libs.rome.modules)
     implementation(libs.ceau.opmlparser) {
         exclude(group = "net.sf.kxml", module = "kxml2")
     }
+    implementation("com.prof18.rssparser:rssparser:6.0.10")
+    implementation(libs.xmlutil.core)
+    implementation(libs.xmlutil.serialization)
+    implementation(libs.xmlutil.serialization.io)
 
-    implementation(libs.readability4j)
+    implementation(libs.filekit.core)
+    implementation(libs.filekit.dialogs)
 
     implementation(libs.reorderable)
 

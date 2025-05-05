@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
@@ -12,6 +13,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.atomicfu)
+    alias(libs.plugins.room)
     alias(libs.plugins.buildkonfig)
 }
 
@@ -55,12 +57,10 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(compose.runtime)
-                implementation(compose.ui)
-                implementation(compose.foundation)
-                implementation(compose.material)
-//                implementation(compose.material3)
-                implementation(libs.material3)
+                implementation(libs.compose.runtime)
+                implementation(libs.compose.ui)
+                implementation(libs.compose.foundation)
+                implementation(libs.compose.material3)
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
                 implementation(libs.compose.material.icons)
@@ -92,11 +92,22 @@ kotlin {
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
 
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.room.ktx)
+                implementation(libs.androidx.room.paging)
+
                 implementation(libs.coil.compose)
                 implementation(libs.coil.network.ktor3)
                 implementation(libs.coil.gif)
                 implementation(libs.coil.svg)
                 implementation(libs.coil.video)
+
+                implementation(libs.xmlutil.core)
+                implementation(libs.xmlutil.serialization)
+                implementation(libs.xmlutil.serialization.io)
+
+                implementation(libs.filekit.core)
+                implementation(libs.filekit.dialogs)
 
                 implementation(libs.compottie)
                 implementation(libs.kermit)
@@ -164,6 +175,7 @@ kotlin {
                 optIn("com.google.accompanist.permissions.ExperimentalPermissionsApi")
                 optIn("kotlin.contracts.ExperimentalContracts")
                 optIn("kotlin.ExperimentalStdlibApi")
+                optIn("kotlin.uuid.ExperimentalUuidApi")
             }
         }
     }
@@ -179,7 +191,7 @@ compose.resources {
 }
 
 android {
-    namespace = "com.skyd.anivu"
+    namespace = "com.skyd.podaura.shared"
     compileSdk = 35
 
     defaultConfig {
@@ -198,6 +210,9 @@ dependencies {
     listOf("kspCommonMainMetadata", "kspAndroid", "kspDesktop").forEach {
         add(it, project(":ksp"))
         add(it, libs.koin.ksp.compiler)
+        if (it != "kspCommonMainMetadata") {
+            add(it, libs.androidx.room.compiler)
+        }
     }
 }
 
@@ -209,10 +224,14 @@ project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
 }
 
 buildkonfig {
-    packageName = "com.skyd.anivu"
+    packageName = "com.skyd.podaura"
 
     defaultConfigs {
         buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())
         buildConfigField(INT, "versionCode", properties["versionCode"]!!.toString())
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }

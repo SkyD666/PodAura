@@ -98,9 +98,6 @@ public static final ** CREATOR;
 # libtorrent4j
 -keep class org.libtorrent4j.** { *; }
 
-# Retrofit
--keep, allowobfuscation, allowshrinking interface retrofit2.Call
-
 # FFmpeg
 -dontwarn com.arthenica.smartexception.java.Exceptions
 

@@ -47,7 +47,7 @@
 
 1. **Subscribe to RSS**, Update RSS, **Read** RSS
 2. **Automatically update RSS** subscriptions
-3. **Download** enclosures (enclosure tags) in RSS articles, also supports **torrent or magnet links**
+3. **Download** enclosures (enclosure tags) in RSS articles
 4. **Seeding** downloaded files
 5. **Play media enclosures or downloaded videos**
 6. Support variable playback **speed**, setup **audio track**, **subtitle track**, etc

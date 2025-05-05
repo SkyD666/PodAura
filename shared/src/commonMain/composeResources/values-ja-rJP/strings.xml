@@ -218,9 +218,6 @@
     <string name="import_export_screen_name"><![CDATA[インポートとエクスポート]]></string>
     <string name="import_opml_screen_name">OPML をインポート</string>
     <string name="export_opml_screen_name">OPML をエクスポート</string>
-    <string name="export_opml_screen_export">エクスポート</string>
-    <string name="export_opml_screen_dir_not_selected">エクスポート先のフォルダを選択してください</string>
-    <string name="export_opml_screen_select_dir">エクスポート先のフォルダを選択</string>
     <string name="import_opml_screen_import">インポート</string>
     <string name="import_opml_screen_select_file">OPML ファイルを選択</string>
     <string name="import_opml_screen_on_conflict">競合</string>
