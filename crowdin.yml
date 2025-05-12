@@ -1,3 +1,3 @@
 files:
-  - source: shared/src/commonMain/composeResources/values/strings.xml
-    translation: shared/src/commonMain/composeResources/values-%android_code%/strings.xml
+  - source: /shared/src/commonMain/composeResources/values/strings.xml
+    translation: /shared/src/commonMain/composeResources/values-%android_code%/strings.xml
