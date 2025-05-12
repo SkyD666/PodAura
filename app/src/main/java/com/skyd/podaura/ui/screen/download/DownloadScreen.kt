@@ -140,7 +140,10 @@ fun DownloadScreen(
                 contentDescription = stringResource(Res.string.download_screen_add_download),
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
             ) {
-                Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = stringResource(Res.string.download_screen_add_download),
+                )
             }
         }
     ) { paddingValues ->

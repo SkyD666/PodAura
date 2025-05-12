@@ -283,7 +283,10 @@ private fun FeedList(
                 },
                 contentDescription = stringResource(Res.string.add),
             ) {
-                Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = stringResource(Res.string.add),
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(

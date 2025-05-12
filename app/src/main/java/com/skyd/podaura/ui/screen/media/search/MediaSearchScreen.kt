@@ -50,13 +50,13 @@ import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
+import com.skyd.podaura.ui.component.SearchBarInputField
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.media.list.MediaList
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
-import com.skyd.podaura.ui.component.SearchBarInputField
 import com.skyd.podaura.ui.screen.search.TrailingIcon
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -122,7 +122,7 @@ fun MediaSearchScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.to_top),
                     )
                 }
             }

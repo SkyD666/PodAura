@@ -92,7 +92,10 @@ fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewMo
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.add),
             ) {
-                Icon(imageVector = Icons.Outlined.Add, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = stringResource(Res.string.add),
+                )
             }
         }
     ) { paddingValues ->

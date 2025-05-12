@@ -265,6 +265,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                 onClick = {
                     openEnclosureBottomSheet = uiState.articleState is ArticleState.Success
                 },
+                contentDescription = stringResource(Res.string.bottom_sheet_enclosure_title),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.AttachFile,

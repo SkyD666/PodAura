@@ -37,9 +37,10 @@
         PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Jetpack Compose</b>.
     </p>
     <p>
-        <b><a href="https://crowdin.com/project/anivu">Help us translate</a></b>
+        <b><a href="https://crowdin.com/project/podaura">Help us translate</a></b>
     </p>
 </div>
+
 
 <a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
 
@@ -76,7 +77,7 @@
 
 If you are interested, please help us **translate**, thank you.
 
-<a title="Crowdin" target="_blank" href="https://crowdin.com/project/anivu"><img src="https://badges.crowdin.net/anivu/localized.svg"></a>
+<a title="Crowdin" target="_blank" href="https://crowdin.com/project/podaura"><img src="https://badges.crowdin.net/podaura/localized.svg"></a>
 
 ## 🛠 Primary technology stack
 

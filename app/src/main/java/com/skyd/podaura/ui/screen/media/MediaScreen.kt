@@ -72,9 +72,9 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
-import com.skyd.podaura.ui.player.resolveUri
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
+import com.skyd.podaura.ui.player.resolveUri
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.podaura.ui.screen.media.list.GroupInfo
@@ -229,7 +229,10 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                     },
                     contentDescription = stringResource(Res.string.edit),
                 ) {
-                    Icon(imageVector = Icons.Outlined.Edit, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = stringResource(Res.string.edit),
+                    )
                 }
             }
         },

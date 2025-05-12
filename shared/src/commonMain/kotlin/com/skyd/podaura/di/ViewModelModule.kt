@@ -3,6 +3,7 @@ package com.skyd.podaura.di
 import com.skyd.podaura.ui.screen.about.update.UpdateViewModel
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedViewModel
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersViewModel
+import com.skyd.podaura.ui.screen.filepicker.FilePickerViewModel
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportViewModel
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlViewModel
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationViewModel
@@ -16,4 +17,5 @@ val viewModelModule = module {
     viewModel { ImportExportViewModel(get(), get()) }
     viewModel { ImportOpmlViewModel(get()) }
     viewModel { UpdateNotificationViewModel(get()) }
+    viewModel { FilePickerViewModel(get()) }
 }

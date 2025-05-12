@@ -142,7 +142,7 @@ fun ImportOpmlScreen(
                     }
                 },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
-                contentDescription = stringResource(Res.string.import_opml_screen_import)
+                contentDescription = null,
             )
         },
     ) { paddingValues ->

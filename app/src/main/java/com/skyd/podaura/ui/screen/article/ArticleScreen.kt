@@ -268,7 +268,7 @@ fun ArticleScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.to_top),
                     )
                 }
             }

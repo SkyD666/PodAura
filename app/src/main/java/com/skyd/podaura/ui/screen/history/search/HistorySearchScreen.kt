@@ -112,7 +112,7 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.ArrowUpward,
-                        contentDescription = null,
+                        contentDescription = stringResource(Res.string.to_top),
                     )
                 }
             }
