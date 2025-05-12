@@ -42,10 +42,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.io.files.Path
-import org.koin.core.annotation.Factory
 import kotlin.uuid.Uuid
 
-@Factory(binds = [IFeedRepository::class])
 class FeedRepository(
     private val groupDao: GroupDao,
     private val feedDao: FeedDao,

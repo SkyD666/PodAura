@@ -27,9 +27,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class SearchRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,

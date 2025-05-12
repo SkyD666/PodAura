@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class FilePickerRepository : BaseRepository() {
     fun requestFiles(
         path: String,

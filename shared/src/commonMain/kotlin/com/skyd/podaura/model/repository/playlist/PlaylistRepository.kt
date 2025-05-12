@@ -28,10 +28,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import org.koin.core.annotation.Factory
 import kotlin.uuid.Uuid
 
-@Factory(binds = [IPlaylistRepository::class])
 class PlaylistRepository(
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,

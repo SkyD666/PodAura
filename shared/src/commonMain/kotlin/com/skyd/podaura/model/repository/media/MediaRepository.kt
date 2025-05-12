@@ -52,10 +52,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.io.decodeFromSource
 import kotlinx.serialization.json.io.encodeToSink
-import org.koin.core.annotation.Factory
-import kotlin.collections.get
 
-@Factory(binds = [IMediaRepository::class])
 class MediaRepository(
     private val json: Json,
     private val feedDao: FeedDao,

@@ -219,8 +219,6 @@ dependencies {
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.navigation)
-    api(libs.koin.annotations)
-    ksp(libs.koin.ksp.compiler)
 
     implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)

@@ -7,12 +7,17 @@ import org.koin.core.module.Module
 import org.koin.core.parameter.ParametersDefinition
 import org.koin.core.qualifier.Qualifier
 import org.koin.dsl.KoinAppDeclaration
-import org.koin.ksp.generated.module
 
 fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
     appDeclaration()
-    modules(ioModule, databaseModule, dataStoreModule, pagingModule)
-    modules(AnnotationModule().module)
+    modules(
+        ioModule,
+        databaseModule,
+        dataStoreModule,
+        pagingModule,
+        repositoryModule,
+        viewModelModule,
+    )
 }
 
 expect val dataStoreModule: Module

@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import org.koin.core.annotation.Factory
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.rss_update_failed
 import kotlin.coroutines.cancellation.CancellationException
@@ -51,7 +50,6 @@ sealed class ArticleSort(open val asc: Boolean) {
     }
 }
 
-@Factory(binds = [IArticleRepository::class])
 class ArticleRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,

@@ -77,7 +77,6 @@ kotlin {
                 implementation(libs.androidx.paging.common)
 
                 implementation(libs.koin.core)
-                api(libs.koin.annotations)
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.koin.compose.viewmodel.navigation)
 
@@ -209,7 +208,6 @@ android {
 dependencies {
     listOf("kspCommonMainMetadata", "kspAndroid", "kspDesktop").forEach {
         add(it, project(":ksp"))
-        add(it, libs.koin.ksp.compiler)
         if (it != "kspCommonMainMetadata") {
             add(it, libs.androidx.room.compiler)
         }

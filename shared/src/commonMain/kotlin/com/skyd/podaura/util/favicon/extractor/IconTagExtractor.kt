@@ -13,9 +13,7 @@ import io.ktor.utils.io.readByteArray
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 open class IconTagExtractor(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
 ) : Extractor {

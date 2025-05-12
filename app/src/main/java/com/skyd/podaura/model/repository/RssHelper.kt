@@ -30,7 +30,6 @@ import io.ktor.utils.io.jvm.javaio.toInputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import org.koin.core.annotation.Factory
 import java.io.InputStream
 import java.util.Date
 import kotlin.uuid.Uuid
@@ -38,7 +37,6 @@ import kotlin.uuid.Uuid
 /**
  * Some operations on RSS.
  */
-@Factory(binds = [])
 class RssHelper(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
     private val faviconExtractor: FaviconExtractor,

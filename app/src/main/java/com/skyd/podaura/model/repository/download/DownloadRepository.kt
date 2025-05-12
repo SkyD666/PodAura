@@ -14,10 +14,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.koin.core.annotation.Factory
 import java.io.File
 
-@Factory(binds = [])
 class DownloadRepository : BaseRepository() {
     suspend fun requestBtDownloadTasksList(): Flow<List<BtDownloadInfoBean>> = combine(
         BtDownloadManager.getDownloadInfoList().distinctUntilChanged(),

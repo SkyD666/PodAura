@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel(binds = [])
 class RequestHeadersViewModel(
     private val requestHeadersRepo: RequestHeadersRepository,
 ) : AbstractMviViewModel<RequestHeadersIntent, RequestHeadersState, RequestHeadersEvent>() {

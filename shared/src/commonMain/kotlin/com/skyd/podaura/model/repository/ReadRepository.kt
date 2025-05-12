@@ -37,12 +37,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Clock
 import kotlinx.io.files.Path
-import org.koin.core.annotation.Factory
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
-@Factory(binds = [])
 class ReadRepository(
     private val articleDao: ArticleDao,
     private val readHistoryDao: ReadHistoryDao,

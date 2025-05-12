@@ -16,11 +16,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
 import org.jetbrains.compose.resources.getString
-import org.koin.android.annotation.KoinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.read_screen_article_id_illegal
 
-@KoinViewModel(binds = [])
 class ReadViewModel(
     private val readRepo: ReadRepository,
     private val articleRepo: IArticleRepository,

@@ -6,9 +6,7 @@ import io.ktor.client.request.get
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class HardCodedExtractor(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
 ) : Extractor {

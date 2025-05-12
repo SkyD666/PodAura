@@ -24,18 +24,10 @@ import net.devrieze.xmlutil.serialization.kxio.decodeFromSource
 import net.devrieze.xmlutil.serialization.kxio.encodeToSink
 import nl.adaptivity.xmlutil.serialization.XML
 import org.jetbrains.compose.resources.getString
-import org.koin.core.annotation.Factory
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
 import kotlin.time.measureTime
 
-@Factory(
-    binds = [
-        ImportExportOpmlRepository::class,
-        IImportOpmlRepository::class,
-        IExportOpmlRepository::class,
-    ]
-)
 class ImportExportOpmlRepository(
     private val feedDao: FeedDao,
     private val groupDao: GroupDao,

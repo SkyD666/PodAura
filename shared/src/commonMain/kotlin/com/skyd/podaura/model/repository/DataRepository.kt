@@ -18,9 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.io.files.Path
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class DataRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,

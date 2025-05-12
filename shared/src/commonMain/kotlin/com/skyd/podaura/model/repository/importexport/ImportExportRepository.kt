@@ -25,10 +25,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import org.koin.core.annotation.Factory
 import kotlin.time.measureTime
 
-@Factory(binds = [])
 class ImportExportRepository : BaseRepository() {
 
     fun importPreferMeasureTime(jsonFile: PlatformFile): Flow<Long> = flow {

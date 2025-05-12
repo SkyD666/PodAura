@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.di.notificationModule
+import com.skyd.podaura.di.repositoryModule
+import com.skyd.podaura.di.viewModelModule
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
@@ -15,7 +17,6 @@ import com.skyd.podaura.util.CrashHandler
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
-import org.koin.ksp.generated.defaultModule
 
 
 class App : Application() {
@@ -27,7 +28,7 @@ class App : Application() {
             androidLogger()
             androidContext(this@App)
         }
-        loadKoinModules(listOf(notificationModule, defaultModule))
+        loadKoinModules(listOf(notificationModule, repositoryModule, viewModelModule))
         AppCompatDelegate.setDefaultNightMode(dataStore.getOrDefault(DarkModePreference))
 
         CrashHandler.init(this)

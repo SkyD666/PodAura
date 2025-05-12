@@ -18,12 +18,10 @@ import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
-import org.koin.android.annotation.KoinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.data_screen_data_cleared_size
 import podaura.shared.generated.resources.data_screen_deleted_count
 
-@KoinViewModel(binds = [])
 class DataViewModel(
     private val dataRepo: DataRepository
 ) : AbstractMviViewModel<DataIntent, DataState, DataEvent>() {

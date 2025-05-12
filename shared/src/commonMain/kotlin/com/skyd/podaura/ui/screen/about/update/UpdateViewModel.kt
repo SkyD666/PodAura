@@ -18,9 +18,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
 import kotlinx.datetime.Instant
-import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel(binds = [])
 class UpdateViewModel(private val updateRepo: UpdateRepository) :
     AbstractMviViewModel<UpdateIntent, UpdateState, UpdateEvent>() {
 

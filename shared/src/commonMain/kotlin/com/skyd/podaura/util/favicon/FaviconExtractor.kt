@@ -7,9 +7,7 @@ import com.skyd.podaura.util.favicon.extractor.HardCodedExtractor
 import com.skyd.podaura.util.favicon.extractor.IconTagExtractor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class FaviconExtractor {
     private val extractors = listOf(
         get<HardCodedExtractor>(),

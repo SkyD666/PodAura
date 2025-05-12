@@ -10,9 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class UpdateRepository(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
 ) : BaseRepository() {

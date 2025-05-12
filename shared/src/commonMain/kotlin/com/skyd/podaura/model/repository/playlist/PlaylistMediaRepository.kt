@@ -27,9 +27,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [IPlaylistMediaRepository::class])
 class PlaylistMediaRepository(
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,

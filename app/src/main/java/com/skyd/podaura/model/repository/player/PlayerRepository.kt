@@ -15,9 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [IPlayerRepository::class])
 class PlayerRepository(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
     private val articleDao: ArticleDao,

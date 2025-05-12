@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [IAddToPlaylistRepository::class])
 class AddToPlaylistRepository(
     private val articleDao: ArticleDao,
     private val playlistDao: PlaylistDao,

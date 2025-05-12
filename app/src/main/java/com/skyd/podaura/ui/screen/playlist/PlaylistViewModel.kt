@@ -17,9 +17,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import org.koin.android.annotation.KoinViewModel
 
-@KoinViewModel(binds = [])
 class PlaylistViewModel(
     private val playlistRepo: PlaylistRepository,
 ) : AbstractMviViewModel<PlaylistIntent, PlaylistState, PlaylistEvent>() {

@@ -15,9 +15,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import org.koin.core.annotation.Factory
 
-@Factory(binds = [])
 class ReorderGroupRepository(
     private val groupDao: GroupDao,
     private val pagingConfig: PagingConfig,
