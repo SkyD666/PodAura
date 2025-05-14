@@ -477,6 +477,7 @@
     <string name="behavior_screen_common_category">Common</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">Load images only on Wi‑Fi</string>
     <string name="history_search_screen_hint">Search history</string>
+    <string name="download_copyright_issues_warning">This file may involve copyright issues and is not supported for download!</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d items</item>
     </plurals>
