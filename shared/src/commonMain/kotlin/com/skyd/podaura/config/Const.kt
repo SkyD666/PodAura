@@ -7,7 +7,7 @@ object Const {
     const val TELEGRAM_GROUP = "https://t.me/SkyD666Chat"
     const val DISCORD_SERVER = "https://discord.gg/pEWEjeJTa3"
 
-    const val TRANSLATION_URL = "https://crowdin.com/project/anivu"
+    const val TRANSLATION_URL = "https://crowdin.com/project/podaura"
 
     const val AFADIAN_LINK = "https://afdian.com/a/SkyD666"
     const val BUY_ME_A_COFFEE_LINK = "https://www.buymeacoffee.com/SkyD666"

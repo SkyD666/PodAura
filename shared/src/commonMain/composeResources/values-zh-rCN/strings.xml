@@ -477,6 +477,7 @@
     <string name="behavior_screen_common_category">通用</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">仅 Wi‑Fi 下加载图片</string>
     <string name="history_search_screen_hint">搜索历史记录</string>
+    <string name="download_copyright_issues_warning">此文件可能涉及版权问题，不支持下载！</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

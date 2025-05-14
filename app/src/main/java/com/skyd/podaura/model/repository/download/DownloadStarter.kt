@@ -22,7 +22,9 @@ import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreferenc
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
 import com.skyd.podaura.model.repository.media.MediaRepository
+import com.skyd.podaura.model.worker.download.BtFileNameChecker
 import com.skyd.podaura.model.worker.download.isTorrentMimetype
+import com.skyd.podaura.ui.component.blockString
 import com.skyd.podaura.ui.component.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.io.files.Path
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download_copyright_issues_warning
 import podaura.shared.generated.resources.download_no_notification_permission_tip
 import java.io.File
 
@@ -58,6 +61,10 @@ object DownloadStarter {
             url.startsWith("magnet:") || isTorrentMimetype(type) ||
                     Regex("^(((http|https|file|content)://)|/).*\\.torrent$").matches(url)
         if (isMagnetOrTorrent) {
+            if (!BtFileNameChecker.check(url)) {
+                blockString(Res.string.download_copyright_issues_warning).showToast()
+                return@launch
+            }
             var uri = url.toUri()
             if (url.startsWith("/")) {
                 uri = uri.buildUpon().scheme("file").build()

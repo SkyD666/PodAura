@@ -226,7 +226,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.guava)
     implementation(libs.kotlinx.datetime)
 
-    implementation(libs.aniyomi.mpv.lib)
+    implementation(libs.mpv.lib)
     implementation(libs.ffmpeg.kit)
 
     implementation(libs.coil.compose)

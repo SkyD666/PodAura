@@ -39,6 +39,8 @@ import com.skyd.podaura.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManagerIntent
 import com.skyd.podaura.ui.activity.MainActivity
+import com.skyd.podaura.ui.component.blockString
+import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.util.uniqueInt
 import io.ktor.client.HttpClient
@@ -79,6 +81,7 @@ import org.libtorrent4j.alerts.TorrentFinishedAlert
 import org.libtorrent4j.swig.settings_pack
 import org.libtorrent4j.swig.torrent_flags_t
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.download_copyright_issues_warning
 import podaura.shared.generated.resources.download_pause
 import podaura.shared.generated.resources.downloading
 import podaura.shared.generated.resources.torrent_download_channel_name
@@ -424,12 +427,17 @@ class BtDownloadWorker(context: Context, parameters: WorkerParameters) :
             // a torrent completes checking. ready to start downloading
             is TorrentCheckedAlert -> {
                 val handle = alert.handle()
+                name = handle.name
+                if (!BtFileNameChecker.check(handle.name)) {
+                    sessionManager.remove(handle)
+                    blockString(Res.string.download_copyright_issues_warning).showToast()
+                    return
+                }
                 updateTorrentFilesToDb(
                     link = torrentLink,
                     savePath = handle.savePath(),
                     files = handle.torrentFile().files(),
                 )
-                name = handle.name
                 updateNotificationAsync()     // update Notification
                 updateNameInfoToDb(link = torrentLink, name = name)
             }
