@@ -24,9 +24,10 @@ object BtFileNameChecker {
     )
 
     private val weights: Map<String, Int> = mapOf(
-        "website" to 3,
+        "website" to 4,
         "resolution" to 2,
         "codec" to 2,
+        "source" to 1,
         "audio" to 1,
         "subtitle" to 1,
     )
@@ -41,7 +42,7 @@ object BtFileNameChecker {
         patterns.forEach { (key, pattern) ->
             if (pattern.containsMatchIn(processedName)) {
                 total += (weights[key] ?: 0)
-                if (total >= 3) return false
+                if (total >= 4) return false
             }
         }
         return true

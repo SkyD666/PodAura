@@ -72,3 +72,5 @@ fun <C : CharSequence> C?.ifNullOfBlank(defaultValue: () -> C): C =
 expect fun String.isLocalFile(): Boolean
 
 expect fun String.isNetworkUrl(): Boolean
+
+fun <T : CharSequence> T.takeIfNotBlank(): T? = takeIf { it.isNotBlank() }

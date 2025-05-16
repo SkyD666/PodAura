@@ -1,5 +1,7 @@
 package com.skyd.podaura.model.repository.importexport.opml
 
+import OPML
+import com.skyd.podaura.ext.takeIfNotBlank
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
@@ -7,6 +9,11 @@ import com.skyd.podaura.model.bean.group.GroupWithFeedBean
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.repository.BaseRepository
+import com.skyd.podaura.model.repository.importexport.opmlparser.dsl.OutlineDsl
+import com.skyd.podaura.model.repository.importexport.opmlparser.dsl.opml
+import com.skyd.podaura.model.repository.importexport.opmlparser.entity.Outline
+import decodeFromSource
+import encodeToSink
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sink
 import io.github.vinceglb.filekit.source
@@ -20,9 +27,6 @@ import kotlinx.datetime.Clock
 import kotlinx.io.Sink
 import kotlinx.io.Source
 import kotlinx.io.buffered
-import net.devrieze.xmlutil.serialization.kxio.decodeFromSource
-import net.devrieze.xmlutil.serialization.kxio.encodeToSink
-import nl.adaptivity.xmlutil.serialization.XML
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
@@ -32,14 +36,7 @@ class ImportExportOpmlRepository(
     private val feedDao: FeedDao,
     private val groupDao: GroupDao,
 ) : BaseRepository(), IImportOpmlRepository, IExportOpmlRepository {
-    private val xml = XML {
-        autoPolymorphic = true
-        indentString = "  "
-        defaultPolicy {
-            pedantic = false
-            ignoreUnknownChildren()
-        }
-    }
+    private val opml = OPML()
 
     private fun groupWithFeedsWithoutDefaultGroup(): Flow<List<GroupWithFeedBean>> =
         groupDao.getGroupWithFeeds().flowOn(Dispatchers.IO)
@@ -87,19 +84,21 @@ class ImportExportOpmlRepository(
             title = title ?: text.toString(),
             description = description,
             link = link,
-            icon = icon,
+            icon = attributes["icon"]?.takeIf { it.isNotBlank() },
             groupId = groupId,
-            nickname = nickname,
-            customDescription = customDescription,
-            customIcon = customIcon?.takeIf { it.startsWith("http://") || it.startsWith("https://") }
+            nickname = attributes["nickname"]?.takeIf { it.isNotBlank() },
+            customDescription = attributes["customDescription"]?.takeIf { it.isNotBlank() },
+            customIcon = attributes["customIcon"]?.takeIf {
+                it.startsWith("http://") || it.startsWith("https://")
+            }
         )
 
-        val opml = xml.decodeFromSource(Opml.serializer(), source.buffered())
+        val opmlObject = opml.decodeFromSource(source.buffered())
         val groupWithFeedList = mutableListOf<OpmlGroupWithFeed>().apply {
             addGroup(GroupVo.DefaultGroup)
         }
 
-        opml.body.outlines.forEach {
+        opmlObject.body.outlines.forEach {
             // Only feeds
             if (it.outlines.isNullOrEmpty()) {
                 // It's a empty group
@@ -137,47 +136,64 @@ class ImportExportOpmlRepository(
         }.inWholeMilliseconds)
     }.flowOn(Dispatchers.IO)
 
-    private fun createFeedOutlineList(feeds: List<FeedViewBean>): List<Outline> {
-        return feeds.map { feedView ->
+    private fun OutlineDsl.addFeedOutlines(feeds: List<FeedViewBean>) {
+        feeds.forEach { feedView ->
             val feed = feedView.feed
-            Outline(
-                title = feed.title,
-                text = feed.title,
-                description = feed.description,
-                htmlUrl = feed.url,
-                xmlUrl = feed.url,
-                link = feed.link,
-                icon = feed.icon,
-                nickname = feed.nickname,
-                customDescription = feed.customDescription,
-                customIcon = feed.customIcon?.takeIf { it.startsWith("http://") || it.startsWith("https://") },
-            )
+            outline {
+                title = feed.title
+                text = feed.title
+                description = feed.description
+                htmlUrl = feed.url
+                xmlUrl = feed.url
+                link = feed.link
+                attribute("icon", feed.icon?.takeIfNotBlank())
+                attribute("nickname", feed.nickname?.takeIfNotBlank())
+                attribute("customDescription", feed.customDescription?.takeIfNotBlank())
+                attribute("customIcon", feed.customIcon?.takeIf {
+                    it.startsWith("http://") || it.startsWith("https://")
+                })
+            }
         }
     }
 
     private suspend fun exportOpml(sink: Sink) {
-        val opml = Opml(
-            version = "2.0",
-            head = Head(
-                title = getString(Res.string.app_name),
-                dateCreated = Clock.System.now().toString(),
-            ),
-            body = Body(
-                outlines = listOf(
-                    // Default group feeds (No group)
-                    *createFeedOutlineList(defaultGroupFeeds().first()).toTypedArray(),
-                    // Other groups
-                    *groupWithFeedsWithoutDefaultGroup().first().map { groupWithFeeds ->
-                        Outline(
-                            title = groupWithFeeds.group.name,
-                            text = groupWithFeeds.group.name,
-                            outlines = createFeedOutlineList(groupWithFeeds.feeds),
-                        )
-                    }.toTypedArray()
-                )
-            )
-        )
+        val opmlObject = opml {
+            version = "2.0"
+            head {
+                title = getString(Res.string.app_name)
+                dateCreated = Clock.System.now().toString()
+            }
+            body {
+                defaultGroupFeeds().first().forEach { feedView ->
+                    val feed = feedView.feed
+                    outline {
+                        title = feed.title
+                        text = feed.title
+                        description = feed.description
+                        htmlUrl = feed.url
+                        xmlUrl = feed.url
+                        link = feed.link
+                        attribute("icon", feed.icon?.takeIfNotBlank())
+                        attribute("nickname", feed.nickname?.takeIfNotBlank())
+                        attribute("customDescription", feed.customDescription?.takeIfNotBlank())
+                        attribute("customIcon", feed.customIcon?.takeIf {
+                            it.startsWith("http://") || it.startsWith("https://")
+                        })
+                    }
+                }
+                // Default group feeds (No group)
+                addFeedOutlines(defaultGroupFeeds().first())
+                // Other groups
+                groupWithFeedsWithoutDefaultGroup().first().forEach { groupWithFeeds ->
+                    outline {
+                        title = groupWithFeeds.group.name
+                        text = groupWithFeeds.group.name
+                        addFeedOutlines(groupWithFeeds.feeds)
+                    }
+                }
+            }
+        }
 
-        xml.encodeToSink(sink, Opml.serializer(), opml)
+        opml.encodeToSink(sink, opmlObject)
     }
 }
