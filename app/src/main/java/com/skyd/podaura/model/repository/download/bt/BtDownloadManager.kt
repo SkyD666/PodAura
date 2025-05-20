@@ -31,7 +31,7 @@ import com.skyd.podaura.model.bean.download.bt.PeerInfoBean
 import com.skyd.podaura.model.bean.download.bt.SessionParamsBean
 import com.skyd.podaura.model.bean.download.bt.TorrentFileBean
 import com.skyd.podaura.model.db.dao.ArticleDao
-import com.skyd.podaura.model.db.dao.DownloadInfoDao
+import com.skyd.podaura.model.db.dao.download.DownloadInfoDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.SessionParamsDao
 import com.skyd.podaura.model.db.dao.TorrentFileDao

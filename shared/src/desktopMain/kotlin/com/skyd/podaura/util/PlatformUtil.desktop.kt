@@ -1,5 +1,7 @@
 package com.skyd.podaura.util
 
+import kotlin.system.exitProcess
+
 actual val platform: Platform
     get() {
         val system = System.getProperty("os.name").lowercase()
@@ -10,3 +12,7 @@ actual val platform: Platform
             else -> Platform.Linux
         }
     }
+
+actual fun exitApp() {
+    exitProcess(0)
+}

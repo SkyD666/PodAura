@@ -1,0 +1,40 @@
+<resources>
+    <string name="tos">
+1. Acceptance of Terms
+By using this application, you agree to abide by these terms. If you do not agree, please stop using it immediately.
+
+2. Open Source License
+The application's source code is released under the GPL‑3.0 license. See the LICENSE file in the project's root directory for details.
+
+3. User Obligations
+3.1 Legal Use
+You must not use this application for any illegal activities (including, but not limited to, subscribing to prohibited podcasts or distributing infringing content).
+3.2 Content Responsibility
+Any podcast content you subscribe to or share through this application must not infringe on the rights of any third party.
+3.3 Network and Device
+You are solely responsible for any data charges, device wear, or other costs incurred by using this application.
+
+4. Disclaimer
+4.1 Content Risks
+This application only provides functionality for users to subscribe to and play podcasts. It does not include any podcast data itself and takes no responsibility for the legality or accuracy of the content accessed by users.
+4.2 Technical Issues
+The developer is not liable for any data loss or functional errors caused by network failures, device compatibility issues, or software defects.
+4.3 Third-Party Services
+This application may retrieve data from third‑party services (including, but not limited to, podcast platforms). The content and actions of those services are independent of this application.
+
+5. Privacy and Data
+5.1 Data Collection
+This application does not collect any data; all user data is stored locally.
+5.2 User Content
+You are responsible for managing and securing any locally cached content (including, but not limited to, podcasts and media library contents).
+
+6. Service Changes
+The developer reserves the right to modify, suspend, or discontinue any feature of the application at any time (including but not limited to maintenance or legal compliance).
+
+7. Miscellaneous
+7.1 Updates to Terms
+After any update to these terms, continued use of the application constitutes acceptance of the new terms.
+7.2 Final Interpretation
+For any matters not covered here, the developer's interpretation shall prevail.
+</string>
+</resources>

@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.History
@@ -92,12 +93,14 @@ import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.local.LocalNavController
+import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.auto_download_rule_screen_name
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.clear
 import podaura.shared.generated.resources.collapse
@@ -197,6 +200,9 @@ fun EditFeedSheet(
                     onDismissRequest()
                 },
                 onSortXmlArticlesOnUpdateChanged = onSortXmlArticlesOnUpdateChanged,
+                onAutoDownload = {
+                    navController.navigate(AutoDownloadRuleRoute(feedUrl = feed.url))
+                },
                 onEditRequestHeaders = {
                     navController.navigate(RequestHeadersRoute(feedUrl = feed.url))
                 },
@@ -431,6 +437,7 @@ internal fun OptionArea(
     onClear: () -> Unit,
     onDelete: (() -> Unit)?,
     onSortXmlArticlesOnUpdateChanged: ((Boolean) -> Unit)? = null,
+    onAutoDownload: (() -> Unit)? = null,
     onEditRequestHeaders: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -504,6 +511,13 @@ internal fun OptionArea(
                             .showToast()
                     }
                 },
+            )
+        }
+        if (onAutoDownload != null) {
+            SheetChip(
+                icon = Icons.Outlined.Download,
+                text = stringResource(Res.string.auto_download_rule_screen_name),
+                onClick = onAutoDownload,
             )
         }
         if (onEditRequestHeaders != null) {

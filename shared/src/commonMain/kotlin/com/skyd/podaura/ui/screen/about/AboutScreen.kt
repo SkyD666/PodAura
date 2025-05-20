@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Balance
 import androidx.compose.material.icons.outlined.Coffee
+import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Update
@@ -71,7 +72,6 @@ import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean
 import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.PodAuraDialog
@@ -118,6 +118,7 @@ import podaura.shared.generated.resources.sponsor
 import podaura.shared.generated.resources.sponsor_afadian
 import podaura.shared.generated.resources.sponsor_buy_me_a_coffee
 import podaura.shared.generated.resources.sponsor_description
+import podaura.shared.generated.resources.terms_of_service_screen_name
 import podaura.shared.generated.resources.update_check
 import podaura.shared.generated.resources.update_check_failed
 
@@ -142,6 +143,11 @@ fun AboutScreen() {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.about_screen_name)) },
                 actions = {
+                    PodAuraIconButton(
+                        imageVector = Icons.Outlined.Gavel,
+                        contentDescription = stringResource(Res.string.terms_of_service_screen_name),
+                        onClick = { navController.navigate(TermsOfServiceRoute) }
+                    )
                     PodAuraIconButton(
                         imageVector = Icons.Outlined.Balance,
                         contentDescription = stringResource(Res.string.license_screen_name),
@@ -491,11 +497,11 @@ private fun OtherWorksItem(
                 .padding(15.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PodAuraImage(
+                Image(
                     modifier = Modifier
                         .size(30.dp)
                         .aspectRatio(1f),
-                    model = data.icon,
+                    painter = painterResource(data.icon),
                     contentDescription = data.name
                 )
                 Spacer(modifier = Modifier.width(16.dp))

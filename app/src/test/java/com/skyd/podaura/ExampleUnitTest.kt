@@ -11,6 +11,11 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        var cancel = false
+        do {
+            println("123")
+            cancel = true
+            if (cancel) continue
+        } while (!cancel)
     }
 }

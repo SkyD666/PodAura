@@ -73,6 +73,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -284,7 +287,9 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
-                .padding(bottom = fabHeight),
+                .padding(bottom = fabHeight)
+                .semantics { testTagsAsResourceId = true }
+                .testTag("ReadColumn"),
         ) {
             when (val articleState = uiState.articleState) {
                 is ArticleState.Failed -> {

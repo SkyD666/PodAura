@@ -4,6 +4,7 @@ import androidx.collection.LruCache
 import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.podaura.ext.atomicMove
 import com.skyd.podaura.ext.createDirectories
+import com.skyd.podaura.ext.currentTimeMillis
 import com.skyd.podaura.ext.deleteRecursively
 import com.skyd.podaura.ext.exists
 import com.skyd.podaura.ext.flowOf
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
 import kotlinx.io.files.Path
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
@@ -229,7 +231,7 @@ class MediaRepository(
                     val groupName = if (group.isDefaultGroup()) null else group.name
                     fileJsons.filter { it.groupName == groupName }
                 }).let { jsons ->
-                    val articleMap = articleDao.getArticleListByIds(
+                    val articleMap = articleDao.getArticleWithFeedListByIds(
                         jsons.mapNotNull { it.articleId }
                     ).associateBy { it.articleWithEnclosure.article.articleId }
 
@@ -303,7 +305,7 @@ class MediaRepository(
             }
             val fileJsons = fileJsonsWithDirPath.map { it.first }
 
-            val articleMap = articleDao.getArticleListByIds(
+            val articleMap = articleDao.getArticleWithFeedListByIds(
                 fileJsons.mapNotNull { it.articleId }
             ).associateBy { it.articleWithEnclosure.article.articleId }
             val feedMap = feedDao.getFeedsIn(
@@ -437,7 +439,7 @@ class MediaRepository(
         }
         val newFolder = Path(
             parentFile,
-            "${displayName?.validateFileName(100)} - ${System.currentTimeMillis()}"
+            "${displayName?.validateFileName(100)} - ${Clock.currentTimeMillis()}"
         )
         createFolder(
             file = newFolder,
@@ -454,7 +456,7 @@ class MediaRepository(
         feedUrl: String?,
         displayName: String?,
     ): Flow<Boolean> = flow {
-        if (file.exists() || file.createDirectories()) {
+        if (file.exists() || !file.createDirectories()) {
             emit(false)
             return@flow
         }

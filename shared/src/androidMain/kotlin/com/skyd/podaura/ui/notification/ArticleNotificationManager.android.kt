@@ -14,8 +14,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.skyd.podaura.di.get
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
+import com.skyd.podaura.model.bean.article.ArticleBean
+import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
+import com.skyd.podaura.model.repository.download.AutoDownloadStarter
 import com.skyd.podaura.ui.component.blockString
-import com.skyd.podaura.ui.notification.ArticleNotificationManager.CHANNEL_ID
+import com.skyd.podaura.ui.notification.ArticleUpdatedManager.CHANNEL_ID
 import com.skyd.podaura.util.uniqueInt
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_notification_channel_name
@@ -70,5 +73,11 @@ actual object PlatformArticleNotification {
                 get<Context>().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+}
+
+actual object PlatformAutoDownload {
+    actual suspend fun autoDownload(data: Map<String, List<ArticleBean>>) {
+        get<AutoDownloadStarter>().start(data)
     }
 }

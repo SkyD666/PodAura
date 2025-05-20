@@ -1,0 +1,12 @@
+package com.skyd.podaura.model.preference
+
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import com.skyd.ksp.preference.Preference
+
+@Preference
+object AcceptTermsPreference : BasePreference<Boolean>() {
+    private const val AGREE_TERMS_VERSION = "agreeTerms"
+
+    override val default = false
+    override val key = booleanPreferencesKey(AGREE_TERMS_VERSION)
+}

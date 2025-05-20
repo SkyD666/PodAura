@@ -9,3 +9,5 @@ enum class Platform {
     MacOS,
     Windows
 }
+
+expect fun exitApp()

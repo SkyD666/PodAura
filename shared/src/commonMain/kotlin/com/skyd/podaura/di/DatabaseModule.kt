@@ -12,6 +12,7 @@ val databaseModule = module {
     single { get<AppDatabase>().feedDao() }
     single { get<AppDatabase>().articleDao() }
     single { get<AppDatabase>().enclosureDao() }
+    single { get<AppDatabase>().autoDownloadRuleDao() }
     single { get<AppDatabase>().articleCategoryDao() }
     single { get<AppDatabase>().downloadInfoDao() }
     single { get<AppDatabase>().torrentFileDao() }

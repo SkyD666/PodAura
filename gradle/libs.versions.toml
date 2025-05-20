@@ -6,7 +6,6 @@ androidxTest = "1.2.1"
 filekit = "0.10.0-beta03"
 xmlutil = "0.91.0"
 koin = "4.0.4"
-koinAnnotations = "2.0.0-RC1"
 ksoup = "0.2.2"
 libtorrent4j = "2.1.0-35"
 coroutines = "1.10.2"
@@ -97,7 +96,6 @@ compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0-rc
 
 rome = { module = "com.rometools:rome", version.ref = "rome" }
 rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
-ceau-opmlparser = { module = "be.ceau:opml-parser", version = "3.1.0" }
 
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "2.4.3" }
 

@@ -10,6 +10,7 @@ import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleCategoryBean
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.article.RssMediaBean
+import com.skyd.podaura.model.bean.download.autorule.AutoDownloadRuleBean
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.podaura.model.bean.download.bt.DownloadLinkUuidMapBean
 import com.skyd.podaura.model.bean.download.bt.SessionParamsBean
@@ -26,7 +27,7 @@ import com.skyd.podaura.model.db.converter.RequestHeadersConverter
 import com.skyd.podaura.model.db.dao.ArticleCategoryDao
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
-import com.skyd.podaura.model.db.dao.DownloadInfoDao
+import com.skyd.podaura.model.db.dao.download.DownloadInfoDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
@@ -35,6 +36,7 @@ import com.skyd.podaura.model.db.dao.ReadHistoryDao
 import com.skyd.podaura.model.db.dao.RssModuleDao
 import com.skyd.podaura.model.db.dao.SessionParamsDao
 import com.skyd.podaura.model.db.dao.TorrentFileDao
+import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.podaura.model.db.migration.Migration10To11
@@ -52,6 +54,7 @@ import com.skyd.podaura.model.db.migration.Migration20To21
 import com.skyd.podaura.model.db.migration.Migration21To22
 import com.skyd.podaura.model.db.migration.Migration22To23
 import com.skyd.podaura.model.db.migration.Migration23To24
+import com.skyd.podaura.model.db.migration.Migration24To25
 import com.skyd.podaura.model.db.migration.Migration2To3
 import com.skyd.podaura.model.db.migration.Migration3To4
 import com.skyd.podaura.model.db.migration.Migration4To5
@@ -75,6 +78,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         ArticleBean::class,
         EnclosureBean::class,
         ArticleCategoryBean::class,
+        AutoDownloadRuleBean::class,
         BtDownloadInfoBean::class,
         DownloadLinkUuidMapBean::class,
         SessionParamsBean::class,
@@ -88,7 +92,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         PlaylistMediaBean::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 24,
+    version = 25,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 @TypeConverters(
@@ -100,6 +104,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun articleDao(): ArticleDao
     abstract fun enclosureDao(): EnclosureDao
     abstract fun articleCategoryDao(): ArticleCategoryDao
+    abstract fun autoDownloadRuleDao(): AutoDownloadRuleDao
     abstract fun downloadInfoDao(): DownloadInfoDao
     abstract fun torrentFileDao(): TorrentFileDao
     abstract fun sessionParamsDao(): SessionParamsDao
@@ -124,7 +129,7 @@ fun AppDatabase.Companion.instance(
         Migration9To10(), Migration10To11(), Migration11To12(), Migration12To13(),
         Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
         Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
-        Migration21To22(), Migration22To23(), Migration23To24(),
+        Migration21To22(), Migration22To23(), Migration23To24(), Migration24To25(),
     )
 
     return builder

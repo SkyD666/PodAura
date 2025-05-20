@@ -111,14 +111,14 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/material-components/material-components-android",
         ),
         LicenseBean(
-            name = "Hilt",
+            name = "Koin",
             license = "Apache-2.0",
-            link = "https://github.com/googlecodelabs/android-hilt",
+            link = "https://github.com/InsertKoinIO/koin",
         ),
         LicenseBean(
-            name = "OkHttp",
+            name = "Ktor",
             license = "Apache-2.0",
-            link = "https://github.com/square/okhttp",
+            link = "https://github.com/ktorio/ktor",
         ),
         LicenseBean(
             name = "Coil",
@@ -161,9 +161,9 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/Ashinch/ReadYou",
         ),
         LicenseBean(
-            name = "Readability4J",
-            license = "Apache-2.0",
-            link = "https://github.com/dankito/Readability4J",
+            name = "Ksoup",
+            license = "MIT",
+            link = "https://github.com/fleeksoft/ksoup",
         ),
         LicenseBean(
             name = "libtorrent4j",
@@ -176,9 +176,9 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/mpv-android/mpv-android",
         ),
         LicenseBean(
-            name = "Lottie",
+            name = "Compottie",
             license = "MIT",
-            link = "https://github.com/airbnb/lottie",
+            link = "https://github.com/alexzhirkevich/compottie",
         ),
         LicenseBean(
             name = "Reorderable",
@@ -186,14 +186,44 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/Calvin-LL/Reorderable",
         ),
         LicenseBean(
-            name = "OPML Parser",
+            name = "XmlUtil",
             license = "Apache-2.0",
-            link = "https://github.com/mdewilde/opml-parser",
+            link = "https://github.com/pdvrieze/xmlutil",
         ),
         LicenseBean(
             name = "Ketch",
             license = "Apache-2.0",
             link = "https://github.com/khushpanchal/Ketch",
+        ),
+        LicenseBean(
+            name = "AtomicFU",
+            license = "Apache-2.0",
+            link = "https://github.com/Kotlin/kotlinx-atomicfu",
+        ),
+        LicenseBean(
+            name = "kotlinx-datetime",
+            license = "Apache-2.0",
+            link = "https://github.com/Kotlin/kotlinx-datetime",
+        ),
+        LicenseBean(
+            name = "kotlinx-io",
+            license = "Apache-2.0",
+            link = "https://github.com/Kotlin/kotlinx-io",
+        ),
+        LicenseBean(
+            name = "Kermit",
+            license = "Apache-2.0",
+            link = "https://github.com/touchlab/Kermit",
+        ),
+        LicenseBean(
+            name = "FileKit",
+            license = "MIT",
+            link = "https://github.com/vinceglb/FileKit",
+        ),
+        LicenseBean(
+            name = "kotlin-codepoints",
+            license = "MIT",
+            link = "https://github.com/cketti/kotlin-codepoints",
         ),
     ).sortedBy { it.name }
 }

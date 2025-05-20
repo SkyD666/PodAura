@@ -2,6 +2,8 @@ package com.skyd.podaura
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.paging.PagingConfig
 import androidx.room.RoomRawQuery
 import androidx.test.core.app.ApplicationProvider
@@ -17,29 +19,28 @@ import androidx.work.await
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
-import com.skyd.podaura.ext.dataStore
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.put
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.db.AppDatabase
+import com.skyd.podaura.model.db.builder
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
+import com.skyd.podaura.model.db.instance
+import com.skyd.podaura.model.preference.createDataStore
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.podaura.model.preference.rss.RssSyncFrequencyPreference
-import com.skyd.podaura.model.repository.RssHelper
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import com.skyd.podaura.model.worker.deletearticle.DeleteArticleWorker
 import com.skyd.podaura.model.worker.deletearticle.listenDeleteArticleFrequency
 import com.skyd.podaura.model.worker.rsssync.RssSyncWorker
 import com.skyd.podaura.model.worker.rsssync.listenRssSyncConfig
-import com.skyd.podaura.util.favicon.FaviconExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -47,9 +48,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -59,7 +57,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import retrofit2.Retrofit
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.days
@@ -75,29 +72,31 @@ class PeriodicTaskModule {
         explicitNulls = false
     }
 
-    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
-        .build()
+//    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+//        .addInterceptor(HttpLoggingInterceptor().apply {
+//            level = HttpLoggingInterceptor.Level.BODY
+//        })
+//        .build()
 
-    private val retrofit = Retrofit
-        .Builder()
-        .baseUrl(Const.BASE_URL)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .client(okHttpClient)
-        .build()
+//    private val retrofit = Retrofit
+//        .Builder()
+//        .baseUrl(Const.BASE_URL)
+//        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+//        .client(okHttpClient)
+//        .build()
 
-    private val faviconExtractor = FaviconExtractor(retrofit)
+    //    private val faviconExtractor = FaviconExtractor(retrofit)
     private val pagingConfig = PagingConfig(pageSize = 20, enablePlaceholders = false)
 
     private lateinit var context: Context
+    private lateinit var dataStore: DataStore<Preferences>
 
     private lateinit var db: AppDatabase
     private lateinit var groupDao: GroupDao
     private lateinit var feedDao: FeedDao
     private lateinit var articleDao: ArticleDao
-    private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
+
+    //    private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
     private lateinit var feedRepository: FeedRepository
 
     /**
@@ -133,7 +132,7 @@ class PeriodicTaskModule {
             RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         val size = articleDao.getArticleList(sql).size
         assertTrue(size > 0)
-        context.dataStore.apply {
+        dataStore.apply {
             put(AutoDeleteArticleBeforePreference.key, 0)
             put(AutoDeleteArticleKeepUnreadPreference.key, true)
         }
@@ -155,7 +154,7 @@ class PeriodicTaskModule {
         val sql =
             RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         assertTrue(articleDao.getArticleList(sql).isNotEmpty())
-        context.dataStore.apply {
+        dataStore.apply {
             put(AutoDeleteArticleBeforePreference.key, 0)
             put(AutoDeleteArticleKeepUnreadPreference.key, false)
         }
@@ -178,7 +177,7 @@ class PeriodicTaskModule {
             RoomRawQuery("SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} = \"$url1\"")
         val size = articleDao.getArticleList(sql).size
         assertTrue(size > 0)
-        context.dataStore.apply {
+        dataStore.apply {
             put(AutoDeleteArticleBeforePreference.key, 1.days.inWholeMilliseconds)
         }
         val worker = TestListenableWorkerBuilder<DeleteArticleWorker>(context).build()
@@ -203,7 +202,7 @@ class PeriodicTaskModule {
         val size = articleList.size
         assertTrue(size > 0)
         articleDao.favoriteArticle(firstId, true)
-        context.dataStore.apply {
+        dataStore.apply {
             put(AutoDeleteArticleBeforePreference.key, 0)
             put(AutoDeleteArticleKeepUnreadPreference.key, false)
             put(AutoDeleteArticleKeepFavoritePreference.key, true)
@@ -251,7 +250,7 @@ class PeriodicTaskModule {
     @Test
     fun test7() = runTest {
         val request = PeriodicWorkRequestBuilder<RssSyncWorker>(
-            context.dataStore.getOrDefault(RssSyncFrequencyPreference),
+            dataStore.getOrDefault(RssSyncFrequencyPreference),
             TimeUnit.MILLISECONDS
         ).build()
 
@@ -272,7 +271,7 @@ class PeriodicTaskModule {
     @Test
     fun test8() = runTest {
         val request = PeriodicWorkRequestBuilder<DeleteArticleWorker>(
-            context.dataStore.getOrDefault(AutoDeleteArticleFrequencyPreference),
+            dataStore.getOrDefault(AutoDeleteArticleFrequencyPreference),
             TimeUnit.MILLISECONDS
         ).build()
 
@@ -295,7 +294,7 @@ class PeriodicTaskModule {
     fun test9() = runTest {
         withContext(Dispatchers.Default) {
             listenRssSyncConfig(context)
-            context.dataStore.put(RssSyncFrequencyPreference.key, RssSyncFrequencyPreference.MANUAL)
+            dataStore.put(RssSyncFrequencyPreference.key, RssSyncFrequencyPreference.MANUAL)
             delay(2000)
 
             assertTrue(
@@ -314,7 +313,7 @@ class PeriodicTaskModule {
     fun test10() = runTest {
         withContext(Dispatchers.Default) {
             listenRssSyncConfig(context)
-            context.dataStore.put(
+            dataStore.put(
                 RssSyncFrequencyPreference.key,
                 RssSyncFrequencyPreference.EVERY_15_MINUTE,
             )
@@ -336,7 +335,7 @@ class PeriodicTaskModule {
     fun test11() = runTest {
         withContext(Dispatchers.Default) {
             listenDeleteArticleFrequency(context)
-            context.dataStore.put(UseAutoDeletePreference.key, true)
+            dataStore.put(UseAutoDeletePreference.key, true)
             delay(2000)
 
             assertFalse(
@@ -355,7 +354,7 @@ class PeriodicTaskModule {
     fun test12() = runTest {
         withContext(Dispatchers.Default) {
             listenDeleteArticleFrequency(context)
-            context.dataStore.put(UseAutoDeletePreference.key, false)
+            dataStore.put(UseAutoDeletePreference.key, false)
             delay(2000)
 
             assertTrue(
@@ -378,14 +377,15 @@ class PeriodicTaskModule {
         WorkManagerTestInitHelper.initializeTestWorkManager(context, config)
         workManager = WorkManager.getInstance(context)
 
-        db = AppDatabase.getInstance(context)
+        dataStore = createDataStore(context)
+        db = AppDatabase.instance(AppDatabase.builder())
         db.clearAllTables()
 
         groupDao = db.groupDao()
         feedDao = db.feedDao()
         articleDao = db.articleDao()
-        feedRepository =
-            FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
+//        feedRepository =
+//            FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
     }
 
     @After

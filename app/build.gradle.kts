@@ -239,9 +239,6 @@ dependencies {
 
     implementation(libs.rome)
     implementation(libs.rome.modules)
-    implementation(libs.ceau.opmlparser) {
-        exclude(group = "net.sf.kxml", module = "kxml2")
-    }
     implementation("com.prof18.rssparser:rssparser:6.0.10")
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
@@ -272,4 +269,5 @@ dependencies {
     androidTestImplementation(libs.androidx.paging.test)
     androidTestImplementation(libs.androidx.work.test)
     androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.uiautomator)
 }

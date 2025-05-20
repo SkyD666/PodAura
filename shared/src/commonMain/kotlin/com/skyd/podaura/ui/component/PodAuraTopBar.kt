@@ -80,15 +80,21 @@ fun PodAuraTopBar(
 expect fun onEmptyPopBackStack(): () -> Unit
 
 @Composable
-fun BackIcon() {
+fun BackInvoker(): () -> Unit {
     val navController = LocalNavController.current
     val globalNavController = LocalGlobalNavController.current
     val onEmptyPopBackStack = onEmptyPopBackStack()
-    BackIcon {
+    return {
         if (!navController.popBackStackWithLifecycle() && globalNavController == navController) {
             onEmptyPopBackStack.invoke()
         }
     }
+}
+
+@Composable
+fun BackIcon() {
+    val backInvoker = BackInvoker()
+    BackIcon { backInvoker.invoke() }
 }
 
 val DefaultBackClick = { }

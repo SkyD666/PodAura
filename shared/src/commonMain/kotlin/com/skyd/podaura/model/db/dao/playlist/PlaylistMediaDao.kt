@@ -187,6 +187,6 @@ interface PlaylistMediaDao {
 
     companion object {
         const val ORDER_DELTA = 10.0
-        const val ORDER_MIN_DELTA = 0.05
+        const val ORDER_MIN_DELTA = 1E-5
     }
 }

@@ -51,6 +51,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -425,7 +428,10 @@ private fun ArticleList(
         placeholderPadding = contentPadding,
     ) {
         LazyVerticalGrid(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .semantics { testTagsAsResourceId = true }
+                .testTag("ArticleLazyVerticalGrid"),
             columns = GridCells.Adaptive(ArticleItemMinWidthPreference.current.dp),
             state = listState,
             contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 6.dp),

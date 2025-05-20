@@ -18,7 +18,7 @@ import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
-import com.skyd.podaura.ui.notification.ArticleNotificationManager
+import com.skyd.podaura.ui.notification.ArticleUpdatedManager
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -106,7 +106,7 @@ interface ArticleDao {
                 }
             )
         }
-        ArticleNotificationManager.send(updatedArticleIds)
+        ArticleUpdatedManager.send(updatedArticleIds)
     }
 
     @Transaction
@@ -214,7 +214,7 @@ interface ArticleDao {
         "SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
     )
-    suspend fun getArticleListByIds(articleIds: List<String>): List<ArticleWithFeed>
+    suspend fun getArticleWithFeedListByIds(articleIds: List<String>): List<ArticleWithFeed>
 
     @Transaction
     @Query(
@@ -222,6 +222,13 @@ interface ArticleDao {
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
     )
     suspend fun getArticleWithEnclosureListByIds(articleIds: List<String>): List<ArticleWithEnclosureBean>
+
+    @Transaction
+    @Query(
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun getArticleListByIds(articleIds: List<String>): List<ArticleBean>
 
     @Transaction
     @Query(

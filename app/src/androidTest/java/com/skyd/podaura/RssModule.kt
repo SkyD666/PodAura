@@ -1,38 +1,33 @@
 package com.skyd.podaura
 
 import android.content.Context
-import android.net.Uri
 import androidx.paging.PagingConfig
 import androidx.paging.testing.asSnapshot
 import androidx.room.RoomRawQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.feed.FEED_VIEW_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.AppDatabase
+import com.skyd.podaura.model.db.builder
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.db.dao.ReadHistoryDao
+import com.skyd.podaura.model.db.instance
 import com.skyd.podaura.model.repository.ReadRepository
-import com.skyd.podaura.model.repository.RssHelper
 import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.ArticleSort
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderGroupRepository
 import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
-import com.skyd.podaura.util.favicon.FaviconExtractor
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,7 +37,6 @@ import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import retrofit2.Retrofit
 import java.io.IOException
 import java.util.UUID
 
@@ -60,20 +54,20 @@ class RssModule {
         explicitNulls = false
     }
 
-    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
-        .build()
+//    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+//        .addInterceptor(HttpLoggingInterceptor().apply {
+//            level = HttpLoggingInterceptor.Level.BODY
+//        })
+//        .build()
+//
+//    private val retrofit = Retrofit
+//        .Builder()
+//        .baseUrl(Const.BASE_URL)
+//        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+//        .client(okHttpClient)
+//        .build()
 
-    private val retrofit = Retrofit
-        .Builder()
-        .baseUrl(Const.BASE_URL)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .client(okHttpClient)
-        .build()
-
-    private val faviconExtractor = FaviconExtractor(retrofit)
+    //    private val faviconExtractor = FaviconExtractor(retrofit)
     private val pagingConfig = PagingConfig(pageSize = 20, enablePlaceholders = false)
 
     private lateinit var db: AppDatabase
@@ -81,7 +75,8 @@ class RssModule {
     private lateinit var feedDao: FeedDao
     private lateinit var articleDao: ArticleDao
     private lateinit var readHistoryDao: ReadHistoryDao
-    private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
+
+    //    private var rssHelper: RssHelper = RssHelper(okHttpClient, faviconExtractor)
     private lateinit var reorderGroupRepository: ReorderGroupRepository
     private lateinit var feedRepository: FeedRepository
     private lateinit var articleRepository: ArticleRepository
@@ -484,7 +479,7 @@ class RssModule {
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         val icon =
             "https://www.gstatic.com/devrel-devsite/prod/v3239347c48d1e3c46204782fd038ba187a6753dfa7d7a0d08a574587ae2085f5/android/images/lockup.svg"
-        feedRepository.editFeedCustomIcon(url1, Uri.parse(icon)).first()
+        feedRepository.editFeedCustomIcon(url1, icon).first()
         assertEquals(feedDao.getFeed(url1).feed.customIcon, icon)
     }
 
@@ -861,7 +856,7 @@ class RssModule {
     @Before
     fun init() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = AppDatabase.getInstance(context)
+        db = AppDatabase.instance(AppDatabase.builder())
         db.clearAllTables()
 
         groupDao = db.groupDao()
@@ -870,8 +865,8 @@ class RssModule {
         readHistoryDao = db.readHistoryDao()
 
         reorderGroupRepository = ReorderGroupRepository(groupDao, pagingConfig)
-        feedRepository = FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
-        articleRepository = ArticleRepository(feedDao, articleDao, rssHelper, pagingConfig)
+//        feedRepository = FeedRepository(groupDao, feedDao, articleDao, rssHelper, pagingConfig)
+//        articleRepository = ArticleRepository(feedDao, articleDao, rssHelper, pagingConfig)
         searchRepository = SearchRepository(feedDao, articleDao, articleRepository, pagingConfig)
         readRepository = ReadRepository(articleDao, readHistoryDao)
         requestHeadersRepository = RequestHeadersRepository(feedDao)

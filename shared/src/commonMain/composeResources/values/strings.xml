@@ -485,6 +485,16 @@
     <string name="behavior_screen_load_net_image_on_wifi_only">Load images only on Wi‑Fi</string>
     <string name="history_search_screen_hint">Search history</string>
     <string name="download_copyright_issues_warning">This file may involve copyright issues and is not supported for download!</string>
+    <string name="auto_download_rule_screen_name">Auto dl</string>
+    <string name="auto_download_rule_screen_require_wifi">Require Wi-Fi</string>
+    <string name="auto_download_rule_screen_require_battery_not_low">Require battery not low</string>
+    <string name="auto_download_rule_screen_require_charging">Require charging</string>
+    <string name="auto_download_rule_screen_require_max_download_count">Max download count</string>
+    <string name="auto_download_rule_screen_require_filter_pattern">Filter pattern</string>
+    <string name="terms_of_service_screen_name">Terms of Service</string>
+    <string name="terms_of_service_screen_tip">Welcome to PodAura! Before continuing, please read and accept our Terms of Service.</string>
+    <string name="terms_of_service_screen_agree">Accept</string>
+    <string name="terms_of_service_screen_disagree">Decline and exit</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>

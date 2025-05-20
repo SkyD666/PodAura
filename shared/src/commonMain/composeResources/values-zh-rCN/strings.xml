@@ -478,6 +478,16 @@
     <string name="behavior_screen_load_net_image_on_wifi_only">仅 Wi‑Fi 下加载图片</string>
     <string name="history_search_screen_hint">搜索历史记录</string>
     <string name="download_copyright_issues_warning">此文件可能涉及版权问题，不支持下载！</string>
+    <string name="auto_download_rule_screen_name">自动下载</string>
+    <string name="auto_download_rule_screen_require_wifi">仅在 Wi-Fi 连接时</string>
+    <string name="auto_download_rule_screen_require_battery_not_low">仅在电量充足时</string>
+    <string name="auto_download_rule_screen_require_charging">仅在充电时</string>
+    <string name="auto_download_rule_screen_require_max_download_count">每批次最大下载数</string>
+    <string name="auto_download_rule_screen_require_filter_pattern">正则过滤器</string>
+    <string name="terms_of_service_screen_name">服务条款</string>
+    <string name="terms_of_service_screen_tip">欢迎使用 PodAura！在继续使用前，请您仔细阅读并接受我们的《服务条款》。</string>
+    <string name="terms_of_service_screen_agree">接受</string>
+    <string name="terms_of_service_screen_disagree">不接受并退出</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

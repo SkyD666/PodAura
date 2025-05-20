@@ -1,5 +1,6 @@
 package com.skyd.podaura.di
 
+import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
 import com.skyd.podaura.model.repository.DataRepository
 import com.skyd.podaura.model.repository.FilePickerRepository
 import com.skyd.podaura.model.repository.HistoryRepository
@@ -43,6 +44,7 @@ val repositoryModule = module {
     factory { FilePickerRepository() }
     factory { UpdateRepository(get()) }
     factory { ImportExportRepository() }
+    factory { AutoDownloadRuleRepository(get(), get()) }
     factory { MediaRepository(get(), get(), get()) } binds arrayOf(IMediaRepository::class)
     factory {
         AddToPlaylistRepository(get(), get(), get())

@@ -73,7 +73,7 @@ class PlayerRepository(
         files: List<PlayDataMode.MediaLibraryList.PlayMediaListItem>,
     ): List<PlaylistMediaWithArticleBean> {
         val articleMap =
-            articleDao.getArticleListByIds(files.mapNotNull { it.articleId })
+            articleDao.getArticleWithFeedListByIds(files.mapNotNull { it.articleId })
                 .associateBy { it.articleWithEnclosure.article.articleId }
         return files.mapIndexed { index, playMediaListItem ->
             PlaylistMediaWithArticleBean(

@@ -39,7 +39,10 @@ import androidx.navigation.NavUri
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.safeLaunch
+import com.skyd.podaura.model.preference.AcceptTermsPreference
+import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.PodAuraNavHost
 import com.skyd.podaura.ui.component.navigation.ExternalUriHandler
 import com.skyd.podaura.ui.local.LocalGlobalNavController
@@ -48,6 +51,8 @@ import com.skyd.podaura.ui.screen.MainRoute
 import com.skyd.podaura.ui.screen.MainScreen
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.about.AboutScreen
+import com.skyd.podaura.ui.screen.about.TermsOfServiceRoute
+import com.skyd.podaura.ui.screen.about.TermsOfServiceScreen
 import com.skyd.podaura.ui.screen.about.license.LicenseRoute
 import com.skyd.podaura.ui.screen.about.license.LicenseScreen
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
@@ -57,6 +62,8 @@ import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute.DownloadDeepLinkLauncher
 import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.download.DownloadRoute.Companion.DownloadLauncher
+import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
+import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute.Companion.AutoDownloadRuleLauncher
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedScreen
 import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupRoute
@@ -140,7 +147,13 @@ class MainActivity : BaseComposeActivity() {
                 LocalGlobalNavController provides navController,
                 LocalNavController provides navController,
             ) {
-                MainContent(onHandleIntent = { IntentHandler() })
+                if (AcceptTermsPreference.current ||
+                    remember { dataStore }.getOrDefault(AcceptTermsPreference)
+                ) {
+                    MainContent(onHandleIntent = { IntentHandler() })
+                } else {
+                    TermsOfServiceScreen()
+                }
             }
         }
     }
@@ -178,6 +191,7 @@ private fun MainNavHost() {
         }
         composable<LicenseRoute> { LicenseScreen() }
         composable<AboutRoute> { AboutScreen() }
+        composable<TermsOfServiceRoute> { TermsOfServiceScreen() }
         composable<SettingsRoute> { SettingsScreen() }
         composable<AppearanceRoute> { AppearanceScreen() }
         composable<ArticleStyleRoute> { ArticleStyleScreen() }
@@ -201,6 +215,7 @@ private fun MainNavHost() {
         composable<ProxyRoute> { ProxyScreen() }
         composable<TransmissionRoute> { TransmissionScreen() }
         composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
+        composable<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }
         composable<MuteFeedRoute> { MuteFeedScreen() }
         composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
         composable<PlaylistMediaListRoute> { PlaylistMediaListLauncher(it) }

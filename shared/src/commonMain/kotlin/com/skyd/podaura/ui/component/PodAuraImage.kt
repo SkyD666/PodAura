@@ -1,11 +1,7 @@
 package com.skyd.podaura.ui.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.DefaultAlpha
@@ -24,10 +20,7 @@ import coil3.svg.SvgDecoder
 import coil3.util.DebugLogger
 import com.skyd.podaura.di.get
 import io.ktor.client.HttpClient
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.getDrawableResourceBytes
-import org.jetbrains.compose.resources.rememberResourceEnvironment
 import org.koin.core.qualifier.named
 
 
@@ -37,20 +30,6 @@ fun imageRequest(model: Any?, context: PlatformContext) = ImageRequest.Builder(c
     .data(model)
     .crossfade(true)
     .build()
-
-@Composable
-fun convertDrawableResource(model: Any?): Any? {
-    var currentModel by remember(model) {
-        mutableStateOf(if (model is DrawableResource) byteArrayOf() else model)
-    }
-    if (model is DrawableResource) {
-        val environment = rememberResourceEnvironment()
-        LaunchedEffect(model) {
-            currentModel = getDrawableResourceBytes(environment = environment, resource = model)
-        }
-    }
-    return currentModel
-}
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -63,13 +42,12 @@ fun PodAuraImage(
     alpha: Float = DefaultAlpha,
     colorFilter: ColorFilter? = null,
 ) {
-    var currentModel = convertDrawableResource(model)
     AsyncImage(
-        model = if (currentModel is ImageRequest) {
-            currentModel
+        model = if (model is ImageRequest) {
+            model
         } else {
             val context = LocalPlatformContext.current
-            remember(currentModel) { imageRequest(currentModel, context) }
+            remember(model) { imageRequest(model, context) }
         },
         modifier = modifier,
         contentDescription = contentDescription,

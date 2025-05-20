@@ -1,4 +1,4 @@
-package com.skyd.podaura.model.db.dao
+package com.skyd.podaura.model.db.dao.download
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -15,19 +15,19 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DownloadInfoDao {
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun updateDownloadInfo(downloadInfo: BtDownloadInfoBean)
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun updateDownloadInfo(btDownloadInfoBeanList: List<BtDownloadInfoBean>)
 
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.DOWNLOAD_REQUEST_ID_COLUMN} = :downloadRequestId
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.DOWNLOAD_REQUEST_ID_COLUMN} = :downloadRequestId
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadInfoRequestId(
@@ -42,8 +42,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        DELETE FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        DELETE FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun deleteDownloadInfo(
@@ -53,9 +53,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.DOWNLOAD_STATE_COLUMN} = :downloadState
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.DOWNLOAD_STATE_COLUMN} = :downloadState
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadState(
@@ -66,8 +66,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.DOWNLOAD_STATE_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT ${BtDownloadInfoBean.Companion.DOWNLOAD_STATE_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadState(
@@ -77,8 +77,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT * FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadInfo(
@@ -88,8 +88,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.DESCRIPTION_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT ${BtDownloadInfoBean.Companion.DESCRIPTION_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadDescription(
@@ -99,9 +99,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.DESCRIPTION_COLUMN} = :description
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.DESCRIPTION_COLUMN} = :description
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadDescription(
@@ -112,8 +112,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.SIZE_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT ${BtDownloadInfoBean.Companion.SIZE_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadSize(
@@ -123,9 +123,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.SIZE_COLUMN} = :size
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.SIZE_COLUMN} = :size
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadSize(
@@ -136,8 +136,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.PROGRESS_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT ${BtDownloadInfoBean.Companion.PROGRESS_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadProgress(
@@ -147,9 +147,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.PROGRESS_COLUMN} = :progress
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.PROGRESS_COLUMN} = :progress
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadProgress(
@@ -160,8 +160,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.NAME_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT ${BtDownloadInfoBean.Companion.NAME_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun getDownloadName(
@@ -171,9 +171,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        UPDATE $DOWNLOAD_INFO_TABLE_NAME
-        SET ${BtDownloadInfoBean.NAME_COLUMN} = :name
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        UPDATE ${DOWNLOAD_INFO_TABLE_NAME}
+        SET ${BtDownloadInfoBean.Companion.NAME_COLUMN} = :name
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun updateDownloadName(
@@ -184,8 +184,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT COUNT(1) FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.LINK_COLUMN} = :link
+        SELECT COUNT(1) FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.LINK_COLUMN} = :link
         """
     )
     suspend fun containsDownloadInfo(
@@ -195,9 +195,9 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM $DOWNLOAD_INFO_TABLE_NAME
-        WHERE ${BtDownloadInfoBean.PROGRESS_COLUMN} < 1
-        AND ${BtDownloadInfoBean.DOWNLOAD_STATE_COLUMN} <> :completedState
+        SELECT * FROM ${DOWNLOAD_INFO_TABLE_NAME}
+        WHERE ${BtDownloadInfoBean.Companion.PROGRESS_COLUMN} < 1
+        AND ${BtDownloadInfoBean.Companion.DOWNLOAD_STATE_COLUMN} <> :completedState
         """
     )
     fun getDownloadingListFlow(
@@ -207,7 +207,7 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT * FROM $DOWNLOAD_INFO_TABLE_NAME
+        SELECT * FROM ${DOWNLOAD_INFO_TABLE_NAME}
         """
     )
     fun getAllDownloadListFlow(): Flow<List<BtDownloadInfoBean>>
@@ -215,28 +215,28 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${BtDownloadInfoBean.DOWNLOAD_REQUEST_ID_COLUMN} FROM $DOWNLOAD_INFO_TABLE_NAME
+        SELECT ${BtDownloadInfoBean.Companion.DOWNLOAD_REQUEST_ID_COLUMN} FROM ${DOWNLOAD_INFO_TABLE_NAME}
         """
     )
     fun getAllDownloadRequestIdFlow(): Flow<List<String>>
 
     @Transaction
-    @Query("SELECT * FROM $DOWNLOAD_INFO_TABLE_NAME WHERE ${BtDownloadInfoBean.PROGRESS_COLUMN} < 1")
+    @Query("SELECT * FROM ${DOWNLOAD_INFO_TABLE_NAME} WHERE ${BtDownloadInfoBean.Companion.PROGRESS_COLUMN} < 1")
     suspend fun getDownloadingList(): List<BtDownloadInfoBean>
 
     @Transaction
-    @Query("SELECT * FROM $DOWNLOAD_INFO_TABLE_NAME WHERE ${BtDownloadInfoBean.PROGRESS_COLUMN} == 1")
+    @Query("SELECT * FROM ${DOWNLOAD_INFO_TABLE_NAME} WHERE ${BtDownloadInfoBean.Companion.PROGRESS_COLUMN} == 1")
     fun getDownloadedList(): Flow<List<BtDownloadInfoBean>>
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun setDownloadLinkUuidMap(bean: DownloadLinkUuidMapBean)
 
     @Transaction
     @Query(
         """
-        SELECT ${DownloadLinkUuidMapBean.LINK_COLUMN} FROM $DOWNLOAD_LINK_UUID_MAP_TABLE_NAME
-        WHERE ${DownloadLinkUuidMapBean.UUID_COLUMN} == :uuid
+        SELECT ${DownloadLinkUuidMapBean.Companion.LINK_COLUMN} FROM ${DOWNLOAD_LINK_UUID_MAP_TABLE_NAME}
+        WHERE ${DownloadLinkUuidMapBean.Companion.UUID_COLUMN} == :uuid
         """
     )
     suspend fun getDownloadLinkByUuid(uuid: String): String?
@@ -244,8 +244,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        SELECT ${DownloadLinkUuidMapBean.UUID_COLUMN} FROM $DOWNLOAD_LINK_UUID_MAP_TABLE_NAME
-        WHERE ${DownloadLinkUuidMapBean.LINK_COLUMN} == :link
+        SELECT ${DownloadLinkUuidMapBean.Companion.UUID_COLUMN} FROM ${DOWNLOAD_LINK_UUID_MAP_TABLE_NAME}
+        WHERE ${DownloadLinkUuidMapBean.Companion.LINK_COLUMN} == :link
         """
     )
     suspend fun getDownloadUuidByLink(link: String): String?
@@ -253,8 +253,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        DELETE FROM $DOWNLOAD_LINK_UUID_MAP_TABLE_NAME
-        WHERE ${DownloadLinkUuidMapBean.UUID_COLUMN} == :uuid
+        DELETE FROM ${DOWNLOAD_LINK_UUID_MAP_TABLE_NAME}
+        WHERE ${DownloadLinkUuidMapBean.Companion.UUID_COLUMN} == :uuid
         """
     )
     suspend fun removeDownloadLinkByUuid(uuid: String): Int
@@ -262,8 +262,8 @@ interface DownloadInfoDao {
     @Transaction
     @Query(
         """
-        DELETE FROM $DOWNLOAD_LINK_UUID_MAP_TABLE_NAME
-        WHERE ${DownloadLinkUuidMapBean.LINK_COLUMN} == :link
+        DELETE FROM ${DOWNLOAD_LINK_UUID_MAP_TABLE_NAME}
+        WHERE ${DownloadLinkUuidMapBean.Companion.LINK_COLUMN} == :link
         """
     )
     suspend fun removeDownloadLinkUuidMap(link: String): Int
