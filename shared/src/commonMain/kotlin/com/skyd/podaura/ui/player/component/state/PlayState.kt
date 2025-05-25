@@ -44,7 +44,7 @@ data class PlayState(
     val playlistFirst = state.playlistFirst
     val playlistLast = state.playlistLast
     val paused = state.paused
-    val pausedForCache = state.pausedForCache
+    val loading = state.loading
     val shuffle = state.shuffle
     val loop = state.loop
     val idling = state.idling

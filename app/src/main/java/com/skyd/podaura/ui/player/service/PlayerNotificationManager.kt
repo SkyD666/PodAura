@@ -114,7 +114,7 @@ class PlayerNotificationManager(
 
             is PlayerEvent.Idling,
             is PlayerEvent.Paused,
-            is PlayerEvent.PausedForCache,
+            is PlayerEvent.Loading,
             is PlayerEvent.Duration,
             is PlayerEvent.Position,
             is PlayerEvent.Loop,

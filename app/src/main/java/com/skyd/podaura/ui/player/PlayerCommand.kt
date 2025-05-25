@@ -55,7 +55,7 @@ sealed interface PlayerEvent {
     ) : PlayerEvent
 
     data class Paused(val value: Boolean) : PlayerEvent
-    data class PausedForCache(val value: Boolean) : PlayerEvent
+    data class Loading(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent
     data object EndFile : PlayerEvent
     data class StartFile(val path: String?) : PlayerEvent

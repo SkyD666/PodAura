@@ -34,15 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavUri
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.safeLaunch
 import com.skyd.podaura.model.preference.AcceptTermsPreference
-import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.PodAuraNavHost
 import com.skyd.podaura.ui.component.navigation.ExternalUriHandler
 import com.skyd.podaura.ui.local.LocalGlobalNavController
@@ -138,7 +135,6 @@ import podaura.shared.generated.resources.storage_permission_request_screen_titl
 class MainActivity : BaseComposeActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         setContentBase {
@@ -147,9 +143,7 @@ class MainActivity : BaseComposeActivity() {
                 LocalGlobalNavController provides navController,
                 LocalNavController provides navController,
             ) {
-                if (AcceptTermsPreference.current ||
-                    remember { dataStore }.getOrDefault(AcceptTermsPreference)
-                ) {
+                if (AcceptTermsPreference.current) {
                     MainContent(onHandleIntent = { IntentHandler() })
                 } else {
                     TermsOfServiceScreen()

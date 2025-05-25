@@ -31,7 +31,7 @@
         </a>
     </p>
     <p>
-        An <b>all-in-one Podcast tool</b> for <b>RSS subscription and updates</b>, <b>media downloads</b> and <b>playback</b>.
+        An <b>all-in-one Podcast app</b> for <b>RSS subscription and updates</b>, <b>media downloads</b> and <b>playback</b>.
     </p>
     <p>
         PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Jetpack Compose</b>.
@@ -41,7 +41,6 @@
     </p>
 </div>
 
-
 <a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
 
 ## 💡 Features
@@ -49,7 +48,7 @@
 1. **Subscribe to RSS**, Update RSS, **Read** RSS
 2. **Automatically update RSS** subscriptions
 3. **Download** enclosures (enclosure tags) in RSS articles
-4. **Seeding** downloaded files
+4. **Automatically download** podcast media
 5. **Play media enclosures or downloaded videos**
 6. Support variable playback **speed**, setup **audio track**, **subtitle track**, etc
 7. **Double-finger** gesture to **rotate and zoom** video, **long press** to speed up playback
@@ -88,7 +87,7 @@ If you are interested, please help us **translate**, thank you.
 - **ViewModel**
 - **Room**
 - **Paging 3**
-- **Hilt**
+- **Koin**
 - **MPV**
 - **WorkManager**
 - **DataStore**

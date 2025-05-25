@@ -135,7 +135,7 @@ class MediaSessionManager(
         is PlayerEvent.Duration -> old.copy(duration = value)
         is PlayerEvent.Idling -> old.copy(idling = value)
         is PlayerEvent.Paused -> old.copy(paused = value)
-        is PlayerEvent.PausedForCache -> old.copy(pausedForCache = value)
+        is PlayerEvent.Loading -> old.copy(loading = value)
         is PlayerEvent.PlaylistPosition -> old.copy(playlistPosition = value)
         is PlayerEvent.Position -> old.copy(position = value)
         is PlayerEvent.Rotate -> old.copy(rotate = value)
@@ -192,7 +192,7 @@ class MediaSessionManager(
                 mediaSession.setPlaybackState(newState.buildPlaybackState())
             }
 
-            is PlayerEvent.PausedForCache -> {
+            is PlayerEvent.Loading -> {
                 mediaSession.setPlaybackState(newState.buildPlaybackState())
             }
 

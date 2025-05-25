@@ -51,7 +51,7 @@ import java.util.Locale
                     )
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = String.format(Locale.getDefault() /*TODO*/, "%.2f".format(), value),
+                        text = String.format(Locale.getDefault() /*TODO*/, "%.2f", value),
                     )
                     PodAuraIconButton(
                         onClick = {

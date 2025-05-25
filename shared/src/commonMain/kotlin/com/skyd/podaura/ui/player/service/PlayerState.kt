@@ -30,7 +30,7 @@ data class PlayerState(
     val rotate: Float = 0f,
     val playlistPosition: Int = -1,
     val paused: Boolean = true,
-    val pausedForCache: Boolean = false,
+    val loading: Boolean = false,
     val shuffle: Boolean = false,
     val loop: LoopMode = LoopMode.None,
     val idling: Boolean = true,

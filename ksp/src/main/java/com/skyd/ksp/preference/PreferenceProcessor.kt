@@ -47,10 +47,18 @@ class PreferenceProcessor(
 
         val annotationName = Preference::class.qualifiedName!!
         val symbols = resolver.getSymbolsWithAnnotation(annotationName)
+            .filterIsInstance<KSClassDeclaration>().filter {
+                val excludeFromList = it.annotations.first {
+                    it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
+                }.arguments.first {
+                    it.name?.asString() == Preference::excludeFromList.name
+                }
+                !(excludeFromList.value as Boolean)
+            }
         val entries = mutableListOf<Entity>()
         var basePreference: KSName? = null
 
-        symbols.filterIsInstance<KSClassDeclaration>().forEach { classDeclaration ->
+        symbols.forEach { classDeclaration ->
             if (classDeclaration.classKind != ClassKind.OBJECT) {
                 logger.error(
                     "The $annotationName annotation only applies to the object class.",

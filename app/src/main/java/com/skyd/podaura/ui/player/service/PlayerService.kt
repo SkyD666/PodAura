@@ -24,10 +24,10 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.PlayerLoopModePreference
 import com.skyd.podaura.model.repository.player.IPlayerRepository
 import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.MPVPlayer
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
-import com.skyd.podaura.ui.player.LoopMode
 import `is`.xyz.mpv.MPVLib
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -113,7 +113,10 @@ class PlayerService : Service() {
         override fun eventProperty(property: String, value: Boolean) {
             when (property) {
                 "pause" -> sendEvent(PlayerEvent.Paused(value))
-                "paused-for-cache" -> sendEvent(PlayerEvent.PausedForCache(value))
+                "paused-for-cache",
+                "core-idle",
+                "demuxer-cache-idle" -> sendEvent(PlayerEvent.Loading(player.loading()))
+
                 "shuffle" -> sendEvent(PlayerEvent.Shuffle(value))
                 "idle-active" -> sendEvent(PlayerEvent.Idling(value))
             }
@@ -151,10 +154,12 @@ class PlayerService : Service() {
                 MPVLib.mpvEventId.MPV_EVENT_START_FILE -> {
                     currentPath = player.path
                     sendEvent(PlayerEvent.StartFile(currentPath))
+                    sendEvent(PlayerEvent.Loading(true))
                 }
 
                 MPVLib.mpvEventId.MPV_EVENT_END_FILE -> {
                     sendEvent(PlayerEvent.EndFile)
+                    sendEvent(PlayerEvent.Loading(false))
                     if (currentPathPlayed) {
                         savePosition(currentPath)
                     }
@@ -174,6 +179,7 @@ class PlayerService : Service() {
                         }
                     }
                     sendEvent(PlayerEvent.Paused(player.paused))
+                    sendEvent(PlayerEvent.Loading(player.loading()))
                     loadLastPosition(currentPath).invokeOnCompletion {
                         sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
                     }

@@ -208,10 +208,11 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             Property("demuxer-cache-time", MPV_FORMAT_INT64),
             Property("video-rotate", MPV_FORMAT_INT64),
             Property("paused-for-cache", MPV_FORMAT_FLAG),
+            Property("core-idle", MPV_FORMAT_FLAG),
+            Property("demuxer-cache-idle", MPV_FORMAT_FLAG),
             Property("seeking", MPV_FORMAT_FLAG),
             Property("pause", MPV_FORMAT_FLAG),
             Property("eof-reached", MPV_FORMAT_FLAG),
-            Property("paused-for-cache", MPV_FORMAT_FLAG),
             Property("idle-active", MPV_FORMAT_FLAG),
             Property("aid", MPV_FORMAT_INT64),
             Property("sid", MPV_FORMAT_INT64),
@@ -360,6 +361,13 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
     val shuffle: Boolean
         get() = MPVLib.getPropertyBoolean("shuffle") ?: false
 
+    val coreIdle: Boolean
+        get() = MPVLib.getPropertyBoolean("core-idle") ?: false
+    val pausedForCache: Boolean
+        get() = MPVLib.getPropertyBoolean("paused-for-cache") ?: false
+    val demuxerCacheIdle: Boolean
+        get() = MPVLib.getPropertyBoolean("demuxer-cache-idle") ?: false
+
     val loopPlaylist: Boolean
         get() = MPVLib.getPropertyString("loop-playlist") in arrayOf("inf", "force")
     val loopOne: Boolean
@@ -489,6 +497,10 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         if (current == newShuffle) return
         MPVLib.command(arrayOf(if (newShuffle) "playlist-shuffle" else "playlist-unshuffle"))
         MPVLib.setPropertyBoolean("shuffle", newShuffle)
+    }
+
+    fun loading(): Boolean {
+        return (pausedForCache || (coreIdle && !demuxerCacheIdle)) && !paused
     }
 
     fun loadFile(filePath: String) {

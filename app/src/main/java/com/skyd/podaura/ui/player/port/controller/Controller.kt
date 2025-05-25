@@ -21,11 +21,13 @@ import androidx.compose.material.icons.outlined.RepeatOne
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.IconToggleButtonColors
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -38,9 +40,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.ui.component.shape.CurlyCornerShape
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
-import com.skyd.podaura.ui.player.LoopMode
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.loop_playlist_mode
@@ -101,15 +103,20 @@ internal fun Controller(
                 .clickable(onClick = playStateCallback.onPlayStateChanged),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = if (playState.isPlaying) Icons.Filled.Pause
-                else Icons.Filled.PlayArrow,
-                contentDescription = stringResource(
-                    if (playState.isPlaying) Res.string.pause else Res.string.play
-                ),
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            val size = 36.dp
+            if (playState.loading) {
+                CircularWavyProgressIndicator(modifier = Modifier.size(size))
+            } else {
+                Icon(
+                    imageVector = if (playState.isPlaying) Icons.Filled.Pause
+                    else Icons.Filled.PlayArrow,
+                    contentDescription = stringResource(
+                        if (playState.isPlaying) Res.string.pause else Res.string.play
+                    ),
+                    modifier = Modifier.size(size),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipNext,

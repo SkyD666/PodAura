@@ -22,15 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Colorize
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,6 +46,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.google.android.material.color.DynamicColors
 import com.materialkolor.ktx.from
@@ -132,24 +134,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 CategorySettingsItem(text = stringResource(Res.string.appearance_screen_theme_category))
             }
             item {
-                SingleChoiceSegmentedButtonRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp),
-                ) {
-                    DarkModePreference.values.forEachIndexed { index, darkModeValue ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = DarkModePreference.values.size,
-                            ),
-                            onClick = { DarkModePreference.put(scope, darkModeValue) },
-                            selected = index == DarkModePreference.values.indexOf(DarkModePreference.current)
-                        ) {
-                            Text(suspendString { BaseDarkModePreference.toDisplayName(darkModeValue) })
-                        }
-                    }
-                }
+                DarkModeButtonGroup()
             }
             item {
                 Palettes(colors = extractAllColors(darkTheme = false))
@@ -273,6 +258,40 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     text = stringResource(Res.string.media_style_screen_name),
                     description = null,
                     onClick = { navController.navigate(MediaStyleRoute) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DarkModeButtonGroup() {
+    val scope = rememberCoroutineScope()
+    val darkMode = DarkModePreference.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(
+            space = ButtonGroupDefaults.ConnectedSpaceBetween,
+            alignment = Alignment.CenterHorizontally,
+        ),
+    ) {
+        DarkModePreference.values.forEachIndexed { index, darkModeValue ->
+            val checked = index == DarkModePreference.values.indexOf(darkMode)
+            ToggleButton(
+                checked = checked,
+                onCheckedChange = { DarkModePreference.put(scope, darkModeValue) },
+                modifier = Modifier.semantics { role = Role.RadioButton },
+                shapes = when (index) {
+                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    DarkModePreference.values.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                },
+            ) {
+                Text(
+                    text = suspendString { BaseDarkModePreference.toDisplayName(darkModeValue) },
+                    modifier = Modifier.padding(horizontal = 10.dp),
                 )
             }
         }

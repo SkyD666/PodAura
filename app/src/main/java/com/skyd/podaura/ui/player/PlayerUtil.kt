@@ -136,7 +136,7 @@ fun PlayerState.playbackState(): Int = when {
         PlaybackStateCompat.STATE_NONE
     }
 
-    pausedForCache -> PlaybackStateCompat.STATE_BUFFERING
+    loading -> PlaybackStateCompat.STATE_BUFFERING
     paused -> PlaybackStateCompat.STATE_PAUSED
     else -> PlaybackStateCompat.STATE_PLAYING
 }
