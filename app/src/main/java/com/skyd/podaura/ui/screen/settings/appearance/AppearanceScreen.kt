@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,13 +63,15 @@ import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.appearance.TextFieldStylePreference
 import com.skyd.podaura.model.preference.appearance.ThemePreference
 import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
+import com.skyd.podaura.ui.component.connectedButtonShapes
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsDefaults
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.article.ArticleStyleRoute
@@ -81,6 +82,7 @@ import com.skyd.podaura.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.podaura.ui.theme.extractAllColors
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.appearance_screen_amoled_dark
@@ -117,148 +119,150 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.appearance_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_theme_category))
-            }
-            item {
-                DarkModeButtonGroup()
-            }
-            item {
-                Palettes(colors = extractAllColors(darkTheme = false))
-            }
-            if (DynamicColors.isDynamicColorAvailable()) {
+            group(text = { getString(Res.string.appearance_screen_theme_category) }) {
+                otherItem {
+                    DarkModeButtonGroup()
+                }
+                otherItem {
+                    Palettes(colors = extractAllColors(darkTheme = false))
+                }
+                if (DynamicColors.isDynamicColorAvailable()) {
+                    item {
+                        SwitchSettingsItem(
+                            imageVector = Icons.Outlined.Colorize,
+                            text = stringResource(Res.string.appearance_screen_use_dynamic_theme),
+                            description = stringResource(Res.string.appearance_screen_use_dynamic_theme_description),
+                            checked = ThemePreference.current == BaseThemePreference.DYNAMIC,
+                            onCheckedChange = {
+                                ThemePreference.put(
+                                    scope = scope,
+                                    value = if (it) BaseThemePreference.DYNAMIC
+                                    else ThemePreference.basicValues.first(),
+                                ) {
+                                    context.activity.recreate()
+                                }
+                            }
+                        )
+                    }
+                }
                 item {
                     SwitchSettingsItem(
-                        imageVector = Icons.Outlined.Colorize,
-                        text = stringResource(Res.string.appearance_screen_use_dynamic_theme),
-                        description = stringResource(Res.string.appearance_screen_use_dynamic_theme_description),
-                        checked = ThemePreference.current == BaseThemePreference.DYNAMIC,
+                        imageVector = null,
+                        text = stringResource(Res.string.appearance_screen_amoled_dark),
+                        checked = AmoledDarkModePreference.current,
                         onCheckedChange = {
-                            ThemePreference.put(
+                            AmoledDarkModePreference.put(
                                 scope = scope,
-                                value = if (it) BaseThemePreference.DYNAMIC
-                                else ThemePreference.basicValues.first(),
-                            ) {
-                                context.activity.recreate()
-                            }
+                                value = it
+                            )
                         }
                     )
                 }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = null,
-                    text = stringResource(Res.string.appearance_screen_amoled_dark),
-                    checked = AmoledDarkModePreference.current,
-                    onCheckedChange = { AmoledDarkModePreference.put(scope = scope, value = it) }
-                )
+            group(text = { getString(Res.string.appearance_screen_style_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.appearance_screen_text_field_style),
+                        descriptionText = suspendString(TextFieldStylePreference.current) {
+                            TextFieldStylePreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            TextFieldStyleMenu(
+                                expanded = expandTextFieldStyleMenu,
+                                onDismissRequest = { expandTextFieldStyleMenu = false }
+                            )
+                        },
+                        onClick = { expandTextFieldStyleMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.appearance_screen_date_style),
+                        descriptionText = suspendString(DateStylePreference.current) {
+                            DateStylePreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            DateStyleStyleMenu(
+                                expanded = expandDateStyleMenu,
+                                onDismissRequest = { expandDateStyleMenu = false }
+                            )
+                        },
+                        onClick = { expandDateStyleMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.appearance_screen_navigation_bar_label),
+                        descriptionText = suspendString(NavigationBarLabelPreference.current) {
+                            NavigationBarLabelPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            NavigationBarLabelStyleMenu(
+                                expanded = expandNavigationBarLabelMenu,
+                                onDismissRequest = { expandNavigationBarLabelMenu = false }
+                            )
+                        },
+                        onClick = { expandNavigationBarLabelMenu = true },
+                    )
+                }
             }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_style_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.appearance_screen_text_field_style),
-                    descriptionText = suspendString(TextFieldStylePreference.current) {
-                        TextFieldStylePreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        TextFieldStyleMenu(
-                            expanded = expandTextFieldStyleMenu,
-                            onDismissRequest = { expandTextFieldStyleMenu = false }
-                        )
-                    },
-                    onClick = { expandTextFieldStyleMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.appearance_screen_date_style),
-                    descriptionText = suspendString(DateStylePreference.current) {
-                        DateStylePreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        DateStyleStyleMenu(
-                            expanded = expandDateStyleMenu,
-                            onDismissRequest = { expandDateStyleMenu = false }
-                        )
-                    },
-                    onClick = { expandDateStyleMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.appearance_screen_navigation_bar_label),
-                    descriptionText = suspendString(NavigationBarLabelPreference.current) {
-                        NavigationBarLabelPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        NavigationBarLabelStyleMenu(
-                            expanded = expandNavigationBarLabelMenu,
-                            onDismissRequest = { expandNavigationBarLabelMenu = false }
-                        )
-                    },
-                    onClick = { expandNavigationBarLabelMenu = true },
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.appearance_screen_screen_style_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.feed_style_screen_name),
-                    description = null,
-                    onClick = { navController.navigate(FeedStyleRoute) },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.article_style_screen_name),
-                    description = null,
-                    onClick = { navController.navigate(ArticleStyleRoute) },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.read_style_screen_name),
-                    description = null,
-                    onClick = { navController.navigate(ReadStyleRoute) },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.search_style_screen_name),
-                    description = null,
-                    onClick = { navController.navigate(SearchStyleRoute) },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.media_style_screen_name),
-                    description = null,
-                    onClick = { navController.navigate(MediaStyleRoute) },
-                )
+            group(text = { getString(Res.string.appearance_screen_screen_style_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.feed_style_screen_name),
+                        description = null,
+                        onClick = { navController.navigate(FeedStyleRoute) },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.article_style_screen_name),
+                        description = null,
+                        onClick = { navController.navigate(ArticleStyleRoute) },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.read_style_screen_name),
+                        description = null,
+                        onClick = { navController.navigate(ReadStyleRoute) },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.search_style_screen_name),
+                        description = null,
+                        onClick = { navController.navigate(SearchStyleRoute) },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.media_style_screen_name),
+                        description = null,
+                        onClick = { navController.navigate(MediaStyleRoute) },
+                    )
+                }
             }
         }
     }
@@ -271,6 +275,7 @@ private fun DarkModeButtonGroup() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(
             space = ButtonGroupDefaults.ConnectedSpaceBetween,
@@ -281,17 +286,16 @@ private fun DarkModeButtonGroup() {
             val checked = index == DarkModePreference.values.indexOf(darkMode)
             ToggleButton(
                 checked = checked,
-                onCheckedChange = { DarkModePreference.put(scope, darkModeValue) },
+                onCheckedChange = { if (it) DarkModePreference.put(scope, darkModeValue) },
                 modifier = Modifier.semantics { role = Role.RadioButton },
-                shapes = when (index) {
-                    0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    DarkModePreference.values.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                },
+                shapes = ButtonGroupDefaults.connectedButtonShapes(
+                    list = DarkModePreference.values,
+                    index = index,
+                ),
             ) {
                 Text(
                     text = suspendString { BaseDarkModePreference.toDisplayName(darkModeValue) },
-                    modifier = Modifier.padding(horizontal = 10.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
         }
@@ -354,7 +358,7 @@ fun Palettes(
     Row(
         modifier = Modifier
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = SettingsDefaults.itemHorizontalSpace, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         colors.forEach { (t, u) ->

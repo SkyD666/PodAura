@@ -42,7 +42,7 @@ fun LicenseScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 title = { Text(text = stringResource(Res.string.license_screen_name)) },
                 scrollBehavior = scrollBehavior,
             )

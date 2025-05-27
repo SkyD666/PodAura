@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.transmission.proxy
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Devices
@@ -33,13 +32,14 @@ import com.skyd.podaura.model.preference.proxy.ProxyPortPreference
 import com.skyd.podaura.model.preference.proxy.ProxyTypePreference
 import com.skyd.podaura.model.preference.proxy.ProxyUsernamePreference
 import com.skyd.podaura.model.preference.proxy.UseProxyPreference
-import com.skyd.podaura.ui.component.BannerItem
-import com.skyd.podaura.ui.component.BaseSettingsItem
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.component.settings.BannerItem
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -74,7 +74,7 @@ fun ProxyScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.proxy_screen_name)) },
             )
@@ -83,7 +83,7 @@ fun ProxyScreen() {
         val useProxy = UseProxyPreference.current
         val proxyModeManual = ProxyModePreference.current == ProxyModePreference.MANUAL_MODE
 
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -99,99 +99,101 @@ fun ProxyScreen() {
                     )
                 }
             }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.proxy_screen_mode),
-                    descriptionText = suspendString(ProxyModePreference.current) {
-                        ProxyModePreference.toDisplayName(it)
-                    },
-                    enabled = useProxy,
-                    extraContent = {
-                        ProxyModeMenu(
-                            expanded = expandProxyModeMenu,
-                            onDismissRequest = { expandProxyModeMenu = false }
-                        )
-                    },
-                    onClick = { expandProxyModeMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.Http),
-                    text = stringResource(Res.string.proxy_screen_type),
-                    descriptionText = ProxyTypePreference.current,
-                    enabled = useProxy && proxyModeManual,
-                    extraContent = {
-                        ProxyTypeMenu(
-                            expanded = expandProxyTypeMenu,
-                            onDismissRequest = { expandProxyTypeMenu = false }
-                        )
-                    },
-                    onClick = { expandProxyTypeMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.Devices),
-                    text = stringResource(Res.string.proxy_screen_hostname),
-                    descriptionText = ProxyHostnamePreference.current,
-                    enabled = useProxy && proxyModeManual,
-                    extraContent = {
-                        EditProxyHostnameDialog(
-                            visible = openEditProxyHostnameDialog,
-                            onDismissRequest = { openEditProxyHostnameDialog = false }
-                        )
-                    },
-                    onClick = { openEditProxyHostnameDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.Podcasts),
-                    text = stringResource(Res.string.proxy_screen_port),
-                    descriptionText = ProxyPortPreference.current.toString(),
-                    enabled = useProxy && proxyModeManual,
-                    extraContent = {
-                        EditProxyPortDialog(
-                            visible = openEditProxyPortDialog,
-                            onDismissRequest = { openEditProxyPortDialog = false }
-                        )
-                    },
-                    onClick = { openEditProxyPortDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.Person),
-                    text = stringResource(Res.string.proxy_screen_username),
-                    descriptionText = ProxyUsernamePreference.current.ifBlank { null },
-                    enabled = useProxy && proxyModeManual,
-                    extraContent = {
-                        EditProxyUsernameDialog(
-                            visible = openEditProxyUsernameDialog,
-                            onDismissRequest = { openEditProxyUsernameDialog = false }
-                        )
-                    },
-                    onClick = { openEditProxyUsernameDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.Password),
-                    text = stringResource(Res.string.proxy_screen_password),
-                    descriptionText = if (ProxyPasswordPreference.current.isBlank()) {
-                        stringResource(Res.string.not_configure)
-                    } else stringResource(Res.string.configured),
-                    enabled = useProxy && proxyModeManual,
-                    extraContent = {
-                        EditProxyPasswordDialog(
-                            visible = openEditProxyPasswordDialog,
-                            onDismissRequest = { openEditProxyPasswordDialog = false }
-                        )
-                    },
-                    onClick = { openEditProxyPasswordDialog = true },
-                )
+            group {
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.proxy_screen_mode),
+                        descriptionText = suspendString(ProxyModePreference.current) {
+                            ProxyModePreference.toDisplayName(it)
+                        },
+                        enabled = useProxy,
+                        extraContent = {
+                            ProxyModeMenu(
+                                expanded = expandProxyModeMenu,
+                                onDismissRequest = { expandProxyModeMenu = false }
+                            )
+                        },
+                        onClick = { expandProxyModeMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.Http),
+                        text = stringResource(Res.string.proxy_screen_type),
+                        descriptionText = ProxyTypePreference.current,
+                        enabled = useProxy && proxyModeManual,
+                        extraContent = {
+                            ProxyTypeMenu(
+                                expanded = expandProxyTypeMenu,
+                                onDismissRequest = { expandProxyTypeMenu = false }
+                            )
+                        },
+                        onClick = { expandProxyTypeMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.Devices),
+                        text = stringResource(Res.string.proxy_screen_hostname),
+                        descriptionText = ProxyHostnamePreference.current,
+                        enabled = useProxy && proxyModeManual,
+                        extraContent = {
+                            EditProxyHostnameDialog(
+                                visible = openEditProxyHostnameDialog,
+                                onDismissRequest = { openEditProxyHostnameDialog = false }
+                            )
+                        },
+                        onClick = { openEditProxyHostnameDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.Podcasts),
+                        text = stringResource(Res.string.proxy_screen_port),
+                        descriptionText = ProxyPortPreference.current.toString(),
+                        enabled = useProxy && proxyModeManual,
+                        extraContent = {
+                            EditProxyPortDialog(
+                                visible = openEditProxyPortDialog,
+                                onDismissRequest = { openEditProxyPortDialog = false }
+                            )
+                        },
+                        onClick = { openEditProxyPortDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.Person),
+                        text = stringResource(Res.string.proxy_screen_username),
+                        descriptionText = ProxyUsernamePreference.current.ifBlank { null },
+                        enabled = useProxy && proxyModeManual,
+                        extraContent = {
+                            EditProxyUsernameDialog(
+                                visible = openEditProxyUsernameDialog,
+                                onDismissRequest = { openEditProxyUsernameDialog = false }
+                            )
+                        },
+                        onClick = { openEditProxyUsernameDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.Password),
+                        text = stringResource(Res.string.proxy_screen_password),
+                        descriptionText = if (ProxyPasswordPreference.current.isBlank()) {
+                            stringResource(Res.string.not_configure)
+                        } else stringResource(Res.string.configured),
+                        enabled = useProxy && proxyModeManual,
+                        extraContent = {
+                            EditProxyPasswordDialog(
+                                visible = openEditProxyPasswordDialog,
+                                onDismissRequest = { openEditProxyPasswordDialog = false }
+                            )
+                        },
+                        onClick = { openEditProxyPasswordDialog = true },
+                    )
+                }
             }
         }
     }

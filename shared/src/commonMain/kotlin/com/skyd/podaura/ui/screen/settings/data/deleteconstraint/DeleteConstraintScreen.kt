@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data.deleteconstraint
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.outlined.Favorite
@@ -21,8 +20,9 @@ import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPrefere
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
-import com.skyd.podaura.ui.component.TipSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
+import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -47,45 +47,47 @@ fun DeleteConstraintScreen() {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.delete_constraint_screen_name)) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                SwitchSettingsItem(
-                    checked = KeepUnreadArticlesPreference.current,
-                    imageVector = Icons.Outlined.MarkEmailUnread,
-                    text = stringResource(Res.string.delete_constraint_screen_keep_unread_articles),
-                    onCheckedChange = { KeepUnreadArticlesPreference.put(scope, it) },
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    checked = KeepFavoriteArticlesPreference.current,
-                    imageVector = Icons.Outlined.Favorite,
-                    text = stringResource(Res.string.delete_constraint_screen_keep_favorite_articles),
-                    onCheckedChange = { KeepFavoriteArticlesPreference.put(scope, it) },
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    checked = KeepPlaylistArticlesPreference.current,
-                    imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                    text = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles),
-                    description = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles_description),
-                    onCheckedChange = { KeepPlaylistArticlesPreference.put(scope, it) },
-                )
-            }
-            item {
-                TipSettingsItem(stringResource(Res.string.delete_constraint_screen_options_tip))
+            group {
+                item {
+                    SwitchSettingsItem(
+                        checked = KeepUnreadArticlesPreference.current,
+                        imageVector = Icons.Outlined.MarkEmailUnread,
+                        text = stringResource(Res.string.delete_constraint_screen_keep_unread_articles),
+                        onCheckedChange = { KeepUnreadArticlesPreference.put(scope, it) },
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        checked = KeepFavoriteArticlesPreference.current,
+                        imageVector = Icons.Outlined.Favorite,
+                        text = stringResource(Res.string.delete_constraint_screen_keep_favorite_articles),
+                        onCheckedChange = { KeepFavoriteArticlesPreference.put(scope, it) },
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        checked = KeepPlaylistArticlesPreference.current,
+                        imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                        text = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles),
+                        description = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles_description),
+                        onCheckedChange = { KeepPlaylistArticlesPreference.put(scope, it) },
+                    )
+                }
+                otherItem {
+                    TipSettingsItem(stringResource(Res.string.delete_constraint_screen_options_tip))
+                }
             }
         }
     }

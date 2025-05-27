@@ -2,7 +2,6 @@ package com.skyd.podaura.ui.screen.settings.data
 
 import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoDelete
 import androidx.compose.material.icons.outlined.Delete
@@ -34,14 +33,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.DeleteWarningDialog
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -105,7 +104,7 @@ fun DataScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.data_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
@@ -116,93 +115,84 @@ fun DataScreen(
         var openDeletePlayHistoryWarningDialog by rememberSaveable { mutableStateOf(false) }
         var openDeleteBeforeDatePickerDialog by rememberSaveable { mutableStateOf(false) }
 
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(
-                    text = stringResource(Res.string.data_screen_media_lib_category),
-                )
+            group(text = { getString(Res.string.data_screen_media_lib_category) }) {
+                item {
+                    val localMediaLibLocation = MediaLibLocationPreference.current
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.PermMedia),
+                        text = stringResource(Res.string.data_screen_change_lib_location),
+                        descriptionText = localMediaLibLocation,
+                        onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
+                    ) {
+                        PodAuraIconButton(
+                            onClick = {
+                                MediaLibLocationPreference.put(
+                                    scope,
+                                    MediaLibLocationPreference.default
+                                )
+                            },
+                            imageVector = Icons.Outlined.Replay,
+                        )
+                    }
+                }
             }
-            item {
-                val localMediaLibLocation = MediaLibLocationPreference.current
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.PermMedia),
-                    text = stringResource(Res.string.data_screen_change_lib_location),
-                    descriptionText = localMediaLibLocation,
-                    onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
-                ) {
-                    PodAuraIconButton(
-                        onClick = {
-                            MediaLibLocationPreference.put(
-                                scope,
-                                MediaLibLocationPreference.default
-                            )
-                        },
-                        imageVector = Icons.Outlined.Replay,
+            group(text = { getString(Res.string.data_screen_clear_up_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Delete),
+                        text = stringResource(Res.string.data_screen_clear_cache),
+                        descriptionText = stringResource(Res.string.data_screen_clear_cache_description),
+                        onClick = { openDeleteWarningDialog = true }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.delete_constraint_screen_name),
+                        descriptionText = stringResource(Res.string.delete_constraint_screen_name_description),
+                        onClick = { navController.navigate(DeleteConstraintRoute) },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Today),
+                        text = stringResource(Res.string.data_screen_delete_article_before),
+                        descriptionText = stringResource(Res.string.data_screen_delete_article_before_description),
+                        onClick = { openDeleteBeforeDatePickerDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.AutoDelete),
+                        text = stringResource(Res.string.auto_delete_screen_name),
+                        descriptionText = stringResource(Res.string.auto_delete_article_screen_description),
+                        onClick = { navController.navigate(AutoDeleteRoute) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.History),
+                        text = stringResource(Res.string.data_screen_clear_play_history),
+                        descriptionText = stringResource(Res.string.data_screen_clear_play_history_description),
+                        onClick = { openDeletePlayHistoryWarningDialog = true }
                     )
                 }
             }
-            item {
-                CategorySettingsItem(
-                    text = stringResource(Res.string.data_screen_clear_up_category),
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Delete),
-                    text = stringResource(Res.string.data_screen_clear_cache),
-                    descriptionText = stringResource(Res.string.data_screen_clear_cache_description),
-                    onClick = { openDeleteWarningDialog = true }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.delete_constraint_screen_name),
-                    descriptionText = stringResource(Res.string.delete_constraint_screen_name_description),
-                    onClick = { navController.navigate(DeleteConstraintRoute) },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Today),
-                    text = stringResource(Res.string.data_screen_delete_article_before),
-                    descriptionText = stringResource(Res.string.data_screen_delete_article_before_description),
-                    onClick = { openDeleteBeforeDatePickerDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.AutoDelete),
-                    text = stringResource(Res.string.auto_delete_screen_name),
-                    descriptionText = stringResource(Res.string.auto_delete_article_screen_description),
-                    onClick = { navController.navigate(AutoDeleteRoute) }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.History),
-                    text = stringResource(Res.string.data_screen_clear_play_history),
-                    descriptionText = stringResource(Res.string.data_screen_clear_play_history_description),
-                    onClick = { openDeletePlayHistoryWarningDialog = true }
-                )
-            }
-            item {
-                CategorySettingsItem(
-                    text = stringResource(Res.string.data_screen_sync_category),
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.SwapVert),
-                    text = stringResource(Res.string.import_export_screen_name),
-                    descriptionText = stringResource(Res.string.import_export_screen_description),
-                    onClick = { navController.navigate(ImportExportRoute) }
-                )
+            group(text = { getString(Res.string.data_screen_sync_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.SwapVert),
+                        text = stringResource(Res.string.import_export_screen_name),
+                        descriptionText = stringResource(Res.string.import_export_screen_description),
+                        onClick = { navController.navigate(ImportExportRoute) }
+                    )
+                }
             }
         }
 

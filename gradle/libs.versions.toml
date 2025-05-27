@@ -12,7 +12,7 @@ coroutines = "1.10.2"
 paging = "3.3.6"
 rome = "2.1.0"
 room = "2.7.1"
-compose = "1.9.0-alpha01"
+compose = "1.9.0-alpha03"
 tracingPerfetto = "1.0.0"
 worker = "2.10.0"
 kotlin = "2.1.10"
@@ -40,7 +40,7 @@ jetbrains-compose-window-size = { module = "org.jetbrains.compose.material3:mate
 jetbrains-compose-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 jetbrains-compose-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 jetbrains-compose-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
-jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.8.0-rc01" }
+jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.8.0" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
@@ -49,7 +49,7 @@ sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.5.1" 
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracingPerfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracingPerfetto" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.4" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.7" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.0.1" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
@@ -67,7 +67,7 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 material-kolor = { module = "com.materialkolor:material-kolor", version = "2.0.0" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.0" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0-alpha14" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0-alpha15" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "2.11.0" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }

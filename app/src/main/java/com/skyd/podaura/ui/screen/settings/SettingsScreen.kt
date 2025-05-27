@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RssFeed
@@ -31,11 +30,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.skyd.podaura.ext.isSinglePane
-import com.skyd.podaura.ui.component.BaseSettingsItem
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SelectedItem
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SelectedItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
@@ -129,86 +129,88 @@ fun SettingsList(
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.settings)) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                SelectedItem(currentItem is AppearanceRoute) {
-                    BaseSettingsItem(
-                        icon = rememberVectorPainter(Icons.Outlined.Palette),
-                        text = stringResource(Res.string.appearance_screen_name),
-                        descriptionText = stringResource(Res.string.appearance_screen_description),
-                        onClick = {
-                            onItemSelected(AppearanceRoute)
-                        }
-                    )
+            group {
+                item {
+                    SelectedItem(currentItem is AppearanceRoute) {
+                        BaseSettingsItem(
+                            icon = rememberVectorPainter(Icons.Outlined.Palette),
+                            text = stringResource(Res.string.appearance_screen_name),
+                            descriptionText = stringResource(Res.string.appearance_screen_description),
+                            onClick = {
+                                onItemSelected(AppearanceRoute)
+                            }
+                        )
+                    }
                 }
-            }
-            item {
-                SelectedItem(currentItem is BehaviorRoute) {
-                    BaseSettingsItem(
-                        icon = rememberVectorPainter(Icons.Outlined.TouchApp),
-                        text = stringResource(Res.string.behavior_screen_name),
-                        descriptionText = stringResource(Res.string.behavior_screen_description),
-                        onClick = {
-                            onItemSelected(BehaviorRoute)
-                        }
-                    )
+                item {
+                    SelectedItem(currentItem is BehaviorRoute) {
+                        BaseSettingsItem(
+                            icon = rememberVectorPainter(Icons.Outlined.TouchApp),
+                            text = stringResource(Res.string.behavior_screen_name),
+                            descriptionText = stringResource(Res.string.behavior_screen_description),
+                            onClick = {
+                                onItemSelected(BehaviorRoute)
+                            }
+                        )
+                    }
                 }
-            }
-            item {
-                SelectedItem(currentItem is RssConfigRoute) {
-                    BaseSettingsItem(
-                        icon = rememberVectorPainter(Icons.Outlined.RssFeed),
-                        text = stringResource(Res.string.rss_config_screen_name),
-                        descriptionText = stringResource(Res.string.rss_config_screen_description),
-                        onClick = {
-                            onItemSelected(RssConfigRoute)
-                        }
-                    )
+                item {
+                    SelectedItem(currentItem is RssConfigRoute) {
+                        BaseSettingsItem(
+                            icon = rememberVectorPainter(Icons.Outlined.RssFeed),
+                            text = stringResource(Res.string.rss_config_screen_name),
+                            descriptionText = stringResource(Res.string.rss_config_screen_description),
+                            onClick = {
+                                onItemSelected(RssConfigRoute)
+                            }
+                        )
+                    }
                 }
-            }
-            item {
-                SelectedItem(currentItem is PlayerConfigRoute) {
-                    BaseSettingsItem(
-                        icon = rememberVectorPainter(Icons.Outlined.SmartDisplay),
-                        text = stringResource(Res.string.player_config_screen_name),
-                        descriptionText = stringResource(Res.string.player_config_screen_description),
-                        onClick = {
-                            onItemSelected(PlayerConfigRoute)
-                        }
-                    )
+                item {
+                    SelectedItem(currentItem is PlayerConfigRoute) {
+                        BaseSettingsItem(
+                            icon = rememberVectorPainter(Icons.Outlined.SmartDisplay),
+                            text = stringResource(Res.string.player_config_screen_name),
+                            descriptionText = stringResource(Res.string.player_config_screen_description),
+                            onClick = {
+                                onItemSelected(PlayerConfigRoute)
+                            }
+                        )
+                    }
                 }
-            }
-            item {
-                SelectedItem(currentItem is DataRoute) {
-                    BaseSettingsItem(
-                        icon = painterResource(Res.drawable.ic_database_24),
-                        text = stringResource(Res.string.data_screen_name),
-                        descriptionText = stringResource(Res.string.data_screen_description),
-                        onClick = { onItemSelected(DataRoute) }
-                    )
+                item {
+                    SelectedItem(currentItem is DataRoute) {
+                        BaseSettingsItem(
+                            icon = painterResource(Res.drawable.ic_database_24),
+                            text = stringResource(Res.string.data_screen_name),
+                            descriptionText = stringResource(Res.string.data_screen_description),
+                            onClick = { onItemSelected(DataRoute) }
+                        )
+                    }
                 }
-            }
-            item {
-                SelectedItem(currentItem is TransmissionRoute) {
-                    BaseSettingsItem(
-                        icon = rememberVectorPainter(Icons.Outlined.SwapVert),
-                        text = stringResource(Res.string.transmission_screen_name),
-                        descriptionText = stringResource(Res.string.transmission_screen_description),
-                        onClick = {
-                            onItemSelected(TransmissionRoute)
-                        }
-                    )
+                item {
+                    SelectedItem(currentItem is TransmissionRoute) {
+                        BaseSettingsItem(
+                            icon = rememberVectorPainter(Icons.Outlined.SwapVert),
+                            text = stringResource(Res.string.transmission_screen_name),
+                            descriptionText = stringResource(Res.string.transmission_screen_description),
+                            onClick = {
+                                onItemSelected(TransmissionRoute)
+                            }
+                        )
+                    }
                 }
             }
         }

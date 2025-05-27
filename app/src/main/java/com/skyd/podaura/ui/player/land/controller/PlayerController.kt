@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
-import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -226,7 +226,7 @@ internal fun PlayerController(
             )
 
             if (playState().loading) {
-                CircularWavyProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                LoadingIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
             if (PlayerShowProgressIndicatorPreference.current && !showController) {

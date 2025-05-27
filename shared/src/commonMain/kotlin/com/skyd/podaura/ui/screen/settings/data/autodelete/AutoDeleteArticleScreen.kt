@@ -6,12 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
@@ -50,17 +47,18 @@ import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticl
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.ui.component.BannerItem
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchBaseSettingsItem
-import com.skyd.podaura.ui.component.SwitchSettingsItem
-import com.skyd.podaura.ui.component.TipSettingsItem
 import com.skyd.podaura.ui.component.dialog.SliderDialog
+import com.skyd.podaura.ui.component.settings.BannerItem
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchBaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
+import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -100,7 +98,7 @@ fun AutoDeleteScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.auto_delete_screen_name)) },
             )
@@ -113,7 +111,7 @@ fun AutoDeleteScreen() {
 
         val autoDeleteArticleUseBefore = AutoDeleteArticleUseBeforePreference.current
         val autoDeleteArticleUseMaxCount = AutoDeleteArticleUseMaxCountPreference.current
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -129,102 +127,103 @@ fun AutoDeleteScreen() {
                     )
                 }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Timer),
-                    text = stringResource(Res.string.auto_delete_article_screen_delete_frequency),
-                    descriptionText = suspendString(AutoDeleteArticleFrequencyPreference.current) {
-                        AutoDeleteArticleFrequencyPreference.toDisplayNameMilliseconds(it)
-                    },
-                    onClick = { openAutoDeleteFrequencyDialog = true },
-                    enabled = useAutoDelete,
-                )
-            }
-            item {
-                CategorySettingsItem(stringResource(Res.string.auto_delete_article_screen_strategy_category))
-                Spacer(modifier = Modifier.height(6.dp))
-                AnimatedVisibility(
-                    visible = !autoDeleteArticleUseBefore && !autoDeleteArticleUseMaxCount,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut(),
-                ) {
-                    Text(
-                        text = stringResource(Res.string.auto_delete_article_screen_no_strategy_tip),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .background(
-                                MaterialTheme.colorScheme.errorContainer,
-                                RoundedCornerShape(6.dp),
-                            )
-                            .padding(12.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.labelLarge,
+            group {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Timer),
+                        text = stringResource(Res.string.auto_delete_article_screen_delete_frequency),
+                        descriptionText = suspendString(AutoDeleteArticleFrequencyPreference.current) {
+                            AutoDeleteArticleFrequencyPreference.toDisplayNameMilliseconds(it)
+                        },
+                        onClick = { openAutoDeleteFrequencyDialog = true },
+                        enabled = useAutoDelete,
                     )
                 }
             }
-            item {
-                SwitchBaseSettingsItem(
-                    checked = autoDeleteArticleUseBefore,
-                    painter = painterResource(Res.drawable.ic_calendar_clock_24),
-                    text = stringResource(Res.string.auto_delete_article_screen_delete_before),
-                    description = suspendString(AutoDeleteArticleBeforePreference.current) {
-                        AutoDeleteArticleBeforePreference.toDisplayNameMilliseconds(it)
-                    },
-                    onClick = { openAutoDeleteBeforeDialog = true },
-                    onCheckedChange = { AutoDeleteArticleUseBeforePreference.put(scope, it) },
-                    enabled = useAutoDelete,
-                )
+            group(text = { getString(Res.string.auto_delete_article_screen_strategy_category) }) {
+                otherItem {
+                    AnimatedVisibility(
+                        visible = !autoDeleteArticleUseBefore && !autoDeleteArticleUseMaxCount,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut(),
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.auto_delete_article_screen_no_strategy_tip),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.errorContainer,
+                                    RoundedCornerShape(6.dp),
+                                )
+                                .padding(12.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                }
+                item {
+                    SwitchBaseSettingsItem(
+                        checked = autoDeleteArticleUseBefore,
+                        painter = painterResource(Res.drawable.ic_calendar_clock_24),
+                        text = stringResource(Res.string.auto_delete_article_screen_delete_before),
+                        description = suspendString(AutoDeleteArticleBeforePreference.current) {
+                            AutoDeleteArticleBeforePreference.toDisplayNameMilliseconds(it)
+                        },
+                        onClick = { openAutoDeleteBeforeDialog = true },
+                        onCheckedChange = { AutoDeleteArticleUseBeforePreference.put(scope, it) },
+                        enabled = useAutoDelete,
+                    )
+                }
+                item {
+                    SwitchBaseSettingsItem(
+                        checked = autoDeleteArticleUseMaxCount,
+                        imageVector = null,
+                        text = stringResource(Res.string.auto_delete_article_screen_delete_max_count),
+                        description = stringResource(
+                            Res.string.auto_delete_article_screen_delete_max_count_description,
+                            AutoDeleteArticleMaxCountPreference.current,
+                        ),
+                        onClick = { openAutoDeleteMaxCountDialog = true },
+                        onCheckedChange = { AutoDeleteArticleUseMaxCountPreference.put(scope, it) },
+                        enabled = useAutoDelete,
+                    )
+                }
+                otherItem {
+                    TipSettingsItem(stringResource(Res.string.auto_delete_article_screen_strategy_tip))
+                }
             }
-            item {
-                SwitchBaseSettingsItem(
-                    checked = autoDeleteArticleUseMaxCount,
-                    imageVector = null,
-                    text = stringResource(Res.string.auto_delete_article_screen_delete_max_count),
-                    description = stringResource(
-                        Res.string.auto_delete_article_screen_delete_max_count_description,
-                        AutoDeleteArticleMaxCountPreference.current,
-                    ),
-                    onClick = { openAutoDeleteMaxCountDialog = true },
-                    onCheckedChange = { AutoDeleteArticleUseMaxCountPreference.put(scope, it) },
-                    enabled = useAutoDelete,
-                )
-            }
-            item {
-                TipSettingsItem(stringResource(Res.string.auto_delete_article_screen_strategy_tip))
-            }
-            item {
-                CategorySettingsItem(stringResource(Res.string.auto_delete_article_screen_option_category))
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.MarkEmailUnread,
-                    text = stringResource(Res.string.auto_delete_article_screen_keep_unread),
-                    description = stringResource(Res.string.auto_delete_article_screen_keep_unread_description),
-                    checked = AutoDeleteArticleKeepUnreadPreference.current,
-                    onCheckedChange = { AutoDeleteArticleKeepUnreadPreference.put(scope, it) }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.FavoriteBorder,
-                    text = stringResource(Res.string.auto_delete_article_screen_keep_favorite),
-                    description = stringResource(Res.string.auto_delete_article_screen_keep_favorite_description),
-                    checked = AutoDeleteArticleKeepFavoritePreference.current,
-                    onCheckedChange = { AutoDeleteArticleKeepFavoritePreference.put(scope, it) }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                    text = stringResource(Res.string.auto_delete_article_screen_keep_playlist),
-                    description = stringResource(Res.string.auto_delete_article_screen_keep_playlist_description),
-                    checked = AutoDeleteArticleKeepPlaylistPreference.current,
-                    onCheckedChange = { AutoDeleteArticleKeepPlaylistPreference.put(scope, it) }
-                )
-            }
-            item {
-                TipSettingsItem(stringResource(Res.string.auto_delete_article_screen_options_tip))
+            group(text = { getString(Res.string.auto_delete_article_screen_option_category) }) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.MarkEmailUnread,
+                        text = stringResource(Res.string.auto_delete_article_screen_keep_unread),
+                        description = stringResource(Res.string.auto_delete_article_screen_keep_unread_description),
+                        checked = AutoDeleteArticleKeepUnreadPreference.current,
+                        onCheckedChange = { AutoDeleteArticleKeepUnreadPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.FavoriteBorder,
+                        text = stringResource(Res.string.auto_delete_article_screen_keep_favorite),
+                        description = stringResource(Res.string.auto_delete_article_screen_keep_favorite_description),
+                        checked = AutoDeleteArticleKeepFavoritePreference.current,
+                        onCheckedChange = { AutoDeleteArticleKeepFavoritePreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                        text = stringResource(Res.string.auto_delete_article_screen_keep_playlist),
+                        description = stringResource(Res.string.auto_delete_article_screen_keep_playlist_description),
+                        checked = AutoDeleteArticleKeepPlaylistPreference.current,
+                        onCheckedChange = { AutoDeleteArticleKeepPlaylistPreference.put(scope, it) }
+                    )
+                }
+                otherItem {
+                    TipSettingsItem(stringResource(Res.string.auto_delete_article_screen_options_tip))
+                }
             }
         }
 

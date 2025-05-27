@@ -1,23 +1,22 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport.importopml
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Segment
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,9 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -39,12 +42,14 @@ import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
-import com.skyd.podaura.ui.component.BaseSettingsItem
 import com.skyd.podaura.ui.component.PodAuraExtendedFloatingActionButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.TipSettingsItem
+import com.skyd.podaura.ui.component.connectedButtonShapes
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -117,7 +122,7 @@ fun ImportOpmlScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.import_opml_screen_name)) },
             )
@@ -146,48 +151,59 @@ fun ImportOpmlScreen(
             )
         },
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
             state = lazyListState,
         ) {
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Segment),
-                    text = stringResource(Res.string.import_opml_screen_select_file),
-                    descriptionText = opmlFilePath?.ifBlank { null },
-                    onClick = { filePickerLauncher.launch() }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.HelpOutline),
-                    text = stringResource(Res.string.import_opml_screen_on_conflict),
-                    description = {
-                        SingleChoiceSegmentedButtonRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp)
-                        ) {
-                            ImportOpmlConflictStrategy.strategies.forEachIndexed { index, proxy ->
-                                SegmentedButton(
-                                    shape = SegmentedButtonDefaults.itemShape(
-                                        index = index,
-                                        count = ImportOpmlConflictStrategy.strategies.size
-                                    ),
-                                    onClick = { selectedImportStrategyIndex = index },
-                                    selected = index == selectedImportStrategyIndex
-                                ) {
-                                    Text(text = proxy.displayName)
+            group {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Segment),
+                        text = stringResource(Res.string.import_opml_screen_select_file),
+                        descriptionText = opmlFilePath?.ifBlank { null },
+                        onClick = { filePickerLauncher.launch() }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.HelpOutline),
+                        text = stringResource(Res.string.import_opml_screen_on_conflict),
+                        description = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    space = ButtonGroupDefaults.ConnectedSpaceBetween,
+                                    alignment = Alignment.CenterHorizontally,
+                                ),
+                            ) {
+                                ImportOpmlConflictStrategy.strategies.forEachIndexed { index, proxy ->
+                                    ToggleButton(
+                                        checked = index == selectedImportStrategyIndex,
+                                        onCheckedChange = {
+                                            if (it) selectedImportStrategyIndex = index
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .semantics { role = Role.RadioButton },
+                                        shapes = ButtonGroupDefaults.connectedButtonShapes(
+                                            list = ImportOpmlConflictStrategy.strategies,
+                                            index = index,
+                                        ),
+                                    ) {
+                                        Text(text = proxy.displayName)
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
+                otherItem {
+                    TipSettingsItem(text = stringResource(Res.string.import_opml_screen_desc))
+                }
             }
-            item { TipSettingsItem(text = stringResource(Res.string.import_opml_screen_desc)) }
         }
     }
 

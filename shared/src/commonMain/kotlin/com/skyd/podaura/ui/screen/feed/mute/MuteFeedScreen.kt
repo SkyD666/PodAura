@@ -41,7 +41,7 @@ import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.TipSettingsItem
+import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher

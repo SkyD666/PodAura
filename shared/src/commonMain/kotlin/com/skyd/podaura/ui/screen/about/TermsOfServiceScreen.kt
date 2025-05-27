@@ -65,7 +65,7 @@ fun TermsOfServiceScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.terms_of_service_screen_name)) },
                 navigationIcon = {},

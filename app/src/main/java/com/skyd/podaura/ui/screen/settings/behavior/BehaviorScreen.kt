@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
@@ -47,18 +46,19 @@ import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDesc
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.ClipboardTextField
 import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.PodAuraDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.behavior_screen_article_screen_category
@@ -97,140 +97,138 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.behavior_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_common_category))
+            group(text = { getString(Res.string.behavior_screen_common_category) }) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Wifi,
+                        text = stringResource(Res.string.behavior_screen_load_net_image_on_wifi_only),
+                        description = null,
+                        checked = LoadNetImageOnWifiOnlyPreference.current,
+                        onCheckedChange = { LoadNetImageOnWifiOnlyPreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.Wifi,
-                    text = stringResource(Res.string.behavior_screen_load_net_image_on_wifi_only),
-                    description = null,
-                    checked = LoadNetImageOnWifiOnlyPreference.current,
-                    onCheckedChange = { LoadNetImageOnWifiOnlyPreference.put(scope, it) }
-                )
+            group(
+                text = { getString(Res.string.behavior_screen_feed_screen_category) },
+            ) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = if (HideEmptyDefaultPreference.current) {
+                            Icons.Outlined.VisibilityOff
+                        } else {
+                            Icons.Outlined.Visibility
+                        },
+                        text = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default),
+                        description = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default_description),
+                        checked = HideEmptyDefaultPreference.current,
+                        onCheckedChange = { HideEmptyDefaultPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                        text = stringResource(Res.string.behavior_screen_feed_screen_hide_muted_feed),
+                        checked = HideMutedFeedPreference.current,
+                        onCheckedChange = { HideMutedFeedPreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_feed_screen_category))
+            group(text = { getString(Res.string.behavior_screen_article_screen_category) }) {
+                item {
+                    SwitchSettingsItem(
+                        painter = painterResource(id = R.drawable.ic_ink_eraser_24),
+                        text = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc),
+                        description = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
+                        checked = DeduplicateTitleInDescPreference.current,
+                        onCheckedChange = { DeduplicateTitleInDescPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Article),
+                        text = stringResource(Res.string.behavior_screen_article_tap_action),
+                        descriptionText = suspendString(ArticleTapActionPreference.current) {
+                            ArticleTapActionPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            ArticleTapActionMenu(
+                                expanded = expandArticleTapActionMenu,
+                                onDismissRequest = { expandArticleTapActionMenu = false }
+                            )
+                        },
+                        onClick = { expandArticleTapActionMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.SwipeLeft),
+                        text = stringResource(Res.string.behavior_screen_article_swipe_left_action),
+                        descriptionText = suspendString(ArticleSwipeLeftActionPreference.current) {
+                            ArticleSwipeActionPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            ArticleSwipeActionMenu(
+                                expanded = expandArticleSwipeLeftActionMenu,
+                                onDismissRequest = { expandArticleSwipeLeftActionMenu = false },
+                                articleSwipeAction = ArticleSwipeLeftActionPreference.current,
+                                values = ArticleSwipeLeftActionPreference.values,
+                                toDisplayName = {
+                                    ArticleSwipeActionPreference.toDisplayName(it)
+                                },
+                                onClick = { ArticleSwipeLeftActionPreference.put(scope, it) },
+                            )
+                        },
+                        onClick = { expandArticleSwipeLeftActionMenu = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.SwipeRight),
+                        text = stringResource(Res.string.behavior_screen_article_swipe_right_action),
+                        descriptionText = suspendString(ArticleSwipeRightActionPreference.current) {
+                            ArticleSwipeActionPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            ArticleSwipeActionMenu(
+                                expanded = expandArticleSwipeRightActionMenu,
+                                onDismissRequest = { expandArticleSwipeRightActionMenu = false },
+                                articleSwipeAction = ArticleSwipeRightActionPreference.current,
+                                values = ArticleSwipeRightActionPreference.values,
+                                toDisplayName = {
+                                    ArticleSwipeActionPreference.toDisplayName(it)
+                                },
+                                onClick = { ArticleSwipeRightActionPreference.put(scope, it) },
+                            )
+                        },
+                        onClick = { expandArticleSwipeRightActionMenu = true },
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = if (HideEmptyDefaultPreference.current) {
-                        Icons.Outlined.VisibilityOff
-                    } else {
-                        Icons.Outlined.Visibility
-                    },
-                    text = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default),
-                    description = stringResource(Res.string.behavior_screen_feed_screen_hide_empty_default_description),
-                    checked = HideEmptyDefaultPreference.current,
-                    onCheckedChange = { HideEmptyDefaultPreference.put(scope, it) }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                    text = stringResource(Res.string.behavior_screen_feed_screen_hide_muted_feed),
-                    checked = HideMutedFeedPreference.current,
-                    onCheckedChange = { HideMutedFeedPreference.put(scope, it) }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_article_screen_category))
-            }
-            item {
-                SwitchSettingsItem(
-                    painter = painterResource(id = R.drawable.ic_ink_eraser_24),
-                    text = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc),
-                    description = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
-                    checked = DeduplicateTitleInDescPreference.current,
-                    onCheckedChange = { DeduplicateTitleInDescPreference.put(scope, it) }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Article),
-                    text = stringResource(Res.string.behavior_screen_article_tap_action),
-                    descriptionText = suspendString(ArticleTapActionPreference.current) {
-                        ArticleTapActionPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        ArticleTapActionMenu(
-                            expanded = expandArticleTapActionMenu,
-                            onDismissRequest = { expandArticleTapActionMenu = false }
-                        )
-                    },
-                    onClick = { expandArticleTapActionMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.SwipeLeft),
-                    text = stringResource(Res.string.behavior_screen_article_swipe_left_action),
-                    descriptionText = suspendString(ArticleSwipeLeftActionPreference.current) {
-                        ArticleSwipeActionPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        ArticleSwipeActionMenu(
-                            expanded = expandArticleSwipeLeftActionMenu,
-                            onDismissRequest = { expandArticleSwipeLeftActionMenu = false },
-                            articleSwipeAction = ArticleSwipeLeftActionPreference.current,
-                            values = ArticleSwipeLeftActionPreference.values,
-                            toDisplayName = {
-                                ArticleSwipeActionPreference.toDisplayName(it)
-                            },
-                            onClick = { ArticleSwipeLeftActionPreference.put(scope, it) },
-                        )
-                    },
-                    onClick = { expandArticleSwipeLeftActionMenu = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.SwipeRight),
-                    text = stringResource(Res.string.behavior_screen_article_swipe_right_action),
-                    descriptionText = suspendString(ArticleSwipeRightActionPreference.current) {
-                        ArticleSwipeActionPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        ArticleSwipeActionMenu(
-                            expanded = expandArticleSwipeRightActionMenu,
-                            onDismissRequest = { expandArticleSwipeRightActionMenu = false },
-                            articleSwipeAction = ArticleSwipeRightActionPreference.current,
-                            values = ArticleSwipeRightActionPreference.values,
-                            toDisplayName = {
-                                ArticleSwipeActionPreference.toDisplayName(it)
-                            },
-                            onClick = { ArticleSwipeRightActionPreference.put(scope, it) },
-                        )
-                    },
-                    onClick = { expandArticleSwipeRightActionMenu = true },
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.behavior_screen_media_screen_category))
-            }
-            item {
-                val mediaFileFilter = MediaFileFilterPreference.current
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.FilterAlt),
-                    text = stringResource(Res.string.behavior_screen_media_file_filter),
-                    descriptionText = suspendString {
-                        MediaFileFilterPreference.toDisplayName(mediaFileFilter)
-                    },
-                    onClick = { openMediaFileFilterDialog = mediaFileFilter },
-                )
+            group(text = { getString(Res.string.behavior_screen_media_screen_category) }) {
+                item {
+                    val mediaFileFilter = MediaFileFilterPreference.current
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.FilterAlt),
+                        text = stringResource(Res.string.behavior_screen_media_file_filter),
+                        descriptionText = suspendString {
+                            MediaFileFilterPreference.toDisplayName(mediaFileFilter)
+                        },
+                        onClick = { openMediaFileFilterDialog = mediaFileFilter },
+                    )
+                }
             }
         }
     }

@@ -47,17 +47,16 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ToggleOff
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -75,6 +74,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -87,6 +89,7 @@ import com.skyd.podaura.ext.thenIfNotNull
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.ui.component.PodAuraIconButton
+import com.skyd.podaura.ui.component.connectedButtonShapes
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.DeleteWarningDialog
 import com.skyd.podaura.ui.component.dialog.PodAuraDialog
@@ -576,19 +579,23 @@ private fun RefreshDialog(
         selectable = false,
         text = {
             Column {
-                SingleChoiceSegmentedButtonRow(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = ButtonGroupDefaults.ConnectedSpaceBetween,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
                 ) {
                     texts.forEachIndexed { index, text ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = texts.size,
-                            ),
-                            onClick = { currentIndex = index },
-                            selected = index == currentIndex
+                        ToggleButton(
+                            checked = index == currentIndex,
+                            onCheckedChange = { if (it) currentIndex = index },
+                            modifier = Modifier
+                                .weight(1f)
+                                .semantics { role = Role.RadioButton },
+                            shapes = ButtonGroupDefaults.connectedButtonShapes(texts, index),
                         ) {
                             Text(text)
                         }

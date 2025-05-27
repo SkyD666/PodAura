@@ -6,7 +6,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -53,21 +52,22 @@ import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPr
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchBaseSettingsItem
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.SliderDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchBaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.cancel
@@ -115,139 +115,140 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_behavior_category))
+            group(text = { getString(Res.string.player_config_screen_behavior_category) }) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Speaker,
+                        text = stringResource(Res.string.player_config_screen_background_play),
+                        description = stringResource(Res.string.player_config_screen_background_play_description),
+                        checked = BackgroundPlayPreference.current,
+                        onCheckedChange = { BackgroundPlayPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.TouchApp),
+                        text = stringResource(Res.string.player_config_screen_double_tap),
+                        descriptionText = suspendString(PlayerDoubleTapPreference.current) {
+                            PlayerDoubleTapPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            DoubleTapMenu(
+                                expanded = expandDoubleTapMenu,
+                                onDismissRequest = { expandDoubleTapMenu = false }
+                            )
+                        },
+                        onClick = { expandDoubleTapMenu = true },
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.PictureInPictureAlt,
+                        text = stringResource(Res.string.player_config_screen_auto_pip),
+                        description = stringResource(Res.string.player_config_screen_auto_pip_description),
+                        checked = PlayerAutoPipPreference.current,
+                        onCheckedChange = { PlayerAutoPipPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.Redo),
+                        text = stringResource(Res.string.player_config_screen_seek_option),
+                        descriptionText = suspendString(PlayerSeekOptionPreference.current) {
+                            PlayerSeekOptionPreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            SeekOptionMenu(
+                                expanded = expandSeekOptionMenu,
+                                onDismissRequest = { expandSeekOptionMenu = false },
+                            )
+                        },
+                        onClick = { expandSeekOptionMenu = true },
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.Speaker,
-                    text = stringResource(Res.string.player_config_screen_background_play),
-                    description = stringResource(Res.string.player_config_screen_background_play_description),
-                    checked = BackgroundPlayPreference.current,
-                    onCheckedChange = { BackgroundPlayPreference.put(scope, it) }
-                )
+            group(text = { getString(Res.string.player_config_screen_appearance_category) }) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.PhotoCamera,
+                        text = stringResource(Res.string.player_config_screen_show_screenshot_button),
+                        description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
+                        checked = PlayerShowScreenshotButtonPreference.current,
+                        onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Timelapse,
+                        text = stringResource(Res.string.player_config_screen_show_progress_indicator),
+                        description = stringResource(Res.string.player_config_screen_show_progress_indicator_description),
+                        checked = PlayerShowProgressIndicatorPreference.current,
+                        onCheckedChange = { PlayerShowProgressIndicatorPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
+                    SwitchBaseSettingsItem(
+                        imageVector = if (forwardSeconds >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
+                        text = stringResource(
+                            Res.string.player_config_screen_show_forward_seconds_button,
+                            forwardSeconds.toSignedString()
+                        ),
+                        description = stringResource(
+                            Res.string.player_config_screen_show_forward_seconds_button_description,
+                            forwardSeconds.toSignedString()
+                        ),
+                        checked = PlayerShowForwardSecondsButtonPreference.current,
+                        onCheckedChange = {
+                            PlayerShowForwardSecondsButtonPreference.put(
+                                scope,
+                                it
+                            )
+                        },
+                        onClick = { openForwardSecondButtonValueDialog = true },
+                    )
+                }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.TouchApp),
-                    text = stringResource(Res.string.player_config_screen_double_tap),
-                    descriptionText = suspendString(PlayerDoubleTapPreference.current) {
-                        PlayerDoubleTapPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        DoubleTapMenu(
-                            expanded = expandDoubleTapMenu,
-                            onDismissRequest = { expandDoubleTapMenu = false }
-                        )
-                    },
-                    onClick = { expandDoubleTapMenu = true },
-                )
+            group(text = { getString(Res.string.player_config_screen_cache_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowRight),
+                        text = stringResource(Res.string.player_config_screen_max_cache_size),
+                        descriptionText = PlayerMaxCacheSizePreference.current.fileSize(context),
+                        onClick = { openMaxCacheSizeDialog = true }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowLeft),
+                        text = stringResource(Res.string.player_config_screen_max_back_cache_size),
+                        descriptionText = PlayerMaxBackCacheSizePreference.current.fileSize(context),
+                        onClick = { openMaxBackCacheSizeDialog = true }
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.PictureInPictureAlt,
-                    text = stringResource(Res.string.player_config_screen_auto_pip),
-                    description = stringResource(Res.string.player_config_screen_auto_pip_description),
-                    checked = PlayerAutoPipPreference.current,
-                    onCheckedChange = { PlayerAutoPipPreference.put(scope, it) }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.Redo),
-                    text = stringResource(Res.string.player_config_screen_seek_option),
-                    descriptionText = suspendString(PlayerSeekOptionPreference.current) {
-                        PlayerSeekOptionPreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        SeekOptionMenu(
-                            expanded = expandSeekOptionMenu,
-                            onDismissRequest = { expandSeekOptionMenu = false },
-                        )
-                    },
-                    onClick = { expandSeekOptionMenu = true },
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_appearance_category))
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.PhotoCamera,
-                    text = stringResource(Res.string.player_config_screen_show_screenshot_button),
-                    description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
-                    checked = PlayerShowScreenshotButtonPreference.current,
-                    onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.Timelapse,
-                    text = stringResource(Res.string.player_config_screen_show_progress_indicator),
-                    description = stringResource(Res.string.player_config_screen_show_progress_indicator_description),
-                    checked = PlayerShowProgressIndicatorPreference.current,
-                    onCheckedChange = { PlayerShowProgressIndicatorPreference.put(scope, it) }
-                )
-            }
-            item {
-                val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
-                SwitchBaseSettingsItem(
-                    imageVector = if (forwardSeconds >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
-                    text = stringResource(
-                        Res.string.player_config_screen_show_forward_seconds_button,
-                        forwardSeconds.toSignedString()
-                    ),
-                    description = stringResource(
-                        Res.string.player_config_screen_show_forward_seconds_button_description,
-                        forwardSeconds.toSignedString()
-                    ),
-                    checked = PlayerShowForwardSecondsButtonPreference.current,
-                    onCheckedChange = { PlayerShowForwardSecondsButtonPreference.put(scope, it) },
-                    onClick = { openForwardSecondButtonValueDialog = true },
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_cache_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowRight),
-                    text = stringResource(Res.string.player_config_screen_max_cache_size),
-                    descriptionText = PlayerMaxCacheSizePreference.current.fileSize(context),
-                    onClick = { openMaxCacheSizeDialog = true }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowLeft),
-                    text = stringResource(Res.string.player_config_screen_max_back_cache_size),
-                    descriptionText = PlayerMaxBackCacheSizePreference.current.fileSize(context),
-                    onClick = { openMaxBackCacheSizeDialog = true }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.player_config_screen_advanced_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.player_config_advanced_screen_name),
-                    descriptionText = null,
-                    onClick = { navController.navigate(PlayerConfigAdvancedRoute) },
-                )
+            group(text = { getString(Res.string.player_config_screen_advanced_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.player_config_advanced_screen_name),
+                        descriptionText = null,
+                        onClick = { navController.navigate(PlayerConfigAdvancedRoute) },
+                    )
+                }
             }
         }
 

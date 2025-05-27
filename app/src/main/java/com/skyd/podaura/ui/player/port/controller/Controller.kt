@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.RepeatOne
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -103,9 +102,8 @@ internal fun Controller(
                 .clickable(onClick = playStateCallback.onPlayStateChanged),
             contentAlignment = Alignment.Center,
         ) {
-            val size = 36.dp
             if (playState.loading) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(size))
+                LoadingIndicator(modifier = Modifier.size(40.dp))
             } else {
                 Icon(
                     imageVector = if (playState.isPlaying) Icons.Filled.Pause
@@ -113,7 +111,7 @@ internal fun Controller(
                     contentDescription = stringResource(
                         if (playState.isPlaying) Res.string.pause else Res.string.play
                     ),
-                    modifier = Modifier.size(size),
+                    modifier = Modifier.size(36.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

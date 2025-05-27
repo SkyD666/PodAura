@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.appearance.read
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tonality
 import androidx.compose.material3.Scaffold
@@ -19,12 +18,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.screen.settings.appearance.feed.TonalElevationDialog
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.read_style_screen_content_category
@@ -44,7 +44,7 @@ fun ReadStyleScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.read_style_screen_name)) },
             )
@@ -53,37 +53,35 @@ fun ReadStyleScreen() {
         var openTopBarTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openReadContentTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
 
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.read_style_screen_top_bar_category))
+            group(text = { getString(Res.string.read_style_screen_top_bar_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            ReadTopBarTonalElevationPreference.current
+                        ),
+                        onClick = { openTopBarTonalElevationDialog = true }
+                    )
+                }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        ReadTopBarTonalElevationPreference.current
-                    ),
-                    onClick = { openTopBarTonalElevationDialog = true }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.read_style_screen_content_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        ReadContentTonalElevationPreference.current
-                    ),
-                    onClick = { openReadContentTonalElevationDialog = true }
-                )
+            group(text = { getString(Res.string.read_style_screen_content_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            ReadContentTonalElevationPreference.current
+                        ),
+                        onClick = { openReadContentTonalElevationDialog = true }
+                    )
+                }
             }
         }
 

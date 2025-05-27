@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.transmission
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Dns
@@ -23,16 +22,17 @@ import com.skyd.podaura.model.preference.transmission.SeedingWhenCompletePrefere
 import com.skyd.podaura.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.podaura.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -71,75 +71,76 @@ fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.transmission_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.transmission_screen_transmission_behavior_category))
+            group(
+                text = { getString(Res.string.transmission_screen_transmission_behavior_category) },
+            ) {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.CloudUpload,
+                        text = stringResource(Res.string.transmission_screen_seeding_when_complete),
+                        description = stringResource(Res.string.transmission_screen_seeding_when_complete_description),
+                        checked = SeedingWhenCompletePreference.current,
+                        onCheckedChange = { SeedingWhenCompletePreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.CloudUpload,
-                    text = stringResource(Res.string.transmission_screen_seeding_when_complete),
-                    description = stringResource(Res.string.transmission_screen_seeding_when_complete_description),
-                    checked = SeedingWhenCompletePreference.current,
-                    onCheckedChange = { SeedingWhenCompletePreference.put(scope, it) }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.transmission_screen_config_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Dns),
-                    text = stringResource(Res.string.transmission_screen_default_torrent_trackers),
-                    descriptionText = pluralStringResource(
-                        Res.plurals.transmission_screen_default_torrent_trackers_description,
-                        quantity = torrentTrackers.size,
-                        torrentTrackers.size,
-                    ),
-                    onClick = {
-                        torrentTrackersDialogValue = torrentTrackers.joinToString("\n")
-                        openTorrentTrackersEditDialog = true
-                    }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Hub),
-                    text = stringResource(Res.string.transmission_screen_torrent_dht_bootstraps),
-                    descriptionText = if (torrentDhtBootstraps.isEmpty()) {
-                        stringResource(Res.string.transmission_screen_torrent_dht_bootstraps_default_description)
-                    } else {
-                        pluralStringResource(
-                            Res.plurals.transmission_screen_torrent_dht_bootstraps_description,
-                            quantity = torrentDhtBootstraps.size,
-                            torrentDhtBootstraps.size,
-                        )
-                    },
-                    onClick = {
-                        torrentDhtBootstrapsDialogValue = torrentDhtBootstraps.joinToString("\n")
-                        openTorrentDhtBootstrapsEditDialog = true
-                    }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(image = Icons.Outlined.VpnKey),
-                    text = stringResource(Res.string.proxy_screen_name),
-                    descriptionText = stringResource(Res.string.proxy_screen_description),
-                    onClick = { navController.navigate(ProxyRoute) },
-                )
+            group(text = { getString(Res.string.transmission_screen_config_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Dns),
+                        text = stringResource(Res.string.transmission_screen_default_torrent_trackers),
+                        descriptionText = pluralStringResource(
+                            Res.plurals.transmission_screen_default_torrent_trackers_description,
+                            quantity = torrentTrackers.size,
+                            torrentTrackers.size,
+                        ),
+                        onClick = {
+                            torrentTrackersDialogValue = torrentTrackers.joinToString("\n")
+                            openTorrentTrackersEditDialog = true
+                        }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Hub),
+                        text = stringResource(Res.string.transmission_screen_torrent_dht_bootstraps),
+                        descriptionText = if (torrentDhtBootstraps.isEmpty()) {
+                            stringResource(Res.string.transmission_screen_torrent_dht_bootstraps_default_description)
+                        } else {
+                            pluralStringResource(
+                                Res.plurals.transmission_screen_torrent_dht_bootstraps_description,
+                                quantity = torrentDhtBootstraps.size,
+                                torrentDhtBootstraps.size,
+                            )
+                        },
+                        onClick = {
+                            torrentDhtBootstrapsDialogValue =
+                                torrentDhtBootstraps.joinToString("\n")
+                            openTorrentDhtBootstrapsEditDialog = true
+                        }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(image = Icons.Outlined.VpnKey),
+                        text = stringResource(Res.string.proxy_screen_name),
+                        descriptionText = stringResource(Res.string.proxy_screen_description),
+                        onClick = { navController.navigate(ProxyRoute) },
+                    )
+                }
             }
         }
     }

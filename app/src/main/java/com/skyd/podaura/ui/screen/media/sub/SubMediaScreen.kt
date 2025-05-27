@@ -89,7 +89,7 @@ private fun SubMediaScreen(media: MediaBean) {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(

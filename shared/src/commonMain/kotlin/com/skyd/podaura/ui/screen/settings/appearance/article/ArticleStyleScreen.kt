@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.appearance.article
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tonality
@@ -25,14 +24,15 @@ import com.skyd.podaura.model.preference.appearance.article.ArticleTopBarTonalEl
 import com.skyd.podaura.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.ItemMinWidthDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.screen.settings.appearance.feed.TonalElevationDialog
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_style_screen_article_item_category
@@ -58,7 +58,7 @@ fun ArticleStyleScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.article_style_screen_name)) },
             )
@@ -69,76 +69,73 @@ fun ArticleStyleScreen() {
         var openArticleItemTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openArticleItemMinWidthDialog by rememberSaveable { mutableStateOf(false) }
 
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.article_style_screen_top_bar_category))
+            group(text = { getString(Res.string.article_style_screen_top_bar_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            ArticleTopBarTonalElevationPreference.current
+                        ),
+                        onClick = { openTopBarTonalElevationDialog = true }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Refresh,
+                        text = stringResource(Res.string.article_style_screen_top_bar_refresh),
+                        description = stringResource(Res.string.article_style_screen_top_bar_refresh_description),
+                        checked = ShowArticleTopBarRefreshPreference.current,
+                        onCheckedChange = { ShowArticleTopBarRefreshPreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        ArticleTopBarTonalElevationPreference.current
-                    ),
-                    onClick = { openTopBarTonalElevationDialog = true }
-                )
+            group(text = { getString(Res.string.article_style_screen_article_list_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            ArticleListTonalElevationPreference.current
+                        ),
+                        onClick = { openArticleListTonalElevationDialog = true }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Refresh,
+                        text = stringResource(Res.string.article_style_screen_pull_refresh),
+                        description = stringResource(Res.string.article_style_screen_pull_refresh_description),
+                        checked = ShowArticlePullRefreshPreference.current,
+                        onCheckedChange = { ShowArticlePullRefreshPreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.Refresh,
-                    text = stringResource(Res.string.article_style_screen_top_bar_refresh),
-                    description = stringResource(Res.string.article_style_screen_top_bar_refresh_description),
-                    checked = ShowArticleTopBarRefreshPreference.current,
-                    onCheckedChange = { ShowArticleTopBarRefreshPreference.put(scope, it) }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.article_style_screen_article_list_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        ArticleListTonalElevationPreference.current
-                    ),
-                    onClick = { openArticleListTonalElevationDialog = true }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Outlined.Refresh,
-                    text = stringResource(Res.string.article_style_screen_pull_refresh),
-                    description = stringResource(Res.string.article_style_screen_pull_refresh_description),
-                    checked = ShowArticlePullRefreshPreference.current,
-                    onCheckedChange = { ShowArticlePullRefreshPreference.put(scope, it) }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.article_style_screen_article_item_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        ArticleItemTonalElevationPreference.current
-                    ),
-                    onClick = { openArticleItemTonalElevationDialog = true }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.WidthNormal),
-                    text = stringResource(Res.string.min_width_dp),
-                    descriptionText = "%.2f".format(ArticleItemMinWidthPreference.current) + " dp",
-                    onClick = { openArticleItemMinWidthDialog = true }
-                )
+            group(text = { getString(Res.string.article_style_screen_article_item_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            ArticleItemTonalElevationPreference.current
+                        ),
+                        onClick = { openArticleItemTonalElevationDialog = true }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.WidthNormal),
+                        text = stringResource(Res.string.min_width_dp),
+                        descriptionText = "%.2f".format(ArticleItemMinWidthPreference.current) + " dp",
+                        onClick = { openArticleItemMinWidthDialog = true }
+                    )
+                }
             }
         }
 

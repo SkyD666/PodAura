@@ -4,7 +4,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Pin
 import androidx.compose.material.icons.outlined.Restore
@@ -31,15 +30,16 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationP
 import com.skyd.podaura.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.SliderDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.component.suspendString
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.feed_style_screen_group_list_category
@@ -62,7 +62,7 @@ fun FeedStyleScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.feed_style_screen_name)) },
             )
@@ -72,53 +72,51 @@ fun FeedStyleScreen() {
         var openGroupListTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var expandFeedNumberBadgeMenu by rememberSaveable { mutableStateOf(false) }
 
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.feed_style_screen_top_bar_category))
+            group(text = { getString(Res.string.feed_style_screen_top_bar_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            FeedTopBarTonalElevationPreference.current
+                        ),
+                        onClick = { openTopBarTonalElevationDialog = true }
+                    )
+                }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        FeedTopBarTonalElevationPreference.current
-                    ),
-                    onClick = { openTopBarTonalElevationDialog = true }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.feed_style_screen_group_list_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Tonality),
-                    text = stringResource(Res.string.tonal_elevation),
-                    descriptionText = TonalElevationPreferenceUtil.toDisplay(
-                        FeedListTonalElevationPreference.current
-                    ),
-                    onClick = { openGroupListTonalElevationDialog = true }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Pin),
-                    text = stringResource(Res.string.feed_style_screen_number_badge),
-                    descriptionText = suspendString(FeedNumberBadgePreference.current) {
-                        FeedNumberBadgePreference.toDisplayName(it)
-                    },
-                    extraContent = {
-                        FeedNumberBadgeMenu(
-                            expanded = expandFeedNumberBadgeMenu,
-                            onDismissRequest = { expandFeedNumberBadgeMenu = false },
-                        )
-                    },
-                    onClick = { expandFeedNumberBadgeMenu = true }
-                )
+            group(text = { getString(Res.string.feed_style_screen_group_list_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Tonality),
+                        text = stringResource(Res.string.tonal_elevation),
+                        descriptionText = TonalElevationPreferenceUtil.toDisplay(
+                            FeedListTonalElevationPreference.current
+                        ),
+                        onClick = { openGroupListTonalElevationDialog = true }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Pin),
+                        text = stringResource(Res.string.feed_style_screen_number_badge),
+                        descriptionText = suspendString(FeedNumberBadgePreference.current) {
+                            FeedNumberBadgePreference.toDisplayName(it)
+                        },
+                        extraContent = {
+                            FeedNumberBadgeMenu(
+                                expanded = expandFeedNumberBadgeMenu,
+                                onDismissRequest = { expandFeedNumberBadgeMenu = false },
+                            )
+                        },
+                        onClick = { expandFeedNumberBadgeMenu = true }
+                    )
+                }
             }
         }
 

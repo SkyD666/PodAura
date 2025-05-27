@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.playerconfig.advanced
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Keyboard
@@ -24,12 +23,13 @@ import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigPreference
 import com.skyd.podaura.model.preference.player.MpvInputConfigPreference
-import com.skyd.podaura.ui.component.BaseSettingsItem
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
@@ -70,88 +70,103 @@ fun PlayerConfigAdvancedScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_advanced_screen_name)) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.Rounded.DeveloperBoard,
-                    text = stringResource(Res.string.player_config_advanced_screen_hardware_decode),
-                    description = stringResource(Res.string.player_config_advanced_screen_hardware_decode_description),
-                    checked = HardwareDecodePreference.current,
-                    onCheckedChange = { HardwareDecodePreference.put(scope, it) }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.PlayCircle),
-                    text = stringResource(Res.string.player_config_advanced_screen_mpv_config),
-                    descriptionText = null,
-                    onClick = {
-                        mpvConfEditDialogValue = MpvConfigPreference.getValue()
-                        openMpvConfEditDialog = true
-                    }
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.Keyboard),
-                    text = stringResource(Res.string.player_config_advanced_screen_mpv_input_config),
-                    descriptionText = null,
-                    onClick = {
-                        mpvInputConfEditDialogValue = MpvInputConfigPreference.getValue()
-                        openMpvInputConfEditDialog = true
-                    }
-                )
-            }
-            item {
-                val configDir = MpvConfigDirPreference.current
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.player_config_advanced_screen_mpv_config_dir),
-                    descriptionText = configDir,
-                    onClick = {
-                        navController.navigate(FilePickerRoute(path = configDir, id = "configDir"))
-                    },
-                    content = {
-                        PodAuraIconButton(
-                            onClick = {
-                                MpvConfigDirPreference.put(scope, MpvConfigDirPreference.default)
-                            },
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(Res.string.reset),
-                        )
-                    },
-                )
-            }
-            item {
-                val cacheDir = MpvCacheDirPreference.current
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.player_config_advanced_screen_mpv_cache_dir),
-                    descriptionText = cacheDir,
-                    onClick = {
-                        navController.navigate(FilePickerRoute(path = cacheDir, id = "cacheDir"))
-                    },
-                    content = {
-                        PodAuraIconButton(
-                            onClick = {
-                                MpvCacheDirPreference.put(scope, MpvCacheDirPreference.default)
-                            },
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(Res.string.reset),
-                        )
-                    },
-                )
+            group {
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Rounded.DeveloperBoard,
+                        text = stringResource(Res.string.player_config_advanced_screen_hardware_decode),
+                        description = stringResource(Res.string.player_config_advanced_screen_hardware_decode_description),
+                        checked = HardwareDecodePreference.current,
+                        onCheckedChange = { HardwareDecodePreference.put(scope, it) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.PlayCircle),
+                        text = stringResource(Res.string.player_config_advanced_screen_mpv_config),
+                        descriptionText = null,
+                        onClick = {
+                            mpvConfEditDialogValue = MpvConfigPreference.getValue()
+                            openMpvConfEditDialog = true
+                        }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Keyboard),
+                        text = stringResource(Res.string.player_config_advanced_screen_mpv_input_config),
+                        descriptionText = null,
+                        onClick = {
+                            mpvInputConfEditDialogValue = MpvInputConfigPreference.getValue()
+                            openMpvInputConfEditDialog = true
+                        }
+                    )
+                }
+                item {
+                    val configDir = MpvConfigDirPreference.current
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.player_config_advanced_screen_mpv_config_dir),
+                        descriptionText = configDir,
+                        onClick = {
+                            navController.navigate(
+                                FilePickerRoute(
+                                    path = configDir,
+                                    id = "configDir"
+                                )
+                            )
+                        },
+                        content = {
+                            PodAuraIconButton(
+                                onClick = {
+                                    MpvConfigDirPreference.put(
+                                        scope,
+                                        MpvConfigDirPreference.default
+                                    )
+                                },
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = stringResource(Res.string.reset),
+                            )
+                        },
+                    )
+                }
+                item {
+                    val cacheDir = MpvCacheDirPreference.current
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.player_config_advanced_screen_mpv_cache_dir),
+                        descriptionText = cacheDir,
+                        onClick = {
+                            navController.navigate(
+                                FilePickerRoute(
+                                    path = cacheDir,
+                                    id = "cacheDir"
+                                )
+                            )
+                        },
+                        content = {
+                            PodAuraIconButton(
+                                onClick = {
+                                    MpvCacheDirPreference.put(scope, MpvCacheDirPreference.default)
+                                },
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = stringResource(Res.string.reset),
+                            )
+                        },
+                    )
+                }
             }
         }
 

@@ -139,7 +139,7 @@ fun AboutScreen() {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.about_screen_name)) },
                 actions = {

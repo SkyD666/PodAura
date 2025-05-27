@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,17 +39,18 @@ import com.skyd.podaura.model.preference.appearance.media.item.MediaItemGridType
 import com.skyd.podaura.model.preference.appearance.media.item.MediaItemListTypeMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaSubListItemTypePreference
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchBaseSettingsItem
-import com.skyd.podaura.ui.component.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.ItemMinWidthDialog
 import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.component.dialog.SliderWithLabelDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchBaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.media_style_screen_media_item_grid_type_cover_ratio
@@ -82,82 +82,81 @@ fun MediaStyleScreen() {
     Scaffold(
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.media_style_screen_name)) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.media_style_screen_media_list_category))
+            group(text = { getString(Res.string.media_style_screen_media_list_category) }) {
+                item {
+                    val mediaShowThumbnail = MediaShowThumbnailPreference.current
+                    SwitchSettingsItem(
+                        imageVector = if (mediaShowThumbnail) Icons.Outlined.Image else Icons.Outlined.HideImage,
+                        text = stringResource(Res.string.media_style_screen_media_list_show_thumbnail),
+                        checked = mediaShowThumbnail,
+                        onCheckedChange = { MediaShowThumbnailPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.AutoMirrored.Outlined.Toc,
+                        text = stringResource(Res.string.media_style_screen_media_list_show_group_tab),
+                        checked = MediaShowGroupTabPreference.current,
+                        onCheckedChange = { MediaShowGroupTabPreference.put(scope, it) }
+                    )
+                }
             }
-            item {
-                val mediaShowThumbnail = MediaShowThumbnailPreference.current
-                SwitchSettingsItem(
-                    imageVector = if (mediaShowThumbnail) Icons.Outlined.Image else Icons.Outlined.HideImage,
-                    text = stringResource(Res.string.media_style_screen_media_list_show_thumbnail),
-                    checked = mediaShowThumbnail,
-                    onCheckedChange = { MediaShowThumbnailPreference.put(scope, it) }
-                )
-            }
-            item {
-                SwitchSettingsItem(
-                    imageVector = Icons.AutoMirrored.Outlined.Toc,
-                    text = stringResource(Res.string.media_style_screen_media_list_show_group_tab),
-                    checked = MediaShowGroupTabPreference.current,
-                    onCheckedChange = { MediaShowGroupTabPreference.put(scope, it) }
-                )
-            }
-            item {
-                CategorySettingsItem(text = stringResource(Res.string.media_style_screen_media_list_item_category))
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.media_style_screen_media_list_item_type),
-                    descriptionText = null,
-                    onClick = { openMediaListItemTypeDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.media_style_screen_media_item_list_type_min_width_dp),
-                    descriptionText = "%.2f".format(MediaItemListTypeMinWidthPreference.current) + " dp",
-                    onClick = { openMediaItemListTypeMinWidthDialog = true },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = null,
-                    text = stringResource(Res.string.media_style_screen_media_item_grid_type_min_width_dp),
-                    descriptionText = "%.2f".format(MediaItemGridTypeMinWidthPreference.current) + " dp",
-                    onClick = { openMediaItemGridMinWidthDialog = true },
-                )
-            }
-            item {
-                val coverRatio = MediaItemGridTypeCoverRatioPreference.current
-                SwitchBaseSettingsItem(
-                    checked = coverRatio > 0f,
-                    onCheckedChange = {
-                        val value = if (it) MediaItemGridTypeCoverRatioPreference.default else 0f
-                        MediaItemGridTypeCoverRatioPreference.put(scope, value)
-                    },
-                    imageVector = null,
-                    text = stringResource(Res.string.media_style_screen_media_item_grid_type_cover_ratio),
-                    description = if (coverRatio == 0f) {
-                        stringResource(Res.string.unlimited)
-                    } else {
-                        "%.2f".format(coverRatio)
-                    },
-                    onClick = { openMediaItemGridCoverRatioDialog = true },
-                )
+            group(text = { getString(Res.string.media_style_screen_media_list_item_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.media_style_screen_media_list_item_type),
+                        descriptionText = null,
+                        onClick = { openMediaListItemTypeDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.media_style_screen_media_item_list_type_min_width_dp),
+                        descriptionText = "%.2f".format(MediaItemListTypeMinWidthPreference.current) + " dp",
+                        onClick = { openMediaItemListTypeMinWidthDialog = true },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = null,
+                        text = stringResource(Res.string.media_style_screen_media_item_grid_type_min_width_dp),
+                        descriptionText = "%.2f".format(MediaItemGridTypeMinWidthPreference.current) + " dp",
+                        onClick = { openMediaItemGridMinWidthDialog = true },
+                    )
+                }
+                item {
+                    val coverRatio = MediaItemGridTypeCoverRatioPreference.current
+                    SwitchBaseSettingsItem(
+                        checked = coverRatio > 0f,
+                        onCheckedChange = {
+                            val value =
+                                if (it) MediaItemGridTypeCoverRatioPreference.default else 0f
+                            MediaItemGridTypeCoverRatioPreference.put(scope, value)
+                        },
+                        imageVector = null,
+                        text = stringResource(Res.string.media_style_screen_media_item_grid_type_cover_ratio),
+                        description = if (coverRatio == 0f) {
+                            stringResource(Res.string.unlimited)
+                        } else {
+                            "%.2f".format(coverRatio)
+                        },
+                        onClick = { openMediaItemGridCoverRatioDialog = true },
+                    )
+                }
             }
         }
         if (openMediaListItemTypeDialog) {

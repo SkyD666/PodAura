@@ -36,14 +36,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.skyd.podaura.ext.takeIfNotBlank
-import com.skyd.podaura.ui.component.BannerItem
-import com.skyd.podaura.ui.component.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.BannerItem
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.SwitchSettingsItem
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.SliderDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
@@ -93,7 +93,7 @@ fun AutoDownloadRuleScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.auto_download_rule_screen_name)) },
             )

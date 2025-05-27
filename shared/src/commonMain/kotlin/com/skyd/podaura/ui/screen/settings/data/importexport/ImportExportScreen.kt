@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -21,12 +20,12 @@ import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.currentTimeMillis
 import com.skyd.podaura.ext.toAbsoluteDateTimeString
 import com.skyd.podaura.ext.validateFileName
-import com.skyd.podaura.ui.component.BaseSettingsItem
-import com.skyd.podaura.ui.component.CategorySettingsItem
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.blockString
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -90,66 +89,68 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = koinViewModel()) {
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             PodAuraTopBar(
-                style = PodAuraTopBarStyle.Large,
+                style = PodAuraTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.import_export_screen_name)) },
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = paddingValues,
         ) {
-            item { CategorySettingsItem(stringResource(Res.string.import_export_screen_feed_category)) }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.FileDownload),
-                    text = stringResource(Res.string.import_opml_screen_name),
-                    descriptionText = null,
-                    onClick = { navController.navigate(ImportOpmlRoute()) }
-                )
+            group(text = { getString(Res.string.import_export_screen_feed_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.FileDownload),
+                        text = stringResource(Res.string.import_opml_screen_name),
+                        descriptionText = null,
+                        onClick = { navController.navigate(ImportOpmlRoute()) }
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.FileUpload),
+                        text = stringResource(Res.string.export_opml_screen_name),
+                        descriptionText = null,
+                        onClick = {
+                            val appName = blockString(Res.string.app_name)
+                            val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
+                            val random = Random.nextInt(0, Int.MAX_VALUE)
+                            opmlSaverLauncher.launch(
+                                suggestedName = "${appName}_${time}_${random}".validateFileName(),
+                                extension = "opml",
+                            )
+                        }
+                    )
+                }
             }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.FileUpload),
-                    text = stringResource(Res.string.export_opml_screen_name),
-                    descriptionText = null,
-                    onClick = {
-                        val appName = blockString(Res.string.app_name)
-                        val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
-                        val random = Random.nextInt(0, Int.MAX_VALUE)
-                        opmlSaverLauncher.launch(
-                            suggestedName = "${appName}_${time}_${random}".validateFileName(),
-                            extension = "opml",
-                        )
-                    }
-                )
-            }
-            item { CategorySettingsItem(stringResource(Res.string.import_export_screen_prefer_category)) }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.FileDownload),
-                    text = stringResource(Res.string.import_opml_screen_import_prefer),
-                    descriptionText = stringResource(Res.string.import_opml_screen_import_prefer_description),
-                    onClick = { jsonPreferencePickerLauncher.launch() },
-                )
-            }
-            item {
-                BaseSettingsItem(
-                    icon = rememberVectorPainter(Icons.Outlined.FileUpload),
-                    text = stringResource(Res.string.import_opml_screen_export_prefer),
-                    descriptionText = stringResource(Res.string.import_opml_screen_export_prefer_description),
-                    onClick = {
-                        val appName = blockString(Res.string.app_name)
-                        val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
-                        jsonPreferenceSaverLauncher.launch(
-                            suggestedName = "${appName}_${BuildKonfig.versionName}_preferences_${time}".validateFileName(),
-                            extension = "json"
-                        )
-                    }
-                )
+            group(text = { getString(Res.string.import_export_screen_prefer_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.FileDownload),
+                        text = stringResource(Res.string.import_opml_screen_import_prefer),
+                        descriptionText = stringResource(Res.string.import_opml_screen_import_prefer_description),
+                        onClick = { jsonPreferencePickerLauncher.launch() },
+                    )
+                }
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.FileUpload),
+                        text = stringResource(Res.string.import_opml_screen_export_prefer),
+                        descriptionText = stringResource(Res.string.import_opml_screen_export_prefer_description),
+                        onClick = {
+                            val appName = blockString(Res.string.app_name)
+                            val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
+                            jsonPreferenceSaverLauncher.launch(
+                                suggestedName = "${appName}_${BuildKonfig.versionName}_preferences_${time}".validateFileName(),
+                                extension = "json"
+                            )
+                        }
+                    )
+                }
             }
         }
     }

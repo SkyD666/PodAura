@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.theme
 
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.materialkolor.dynamicColorScheme
@@ -30,7 +30,7 @@ fun PodAuraTheme(
     val themeName = ThemePreference.current
     val isAmoled = AmoledDarkModePreference.current
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = remember(themeName, darkTheme, isAmoled) {
             colors.getOrElse(themeName) {
                 val (primary, secondary, tertiary) = ThemePreference.toColors(ThemePreference.basicValues[0])

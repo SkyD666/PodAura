@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.component
+package com.skyd.podaura.ui.component.settings
 
 import androidx.annotation.IntRange
 import androidx.compose.foundation.Image
@@ -48,15 +48,19 @@ import com.skyd.podaura.ext.alwaysLight
 import com.skyd.podaura.ext.thenIf
 import java.util.Locale
 
+
 val LocalUseColorfulIcon = compositionLocalOf { false }
-val LocalVerticalPadding = compositionLocalOf { 16.dp }
+val LocalVerticalPadding = compositionLocalOf { 14.dp }
+val LocalItemEnabled = compositionLocalOf { true }
 
 @Composable
 fun BannerItem(content: @Composable () -> Unit) {
     Column {
-        Spacer(modifier = Modifier.height(16.dp))
         CompositionLocalProvider(
             LocalContentColor provides (LocalContentColor.current alwaysLight true),
+            SettingsDefaults.LocalBaseItemBackground provides Color.Transparent,
+            SettingsDefaults.LocalItemHorizontalSpace provides 0.dp,
+            SettingsDefaults.LocalItemVerticalSpace provides 0.dp,
             LocalVerticalPadding provides 21.dp
         ) {
             Box(
@@ -68,7 +72,7 @@ fun BannerItem(content: @Composable () -> Unit) {
                 content()
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
@@ -92,7 +96,7 @@ fun SliderSettingsItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     valueFormat: String = "%.2f",
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onValueChange: (Float) -> Unit,
 ) {
     SliderSettingsItem(
@@ -120,7 +124,7 @@ fun SliderSettingsItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     valueFormat: String = "%.2f",
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onValueChange: (Float) -> Unit,
 ) {
     BaseSettingsItem(
@@ -153,7 +157,7 @@ fun SwitchSettingsItem(
     imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
     SwitchSettingsItem(
@@ -174,7 +178,7 @@ fun SwitchSettingsItem(
     painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -209,7 +213,7 @@ fun SwitchBaseSettingsItem(
     imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -236,7 +240,7 @@ fun SwitchBaseSettingsItem(
     painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -271,7 +275,7 @@ fun RadioSettingsItem(
     modifier: Modifier = Modifier,
     description: String? = null,
     selected: Boolean = false,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
 ) {
     RadioSettingsItem(
@@ -292,7 +296,7 @@ fun RadioSettingsItem(
     modifier: Modifier = Modifier,
     description: String? = null,
     selected: Boolean = false,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
 ) {
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -374,7 +378,7 @@ fun BaseSettingsItem(
     icon: Painter?,
     text: String,
     descriptionText: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -408,7 +412,7 @@ fun BaseSettingsItem(
     icon: Painter?,
     text: String,
     description: (@Composable () -> Unit)? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = LocalItemEnabled.current,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -422,19 +426,34 @@ fun BaseSettingsItem(
         },
     ) {
         Row(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
+                .padding(
+                    horizontal = SettingsDefaults.itemHorizontalSpace,
+                    vertical = SettingsDefaults.itemVerticalSpace,
+                )
+                .clip(
+                    RoundedCornerShape(
+                        topStart = SettingsDefaults.topRound,
+                        topEnd = SettingsDefaults.topRound,
+                        bottomStart = SettingsDefaults.bottomRound,
+                        bottomEnd = SettingsDefaults.bottomRound,
+                    )
+                )
                 .thenIf(onClick != null && enabled) {
                     combinedClickable(onLongClick = onLongClick) { onClick!!() }
                 }
-                .padding(horizontal = 16.dp),
+                .then(modifier)
+                .background(color = SettingsDefaults.baseItemBackground)
+                .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
                 if (LocalUseColorfulIcon.current) {
                     Image(
                         modifier = Modifier
-                            .padding(10.dp)
+                            .padding(6.dp)
+                            .padding(start = 4.dp)
                             .size(24.dp),
                         painter = icon,
                         contentDescription = null
@@ -442,7 +461,8 @@ fun BaseSettingsItem(
                 } else {
                     Icon(
                         modifier = Modifier
-                            .padding(10.dp)
+                            .padding(6.dp)
+                            .padding(start = 4.dp)
                             .size(24.dp),
                         painter = icon,
                         contentDescription = null,
@@ -462,13 +482,13 @@ fun BaseSettingsItem(
                 )
                 extraContent?.invoke()
                 if (description != null) {
-                    Box(modifier = Modifier.padding(top = 4.dp)) {
+                    Box(modifier = Modifier.padding(top = 2.dp)) {
                         description.invoke()
                     }
                 }
             }
             content?.let {
-                Box(modifier = Modifier.padding(end = 5.dp)) { it.invoke() }
+                Box(modifier = Modifier.padding(end = 10.dp)) { it.invoke() }
             }
         }
     }
@@ -478,10 +498,9 @@ fun BaseSettingsItem(
 fun CategorySettingsItem(text: String) {
     Text(
         modifier = Modifier.padding(
-            start = 16.dp + 10.dp,
+            start = 20.dp,
             end = 20.dp,
-            top = 10.dp,
-            bottom = 5.dp
+            bottom = 8.dp
         ),
         text = text,
         style = MaterialTheme.typography.titleMedium,
@@ -494,7 +513,7 @@ fun CategorySettingsItem(text: String) {
 @Composable
 fun TipSettingsItem(text: String) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp + 10.dp, vertical = 10.dp)
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
         Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
         Spacer(modifier = Modifier.height(10.dp))
