@@ -379,6 +379,7 @@
     <string name="behavior_screen_media_screen_category">メディアライブラリ</string>
     <string name="behavior_screen_media_file_filter">ファイルフィルター</string>
     <string name="behavior_screen_media_file_filter_placeholder">ファイル名の正規表現</string>
+    <string name="behavior_screen_reverse_load_article_playlist">Reverse load article playlist</string>
     <string name="feed_screen_mute_feed">ミュート</string>
     <string name="feed_screen_mute_all_feeds">すべてミュート</string>
     <string name="feed_screen_unmute_feed">ミュートを解除</string>
