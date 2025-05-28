@@ -13,8 +13,8 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
-import coil3.asImage
 import com.skyd.podaura.BuildConfig
 import com.skyd.podaura.appContext
 import com.skyd.podaura.ext.getOrDefault
@@ -182,7 +182,7 @@ class PlayerService : Service() {
                     sendEvent(PlayerEvent.Paused(player.paused))
                     sendEvent(PlayerEvent.Loading(player.loading()))
                     loadLastPosition(currentPath).invokeOnCompletion {
-                        sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail?.asImage()))
+                        sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail?.asImageBitmap()))
                     }
                 }
 

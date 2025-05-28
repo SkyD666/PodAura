@@ -26,6 +26,7 @@ import coil3.compose.rememberAsyncImagePainter
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.ratio
 import com.skyd.podaura.ext.screenIsLand
+import com.skyd.podaura.ext.size
 import com.skyd.podaura.ext.thenIfNotNull
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.OnLifecycleEvent
@@ -247,24 +248,42 @@ private fun PipContent(
                 .fillMaxSize()
         )
     } else {
-        val painter = rememberAsyncImagePainter(
-            model = playState.thumbnailAny ?: playState.mediaThumbnail
-        )
-        Image(
-            painter = painter,
-            contentDescription = null,
-            modifier = Modifier
-                .thenIfNotNull(painter.intrinsicSize.ratio) { aspectRatio(it) }
-                .fillMaxSize()
-                .pipParams(
-                    context = LocalContext.current,
-                    autoEnterPipMode = autoEnterPipMode,
-                    isVideo = false,
-                    playState = playState,
-                )
-                .background(Color.Black),
-            contentScale = ContentScale.Fit,
-        )
+        var useThumbnailAny by rememberSaveable { mutableStateOf(true) }
+        val thumbnailAny = playState.thumbnailAny
+        val mediaThumbnail = playState.mediaThumbnail
+        val contentScale = ContentScale.Fit
+        val modifier = Modifier
+            .fillMaxSize()
+            .pipParams(
+                context = LocalContext.current,
+                autoEnterPipMode = autoEnterPipMode,
+                isVideo = false,
+                playState = playState,
+            )
+            .background(Color.Black)
+        if (useThumbnailAny && thumbnailAny != null) {
+            val painter = rememberAsyncImagePainter(
+                model = thumbnailAny,
+                onError = { useThumbnailAny = false },
+            )
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier
+                    .thenIfNotNull(painter.intrinsicSize.ratio) { aspectRatio(it) }
+                    .then(modifier),
+                contentScale = contentScale,
+            )
+        } else if (mediaThumbnail != null) {
+            Image(
+                bitmap = mediaThumbnail,
+                contentDescription = null,
+                modifier = Modifier
+                    .thenIfNotNull(mediaThumbnail.size().ratio) { aspectRatio(it) }
+                    .then(modifier),
+                contentScale = contentScale,
+            )
+        }
     }
 }
 

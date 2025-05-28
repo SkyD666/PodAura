@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.player.port
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.EventListener
@@ -58,18 +60,28 @@ private fun Thumbnail(thumbnail: Any?) {
 
         }
     } else {
-        PodAuraImage(
-            modifier = modifier,
-            model = thumbnail,
-            imageLoader = rememberPodAuraImageLoader(
-                listener = object : EventListener() {
-                    override fun onError(request: ImageRequest, result: ErrorResult) {
-                        imageLoadFailed = true
-                    }
-                },
-                components = { add(LocalMediaFetcher.Factory()) },
-            ),
-            contentScale = ContentScale.Crop,
-        )
+        val contentScale = ContentScale.Crop
+        if (thumbnail is ImageBitmap) {
+            Image(
+                bitmap = thumbnail,
+                contentDescription = null,
+                modifier = modifier,
+                contentScale = contentScale,
+            )
+        } else {
+            PodAuraImage(
+                model = thumbnail,
+                modifier = modifier,
+                imageLoader = rememberPodAuraImageLoader(
+                    listener = object : EventListener() {
+                        override fun onError(request: ImageRequest, result: ErrorResult) {
+                            imageLoadFailed = true
+                        }
+                    },
+                    components = { add(LocalMediaFetcher.Factory()) },
+                ),
+                contentScale = contentScale,
+            )
+        }
     }
 }

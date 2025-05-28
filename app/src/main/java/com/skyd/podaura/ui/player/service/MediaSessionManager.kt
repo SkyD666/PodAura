@@ -5,14 +5,13 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.ui.graphics.asAndroidBitmap
-import coil3.toBitmap
 import com.skyd.podaura.R
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.toUri
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.createThumbnailFile
 import com.skyd.podaura.ui.player.playbackState
-import com.skyd.podaura.ui.player.LoopMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -224,7 +223,10 @@ class MediaSessionManager(
                                 thumbnail.toString()
                             )
                         } else if (newState.mediaThumbnail != null) {
-                            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, newState.mediaThumbnail?.toBitmap())
+                            putBitmap(
+                                MediaMetadataCompat.METADATA_KEY_ART,
+                                newState.mediaThumbnail?.asAndroidBitmap(),
+                            )
                         }
                     }
                     notificationManager.notifyNotification()

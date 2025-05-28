@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.PendingIntentCompat
@@ -18,7 +19,6 @@ import androidx.core.app.ServiceCompat
 import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import coil3.Bitmap
-import coil3.toBitmap
 import com.skyd.podaura.R
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.notify
@@ -296,10 +296,10 @@ class PlayerNotificationManager(
         if (thumbnailAny is String) {
             lastThumbnail = thumbnailAny
             withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) }
-                ?: mediaThumbnail?.toBitmap()
+                ?: mediaThumbnail?.asAndroidBitmap()
         } else {
             lastThumbnail = thumbnailAny
-            mediaThumbnail?.toBitmap()
+            mediaThumbnail?.asAndroidBitmap()
         }
     }
 

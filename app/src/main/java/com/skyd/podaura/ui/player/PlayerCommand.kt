@@ -3,7 +3,7 @@ package com.skyd.podaura.ui.player
 import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
-import coil3.Image
+import androidx.compose.ui.graphics.ImageBitmap
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import java.io.File
 
@@ -79,5 +79,5 @@ sealed interface PlayerEvent {
     data class PlaylistPosition(val value: Int) : PlayerEvent
     data class Artist(val value: String) : PlayerEvent
     data class Album(val value: String) : PlayerEvent
-    data class MediaThumbnail(val value: Image?) : PlayerEvent
+    data class MediaThumbnail(val value: ImageBitmap?) : PlayerEvent
 }
