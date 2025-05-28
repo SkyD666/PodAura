@@ -256,9 +256,9 @@ interface ArticleDao {
                 "       (SELECT enclosure_count FROM temp_enclosure) > 0 AND " +
                 "       (${ArticleBean.DATE_COLUMN} > (SELECT update_time FROM temp_target) " +
                 "           OR (${ArticleBean.DATE_COLUMN} = (SELECT update_time FROM temp_target) AND ${ArticleBean.ARTICLE_ID_COLUMN} > :articleId)) " +
-                "    ORDER BY ${ArticleBean.DATE_COLUMN} DESC, ${ArticleBean.ARTICLE_ID_COLUMN} DESC " +
+                "    ORDER BY ${ArticleBean.DATE_COLUMN} ASC, ${ArticleBean.ARTICLE_ID_COLUMN} ASC " +
                 "    LIMIT :neighborCount " +
-                ") " +
+                ")" +
                 "UNION ALL " +
                 "SELECT * FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId " +
                 "UNION ALL " +
@@ -270,7 +270,9 @@ interface ArticleDao {
                 "           OR (${ArticleBean.DATE_COLUMN} = (SELECT update_time FROM temp_target) AND ${ArticleBean.ARTICLE_ID_COLUMN} < :articleId)) " +
                 "    ORDER BY ${ArticleBean.DATE_COLUMN} DESC, ${ArticleBean.ARTICLE_ID_COLUMN} DESC " +
                 "    LIMIT :neighborCount " +
-                ");"
+                ")" +
+
+                "ORDER BY ${ArticleBean.DATE_COLUMN} DESC, ${ArticleBean.ARTICLE_ID_COLUMN} DESC "
     )
     suspend fun getArticlesForPlaylist(
         articleId: String,
