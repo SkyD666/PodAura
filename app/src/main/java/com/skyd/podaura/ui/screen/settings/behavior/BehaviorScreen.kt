@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.SwipeLeft
 import androidx.compose.material.icons.outlined.SwipeRight
 import androidx.compose.material.icons.outlined.Visibility
@@ -45,6 +46,7 @@ import com.skyd.podaura.model.preference.behavior.article.ArticleTapActionPrefer
 import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePlaylistPreference
 import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.ClipboardTextField
@@ -77,8 +79,10 @@ import podaura.shared.generated.resources.behavior_screen_media_file_filter
 import podaura.shared.generated.resources.behavior_screen_media_file_filter_placeholder
 import podaura.shared.generated.resources.behavior_screen_media_screen_category
 import podaura.shared.generated.resources.behavior_screen_name
+import podaura.shared.generated.resources.behavior_screen_reverse_load_article_playlist
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.ok
+import podaura.shared.generated.resources.playlist_screen_name
 
 
 @Serializable
@@ -214,6 +218,17 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                             )
                         },
                         onClick = { expandArticleSwipeRightActionMenu = true },
+                    )
+                }
+            }
+            group(text = { getString(Res.string.playlist_screen_name) }) {
+                item {
+                    SwitchSettingsItem(
+                        checked = ReverseLoadArticlePlaylistPreference.current,
+                        text = stringResource(Res.string.behavior_screen_reverse_load_article_playlist),
+                        imageVector = Icons.Outlined.SwapVert,
+                        description = null,
+                        onCheckedChange = { ReverseLoadArticlePlaylistPreference.put(scope, it) },
                     )
                 }
             }

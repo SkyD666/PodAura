@@ -52,8 +52,11 @@ class PlayerRepository(
         emit(mediaPlayHistoryDao.getMediaPlayHistory(path)?.lastPlayPosition ?: 0L)
     }.flowOn(Dispatchers.IO)
 
-    suspend fun requestPlaylistByArticleId(articleId: String): List<PlaylistMediaWithArticleBean> =
-        articleDao.getArticlesForPlaylist(articleId).map { articleWithFeed ->
+    suspend fun requestPlaylistByArticleId(
+        articleId: String,
+        reverse: Boolean = true,
+    ): List<PlaylistMediaWithArticleBean> {
+        return articleDao.getArticlesForPlaylist(articleId).map { articleWithFeed ->
             val enclosures = articleWithFeed.articleWithEnclosure.enclosures
             enclosures.mapIndexed { index, enclosure ->
                 PlaylistMediaWithArticleBean(
@@ -67,7 +70,8 @@ class PlayerRepository(
                     article = articleWithFeed,
                 )
             }
-        }.flatten()
+        }.flatten().run { if (reverse) reversed() else this }
+    }
 
     suspend fun requestPlaylistByMediaLibraryList(
         files: List<PlayDataMode.MediaLibraryList.PlayMediaListItem>,

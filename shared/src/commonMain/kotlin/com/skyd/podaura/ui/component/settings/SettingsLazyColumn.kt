@@ -21,10 +21,7 @@ fun SettingsLazyColumn(
     LazyColumn(
         modifier = modifier,
         state = state,
-        contentPadding = contentPadding + PaddingValues(vertical = 16.dp),
-        content = {
-            val scope = SettingsLazyListScopeImpl(this)
-            scope.content()
-        },
+        contentPadding = contentPadding + PaddingValues(vertical = SettingsDefaults.itemTopBottomSpace),
+        content = { SettingsLazyListScopeImpl(this).content() },
     )
 }

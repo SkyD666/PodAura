@@ -3,7 +3,10 @@ package com.skyd.podaura.ui.activity.player
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.skyd.podaura.ext.getOrDefaultSuspend
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
+import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePlaylistPreference
+import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.model.repository.player.PlayerRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistMediaRepository
@@ -29,7 +32,10 @@ class PlayerViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             when (val playDataMode = intent.getParcelableExtra<PlayDataMode>(PLAY_DATA_MODE_KEY)) {
                 is PlayDataMode.ArticleList -> mediaInfos.emit(
-                    playDataMode.url to playerRepo.requestPlaylistByArticleId(playDataMode.articleId)
+                    playDataMode.url to playerRepo.requestPlaylistByArticleId(
+                        articleId = playDataMode.articleId,
+                        reverse = dataStore.getOrDefaultSuspend(ReverseLoadArticlePlaylistPreference),
+                    )
                 )
 
                 is PlayDataMode.MediaLibraryList -> mediaInfos.emit(

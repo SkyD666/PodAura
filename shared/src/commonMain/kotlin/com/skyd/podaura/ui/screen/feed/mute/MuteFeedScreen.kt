@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
@@ -27,6 +25,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,14 +34,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skyd.podaura.ext.plus
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
+import com.skyd.podaura.ui.component.settings.SettingsDefaults
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.TipSettingsItem
+import com.skyd.podaura.ui.component.settings.dsl.items
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.FeedIcon
@@ -102,20 +103,22 @@ private fun FeedList(
     dispatcher: (MuteFeedIntent) -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = lazyListState,
-        contentPadding = contentPadding + PaddingValues(vertical = 6.dp),
-    ) {
-        item { TipSettingsItem(text = stringResource(Res.string.mute_feed_screen_tip)) }
-        when (listState) {
-            is ListState.Failed -> item { ErrorPlaceholder(listState.msg) }
-            ListState.Init -> item { CircularProgressPlaceholder() }
-            is ListState.Success -> items(listState.dataList, key = { it.url }) { item ->
-                MuteFeedItem(
-                    feed = item,
-                    onMute = { dispatcher(MuteFeedIntent.Mute(item.url, it)) },
-                )
+    CompositionLocalProvider(SettingsDefaults.LocalItemTopBottomSpace provides 0.dp) {
+        SettingsLazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = lazyListState,
+            contentPadding = contentPadding,
+        ) {
+            item { TipSettingsItem(text = stringResource(Res.string.mute_feed_screen_tip)) }
+            when (listState) {
+                is ListState.Failed -> item { ErrorPlaceholder(listState.msg) }
+                ListState.Init -> item { CircularProgressPlaceholder() }
+                is ListState.Success -> items(listState.dataList, key = { it.url }) { item ->
+                    MuteFeedItem(
+                        feed = item,
+                        onMute = { dispatcher(MuteFeedIntent.Mute(item.url, it)) },
+                    )
+                }
             }
         }
     }

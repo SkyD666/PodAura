@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.transmission
 
+import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudUpload
@@ -31,6 +32,7 @@ import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
+import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
@@ -52,8 +54,9 @@ import podaura.shared.generated.resources.transmission_screen_torrent_dht_bootst
 import podaura.shared.generated.resources.transmission_screen_transmission_behavior_category
 
 
+@Parcelize
 @Serializable
-data object TransmissionRoute
+data object TransmissionRoute : Parcelable
 
 @Composable
 fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {

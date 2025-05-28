@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
@@ -36,17 +35,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import com.skyd.podaura.ext.takeIfNotBlank
-import com.skyd.podaura.ui.component.settings.BannerItem
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.dialog.SliderDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
+import com.skyd.podaura.ui.component.settings.BannerItem
+import com.skyd.podaura.ui.component.settings.BaseSettingsItem
+import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
+import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleState.RuleState
@@ -62,6 +62,7 @@ import podaura.shared.generated.resources.auto_download_rule_screen_require_filt
 import podaura.shared.generated.resources.auto_download_rule_screen_require_max_download_count
 import podaura.shared.generated.resources.auto_download_rule_screen_require_wifi
 import podaura.shared.generated.resources.enable
+import podaura.shared.generated.resources.none
 import podaura.shared.generated.resources.ok
 import podaura.shared.generated.resources.reset
 import podaura.shared.generated.resources.unlimited
@@ -136,7 +137,7 @@ private fun RuleContent(
     var openMaxDownloadCountDialog by rememberSaveable { mutableStateOf(false) }
     var openFilterPatternDialog by rememberSaveable { mutableStateOf(false) }
 
-    LazyColumn(
+    SettingsLazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(connection),
@@ -156,68 +157,69 @@ private fun RuleContent(
                 )
             }
         }
-        item {
-            SwitchSettingsItem(
-                enabled = rule.enabled,
-                imageVector = Icons.Outlined.Wifi,
-                text = stringResource(Res.string.auto_download_rule_screen_require_wifi),
-                checked = rule.requireWifi,
-                onCheckedChange = {
-                    dispatcher(
-                        AutoDownloadRuleIntent.RequireWifi(feedUrl = rule.feedUrl, requireWifi = it)
-                    )
-                }
-            )
-        }
-        item {
-            SwitchSettingsItem(
-                enabled = rule.enabled,
-                imageVector = Icons.Outlined.BatteryFull,
-                text = stringResource(Res.string.auto_download_rule_screen_require_battery_not_low),
-                checked = rule.requireBatteryNotLow,
-                onCheckedChange = {
-                    dispatcher(
-                        AutoDownloadRuleIntent.RequireBatteryNotLow(
-                            feedUrl = rule.feedUrl,
-                            requireBatteryNotLow = it,
+        group(enabled = rule.enabled) {
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.Outlined.Wifi,
+                    text = stringResource(Res.string.auto_download_rule_screen_require_wifi),
+                    checked = rule.requireWifi,
+                    onCheckedChange = {
+                        dispatcher(
+                            AutoDownloadRuleIntent.RequireWifi(
+                                feedUrl = rule.feedUrl,
+                                requireWifi = it,
+                            )
                         )
-                    )
-                }
-            )
-        }
-        item {
-            SwitchSettingsItem(
-                enabled = rule.enabled,
-                imageVector = Icons.Outlined.Bolt,
-                text = stringResource(Res.string.auto_download_rule_screen_require_charging),
-                checked = rule.requireCharging,
-                onCheckedChange = {
-                    dispatcher(
-                        AutoDownloadRuleIntent.RequireCharging(
-                            feedUrl = rule.feedUrl,
-                            requireCharging = it,
+                    }
+                )
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.Outlined.BatteryFull,
+                    text = stringResource(Res.string.auto_download_rule_screen_require_battery_not_low),
+                    checked = rule.requireBatteryNotLow,
+                    onCheckedChange = {
+                        dispatcher(
+                            AutoDownloadRuleIntent.RequireBatteryNotLow(
+                                feedUrl = rule.feedUrl,
+                                requireBatteryNotLow = it,
+                            )
                         )
-                    )
-                }
-            )
-        }
-        item {
-            BaseSettingsItem(
-                enabled = rule.enabled,
-                icon = rememberVectorPainter(Icons.Outlined.KeyboardDoubleArrowDown),
-                text = stringResource(Res.string.auto_download_rule_screen_require_max_download_count),
-                descriptionText = rule.maxDownloadCount.toString(),
-                onClick = { openMaxDownloadCountDialog = true }
-            )
-        }
-        item {
-            BaseSettingsItem(
-                enabled = rule.enabled,
-                icon = rememberVectorPainter(Icons.Outlined.Code),
-                text = stringResource(Res.string.auto_download_rule_screen_require_filter_pattern),
-                descriptionText = rule.filterPattern.orEmpty().toString(),
-                onClick = { openFilterPatternDialog = true }
-            )
+                    }
+                )
+            }
+            item {
+                SwitchSettingsItem(
+                    imageVector = Icons.Outlined.Bolt,
+                    text = stringResource(Res.string.auto_download_rule_screen_require_charging),
+                    checked = rule.requireCharging,
+                    onCheckedChange = {
+                        dispatcher(
+                            AutoDownloadRuleIntent.RequireCharging(
+                                feedUrl = rule.feedUrl,
+                                requireCharging = it,
+                            )
+                        )
+                    }
+                )
+            }
+            item {
+                BaseSettingsItem(
+                    icon = rememberVectorPainter(Icons.Outlined.KeyboardDoubleArrowDown),
+                    text = stringResource(Res.string.auto_download_rule_screen_require_max_download_count),
+                    descriptionText = rule.maxDownloadCount.toString(),
+                    onClick = { openMaxDownloadCountDialog = true }
+                )
+            }
+            item {
+                BaseSettingsItem(
+                    icon = rememberVectorPainter(Icons.Outlined.Code),
+                    text = stringResource(Res.string.auto_download_rule_screen_require_filter_pattern),
+                    descriptionText = rule.filterPattern.orEmpty()
+                        .ifBlank { stringResource(Res.string.none) },
+                    onClick = { openFilterPatternDialog = true }
+                )
+            }
         }
     }
 

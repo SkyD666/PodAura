@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,24 +44,23 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skyd.podaura.ext.alwaysLight
 import com.skyd.podaura.ext.thenIf
+import com.skyd.podaura.ui.component.settings.dsl.SettingsBaseItemScope
+import com.skyd.podaura.ui.component.settings.dsl.SettingsOtherItemScope
 import java.util.Locale
 
 
-val LocalUseColorfulIcon = compositionLocalOf { false }
-val LocalVerticalPadding = compositionLocalOf { 14.dp }
-val LocalItemEnabled = compositionLocalOf { true }
-
 @Composable
-fun BannerItem(content: @Composable () -> Unit) {
+fun SettingsOtherItemScope.BannerItem(content: @Composable () -> Unit) {
     Column {
         CompositionLocalProvider(
             LocalContentColor provides (LocalContentColor.current alwaysLight true),
             SettingsDefaults.LocalBaseItemBackground provides Color.Transparent,
             SettingsDefaults.LocalItemHorizontalSpace provides 0.dp,
             SettingsDefaults.LocalItemVerticalSpace provides 0.dp,
-            LocalVerticalPadding provides 21.dp
+            SettingsDefaults.LocalBaseItemVerticalPadding provides 21.dp
         ) {
             Box(
                 modifier = Modifier
@@ -72,12 +71,11 @@ fun BannerItem(content: @Composable () -> Unit) {
                 content()
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-fun SelectedItem(selected: Boolean, content: @Composable () -> Unit) {
+inline fun SelectedItem(selected: Boolean, content: @Composable () -> Unit) {
     Box(modifier = Modifier.thenIf(selected) {
         background(MaterialTheme.colorScheme.surfaceContainerHighest)
     }) {
@@ -86,7 +84,7 @@ fun SelectedItem(selected: Boolean, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun SliderSettingsItem(
+fun SettingsBaseItemScope.SliderSettingsItem(
     imageVector: ImageVector?,
     text: String,
     value: Float,
@@ -96,7 +94,7 @@ fun SliderSettingsItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     valueFormat: String = "%.2f",
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onValueChange: (Float) -> Unit,
 ) {
     SliderSettingsItem(
@@ -114,7 +112,7 @@ fun SliderSettingsItem(
 }
 
 @Composable
-fun SliderSettingsItem(
+fun SettingsBaseItemScope.SliderSettingsItem(
     painter: Painter?,
     text: String,
     value: Float,
@@ -124,7 +122,7 @@ fun SliderSettingsItem(
     steps: Int = 0,
     onValueChangeFinished: (() -> Unit)? = null,
     valueFormat: String = "%.2f",
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onValueChange: (Float) -> Unit,
 ) {
     BaseSettingsItem(
@@ -151,13 +149,13 @@ fun SliderSettingsItem(
 }
 
 @Composable
-fun SwitchSettingsItem(
+fun SettingsBaseItemScope.SwitchSettingsItem(
     checked: Boolean,
     text: String,
     imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
     SwitchSettingsItem(
@@ -172,13 +170,13 @@ fun SwitchSettingsItem(
 }
 
 @Composable
-fun SwitchSettingsItem(
+fun SettingsBaseItemScope.SwitchSettingsItem(
     checked: Boolean,
     text: String,
     painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onCheckedChange: ((Boolean) -> Unit)?,
 ) {
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -207,13 +205,13 @@ fun SwitchSettingsItem(
 
 
 @Composable
-fun SwitchBaseSettingsItem(
+fun SettingsBaseItemScope.SwitchBaseSettingsItem(
     checked: Boolean,
     text: String,
     imageVector: ImageVector?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -234,13 +232,13 @@ fun SwitchBaseSettingsItem(
 }
 
 @Composable
-fun SwitchBaseSettingsItem(
+fun SettingsBaseItemScope.SwitchBaseSettingsItem(
     checked: Boolean,
     text: String,
     painter: Painter?,
     modifier: Modifier = Modifier,
     description: String? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -269,13 +267,13 @@ fun SwitchBaseSettingsItem(
 }
 
 @Composable
-fun RadioSettingsItem(
+fun SettingsBaseItemScope.RadioSettingsItem(
     imageVector: ImageVector?,
     text: String,
     modifier: Modifier = Modifier,
     description: String? = null,
     selected: Boolean = false,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
 ) {
     RadioSettingsItem(
@@ -290,13 +288,13 @@ fun RadioSettingsItem(
 }
 
 @Composable
-fun RadioSettingsItem(
+fun SettingsBaseItemScope.RadioSettingsItem(
     painter: Painter?,
     text: String,
     modifier: Modifier = Modifier,
     description: String? = null,
     selected: Boolean = false,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
 ) {
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
@@ -325,7 +323,7 @@ fun RadioSettingsItem(
 }
 
 @Composable
-fun ColorSettingsItem(
+fun SettingsBaseItemScope.ColorSettingsItem(
     imageVector: ImageVector?,
     text: String,
     modifier: Modifier = Modifier,
@@ -344,7 +342,7 @@ fun ColorSettingsItem(
 }
 
 @Composable
-fun ColorSettingsItem(
+fun SettingsBaseItemScope.ColorSettingsItem(
     painter: Painter?,
     text: String,
     modifier: Modifier = Modifier,
@@ -373,12 +371,12 @@ fun ColorSettingsItem(
 }
 
 @Composable
-fun BaseSettingsItem(
+fun SettingsBaseItemScope.BaseSettingsItem(
     modifier: Modifier = Modifier,
     icon: Painter?,
     text: String,
     descriptionText: String? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -407,12 +405,12 @@ fun BaseSettingsItem(
 }
 
 @Composable
-fun BaseSettingsItem(
+fun SettingsBaseItemScope.BaseSettingsItem(
     modifier: Modifier = Modifier,
     icon: Painter?,
     text: String,
     description: (@Composable () -> Unit)? = null,
-    enabled: Boolean = LocalItemEnabled.current,
+    enabled: Boolean = SettingsDefaults.baseItemEnabled,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     extraContent: (@Composable () -> Unit)? = null,
@@ -434,22 +432,23 @@ fun BaseSettingsItem(
                 )
                 .clip(
                     RoundedCornerShape(
-                        topStart = SettingsDefaults.topRound,
-                        topEnd = SettingsDefaults.topRound,
-                        bottomStart = SettingsDefaults.bottomRound,
-                        bottomEnd = SettingsDefaults.bottomRound,
+                        topStart = SettingsDefaults.baseItemTopRound,
+                        topEnd = SettingsDefaults.baseItemTopRound,
+                        bottomStart = SettingsDefaults.baseItemBottomRound,
+                        bottomEnd = SettingsDefaults.baseItemBottomRound,
                     )
                 )
                 .thenIf(onClick != null && enabled) {
                     combinedClickable(onLongClick = onLongClick) { onClick!!() }
                 }
+                .heightIn(min = 60.dp)
                 .then(modifier)
                 .background(color = SettingsDefaults.baseItemBackground)
                 .padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (icon != null) {
-                if (LocalUseColorfulIcon.current) {
+                if (SettingsDefaults.baseItemUseColorfulIcon) {
                     Image(
                         modifier = Modifier
                             .padding(6.dp)
@@ -472,10 +471,14 @@ fun BaseSettingsItem(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 10.dp, vertical = LocalVerticalPadding.current)
+                    .padding(
+                        horizontal = 10.dp,
+                        vertical = SettingsDefaults.baseItemVerticalPadding,
+                    )
             ) {
                 Text(
                     text = text,
+                    fontSize = 20.sp,
                     style = MaterialTheme.typography.titleLarge,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -495,7 +498,7 @@ fun BaseSettingsItem(
 }
 
 @Composable
-fun CategorySettingsItem(text: String) {
+fun SettingsOtherItemScope.CategorySettingsItem(text: String) {
     Text(
         modifier = Modifier.padding(
             start = 20.dp,
@@ -511,7 +514,7 @@ fun CategorySettingsItem(text: String) {
 }
 
 @Composable
-fun TipSettingsItem(text: String) {
+fun SettingsOtherItemScope.TipSettingsItem(text: String) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
     ) {

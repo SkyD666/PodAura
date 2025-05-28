@@ -386,6 +386,7 @@
     <string name="behavior_screen_media_screen_category">Media library</string>
     <string name="behavior_screen_media_file_filter">File filter</string>
     <string name="behavior_screen_media_file_filter_placeholder">Filename regex</string>
+    <string name="behavior_screen_reverse_load_article_playlist">Reverse load article playlist</string>
     <string name="feed_screen_mute_feed">Mute</string>
     <string name="feed_screen_mute_all_feeds">Mute all</string>
     <string name="feed_screen_unmute_feed">Unmute</string>

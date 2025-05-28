@@ -379,6 +379,7 @@
     <string name="behavior_screen_media_screen_category">媒体库</string>
     <string name="behavior_screen_media_file_filter">文件过滤</string>
     <string name="behavior_screen_media_file_filter_placeholder">文件名正则</string>
+    <string name="behavior_screen_reverse_load_article_playlist">反向加载文章播放列表</string>
     <string name="feed_screen_mute_feed">静音</string>
     <string name="feed_screen_mute_all_feeds">静音</string>
     <string name="feed_screen_unmute_feed">取消静音</string>
