@@ -4,6 +4,8 @@ import android.content.Context
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import androidx.compose.ui.graphics.asAndroidBitmap
+import coil3.toBitmap
 import com.skyd.podaura.R
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.toUri
@@ -222,7 +224,7 @@ class MediaSessionManager(
                                 thumbnail.toString()
                             )
                         } else if (newState.mediaThumbnail != null) {
-                            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, newState.mediaThumbnail)
+                            putBitmap(MediaMetadataCompat.METADATA_KEY_ART, newState.mediaThumbnail?.toBitmap())
                         }
                     }
                     notificationManager.notifyNotification()

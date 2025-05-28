@@ -6,12 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,12 +24,14 @@ import androidx.compose.material.icons.outlined.Balance
 import androidx.compose.material.icons.outlined.Coffee
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -114,6 +114,7 @@ import podaura.shared.generated.resources.ic_rays
 import podaura.shared.generated.resources.ic_santa_hat
 import podaura.shared.generated.resources.ic_telegram_24
 import podaura.shared.generated.resources.license_screen_name
+import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.sponsor
 import podaura.shared.generated.resources.sponsor_afadian
 import podaura.shared.generated.resources.sponsor_buy_me_a_coffee
@@ -330,28 +331,46 @@ private fun HelpArea(
     onSponsorDialogVisibleChange: (Boolean) -> Unit,
 ) {
     Spacer(modifier = Modifier.height(16.dp))
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Button(
+    val translateLabel = stringResource(Res.string.help_translate)
+    val sponsorLabel = stringResource(Res.string.sponsor)
+    ButtonGroup(
+        overflowIndicator = { menuState ->
+            FilledIconButton(
+                onClick = { if (menuState.isExpanded) menuState.dismiss() else menuState.show() }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.MoreVert,
+                    contentDescription = stringResource(Res.string.more),
+                )
+            }
+        },
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        clickableItem(
             onClick = onTranslateClick,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            Icon(imageVector = Icons.Outlined.Translate, contentDescription = null)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = stringResource(Res.string.help_translate), textAlign = TextAlign.Center)
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Button(
+            label = translateLabel,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Translate,
+                    contentDescription = null,
+                    modifier = Modifier.padding(3.dp),
+                )
+            },
+            weight = 1f,
+        )
+        clickableItem(
             onClick = { onSponsorDialogVisibleChange(true) },
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-        ) {
-            Icon(imageVector = Icons.Outlined.Coffee, contentDescription = null)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(text = stringResource(Res.string.sponsor), textAlign = TextAlign.Center)
-        }
+            label = sponsorLabel,
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Coffee,
+                    contentDescription = null,
+                    modifier = Modifier.padding(3.dp),
+                )
+            },
+            weight = 1f,
+        )
     }
     SponsorDialog(visible = openSponsorDialog, onClose = { onSponsorDialogVisibleChange(false) })
 }

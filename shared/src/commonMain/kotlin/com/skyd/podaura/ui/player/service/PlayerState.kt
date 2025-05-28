@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.player.service
 
-import coil3.Bitmap
+import coil3.Image
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.Track
@@ -35,7 +35,7 @@ data class PlayerState(
     val loop: LoopMode = LoopMode.None,
     val idling: Boolean = true,
     val mediaTitle: String? = null,
-    val mediaThumbnail: Bitmap? = null,
+    val mediaThumbnail: Image? = null,
 ) {
     val currentMedia = playlist[path]
     val isVideo = videoTracks.any { it.trackId >= 0 && !it.isAlbumArt }

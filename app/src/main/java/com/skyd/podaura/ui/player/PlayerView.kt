@@ -3,7 +3,9 @@ package com.skyd.podaura.ui.player
 import android.content.pm.ActivityInfo
 import android.provider.Settings
 import android.view.OrientationEventListener
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,11 +22,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.rememberAsyncImagePainter
 import com.skyd.podaura.ext.activity
+import com.skyd.podaura.ext.ratio
 import com.skyd.podaura.ext.screenIsLand
+import com.skyd.podaura.ext.thenIfNotNull
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.OnLifecycleEvent
-import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.player.component.PlayerAndroidView
 import com.skyd.podaura.ui.player.component.dialog.SpeedDialog
 import com.skyd.podaura.ui.player.component.dialog.audio.AudioTrackDialog
@@ -243,9 +247,15 @@ private fun PipContent(
                 .fillMaxSize()
         )
     } else {
-        PodAuraImage(
-            model = playState.thumbnailAny/* TODO ?: playState.mediaThumbnail*/,
+        val painter = rememberAsyncImagePainter(
+            model = playState.thumbnailAny ?: playState.mediaThumbnail
+        )
+        Image(
+            painter = painter,
+            contentDescription = null,
             modifier = Modifier
+                .thenIfNotNull(painter.intrinsicSize.ratio) { aspectRatio(it) }
+                .fillMaxSize()
                 .pipParams(
                     context = LocalContext.current,
                     autoEnterPipMode = autoEnterPipMode,

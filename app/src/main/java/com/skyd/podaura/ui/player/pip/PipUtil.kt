@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.util.Log
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
@@ -27,6 +26,7 @@ import androidx.core.app.PictureInPictureModeChangedInfo
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toRect
 import androidx.core.util.Consumer
+import co.touchlab.kermit.Logger
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
@@ -48,7 +48,7 @@ internal fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
             onDispose { activity.removeOnUserLeaveHintListener(onUserLeaveBehavior) }
         }
     } else {
-        Log.i("PIP_TAG", "API does not support PiP")
+        Logger.i("PIP_TAG") { "API does not support PiP" }
     }
 }
 
@@ -96,7 +96,6 @@ internal fun Modifier.pipParams(
                     b.setAspectRatio(Rational(rect.width.toInt(), rect.height.toInt()))
                 }
                 setActionsAndApplyBuilder(b)
-
             }
         }
     } else this

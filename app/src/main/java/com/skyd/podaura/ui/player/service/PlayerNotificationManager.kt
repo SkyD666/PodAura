@@ -18,14 +18,15 @@ import androidx.core.app.ServiceCompat
 import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import coil3.Bitmap
+import coil3.toBitmap
 import com.skyd.podaura.R
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.notify
 import com.skyd.podaura.ui.activity.player.PlayActivity
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.createThumbnail
 import com.skyd.podaura.ui.player.isPlaying
-import com.skyd.podaura.ui.player.LoopMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -294,10 +295,11 @@ class PlayerNotificationManager(
         val thumbnailAny = currentMedia?.thumbnailAny
         if (thumbnailAny is String) {
             lastThumbnail = thumbnailAny
-            withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) } ?: mediaThumbnail
+            withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) }
+                ?: mediaThumbnail?.toBitmap()
         } else {
             lastThumbnail = thumbnailAny
-            mediaThumbnail
+            mediaThumbnail?.toBitmap()
         }
     }
 
