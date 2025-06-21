@@ -11,19 +11,20 @@ libtorrent4j = "2.1.0-35"
 coroutines = "1.10.2"
 paging = "3.3.6"
 rome = "2.1.0"
-room = "2.7.1"
-compose = "1.9.0-alpha03"
+room = "2.7.2"
+compose = "1.9.0-beta01"
 tracingPerfetto = "1.0.0"
-worker = "2.10.1"
-kotlin = "2.1.10"
+worker = "2.10.2"
+kotlin = "2.2.0-RC3"
 kotlinxAtomicfu = "0.27.0"
 kotlinxSerialization = "1.8.0"
+ksp = "2.2.0-RC3-2.0.2"
 ktor = "3.1.2"
-agp = "8.9.2"
+agp = "8.10.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.16.0" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.0" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.10.1" }
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version = "1.1.1" }
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0-alpha01" }
@@ -34,18 +35,18 @@ compose-foundation = { module = "androidx.compose.foundation:foundation", versio
 jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.0-beta01" }
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
-androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.8.0" }
+androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.8.3" }
 compose-material-icons = { module = "org.jetbrains.compose.material:material-icons-extended", version = "1.7.3" }
 jetbrains-compose-window-size = { module = "org.jetbrains.compose.material3:material3-window-size-class", version = "1.7.3" }
 jetbrains-compose-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 jetbrains-compose-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 jetbrains-compose-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
-jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.8.0" }
+jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.8.1" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.5.1" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.5.2" }
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracingPerfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracingPerfetto" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
@@ -67,7 +68,7 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 material-kolor = { module = "com.materialkolor:material-kolor", version = "2.0.0" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.0" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0-alpha15" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.4.0-alpha16" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "2.11.0" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -91,6 +92,8 @@ coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+
+settings = { module = "io.github.skyd666:settings", version = "1.0-beta03" }
 
 compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0-rc04" }
 
@@ -116,7 +119,7 @@ androidx-paging-test = { module = "androidx.paging:paging-testing", version.ref 
 androidx-work-test = { module = "androidx.work:work-testing", version.ref = "worker" }
 androidx-test-rules = { module = "androidx.test:rules", version = "1.6.1" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version = "2.1.10-1.0.31" }
+symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version = "1.10.2" }
@@ -129,17 +132,17 @@ kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version = 
 kotlinx-io-okio = { module = "org.jetbrains.kotlinx:kotlinx-io-okio", version = "0.7.0" }
 
 [plugins]
-android-application = { id = "com.android.application", version = "8.9.2" }
+android-application = { id = "com.android.application", version = "8.10.1" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-ksp = { id = "com.google.devtools.ksp", version = "2.1.10-1.0.31" }
-android-library = { id = "com.android.library", version = "8.9.2" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+android-library = { id = "com.android.library", version = "8.10.1" }
 android-test = { id = "com.android.test", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinxAtomicfu" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-compose-multiplatform = { id = "org.jetbrains.compose", version = "1.8.0-rc01" }
+compose-multiplatform = { id = "org.jetbrains.compose", version = "1.8.1" }
 room = { id = "androidx.room", version.ref = "room" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version = "0.17.0" }

@@ -1,6 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
@@ -113,6 +112,7 @@ kotlin {
                 implementation(libs.kotlin.codepoints.deluxe)
                 implementation(libs.ksoup)
                 implementation(libs.material.kolor)
+                implementation(libs.settings)
 
                 implementation(project(":ksp"))
             }
@@ -219,6 +219,14 @@ dependencies {
 project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
+tasks {
+    configureEach {
+        if (name.contains("kspDebugKotlinAndroid") || name.contains("kspReleaseKotlinAndroid")) {
+            dependsOn("kspCommonMainKotlinMetadata")
+        }
     }
 }
 

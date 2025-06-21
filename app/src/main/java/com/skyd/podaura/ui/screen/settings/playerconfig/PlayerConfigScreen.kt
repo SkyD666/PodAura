@@ -58,13 +58,13 @@ import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.SliderDialog
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
-import com.skyd.podaura.ui.component.settings.SwitchBaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
+import com.skyd.settings.BaseSettingsItem
+import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.SwitchBaseSettingsItem
+import com.skyd.settings.SwitchSettingsItem
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString

@@ -47,11 +47,11 @@ import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.connectedButtonShapes
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
-import com.skyd.podaura.ui.component.settings.TipSettingsItem
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
+import com.skyd.settings.BaseSettingsItem
+import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.TipSettingsItem
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher

@@ -33,9 +33,6 @@ import com.skyd.podaura.ext.isSinglePane
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SelectedItem
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
@@ -43,6 +40,9 @@ import com.skyd.podaura.ui.screen.settings.data.DataRoute
 import com.skyd.podaura.ui.screen.settings.playerconfig.PlayerConfigRoute
 import com.skyd.podaura.ui.screen.settings.rssconfig.RssConfigRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
+import com.skyd.settings.BaseSettingsItem
+import com.skyd.settings.SelectedItem
+import com.skyd.settings.SettingsLazyColumn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource

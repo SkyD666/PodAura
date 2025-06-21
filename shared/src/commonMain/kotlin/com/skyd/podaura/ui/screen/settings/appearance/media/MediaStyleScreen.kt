@@ -44,11 +44,11 @@ import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.ItemMinWidthDialog
 import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.component.dialog.SliderWithLabelDialog
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
-import com.skyd.podaura.ui.component.settings.SwitchBaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.component.suspendString
+import com.skyd.settings.BaseSettingsItem
+import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.SwitchBaseSettingsItem
+import com.skyd.settings.SwitchSettingsItem
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource

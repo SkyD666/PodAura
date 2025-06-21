@@ -27,10 +27,10 @@ import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenc
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.ItemMinWidthDialog
-import com.skyd.podaura.ui.component.settings.BaseSettingsItem
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
-import com.skyd.podaura.ui.component.settings.SwitchSettingsItem
 import com.skyd.podaura.ui.screen.settings.appearance.feed.TonalElevationDialog
+import com.skyd.settings.BaseSettingsItem
+import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.SwitchSettingsItem
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource

@@ -151,19 +151,19 @@ class MainActivity : BaseComposeActivity() {
             }
         }
     }
+}
 
-    @Composable
-    private fun IntentHandler() {
-        val navController = LocalNavController.current
+@Composable
+private fun IntentHandler() {
+    val navController = LocalNavController.current
 
-        DisposableEffect(navController) {
-            ExternalUriHandler.listener = { uri ->
-                navController.navigate(NavUri(uri))
-            }
-            onDispose {
-                // Removes the listener when the composable is no longer active
-                ExternalUriHandler.listener = null
-            }
+    DisposableEffect(navController) {
+        ExternalUriHandler.listener = { uri ->
+            navController.navigate(NavUri(uri))
+        }
+        onDispose {
+            // Removes the listener when the composable is no longer active
+            ExternalUriHandler.listener = null
         }
     }
 }

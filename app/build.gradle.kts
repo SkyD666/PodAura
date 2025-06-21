@@ -254,6 +254,8 @@ dependencies {
     implementation(libs.libtorrent4j.x86)
     implementation(libs.libtorrent4j.x8664)
 
+    implementation(libs.settings)
+
     implementation(compose.components.resources)
 
     implementation(project(":shared"))

@@ -114,7 +114,7 @@ fun MoreScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(dataList) { item ->
-                More1Item(
+                MoreItem(
                     data = item,
                     onClickListener = { data -> data.action.invoke() }
                 )
@@ -124,7 +124,7 @@ fun MoreScreen() {
 }
 
 @Composable
-fun More1Item(
+fun MoreItem(
     data: MoreBean,
     onClickListener: ((data: MoreBean) -> Unit)? = null
 ) {

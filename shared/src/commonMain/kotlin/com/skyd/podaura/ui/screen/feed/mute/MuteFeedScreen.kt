@@ -40,14 +40,15 @@ import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.WaitingDialog
-import com.skyd.podaura.ui.component.settings.SettingsDefaults
-import com.skyd.podaura.ui.component.settings.SettingsLazyColumn
-import com.skyd.podaura.ui.component.settings.TipSettingsItem
-import com.skyd.podaura.ui.component.settings.dsl.items
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedState.ListState
+import com.skyd.settings.LocalSettingsStyle
+import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.SettingsStyle
+import com.skyd.settings.TipSettingsItem
+import com.skyd.settings.dsl.items
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -103,7 +104,7 @@ private fun FeedList(
     dispatcher: (MuteFeedIntent) -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
-    CompositionLocalProvider(SettingsDefaults.LocalItemTopBottomSpace provides 0.dp) {
+    CompositionLocalProvider(LocalSettingsStyle provides SettingsStyle(itemTopBottomSpace = 0.dp)) {
         SettingsLazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = lazyListState,

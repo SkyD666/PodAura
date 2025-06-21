@@ -53,7 +53,7 @@ data class PlaylistMediaBean(
     }
 
     @Ignore
-    val isLocalFile = url.isLocalFile()
+    val isLocalFile: Boolean = url.isLocalFile()
 
     @Ignore
     var title: String? = null
