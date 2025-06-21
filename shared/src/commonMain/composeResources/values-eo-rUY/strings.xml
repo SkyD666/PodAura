@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PodAura</string>
     <string name="media_screen_name">Medio</string>
     <string name="more_screen_name">Pli</string>
     <string name="add">Aldoni</string>
