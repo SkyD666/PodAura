@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PodAura</string>
+    <string name="media_screen_name">Medio</string>
+    <string name="more_screen_name">Pli</string>
+    <string name="add">Aldoni</string>
+    <string name="paste">Alglui</string>
+    <string name="warning">Averto</string>
+    <string name="cancel">Nuligi</string>
+    <string name="ok">Bone</string>
+    <string name="copy">Kopii</string>
+    <string name="close">Fermi</string>
+    <string name="exit">Eliri</string>
+    <string name="remove">Forigi</string>
+    <string name="edit">Redakti</string>
+    <string name="article_screen_name">Artikolo</string>
+    <string name="back">Reen</string>
+    <string name="read_screen_name">Legi</string>
+    <string name="download">Elŝuti</string>
+    <string name="downloading">Elŝutas…</string>
+    <string name="download_error_paused">Eraro</string>
+    <string name="download_paused">Paŭzigita</string>
+    <string name="download_completed">Finita</string>
 </resources>
