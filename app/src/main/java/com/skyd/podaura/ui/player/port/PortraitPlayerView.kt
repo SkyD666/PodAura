@@ -30,13 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.activity.MainActivity
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
@@ -70,20 +70,20 @@ internal fun PortraitPlayerView(
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { },
                 navigationIcon = { BackIcon(onClick = onBack) },
                 actions = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        PodAuraIconButton(
+                        ComponeIconButton(
                             onClick = { context.activity.manualEnterPictureInPictureMode() },
                             imageVector = Icons.Outlined.PictureInPictureAlt,
                             contentDescription = stringResource(Res.string.player_picture_in_picture),
                         )
                     }
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { showMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(Res.string.more),

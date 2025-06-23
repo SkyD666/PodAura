@@ -45,16 +45,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.SearchBarInputField
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.withoutTop
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
-import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.SearchBarInputField
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.history.MediaPlayHistoryList
@@ -102,7 +102,7 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
-                PodAuraFloatingActionButton(
+                ComponeFloatingActionButton(
                     onClick = { scope.launch { searchResultListState.animateScrollToItem(0) } },
                     onSizeWithSinglePaddingChanged = { width, height ->
                         fabWidth = width
@@ -187,8 +187,6 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 tabs[index].second.invoke(this)
             }
         }
-
-
 
         WaitingDialog(visible = uiState.loadingDialog)
 

@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.ext.thenIfNotNull
@@ -39,9 +42,6 @@ import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.history.item.MediaPlayHistoryItem
@@ -76,12 +76,12 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.CenterAligned,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.CenterAligned,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.history_screen_name)) },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { navController.navigate(HistorySearchRoute) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.history_search_screen_hint),

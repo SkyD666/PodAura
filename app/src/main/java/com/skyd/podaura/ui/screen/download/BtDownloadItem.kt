@@ -27,10 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toPercentage
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -182,7 +182,7 @@ fun BtDownloadItem(
                     )
                 }
             }
-            PodAuraIconButton(
+            ComponeIconButton(
                 enabled = pauseButtonEnabled,
                 onClick = {
                     when (data.downloadState) {
@@ -202,7 +202,7 @@ fun BtDownloadItem(
                 imageVector = pauseButtonIcon,
                 contentDescription = pauseButtonContentDescription,
             )
-            PodAuraIconButton(
+            ComponeIconButton(
                 enabled = cancelButtonEnabled,
                 onClick = {
                     onCancel(data)

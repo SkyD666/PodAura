@@ -65,16 +65,16 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.license.LicenseRoute
@@ -139,22 +139,22 @@ fun AboutScreen() {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.about_screen_name)) },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         imageVector = Icons.Outlined.Gavel,
                         contentDescription = stringResource(Res.string.terms_of_service_screen_name),
                         onClick = { navController.navigate(TermsOfServiceRoute) }
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         imageVector = Icons.Outlined.Balance,
                         contentDescription = stringResource(Res.string.license_screen_name),
                         onClick = { navController.navigate(LicenseRoute) }
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { openUpdateDialog = true },
                         imageVector = Icons.Outlined.Update,
                         contentDescription = stringResource(Res.string.update_check)
@@ -378,7 +378,7 @@ private fun HelpArea(
 @Composable
 private fun SponsorDialog(visible: Boolean, onClose: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    PodAuraDialog(
+    ComponeDialog(
         visible = visible,
         onDismissRequest = onClose,
         icon = { Icon(imageVector = Icons.Outlined.Coffee, contentDescription = null) },
@@ -436,7 +436,7 @@ private fun ButtonArea() {
             ),
             contentAlignment = Alignment.Center
         ) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_github_24),
                 contentDescription = stringResource(Res.string.about_screen_visit_github),
                 onClick = { uriHandler.safeOpenUri(Const.GITHUB_REPO) }
@@ -449,7 +449,7 @@ private fun ButtonArea() {
             ),
             contentAlignment = Alignment.Center
         ) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_telegram_24),
                 contentDescription = stringResource(Res.string.about_screen_join_telegram),
                 onClick = { uriHandler.safeOpenUri(Const.TELEGRAM_GROUP) }
@@ -462,7 +462,7 @@ private fun ButtonArea() {
             ),
             contentAlignment = Alignment.Center
         ) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_discord_24),
                 contentDescription = stringResource(Res.string.about_screen_join_discord),
                 onClick = { uriHandler.safeOpenUri(Const.DISCORD_SERVER) }

@@ -59,6 +59,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.isDetailPaneVisible
 import com.skyd.podaura.ext.isSinglePane
@@ -72,12 +77,7 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationP
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.local.LocalGlobalNavController
 import com.skyd.podaura.ui.local.LocalNavController
@@ -234,21 +234,21 @@ private fun FeedList(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 title = { Text(text = stringResource(Res.string.feed_screen_name)) },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { navController.navigate(SearchRoute.Feed) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.feed_screen_search_feed),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { onShowArticleListByFeedUrls(emptyList()) },
                         imageVector = Icons.AutoMirrored.Outlined.Article,
                         contentDescription = stringResource(Res.string.feed_screen_all_articles),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(Res.string.more),
@@ -278,7 +278,7 @@ private fun FeedList(
             )
         },
         floatingActionButton = {
-            PodAuraFloatingActionButton(
+            ComponeFloatingActionButton(
                 onClick = { openAddDialog = true },
                 onSizeWithSinglePaddingChanged = { width, height ->
                     fabWidth = width

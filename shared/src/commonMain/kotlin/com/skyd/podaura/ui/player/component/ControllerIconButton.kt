@@ -6,8 +6,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraIconToggleButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeIconToggleButton
 
 @Composable
 /*internal*/ fun ControllerIconButton(
@@ -17,7 +17,7 @@ import com.skyd.podaura.ui.component.PodAuraIconToggleButton
     imageVector: ImageVector,
     contentDescription: String?,
 ) {
-    PodAuraIconButton(
+    ComponeIconButton(
         modifier = modifier,
         imageVector = imageVector,
         onClick = onClick,
@@ -39,7 +39,7 @@ import com.skyd.podaura.ui.component.PodAuraIconToggleButton
         checkedContentColor = LocalContentColor.current,
     ),
 ) {
-    PodAuraIconToggleButton(
+    ComponeIconToggleButton(
         modifier = modifier,
         checked = checked,
         onCheckedChange = onCheckedChange,

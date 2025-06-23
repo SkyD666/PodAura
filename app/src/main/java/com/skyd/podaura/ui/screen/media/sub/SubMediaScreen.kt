@@ -20,16 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.podaura.ext.exists
 import com.skyd.podaura.ext.popBackStackWithLifecycle
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaSubListSortByPreference
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.serializableType
 import com.skyd.podaura.ui.local.LocalNavController
@@ -62,7 +62,7 @@ data class SubMediaRoute(val media: MediaBean) {
 fun SubMediaScreenRoute(media: MediaBean?) {
     val navController = LocalNavController.current
     if (media == null || !media.path.exists() || !media.isDir) {
-        PodAuraDialog(
+        ComponeDialog(
             icon = {
                 Icon(imageVector = Icons.Outlined.WarningAmber, contentDescription = null)
             },
@@ -88,8 +88,8 @@ private fun SubMediaScreen(media: MediaBean) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(
@@ -99,7 +99,7 @@ private fun SubMediaScreen(media: MediaBean) {
                     )
                 },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = {
                             navController.navigate(
                                 MediaSearchRoute(path = media.filePath, isSubList = true)
@@ -108,7 +108,7 @@ private fun SubMediaScreen(media: MediaBean) {
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.media_screen_search_hint),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { showSortMediaDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
                         contentDescription = stringResource(Res.string.sort),

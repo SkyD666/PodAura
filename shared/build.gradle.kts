@@ -112,7 +112,8 @@ kotlin {
                 implementation(libs.kotlin.codepoints.deluxe)
                 implementation(libs.ksoup)
                 implementation(libs.material.kolor)
-                implementation(libs.settings)
+                implementation(libs.skyd666.settings)
+                implementation(libs.skyd666.compone)
 
                 implementation(project(":ksp"))
             }

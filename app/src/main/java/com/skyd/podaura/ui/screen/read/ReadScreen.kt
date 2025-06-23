@@ -87,6 +87,11 @@ import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.video.VideoFrameDecoder
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.ifNullOfBlank
@@ -101,12 +106,7 @@ import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevati
 import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
 import com.skyd.podaura.ui.activity.player.PlayActivity
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
 import com.skyd.podaura.ui.local.LocalNavController
@@ -185,8 +185,8 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.read_screen_name)) },
                 colors = TopAppBarDefaults.topAppBarColors().copy(
@@ -198,7 +198,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                     ),
                 ),
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         enabled = uiState.articleState is ArticleState.Success,
                         onClick = {
                             val articleState = uiState.articleState
@@ -219,7 +219,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                     )
                     val isFavorite = (uiState.articleState as? ArticleState.Success)
                         ?.article?.articleWithEnclosure?.article?.isFavorite == true
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         enabled = uiState.articleState is ArticleState.Success,
                         onClick = {
                             val articleState = uiState.articleState
@@ -239,7 +239,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                             else Res.string.article_screen_favorite
                         ),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         enabled = uiState.articleState is ArticleState.Success,
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
@@ -263,7 +263,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
             )
         },
         floatingActionButton = {
-            PodAuraFloatingActionButton(
+            ComponeFloatingActionButton(
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 onClick = {
                     openEnclosureBottomSheet = uiState.articleState is ArticleState.Success
@@ -675,7 +675,7 @@ private fun MediaCover(
                 contentDescription = stringResource(Res.string.play),
                 tint = Color.White,
             )
-            PodAuraIconButton(
+            ComponeIconButton(
                 onClick = { openAddToPlaylistSheet = true },
                 modifier = Modifier.align(Alignment.BottomStart),
                 tint = Color.White,

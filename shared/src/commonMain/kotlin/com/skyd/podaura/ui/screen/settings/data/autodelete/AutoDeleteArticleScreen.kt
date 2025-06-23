@@ -36,6 +36,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
@@ -47,16 +50,13 @@ import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticl
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.UseAutoDeletePreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.SliderDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.settings.BannerItem
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchBaseSettingsItem
 import com.skyd.settings.SwitchSettingsItem
 import com.skyd.settings.TipSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -97,8 +97,8 @@ fun AutoDeleteScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.auto_delete_screen_name)) },
             )

@@ -31,6 +31,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.component.dialog.SliderWithLabelDialog
 import com.skyd.podaura.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.model.preference.appearance.media.item.BaseMediaItemTypePreference
@@ -39,16 +43,12 @@ import com.skyd.podaura.model.preference.appearance.media.item.MediaItemGridType
 import com.skyd.podaura.model.preference.appearance.media.item.MediaItemListTypeMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaSubListItemTypePreference
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.ItemMinWidthDialog
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
-import com.skyd.podaura.ui.component.dialog.SliderWithLabelDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchBaseSettingsItem
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -81,8 +81,8 @@ fun MediaStyleScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.media_style_screen_name)) },
             )
@@ -244,7 +244,7 @@ private fun MediaListItemTypeDialog(onDismissRequest: () -> Unit) {
         }
     }
 
-    PodAuraDialog(
+    ComponeDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.GridView, contentDescription = null) },
         title = { Text(stringResource(Res.string.media_style_screen_media_list_item_type)) },

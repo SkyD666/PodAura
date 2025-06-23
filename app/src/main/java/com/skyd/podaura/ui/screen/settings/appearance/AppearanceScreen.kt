@@ -53,6 +53,12 @@ import com.google.android.material.color.DynamicColors
 import com.materialkolor.ktx.from
 import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
@@ -62,13 +68,6 @@ import com.skyd.podaura.model.preference.appearance.DateStylePreference
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.appearance.TextFieldStylePreference
 import com.skyd.podaura.model.preference.appearance.ThemePreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.CheckableListMenu
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.connectedButtonShapes
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
@@ -80,6 +79,7 @@ import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsDefaults
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
@@ -118,8 +118,8 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.appearance_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },

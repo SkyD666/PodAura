@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
@@ -33,35 +34,6 @@ import podaura.shared.generated.resources.delete_constraint_screen_keep_unread_a
 import podaura.shared.generated.resources.warning
 
 @Composable
-fun DeleteWarningDialog(
-    visible: Boolean = true,
-    title: String = stringResource(Res.string.warning),
-    text: String? = null,
-    confirmText: String = stringResource(Res.string.delete),
-    dismissText: String = stringResource(Res.string.cancel),
-    onDismissRequest: () -> Unit,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    PodAuraDialog(
-        visible = visible,
-        onDismissRequest = onDismissRequest,
-        icon = { Icon(imageVector = Icons.Outlined.Warning, contentDescription = null) },
-        title = { Text(text = title) },
-        text = if (text == null) null else {
-            { Text(text = text) }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm()
-                onDismiss()
-            }) { Text(confirmText) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(dismissText) } },
-    )
-}
-
-@Composable
 fun DeleteArticleWarningDialog(
     visible: Boolean = true,
     title: String = stringResource(Res.string.warning),
@@ -73,7 +45,7 @@ fun DeleteArticleWarningDialog(
     onConfirm: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    PodAuraDialog(
+    ComponeDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Warning, contentDescription = null) },

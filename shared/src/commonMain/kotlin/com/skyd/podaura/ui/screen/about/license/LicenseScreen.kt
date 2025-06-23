@@ -22,11 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.LicenseBean
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -41,8 +41,8 @@ fun LicenseScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 title = { Text(text = stringResource(Res.string.license_screen_name)) },
                 scrollBehavior = scrollBehavior,
             )

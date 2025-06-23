@@ -34,12 +34,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.FeedIcon
@@ -73,8 +73,8 @@ fun MuteFeedScreen(viewModel: MuteFeedViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.mute_feed_screen_name)) },
             )

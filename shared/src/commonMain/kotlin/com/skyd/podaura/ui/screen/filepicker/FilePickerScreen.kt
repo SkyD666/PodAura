@@ -38,6 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.DEFAULT_FILE_PICKER_PATH
 import com.skyd.podaura.ext.isDirectory
@@ -45,9 +48,6 @@ import com.skyd.podaura.ext.onlyHorizontal
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.popBackStackWithLifecycle
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -155,8 +155,8 @@ fun FilePickerScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(
@@ -167,14 +167,14 @@ fun FilePickerScreen(
                     )
                 },
                 navigationIcon = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { navController.popBackStackWithLifecycle() },
                         imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(Res.string.close),
                     )
                 },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { dispatch(FilePickerIntent.NewLocation(Const.DEFAULT_FILE_PICKER_PATH)) },
                         imageVector = Icons.Outlined.PhoneAndroid,
                         contentDescription = stringResource(Res.string.file_picker_screen_internal_storage),

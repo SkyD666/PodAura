@@ -254,7 +254,8 @@ dependencies {
     implementation(libs.libtorrent4j.x86)
     implementation(libs.libtorrent4j.x8664)
 
-    implementation(libs.settings)
+    implementation(libs.skyd666.settings)
+    implementation(libs.skyd666.compone)
 
     implementation(compose.components.resources)
 

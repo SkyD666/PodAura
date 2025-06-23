@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.bean
 
-import com.skyd.podaura.ui.component.blockString
+import com.skyd.compone.component.blockString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.default_media_group
 

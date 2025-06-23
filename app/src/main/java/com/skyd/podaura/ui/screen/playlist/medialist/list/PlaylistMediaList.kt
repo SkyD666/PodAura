@@ -31,6 +31,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.ext.getOrNull
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.ext.thenIf
@@ -39,7 +40,6 @@ import com.skyd.podaura.ext.withoutTop
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaItem
@@ -201,7 +201,7 @@ private fun PlaylistMediaList(
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp),
             ) {
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = {
                         onDelete(uiState.selectedItems)
                         dispatch(ListIntent.ClearSelected)
@@ -209,7 +209,7 @@ private fun PlaylistMediaList(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = stringResource(Res.string.delete),
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = onOpenAddToPlaylistSheet,
                     imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
                     contentDescription = stringResource(Res.string.add_to_playlist),

@@ -21,22 +21,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.preference.rss.RssSyncBatteryNotLowConstraintPreference
 import com.skyd.podaura.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.podaura.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.podaura.model.preference.rss.RssSyncWifiConstraintPreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.CheckableListMenu
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
@@ -69,8 +69,8 @@ fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.rss_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
@@ -158,7 +158,6 @@ fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 @Composable
 private fun RssSyncFrequencyMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
     val scope = rememberCoroutineScope()
-
     CheckableListMenu(
         expanded = expanded,
         current = RssSyncFrequencyPreference.current,

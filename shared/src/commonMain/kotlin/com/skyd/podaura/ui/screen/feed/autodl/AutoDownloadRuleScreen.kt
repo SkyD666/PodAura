@@ -34,15 +34,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.SliderDialog
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.takeIfNotBlank
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.SliderDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleState.RuleState
@@ -93,8 +93,8 @@ fun AutoDownloadRuleScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.auto_download_rule_screen_name)) },
             )
@@ -279,7 +279,7 @@ private fun MaxDownloadCountDialog(
                     else value.toInt().toString(),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = defaultValue() },
                     imageVector = Icons.Outlined.Restore,

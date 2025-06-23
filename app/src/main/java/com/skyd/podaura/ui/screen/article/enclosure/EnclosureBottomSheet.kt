@@ -29,6 +29,8 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.TagText
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.getOrDefault
@@ -41,8 +43,6 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.repository.download.DownloadStarter
 import com.skyd.podaura.ui.activity.player.PlayActivity
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.TagText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -160,7 +160,7 @@ private fun EnclosureItem(
         }
         Spacer(modifier = Modifier.width(12.dp))
         if (enclosure.isMedia) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 onClick = {
                     try {
                         PlayActivity.playArticleList(
@@ -176,7 +176,7 @@ private fun EnclosureItem(
                 contentDescription = stringResource(Res.string.play),
             )
         }
-        PodAuraIconButton(
+        ComponeIconButton(
             onClick = { onDownload(enclosure) },
             imageVector = Icons.Outlined.Download,
             contentDescription = stringResource(Res.string.download),
@@ -211,7 +211,7 @@ private fun LinkEnclosureItem(
         }
         Spacer(modifier = Modifier.width(12.dp))
         if (enclosure.isMedia) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 onClick = {
                     try {
                         PlayActivity.playArticleList(
@@ -228,7 +228,7 @@ private fun LinkEnclosureItem(
             )
         }
         if (isMagnetOrTorrent) {
-            PodAuraIconButton(
+            ComponeIconButton(
                 onClick = { onDownload(enclosure) },
                 imageVector = Icons.Outlined.Download,
                 contentDescription = stringResource(Res.string.download),

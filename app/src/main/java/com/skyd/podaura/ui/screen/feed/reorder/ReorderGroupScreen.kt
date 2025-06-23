@@ -36,6 +36,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.safeItemKey
@@ -44,10 +48,6 @@ import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.coroutines.channels.Channel
@@ -76,8 +76,8 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.reorder_group_screen_name)) },
             )
@@ -199,7 +199,7 @@ private fun ReorderableGroup(
                     .weight(1f),
                 style = MaterialTheme.typography.titleMedium,
             )
-            PodAuraIconButton(
+            ComponeIconButton(
                 modifier = dragIconModifier,
                 onClick = { },
                 imageVector = Icons.Rounded.DragHandle,

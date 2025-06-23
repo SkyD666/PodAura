@@ -62,6 +62,12 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.onlyHorizontal
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeItemKey
@@ -73,17 +79,11 @@ import com.skyd.podaura.model.preference.appearance.article.ArticleTopBarTonalEl
 import com.skyd.podaura.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
 import com.skyd.podaura.model.repository.article.ArticleSort
-import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
-import com.skyd.podaura.ui.component.DefaultBackClick
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.UuidList
 import com.skyd.podaura.ui.component.UuidListType
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.component.listType
 import com.skyd.podaura.ui.component.uuidListType
 import com.skyd.podaura.ui.local.LocalNavController
@@ -189,7 +189,7 @@ fun ArticleScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
+            ComponeTopBar(
                 title = { Text(text = stringResource(Res.string.article_screen_name)) },
                 navigationIcon = {
                     if (onBackClick == DefaultBackClick) BackIcon()
@@ -217,7 +217,7 @@ fun ArticleScreen(
                                 label = "topBarRefreshAnimate",
                             ).value
                         } else 0f
-                        PodAuraIconButton(
+                        ComponeIconButton(
                             onClick = {
                                 dispatch(
                                     ArticleIntent.Refresh(
@@ -241,7 +241,7 @@ fun ArticleScreen(
                         onFilterRead = { dispatch(ArticleIntent.FilterRead(it)) },
                         onSort = { dispatch(ArticleIntent.UpdateSort(it)) },
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = {
                             navController.navigate(
                                 SearchRoute.Article(
@@ -264,7 +264,7 @@ fun ArticleScreen(
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
-                PodAuraFloatingActionButton(
+                ComponeFloatingActionButton(
                     onClick = { scope.launch { listState.animateScrollToItem(0) } },
                     onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                     contentDescription = stringResource(Res.string.to_top),

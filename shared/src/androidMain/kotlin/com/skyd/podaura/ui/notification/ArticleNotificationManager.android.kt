@@ -12,12 +12,11 @@ import androidx.annotation.DrawableRes
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.di.get
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
-import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter
-import com.skyd.podaura.ui.component.blockString
 import com.skyd.podaura.ui.notification.ArticleUpdatedManager.CHANNEL_ID
 import com.skyd.podaura.util.uniqueInt
 import podaura.shared.generated.resources.Res

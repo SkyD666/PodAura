@@ -15,9 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.landOrientation
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.player.component.ControllerIconButton
 import com.skyd.podaura.ui.player.component.ControllerTextButton
 import com.skyd.podaura.ui.player.component.state.PlayState
@@ -74,7 +74,7 @@ internal fun SmallController(
             imageVector = Icons.Outlined.ClosedCaption,
             contentDescription = stringResource(Res.string.player_subtitle_track),
         )
-        PodAuraIconButton(
+        ComponeIconButton(
             onClick = { context.activity.landOrientation() },
             imageVector = Icons.Outlined.Fullscreen,
             contentDescription = stringResource(Res.string.fullscreen),

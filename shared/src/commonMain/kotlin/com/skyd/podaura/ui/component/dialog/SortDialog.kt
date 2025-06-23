@@ -24,8 +24,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.skyd.podaura.ui.component.connectedButtonShapes
-import com.skyd.podaura.ui.component.suspendString
+import com.skyd.compone.component.connectedButtonShapes
+import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.component.suspendString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.ascending
@@ -46,7 +47,7 @@ fun SortDialog(
     onSortByDisplayName: suspend (String) -> String,
     onSortByIcon: (String) -> ImageVector?,
 ) {
-    PodAuraDialog(
+    ComponeDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         icon = {

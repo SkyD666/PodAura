@@ -14,9 +14,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTextField
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.podaura.ui.component.ComponeTextField
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.cancel
@@ -33,13 +33,13 @@ fun DelayMillisDialog(
     onDismiss: () -> Unit,
 ) {
     var currentDelay by remember { mutableStateOf(delay.toString()) }
-    PodAuraDialog(
+    ComponeDialog(
         onDismissRequest = onDismiss,
         icon = null,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = title, modifier = Modifier.weight(1f))
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = { currentDelay = "0" },
                     imageVector = Icons.Outlined.Restore,
                     contentDescription = stringResource(Res.string.reset),
@@ -49,14 +49,14 @@ fun DelayMillisDialog(
         text = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val pattern = remember { Regex("^[-+]?\\d+$") }
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = {
                         currentDelay = ((currentDelay.toLongOrNull() ?: 0) - 500).toString()
                     },
                     imageVector = Icons.Outlined.RemoveCircleOutline,
                     contentDescription = stringResource(Res.string.minus),
                 )
-                PodAuraTextField(
+                ComponeTextField(
                     modifier = Modifier.weight(1f),
                     value = currentDelay.toString(),
                     onValueChange = {
@@ -64,7 +64,7 @@ fun DelayMillisDialog(
                     },
                     trailingIcon = { Text("ms") },
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = {
                         currentDelay = ((currentDelay.toLongOrNull() ?: 0) + 500).toString()
                     },

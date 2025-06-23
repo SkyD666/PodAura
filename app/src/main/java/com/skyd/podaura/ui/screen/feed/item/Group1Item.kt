@@ -18,10 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.collapse
@@ -80,7 +80,7 @@ fun Group1Item(
             label = "expand icon rotate",
         )
 
-        PodAuraIconButton(
+        ComponeIconButton(
             onClick = { onExpandChange(data, !isExpanded) },
             imageVector = Icons.Outlined.KeyboardArrowUp,
             contentDescription = stringResource(if (isExpanded) Res.string.collapse else Res.string.expend),

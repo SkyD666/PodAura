@@ -38,15 +38,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.skyd.compone.component.ComponeExtendedFloatingActionButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.connectedButtonShapes
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
-import com.skyd.podaura.ui.component.PodAuraExtendedFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.connectedButtonShapes
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.settings.BaseSettingsItem
@@ -121,14 +121,14 @@ fun ImportOpmlScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.import_opml_screen_name)) },
             )
         },
         floatingActionButton = {
-            PodAuraExtendedFloatingActionButton(
+            ComponeExtendedFloatingActionButton(
                 text = { Text(text = stringResource(Res.string.import_opml_screen_import)) },
                 icon = { Icon(imageVector = Icons.Default.Done, contentDescription = null) },
                 onClick = {

@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.component.dialog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WidthNormal
 import androidx.compose.runtime.Composable
+import com.skyd.compone.component.dialog.SliderWithLabelDialog
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.min_width_dp

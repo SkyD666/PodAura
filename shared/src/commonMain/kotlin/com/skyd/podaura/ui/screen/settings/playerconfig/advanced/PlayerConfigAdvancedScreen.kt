@@ -18,14 +18,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
 import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigPreference
 import com.skyd.podaura.model.preference.player.MpvInputConfigPreference
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
@@ -69,8 +69,8 @@ fun PlayerConfigAdvancedScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_advanced_screen_name)) },
             )
@@ -129,7 +129,7 @@ fun PlayerConfigAdvancedScreen() {
                             )
                         },
                         content = {
-                            PodAuraIconButton(
+                            ComponeIconButton(
                                 onClick = {
                                     MpvConfigDirPreference.put(
                                         scope,
@@ -157,7 +157,7 @@ fun PlayerConfigAdvancedScreen() {
                             )
                         },
                         content = {
-                            PodAuraIconButton(
+                            ComponeIconButton(
                                 onClick = {
                                     MpvCacheDirPreference.put(scope, MpvCacheDirPreference.default)
                                 },

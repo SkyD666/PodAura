@@ -16,6 +16,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.BuildConfig
 import com.skyd.podaura.R
 import com.skyd.podaura.config.Const
@@ -39,7 +40,6 @@ import com.skyd.podaura.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManagerIntent
 import com.skyd.podaura.ui.activity.MainActivity
-import com.skyd.podaura.ui.component.blockString
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.util.uniqueInt

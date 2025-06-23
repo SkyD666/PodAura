@@ -50,6 +50,11 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.SearchBarInputField
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
@@ -57,14 +62,9 @@ import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.preference.appearance.search.SearchItemMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.search.SearchListTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.search.SearchTopBarTonalElevationPreference
-import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.SearchBarInputField
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.component.serializableType
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -151,7 +151,7 @@ fun SearchScreen(
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
-                PodAuraFloatingActionButton(
+                ComponeFloatingActionButton(
                     onClick = { scope.launch { searchResultListState.animateScrollToItem(0) } },
                     onSizeWithSinglePaddingChanged = { width, height ->
                         fabWidth = width
@@ -354,7 +354,7 @@ fun TrailingIcon(
     onClick: (() -> Unit)? = null
 ) {
     if (showClearButton) {
-        PodAuraIconButton(
+        ComponeIconButton(
             imageVector = Icons.Outlined.Clear,
             contentDescription = stringResource(Res.string.clear_input_text),
             onClick = { onClick?.invoke() }

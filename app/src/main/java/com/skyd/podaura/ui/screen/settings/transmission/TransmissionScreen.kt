@@ -19,13 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
 import com.skyd.podaura.model.preference.transmission.SeedingWhenCompletePreference
 import com.skyd.podaura.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.podaura.model.preference.transmission.TorrentTrackersPreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
@@ -73,8 +73,8 @@ fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.transmission_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },

@@ -40,18 +40,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.SearchBarInputField
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaSubListItemTypePreference
 import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
-import com.skyd.podaura.ui.component.BackIcon
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.SearchBarInputField
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -112,7 +112,7 @@ fun MediaSearchScreen(
                 enter = fadeIn(),
                 exit = fadeOut(),
             ) {
-                PodAuraFloatingActionButton(
+                ComponeFloatingActionButton(
                     onClick = { scope.launch { searchResultListState.animateScrollToItem(0) } },
                     onSizeWithSinglePaddingChanged = { width, height ->
                         fabWidth = width

@@ -25,6 +25,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.model.preference.proxy.ProxyHostnamePreference
 import com.skyd.podaura.model.preference.proxy.ProxyModePreference
 import com.skyd.podaura.model.preference.proxy.ProxyPasswordPreference
@@ -32,15 +35,12 @@ import com.skyd.podaura.model.preference.proxy.ProxyPortPreference
 import com.skyd.podaura.model.preference.proxy.ProxyTypePreference
 import com.skyd.podaura.model.preference.proxy.ProxyUsernamePreference
 import com.skyd.podaura.model.preference.proxy.UseProxyPreference
-import com.skyd.podaura.ui.component.CheckableListMenu
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.settings.BannerItem
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -73,8 +73,8 @@ fun ProxyScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.proxy_screen_name)) },
             )

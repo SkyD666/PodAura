@@ -26,18 +26,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.feed.FeedNumberBadgePreference
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
-import com.skyd.podaura.ui.component.CheckableListMenu
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.SliderDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.suspendString
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -61,8 +61,8 @@ fun FeedStyleScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.feed_style_screen_name)) },
             )
@@ -168,7 +168,7 @@ internal fun TonalElevationDialog(
                     text = TonalElevationPreferenceUtil.toDisplay(value),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = defaultValue() },
                     imageVector = Icons.Outlined.Restore,

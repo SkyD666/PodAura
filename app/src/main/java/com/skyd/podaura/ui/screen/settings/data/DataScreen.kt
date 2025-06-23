@@ -31,14 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.component.dialog.DeleteWarningDialog
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.DeleteWarningDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
@@ -103,8 +103,8 @@ fun DataScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.data_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
@@ -130,7 +130,7 @@ fun DataScreen(
                         descriptionText = localMediaLibLocation,
                         onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
                     ) {
-                        PodAuraIconButton(
+                        ComponeIconButton(
                             onClick = {
                                 MediaLibLocationPreference.put(
                                     scope,

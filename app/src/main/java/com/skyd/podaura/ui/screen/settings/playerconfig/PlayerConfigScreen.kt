@@ -39,6 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
@@ -51,20 +58,13 @@ import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.CheckableListMenu
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.SliderDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchBaseSettingsItem
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
@@ -114,8 +114,8 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
@@ -296,7 +296,6 @@ private fun DoubleTapMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 @Composable
 private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
     val scope = rememberCoroutineScope()
-
     CheckableListMenu(
         expanded = expanded,
         current = PlayerSeekOptionPreference.current,
@@ -327,7 +326,7 @@ internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
                     text = "${value.toInt().toSignedString()}s",
                     style = MaterialTheme.typography.titleMedium,
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = PlayerForwardSecondsButtonValuePreference.default },
                     imageVector = Icons.Outlined.Restore,
@@ -386,7 +385,7 @@ internal fun MaxCacheSizeDialog(
                     text = value.fileSize(context),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                PodAuraIconButton(
+                ComponeIconButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = { value = defaultValue() },
                     imageVector = Icons.Outlined.Restore,

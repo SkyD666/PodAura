@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.dialog.DeleteWarningDialog
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.safeItemKey
@@ -44,13 +49,8 @@ import com.skyd.podaura.model.preference.behavior.playlist.PlaylistSortByPrefere
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.dialog.DeleteWarningDialog
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.mvi.MviEventListener
@@ -97,12 +97,12 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
+            ComponeTopBar(
                 title = { Text(text = stringResource(Res.string.playlist_screen_name)) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {},
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { showSortDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
                         contentDescription = stringResource(Res.string.sort),
@@ -116,7 +116,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
             )
         },
         floatingActionButton = {
-            PodAuraFloatingActionButton(
+            ComponeFloatingActionButton(
                 onClick = { openAddDialog = true },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.add),

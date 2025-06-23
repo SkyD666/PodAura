@@ -39,7 +39,6 @@ class PreferenceProcessor(
 
         val preferencesListSymbols =
             resolver.getSymbolsWithAnnotation(PreferencesList::class.qualifiedName!!)
-        logger.warn(preferencesListSymbols.count().toString())
         val preferencesListSymbol = preferencesListSymbols
             .filterIsInstance<KSPropertyDeclaration>().firstOrNull() ?: return emptyList()
         val preferencesListPkg = preferencesListSymbol
@@ -94,16 +93,16 @@ class PreferenceProcessor(
             val defaultProperty = classDeclaration.getAllProperties().firstOrNull {
                 it.simpleName.asString() == "default"
             }
-            if (defaultProperty == null) {
+            if (defaultProperty?.getter?.returnType == null) {
                 logger.error("Property named 'default' not found.", classDeclaration)
                 return@forEach
             }
-
-            val defaultPropertyReturnType = defaultProperty.getter!!.returnType!!.resolve()
+            val defaultPropertyReturnType =
+                defaultProperty.getter?.returnType?.resolve() ?: return@forEach
             entries += Entity(
-                preferenceQualifiedName = classDeclaration.qualifiedName!!,
+                preferenceQualifiedName = classDeclaration.qualifiedName ?: return@forEach,
                 preferenceSimpleName = classDeclaration.simpleName,
-                dataType = defaultPropertyReturnType.declaration.qualifiedName!!,
+                dataType = defaultPropertyReturnType.declaration.qualifiedName ?: return@forEach,
             )
         }
         if (entries.isNotEmpty()) {

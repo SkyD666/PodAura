@@ -46,11 +46,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.model.bean.MoreBean
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
@@ -82,8 +82,8 @@ fun MoreScreen() {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 title = { Text(text = stringResource(Res.string.more_screen_name)) },
                 navigationIcon = {},
                 windowInsets = WindowInsets.safeDrawing.only(

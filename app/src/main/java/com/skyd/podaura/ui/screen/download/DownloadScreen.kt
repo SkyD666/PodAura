@@ -41,6 +41,9 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.onlyHorizontal
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.type
@@ -52,9 +55,6 @@ import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
 import com.skyd.podaura.model.repository.download.bt.BtDownloadManager.rememberBtDownloadWorkStarter
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.coroutines.launch
@@ -128,14 +128,14 @@ fun DownloadScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.CenterAligned,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.CenterAligned,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.download_screen_name)) },
             )
         },
         floatingActionButton = {
-            PodAuraFloatingActionButton(
+            ComponeFloatingActionButton(
                 onClick = { openLinkDialog = "" },
                 contentDescription = stringResource(Res.string.download_screen_add_download),
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },

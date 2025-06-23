@@ -53,6 +53,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.bean.MediaGroupBean
@@ -63,13 +68,8 @@ import com.skyd.podaura.model.preference.behavior.media.MediaListSortByPreferenc
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.mvi.MviEventListener
@@ -148,8 +148,8 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 title = {
                     val title = stringResource(Res.string.media_screen_name)
                     Text(
@@ -173,19 +173,19 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                     only(sides)
                 },
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = {
                             navController.navigate(MediaSearchRoute(path = path, isSubList = false))
                         },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.media_screen_search_hint),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { showSortMediaDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
                         contentDescription = stringResource(Res.string.sort),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { openMoreMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(Res.string.more),
@@ -223,7 +223,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                         contentDescription = stringResource(Res.string.open_file),
                     )
                 }
-                PodAuraFloatingActionButton(
+                ComponeFloatingActionButton(
                     onClick = {
                         dispatch(MediaIntent.OnEditGroupDialog(uiState.groups[pagerState.currentPage].first))
                     },

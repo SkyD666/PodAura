@@ -44,6 +44,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.toRoute
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.toRelativeDateTimeString
@@ -56,10 +59,7 @@ import com.skyd.podaura.model.preference.behavior.playlist.PlaylistMediaSortByPr
 import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
 import com.skyd.podaura.ui.component.dialog.SortDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.playlist.PlaylistThumbnail
@@ -106,7 +106,7 @@ fun PlaylistMediaListScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
+            ComponeTopBar(
                 title = {
                     AnimatedVisibility(
                         visible = !headerVisible,
@@ -120,7 +120,7 @@ fun PlaylistMediaListScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { showSortDialog = true },
                         imageVector = Icons.AutoMirrored.Outlined.Sort,
                         contentDescription = stringResource(Res.string.sort),

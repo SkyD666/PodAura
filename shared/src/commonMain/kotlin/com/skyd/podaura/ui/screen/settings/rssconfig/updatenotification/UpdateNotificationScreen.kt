@@ -39,15 +39,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ext.plus
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.ui.component.ClipboardTextField
-import com.skyd.podaura.ui.component.PodAuraFloatingActionButton
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
-import com.skyd.podaura.ui.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.serialization.Serializable
@@ -80,14 +80,14 @@ fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewMo
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.Small,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.update_notification_screen_name)) },
             )
         },
         floatingActionButton = {
-            PodAuraFloatingActionButton(
+            ComponeFloatingActionButton(
                 onClick = { openAddDialog = true },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.add),
@@ -145,7 +145,7 @@ private fun AddRuleDialog(
     var name by rememberSaveable { mutableStateOf("") }
     var regex by rememberSaveable { mutableStateOf("") }
 
-    PodAuraDialog(
+    ComponeDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Pattern, contentDescription = null) },
         title = { Text(text = stringResource(Res.string.add)) },
@@ -244,7 +244,7 @@ private fun RuleItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            PodAuraIconButton(
+            ComponeIconButton(
                 onClick = { onRemove(rule.id) },
                 imageVector = Icons.Outlined.Close,
                 contentDescription = stringResource(Res.string.remove),

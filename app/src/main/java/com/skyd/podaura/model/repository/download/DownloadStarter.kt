@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.net.toUri
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.TEMP_TORRENT_DIR
 import com.skyd.podaura.di.get
@@ -24,7 +25,6 @@ import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
 import com.skyd.podaura.model.repository.media.MediaRepository
 import com.skyd.podaura.model.worker.download.BtFileNameChecker
 import com.skyd.podaura.model.worker.download.isTorrentMimetype
-import com.skyd.podaura.ui.component.blockString
 import com.skyd.podaura.ui.component.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

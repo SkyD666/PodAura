@@ -81,6 +81,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
+import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.connectedButtonShapes
+import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -88,11 +92,7 @@ import com.skyd.podaura.ext.setText
 import com.skyd.podaura.ext.thenIfNotNull
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
-import com.skyd.podaura.ui.component.PodAuraIconButton
-import com.skyd.podaura.ui.component.connectedButtonShapes
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
-import com.skyd.podaura.ui.component.dialog.DeleteWarningDialog
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.local.LocalNavController
@@ -249,7 +249,7 @@ fun EditFeedSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = stringResource(Res.string.feed_screen_rss_title))
                 Spacer(modifier = Modifier.weight(1f))
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = {
                         onNicknameChange(null)
                         nickname = feed.title
@@ -279,7 +279,7 @@ fun EditFeedSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = stringResource(Res.string.feed_screen_rss_description))
                 Spacer(modifier = Modifier.weight(1f))
-                PodAuraIconButton(
+                ComponeIconButton(
                     onClick = {
                         onCustomDescriptionChange(null)
                         customDescription = feed.description
@@ -571,7 +571,7 @@ private fun RefreshDialog(
     }
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
 
-    PodAuraDialog(
+    ComponeDialog(
         visible = visible,
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null) },
@@ -772,7 +772,7 @@ private fun EditIconDialog(
     onNetwork: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    PodAuraDialog(
+    ComponeDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(imageVector = Icons.Outlined.Image, contentDescription = null) },
         title = { Text(text = stringResource(Res.string.feed_screen_rss_edit_icon)) },

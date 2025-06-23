@@ -1,10 +1,10 @@
 package com.skyd.podaura.model.bean.group
 
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.BaseBean
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.ui.component.blockString
 import kotlinx.serialization.Serializable
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.default_feed_group

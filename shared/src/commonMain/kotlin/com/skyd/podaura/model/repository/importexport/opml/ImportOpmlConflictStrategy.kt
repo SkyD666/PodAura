@@ -1,9 +1,9 @@
 package com.skyd.podaura.model.repository.importexport.opml
 
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
-import com.skyd.podaura.ui.component.blockString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.import_opml_conflict_strategy_replace
 import podaura.shared.generated.resources.import_opml_conflict_strategy_skip

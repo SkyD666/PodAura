@@ -19,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.ext.safeLaunch
-import com.skyd.podaura.ui.component.PodAuraIconButton
 import com.skyd.podaura.ui.player.component.dialog.BasicPlayerDialog
 import com.skyd.podaura.ui.player.component.dialog.DelayMillisDialog
 import com.skyd.podaura.ui.player.component.dialog.TrackDialogListItem
@@ -71,12 +71,12 @@ internal fun AudioTrackDialog(
                         text = stringResource(Res.string.player_audio_track),
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { onDialogVisibilityChanged.onAudioSettingDialog(true) },
                         imageVector = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
                     )
-                    PodAuraIconButton(
+                    ComponeIconButton(
                         onClick = { pickAudioFileLauncher.safeLaunch("*/*") },
                         imageVector = Icons.Outlined.Add,
                         contentDescription = stringResource(Res.string.player_add_external_audio),

@@ -15,11 +15,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
 import com.skyd.podaura.ui.screen.settings.appearance.feed.TonalElevationDialog
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
@@ -43,8 +43,8 @@ fun ReadStyleScreen() {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.read_style_screen_name)) },
             )

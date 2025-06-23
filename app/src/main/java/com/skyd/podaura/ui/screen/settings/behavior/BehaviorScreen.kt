@@ -36,6 +36,12 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.CheckableListMenu
+import com.skyd.compone.component.ComponeTopBar
+import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.podaura.R
 import com.skyd.podaura.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
@@ -47,17 +53,11 @@ import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDesc
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePlaylistPreference
-import com.skyd.podaura.ui.component.BackIcon
-import com.skyd.podaura.ui.component.CheckableListMenu
 import com.skyd.podaura.ui.component.ClipboardTextField
-import com.skyd.podaura.ui.component.DefaultBackClick
-import com.skyd.podaura.ui.component.PodAuraTopBar
-import com.skyd.podaura.ui.component.PodAuraTopBarStyle
-import com.skyd.podaura.ui.component.dialog.PodAuraDialog
-import com.skyd.podaura.ui.component.suspendString
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
+import com.skyd.settings.suspendString
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
@@ -100,8 +100,8 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
 
     Scaffold(
         topBar = {
-            PodAuraTopBar(
-                style = PodAuraTopBarStyle.LargeFlexible,
+            ComponeTopBar(
+                style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.behavior_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
@@ -299,7 +299,7 @@ internal fun MediaFileFilterDialog(
 ) {
     var value by rememberSaveable { mutableStateOf(initValue) }
 
-    PodAuraDialog(
+    ComponeDialog(
         onDismissRequest = onDismissRequest,
         icon = { Icon(Icons.Outlined.FilterAlt, contentDescription = null) },
         title = { Text(stringResource(Res.string.behavior_screen_media_file_filter)) },
