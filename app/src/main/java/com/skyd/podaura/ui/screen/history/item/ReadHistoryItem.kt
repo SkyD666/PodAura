@@ -32,13 +32,13 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.ext.thenIf
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.readable
-import com.skyd.podaura.ext.thenIf
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDescPreference
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.article.ArticleItemFeedInfo
 import com.skyd.podaura.ui.screen.article.ArticleItemIconButton
 import com.skyd.podaura.ui.screen.article.navigateToReadScreen

@@ -28,7 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
-import com.skyd.podaura.ext.setText
+import com.skyd.compone.ext.setText
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res

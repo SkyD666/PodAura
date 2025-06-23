@@ -41,8 +41,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.ext.isCompact
-import com.skyd.podaura.ext.thenIf
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.ui.local.LocalWindowSizeClass

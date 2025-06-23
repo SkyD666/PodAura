@@ -21,13 +21,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
 import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigPreference
 import com.skyd.podaura.model.preference.player.MpvInputConfigPreference
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.settings.BaseSettingsItem

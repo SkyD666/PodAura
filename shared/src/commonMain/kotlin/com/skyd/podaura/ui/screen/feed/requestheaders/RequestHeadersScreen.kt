@@ -45,7 +45,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.podaura.ext.plus
+import com.skyd.compone.ext.plus
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.ClipboardTextField
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog

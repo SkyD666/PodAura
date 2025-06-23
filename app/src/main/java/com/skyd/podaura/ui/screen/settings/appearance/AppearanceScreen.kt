@@ -59,6 +59,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.connectedButtonShapes
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
@@ -68,7 +69,6 @@ import com.skyd.podaura.model.preference.appearance.DateStylePreference
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.appearance.TextFieldStylePreference
 import com.skyd.podaura.model.preference.appearance.ThemePreference
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.article.ArticleStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.media.MediaStyleRoute

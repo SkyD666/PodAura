@@ -58,6 +58,7 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.bean.MediaGroupBean
@@ -70,7 +71,6 @@ import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher

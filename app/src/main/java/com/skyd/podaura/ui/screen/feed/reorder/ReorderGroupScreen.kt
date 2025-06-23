@@ -40,7 +40,7 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.podaura.ext.plus
+import com.skyd.compone.ext.plus
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.ext.vThenP

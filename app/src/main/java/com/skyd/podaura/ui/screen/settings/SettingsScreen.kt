@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.podaura.ext.isSinglePane
+import com.skyd.compone.ext.isSinglePane
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute

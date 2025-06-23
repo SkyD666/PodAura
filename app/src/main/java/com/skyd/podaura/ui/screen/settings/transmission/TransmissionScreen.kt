@@ -23,11 +23,11 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.model.preference.transmission.SeedingWhenCompletePreference
 import com.skyd.podaura.model.preference.transmission.TorrentDhtBootstrapsPreference
 import com.skyd.podaura.model.preference.transmission.TorrentTrackersPreference
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn

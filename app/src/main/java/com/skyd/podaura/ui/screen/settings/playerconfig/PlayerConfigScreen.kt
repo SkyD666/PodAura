@@ -46,6 +46,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.SliderDialog
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
@@ -58,7 +59,6 @@ import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn

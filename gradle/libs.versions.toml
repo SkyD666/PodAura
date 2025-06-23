@@ -94,7 +94,7 @@ coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta03" }
-skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta03" }
+skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta04" }
 
 compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0-rc04" }
 

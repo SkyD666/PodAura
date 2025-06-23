@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.podaura.ext.plus
+import com.skyd.compone.ext.plus
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.LicenseBean
 import kotlinx.serialization.Serializable

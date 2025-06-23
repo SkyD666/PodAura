@@ -43,6 +43,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.compone.component.TagText
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.ext.toDateTimeString
@@ -52,7 +53,6 @@ import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.player.isFdFileExists
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.screen.read.ReadRoute

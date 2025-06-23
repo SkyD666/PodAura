@@ -55,7 +55,7 @@ import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.podaura.ext.plus
+import com.skyd.compone.ext.plus
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.feed.FeedViewBean

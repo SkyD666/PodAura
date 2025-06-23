@@ -38,12 +38,12 @@ import androidx.navigation.NavUri
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.skyd.compone.local.LocalGlobalNavController
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.safeLaunch
 import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.ui.component.PodAuraNavHost
 import com.skyd.podaura.ui.component.navigation.ExternalUriHandler
-import com.skyd.podaura.ui.local.LocalGlobalNavController
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.MainRoute
 import com.skyd.podaura.ui.screen.MainScreen
 import com.skyd.podaura.ui.screen.about.AboutRoute

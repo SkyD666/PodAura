@@ -44,8 +44,8 @@ import androidx.navigation.toRoute
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.podaura.ext.onlyHorizontal
-import com.skyd.podaura.ext.plus
+import com.skyd.compone.ext.onlyHorizontal
+import com.skyd.compone.ext.plus
 import com.skyd.podaura.ext.type
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean

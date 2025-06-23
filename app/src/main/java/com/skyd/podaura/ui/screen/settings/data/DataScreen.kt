@@ -38,8 +38,8 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.mvi.MviEventListener
 import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute

@@ -26,12 +26,12 @@ import com.skyd.compone.component.CheckableListMenu
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.preference.rss.RssSyncBatteryNotLowConstraintPreference
 import com.skyd.podaura.model.preference.rss.RssSyncChargingConstraintPreference
 import com.skyd.podaura.model.preference.rss.RssSyncFrequencyPreference
 import com.skyd.podaura.model.preference.rss.RssSyncWifiConstraintPreference
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn

@@ -23,11 +23,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.rememberAsyncImagePainter
+import com.skyd.compone.ext.ratio
+import com.skyd.compone.ext.size
+import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.podaura.ext.activity
-import com.skyd.podaura.ext.ratio
 import com.skyd.podaura.ext.screenIsLand
-import com.skyd.podaura.ext.size
-import com.skyd.podaura.ext.thenIfNotNull
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.OnLifecycleEvent
 import com.skyd.podaura.ui.player.component.PlayerAndroidView

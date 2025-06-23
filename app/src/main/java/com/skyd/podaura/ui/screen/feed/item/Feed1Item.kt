@@ -35,11 +35,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.preference.appearance.feed.FeedNumberBadgePreference
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import org.jetbrains.compose.resources.stringResource

@@ -48,10 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.ext.plus
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.isCompact
-import com.skyd.podaura.ext.plus
 import com.skyd.podaura.model.bean.MoreBean
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.download.DownloadRoute

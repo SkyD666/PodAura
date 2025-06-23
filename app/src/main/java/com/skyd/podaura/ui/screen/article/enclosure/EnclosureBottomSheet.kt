@@ -31,10 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
+import com.skyd.compone.ext.setText
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.getOrDefault
-import com.skyd.podaura.ext.setText
 import com.skyd.podaura.model.bean.LinkEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed

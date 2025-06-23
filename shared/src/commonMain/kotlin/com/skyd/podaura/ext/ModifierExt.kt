@@ -6,23 +6,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 import kotlin.math.roundToInt
 
-inline fun Modifier.thenIf(condition: Boolean, block: Modifier.() -> Modifier): Modifier {
-    contract {
-        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
-    }
-    return if (condition) block() else this
-}
-
-inline fun <T> Modifier.thenIfNotNull(obj: T?, block: Modifier.(T) -> Modifier): Modifier {
-    contract {
-        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
-    }
-    return if (obj != null) block(obj) else this
-}
 
 fun Modifier.aspectRatioIn(
     ratio: Float,

@@ -45,7 +45,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
-import com.skyd.podaura.ext.thenIf
+import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader

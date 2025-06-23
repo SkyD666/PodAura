@@ -69,13 +69,13 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.ext.plus
+import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.ext.isCompact
-import com.skyd.podaura.ext.plus
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean
-import com.skyd.podaura.ui.local.LocalNavController
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.license.LicenseRoute
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
