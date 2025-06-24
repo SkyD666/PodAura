@@ -1,9 +1,9 @@
 package com.skyd.podaura.ui.screen.history
 
 import androidx.paging.PagingData
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
-import com.skyd.podaura.ui.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 
 data class HistoryState(

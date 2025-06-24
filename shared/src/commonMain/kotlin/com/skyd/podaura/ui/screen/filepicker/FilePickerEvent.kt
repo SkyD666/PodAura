@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.filepicker
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface FilePickerEvent : MviSingleEvent {
     sealed interface FileListResultEvent : FilePickerEvent {

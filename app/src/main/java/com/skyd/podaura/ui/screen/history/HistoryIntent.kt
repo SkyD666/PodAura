@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.history
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface HistoryIntent : MviIntent {
     data object Init : HistoryIntent

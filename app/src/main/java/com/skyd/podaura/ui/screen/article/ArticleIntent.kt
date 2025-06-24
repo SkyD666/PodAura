@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.article
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.repository.article.ArticleSort
-import com.skyd.podaura.ui.mvi.MviIntent
 
 sealed interface ArticleIntent : MviIntent {
     data class Init(

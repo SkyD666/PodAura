@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport.importopml
 
+import com.skyd.mvi.MviSingleEvent
 import com.skyd.podaura.model.repository.importexport.opml.IImportOpmlRepository.ImportOpmlResult
-import com.skyd.podaura.ui.mvi.MviSingleEvent
 
 sealed interface ImportOpmlEvent : MviSingleEvent {
     sealed interface ImportOpmlResultEvent : ImportOpmlEvent {

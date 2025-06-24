@@ -46,11 +46,11 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.ClipboardTextField
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel

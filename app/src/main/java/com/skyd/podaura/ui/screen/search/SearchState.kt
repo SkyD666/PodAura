@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.search
 
 import androidx.paging.PagingData
-import com.skyd.podaura.ui.mvi.MviViewState
+import com.skyd.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 
 data class SearchState(

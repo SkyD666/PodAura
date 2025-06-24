@@ -1,9 +1,9 @@
 package com.skyd.podaura.ui.screen.article
 
 import androidx.paging.PagingData
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.repository.article.ArticleSort
-import com.skyd.podaura.ui.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 
 data class ArticleState(

@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.history
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface HistoryEvent : MviSingleEvent {
     sealed interface DeleteReadHistory : HistoryEvent {

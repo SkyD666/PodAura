@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface UpdateNotificationEvent : MviSingleEvent {
     sealed interface RuleListResultEvent : UpdateNotificationEvent {

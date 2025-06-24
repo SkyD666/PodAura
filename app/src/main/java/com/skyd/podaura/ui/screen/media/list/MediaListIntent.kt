@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.media.list
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
-import com.skyd.podaura.ui.mvi.MviIntent
 import kotlinx.io.files.Path
 
 sealed interface MediaListIntent : MviIntent {

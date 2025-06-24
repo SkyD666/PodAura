@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.mute
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface MuteFeedIntent : MviIntent {
     data object Init : MuteFeedIntent

@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.about.update
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.UpdateBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 
 data class UpdateState(

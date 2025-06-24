@@ -1,9 +1,9 @@
 package com.skyd.podaura.model.repository.download.bt
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean.DownloadState
 import com.skyd.podaura.model.bean.download.bt.TorrentFileBean
-import com.skyd.podaura.ui.mvi.MviIntent
 
 sealed interface BtDownloadManagerIntent : MviIntent {
     data class UpdateDownloadInfo(val btDownloadInfoBean: BtDownloadInfoBean) :

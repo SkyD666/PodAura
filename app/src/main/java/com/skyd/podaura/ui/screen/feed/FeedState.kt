@@ -1,9 +1,9 @@
 package com.skyd.podaura.ui.screen.feed
 
 import androidx.paging.PagingData
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
-import com.skyd.podaura.ui.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 

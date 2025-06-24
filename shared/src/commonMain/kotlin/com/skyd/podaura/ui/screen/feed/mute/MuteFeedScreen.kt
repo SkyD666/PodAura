@@ -37,11 +37,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedState.ListState
 import com.skyd.settings.LocalSettingsStyle

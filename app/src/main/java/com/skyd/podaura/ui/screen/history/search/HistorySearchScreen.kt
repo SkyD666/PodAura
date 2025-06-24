@@ -51,12 +51,12 @@ import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.withoutTop
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.history.MediaPlayHistoryList
 import com.skyd.podaura.ui.screen.history.ReadHistoryList
 import com.skyd.podaura.ui.screen.search.TrailingIcon

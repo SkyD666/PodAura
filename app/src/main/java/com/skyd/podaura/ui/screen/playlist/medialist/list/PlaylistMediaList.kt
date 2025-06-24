@@ -35,12 +35,12 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.ext.thenIf
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.compone.ext.withoutTop
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.getOrNull
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaItem
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaItemPlaceholder

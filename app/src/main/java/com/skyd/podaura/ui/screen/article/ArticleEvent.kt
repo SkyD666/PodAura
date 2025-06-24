@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.article
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface ArticleEvent : MviSingleEvent {
     sealed interface InitArticleListResultEvent : ArticleEvent {

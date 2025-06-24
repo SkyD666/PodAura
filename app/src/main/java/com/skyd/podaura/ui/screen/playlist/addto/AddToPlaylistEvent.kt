@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.playlist.addto
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface AddToPlaylistEvent : MviSingleEvent {
     sealed interface AddToPlaylistResultEvent : AddToPlaylistEvent {

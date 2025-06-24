@@ -69,6 +69,8 @@ import com.skyd.compone.ext.isSinglePane
 import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalGlobalNavController
 import com.skyd.compone.local.LocalNavController
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.lastIndex
 import com.skyd.podaura.ext.safeItemKey
@@ -82,8 +84,6 @@ import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder

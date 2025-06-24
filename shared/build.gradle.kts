@@ -114,6 +114,7 @@ kotlin {
                 implementation(libs.material.kolor)
                 implementation(libs.skyd666.settings)
                 implementation(libs.skyd666.compone)
+                implementation(libs.skyd666.mvi)
 
                 implementation(project(":ksp"))
             }

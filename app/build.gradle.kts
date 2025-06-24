@@ -256,6 +256,7 @@ dependencies {
 
     implementation(libs.skyd666.settings)
     implementation(libs.skyd666.compone)
+    implementation(libs.skyd666.mvi)
 
     implementation(compose.components.resources)
 

@@ -1,9 +1,9 @@
 package com.skyd.podaura.ui.screen.playlist.medialist
 
 import androidx.paging.PagingData
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
-import com.skyd.podaura.ui.mvi.MviViewState
 import kotlinx.coroutines.flow.Flow
 
 data class PlaylistMediaListState(

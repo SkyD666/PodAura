@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.filepicker
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface FilePickerIntent : MviIntent {
     data class Refresh(

@@ -72,6 +72,8 @@ import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.preference.appearance.article.ArticleItemMinWidthPreference
@@ -87,8 +89,6 @@ import com.skyd.podaura.ui.component.UuidList
 import com.skyd.podaura.ui.component.UuidListType
 import com.skyd.podaura.ui.component.listType
 import com.skyd.podaura.ui.component.uuidListType
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize

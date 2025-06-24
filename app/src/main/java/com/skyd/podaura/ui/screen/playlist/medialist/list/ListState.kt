@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.playlist.medialist.list
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class ListState(
     val selectedItems: List<PlaylistMediaWithArticleBean>,

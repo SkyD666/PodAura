@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.media
 
+import com.skyd.mvi.MviSingleEvent
 import com.skyd.podaura.model.bean.MediaGroupBean
-import com.skyd.podaura.ui.mvi.MviSingleEvent
 
 sealed interface MediaEvent : MviSingleEvent {
     sealed interface DeleteGroupResultEvent : MediaEvent {

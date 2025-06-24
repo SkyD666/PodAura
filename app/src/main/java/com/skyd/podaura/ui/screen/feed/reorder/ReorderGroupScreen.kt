@@ -41,6 +41,8 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.ext.vThenP
@@ -48,8 +50,6 @@ import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable

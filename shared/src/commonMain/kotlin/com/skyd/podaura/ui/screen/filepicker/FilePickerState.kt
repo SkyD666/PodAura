@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.filepicker
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.DEFAULT_FILE_PICKER_PATH
-import com.skyd.podaura.ui.mvi.MviViewState
 import kotlinx.io.files.Path
 
 data class FilePickerState(

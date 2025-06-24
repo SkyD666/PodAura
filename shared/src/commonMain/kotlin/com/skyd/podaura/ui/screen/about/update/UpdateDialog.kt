@@ -31,14 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.UpdateBean
 import com.skyd.podaura.model.preference.IgnoreUpdateVersionPreference
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res

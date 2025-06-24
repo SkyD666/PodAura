@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.media.search
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface MediaSearchEvent : MviSingleEvent {
     sealed interface DeleteFileResultEvent : MediaSearchEvent {

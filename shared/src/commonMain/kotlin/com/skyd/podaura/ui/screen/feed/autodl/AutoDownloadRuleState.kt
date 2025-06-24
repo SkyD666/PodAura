@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.feed.autodl
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.download.autorule.AutoDownloadRuleBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class AutoDownloadRuleState(
     val ruleState: RuleState,

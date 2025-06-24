@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.search
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface SearchEvent : MviSingleEvent {
     sealed interface FavoriteArticleResultEvent : SearchEvent {

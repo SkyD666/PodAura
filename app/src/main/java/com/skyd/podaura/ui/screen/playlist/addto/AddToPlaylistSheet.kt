@@ -15,13 +15,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.playlist.PlaylistItem
 import com.skyd.podaura.ui.screen.playlist.PlaylistItemPlaceholder
 import org.jetbrains.compose.resources.stringResource

@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data
 
-import com.skyd.podaura.ui.mvi.MviViewState
+import com.skyd.mvi.MviViewState
 
 data class DataState(
     val dataListState: DataListState,

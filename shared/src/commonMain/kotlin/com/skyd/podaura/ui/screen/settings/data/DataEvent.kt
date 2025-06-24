@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface DataEvent : MviSingleEvent {
     sealed interface ClearCacheResultEvent : DataEvent {

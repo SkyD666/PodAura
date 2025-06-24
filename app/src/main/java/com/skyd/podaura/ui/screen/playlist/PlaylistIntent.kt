@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.playlist
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface PlaylistIntent : MviIntent {
     data object Init : PlaylistIntent

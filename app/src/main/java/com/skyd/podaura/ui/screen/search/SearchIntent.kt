@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.search
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface SearchIntent : MviIntent {
     data class UpdateQuery(val query: String) : SearchIntent

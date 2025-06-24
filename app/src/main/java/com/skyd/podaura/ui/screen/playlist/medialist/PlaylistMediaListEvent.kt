@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.playlist.medialist
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface PlaylistMediaListEvent : MviSingleEvent {
     sealed interface ReorderResultEvent : PlaylistMediaListEvent {

@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.feed
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
-import com.skyd.podaura.ui.mvi.MviIntent
 
 sealed interface FeedIntent : MviIntent {
     data object Init : FeedIntent

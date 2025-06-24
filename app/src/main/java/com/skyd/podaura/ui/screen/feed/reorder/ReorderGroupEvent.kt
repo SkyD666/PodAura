@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.reorder
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface ReorderGroupEvent : MviSingleEvent {
     sealed interface GroupListResultEvent : ReorderGroupEvent {

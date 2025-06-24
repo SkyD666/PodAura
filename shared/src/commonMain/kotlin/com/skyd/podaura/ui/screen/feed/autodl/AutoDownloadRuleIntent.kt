@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.autodl
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface AutoDownloadRuleIntent : MviIntent {
     data class Init(val feedUrl: String) : AutoDownloadRuleIntent

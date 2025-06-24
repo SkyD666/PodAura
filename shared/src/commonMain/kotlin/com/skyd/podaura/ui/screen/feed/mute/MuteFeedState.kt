@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.feed.mute
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.feed.FeedBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class MuteFeedState(
     val listState: ListState,

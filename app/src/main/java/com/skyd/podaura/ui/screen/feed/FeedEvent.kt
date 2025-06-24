@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.feed
 
+import com.skyd.mvi.MviSingleEvent
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
-import com.skyd.podaura.ui.mvi.MviSingleEvent
 
 sealed interface FeedEvent : MviSingleEvent {
     sealed interface InitFeetListResultEvent : FeedEvent {

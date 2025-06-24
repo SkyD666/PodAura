@@ -56,6 +56,8 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -66,8 +68,6 @@ import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.serializableType
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.article.Article1Item
 import com.skyd.podaura.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item

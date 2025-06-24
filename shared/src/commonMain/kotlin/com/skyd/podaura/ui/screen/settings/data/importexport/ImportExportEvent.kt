@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface ImportExportEvent : MviSingleEvent {
     sealed interface ExportOpmlResultEvent : ImportExportEvent {

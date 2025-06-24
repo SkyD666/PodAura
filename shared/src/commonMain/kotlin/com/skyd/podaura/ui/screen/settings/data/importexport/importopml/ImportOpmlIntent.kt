@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport.importopml
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
-import com.skyd.podaura.ui.mvi.MviIntent
 import io.github.vinceglb.filekit.PlatformFile
 
 sealed interface ImportOpmlIntent : MviIntent {

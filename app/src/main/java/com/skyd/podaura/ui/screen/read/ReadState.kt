@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.read
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class ReadState(
     val articleState: ArticleState,

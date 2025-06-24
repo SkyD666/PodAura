@@ -37,13 +37,13 @@ import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.history.item.MediaPlayHistoryItem
 import com.skyd.podaura.ui.screen.history.item.MediaPlayItemPlaceholder
 import com.skyd.podaura.ui.screen.history.item.ReadHistoryItem

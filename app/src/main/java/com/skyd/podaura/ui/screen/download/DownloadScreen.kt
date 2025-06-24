@@ -46,6 +46,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.type
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
@@ -56,7 +57,6 @@ import com.skyd.podaura.model.repository.download.bt.BtDownloadManager.rememberB
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.mvi.getDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource

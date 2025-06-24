@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.media.list
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface MediaListEvent : MviSingleEvent {
     sealed interface MediaListResultEvent : MediaListEvent {

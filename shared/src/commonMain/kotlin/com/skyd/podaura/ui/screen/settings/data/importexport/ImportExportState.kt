@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport
 
-import com.skyd.podaura.ui.mvi.MviViewState
+import com.skyd.mvi.MviViewState
 
 data class ImportExportState(
     val loadingDialog: Boolean,

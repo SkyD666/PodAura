@@ -1,10 +1,10 @@
 package com.skyd.podaura.ui.screen.read
 
+import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
-import com.skyd.podaura.ui.mvi.AbstractMviViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance

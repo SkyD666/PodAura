@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.media
 
+import com.skyd.mvi.MviIntent
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
-import com.skyd.podaura.ui.mvi.MviIntent
 
 sealed interface MediaIntent : MviIntent {
     data class Init(val path: String) : MediaIntent

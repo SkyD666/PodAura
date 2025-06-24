@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.media.search
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.MediaBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class MediaSearchState(
     val searchResultState: SearchResultState,

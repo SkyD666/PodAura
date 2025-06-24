@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.media
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.MediaGroupBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class MediaState(
     val groups: List<Pair<MediaGroupBean, Long>>,

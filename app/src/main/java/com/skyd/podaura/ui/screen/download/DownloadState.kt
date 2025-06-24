@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.download
 
+import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
-import com.skyd.podaura.ui.mvi.MviViewState
 
 data class DownloadState(
     val downloadListState: DownloadListState,

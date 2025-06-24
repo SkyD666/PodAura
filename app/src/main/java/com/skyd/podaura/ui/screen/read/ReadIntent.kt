@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.read
 
 import androidx.compose.ui.platform.Clipboard
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface ReadIntent : MviIntent {
     data class Init(val articleId: String) : ReadIntent

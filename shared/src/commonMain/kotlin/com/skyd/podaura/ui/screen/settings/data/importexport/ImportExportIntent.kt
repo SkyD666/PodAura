@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 import io.github.vinceglb.filekit.PlatformFile
 
 sealed interface ImportExportIntent : MviIntent {

@@ -47,6 +47,8 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.toRelativeDateTimeString
@@ -60,8 +62,6 @@ import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.dialog.SortDialog
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.playlist.PlaylistThumbnail
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlinx.coroutines.channels.Channel

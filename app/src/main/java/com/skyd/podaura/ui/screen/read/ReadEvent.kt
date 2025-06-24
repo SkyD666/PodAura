@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.read
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface ReadEvent : MviSingleEvent {
     sealed interface FavoriteArticleResultEvent : ReadEvent {

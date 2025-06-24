@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.reorder
 
-import com.skyd.podaura.ui.mvi.MviIntent
+import com.skyd.mvi.MviIntent
 
 sealed interface ReorderGroupIntent : MviIntent {
     data object Init : ReorderGroupIntent

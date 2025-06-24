@@ -3,11 +3,11 @@ package com.skyd.podaura.ui.screen.search
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
-import com.skyd.podaura.ui.mvi.AbstractMviViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance

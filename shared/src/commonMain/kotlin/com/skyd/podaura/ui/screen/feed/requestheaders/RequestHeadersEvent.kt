@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.requestheaders
 
-import com.skyd.podaura.ui.mvi.MviSingleEvent
+import com.skyd.mvi.MviSingleEvent
 
 sealed interface RequestHeadersEvent : MviSingleEvent {
     sealed interface HeadersResultEvent : RequestHeadersEvent {

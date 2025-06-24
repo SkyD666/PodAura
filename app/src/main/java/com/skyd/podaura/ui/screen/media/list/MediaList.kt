@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalNavController
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
@@ -41,8 +43,6 @@ import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
-import com.skyd.podaura.ui.mvi.MviEventListener
-import com.skyd.podaura.ui.mvi.getDispatcher
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.media.CreateGroupDialog
 import com.skyd.podaura.ui.screen.media.list.item.MediaItem
