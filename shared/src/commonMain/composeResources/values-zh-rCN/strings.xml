@@ -370,7 +370,7 @@
     <string name="feed_number_badge_unread">未读</string>
     <string name="feed_number_badge_all">所有</string>
     <string name="feed_style_screen_number_badge">文章数指示类型</string>
-    <string name="feed_number_badge_unread_all">未读与所有</string>
+    <string name="feed_number_badge_unread_all"><![CDATA[未读与所有]]></string>
     <string name="media_screen_style">样式</string>
     <string name="media_display_filter_video">视频</string>
     <string name="media_display_filter_audio">音频</string>
