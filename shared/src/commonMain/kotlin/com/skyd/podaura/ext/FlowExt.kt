@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.take
@@ -35,7 +36,7 @@ fun <T> concat(flow1: Flow<T>, flow2: Flow<T>): Flow<T> = flow {
     emitAll(flow2)
 }
 
-fun <T> Flow<T>.startWith(item: T): Flow<T> = concat(flowOf(item), this)
+fun <T> Flow<T>.startWith(item: T): Flow<T> = onStart { emit(item) }
 
 fun <T> Flow<T>.endWith(item: T): Flow<T> = concat(this, flowOf(item))
 
