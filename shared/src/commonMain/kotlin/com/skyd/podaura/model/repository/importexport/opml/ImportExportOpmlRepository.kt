@@ -23,13 +23,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Clock
 import kotlinx.io.Sink
 import kotlinx.io.Source
 import kotlinx.io.buffered
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
+import kotlin.time.Clock
 import kotlin.time.measureTime
 
 class ImportExportOpmlRepository(

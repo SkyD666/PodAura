@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +32,10 @@ import com.skyd.podaura.model.bean.download.bt.PeerInfoBean
 import com.skyd.podaura.model.bean.download.bt.SessionParamsBean
 import com.skyd.podaura.model.bean.download.bt.TorrentFileBean
 import com.skyd.podaura.model.db.dao.ArticleDao
-import com.skyd.podaura.model.db.dao.download.DownloadInfoDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.SessionParamsDao
 import com.skyd.podaura.model.db.dao.TorrentFileDao
+import com.skyd.podaura.model.db.dao.download.DownloadInfoDao
 import com.skyd.podaura.model.repository.download.DownloadRepository
 import com.skyd.podaura.model.repository.media.MediaRepository
 import com.skyd.podaura.model.worker.download.BtDownloadWorker
@@ -62,8 +63,10 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
+import org.jetbrains.compose.resources.getString
 import org.libtorrent4j.TorrentStatus
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.bt_deprecated_warning
 import podaura.shared.generated.resources.download_no_notification_permission_tip
 import java.util.UUID
 
@@ -147,6 +150,7 @@ object BtDownloadManager {
             }
         }
         scope.launch {
+            getString(Res.string.bt_deprecated_warning).showToast(Toast.LENGTH_LONG)
             var torrentLinkUuid = getDownloadUuidByLink(torrentLink)
             if (torrentLinkUuid == null) {
                 torrentLinkUuid = UUID.randomUUID().toString()

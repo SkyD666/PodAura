@@ -80,7 +80,6 @@ import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.license.LicenseRoute
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -122,6 +121,7 @@ import podaura.shared.generated.resources.sponsor_description
 import podaura.shared.generated.resources.terms_of_service_screen_name
 import podaura.shared.generated.resources.update_check
 import podaura.shared.generated.resources.update_check_failed
+import kotlin.time.Clock
 
 
 @Serializable
@@ -259,7 +259,7 @@ private fun IconArea() {
         )
         val today = remember { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
         val month = remember(today) { today.month }
-        val day = remember(today) { today.dayOfMonth }
+        val day = remember(today) { today.day }
         if (month == Month.DECEMBER && (day in 22..28)) {     // Xmas
             Image(
                 modifier = Modifier

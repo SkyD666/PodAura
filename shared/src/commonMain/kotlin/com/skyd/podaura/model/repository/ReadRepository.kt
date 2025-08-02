@@ -35,9 +35,9 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.datetime.Clock
 import kotlinx.io.files.Path
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -99,7 +99,7 @@ class ReadRepository(
     }
 
     private fun deleteOldTempFiles(currentFile: Path) {
-        val nowTime = Clock.Companion.currentTimeMillis().milliseconds
+        val nowTime = Clock.currentTimeMillis().milliseconds
         kotlinx.io.files.Path(Const.TEMP_PICTURES_DIR).deleteDirs { file ->
             file.name == currentFile.name || file.toString() == Const.TEMP_PICTURES_DIR ||
                     (nowTime - (file.lastModifiedTime ?: 0).milliseconds) < 1.hours
