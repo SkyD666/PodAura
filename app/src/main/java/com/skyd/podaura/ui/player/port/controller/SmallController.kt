@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
-import androidx.compose.material.icons.outlined.ClosedCaption
 import androidx.compose.material.icons.outlined.Fullscreen
-import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.RepeatOne
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -18,22 +19,26 @@ import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.landOrientation
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.ControllerIconButton
+import com.skyd.podaura.ui.player.component.ControllerIconToggleButton
 import com.skyd.podaura.ui.player.component.ControllerTextButton
 import com.skyd.podaura.ui.player.component.state.PlayState
+import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.fullscreen
-import podaura.shared.generated.resources.player_audio_track
-import podaura.shared.generated.resources.player_subtitle_track
+import podaura.shared.generated.resources.loop_playlist_mode
 import podaura.shared.generated.resources.playlist
+import podaura.shared.generated.resources.shuffle_playlist
 import java.util.Locale
 
 
 @Composable
 internal fun SmallController(
     playState: PlayState,
+    playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onOpenPlaylist: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,12 +55,13 @@ internal fun SmallController(
             imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
             contentDescription = stringResource(Res.string.playlist),
         )
-        // Audio track button
-        ControllerIconButton(
+        // Shuffle button
+        ControllerIconToggleButton(
             enabled = playState.mediaLoaded,
-            onClick = { onDialogVisibilityChanged.onAudioTrackDialog(true) },
-            imageVector = Icons.Outlined.MusicNote,
-            contentDescription = stringResource(Res.string.player_audio_track),
+            checked = playState.shuffle,
+            onCheckedChange = playStateCallback.onShuffle,
+            imageVector = Icons.Outlined.Shuffle,
+            contentDescription = stringResource(Res.string.shuffle_playlist),
         )
         // Speed button
         ControllerTextButton(
@@ -67,12 +73,16 @@ internal fun SmallController(
             ),
             onClick = { onDialogVisibilityChanged.onSpeedDialog(true) },
         )
-        // Subtitle track button
-        ControllerIconButton(
+        // Loop button
+        ControllerIconToggleButton(
             enabled = playState.mediaLoaded,
-            onClick = { onDialogVisibilityChanged.onSubtitleTrackDialog(true) },
-            imageVector = Icons.Outlined.ClosedCaption,
-            contentDescription = stringResource(Res.string.player_subtitle_track),
+            checked = playState.loop != LoopMode.None,
+            onCheckedChange = { playStateCallback.onCycleLoop() },
+            imageVector = when (playState.loop) {
+                LoopMode.LoopPlaylist, LoopMode.None -> Icons.Outlined.Repeat
+                LoopMode.LoopFile -> Icons.Outlined.RepeatOne
+            },
+            contentDescription = stringResource(Res.string.loop_playlist_mode),
         )
         ComponeIconButton(
             onClick = { context.activity.landOrientation() },

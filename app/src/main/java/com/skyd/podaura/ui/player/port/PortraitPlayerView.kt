@@ -6,15 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.ClosedCaption
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -50,7 +51,9 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.player_audio_track
 import podaura.shared.generated.resources.player_picture_in_picture
+import podaura.shared.generated.resources.player_subtitle_track
 import podaura.shared.generated.resources.read_screen_name
 
 
@@ -91,20 +94,20 @@ internal fun PortraitPlayerView(
                     Menu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false },
+                        playState = playState,
+                        onDialogVisibilityChanged = onDialogVisibilityChanged,
                         media = playState.currentMedia,
                     )
                 }
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues),
-        ) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             MediaArea(
                 playState = playState,
-                modifier = Modifier.padding(horizontal = 30.dp),
+                modifier = Modifier
+                    .padding(horizontal = 30.dp)
+                    .weight(1f),
                 playerContent = playerContent,
             )
 
@@ -121,16 +124,17 @@ internal fun PortraitPlayerView(
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             Controller(
                 playState = playState,
                 playStateCallback = playStateCallback,
                 modifier = Modifier.padding(horizontal = 22.dp),
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             SmallController(
                 playState = playState,
+                playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
                 onOpenPlaylist = { showPlaylistSheet = true },
                 modifier = Modifier.padding(horizontal = 30.dp),
@@ -159,6 +163,8 @@ internal fun PortraitPlayerView(
 private fun Menu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
+    playState: PlayState,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
     media: PlaylistMediaWithArticleBean?,
 ) {
     val context = LocalContext.current
@@ -167,6 +173,29 @@ private fun Menu(
         expanded = expanded,
         onDismissRequest = onDismissRequest
     ) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(Res.string.player_audio_track)) },
+            leadingIcon = {
+                Icon(imageVector = Icons.Outlined.MusicNote, contentDescription = null)
+            },
+            onClick = {
+                onDialogVisibilityChanged.onAudioTrackDialog(true)
+                onDismissRequest()
+            },
+            enabled = playState.mediaLoaded,
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(Res.string.player_subtitle_track)) },
+            leadingIcon = {
+                Icon(imageVector = Icons.Outlined.ClosedCaption, contentDescription = null)
+            },
+            onClick = {
+                onDialogVisibilityChanged.onSubtitleTrackDialog(true)
+                onDismissRequest()
+            },
+            enabled = playState.mediaLoaded,
+        )
+        HorizontalDivider()
         val feedUrl = media?.article?.feed?.url
         DropdownMenuItem(
             text = { Text(text = stringResource(Res.string.feed_screen_name)) },
@@ -187,10 +216,7 @@ private fun Menu(
         DropdownMenuItem(
             text = { Text(text = stringResource(Res.string.read_screen_name)) },
             leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Article,
-                    contentDescription = null,
-                )
+                Icon(imageVector = Icons.AutoMirrored.Outlined.Article, contentDescription = null)
             },
             onClick = {
                 val intent = Intent(

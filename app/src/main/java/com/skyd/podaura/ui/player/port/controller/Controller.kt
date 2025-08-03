@@ -16,9 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Repeat
-import androidx.compose.material.icons.outlined.RepeatOne
-import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.Forward10
+import androidx.compose.material.icons.outlined.Replay10
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material3.Icon
@@ -39,7 +38,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.ui.component.shape.CurlyCornerShape
-import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import org.jetbrains.compose.resources.stringResource
@@ -73,25 +71,23 @@ internal fun Controller(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Shuffle button
-        SmallerCircleToggleButton(
-            enabled = playState.mediaLoaded,
-            checked = playState.shuffle,
-            onCheckedChange = playStateCallback.onShuffle,
-            imageVector = Icons.Outlined.Shuffle,
-            contentDescription = stringResource(Res.string.shuffle_playlist),
-            iconSize = 25.dp,
-        )
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipPrevious,
             contentDescription = stringResource(Res.string.skip_previous),
             enabled = !playState.playlistFirst,
             onClick = playStateCallback.onPreviousMedia,
         )
+        // -seconds
+        SmallerCircleButton(
+            imageVector = Icons.Outlined.Replay10,
+            contentDescription = stringResource(Res.string.shuffle_playlist),
+            enabled = playState.mediaLoaded,
+            onClick = { playStateCallback.onSeekTo(playState.position - 10) },
+        )
         Box(
             modifier = Modifier
                 .padding(horizontal = 6.dp)
-                .size(78.dp)
+                .size(76.dp)
                 .clip(
                     CurlyCornerShape(
                         amp = with(density) { animatePlayButtonShapeAmp.toPx() },
@@ -116,23 +112,18 @@ internal fun Controller(
                 )
             }
         }
+        // +seconds
+        SmallerCircleButton(
+            imageVector = Icons.Outlined.Forward10,
+            contentDescription = stringResource(Res.string.loop_playlist_mode),
+            enabled = playState.mediaLoaded,
+            onClick = { playStateCallback.onSeekTo(playState.position + 10) },
+        )
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipNext,
             contentDescription = stringResource(Res.string.skip_next),
             enabled = !playState.playlistLast,
             onClick = playStateCallback.onNextMedia,
-        )
-        // Loop button
-        SmallerCircleToggleButton(
-            enabled = playState.mediaLoaded,
-            checked = playState.loop != LoopMode.None,
-            onCheckedChange = { playStateCallback.onCycleLoop() },
-            imageVector = when (playState.loop) {
-                LoopMode.LoopPlaylist, LoopMode.None -> Icons.Outlined.Repeat
-                LoopMode.LoopFile -> Icons.Outlined.RepeatOne
-            },
-            contentDescription = stringResource(Res.string.loop_playlist_mode),
-            iconSize = 25.dp,
         )
     }
 }
@@ -169,12 +160,12 @@ private fun SmallerCircleToggleButton(
 private fun SmallerCircleButton(
     imageVector: ImageVector,
     contentDescription: String?,
-    iconSize: Dp = 36.dp,
+    iconSize: Dp = 32.dp,
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     IconButton(
-        modifier = Modifier.size(45.dp),
+        modifier = Modifier.size(46.dp),
         onClick = onClick,
         enabled = enabled,
     ) {
