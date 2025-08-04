@@ -10,8 +10,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
@@ -42,9 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.core.view.WindowInsetsControllerCompat
 import com.skyd.podaura.ext.tickVibrate
-import com.skyd.podaura.model.preference.player.PlayerForwardSecondsButtonValuePreference
+import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
+import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
+import com.skyd.podaura.model.preference.player.PlayerShowReplaySecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.podaura.ui.component.rememberSystemUiController
 import com.skyd.podaura.ui.component.shape.ForwardRippleDirect
@@ -55,7 +62,7 @@ import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChang
 import com.skyd.podaura.ui.player.land.controller.bar.BottomBar
 import com.skyd.podaura.ui.player.land.controller.bar.TopBar
 import com.skyd.podaura.ui.player.land.controller.bar.TopBarCallback
-import com.skyd.podaura.ui.player.land.controller.button.ForwardSeconds
+import com.skyd.podaura.ui.player.land.controller.button.ForwardOrReplaySeconds
 import com.skyd.podaura.ui.player.land.controller.button.ResetTransform
 import com.skyd.podaura.ui.player.land.controller.button.Screenshot
 import com.skyd.podaura.ui.player.land.controller.preview.BrightnessPreview
@@ -323,7 +330,7 @@ private fun AutoHiddenBox(
             exit = fadeOut(),
         ) {
             ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-                val (topBar, bottomBar, screenshot, forwardSeconds, resetTransform) = createRefs()
+                val (topBar, bottomBar, screenshot, replaySeconds, forwardSeconds, resetTransform) = createRefs()
 
                 TopBar(
                     modifier = Modifier.constrainAs(topBar) { top.linkTo(parent.top) },
@@ -353,19 +360,38 @@ private fun AutoHiddenBox(
                     )
                 }
 
+                // Replay seconds button
+                if (PlayerShowReplaySecondsButtonPreference.current) {
+                    val replaySecond = PlayerReplaySecondsPreference.current
+                    ForwardOrReplaySeconds(
+                        modifier = Modifier
+                            .constrainAs(replaySeconds) {
+                                bottom.linkTo(bottomBar.top)
+                                start.linkTo(parent.start)
+                            }
+                            .padding(start = 20.dp)
+                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start)),
+                        seconds = replaySecond,
+                        onClick = {
+                            with(playState()) { playStateCallback.onSeekTo(position + replaySecond) }
+                            onRestartAutoHideControllerRunnable()
+                        },
+                    )
+                }
+
                 // Forward seconds button
                 if (PlayerShowForwardSecondsButtonPreference.current) {
-                    val forwardSecondButtonValue = PlayerForwardSecondsButtonValuePreference.current
-                    ForwardSeconds(
+                    val forwardSecond = PlayerForwardSecondsPreference.current
+                    ForwardOrReplaySeconds(
                         modifier = Modifier
                             .constrainAs(forwardSeconds) {
                                 bottom.linkTo(bottomBar.top)
                                 end.linkTo(parent.end)
                             }
                             .padding(end = 20.dp),
-                        forwardSeconds = forwardSecondButtonValue,
+                        seconds = forwardSecond,
                         onClick = {
-                            with(playState()) { playStateCallback.onSeekTo(position + forwardSecondButtonValue) }
+                            with(playState()) { playStateCallback.onSeekTo(position + forwardSecond) }
                             onRestartAutoHideControllerRunnable()
                         },
                     )

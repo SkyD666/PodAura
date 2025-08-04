@@ -10,7 +10,3 @@ fun Long.fileSize(context: Context): String =
         .replace(Regex("[\\u200B\\u200C\\u200E\\u200F\\u202A-\\u202E\\u2060]"), "")
 
 fun Float.toPercentage(format: String = "%.2f%%"): String = format.format(this * 100)
-
-fun Float.toDegrees(): Float = (this * 180 / Math.PI).toFloat()
-
-fun Int.toSignedString(): String = if (this >= 0) "+$this" else toString()

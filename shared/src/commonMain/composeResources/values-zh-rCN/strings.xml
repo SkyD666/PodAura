@@ -139,9 +139,12 @@
     <string name="theme_red">喜多</string>
     <string name="theme_purple">刻晴</string>
     <string name="theme_mahiro">真寻</string>
-    <string name="player_config_screen_appearance_category">全屏外观</string>
-    <string name="player_config_screen_show_forward_seconds_button">%1$ss 按钮</string>
-    <string name="player_config_screen_show_forward_seconds_button_description">在播放进度条上方显示 %1$ss 按钮</string>
+    <string name="player_forward_seconds_content_description">快进 %1$d 秒</string>
+    <string name="player_replay_seconds_content_description">后退 %1$d 秒</string>
+    <string name="player_config_screen_appearance_category">外观</string>
+    <string name="player_config_screen_forward_seconds">%1$ss 按钮</string>
+    <string name="player_config_screen_forward_seconds_description">设置快进秒数，或在全屏播放进度条上方显示 %1$ss 按钮</string>
+    <string name="player_config_screen_replay_seconds_description">设置后退秒数，或在全屏播放进度条上方显示 %1$ss 按钮</string>
     <string name="dark_mode_light">浅色</string>
     <string name="dark_mode_dark">深色</string>
     <string name="dark_mode_follow_system">跟随系统</string>
@@ -463,6 +466,7 @@
     <string name="plus">加</string>
     <string name="player_subtitle_delay">字幕延迟</string>
     <string name="player_config_screen_forward_second_button_value">快进秒数</string>
+    <string name="player_config_screen_replay_second_button_value">后退秒数</string>
     <string name="list_item_type_list">列表</string>
     <string name="list_item_type_compact_grid">紧凑网格</string>
     <string name="list_item_type_comfortable_grid">松散网格</string>

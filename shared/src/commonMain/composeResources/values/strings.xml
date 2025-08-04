@@ -145,9 +145,12 @@
     <string name="theme_purple">Keqing</string>
     <string name="theme_mahiro">Mahiro</string>
     <string name="player_forward_seconds" translatable="false">%1$ss</string>
-    <string name="player_config_screen_appearance_category">Fullscreen appearance</string>
-    <string name="player_config_screen_show_forward_seconds_button">%1$ss button</string>
-    <string name="player_config_screen_show_forward_seconds_button_description">Show %1$ss button above the progress bar</string>
+    <string name="player_forward_seconds_content_description">Forward %1$d seconds</string>
+    <string name="player_replay_seconds_content_description">Replay %1$d seconds</string>
+    <string name="player_config_screen_appearance_category">Appearance</string>
+    <string name="player_config_screen_forward_seconds">%1$ss button</string>
+    <string name="player_config_screen_forward_seconds_description">Set forward seconds or show %1$ss button above the progress bar</string>
+    <string name="player_config_screen_replay_seconds_description">Set replay seconds or show %1$ss button above the progress bar</string>
     <string name="dark_mode_light">Light</string>
     <string name="dark_mode_dark">Dark</string>
     <string name="dark_mode_follow_system">System</string>
@@ -470,6 +473,7 @@
     <string name="plus">Plus</string>
     <string name="player_subtitle_delay">Subtitle delay</string>
     <string name="player_config_screen_forward_second_button_value">Forward seconds</string>
+    <string name="player_config_screen_replay_second_button_value">Replay seconds</string>
     <string name="list_item_type_list">List</string>
     <string name="list_item_type_compact_grid">Compact grid</string>
     <string name="list_item_type_comfortable_grid">Comfortable grid</string>

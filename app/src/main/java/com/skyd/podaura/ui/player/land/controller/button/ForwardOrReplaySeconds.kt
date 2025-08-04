@@ -20,9 +20,9 @@ import podaura.shared.generated.resources.player_forward_seconds
 
 
 @Composable
-internal fun ForwardSeconds(
+internal fun ForwardOrReplaySeconds(
     modifier: Modifier = Modifier,
-    forwardSeconds: Int,
+    seconds: Int,
     onClick: () -> Unit,
 ) {
     Text(
@@ -33,7 +33,7 @@ internal fun ForwardSeconds(
             .padding(horizontal = 16.dp, vertical = 10.dp),
         text = stringResource(
             Res.string.player_forward_seconds,
-            forwardSeconds.toSignedString()
+            seconds.toSignedString()
         ),
         style = MaterialTheme.typography.labelLarge,
         fontSize = 18.sp,

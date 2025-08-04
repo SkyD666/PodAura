@@ -10,10 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Redo
-import androidx.compose.material.icons.outlined.FastForward
-import androidx.compose.material.icons.outlined.FastRewind
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Speaker
@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -52,12 +53,14 @@ import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.model.preference.player.PlayerAutoPipPreference
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
-import com.skyd.podaura.model.preference.player.PlayerForwardSecondsButtonValuePreference
+import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerMaxCacheSizePreference
+import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
+import com.skyd.podaura.model.preference.player.PlayerShowReplaySecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdvancedRoute
 import com.skyd.settings.BaseSettingsItem
@@ -83,12 +86,14 @@ import podaura.shared.generated.resources.player_config_screen_behavior_category
 import podaura.shared.generated.resources.player_config_screen_cache_category
 import podaura.shared.generated.resources.player_config_screen_double_tap
 import podaura.shared.generated.resources.player_config_screen_forward_second_button_value
+import podaura.shared.generated.resources.player_config_screen_forward_seconds
+import podaura.shared.generated.resources.player_config_screen_forward_seconds_description
 import podaura.shared.generated.resources.player_config_screen_max_back_cache_size
 import podaura.shared.generated.resources.player_config_screen_max_cache_size
 import podaura.shared.generated.resources.player_config_screen_name
+import podaura.shared.generated.resources.player_config_screen_replay_second_button_value
+import podaura.shared.generated.resources.player_config_screen_replay_seconds_description
 import podaura.shared.generated.resources.player_config_screen_seek_option
-import podaura.shared.generated.resources.player_config_screen_show_forward_seconds_button
-import podaura.shared.generated.resources.player_config_screen_show_forward_seconds_button_description
 import podaura.shared.generated.resources.player_config_screen_show_progress_indicator
 import podaura.shared.generated.resources.player_config_screen_show_progress_indicator_description
 import podaura.shared.generated.resources.player_config_screen_show_screenshot_button
@@ -108,7 +113,8 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val navController = LocalNavController.current
     var expandDoubleTapMenu by rememberSaveable { mutableStateOf(false) }
     var expandSeekOptionMenu by rememberSaveable { mutableStateOf(false) }
-    var openForwardSecondButtonValueDialog by rememberSaveable { mutableStateOf(false) }
+    var openReplaySecondDialog by rememberSaveable { mutableStateOf(false) }
+    var openForwardSecondDialog by rememberSaveable { mutableStateOf(false) }
     var openMaxCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
     var openMaxBackCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -200,25 +206,41 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     )
                 }
                 item {
-                    val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
+                    val replaySeconds = PlayerReplaySecondsPreference.current
                     SwitchBaseSettingsItem(
-                        imageVector = if (forwardSeconds >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
+                        imageVector = Icons.Outlined.Replay,
                         text = stringResource(
-                            Res.string.player_config_screen_show_forward_seconds_button,
+                            Res.string.player_config_screen_forward_seconds,
+                            replaySeconds.toSignedString()
+                        ),
+                        description = stringResource(
+                            Res.string.player_config_screen_replay_seconds_description,
+                            replaySeconds.toSignedString()
+                        ),
+                        checked = PlayerShowReplaySecondsButtonPreference.current,
+                        onCheckedChange = {
+                            PlayerShowReplaySecondsButtonPreference.put(scope, it)
+                        },
+                        onClick = { openReplaySecondDialog = true },
+                    )
+                }
+                item {
+                    val forwardSeconds = PlayerForwardSecondsPreference.current
+                    SwitchBaseSettingsItem(
+                        imageVector = Icons.Outlined.Refresh,
+                        text = stringResource(
+                            Res.string.player_config_screen_forward_seconds,
                             forwardSeconds.toSignedString()
                         ),
                         description = stringResource(
-                            Res.string.player_config_screen_show_forward_seconds_button_description,
+                            Res.string.player_config_screen_forward_seconds_description,
                             forwardSeconds.toSignedString()
                         ),
                         checked = PlayerShowForwardSecondsButtonPreference.current,
                         onCheckedChange = {
-                            PlayerShowForwardSecondsButtonPreference.put(
-                                scope,
-                                it
-                            )
+                            PlayerShowForwardSecondsButtonPreference.put(scope, it)
                         },
-                        onClick = { openForwardSecondButtonValueDialog = true },
+                        onClick = { openForwardSecondDialog = true },
                     )
                 }
             }
@@ -252,10 +274,11 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             }
         }
 
-        if (openForwardSecondButtonValueDialog) {
-            ForwardSecondButtonValueDialog(onDismissRequest = {
-                openForwardSecondButtonValueDialog = false
-            })
+        if (openReplaySecondDialog) {
+            ReplaySecondsDialog(onDismissRequest = { openReplaySecondDialog = false })
+        }
+        if (openForwardSecondDialog) {
+            ForwardSecondsDialog(onDismissRequest = { openForwardSecondDialog = false })
         }
 
         if (openMaxCacheSizeDialog) {
@@ -307,43 +330,73 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-internal fun ForwardSecondButtonValueDialog(onDismissRequest: () -> Unit) {
+internal fun ReplaySecondsDialog(onDismissRequest: () -> Unit) {
     val scope = rememberCoroutineScope()
-    val forwardSeconds = PlayerForwardSecondsButtonValuePreference.current
-    var value by rememberSaveable { mutableIntStateOf(forwardSeconds) }
+    SecondsDialog(
+        value = PlayerReplaySecondsPreference.current,
+        valueRange = PlayerReplaySecondsPreference.range,
+        title = stringResource(Res.string.player_config_screen_replay_second_button_value),
+        imageVector = Icons.Outlined.Replay,
+        onDismissRequest = onDismissRequest,
+        onReset = { PlayerReplaySecondsPreference.default },
+        onConform = { PlayerReplaySecondsPreference.put(scope, it) },
+    )
+}
+
+
+@Composable
+internal fun ForwardSecondsDialog(onDismissRequest: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    SecondsDialog(
+        value = PlayerForwardSecondsPreference.current,
+        valueRange = PlayerForwardSecondsPreference.range,
+        title = stringResource(Res.string.player_config_screen_forward_second_button_value),
+        imageVector = Icons.Outlined.Refresh,
+        onDismissRequest = onDismissRequest,
+        onReset = { PlayerForwardSecondsPreference.default },
+        onConform = { PlayerForwardSecondsPreference.put(scope, it) },
+    )
+}
+
+@Composable
+internal fun SecondsDialog(
+    value: Int,
+    valueRange: ClosedFloatingPointRange<Float>,
+    title: String,
+    imageVector: ImageVector,
+    onDismissRequest: () -> Unit,
+    onReset: () -> Int,
+    onConform: (Int) -> Unit,
+) {
+    var currentValue by rememberSaveable { mutableIntStateOf(value) }
 
     SliderDialog(
         onDismissRequest = onDismissRequest,
-        value = value.toFloat(),
-        onValueChange = { value = it.toInt() },
-        valueRange = PlayerForwardSecondsButtonValuePreference.range,
+        value = currentValue.toFloat(),
+        onValueChange = { currentValue = it.toInt() },
+        valueRange = valueRange,
         valueLabel = {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .animateContentSize(),
-                    text = "${value.toInt().toSignedString()}s",
+                    text = "${currentValue.toSignedString()}s",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 ComponeIconButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
-                    onClick = { value = PlayerForwardSecondsButtonValuePreference.default },
+                    onClick = { currentValue = onReset() },
                     imageVector = Icons.Outlined.Restore,
                     contentDescription = stringResource(Res.string.reset),
                 )
             }
         },
-        icon = {
-            Icon(
-                imageVector = if (value >= 0) Icons.Outlined.FastForward else Icons.Outlined.FastRewind,
-                contentDescription = null,
-            )
-        },
-        title = { Text(text = stringResource(Res.string.player_config_screen_forward_second_button_value)) },
+        icon = { Icon(imageVector = imageVector, contentDescription = null) },
+        title = { Text(text = title) },
         confirmButton = {
             TextButton(onClick = {
-                PlayerForwardSecondsButtonValuePreference.put(scope, value)
+                onConform(currentValue)
                 onDismissRequest()
             }) {
                 Text(text = stringResource(Res.string.ok))

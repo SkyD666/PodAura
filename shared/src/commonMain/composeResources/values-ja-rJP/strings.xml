@@ -138,9 +138,8 @@
     <string name="theme_red">喜多郁代</string>
     <string name="theme_purple">刻晴</string>
     <string name="theme_mahiro">緒山まひろ</string>
-    <string name="player_config_screen_appearance_category">フルスクリーンの外観</string>
-    <string name="player_config_screen_show_forward_seconds_button">%1$ss ボタン</string>
-    <string name="player_config_screen_show_forward_seconds_button_description">進捗バーの上に %1$ss ボタンを表示します</string>
+    <string name="player_config_screen_appearance_category">外観</string>
+    <string name="player_config_screen_forward_seconds">%1$ss ボタン</string>
     <string name="dark_mode_light">ライト</string>
     <string name="dark_mode_dark">ダーク</string>
     <string name="dark_mode_follow_system">システム</string>

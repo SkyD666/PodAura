@@ -1,6 +1,7 @@
 package com.skyd.podaura.ext
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -8,6 +9,8 @@ import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import kotlin.math.roundToInt
 
+
+fun Modifier.mirror(): Modifier = scale(scaleX = -1f, scaleY = 1f)
 
 fun Modifier.aspectRatioIn(
     ratio: Float,

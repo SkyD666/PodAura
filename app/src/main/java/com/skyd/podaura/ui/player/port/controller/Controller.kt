@@ -16,8 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Forward10
-import androidx.compose.material.icons.outlined.Replay10
+import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material3.Icon
@@ -28,6 +27,7 @@ import androidx.compose.material3.IconToggleButtonColors
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,19 +35,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.skyd.compone.ext.thenIf
+import com.skyd.podaura.ext.mirror
+import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
+import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.shape.CurlyCornerShape
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.loop_playlist_mode
 import podaura.shared.generated.resources.pause
 import podaura.shared.generated.resources.play
-import podaura.shared.generated.resources.shuffle_playlist
+import podaura.shared.generated.resources.player_forward_seconds_content_description
+import podaura.shared.generated.resources.player_replay_seconds_content_description
 import podaura.shared.generated.resources.skip_next
 import podaura.shared.generated.resources.skip_previous
+import kotlin.math.abs
 
 
 @Composable
@@ -78,11 +85,12 @@ internal fun Controller(
             onClick = playStateCallback.onPreviousMedia,
         )
         // -seconds
-        SmallerCircleButton(
-            imageVector = Icons.Outlined.Replay10,
-            contentDescription = stringResource(Res.string.shuffle_playlist),
+        ForwardOrReplayButton(
+            seconds = PlayerReplaySecondsPreference.current,
+            contentDescription = stringResource(Res.string.player_replay_seconds_content_description),
             enabled = playState.mediaLoaded,
-            onClick = { playStateCallback.onSeekTo(playState.position - 10) },
+            playState = playState,
+            playStateCallback = playStateCallback,
         )
         Box(
             modifier = Modifier
@@ -113,17 +121,44 @@ internal fun Controller(
             }
         }
         // +seconds
-        SmallerCircleButton(
-            imageVector = Icons.Outlined.Forward10,
-            contentDescription = stringResource(Res.string.loop_playlist_mode),
+        ForwardOrReplayButton(
+            seconds = PlayerForwardSecondsPreference.current,
+            contentDescription = stringResource(Res.string.player_forward_seconds_content_description),
             enabled = playState.mediaLoaded,
-            onClick = { playStateCallback.onSeekTo(playState.position + 10) },
+            playState = playState,
+            playStateCallback = playStateCallback,
         )
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipNext,
             contentDescription = stringResource(Res.string.skip_next),
             enabled = !playState.playlistLast,
             onClick = playStateCallback.onNextMedia,
+        )
+    }
+}
+
+@Composable
+private fun ForwardOrReplayButton(
+    seconds: Int,
+    contentDescription: String?,
+    enabled: Boolean,
+    playState: PlayState,
+    playStateCallback: PlayStateCallback,
+) {
+    Box(contentAlignment = Alignment.Center) {
+        SmallerCircleButton(
+            imageVector = Icons.Outlined.Replay,
+            contentDescription = contentDescription,
+            mirrorIcon = seconds >= 0,
+            enabled = enabled,
+            onClick = { playStateCallback.onSeekTo(playState.position + seconds) },
+        )
+        Text(
+            text = abs(seconds).toString(),
+            modifier = Modifier.padding(top = 5.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = if (abs(seconds) >= 100) 6.sp else 9.sp,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -161,6 +196,7 @@ private fun SmallerCircleButton(
     imageVector: ImageVector,
     contentDescription: String?,
     iconSize: Dp = 32.dp,
+    mirrorIcon: Boolean = false,
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
@@ -172,7 +208,9 @@ private fun SmallerCircleButton(
         Icon(
             imageVector = imageVector,
             contentDescription = contentDescription,
-            modifier = Modifier.size(iconSize),
+            modifier = Modifier
+                .size(iconSize)
+                .thenIf(mirrorIcon) { mirror() },
         )
     }
 }
