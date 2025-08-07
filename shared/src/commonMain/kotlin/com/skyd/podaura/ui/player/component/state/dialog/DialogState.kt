@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.player.component.state.dialog
 
 import androidx.compose.runtime.Immutable
+import com.skyd.podaura.ui.player.component.state.dialog.seconds.ForwardSecondsDialogState
+import com.skyd.podaura.ui.player.component.state.dialog.seconds.ReplaySecondsDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
@@ -11,6 +13,8 @@ data class DialogState(
     val speedDialogState: () -> SpeedDialogState,
     val audioTrackDialogState: () -> AudioTrackDialogState,
     val subtitleTrackDialogState: () -> SubtitleTrackDialogState,
+    val forwardSecondsDialogState: () -> ForwardSecondsDialogState,
+    val replaySecondsDialogState: () -> ReplaySecondsDialogState,
 )
 
 @Immutable
@@ -27,4 +31,6 @@ data class OnDialogVisibilityChanged(
     val onAudioTrackDialog: (Boolean) -> Unit,
     val onSubtitleSettingDialog: (Boolean) -> Unit,
     val onAudioSettingDialog: (Boolean) -> Unit,
+    val onReplaySecondDialog: (Boolean) -> Unit,
+    val onForwardSecondDialog: (Boolean) -> Unit,
 )

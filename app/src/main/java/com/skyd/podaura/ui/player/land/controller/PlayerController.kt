@@ -372,6 +372,7 @@ private fun AutoHiddenBox(
                             .padding(start = 20.dp)
                             .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start)),
                         seconds = replaySecond,
+                        onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
                         onClick = {
                             with(playState()) { playStateCallback.onSeekTo(position + replaySecond) }
                             onRestartAutoHideControllerRunnable()
@@ -390,6 +391,7 @@ private fun AutoHiddenBox(
                             }
                             .padding(end = 20.dp),
                         seconds = forwardSecond,
+                        onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
                         onClick = {
                             with(playState()) { playStateCallback.onSeekTo(position + forwardSecond) }
                             onRestartAutoHideControllerRunnable()

@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.player.land.controller.button
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -23,13 +23,14 @@ import podaura.shared.generated.resources.player_forward_seconds
 internal fun ForwardOrReplaySeconds(
     modifier: Modifier = Modifier,
     seconds: Int,
+    onLongClick: () -> Unit,
     onClick: () -> Unit,
 ) {
     Text(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
             .background(color = ControllerLabelGray)
-            .clickable(onClick = onClick)
+            .combinedClickable(onLongClick = onLongClick, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         text = stringResource(
             Res.string.player_forward_seconds,

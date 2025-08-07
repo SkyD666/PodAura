@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,9 +45,11 @@ import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.ext.mirror
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
+import com.skyd.podaura.ui.component.LongClickListener
 import com.skyd.podaura.ui.component.shape.CurlyCornerShape
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
+import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.pause
@@ -62,6 +66,7 @@ internal fun Controller(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     modifier: Modifier = Modifier,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
 ) {
     val density = LocalDensity.current
     val animatePlayButtonShapeAmp by animateDpAsState(
@@ -91,6 +96,7 @@ internal fun Controller(
             enabled = playState.mediaLoaded,
             playState = playState,
             playStateCallback = playStateCallback,
+            onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
         )
         Box(
             modifier = Modifier
@@ -127,6 +133,7 @@ internal fun Controller(
             enabled = playState.mediaLoaded,
             playState = playState,
             playStateCallback = playStateCallback,
+            onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
         )
         SmallerCircleButton(
             imageVector = Icons.Outlined.SkipNext,
@@ -144,6 +151,7 @@ private fun ForwardOrReplayButton(
     enabled: Boolean,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
+    onLongClick: () -> Unit,
 ) {
     Box(contentAlignment = Alignment.Center) {
         SmallerCircleButton(
@@ -151,6 +159,7 @@ private fun ForwardOrReplayButton(
             contentDescription = contentDescription,
             mirrorIcon = seconds >= 0,
             enabled = enabled,
+            onLongClick = onLongClick,
             onClick = { playStateCallback.onSeekTo(playState.position + seconds) },
         )
         Text(
@@ -198,12 +207,20 @@ private fun SmallerCircleButton(
     iconSize: Dp = 32.dp,
     mirrorIcon: Boolean = false,
     enabled: Boolean = true,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    LongClickListener(
+        interactionSource = interactionSource,
+        onLongClick = onLongClick,
+        onClick = onClick,
+    )
     IconButton(
         modifier = Modifier.size(46.dp),
-        onClick = onClick,
+        onClick = {},
         enabled = enabled,
+        interactionSource = interactionSource,
     ) {
         Icon(
             imageVector = imageVector,

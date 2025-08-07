@@ -274,12 +274,14 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             }
         }
 
-        if (openReplaySecondDialog) {
-            ReplaySecondsDialog(onDismissRequest = { openReplaySecondDialog = false })
-        }
-        if (openForwardSecondDialog) {
-            ForwardSecondsDialog(onDismissRequest = { openForwardSecondDialog = false })
-        }
+        ReplaySecondsDialog(
+            visible = { openReplaySecondDialog },
+            onDismissRequest = { openReplaySecondDialog = false },
+        )
+        ForwardSecondsDialog(
+            visible = { openForwardSecondDialog },
+            onDismissRequest = { openForwardSecondDialog = false },
+        )
 
         if (openMaxCacheSizeDialog) {
             MaxCacheSizeDialog(
@@ -330,32 +332,36 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-internal fun ReplaySecondsDialog(onDismissRequest: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    SecondsDialog(
-        value = PlayerReplaySecondsPreference.current,
-        valueRange = PlayerReplaySecondsPreference.range,
-        title = stringResource(Res.string.player_config_screen_replay_second_button_value),
-        imageVector = Icons.Outlined.Replay,
-        onDismissRequest = onDismissRequest,
-        onReset = { PlayerReplaySecondsPreference.default },
-        onConform = { PlayerReplaySecondsPreference.put(scope, it) },
-    )
+internal fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
+    if (visible()) {
+        val scope = rememberCoroutineScope()
+        SecondsDialog(
+            value = PlayerReplaySecondsPreference.current,
+            valueRange = PlayerReplaySecondsPreference.range,
+            title = stringResource(Res.string.player_config_screen_replay_second_button_value),
+            imageVector = Icons.Outlined.Replay,
+            onDismissRequest = onDismissRequest,
+            onReset = { PlayerReplaySecondsPreference.default },
+            onConform = { PlayerReplaySecondsPreference.put(scope, it) },
+        )
+    }
 }
 
 
 @Composable
-internal fun ForwardSecondsDialog(onDismissRequest: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    SecondsDialog(
-        value = PlayerForwardSecondsPreference.current,
-        valueRange = PlayerForwardSecondsPreference.range,
-        title = stringResource(Res.string.player_config_screen_forward_second_button_value),
-        imageVector = Icons.Outlined.Refresh,
-        onDismissRequest = onDismissRequest,
-        onReset = { PlayerForwardSecondsPreference.default },
-        onConform = { PlayerForwardSecondsPreference.put(scope, it) },
-    )
+internal fun ForwardSecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
+    if (visible()) {
+        val scope = rememberCoroutineScope()
+        SecondsDialog(
+            value = PlayerForwardSecondsPreference.current,
+            valueRange = PlayerForwardSecondsPreference.range,
+            title = stringResource(Res.string.player_config_screen_forward_second_button_value),
+            imageVector = Icons.Outlined.Refresh,
+            onDismissRequest = onDismissRequest,
+            onReset = { PlayerForwardSecondsPreference.default },
+            onConform = { PlayerForwardSecondsPreference.put(scope, it) },
+        )
+    }
 }
 
 @Composable

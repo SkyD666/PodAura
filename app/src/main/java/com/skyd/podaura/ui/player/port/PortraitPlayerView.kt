@@ -129,6 +129,7 @@ internal fun PortraitPlayerView(
                 playState = playState,
                 playStateCallback = playStateCallback,
                 modifier = Modifier.padding(horizontal = 22.dp),
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
             )
 
             Spacer(modifier = Modifier.height(16.dp))

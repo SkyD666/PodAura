@@ -41,6 +41,8 @@ import com.skyd.podaura.ui.player.component.state.dialog.DialogState
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.component.state.dialog.SpeedDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.SpeedDialogState
+import com.skyd.podaura.ui.player.component.state.dialog.seconds.ForwardSecondsDialogState
+import com.skyd.podaura.ui.player.component.state.dialog.seconds.ReplaySecondsDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
@@ -52,6 +54,8 @@ import com.skyd.podaura.ui.player.pip.pipParams
 import com.skyd.podaura.ui.player.pip.rememberIsInPipMode
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.player.service.PlayerService
+import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
+import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import java.io.File
 
 
@@ -80,6 +84,8 @@ fun PlayerView(
     var subtitleTrackDialogState by remember { mutableStateOf(SubtitleTrackDialogState.initial) }
     var audioTrackDialogState by remember { mutableStateOf(AudioTrackDialogState.initial) }
     var speedDialogState by remember { mutableStateOf(SpeedDialogState.initial) }
+    var forwardSecondsDialogState by remember { mutableStateOf(ForwardSecondsDialogState.initial) }
+    var replaySecondsDialogState by remember { mutableStateOf(ReplaySecondsDialogState.initial) }
 
     val dialogState by remember {
         mutableStateOf(
@@ -87,6 +93,8 @@ fun PlayerView(
                 speedDialogState = { speedDialogState },
                 audioTrackDialogState = { audioTrackDialogState },
                 subtitleTrackDialogState = { subtitleTrackDialogState },
+                forwardSecondsDialogState = { forwardSecondsDialogState },
+                replaySecondsDialogState = { replaySecondsDialogState },
             )
         )
     }
@@ -123,7 +131,7 @@ fun PlayerView(
                 onSubtitleTrackChanged = { service.onCommand(PlayerCommand.SetSubtitleTrack(it.trackId)) },
                 onAddSubtitle = { service.onCommand(PlayerCommand.AddSubtitle(it)) },
                 onSubtitleDelayChanged = { service.onCommand(PlayerCommand.SubtitleDelay(it)) },
-            )
+            ),
         )
     }
 
@@ -176,6 +184,12 @@ fun PlayerView(
                     },
                     onAudioSettingDialog = {
                         audioTrackDialogState = audioTrackDialogState.copy(showSetting = it)
+                    },
+                    onReplaySecondDialog = {
+                        replaySecondsDialogState = replaySecondsDialogState.copy(show = it)
+                    },
+                    onForwardSecondDialog = {
+                        forwardSecondsDialogState = forwardSecondsDialogState.copy(show = it)
                     },
                 )
             },
@@ -347,6 +361,14 @@ private fun Content(
         subtitleTrackDialogState = dialogState.subtitleTrackDialogState,
         subtitleTrackDialogCallback = dialogCallback.subtitleTrackDialogCallback,
         onDialogVisibilityChanged = onDialogVisibilityChanged,
+    )
+    ReplaySecondsDialog(
+        visible = { dialogState.replaySecondsDialogState().show },
+        onDismissRequest = { onDialogVisibilityChanged.onReplaySecondDialog(false) },
+    )
+    ForwardSecondsDialog(
+        visible = { dialogState.forwardSecondsDialogState().show },
+        onDismissRequest = { onDialogVisibilityChanged.onForwardSecondDialog(false) },
     )
 }
 
