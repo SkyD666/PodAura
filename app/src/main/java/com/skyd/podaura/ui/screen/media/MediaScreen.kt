@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.media
 
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,7 +16,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MyLocation
@@ -28,10 +27,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -44,12 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,6 +65,7 @@ import com.skyd.podaura.model.preference.behavior.media.MediaListSortByPreferenc
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.player.PlayActivity
+import com.skyd.podaura.ui.component.LongClickListener
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
@@ -87,7 +82,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.data_screen_change_lib_location
-import podaura.shared.generated.resources.edit
 import podaura.shared.generated.resources.media_group
 import podaura.shared.generated.resources.media_screen_add_group
 import podaura.shared.generated.resources.media_screen_name
@@ -114,7 +108,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val scope = rememberCoroutineScope()
 
     var fabHeight by remember { mutableStateOf(0.dp) }
-    var fabWidth by remember { mutableStateOf(0.dp) }
 
     val dispatch = viewModel.getDispatcher(key1 = path, startWith = MediaIntent.Init(path = path))
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
@@ -200,40 +193,14 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
             )
         },
         floatingActionButton = {
-            val density = LocalDensity.current
-            Column(
-                modifier = Modifier.onSizeChanged {
-                    with(density) {
-                        fabWidth = it.width.toDp() + 16.dp
-                        fabHeight = it.height.toDp() + 16.dp
-                    }
+            ComponeFloatingActionButton(
+                onClick = {
+                    navController.navigate(FilePickerRoute(path = path, pickFolder = false))
                 },
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.End
+                onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
+                contentDescription = stringResource(Res.string.open_file),
             ) {
-                SmallFloatingActionButton(
-                    onClick = {
-                        navController.navigate(FilePickerRoute(path = path, pickFolder = false))
-                    },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.secondary,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.FileOpen,
-                        contentDescription = stringResource(Res.string.open_file),
-                    )
-                }
-                ComponeFloatingActionButton(
-                    onClick = {
-                        dispatch(MediaIntent.OnEditGroupDialog(uiState.groups[pagerState.currentPage].first))
-                    },
-                    contentDescription = stringResource(Res.string.edit),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(Res.string.edit),
-                    )
-                }
+                Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = null)
             }
         },
         contentWindowInsets = WindowInsets.safeDrawing.run {
@@ -260,9 +227,17 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                         divider = {},
                     ) {
                         uiState.groups.forEachIndexed { index, group ->
+                            val interactionSource = remember { MutableInteractionSource() }
+                            LongClickListener(
+                                interactionSource = interactionSource,
+                                onLongClick = {
+                                    dispatch(MediaIntent.OnEditGroupDialog(uiState.groups[index].first))
+                                },
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } }
+                            )
                             Tab(
                                 selected = pagerState.currentPage == index,
-                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                onClick = { },
                                 text = {
                                     Text(
                                         modifier = Modifier
@@ -272,6 +247,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                                         maxLines = 1,
                                     )
                                 },
+                                interactionSource = interactionSource,
                             )
                         }
                     }
