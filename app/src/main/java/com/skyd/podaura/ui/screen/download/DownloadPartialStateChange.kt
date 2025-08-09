@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.download
 
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
-import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
 
 
 internal sealed interface DownloadPartialStateChange {
@@ -20,7 +19,6 @@ internal sealed interface DownloadPartialStateChange {
                 is Success -> oldState.copy(
                     downloadListState = DownloadListState.Success(
                         downloadInfoBeanList = downloadInfoBeanList,
-                        btDownloadInfoBeanList = btDownloadInfoBeanList,
                     ),
                     loadingDialog = false,
                 )
@@ -39,7 +37,6 @@ internal sealed interface DownloadPartialStateChange {
 
         data class Success(
             val downloadInfoBeanList: List<DownloadInfoBean>,
-            val btDownloadInfoBeanList: List<BtDownloadInfoBean>,
         ) : DownloadListResult
 
         data class Failed(val msg: String) : DownloadListResult

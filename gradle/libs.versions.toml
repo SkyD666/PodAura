@@ -7,7 +7,6 @@ filekit = "0.10.0"
 xmlutil = "0.91.2"
 koin = "4.1.0"
 ksoup = "0.2.4"
-libtorrent4j = "2.1.0-35"
 coroutines = "1.10.2"
 paging = "3.3.6"
 rome = "2.1.0"
@@ -103,11 +102,6 @@ rome = { module = "com.rometools:rome", version.ref = "rome" }
 rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
 
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "2.5.1" }
-
-libtorrent4j-arm64 = { module = "org.libtorrent4j:libtorrent4j-android-arm64", version.ref = "libtorrent4j" }
-libtorrent4j-arm = { module = "org.libtorrent4j:libtorrent4j-android-arm", version.ref = "libtorrent4j" }
-libtorrent4j-x86 = { module = "org.libtorrent4j:libtorrent4j-android-x86", version.ref = "libtorrent4j" }
-libtorrent4j-x8664 = { module = "org.libtorrent4j:libtorrent4j-android-x86_64", version.ref = "libtorrent4j" }
 
 junit = { module = "junit:junit", version = "4.13.2" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTest" }

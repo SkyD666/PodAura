@@ -17,7 +17,15 @@ fun Activity.landOrientation() {
     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 }
 
+fun Activity.sensorLandOrientation() {
+    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+}
+
 @SuppressLint("SourceLockedOrientationActivity")
 fun Activity.portOrientation() {
     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+}
+
+fun Activity.unspecifiedOrientation() {
+    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 }

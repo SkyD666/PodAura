@@ -7,10 +7,10 @@ import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.download.DownloadRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
@@ -38,13 +38,9 @@ class DownloadViewModel(
     private fun Flow<DownloadIntent>.toReadPartialStateChangeFlow(): Flow<DownloadPartialStateChange> {
         return merge(
             filterIsInstance<DownloadIntent.Init>().flatMapConcat {
-                combine(
-                    downloadRepo.requestDownloadTasksList(),
-                    downloadRepo.requestBtDownloadTasksList(),
-                ) { downloadTasks, btDownloadTasks ->
+                downloadRepo.requestDownloadTasksList().map { downloadTasks ->
                     DownloadPartialStateChange.DownloadListResult.Success(
                         downloadInfoBeanList = downloadTasks,
-                        btDownloadInfoBeanList = btDownloadTasks,
                     )
                 }.startWith(DownloadPartialStateChange.DownloadListResult.Loading)
                     .catchMap { DownloadPartialStateChange.DownloadListResult.Failed(it.message.toString()) }

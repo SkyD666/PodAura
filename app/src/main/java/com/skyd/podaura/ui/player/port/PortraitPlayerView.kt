@@ -3,9 +3,16 @@ package com.skyd.podaura.ui.player.port
 import android.content.Intent
 import android.os.Build
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.ClosedCaption
@@ -28,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -36,8 +44,11 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.activity
+import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.activity.MainActivity
+import com.skyd.podaura.ui.component.isLandscape
+import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
@@ -63,6 +74,7 @@ internal fun PortraitPlayerView(
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onBack: () -> Unit,
+    onEnterFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -102,45 +114,27 @@ internal fun PortraitPlayerView(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
-            MediaArea(
+        val windowSizeClass = LocalWindowSizeClass.current
+        if (windowSizeClass.isExpanded || isLandscape()) {
+            ExpandedContent(
                 playState = playState,
-                modifier = Modifier
-                    .padding(horizontal = 30.dp)
-                    .weight(1f),
+                playStateCallback = playStateCallback,
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                onOpenPlaylistSheet = { showPlaylistSheet = true },
+                onEnterFullscreen = onEnterFullscreen,
+                contentPadding = paddingValues,
                 playerContent = playerContent,
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Titles(
-                playState = playState,
-                modifier = Modifier.padding(horizontal = 30.dp),
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-            ProgressBar(
-                playState = playState,
-                playStateCallback = playStateCallback,
-                modifier = Modifier.padding(horizontal = 30.dp),
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Controller(
-                playState = playState,
-                playStateCallback = playStateCallback,
-                modifier = Modifier.padding(horizontal = 22.dp),
-                onDialogVisibilityChanged = onDialogVisibilityChanged,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            SmallController(
+        } else {
+            CompactContent(
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
-                onOpenPlaylist = { showPlaylistSheet = true },
-                modifier = Modifier.padding(horizontal = 30.dp),
+                onOpenPlaylistSheet = { showPlaylistSheet = true },
+                onEnterFullscreen = onEnterFullscreen,
+                contentPadding = paddingValues,
+                playerContent = playerContent,
             )
-            Spacer(modifier = Modifier.height(20.dp))
         }
 
         if (showPlaylistSheet) {
@@ -157,6 +151,135 @@ internal fun PortraitPlayerView(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun CompactContent(
+    playState: PlayState,
+    playStateCallback: PlayStateCallback,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
+    onOpenPlaylistSheet: () -> Unit,
+    onEnterFullscreen: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
+    playerContent: @Composable () -> Unit,
+) {
+    Column(modifier = Modifier.padding(contentPadding)) {
+        MediaArea(
+            playState = playState,
+            modifier = Modifier
+                .padding(horizontal = 30.dp)
+                .weight(1f),
+            playerContent = playerContent,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Titles(
+            playState = playState,
+            modifier = Modifier.padding(horizontal = 30.dp),
+        )
+        ControllerArea(
+            isExpanded = false,
+            playState = playState,
+            playStateCallback = playStateCallback,
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+            onOpenPlaylistSheet = onOpenPlaylistSheet,
+            onEnterFullscreen = onEnterFullscreen,
+            contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp)
+        )
+    }
+}
+
+@Composable
+private fun ExpandedContent(
+    playState: PlayState,
+    playStateCallback: PlayStateCallback,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
+    onOpenPlaylistSheet: () -> Unit,
+    onEnterFullscreen: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
+    playerContent: @Composable () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .padding(contentPadding)
+            .fillMaxSize(),
+    ) {
+        MediaArea(
+            playState = playState,
+            modifier = Modifier
+                .padding(start = 30.dp)
+                .weight(0.4f)
+                .align(Alignment.CenterVertically),
+            playerContent = playerContent,
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.Bottom)
+                .weight(0.6f)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Titles(
+                playState = playState,
+                modifier = Modifier.padding(horizontal = 30.dp),
+            )
+            ControllerArea(
+                isExpanded = true,
+                playState = playState,
+                playStateCallback = playStateCallback,
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                onOpenPlaylistSheet = onOpenPlaylistSheet,
+                onEnterFullscreen = onEnterFullscreen,
+                contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ControllerArea(
+    isExpanded: Boolean,
+    playState: PlayState,
+    playStateCallback: PlayStateCallback,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
+    onOpenPlaylistSheet: () -> Unit,
+    onEnterFullscreen: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(),
+) {
+    Column(modifier = Modifier.padding(contentPadding)) {
+        val space: @Composable ColumnScope.() -> Unit = {
+            Spacer(
+                modifier = Modifier.run {
+                    if (isExpanded) {
+                        weight(1f).heightIn(max = 16.dp)
+                    } else {
+                        height(16.dp)
+                    }
+                }
+            )
+        }
+        ProgressBar(
+            playState = playState,
+            playStateCallback = playStateCallback,
+            modifier = Modifier.padding(horizontal = 30.dp),
+        )
+        space()
+        Controller(
+            playState = playState,
+            playStateCallback = playStateCallback,
+            modifier = Modifier
+                .padding(horizontal = 22.dp)
+                .align(Alignment.CenterHorizontally),
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+        )
+        space()
+        SmallController(
+            playState = playState,
+            playStateCallback = playStateCallback,
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+            onOpenPlaylist = onOpenPlaylistSheet,
+            onEnterFullscreen = onEnterFullscreen,
+            modifier = Modifier.padding(horizontal = 30.dp),
+        )
     }
 }
 

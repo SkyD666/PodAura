@@ -14,11 +14,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
-import com.skyd.podaura.ext.activity
-import com.skyd.podaura.ext.landOrientation
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.ControllerIconButton
 import com.skyd.podaura.ui.player.component.ControllerIconToggleButton
@@ -41,9 +38,9 @@ internal fun SmallController(
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onOpenPlaylist: () -> Unit,
+    onEnterFullscreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -85,7 +82,7 @@ internal fun SmallController(
             contentDescription = stringResource(Res.string.loop_playlist_mode),
         )
         ComponeIconButton(
-            onClick = { context.activity.landOrientation() },
+            onClick = onEnterFullscreen,
             imageVector = Icons.Outlined.Fullscreen,
             contentDescription = stringResource(Res.string.fullscreen),
         )

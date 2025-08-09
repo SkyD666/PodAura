@@ -1,8 +1,5 @@
 package com.skyd.podaura.ui.player
 
-import android.content.pm.ActivityInfo
-import android.provider.Settings
-import android.view.OrientationEventListener
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
@@ -17,7 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
@@ -27,9 +23,9 @@ import com.skyd.compone.ext.ratio
 import com.skyd.compone.ext.size
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.podaura.ext.activity
-import com.skyd.podaura.ext.screenIsLand
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.OnLifecycleEvent
+import com.skyd.podaura.ui.component.rememberOrientationController
 import com.skyd.podaura.ui.player.component.PlayerAndroidView
 import com.skyd.podaura.ui.player.component.dialog.SpeedDialog
 import com.skyd.podaura.ui.player.component.dialog.audio.AudioTrackDialog
@@ -47,7 +43,7 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogC
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
-import com.skyd.podaura.ui.player.land.LandscapePlayerView
+import com.skyd.podaura.ui.player.land.FullscreenPlayerView
 import com.skyd.podaura.ui.player.pip.PipBroadcastReceiver
 import com.skyd.podaura.ui.player.pip.PipListenerPreAPI12
 import com.skyd.podaura.ui.player.pip.pipParams
@@ -312,25 +308,28 @@ private fun Content(
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onCommand: (PlayerCommand) -> Unit,
 ) {
-    ScreenOrientationHandler()
     val player = @Composable {
         PlayerAndroidView(
             onCommand = onCommand,
             modifier = Modifier.fillMaxSize()
         )
     }
+    var fullscreen by rememberSaveable { mutableStateOf(false) }
+    val orientationController = rememberOrientationController()
 
-    val configuration = LocalConfiguration.current
-    if (configuration.screenIsLand) {
-        LandscapePlayerView(
+    if (fullscreen) {
+        FullscreenPlayerView(
             playState = playState,
             playStateCallback = playStateCallback,
             dialogState = dialogState,
-            onBack = onBack,
             onDialogVisibilityChanged = onDialogVisibilityChanged,
             onSaveScreenshot = onSaveScreenshot,
             onCommand = onCommand,
             playerContent = player,
+            onExitFullscreen = {
+                orientationController.unspecified()
+                fullscreen = false
+            }
         )
     } else {
         PortraitPlayerView(
@@ -338,6 +337,10 @@ private fun Content(
             playStateCallback = playStateCallback,
             onDialogVisibilityChanged = onDialogVisibilityChanged,
             onBack = onBack,
+            onEnterFullscreen = {
+                orientationController.landscape()
+                fullscreen = true
+            },
             playerContent = player,
         )
     }
@@ -370,51 +373,4 @@ private fun Content(
         visible = { dialogState.forwardSecondsDialogState().show },
         onDismissRequest = { onDialogVisibilityChanged.onForwardSecondDialog(false) },
     )
-}
-
-@Composable
-private fun ScreenOrientationHandler() {
-    val activity = LocalContext.current.activity
-    LifecycleStartEffect(Unit) {
-        val listener = object : OrientationEventListener(activity) {
-            private var orientation = -1
-
-            override fun onOrientationChanged(newOrientation: Int) {
-                if (activity.isFinishing) return
-
-                val lastOrientation = orientation
-                if (newOrientation == ORIENTATION_UNKNOWN) {
-                    orientation = ORIENTATION_UNKNOWN
-                    return
-                }
-                when {
-                    newOrientation > 350 || newOrientation < 10 -> orientation = 0
-                    newOrientation in 80..100 -> orientation = 90
-                    newOrientation in 170..190 -> orientation = 180
-                    newOrientation in 260..280 -> orientation = 270
-                }
-                try {
-                    val accelerometerRotationEnabled = Settings.System.getInt(
-                        activity.contentResolver,
-                        Settings.System.ACCELEROMETER_ROTATION
-                    ) != 0
-                    if (!accelerometerRotationEnabled) {
-                        return
-                    }
-                } catch (e: Settings.SettingNotFoundException) {
-                    e.printStackTrace()
-                    return
-                }
-
-                if (lastOrientation != orientation) {
-                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                }
-            }
-        }
-        listener.enable()
-
-        onStopOrDispose {
-            listener.disable()
-        }
-    }
 }

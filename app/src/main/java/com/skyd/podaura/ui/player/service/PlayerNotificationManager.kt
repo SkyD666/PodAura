@@ -84,7 +84,10 @@ class PlayerNotificationManager(
         fetchThumbnailJob?.cancel()
         fetchThumbnailJob = scope.launch(Dispatchers.IO) {
             getThumbnail(state)?.let { thumbnail ->
-                baseNotificationBuilder.setThumbnail(thumbnail).build().myNotify()
+                baseNotificationBuilder.setThumbnail(thumbnail)
+                withContext(Dispatchers.Main) {
+                    baseNotificationBuilder.build().myNotify()
+                }
             }
         }
     }

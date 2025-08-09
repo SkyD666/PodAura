@@ -5,7 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.core.view.WindowInsetsControllerCompat
@@ -17,20 +16,19 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.DialogState
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.land.controller.PlayerController
-import com.skyd.podaura.ui.player.land.controller.bar.TopBarCallback
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
 import java.io.File
 
 @Composable
-internal fun LandscapePlayerView(
+internal fun FullscreenPlayerView(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     dialogState: DialogState,
-    onBack: () -> Unit,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onSaveScreenshot: (File) -> Unit,
     onCommand: (PlayerCommand) -> Unit,
+    onExitFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
 ) {
     val systemUiController = rememberSystemUiController()
@@ -41,10 +39,6 @@ internal fun LandscapePlayerView(
             onVideoZoom = { onCommand(PlayerCommand.Zoom(it)) },
             onVideoOffset = { onCommand(PlayerCommand.VideoOffset(it)) },
         )
-    }
-    val currentOnBack by rememberUpdatedState(newValue = onBack)
-    val topBarCallback = remember {
-        TopBarCallback(onBack = currentOnBack)
     }
 
     LaunchedEffect(playState) {
@@ -60,12 +54,12 @@ internal fun LandscapePlayerView(
         enabled = { playState.mediaLoaded },
         playState = { playState },
         playStateCallback = playStateCallback,
-        topBarCallback = topBarCallback,
         dialogState = dialogState,
         onDialogVisibilityChanged = onDialogVisibilityChanged,
         transformState = { transformState },
         transformStateCallback = transformStateCallback,
         onScreenshot = { onCommand(PlayerCommand.Screenshot(onSaveScreenshot)) },
+        onExitFullscreen = onExitFullscreen,
     )
 
     LifecycleResumeEffect(Unit) {

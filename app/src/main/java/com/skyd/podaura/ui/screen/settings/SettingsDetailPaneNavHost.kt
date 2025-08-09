@@ -42,8 +42,6 @@ import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNo
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionScreen
-import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
-import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyScreen
 
 @Composable
 internal fun SettingsDetailPaneNavHost(
@@ -70,7 +68,6 @@ internal fun SettingsDetailPaneNavHost(
         composable<PlayerConfigRoute> { PlayerConfigScreen(onBack = onPaneBack) }
         composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
         composable<RssConfigRoute> { RssConfigScreen(onBack = onPaneBack) }
-        composable<ProxyRoute> { ProxyScreen() }
         composable<TransmissionRoute> { TransmissionScreen(onBack = onPaneBack) }
         composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
         composable<DeleteConstraintRoute> { DeleteConstraintScreen() }

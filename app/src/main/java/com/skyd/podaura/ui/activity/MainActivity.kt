@@ -122,8 +122,6 @@ import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNo
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionScreen
-import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyRoute
-import com.skyd.podaura.ui.screen.settings.transmission.proxy.ProxyScreen
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.storage_permission_request_screen_first_tip
@@ -206,7 +204,6 @@ private fun MainNavHost() {
         composable<PlayerConfigRoute> { PlayerConfigScreen() }
         composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
         composable<RssConfigRoute> { RssConfigScreen() }
-        composable<ProxyRoute> { ProxyScreen() }
         composable<TransmissionRoute> { TransmissionScreen() }
         composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
         composable<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }

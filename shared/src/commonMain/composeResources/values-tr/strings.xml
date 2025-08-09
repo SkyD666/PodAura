@@ -78,8 +78,6 @@
     <string name="transmission_screen_name">Aktarım</string>
     <string name="transmission_screen_description">Veri aktarım ayarları, davranışlar</string>
     <string name="transmission_screen_transmission_behavior_category">Davranış</string>
-    <string name="transmission_screen_seeding_when_complete">Otomatik paylaşım</string>
-    <string name="transmission_screen_seeding_when_complete_description">İndirme tamamlandığında otomatik paylaşım</string>
     <string name="proxy_screen_name">Proxy</string>
     <string name="proxy_screen_description">Proxy sunucu adresi, port, hesap vb. ayarlarını yapılandır</string>
     <string name="proxy_mode_auto">Otomatik</string>

@@ -39,15 +39,12 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.back
 import podaura.shared.generated.resources.player_picture_in_picture
 
-data class TopBarCallback(
-    val onBack: () -> Unit,
-)
 
 @Composable
 internal fun TopBar(
     modifier: Modifier = Modifier,
     title: String,
-    topBarCallback: TopBarCallback,
+    onExitFullscreen: () -> Unit,
 ) {
     val context = LocalContext.current
     Row(
@@ -71,7 +68,7 @@ internal fun TopBar(
             modifier = Modifier
                 .clip(CircleShape)
                 .size(56.dp)
-                .clickable(onClick = topBarCallback.onBack)
+                .clickable(onClick = onExitFullscreen)
                 .padding(15.dp),
             imageVector = Icons.AutoMirrored.Outlined.ArrowBackIos,
             contentDescription = stringResource(Res.string.back),

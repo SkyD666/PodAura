@@ -12,44 +12,19 @@ import androidx.test.rule.GrantPermissionRule
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
-import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
-import androidx.work.workDataOf
 import com.skyd.downloader.Status
-import com.skyd.podaura.ext.put
-import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean.DownloadState
-import com.skyd.podaura.model.bean.download.bt.DownloadLinkUuidMapBean
-import com.skyd.podaura.model.bean.download.bt.PeerInfoBean
 import com.skyd.podaura.model.db.AppDatabase
 import com.skyd.podaura.model.db.builder
 import com.skyd.podaura.model.db.instance
 import com.skyd.podaura.model.preference.createDataStore
-import com.skyd.podaura.model.preference.proxy.ProxyHostnamePreference
-import com.skyd.podaura.model.preference.proxy.ProxyModePreference
-import com.skyd.podaura.model.preference.proxy.ProxyTypePreference
-import com.skyd.podaura.model.preference.proxy.UseProxyPreference
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.DownloadRepository
 import com.skyd.podaura.model.repository.download.DownloadStarter
-import com.skyd.podaura.model.repository.download.bt.BtDownloadManager
-import com.skyd.podaura.model.repository.download.bt.BtDownloadManager.setDownloadLinkUuidMap
-import com.skyd.podaura.model.repository.download.bt.BtDownloadManagerIntent
-import com.skyd.podaura.model.worker.download.BtDownloadWorker
-import com.skyd.podaura.model.worker.download.BtDownloadWorker.Companion.TORRENT_LINK_UUID
-import com.skyd.podaura.model.worker.download.initProxySettings
-import com.skyd.podaura.model.worker.download.isTorrentMimetype
-import com.skyd.podaura.model.worker.download.readResumeData
-import com.skyd.podaura.model.worker.download.serializeResumeData
-import com.skyd.podaura.model.worker.download.toSettingsPackProxyType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -59,11 +34,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
-import org.libtorrent4j.AddTorrentParams
-import org.libtorrent4j.SessionParams
-import org.libtorrent4j.swig.settings_pack
 import java.io.IOException
-import java.util.UUID
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -116,9 +87,6 @@ class DownloadModule {
         assertNull(
             DownloadManager.getInstance(context).downloadInfoListFlow.first()
                 .firstOrNull { it.url == btDownloadUrl1 })
-        assertNotNull(
-            BtDownloadManager.getDownloadInfoList().first()
-                .firstOrNull { it.link == btDownloadUrl1 })
     }
 
     /**
@@ -135,38 +103,6 @@ class DownloadModule {
                 .firstOrNull { it.url == downloadUrl1 })
     }
 
-    /**
-     * Pass
-     * downloadRepository.requestBtDownloadTasksList
-     */
-    @Test
-    fun test4() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotNull(
-            downloadRepository.requestBtDownloadTasksList().first()
-                .firstOrNull { it.link == btDownloadUrl1 })
-    }
-
-    /**
-     * Pass
-     * downloadRepository.requestBtDownloadTasksList
-     * downloadRepository.deleteBtDownloadTaskInfo
-     */
-    @Test
-    fun test5() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotNull(
-            downloadRepository.requestBtDownloadTasksList().first()
-                .firstOrNull { it.link == btDownloadUrl1 })
-        downloadRepository.deleteBtDownloadTaskInfo(btDownloadUrl1).first()
-        assertNull(
-            downloadRepository.requestBtDownloadTasksList().first()
-                .firstOrNull { it.link == btDownloadUrl1 })
-    }
 
     /**
      * Pass
@@ -219,401 +155,6 @@ class DownloadModule {
 
     /**
      * Pass
-     * BtDownloadManager.getDownloadInfo
-     * BtDownloadManager.delete
-     */
-    @Test
-    fun test8() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotEquals(
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadState,
-            DownloadState.Init,
-        )
-        BtDownloadManager.delete(
-            context,
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadRequestId,
-            btDownloadUrl1
-        )
-        Thread.sleep(5000)
-
-        assertNull(BtDownloadManager.getDownloadInfo(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.getDownloadInfo
-     * BtDownloadManager.pause
-     */
-    @Test
-    fun test9() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotEquals(
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadState,
-            DownloadState.Init,
-        )
-        BtDownloadManager.pause(
-            context,
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadRequestId,
-            btDownloadUrl1
-        )
-        Thread.sleep(5000)
-
-        assertTrue(
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadState
-                .run { this == DownloadState.Paused || this == DownloadState.SeedingPaused })
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.containsDownloadInfo
-     */
-    @Test
-    fun test10() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertTrue(BtDownloadManager.containsDownloadInfo(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.containsDownloadInfo
-     */
-    @Test
-    fun test11() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        BtDownloadManager.delete(
-            context,
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadRequestId,
-            btDownloadUrl1
-        )
-        Thread.sleep(500)
-
-        assertFalse(BtDownloadManager.containsDownloadInfo(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.getDownloadUuidByLink
-     * BtDownloadManager.getDownloadLinkByUuid
-     */
-    @Test
-    fun test12() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        val uuid = BtDownloadManager.getDownloadUuidByLink(btDownloadUrl1)!!
-        assertEquals(
-            BtDownloadManager.getDownloadLinkByUuid(uuid),
-            btDownloadUrl1
-        )
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.getDownloadProgress
-     */
-    @Test
-    fun test13() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotNull(BtDownloadManager.getDownloadProgress(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.getDownloadName
-     */
-    @Test
-    fun test14() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotNull(BtDownloadManager.getDownloadName(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.getDownloadState
-     */
-    @Test
-    fun test15() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        assertNotNull(BtDownloadManager.getDownloadState(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.pause
-     * BtDownloadManager.getSessionParams
-     */
-    @Test
-    fun test16() = runTest {
-        db.clearAllTables()
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-        BtDownloadManager.pause(
-            context,
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadRequestId,
-            btDownloadUrl1
-        )
-        Thread.sleep(5000)
-        assertNotNull(BtDownloadManager.getSessionParams(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.delete
-     * BtDownloadManager.getSessionParams
-     */
-    @Test
-    fun test17() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-        BtDownloadManager.delete(
-            context,
-            BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.downloadRequestId,
-            btDownloadUrl1
-        )
-        Thread.sleep(1000)
-        assertNull(BtDownloadManager.getSessionParams(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.deleteDownloadInfo
-     * BtDownloadManager.getDownloadInfo
-     */
-    @Test
-    fun test18() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        BtDownloadManager.deleteDownloadInfo(btDownloadUrl1)
-        assertNull(BtDownloadManager.getDownloadInfo(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.deleteSessionParams
-     * BtDownloadManager.getSessionParams
-     */
-    @Test
-    fun test19() = runTest {
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-
-        BtDownloadManager.deleteSessionParams(btDownloadUrl1)
-        assertNull(BtDownloadManager.getSessionParams(btDownloadUrl1))
-    }
-
-    /**
-     * Pass
-     * BtDownloadWorker.doWork
-     */
-    @Test
-    fun test20() = runTest {
-        val torrentLinkUuid = UUID.randomUUID().toString()
-        setDownloadLinkUuidMap(
-            DownloadLinkUuidMapBean(
-                link = btDownloadUrl1,
-                uuid = torrentLinkUuid,
-            )
-        )
-        val worker = TestListenableWorkerBuilder<BtDownloadWorker>(context)
-            .setInputData(workDataOf(TORRENT_LINK_UUID to torrentLinkUuid))
-            .build()
-        withContext(Dispatchers.IO) {
-            withTimeoutOrNull(5000) {
-                worker.doWork()
-            }
-            assertTrue(BtDownloadManager.containsDownloadInfo(btDownloadUrl1))
-        }
-    }
-
-    /**
-     * Pass
-     * isTorrentMimetype
-     */
-    @Test
-    fun test21() = runTest {
-        assertFalse(isTorrentMimetype("application/x-bittorrents"))
-    }
-
-    /**
-     * Pass
-     * isTorrentMimetype
-     */
-    @Test
-    fun test22() = runTest {
-        assertTrue(isTorrentMimetype("applications/x-bittorrent"))
-    }
-
-    /**
-     * Pass
-     * doIfMagnetOrTorrentLink
-     */
-    @Test
-    fun test23() = runTest {
-//        doIfMagnetOrTorrentLink(
-//            link = btDownloadUrl1,
-//            onTorrent = { assertTrue(false) },
-//            onUnsupported = { assertTrue(false) },
-//        )
-    }
-
-    /**
-     * Pass
-     * doIfMagnetOrTorrentLink
-     */
-    @Test
-    fun test24() = runTest {
-//        doIfMagnetOrTorrentLink(
-//            link = downloadUrl1,
-//            onMagnet = { assertTrue(false) },
-//            onTorrent = { assertTrue(false) },
-//            onSupported = { assertTrue(false) },
-//        )
-    }
-
-    /**
-     * Pass
-     * ifMagnetLink
-     */
-    @Test
-    fun test25() = runTest {
-//        ifMagnetLink(
-//            link = downloadUrl1,
-//            onMagnet = { assertTrue(false) },
-//        )
-    }
-
-    /**
-     * Pass
-     * ifMagnetLink
-     */
-    @Test
-    fun test26() = runTest {
-//        ifMagnetLink(
-//            link = btDownloadUrl1,
-//            onUnsupported = { assertTrue(false) },
-//        )
-    }
-
-    /**
-     * Pass
-     * initProxySettings
-     * toSettingsPackProxyType
-     */
-    @Test
-    fun test27() = runTest {
-        dataStore.apply {
-            put(UseProxyPreference.key, true)
-            put(ProxyModePreference.key, ProxyModePreference.MANUAL_MODE)
-            put(ProxyTypePreference.key, ProxyTypePreference.HTTP)
-            put(ProxyHostnamePreference.key, "localhost")
-        }
-        val sessionParams = SessionParams()
-        sessionParams.settings = initProxySettings(
-            context = context,
-            settings = sessionParams.settings,
-        ).setString(
-            settings_pack.string_types.user_agent.swigValue(),
-            "Test/1.0"
-        )
-        with(sessionParams.settings) {
-            assertEquals(getString(settings_pack.string_types.user_agent.swigValue()), "Test/1.0")
-            assertEquals(
-                getInteger(settings_pack.int_types.proxy_type.swigValue()),
-                toSettingsPackProxyType(ProxyTypePreference.HTTP).swigValue()
-            )
-            assertEquals(
-                getString(settings_pack.string_types.proxy_hostname.swigValue()),
-                "localhost"
-            )
-        }
-    }
-
-    /**
-     * Pass
-     * initProxySettings
-     */
-    @Test
-    fun test28() = runTest {
-        dataStore.put(UseProxyPreference.key, false)
-        val sessionParams = SessionParams()
-        sessionParams.settings = initProxySettings(
-            context = context,
-            settings = sessionParams.settings,
-        )
-        assertEquals(
-            sessionParams.settings.getInteger(settings_pack.int_types.proxy_type.swigValue()),
-            0
-        )
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.sendIntent
-     */
-    @Test
-    fun test29() = runTest {
-        db.clearAllTables()
-        DownloadStarter.download(context, btDownloadUrl1)
-        Thread.sleep(1000)
-        BtDownloadManager.sendIntent(
-            BtDownloadManagerIntent.UpdateDownloadDescription(btDownloadUrl1, "TestTest")
-        )
-        Thread.sleep(5000)
-        assertEquals(BtDownloadManager.getDownloadInfo(btDownloadUrl1)!!.description, "TestTest")
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.updatePeerInfoMapFlow
-     * BtDownloadManager.peerInfoMapFlow
-     */
-    @Test
-    fun test30() = runTest {
-        val requestId = UUID.randomUUID().toString()
-        BtDownloadManager.updatePeerInfoMapFlow(
-            requestId, listOf(PeerInfoBean(client = "TestClient")),
-        )
-        assertEquals(
-            BtDownloadManager.peerInfoMapFlow.value[requestId]!!.first().client, "TestClient"
-        )
-    }
-
-    /**
-     * Pass
-     * BtDownloadManager.updatePeerInfoMapFlow
-     * BtDownloadManager.peerInfoMapFlow
-     * BtDownloadManager.removeWorkerFromFlow
-     */
-    @Test
-    fun test31() = runTest {
-        val requestId = UUID.randomUUID().toString()
-        BtDownloadManager.updatePeerInfoMapFlow(
-            requestId, listOf(PeerInfoBean(client = "TestClient2")),
-        )
-        assertEquals(
-            BtDownloadManager.peerInfoMapFlow.value[requestId]!!.first().client, "TestClient2"
-        )
-        BtDownloadManager.removeWorkerFromFlow(requestId)
-        assertNull(BtDownloadManager.peerInfoMapFlow.value[requestId])
-    }
-
-    /**
-     * Pass
      * DownloadManager.getInstance(context).pause
      * DownloadManager.getInstance(context).retry
      */
@@ -629,21 +170,9 @@ class DownloadModule {
         Thread.sleep(5000)
         assertTrue(
             DownloadManager.getInstance(context).downloadInfoListFlow.first()
-            .first { it.url == downloadUrl1 }
-            .status.run { this == Status.Queued || this == Status.Downloading || this == Status.Started || this == Status.Success })
+                .first { it.url == downloadUrl1 }
+                .status.run { this == Status.Queued || this == Status.Downloading || this == Status.Started || this == Status.Success })
     }
-
-    /**
-     * Pass
-     * serializeResumeData
-     * readResumeData
-     */
-    @Test
-    fun test33() = runTest {
-        serializeResumeData("TestResumeData", AddTorrentParams())
-        assertNotNull(readResumeData("TestResumeData"))
-    }
-
 
     @Before
     fun init() {

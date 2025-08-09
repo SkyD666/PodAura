@@ -249,11 +249,6 @@ dependencies {
 
     implementation(libs.reorderable)
 
-    implementation(libs.libtorrent4j.arm64)
-    implementation(libs.libtorrent4j.arm)
-    implementation(libs.libtorrent4j.x86)
-    implementation(libs.libtorrent4j.x8664)
-
     implementation(libs.skyd666.settings)
     implementation(libs.skyd666.compone)
     implementation(libs.skyd666.mvi)

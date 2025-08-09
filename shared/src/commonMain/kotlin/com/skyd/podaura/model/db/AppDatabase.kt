@@ -11,10 +11,6 @@ import com.skyd.podaura.model.bean.article.ArticleCategoryBean
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.article.RssMediaBean
 import com.skyd.podaura.model.bean.download.autorule.AutoDownloadRuleBean
-import com.skyd.podaura.model.bean.download.bt.BtDownloadInfoBean
-import com.skyd.podaura.model.bean.download.bt.DownloadLinkUuidMapBean
-import com.skyd.podaura.model.bean.download.bt.SessionParamsBean
-import com.skyd.podaura.model.bean.download.bt.TorrentFileBean
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupBean
@@ -27,15 +23,12 @@ import com.skyd.podaura.model.db.converter.RequestHeadersConverter
 import com.skyd.podaura.model.db.dao.ArticleCategoryDao
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
-import com.skyd.podaura.model.db.dao.download.DownloadInfoDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
 import com.skyd.podaura.model.db.dao.ReadHistoryDao
 import com.skyd.podaura.model.db.dao.RssModuleDao
-import com.skyd.podaura.model.db.dao.SessionParamsDao
-import com.skyd.podaura.model.db.dao.TorrentFileDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
@@ -55,6 +48,7 @@ import com.skyd.podaura.model.db.migration.Migration21To22
 import com.skyd.podaura.model.db.migration.Migration22To23
 import com.skyd.podaura.model.db.migration.Migration23To24
 import com.skyd.podaura.model.db.migration.Migration24To25
+import com.skyd.podaura.model.db.migration.Migration25To26
 import com.skyd.podaura.model.db.migration.Migration2To3
 import com.skyd.podaura.model.db.migration.Migration3To4
 import com.skyd.podaura.model.db.migration.Migration4To5
@@ -79,10 +73,6 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         EnclosureBean::class,
         ArticleCategoryBean::class,
         AutoDownloadRuleBean::class,
-        BtDownloadInfoBean::class,
-        DownloadLinkUuidMapBean::class,
-        SessionParamsBean::class,
-        TorrentFileBean::class,
         GroupBean::class,
         ReadHistoryBean::class,
         MediaPlayHistoryBean::class,
@@ -92,7 +82,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         PlaylistMediaBean::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 25,
+    version = 26,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 @TypeConverters(
@@ -105,9 +95,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun enclosureDao(): EnclosureDao
     abstract fun articleCategoryDao(): ArticleCategoryDao
     abstract fun autoDownloadRuleDao(): AutoDownloadRuleDao
-    abstract fun downloadInfoDao(): DownloadInfoDao
-    abstract fun torrentFileDao(): TorrentFileDao
-    abstract fun sessionParamsDao(): SessionParamsDao
     abstract fun readHistoryDao(): ReadHistoryDao
     abstract fun mediaPlayHistoryDao(): MediaPlayHistoryDao
     abstract fun rssModuleDao(): RssModuleDao
@@ -130,6 +117,7 @@ fun AppDatabase.Companion.instance(
         Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
         Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
         Migration21To22(), Migration22To23(), Migration23To24(), Migration24To25(),
+        Migration25To26(),
     )
 
     return builder

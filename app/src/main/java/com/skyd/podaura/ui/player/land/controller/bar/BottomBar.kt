@@ -48,10 +48,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.skyd.podaura.ext.activity
-import com.skyd.podaura.ext.portOrientation
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.ControllerIconButton
 import com.skyd.podaura.ui.player.component.ControllerIconToggleButton
 import com.skyd.podaura.ui.player.component.ControllerTextButton
@@ -59,7 +57,6 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.land.controller.ControllerBarGray
-import com.skyd.podaura.ui.player.LoopMode
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.exit_fullscreen
@@ -85,8 +82,8 @@ fun BottomBar(
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onRestartAutoHideControllerRunnable: () -> Unit,
     onOpenPlaylist: () -> Unit,
+    onExitFullscreen: () -> Unit,
 ) {
-    val context = LocalContext.current
     val playStateValue = playState()
 
     Column(
@@ -247,7 +244,7 @@ fun BottomBar(
             )
             // To portrait
             ControllerIconButton(
-                onClick = { context.activity.portOrientation() },
+                onClick = onExitFullscreen,
                 imageVector = Icons.Rounded.FullscreenExit,
                 contentDescription = stringResource(Res.string.exit_fullscreen),
             )

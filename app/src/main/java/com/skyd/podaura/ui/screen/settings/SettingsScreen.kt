@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.SmartDisplay
-import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,7 +38,6 @@ import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute
 import com.skyd.podaura.ui.screen.settings.playerconfig.PlayerConfigRoute
 import com.skyd.podaura.ui.screen.settings.rssconfig.RssConfigRoute
-import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SelectedItem
 import com.skyd.settings.SettingsLazyColumn
@@ -60,8 +58,6 @@ import podaura.shared.generated.resources.player_config_screen_name
 import podaura.shared.generated.resources.rss_config_screen_description
 import podaura.shared.generated.resources.rss_config_screen_name
 import podaura.shared.generated.resources.settings
-import podaura.shared.generated.resources.transmission_screen_description
-import podaura.shared.generated.resources.transmission_screen_name
 
 
 @Serializable
@@ -200,18 +196,18 @@ fun SettingsList(
                         )
                     }
                 }
-                item {
-                    SelectedItem(currentItem is TransmissionRoute) {
-                        BaseSettingsItem(
-                            icon = rememberVectorPainter(Icons.Outlined.SwapVert),
-                            text = stringResource(Res.string.transmission_screen_name),
-                            descriptionText = stringResource(Res.string.transmission_screen_description),
-                            onClick = {
-                                onItemSelected(TransmissionRoute)
-                            }
-                        )
-                    }
-                }
+//                item {
+//                    SelectedItem(currentItem is TransmissionRoute) {
+//                        BaseSettingsItem(
+//                            icon = rememberVectorPainter(Icons.Outlined.SwapVert),
+//                            text = stringResource(Res.string.transmission_screen_name),
+//                            descriptionText = stringResource(Res.string.transmission_screen_description),
+//                            onClick = {
+//                                onItemSelected(TransmissionRoute)
+//                            }
+//                        )
+//                    }
+//                }
             }
         }
     }

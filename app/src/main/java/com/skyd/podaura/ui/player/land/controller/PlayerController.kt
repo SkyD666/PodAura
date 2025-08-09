@@ -61,7 +61,6 @@ import com.skyd.podaura.ui.player.component.state.dialog.DialogState
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.land.controller.bar.BottomBar
 import com.skyd.podaura.ui.player.land.controller.bar.TopBar
-import com.skyd.podaura.ui.player.land.controller.bar.TopBarCallback
 import com.skyd.podaura.ui.player.land.controller.button.ForwardOrReplaySeconds
 import com.skyd.podaura.ui.player.land.controller.button.ResetTransform
 import com.skyd.podaura.ui.player.land.controller.button.Screenshot
@@ -83,12 +82,12 @@ internal fun PlayerController(
     enabled: () -> Boolean,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
-    topBarCallback: TopBarCallback,
     dialogState: DialogState,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     transformState: () -> TransformState,
     transformStateCallback: TransformStateCallback,
     onScreenshot: () -> Unit,
+    onExitFullscreen: () -> Unit,
 ) {
     var showController by rememberSaveable { mutableStateOf(true) }
     var controllerWidth by remember { mutableIntStateOf(0) }
@@ -223,13 +222,13 @@ internal fun PlayerController(
                 show = { showController },
                 playState = playState,
                 playStateCallback = playStateCallback,
-                topBarCallback = topBarCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
                 transformState = transformState,
                 transformStateCallback = transformStateCallback,
                 onScreenshot = onScreenshot,
                 onRestartAutoHideControllerRunnable = restartAutoHideControllerRunnable,
                 onOpenPlaylist = { showPlaylistSheet = true },
+                onExitFullscreen = onExitFullscreen,
             )
 
             if (playState().loading) {
@@ -315,13 +314,13 @@ private fun AutoHiddenBox(
     show: () -> Boolean,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
-    topBarCallback: TopBarCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     transformState: () -> TransformState,
     transformStateCallback: TransformStateCallback,
     onScreenshot: () -> Unit,
     onRestartAutoHideControllerRunnable: () -> Unit,
     onOpenPlaylist: () -> Unit,
+    onExitFullscreen: () -> Unit,
 ) {
     Box {
         AnimatedVisibility(
@@ -335,7 +334,7 @@ private fun AutoHiddenBox(
                 TopBar(
                     modifier = Modifier.constrainAs(topBar) { top.linkTo(parent.top) },
                     title = playState().run { title.orEmpty().ifBlank { mediaTitle }.orEmpty() },
-                    topBarCallback = topBarCallback,
+                    onExitFullscreen = onExitFullscreen,
                 )
                 BottomBar(
                     modifier = Modifier.constrainAs(bottomBar) { bottom.linkTo(parent.bottom) },
@@ -345,6 +344,7 @@ private fun AutoHiddenBox(
                     onDialogVisibilityChanged = onDialogVisibilityChanged,
                     onRestartAutoHideControllerRunnable = onRestartAutoHideControllerRunnable,
                     onOpenPlaylist = onOpenPlaylist,
+                    onExitFullscreen = onExitFullscreen,
                 )
 
                 if (PlayerShowScreenshotButtonPreference.current) {
