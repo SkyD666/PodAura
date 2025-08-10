@@ -35,7 +35,6 @@ import androidx.navigation.toRoute
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.type
@@ -139,7 +138,7 @@ fun DownloadScreen(
             is DownloadListState.Success -> DownloadList(
                 downloadInfoBeanList = downloadListState.downloadInfoBeanList,
                 nestedScrollConnection = scrollBehavior.nestedScrollConnection,
-                contentPadding = paddingValues.onlyHorizontal() + PaddingValues(bottom = fabHeight + 16.dp),
+                contentPadding = paddingValues + PaddingValues(bottom = fabHeight + 16.dp),
             )
         }
     }
