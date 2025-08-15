@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.feed.reorder
+package com.skyd.podaura.ui.screen.feed.reorder.group
 
 import android.os.Parcelable
 import androidx.compose.foundation.background
@@ -32,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,7 +69,7 @@ data object ReorderGroupRoute : Parcelable
 
 @Composable
 fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
@@ -91,6 +93,7 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
                 contentPadding = paddingValues,
                 groupListState = groupListState,
                 dispatcher = dispatcher,
+                nestedScrollConnection = scrollBehavior.nestedScrollConnection,
             )
         }
 
@@ -114,6 +117,7 @@ private fun GroupList(
     contentPadding: PaddingValues,
     groupListState: GroupListState.Success,
     dispatcher: (ReorderGroupIntent) -> Unit,
+    nestedScrollConnection: NestedScrollConnection,
 ) {
     val lazyListState = rememberLazyListState()
 
@@ -135,7 +139,9 @@ private fun GroupList(
         placeholderPadding = contentPadding,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(nestedScrollConnection),
             state = lazyListState,
             contentPadding = contentPadding + PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

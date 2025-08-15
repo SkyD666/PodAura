@@ -8,6 +8,6 @@ import com.skyd.podaura.model.preference.BasePreference
 object BackgroundPlayPreference : BasePreference<Boolean>() {
     private const val BACKGROUND_PLAY = "backgroundPlay"
 
-    override val default = false
+    override val default = true
     override val key = booleanPreferencesKey(BACKGROUND_PLAY)
 }

@@ -2,7 +2,6 @@ package com.skyd.podaura.ui.screen.article
 
 import androidx.paging.PagingData
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
-import com.skyd.podaura.model.repository.article.ArticleSort
 import kotlinx.coroutines.flow.Flow
 
 
@@ -15,10 +14,11 @@ internal sealed interface ArticlePartialStateChange {
         }
     }
 
-    sealed interface ArticleList : ArticlePartialStateChange {
+    sealed interface Init : ArticlePartialStateChange {
         override fun reduce(oldState: ArticleState): ArticleState {
             return when (this) {
                 is Success -> oldState.copy(
+                    articleFilterState = filterMask,
                     articleListState = ArticleListState.Success(
                         articlePagingDataFlow = articlePagingDataFlow,
                         loading = false,
@@ -44,11 +44,13 @@ internal sealed interface ArticlePartialStateChange {
             }
         }
 
-        data class Success(val articlePagingDataFlow: Flow<PagingData<ArticleWithFeed>>) :
-            ArticleList
+        data class Success(
+            val articlePagingDataFlow: Flow<PagingData<ArticleWithFeed>>,
+            val filterMask: Int,
+        ) : Init
 
-        data class Failed(val msg: String) : ArticleList
-        data object Loading : ArticleList
+        data class Failed(val msg: String) : Init
+        data object Loading : Init
     }
 
     sealed interface RefreshArticleList : ArticlePartialStateChange {
@@ -130,58 +132,16 @@ internal sealed interface ArticlePartialStateChange {
         data class Failed(val msg: String) : DeleteArticle
     }
 
-    sealed interface FavoriteFilterArticle : ArticlePartialStateChange {
+    sealed interface UpdateFilter : ArticlePartialStateChange {
         override fun reduce(oldState: ArticleState): ArticleState {
             return when (this) {
                 is Success -> oldState.copy(
-                    articleFilterState = oldState.articleFilterState.copy(
-                        favoriteFilter = favoriteFilter,
-                    ),
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
+                    articleFilterState = filterMask,
                     loadingDialog = false,
                 )
             }
         }
 
-        data class Success(val favoriteFilter: Boolean?) : FavoriteFilterArticle
-        data class Failed(val msg: String) : FavoriteFilterArticle
-    }
-
-    sealed interface ReadFilterArticle : ArticlePartialStateChange {
-        override fun reduce(oldState: ArticleState): ArticleState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    articleFilterState = oldState.articleFilterState.copy(
-                        readFilter = readFilter,
-                    ),
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val readFilter: Boolean?) : ReadFilterArticle
-        data class Failed(val msg: String) : ReadFilterArticle
-    }
-
-    sealed interface UpdateSort : ArticlePartialStateChange {
-        override fun reduce(oldState: ArticleState): ArticleState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    articleFilterState = oldState.articleFilterState.copy(
-                        sortFilter = sortFilter
-                    ),
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val sortFilter: ArticleSort) : UpdateSort
+        data class Success(val filterMask: Int) : UpdateFilter
     }
 }

@@ -89,7 +89,8 @@ import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Group1Item
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
-import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupRoute
+import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute
+import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
 import kotlinx.coroutines.launch
@@ -437,6 +438,7 @@ private fun FeedList(
                         )
                     )
                 },
+                onReorderFeedsInGroup = { navController.navigate(ReorderFeedRoute(groupId = it)) },
                 openCreateGroupDialog = {
                     openCreateGroupDialog = true
                     createGroupDialogGroup = ""

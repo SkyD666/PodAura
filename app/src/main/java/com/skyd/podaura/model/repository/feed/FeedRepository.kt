@@ -21,6 +21,7 @@ import com.skyd.podaura.model.bean.group.groupfeed.GroupOrFeedBean
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
+import com.skyd.podaura.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
@@ -163,23 +164,26 @@ class FeedRepository(
         val realNickname = if (nickname.isNullOrBlank()) null else nickname
         val realGroupId =
             if (groupId.isNullOrBlank() || groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
+        val oldFeed = feedDao.getFeed(url)
         val feedWithArticleBean = rssHelper.searchFeed(url = url).run {
             copy(
                 feed = feed.copy(
                     groupId = realGroupId,
                     nickname = realNickname,
+                    orderPosition = oldFeed?.orderPosition
+                        ?: (feedDao.getMaxOrder(realGroupId) + ORDER_DELTA)
                 )
             )
         }
         feedDao.setFeedWithArticle(feedWithArticleBean)
-        emit(feedDao.getFeed(url))
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun editFeedUrl(
         oldUrl: String,
         newUrl: String,
     ): Flow<FeedViewBean> = flow {
-        val oldFeed = feedDao.getFeed(oldUrl)
+        val oldFeed = feedDao.getFeedView(oldUrl)
         var newFeed = oldFeed
         if (oldUrl != newUrl) {
             val feedWithArticleBean = rssHelper.searchFeed(url = newUrl).run {
@@ -194,7 +198,7 @@ class FeedRepository(
             }
             feedDao.removeFeed(oldUrl)
             feedDao.setFeedWithArticle(feedWithArticleBean)
-            newFeed = feedDao.getFeed(newUrl)
+            newFeed = feedDao.getFeedView(newUrl)
         }
         emit(newFeed)
     }.flowOn(Dispatchers.IO)
@@ -204,8 +208,8 @@ class FeedRepository(
         nickname: String?,
     ): Flow<FeedViewBean> = flow {
         val realNickname = if (nickname.isNullOrBlank()) null else nickname
-        feedDao.updateFeed(feedDao.getFeed(url).feed.copy(nickname = realNickname))
-        emit(feedDao.getFeed(url))
+        feedDao.updateFeed(feedDao.getFeedView(url).feed.copy(nickname = realNickname))
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun editFeedGroup(
@@ -213,19 +217,23 @@ class FeedRepository(
         groupId: String?,
     ): Flow<FeedViewBean> = flow {
         val realGroupId =
-            if (groupId.isNullOrBlank() || groupId == GroupVo.DEFAULT_GROUP_ID) null
-            else groupId
+            if (groupId.isNullOrBlank() || groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
 
-        feedDao.updateFeed(feedDao.getFeed(url).feed.copy(groupId = realGroupId))
-        emit(feedDao.getFeed(url))
+        feedDao.updateFeed(
+            feedDao.getFeedView(url).feed.copy(
+                groupId = realGroupId,
+                orderPosition = feedDao.getMaxOrder(realGroupId) + ORDER_DELTA,
+            )
+        )
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun editFeedCustomDescription(
         url: String,
         customDescription: String?,
     ): Flow<FeedViewBean> = flow {
-        feedDao.updateFeed(feedDao.getFeed(url).feed.copy(customDescription = customDescription))
-        emit(feedDao.getFeed(url))
+        feedDao.updateFeed(feedDao.getFeedView(url).feed.copy(customDescription = customDescription))
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun editFeedCustomIcon(
@@ -242,10 +250,10 @@ class FeedRepository(
                 filePath = customIcon
             }
         }
-        val oldFeed = feedDao.getFeed(url)
+        val oldFeed = feedDao.getFeedView(url)
         oldFeed.feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
         feedDao.updateFeed(oldFeed.feed.copy(customIcon = filePath))
-        emit(feedDao.getFeed(url))
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun editFeedSortXmlArticlesOnUpdate(
@@ -253,12 +261,12 @@ class FeedRepository(
         sort: Boolean,
     ): Flow<FeedViewBean> = flow {
         feedDao.updateFeedSortXmlArticlesOnUpdate(feedUrl = url, sort = sort)
-        emit(feedDao.getFeed(url))
+        emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
     fun removeFeed(url: String): Flow<Int> {
         return flow {
-            feedDao.getFeed(url).feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
+            feedDao.getFeedView(url).feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
             emit(feedDao.removeFeed(url))
         }.flowOn(Dispatchers.IO)
     }

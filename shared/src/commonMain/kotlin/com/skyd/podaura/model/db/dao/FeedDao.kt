@@ -73,7 +73,8 @@ interface FeedDao {
     @Query(
         """
         UPDATE $FEED_TABLE_NAME
-        SET ${FeedBean.GROUP_ID_COLUMN} = :toGroupId
+        SET ${FeedBean.GROUP_ID_COLUMN} = :toGroupId, 
+            ${FeedBean.ORDER_POSITION_COLUMN} = ${FeedBean.ORDER_POSITION_COLUMN} - :fromGroupFeedMinOrder + :toGroupFeedMaxOrder + :orderDelta 
         WHERE :fromGroupId IS NULL AND ${FeedBean.GROUP_ID_COLUMN} IS NULL OR
         ${FeedBean.GROUP_ID_COLUMN} = :fromGroupId OR
         :fromGroupId IS NULL AND ${FeedBean.GROUP_ID_COLUMN} NOT IN (
@@ -81,7 +82,13 @@ interface FeedDao {
         )
         """
     )
-    suspend fun moveFeedToGroup(fromGroupId: String?, toGroupId: String?): Int
+    suspend fun moveFeedToGroup(
+        fromGroupId: String?,
+        toGroupId: String?,
+        fromGroupFeedMinOrder: Double,
+        toGroupFeedMaxOrder: Double,
+        orderDelta: Double,
+    ): Int
 
     @Transaction
     @Query(
@@ -123,12 +130,21 @@ interface FeedDao {
     suspend fun updateFeedSortXmlArticlesOnUpdate(feedUrl: String, sort: Boolean): Int
 
     @Transaction
-    @Query("SELECT * FROM $FEED_TABLE_NAME")
-    fun getFeedPagingSource(): PagingSource<Int, FeedBean>
+    @Query(
+        "SELECT * FROM $FEED_VIEW_NAME " +
+                "WHERE :groupId IS NULL AND ${FeedBean.GROUP_ID_COLUMN} IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId " +
+                "ORDER BY ${FeedBean.ORDER_POSITION_COLUMN}"
+    )
+    fun getFeedViewPagingSourceInGroup(groupId: String?): PagingSource<Int, FeedViewBean>
 
     @Transaction
     @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.URL_COLUMN} = :feedUrl")
-    suspend fun getFeed(feedUrl: String): FeedViewBean
+    suspend fun getFeedView(feedUrl: String): FeedViewBean
+
+    @Transaction
+    @Query("SELECT * FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} = :feedUrl")
+    suspend fun getFeed(feedUrl: String): FeedBean?
 
     @Transaction
     @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.URL_COLUMN} IN (:feedUrls)")
@@ -148,11 +164,10 @@ interface FeedDao {
 
     @Transaction
     @Query(
-        """
-            SELECT * FROM $FEED_VIEW_NAME
-            WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL OR 
-            ${FeedBean.GROUP_ID_COLUMN} NOT IN (:groupIds)
-        """
+        "SELECT * FROM $FEED_VIEW_NAME " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL OR " +
+                "${FeedBean.GROUP_ID_COLUMN} NOT IN (:groupIds) " +
+                "ORDER BY ${FeedBean.ORDER_POSITION_COLUMN}"
     )
     suspend fun getFeedsNotInGroup(groupIds: List<String>): List<FeedViewBean>
 
@@ -169,6 +184,14 @@ interface FeedDao {
         """
     )
     suspend fun getFeedsByGroupId(groupId: String?): List<FeedViewBean>
+
+    @Transaction
+    @Query(
+        "SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME " +
+                "WHERE :groupId IS NULL AND ${FeedBean.GROUP_ID_COLUMN} IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
+    )
+    suspend fun getFeedUrlsByGroupId(groupId: String?): List<String>
 
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class])
@@ -212,4 +235,70 @@ interface FeedDao {
                 "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
     )
     suspend fun muteFeedsInGroup(groupId: String?, mute: Boolean): Int
+
+    @Transaction
+    @Query(
+        "UPDATE `$FEED_TABLE_NAME` " +
+                "SET ${FeedBean.FILTER_MASK_COLUMN} = :filterMask " +
+                "WHERE ${FeedBean.URL_COLUMN} = :url"
+    )
+    suspend fun updateFilterMask(url: String, filterMask: Int): Int
+
+    @Transaction
+    @Query(
+        "SELECT ${FeedBean.FILTER_MASK_COLUMN} FROM `$FEED_TABLE_NAME` " +
+                "WHERE ${FeedBean.URL_COLUMN} = :url"
+    )
+    suspend fun getFilterMask(url: String): Int
+
+    @Transaction
+    @Query(
+        "UPDATE `$FEED_TABLE_NAME` " +
+                "SET ${FeedBean.ORDER_POSITION_COLUMN} = :orderPosition " +
+                "WHERE ${FeedBean.URL_COLUMN} = :url"
+    )
+    suspend fun reorderFeed(url: String, orderPosition: Double): Int
+
+    @Transaction
+    suspend fun reindexOrders(groupId: String?) {
+        getFeedUrlsByGroupId(groupId).forEachIndexed { index, url ->
+            reorderFeed(
+                url = url,
+                orderPosition = (index * ORDER_DELTA) + ORDER_DELTA,
+            )
+        }
+    }
+
+    @Transaction
+    @Query(
+        "SELECT * FROM `$FEED_TABLE_NAME` " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId " +
+                "ORDER BY ${FeedBean.ORDER_POSITION_COLUMN} " +
+                "LIMIT 1 OFFSET :index"
+    )
+    suspend fun getNth(groupId: String?, index: Int): FeedBean?
+
+    @Transaction
+    @Query(
+        "SELECT COALESCE(MAX(`${FeedBean.ORDER_POSITION_COLUMN}`), 0) " +
+                "FROM `$FEED_TABLE_NAME` " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
+    )
+    suspend fun getMaxOrder(groupId: String?): Double
+
+    @Transaction
+    @Query(
+        "SELECT COALESCE(MIN(`${FeedBean.ORDER_POSITION_COLUMN}`), 0) " +
+                "FROM `$FEED_TABLE_NAME` " +
+                "WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL " +
+                "OR ${FeedBean.GROUP_ID_COLUMN} = :groupId"
+    )
+    suspend fun getMinOrder(groupId: String?): Double
+
+    companion object {
+        const val ORDER_DELTA = 10.0
+        const val ORDER_MIN_DELTA = 1E-5
+    }
 }

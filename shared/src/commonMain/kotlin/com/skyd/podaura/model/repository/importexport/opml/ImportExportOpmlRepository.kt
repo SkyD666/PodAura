@@ -137,7 +137,7 @@ class ImportExportOpmlRepository(
     }.flowOn(Dispatchers.IO)
 
     private fun OutlineDsl.addFeedOutlines(feeds: List<FeedViewBean>) {
-        feeds.forEach { feedView ->
+        feeds.sortedBy { it.feed.orderPosition }.forEach { feedView ->
             val feed = feedView.feed
             outline {
                 title = feed.title

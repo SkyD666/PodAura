@@ -108,7 +108,7 @@ class RssModule {
             groupId = null,
             nickname = "Nvidia",
         ).first()
-        feedDao.getFeed("https://blogs.nvidia.cn/feed/").feed.apply {
+        feedDao.getFeedView("https://blogs.nvidia.cn/feed/").feed.apply {
             assertTrue(groupId == null && nickname == "Nvidia")
         }
     }
@@ -186,7 +186,7 @@ class RssModule {
         ).first()
 
         feedRepository.editFeedGroup(url1, groupId).first()
-        assertTrue(feedDao.getFeed(url1).feed.groupId == groupId)
+        assertTrue(feedDao.getFeedView(url1).feed.groupId == groupId)
 
         feedRepository.moveGroupFeedsTo(GroupVo.DEFAULT_GROUP_ID, groupId).first()
         assertTrue(feedDao.getFeedsByGroupId(null).isEmpty())
@@ -450,7 +450,7 @@ class RssModule {
         val url1 = "https://blogs.nvidia.cn/feed/"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         feedRepository.editFeedCustomDescription(url1, "test13").first()
-        assertEquals(feedDao.getFeed(url1).feed.customDescription, "test13")
+        assertEquals(feedDao.getFeedView(url1).feed.customDescription, "test13")
     }
 
     /**
@@ -464,7 +464,7 @@ class RssModule {
         val url1 = "https://blogs.nvidia.cn/feed/"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         feedRepository.editFeedNickname(url1, "nickname test13").first()
-        assertEquals(feedDao.getFeed(url1).feed.nickname, "nickname test13")
+        assertEquals(feedDao.getFeedView(url1).feed.nickname, "nickname test13")
     }
 
     /**
@@ -480,7 +480,7 @@ class RssModule {
         val icon =
             "https://www.gstatic.com/devrel-devsite/prod/v3239347c48d1e3c46204782fd038ba187a6753dfa7d7a0d08a574587ae2085f5/android/images/lockup.svg"
         feedRepository.editFeedCustomIcon(url1, icon).first()
-        assertEquals(feedDao.getFeed(url1).feed.customIcon, icon)
+        assertEquals(feedDao.getFeedView(url1).feed.customIcon, icon)
     }
 
     /**
@@ -494,9 +494,9 @@ class RssModule {
         val url1 = "https://blogs.nvidia.cn/feed/"
         feedRepository.setFeed(url = url1, groupId = null, nickname = null).first()
         feedRepository.editFeedSortXmlArticlesOnUpdate(url1, true).first()
-        assertTrue(feedDao.getFeed(url1).feed.sortXmlArticlesOnUpdate)
+        assertTrue(feedDao.getFeedView(url1).feed.sortXmlArticlesOnUpdate)
         feedRepository.editFeedSortXmlArticlesOnUpdate(url1, false).first()
-        assertFalse(feedDao.getFeed(url1).feed.sortXmlArticlesOnUpdate)
+        assertFalse(feedDao.getFeedView(url1).feed.sortXmlArticlesOnUpdate)
     }
 
     /**

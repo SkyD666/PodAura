@@ -318,6 +318,7 @@
     <string name="proxy_screen_port_error_message">Ports can only range from 0 to 65535</string>
     <string name="more">More</string>
     <string name="reorder_group_screen_name">Reorder groups</string>
+    <string name="reorder_feed_screen_name">Reorder feeds</string>
     <string name="player_config_screen_cache_category">Cache</string>
     <string name="player_config_screen_max_cache_size">Max cache size</string>
     <string name="player_config_screen_max_back_cache_size">Max back cache size</string>

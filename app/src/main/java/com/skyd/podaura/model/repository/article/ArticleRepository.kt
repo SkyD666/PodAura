@@ -12,6 +12,7 @@ import com.skyd.podaura.ext.getString
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
@@ -29,7 +30,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
@@ -41,14 +42,6 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.rss_update_failed
 import kotlin.coroutines.cancellation.CancellationException
 
-sealed class ArticleSort(open val asc: Boolean) {
-    data class Date(override val asc: Boolean) : ArticleSort(asc)
-    data class Title(override val asc: Boolean) : ArticleSort(asc)
-
-    companion object {
-        val default = Date(false)
-    }
-}
 
 class ArticleRepository(
     private val feedDao: FeedDao,
@@ -56,20 +49,28 @@ class ArticleRepository(
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
 ) : BaseRepository(), IArticleRepository {
-    private val filterFavorite = MutableStateFlow<Boolean?>(null)
-    private val filterRead = MutableStateFlow<Boolean?>(null)
-    private val articleSortDateDesc = MutableStateFlow<ArticleSort>(ArticleSort.default)
+    private val filterMask: MutableStateFlow<Int> = MutableStateFlow(0)
 
-    fun filterFavorite(favorite: Boolean?) {
-        filterFavorite.value = favorite
-    }
+    fun requestFilterMask(): Flow<Int> = filterMask.asStateFlow()
 
-    fun filterRead(read: Boolean?) {
-        filterRead.value = read
-    }
+    fun isOnlySingleFeed(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+        articleIds: List<String>,
+    ) = feedUrls.size == 1 && groupIds.isEmpty() && articleIds.isEmpty()
 
-    fun updateSort(articleSort: ArticleSort) {
-        articleSortDateDesc.value = articleSort
+    fun updateFilterMask(
+        feedUrls: List<String>,
+        groupIds: List<String>,
+        articleIds: List<String>,
+        filterMask: Int,
+    ): Flow<Int> = flow {
+        this@ArticleRepository.filterMask.emit(filterMask)
+        if (isOnlySingleFeed(feedUrls, groupIds, articleIds)) {
+            emit(feedDao.updateFilterMask(url = feedUrls.first(), filterMask = filterMask))
+        } else {
+            emit(0)
+        }
     }
 
     override fun requestRealFeedUrls(
@@ -96,13 +97,15 @@ class ArticleRepository(
         feedUrls: List<String>,
         groupIds: List<String>,
         articleIds: List<String>,
-    ): Flow<PagingData<ArticleWithFeed>> = combine(
-        filterFavorite,
-        filterRead,
-        articleSortDateDesc,
-    ) { favorite, read, sortDateDesc ->
-        arrayOf(favorite, read, sortDateDesc)
-    }.flatMapLatest { (favorite, read, sortDateDesc) ->
+    ): Flow<PagingData<ArticleWithFeed>> = flow {
+        if (isOnlySingleFeed(feedUrls, groupIds, articleIds)) {
+            filterMask.emit(feedDao.getFilterMask(feedUrls.first()))
+        }
+        emit(Unit)
+    }.flatMapLatest { filterMask }.flatMapLatest { filterMask ->
+        val favorite = FeedBean.parseFilterMaskToFavorite(filterMask)
+        val read = FeedBean.parseFilterMaskToRead(filterMask)
+        val sortBy = FeedBean.parseFilterMaskToSort(filterMask)
         val realFeedUrls = requestRealFeedUrls(
             feedUrls = feedUrls,
             groupIds = groupIds,
@@ -113,9 +116,9 @@ class ArticleRepository(
                 genSql(
                     feedUrls = realFeedUrls.distinct(),
                     articleIds = articleIds,
-                    isFavorite = favorite as Boolean?,
-                    isRead = read as Boolean?,
-                    orderBy = sortDateDesc as ArticleSort,
+                    isFavorite = favorite,
+                    isRead = read,
+                    orderBy = sortBy,
                 )
             )
         }.flow
@@ -138,7 +141,7 @@ class ArticleRepository(
                     semaphore.withPermit {
                         val articleBeanList = runCatching {
                             rssHelper.queryRssXml(
-                                feed = feedDao.getFeed(feedUrl).feed,
+                                feed = feedDao.getFeedView(feedUrl).feed,
                                 full = full,
                                 latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
                             )?.also { feedWithArticle ->
@@ -206,7 +209,7 @@ class ArticleRepository(
             articleIds: List<String>,
             isFavorite: Boolean?,
             isRead: Boolean?,
-            orderBy: ArticleSort,
+            orderBy: FeedBean.SortBy,
         ): RoomRawQuery {
             val sql = buildString {
                 append("SELECT DISTINCT * FROM `$ARTICLE_TABLE_NAME` WHERE 1 ")
@@ -233,8 +236,8 @@ class ArticleRepository(
                 append(") ")
                 val ascOrDesc = if (orderBy.asc) "ASC" else "DESC"
                 val orderField = when (orderBy) {
-                    is ArticleSort.Date -> ArticleBean.DATE_COLUMN
-                    is ArticleSort.Title -> ArticleBean.TITLE_COLUMN
+                    is FeedBean.SortBy.Date -> ArticleBean.DATE_COLUMN
+                    is FeedBean.SortBy.Title -> ArticleBean.TITLE_COLUMN
                 }
                 append("\nORDER BY `$orderField` $ascOrDesc")
             }

@@ -464,7 +464,7 @@ class MediaRepository(
 
         val realGroupName = if (group.isDefaultGroup()) null else group.name
         val realFeedUrl = feedUrl.takeIf { !it.isNullOrBlank() }
-        val feed = realFeedUrl?.let { feedDao.getFeed(it) }
+        val feed = realFeedUrl?.let { feedDao.getFeedView(it) }
         val realDisplayName = displayName.takeIf { !it.isNullOrBlank() } ?: feed?.feed?.title
 
         val path = file.parent!!.toString()

@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.Edit
@@ -135,6 +136,7 @@ import podaura.shared.generated.resources.feed_screen_unmute_feed
 import podaura.shared.generated.resources.item_selected
 import podaura.shared.generated.resources.read_all
 import podaura.shared.generated.resources.refresh
+import podaura.shared.generated.resources.reorder_feed_screen_name
 import podaura.shared.generated.resources.request_headers_screen_name
 import podaura.shared.generated.resources.reset
 
@@ -442,6 +444,7 @@ internal fun OptionArea(
     onSortXmlArticlesOnUpdateChanged: ((Boolean) -> Unit)? = null,
     onAutoDownload: (() -> Unit)? = null,
     onEditRequestHeaders: (() -> Unit)? = null,
+    onReorderFeedsInGroup: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var openClearWarningDialog by rememberSaveable { mutableStateOf(false) }
@@ -528,6 +531,13 @@ internal fun OptionArea(
                 icon = Icons.Outlined.Http,
                 text = stringResource(Res.string.request_headers_screen_name),
                 onClick = onEditRequestHeaders,
+            )
+        }
+        if (onReorderFeedsInGroup != null) {
+            SheetChip(
+                icon = Icons.AutoMirrored.Outlined.Sort,
+                text = stringResource(Res.string.reorder_feed_screen_name),
+                onClick = onReorderFeedsInGroup,
             )
         }
     }

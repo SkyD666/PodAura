@@ -82,7 +82,13 @@ interface GroupDao {
     @Transaction
     suspend fun moveGroupFeedsTo(fromGroupId: String?, toGroupId: String?): Int {
         val feedDao = get<FeedDao>()
-        return feedDao.moveFeedToGroup(fromGroupId = fromGroupId, toGroupId = toGroupId)
+        return feedDao.moveFeedToGroup(
+            fromGroupId = fromGroupId,
+            toGroupId = toGroupId,
+            fromGroupFeedMinOrder = feedDao.getMinOrder(groupId = fromGroupId),
+            toGroupFeedMaxOrder = feedDao.getMaxOrder(groupId = toGroupId),
+            orderDelta = FeedDao.ORDER_DELTA,
+        )
     }
 
     @Transaction
@@ -152,7 +158,7 @@ interface GroupDao {
                 "    f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
                 "    (SELECT `order` FROM default_group_order) AS group_order, " +
                 "    1 AS is_feed, " +
-                "    f.${FeedBean.TITLE_COLUMN} AS feed_order " +
+                "    f.${FeedBean.ORDER_POSITION_COLUMN} AS feed_order " +
                 "FROM `$FEED_TABLE_NAME` f " +
                 "WHERE f.${FeedBean.GROUP_ID_COLUMN} IS NULL AND " +
                 "    :defaultGroupIsExpanded AND (NOT f.${FeedBean.MUTE_COLUMN} OR NOT :hideMutedFeed) " +
@@ -172,7 +178,7 @@ interface GroupDao {
                 "        f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
                 "        g.${GroupBean.ORDER_POSITION_COLUMN} AS group_order, " +
                 "        1 AS is_feed, " +
-                "        f.${FeedBean.TITLE_COLUMN} AS feed_order " +
+                "        f.${FeedBean.ORDER_POSITION_COLUMN} AS feed_order " +
                 "    FROM `$FEED_TABLE_NAME` f " +
                 "    INNER JOIN `$GROUP_TABLE_NAME` g ON f.${FeedBean.GROUP_ID_COLUMN} = g.${GroupBean.GROUP_ID_COLUMN} AND " +
                 "        g.${GroupBean.IS_EXPANDED_COLUMN} = 1 " +

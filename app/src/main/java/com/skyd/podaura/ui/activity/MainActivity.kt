@@ -63,8 +63,10 @@ import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute.Companion.AutoDownloadRuleLauncher
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedScreen
-import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupRoute
-import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupScreen
+import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute
+import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute.Companion.ReorderFeedLauncher
+import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
+import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupScreen
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute.Companion.RequestHeadersLauncher
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
@@ -191,6 +193,7 @@ private fun MainNavHost() {
         composable<ReadStyleRoute> { ReadStyleScreen() }
         composable<MediaStyleRoute> { MediaStyleScreen() }
         composable<ReorderGroupRoute> { ReorderGroupScreen() }
+        composable<ReorderFeedRoute> { ReorderFeedLauncher(it) }
         composable<SearchStyleRoute> { SearchStyleScreen() }
         composable<BehaviorRoute> { BehaviorScreen() }
         composable<AutoDeleteRoute> { AutoDeleteScreen() }

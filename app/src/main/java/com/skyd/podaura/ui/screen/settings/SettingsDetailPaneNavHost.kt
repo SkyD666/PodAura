@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.skyd.podaura.ui.component.PodAuraNavHost
-import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupRoute
-import com.skyd.podaura.ui.screen.feed.reorder.ReorderGroupScreen
+import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
+import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupScreen
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute.Companion.FilePickerLauncher
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute

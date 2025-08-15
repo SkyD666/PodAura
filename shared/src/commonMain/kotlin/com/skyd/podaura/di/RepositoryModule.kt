@@ -1,6 +1,5 @@
 package com.skyd.podaura.di
 
-import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
 import com.skyd.podaura.model.repository.DataRepository
 import com.skyd.podaura.model.repository.FilePickerRepository
 import com.skyd.podaura.model.repository.HistoryRepository
@@ -8,6 +7,8 @@ import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.UpdateNotificationRepository
 import com.skyd.podaura.model.repository.UpdateRepository
+import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
+import com.skyd.podaura.model.repository.feed.ReorderFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderGroupRepository
 import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
 import com.skyd.podaura.model.repository.importexport.ImportExportRepository
@@ -31,6 +32,7 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
     factory { ReorderGroupRepository(get(), get()) }
+    factory { ReorderFeedRepository(get(), get()) }
     factory { DataRepository(get(), get(), get()) }
     factory { HistoryRepository(get(), get(), get()) }
     factory { ReadRepository(get(), get()) }

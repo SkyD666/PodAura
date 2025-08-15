@@ -49,6 +49,7 @@ import podaura.shared.generated.resources.feed_screen_feed_muted
 @Composable
 fun Feed1Item(
     data: FeedViewBean,
+    maxDescriptionLines: Int = 3,
     selected: Boolean = false,
     inGroup: Boolean = false,
     isEnd: Boolean = false,
@@ -119,7 +120,7 @@ fun Feed1Item(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
+                    maxLines = maxDescriptionLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

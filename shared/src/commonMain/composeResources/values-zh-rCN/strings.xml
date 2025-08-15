@@ -311,6 +311,7 @@
     <string name="proxy_screen_port_error_message">端口范围只能从 0 到 65535</string>
     <string name="more">更多</string>
     <string name="reorder_group_screen_name">重排序组</string>
+    <string name="reorder_feed_screen_name">重排序订阅</string>
     <string name="player_config_screen_cache_category">缓存</string>
     <string name="player_config_screen_max_cache_size">最大前向缓存大小</string>
     <string name="player_config_screen_max_back_cache_size">最大保留缓存大小</string>

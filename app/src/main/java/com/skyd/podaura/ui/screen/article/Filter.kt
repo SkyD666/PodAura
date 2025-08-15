@@ -43,7 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ListMenu
 import com.skyd.podaura.ext.getString
-import com.skyd.podaura.model.repository.article.ArticleSort
+import com.skyd.podaura.model.bean.feed.FeedBean
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_filter_all
@@ -61,12 +61,10 @@ import podaura.shared.generated.resources.article_screen_sort_title_desc
 
 @Composable
 fun FilterIcon(
-    filterCount: Int,
+    hasFilter: Boolean,
     showFilterBar: Boolean,
     onFilterBarVisibilityChanged: (Boolean) -> Unit,
-    onFilterFavorite: (Boolean?) -> Unit,
-    onFilterRead: (Boolean?) -> Unit,
-    onSort: (ArticleSort) -> Unit,
+    onFilterMaskChanged: (Int) -> Unit,
 ) {
     var expandMenu by rememberSaveable { mutableStateOf(false) }
 
@@ -74,8 +72,8 @@ fun FilterIcon(
         IconToggleButton(
             checked = showFilterBar,
             onCheckedChange = {
-                if (filterCount == 0) onFilterBarVisibilityChanged(it)
-                else expandMenu = true
+                if (hasFilter) expandMenu = true
+                else onFilterBarVisibilityChanged(it)
             },
         ) {
             Icon(
@@ -85,16 +83,12 @@ fun FilterIcon(
         }
     }
 
-    if (filterCount == 0) {
-        icon()
+    if (hasFilter) {
+        BadgedBox(badge = { Badge() }) {
+            icon()
+        }
     } else {
-        BadgedBox(
-            badge = {
-                Badge {
-                    Text(text = filterCount.toString())
-                }
-            }
-        ) { icon() }
+        icon()
     }
 
     DropdownMenu(
@@ -107,9 +101,7 @@ fun FilterIcon(
                 Icon(imageVector = Icons.Outlined.ClearAll, contentDescription = null)
             },
             onClick = {
-                onFilterFavorite(null)
-                onFilterRead(null)
-                onSort(ArticleSort.default)
+                onFilterMaskChanged(FeedBean.DEFAULT_FILTER_MASK)
                 expandMenu = false
             },
         )
@@ -140,10 +132,8 @@ fun FilterIcon(
 @Composable
 internal fun FilterRow(
     modifier: Modifier = Modifier,
-    articleFilterState: ArticleFilterState,
-    onFilterFavorite: (Boolean?) -> Unit,
-    onFilterRead: (Boolean?) -> Unit,
-    onSort: (ArticleSort) -> Unit,
+    articleFilterMask: Int,
+    onFilterMaskChanged: (Int) -> Unit,
 ) {
 
     Row(modifier = modifier.fillMaxWidth()) {
@@ -155,16 +145,28 @@ internal fun FilterRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             FavoriteFilter(
-                current = articleFilterState.favoriteFilter,
-                onFilterFavorite = onFilterFavorite,
+                current = FeedBean.parseFilterMaskToFavorite(filterMask = articleFilterMask),
+                onFilterFavorite = {
+                    onFilterMaskChanged(
+                        FeedBean.newFilterMask(filterMask = articleFilterMask, filterFavorite = it)
+                    )
+                },
             )
             ReadFilter(
-                current = articleFilterState.readFilter,
-                onFilterRead = onFilterRead,
+                current = FeedBean.parseFilterMaskToRead(filterMask = articleFilterMask),
+                onFilterRead = {
+                    onFilterMaskChanged(
+                        FeedBean.newFilterMask(filterMask = articleFilterMask, filterRead = it)
+                    )
+                },
             )
             SortSetting(
-                current = articleFilterState.sortFilter,
-                onSort = onSort,
+                current = FeedBean.parseFilterMaskToSort(filterMask = articleFilterMask),
+                onSort = {
+                    onFilterMaskChanged(
+                        FeedBean.newFilterMask(filterMask = articleFilterMask, sort = it)
+                    )
+                },
             )
         }
     }
@@ -172,26 +174,26 @@ internal fun FilterRow(
 
 @Composable
 internal fun SortSetting(
-    current: ArticleSort,
-    onSort: (ArticleSort) -> Unit,
+    current: FeedBean.SortBy,
+    onSort: (FeedBean.SortBy) -> Unit,
 ) {
     val context = LocalContext.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val items = remember {
         mapOf(
-            ArticleSort.default to Pair(
+            FeedBean.SortBy.default to Pair(
                 context.getString(Res.string.article_screen_sort_date_desc),
                 Icons.Outlined.CalendarMonth,
             ),
-            ArticleSort.Date(true) to Pair(
+            FeedBean.SortBy.Date(true) to Pair(
                 context.getString(Res.string.article_screen_sort_date_asc),
                 Icons.Outlined.CalendarMonth,
             ),
-            ArticleSort.Title(true) to Pair(
+            FeedBean.SortBy.Title(true) to Pair(
                 context.getString(Res.string.article_screen_sort_title_asc),
                 Icons.Outlined.Title,
             ),
-            ArticleSort.Title(false) to Pair(
+            FeedBean.SortBy.Title(false) to Pair(
                 context.getString(Res.string.article_screen_sort_title_desc),
                 Icons.Outlined.Title,
             ),
@@ -207,7 +209,7 @@ internal fun SortSetting(
                     text = items[current]!!.first,
                 )
             },
-            selected = current != ArticleSort.default,
+            selected = current != FeedBean.SortBy.default,
             leadingIcon = {
                 Icon(
                     imageVector = items[current]!!.second,

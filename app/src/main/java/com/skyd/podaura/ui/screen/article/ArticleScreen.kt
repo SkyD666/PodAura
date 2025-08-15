@@ -76,12 +76,12 @@ import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.preference.appearance.article.ArticleItemMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.article.ArticleListTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.article.ArticleTopBarTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
-import com.skyd.podaura.model.repository.article.ArticleSort
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
@@ -179,7 +179,7 @@ fun ArticleScreen(
     val dispatch = viewModel.getDispatcher(
         feedUrls, groupIds, articleIds,
         startWith = ArticleIntent.Init(
-            urls = feedUrls,
+            feedUrls = feedUrls,
             groupIds = groupIds,
             articleIds = articleIds,
         )
@@ -234,12 +234,19 @@ fun ArticleScreen(
                         )
                     }
                     FilterIcon(
-                        filterCount = uiState.articleFilterState.filterCount,
+                        hasFilter = uiState.articleFilterState != FeedBean.DEFAULT_FILTER_MASK,
                         showFilterBar = showFilterBar,
                         onFilterBarVisibilityChanged = { showFilterBar = it },
-                        onFilterFavorite = { dispatch(ArticleIntent.FilterFavorite(it)) },
-                        onFilterRead = { dispatch(ArticleIntent.FilterRead(it)) },
-                        onSort = { dispatch(ArticleIntent.UpdateSort(it)) },
+                        onFilterMaskChanged = {
+                            dispatch(
+                                ArticleIntent.UpdateFilter(
+                                    feedUrls = feedUrls,
+                                    groupIds = groupIds,
+                                    articleIds = articleIds,
+                                    filterMask = it,
+                                )
+                            )
+                        },
                     )
                     ComponeIconButton(
                         onClick = {
@@ -288,9 +295,16 @@ fun ArticleScreen(
             nestedScrollConnection = scrollBehavior.nestedScrollConnection,
             showFilterBar = showFilterBar,
             onRefresh = { dispatch(ArticleIntent.Refresh(feedUrls, groupIds, articleIds)) },
-            onFilterFavorite = { dispatch(ArticleIntent.FilterFavorite(it)) },
-            onFilterRead = { dispatch(ArticleIntent.FilterRead(it)) },
-            onSort = { dispatch(ArticleIntent.UpdateSort(it)) },
+            onFilterMaskChanged = {
+                dispatch(
+                    ArticleIntent.UpdateFilter(
+                        feedUrls = feedUrls,
+                        groupIds = groupIds,
+                        articleIds = articleIds,
+                        filterMask = it,
+                    )
+                )
+            },
             onFavorite = { articleWithFeed, favorite ->
                 dispatch(
                     ArticleIntent.Favorite(
@@ -347,9 +361,7 @@ private fun Content(
     nestedScrollConnection: NestedScrollConnection,
     showFilterBar: Boolean,
     onRefresh: () -> Unit,
-    onFilterFavorite: (Boolean?) -> Unit,
-    onFilterRead: (Boolean?) -> Unit,
-    onSort: (ArticleSort) -> Unit,
+    onFilterMaskChanged: (Int) -> Unit,
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
@@ -370,10 +382,8 @@ private fun Content(
             AnimatedVisibility(visible = showFilterBar) {
                 Column(modifier = Modifier.padding(contentPadding.onlyHorizontal())) {
                     FilterRow(
-                        articleFilterState = uiState.articleFilterState,
-                        onFilterFavorite = onFilterFavorite,
-                        onFilterRead = onFilterRead,
-                        onSort = onSort,
+                        articleFilterMask = uiState.articleFilterState,
+                        onFilterMaskChanged = onFilterMaskChanged,
                     )
                     HorizontalDivider()
                 }
