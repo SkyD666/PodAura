@@ -1,8 +1,8 @@
 package com.skyd.podaura.util
 
 import com.skyd.podaura.ext.currentTimeMillis
-import kotlinx.datetime.Clock
 import kotlin.random.Random
+import kotlin.time.Clock
 
 
 fun uniqueInt(): Int =

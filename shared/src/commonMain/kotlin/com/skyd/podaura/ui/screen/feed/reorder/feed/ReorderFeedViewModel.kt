@@ -31,7 +31,7 @@ class ReorderFeedViewModel(
             intentFlow.filterIsInstance<ReorderFeedIntent.Init>().take(1),
             intentFlow.filterNot { it is ReorderFeedIntent.Init }
         )
-            .toReorderGroupPartialStateChangeFlow()
+            .toReorderFeedPartialStateChangeFlow()
             .debugLog("ReorderFeedPartialStateChange")
             .sendSingleEvent()
             .scan(initialVS) { vs, change -> change.reduce(vs) }
@@ -54,7 +54,7 @@ class ReorderFeedViewModel(
         }
     }
 
-    private fun Flow<ReorderFeedIntent>.toReorderGroupPartialStateChangeFlow(): Flow<ReorderFeedPartialStateChange> {
+    private fun Flow<ReorderFeedIntent>.toReorderFeedPartialStateChangeFlow(): Flow<ReorderFeedPartialStateChange> {
         return merge(
             filterIsInstance<ReorderFeedIntent.Init>().flatMapConcat { intent ->
                 flowOf(

@@ -125,40 +125,7 @@ fun Article1Item(
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf(false) }
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
 
-    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { dismissValue ->
-            val articleSwipeAction = dataStore.getOrDefault(
-                if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
-                    ArticleSwipeRightActionPreference
-                } else {
-                    ArticleSwipeLeftActionPreference
-                }
-            )
-            when (dismissValue) {
-                SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> {
-                    val articleWithEnclosure = currentData.articleWithEnclosure
-                    swipeAction(
-                        articleSwipeAction = articleSwipeAction,
-                        navController = globalNavController,
-                        data = articleWithEnclosure,
-                        onMarkAsRead = {
-                            onRead(currentData, !articleWithEnclosure.article.isRead)
-                        },
-                        onMarkAsFavorite = {
-                            onFavorite(currentData, !articleWithEnclosure.article.isFavorite)
-                        },
-                        onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
-                        onOpenLink = { uriHandler.safeOpenUri(it) },
-                        onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true }
-                    )
-                }
-
-                SwipeToDismissBoxValue.Settled -> Unit
-            }
-            false
-        },
-        positionalThreshold = { it * 0.15f },
-    )
+    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(positionalThreshold = { it * .15f })
     LaunchedEffect(data) { swipeToDismissBoxState.reset() }
     var isSwipeToDismissActive by remember(data) { mutableStateOf(false) }
 
@@ -189,6 +156,37 @@ fun Article1Item(
             enableDismissFromStartToEnd = enableDismissFromStartToEnd,
             enableDismissFromEndToStart = enableDismissFromEndToStart,
             gesturesEnabled = enableDismissFromStartToEnd || enableDismissFromEndToStart,
+            onDismiss = { dismissValue ->
+                val articleSwipeAction = dataStore.getOrDefault(
+                    if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                        ArticleSwipeRightActionPreference
+                    } else {
+                        ArticleSwipeLeftActionPreference
+                    }
+                )
+                when (dismissValue) {
+                    SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> {
+                        val articleWithEnclosure = currentData.articleWithEnclosure
+                        swipeAction(
+                            articleSwipeAction = articleSwipeAction,
+                            navController = globalNavController,
+                            data = articleWithEnclosure,
+                            onMarkAsRead = {
+                                onRead(currentData, !articleWithEnclosure.article.isRead)
+                            },
+                            onMarkAsFavorite = {
+                                onFavorite(currentData, !articleWithEnclosure.article.isFavorite)
+                            },
+                            onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
+                            onOpenLink = { uriHandler.safeOpenUri(it) },
+                            onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true }
+                        )
+                    }
+
+                    SwipeToDismissBoxValue.Settled -> Unit
+                }
+                false
+            },
         ) {
             Article1ItemContent(
                 data = data,

@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 class UpdateViewModel(private val updateRepo: UpdateRepository) :
     AbstractMviViewModel<UpdateIntent, UpdateState, UpdateEvent>() {
