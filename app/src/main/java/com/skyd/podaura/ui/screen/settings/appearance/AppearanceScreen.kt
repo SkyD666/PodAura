@@ -66,6 +66,7 @@ import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseThemePreference
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.appearance.DateStylePreference
+import com.skyd.podaura.model.preference.appearance.ExpressiveColorPreference
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.appearance.TextFieldStylePreference
 import com.skyd.podaura.model.preference.appearance.ThemePreference
@@ -87,6 +88,7 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.appearance_screen_amoled_dark
 import podaura.shared.generated.resources.appearance_screen_date_style
+import podaura.shared.generated.resources.appearance_screen_expressive_color
 import podaura.shared.generated.resources.appearance_screen_name
 import podaura.shared.generated.resources.appearance_screen_navigation_bar_label
 import podaura.shared.generated.resources.appearance_screen_screen_style_category
@@ -161,13 +163,20 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 item {
                     SwitchSettingsItem(
                         imageVector = null,
+                        text = stringResource(Res.string.appearance_screen_expressive_color),
+                        checked = ExpressiveColorPreference.current,
+                        onCheckedChange = {
+                            ExpressiveColorPreference.put(scope = scope, value = it)
+                        }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = null,
                         text = stringResource(Res.string.appearance_screen_amoled_dark),
                         checked = AmoledDarkModePreference.current,
                         onCheckedChange = {
-                            AmoledDarkModePreference.put(
-                                scope = scope,
-                                value = it
-                            )
+                            AmoledDarkModePreference.put(scope = scope, value = it)
                         }
                     )
                 }

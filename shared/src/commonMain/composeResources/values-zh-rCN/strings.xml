@@ -148,6 +148,7 @@
     <string name="dark_mode_follow_system">跟随系统</string>
     <string name="appearance_screen_use_dynamic_theme">动态主题</string>
     <string name="appearance_screen_use_dynamic_theme_description">将壁纸颜色应用于主题</string>
+    <string name="appearance_screen_expressive_color">富有表现力的颜色</string>
     <string name="help_translate">翻译</string>
     <string name="sponsor">赞助</string>
     <string name="sponsor_description">如果您喜欢我开发的软件，可以请我喝一杯咖啡，谢谢！</string>

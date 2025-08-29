@@ -121,7 +121,7 @@ internal fun Controller(
                         if (playState.isPlaying) Res.string.pause else Res.string.play
                     ),
                     modifier = Modifier.size(36.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }

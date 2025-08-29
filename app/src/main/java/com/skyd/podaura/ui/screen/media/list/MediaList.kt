@@ -14,7 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.LoadingIndicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -150,7 +150,7 @@ internal fun MediaList(
                 }
             }
 
-            Indicator(
+            LoadingIndicator(
                 modifier = Modifier
                     .padding(contentPadding + fabPadding)
                     .align(Alignment.TopCenter),

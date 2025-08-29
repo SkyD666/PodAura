@@ -34,7 +34,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.LoadingIndicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberTopAppBarState
@@ -414,7 +414,7 @@ private fun Content(
         }
 
         if (ShowArticlePullRefreshPreference.current) {
-            Indicator(
+            LoadingIndicator(
                 isRefreshing = uiState.articleListState.loading,
                 state = state,
                 modifier = Modifier.align(Alignment.TopCenter),

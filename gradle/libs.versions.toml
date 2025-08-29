@@ -55,7 +55,7 @@ androidx-paging-common = { module = "androidx.paging:paging-common", version.ref
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 
-kermit = { module = "co.touchlab:kermit", version = "2.0.6" }
+kermit = { module = "co.touchlab:kermit", version = "2.0.8" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
@@ -67,7 +67,7 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 material-kolor = { module = "com.materialkolor:material-kolor", version = "3.0.1" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha02" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha03" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "3.0.0" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -96,21 +96,21 @@ skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta0
 skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta05" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta02" }
 
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0-rc04" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0-rc05" }
 
 rome = { module = "com.rometools:rome", version.ref = "rome" }
 rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
 
-reorderable = { module = "sh.calvin.reorderable:reorderable", version = "2.5.1" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
 
 junit = { module = "junit:junit", version = "4.13.2" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTest" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxTest" }
-mockito-core = { module = "org.mockito:mockito-core", version = "5.18.0" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.19.0" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.0.0" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.7.0" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
-androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.2.0" }
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.4.0" }
 androidx-paging-test = { module = "androidx.paging:paging-testing", version.ref = "paging" }
 androidx-work-test = { module = "androidx.work:work-testing", version.ref = "worker" }
 androidx-test-rules = { module = "androidx.test:rules", version = "1.7.0" }

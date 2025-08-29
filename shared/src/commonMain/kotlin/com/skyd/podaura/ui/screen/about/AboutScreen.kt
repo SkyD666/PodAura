@@ -438,6 +438,7 @@ private fun ButtonArea() {
         ) {
             ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_github_24),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 contentDescription = stringResource(Res.string.about_screen_visit_github),
                 onClick = { uriHandler.safeOpenUri(Const.GITHUB_REPO) }
             )
@@ -451,6 +452,7 @@ private fun ButtonArea() {
         ) {
             ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_telegram_24),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
                 contentDescription = stringResource(Res.string.about_screen_join_telegram),
                 onClick = { uriHandler.safeOpenUri(Const.TELEGRAM_GROUP) }
             )
@@ -464,6 +466,7 @@ private fun ButtonArea() {
         ) {
             ComponeIconButton(
                 painter = painterResource(Res.drawable.ic_discord_24),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
                 contentDescription = stringResource(Res.string.about_screen_join_discord),
                 onClick = { uriHandler.safeOpenUri(Const.DISCORD_SERVER) }
             )

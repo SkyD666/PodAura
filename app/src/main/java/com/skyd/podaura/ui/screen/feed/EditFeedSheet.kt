@@ -58,6 +58,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -499,8 +500,8 @@ internal fun OptionArea(
         if (onDelete != null) {
             SheetChip(
                 icon = Icons.Outlined.Delete,
-                iconTint = MaterialTheme.colorScheme.onError,
                 iconBackgroundColor = MaterialTheme.colorScheme.error,
+                iconTint = MaterialTheme.colorScheme.onError,
                 text = stringResource(Res.string.delete),
                 onClick = { openDeleteWarningDialog = true },
             )
@@ -727,8 +728,8 @@ internal fun GroupArea(
 internal fun SheetChip(
     modifier: Modifier = Modifier,
     icon: ImageVector?,
-    iconTint: Color = MaterialTheme.colorScheme.onPrimary,
     iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
+    iconTint: Color = contentColorFor(iconBackgroundColor),
     text: String?,
     contentDescription: String? = null,
     onClick: () -> Unit,
@@ -738,7 +739,7 @@ internal fun SheetChip(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(100))
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .background(MaterialTheme.colorScheme.secondaryContainer)
             .height(35.dp)
             .combinedClickable(onLongClick = onLongClick, onClick = onClick)
             .padding(5.dp),
@@ -767,7 +768,7 @@ internal fun SheetChip(
                 text = text,
                 style = MaterialTheme.typography.labelLarge,
                 fontSize = 15.sp,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

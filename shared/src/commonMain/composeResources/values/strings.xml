@@ -154,6 +154,7 @@
     <string name="dark_mode_follow_system">System</string>
     <string name="appearance_screen_use_dynamic_theme">Dynamic theme</string>
     <string name="appearance_screen_use_dynamic_theme_description">Apply wallpaper colors to the app</string>
+    <string name="appearance_screen_expressive_color">Expressive color</string>
     <string name="help_translate">Translate</string>
     <string name="sponsor">Sponsor</string>
     <string name="sponsor_description">If you like the app, you can buy me a cup of coffee, thanks!</string>

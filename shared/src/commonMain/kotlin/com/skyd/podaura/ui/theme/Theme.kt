@@ -4,10 +4,13 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
+import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
+import com.skyd.podaura.model.preference.appearance.ExpressiveColorPreference
 import com.skyd.podaura.model.preference.appearance.ThemePreference
 
 @Composable
@@ -29,9 +32,10 @@ fun PodAuraTheme(
 ) {
     val themeName = ThemePreference.current
     val isAmoled = AmoledDarkModePreference.current
+    val expressiveColor = ExpressiveColorPreference.current
 
     MaterialExpressiveTheme(
-        colorScheme = remember(themeName, darkTheme, isAmoled) {
+        colorScheme = remember(themeName, darkTheme, isAmoled, expressiveColor) {
             colors.getOrElse(themeName) {
                 val (primary, secondary, tertiary) = ThemePreference.toColors(ThemePreference.basicValues[0])
                 dynamicColorScheme(
@@ -40,7 +44,13 @@ fun PodAuraTheme(
                     isAmoled = isAmoled,
                     secondary = secondary,
                     tertiary = tertiary,
+                    style = if (expressiveColor) PaletteStyle.Expressive else PaletteStyle.TonalSpot,
                     contrastLevel = contrastLevel(),
+                    specVersion = if (expressiveColor) {
+                        ColorSpec.SpecVersion.SPEC_2025
+                    } else {
+                        ColorSpec.SpecVersion.SPEC_2021
+                    },
                 )
             }
         },
@@ -58,6 +68,7 @@ fun extractAllColors(darkTheme: Boolean): Map<String, ColorScheme> {
 
 @Composable
 fun extractColors(darkTheme: Boolean): Map<String, ColorScheme> {
+    val expressiveColor = ExpressiveColorPreference.current
     return ThemePreference.basicValues.associateWith {
         val (primary, secondary, tertiary) = ThemePreference.toColors(it)
         rememberDynamicColorScheme(
@@ -66,7 +77,13 @@ fun extractColors(darkTheme: Boolean): Map<String, ColorScheme> {
             isAmoled = AmoledDarkModePreference.current,
             secondary = secondary,
             tertiary = tertiary,
+            style = if (expressiveColor) PaletteStyle.Expressive else PaletteStyle.TonalSpot,
             contrastLevel = contrastLevel(),
+            specVersion = if (expressiveColor) {
+                ColorSpec.SpecVersion.SPEC_2025
+            } else {
+                ColorSpec.SpecVersion.SPEC_2021
+            },
         )
     }.toMutableMap()
 }
