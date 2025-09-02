@@ -1,4 +1,5 @@
 import com.android.build.api.variant.FilterConfiguration
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -9,26 +10,23 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.room)
 }
 
 apply(from = "../secret.gradle.kts")
 
 android {
     namespace = "com.skyd.podaura"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.skyd.anivu"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = properties["versionCode"]!!.toString().toInt()
         versionName = properties["versionName"]!!.toString()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     signingConfigs {
@@ -111,9 +109,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         viewBinding = true
@@ -144,6 +139,16 @@ android {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
     }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 composeCompiler {

@@ -195,7 +195,7 @@ compose.resources {
 
 android {
     namespace = "com.skyd.podaura.shared"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24

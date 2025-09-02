@@ -66,7 +66,8 @@ fun findRealPath(fd: Int): String? {
             ins.read()
             return path
         }
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.e("findRealPath", "Failed to findRealPath: $e")
     } finally {
         ins?.close()
     }

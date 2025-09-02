@@ -9,7 +9,6 @@ import android.view.KeyEvent
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
 import com.skyd.podaura.config.Const
-import com.skyd.podaura.config.MPV_CACHE_DIR
 import com.skyd.podaura.config.MPV_FONT_DIR
 import com.skyd.podaura.config.PICTURES_DIR
 import com.skyd.podaura.ext.getOrDefault
@@ -517,22 +516,22 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             else realFiles.indexOf(startFile).takeIf { it >= 0 } ?: 0
             val currentPlaylist = loadPlaylist()
             if (currentPlaylist != realFiles) {
-                val playlistFile = File(Const.MPV_CACHE_DIR, "playlist")
-                if (playlistFile.exists() || playlistFile.createNewFile()) {
-                    playlistFile.writeText(realFiles.joinToString("\n"))
-                    MPVLib.addObserver(
-                        EventObserver(
-                            onEvent = { eventId ->
-                                if (eventId == MPVLib.mpvEventId.MPV_EVENT_START_FILE) {
-                                    MPVLib.command(arrayOf("playlist-play-index", index.toString()))
-                                    paused = false
-                                    MPVLib.removeObserver(this)
-                                }
+                MPVLib.addObserver(
+                    EventObserver(
+                        onEvent = { eventId ->
+                            if (eventId == MPVLib.mpvEventId.MPV_EVENT_START_FILE) {
+                                MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+                                paused = false
+                                MPVLib.removeObserver(this)
                             }
-                        )
+                        }
                     )
-                    paused = true
-                    MPVLib.command(arrayOf("loadlist", playlistFile.path, "replace"))
+                )
+                paused = true
+                MPVLib.command(arrayOf("stop"))
+                files.forEachIndexed { index, path ->
+                    val mode = if (index == 0) "replace" else "append"
+                    MPVLib.command(arrayOf("loadfile", path, mode))
                 }
             } else if (path != startFile && playlistCount > 0) {
                 MPVLib.command(arrayOf("playlist-play-index", index.toString()))
