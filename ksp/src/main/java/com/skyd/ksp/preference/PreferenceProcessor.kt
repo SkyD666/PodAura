@@ -107,13 +107,9 @@ class PreferenceProcessor(
         }
         if (entries.isNotEmpty()) {
             generatePreferencesFile(entries, basePreference!!, preferencesListPkg)
-//            generateCompositionLocalFile(entries)
-//            generateSettingsProviderFile(entries)
         }
         return emptyList()
     }
-
-    private val packageName = "com.skyd.generated.preference"
     private fun generatePreferencesFile(
         entries: List<Entity>,
         basePreference: KSName,
@@ -139,70 +135,4 @@ class PreferenceProcessor(
             writer.appendLine(")")
         }
     }
-
-    private fun generateCompositionLocalFile(entries: List<Entity>) {
-        val file = codeGenerator.createNewFile(
-            dependencies = Dependencies.ALL_FILES,
-            packageName = packageName,
-            fileName = "PreferenceCompositionLocals",
-            extensionName = "kt",
-        )
-        file.bufferedWriter().use { writer ->
-            writer.appendLine("package $packageName")
-            writer.appendLine("")
-            writer.appendLine("import androidx.datastore.preferences.core.Preferences")
-            writer.appendLine("import androidx.compose.runtime.compositionLocalOf")
-            writer.appendLine("")
-            for (entity in entries) {
-                val preferenceQualifiedName = entity.preferenceQualifiedName
-                val localName = getLocalName(entity.preferenceSimpleName.asString())
-                writer.appendLine("val $localName = compositionLocalOf { ${preferenceQualifiedName.asString()}.default }")
-            }
-        }
-    }
-
-    private fun generateSettingsProviderFile(entries: List<Entity>) {
-        val file = codeGenerator.createNewFile(
-            dependencies = Dependencies.ALL_FILES,
-            packageName = packageName,
-            fileName = "SettingsProvider",
-            extensionName = "kt",
-        )
-        file.bufferedWriter().use { writer ->
-            writer.appendLine("package $packageName")
-            writer.appendLine("")
-            writer.appendLine("import androidx.compose.runtime.Composable")
-            writer.appendLine("import androidx.compose.runtime.CompositionLocalProvider")
-            writer.appendLine("import androidx.compose.runtime.collectAsState")
-            writer.appendLine("import androidx.compose.runtime.getValue")
-            writer.appendLine("import androidx.compose.runtime.remember")
-            writer.appendLine("import androidx.compose.ui.platform.LocalContext")
-            writer.appendLine("import androidx.datastore.core.DataStore")
-            writer.appendLine("import androidx.datastore.preferences.core.Preferences")
-            writer.appendLine("import kotlinx.coroutines.Dispatchers")
-            writer.appendLine("")
-            writer.appendLine("@Composable")
-            writer.appendLine("fun SettingsProvider(")
-            writer.appendLine("    dataStore: DataStore<Preferences>,")
-            writer.appendLine("    content: @Composable () -> Unit,")
-            writer.appendLine(") {")
-            writer.appendLine("    val context = LocalContext.current")
-            writer.appendLine("    val pref by remember { dataStore.data }.collectAsState(initial = null, context = Dispatchers.Default)")
-            writer.appendLine("    CompositionLocalProvider(")
-            for (entity in entries) {
-                val preferenceQualifiedName = entity.preferenceQualifiedName.asString()
-                val localName = getLocalName(entity.preferenceSimpleName.asString())
-                val keyString = "${preferenceQualifiedName}.key"
-                val defaultString = "${preferenceQualifiedName}.default"
-                writer.append("        ")
-                writer.appendLine("$localName provides (pref?.get($keyString) ?: $defaultString),")
-            }
-            writer.appendLine("    ) { content() }")
-            writer.appendLine("}")
-        }
-    }
-
-    private fun getLocalName(preferenceSimpleName: String) = "Local" + preferenceSimpleName
-        .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        .removeSuffix("Preference")
 }

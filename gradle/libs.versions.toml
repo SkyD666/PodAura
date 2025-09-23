@@ -1,37 +1,37 @@
 [versions]
 adaptive = "1.1.2"
-androidx-lifecycle = "2.9.3"
+androidx-lifecycle = "2.9.4"
 coil = "3.3.0"
 androidxTest = "1.3.0"
-filekit = "0.10.0"
+filekit = "0.11.0"
 xmlutil = "0.91.2"
 koin = "4.1.1"
 ksoup = "0.2.5"
 coroutines = "1.10.2"
 paging = "3.3.6"
 rome = "2.1.0"
-room = "2.7.2"
-compose = "1.9.0"
+room = "2.8.0"
+compose = "1.9.1"
 tracingPerfetto = "1.0.0"
-worker = "2.10.3"
+worker = "2.10.4"
 kotlin = "2.2.0"
 kotlinxAtomicfu = "0.29.0"
 kotlinxSerialization = "1.9.0"
 ksp = "2.2.0-2.0.2"
-ktor = "3.2.3"
+ktor = "3.3.0"
 agp = "8.10.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.10.1" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.11.0" }
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version = "1.1.1" }
-androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0-beta01" }
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0-rc01" }
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
 compose-runtime = { module = "androidx.compose.runtime:runtime", version.ref = "compose" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
-jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.0-rc01" }
+jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.0" }
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.9.0" }
@@ -40,12 +40,12 @@ jetbrains-compose-window-size = { module = "org.jetbrains.compose.material3:mate
 jetbrains-compose-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "adaptive" }
 jetbrains-compose-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "adaptive" }
 jetbrains-compose-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "adaptive" }
-jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.8.2" }
+jetbrains-compose-ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version = "1.9.0" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.5.2" }
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.0" }
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracingPerfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracingPerfetto" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
@@ -67,7 +67,7 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 material-kolor = { module = "com.materialkolor:material-kolor", version = "3.0.1" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha03" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha04" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "3.0.0" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -106,11 +106,11 @@ reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" 
 junit = { module = "junit:junit", version = "4.13.2" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxTest" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "androidxTest" }
-mockito-core = { module = "org.mockito:mockito-core", version = "5.19.0" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.20.0" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.0.0" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.7.0" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
-androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.4.0" }
+androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version = "1.4.1" }
 androidx-paging-test = { module = "androidx.paging:paging-testing", version.ref = "paging" }
 androidx-work-test = { module = "androidx.work:work-testing", version.ref = "worker" }
 androidx-test-rules = { module = "androidx.test:rules", version = "1.7.0" }
