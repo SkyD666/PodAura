@@ -43,13 +43,13 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogC
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
+import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
 import com.skyd.podaura.ui.player.pip.PipBroadcastReceiver
 import com.skyd.podaura.ui.player.pip.PipListenerPreAPI12
 import com.skyd.podaura.ui.player.pip.pipParams
 import com.skyd.podaura.ui.player.pip.rememberIsInPipMode
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
-import com.skyd.podaura.ui.player.service.PlayerService
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import java.io.File
@@ -57,7 +57,7 @@ import java.io.File
 
 @Composable
 fun PlayerViewRoute(
-    service: PlayerService?,
+    service: PlayerCoordinator?,
     onBack: () -> Unit,
     onSaveScreenshot: (File) -> Unit,
 ) {
@@ -68,7 +68,7 @@ fun PlayerViewRoute(
 
 @Composable
 fun PlayerView(
-    service: PlayerService,
+    service: PlayerCoordinator,
     onBack: () -> Unit,
     onSaveScreenshot: (File) -> Unit,
 ) {
@@ -138,7 +138,7 @@ fun PlayerView(
         )
     }
 
-    val playerObserver = PlayerService.Observer { command ->
+    val playerObserver = PlayerCoordinator.Observer { command ->
         when (command) {
             is PlayerEvent.Shutdown -> context.activity.finish()
             PlayerEvent.Seek -> playState = playState.copy(isSeeking = false)

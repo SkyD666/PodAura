@@ -43,7 +43,6 @@ sealed interface PlayerCommand {
 }
 
 sealed interface PlayerEvent {
-    data object ServiceDestroy : PlayerEvent
     data object Shutdown : PlayerEvent
     data class Idling(val value: Boolean) : PlayerEvent
     data class Position(val value: Long) : PlayerEvent

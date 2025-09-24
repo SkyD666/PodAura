@@ -113,7 +113,7 @@ class PlayActivity : BaseComposeActivity() {
             this@PlayActivity.service = binder.getService()
             lifecycleScope.launch {
                 viewModel.mediaInfos.filter { it.first != null }.collect { (path, playlist) ->
-                    this@PlayActivity.service.onCommand(
+                    this@PlayActivity.service.playerCoordinator.onCommand(
                         PlayerCommand.LoadList(
                             playlist = playlist,
                             startPath = path,
@@ -166,7 +166,7 @@ class PlayActivity : BaseComposeActivity() {
                 onDispose { removeOnNewIntentListener(listener) }
             }
             PlayerViewRoute(
-                service = if (serviceBound) service else null,
+                service = if (serviceBound) service.playerCoordinator else null,
                 onBack = { finish() },
                 onSaveScreenshot = {
                     picture = it
@@ -195,7 +195,7 @@ class PlayActivity : BaseComposeActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (serviceBound && service.player.onKey(event)) {
+        if (serviceBound && service.playerCoordinator.player.onKey(event)) {
             return true
         }
         return super.dispatchKeyEvent(event)
