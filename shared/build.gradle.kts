@@ -1,7 +1,8 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import com.google.devtools.ksp.gradle.KspAATask
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -74,6 +75,7 @@ kotlin {
                 implementation(libs.androidx.datastore.preferences)
                 implementation(libs.androidx.graphics.shapes)
                 implementation(libs.androidx.paging.common)
+                implementation(libs.androidx.paging.compose)
 
                 implementation(libs.koin.core)
                 implementation(libs.koin.compose.viewmodel)
@@ -91,14 +93,11 @@ kotlin {
                 implementation(libs.ktor.serialization.kotlinx.json)
 
                 implementation(libs.androidx.room.runtime)
-                implementation(libs.androidx.room.ktx)
                 implementation(libs.androidx.room.paging)
 
                 implementation(libs.coil.compose)
                 implementation(libs.coil.network.ktor3)
-                implementation(libs.coil.gif)
                 implementation(libs.coil.svg)
-                implementation(libs.coil.video)
 
                 implementation(libs.xmlutil.core)
                 implementation(libs.xmlutil.serialization)
@@ -112,6 +111,7 @@ kotlin {
                 implementation(libs.kotlin.codepoints.deluxe)
                 implementation(libs.ksoup)
                 implementation(libs.material.kolor)
+                implementation(libs.reorderable)
                 implementation(libs.skyd666.settings)
                 implementation(libs.skyd666.compone)
                 implementation(libs.skyd666.mvi)
@@ -136,7 +136,12 @@ kotlin {
                 implementation(libs.android.material)
                 implementation(libs.androidx.work.runtime.ktx)
 
+                implementation(libs.androidx.room.ktx)
+
                 implementation(libs.ktor.client.okhttp)
+
+                implementation(libs.coil.gif)
+                implementation(libs.coil.video)
             }
         }
 
@@ -153,6 +158,8 @@ kotlin {
 
         val desktopMain by getting
         desktopMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.desktop.common)
         }
 
@@ -209,6 +216,18 @@ android {
     }
 }
 
+compose.desktop {
+    application {
+        mainClass = "com.skyd.podaura.MainKt"
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "com.skyd.podaura"
+            packageVersion = "1.0.0"
+        }
+    }
+}
+
 dependencies {
     listOf("kspCommonMainMetadata", "kspAndroid", "kspDesktop").forEach {
         add(it, project(":ksp"))
@@ -219,7 +238,7 @@ dependencies {
 }
 
 // Trigger Common Metadata Generation from Native tasks
-project.tasks.withType(KotlinCompilationTask::class.java).configureEach {
+project.tasks.withType(KspAATask::class.java).configureEach {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }

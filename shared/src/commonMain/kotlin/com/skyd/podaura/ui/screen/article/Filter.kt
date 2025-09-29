@@ -39,11 +39,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ListMenu
-import com.skyd.podaura.ext.getString
+import com.skyd.compone.component.blockString
 import com.skyd.podaura.model.bean.feed.FeedBean
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_filter_all
@@ -130,7 +130,7 @@ fun FilterIcon(
 }
 
 @Composable
-internal fun FilterRow(
+/*internal*/ fun FilterRow(
     modifier: Modifier = Modifier,
     articleFilterMask: Int,
     onFilterMaskChanged: (Int) -> Unit,
@@ -177,24 +177,23 @@ internal fun SortSetting(
     current: FeedBean.SortBy,
     onSort: (FeedBean.SortBy) -> Unit,
 ) {
-    val context = LocalContext.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val items = remember {
         mapOf(
             FeedBean.SortBy.default to Pair(
-                context.getString(Res.string.article_screen_sort_date_desc),
+                Res.string.article_screen_sort_date_desc,
                 Icons.Outlined.CalendarMonth,
             ),
             FeedBean.SortBy.Date(true) to Pair(
-                context.getString(Res.string.article_screen_sort_date_asc),
+                Res.string.article_screen_sort_date_asc,
                 Icons.Outlined.CalendarMonth,
             ),
             FeedBean.SortBy.Title(true) to Pair(
-                context.getString(Res.string.article_screen_sort_title_asc),
+                Res.string.article_screen_sort_title_asc,
                 Icons.Outlined.Title,
             ),
             FeedBean.SortBy.Title(false) to Pair(
-                context.getString(Res.string.article_screen_sort_title_desc),
+                Res.string.article_screen_sort_title_desc,
                 Icons.Outlined.Title,
             ),
         )
@@ -206,7 +205,7 @@ internal fun SortSetting(
             label = {
                 Text(
                     modifier = Modifier.animateContentSize(),
-                    text = items[current]!!.first,
+                    text = stringResource(items[current]!!.first),
                 )
             },
             selected = current != FeedBean.SortBy.default,
@@ -228,7 +227,7 @@ internal fun SortSetting(
         ListMenu(
             expanded = expandMenu,
             values = remember(items) { items.keys },
-            displayName = { items[it]?.first.orEmpty() },
+            displayName = { blockString(items[it]!!.first) },
             leadingIcon = { Icon(imageVector = items[it]!!.second, contentDescription = null) },
             onClick = onSort,
             onDismissRequest = { expandMenu = false },
@@ -241,19 +240,18 @@ internal fun FavoriteFilter(
     current: Boolean?,
     onFilterFavorite: (Boolean?) -> Unit,
 ) {
-    val context = LocalContext.current
     val items = remember {
         mapOf(
             null to Pair(
-                context.getString(Res.string.article_screen_filter_all),
+                Res.string.article_screen_filter_all,
                 Icons.Outlined.FavoriteBorder,
             ),
             true to Pair(
-                context.getString(Res.string.article_screen_filter_favorite),
+                Res.string.article_screen_filter_favorite,
                 Icons.Outlined.Favorite,
             ),
             false to Pair(
-                context.getString(Res.string.article_screen_filter_unfavorite),
+                Res.string.article_screen_filter_unfavorite,
                 Icons.Outlined.FavoriteBorder,
             ),
         )
@@ -270,19 +268,18 @@ internal fun ReadFilter(
     current: Boolean?,
     onFilterRead: (Boolean?) -> Unit,
 ) {
-    val context = LocalContext.current
     val items = remember {
         mapOf(
             null to Pair(
-                context.getString(Res.string.article_screen_filter_all),
+                Res.string.article_screen_filter_all,
                 Icons.Outlined.Markunread,
             ),
             true to Pair(
-                context.getString(Res.string.article_screen_filter_read),
+                Res.string.article_screen_filter_read,
                 Icons.Outlined.Drafts,
             ),
             false to Pair(
-                context.getString(Res.string.article_screen_filter_unread),
+                Res.string.article_screen_filter_unread,
                 Icons.Outlined.MarkEmailUnread,
             ),
         )
@@ -297,7 +294,7 @@ internal fun ReadFilter(
 @Composable
 private fun FavoriteReadFilter(
     current: Boolean?,
-    items: Map<Boolean?, Pair<String, ImageVector>>,
+    items: Map<Boolean?, Pair<StringResource, ImageVector>>,
     onFilter: (Boolean?) -> Unit,
 ) {
     var expandMenu by rememberSaveable { mutableStateOf(false) }
@@ -308,7 +305,7 @@ private fun FavoriteReadFilter(
             label = {
                 Text(
                     modifier = Modifier.animateContentSize(),
-                    text = items[current]!!.first,
+                    text = stringResource(items[current]!!.first),
                 )
             },
             selected = current != null,
@@ -330,7 +327,7 @@ private fun FavoriteReadFilter(
         ListMenu(
             expanded = expandMenu,
             values = remember(items) { items.keys },
-            displayName = { items[it]?.first.orEmpty() },
+            displayName = { blockString(items[it]!!.first) },
             leadingIcon = { Icon(imageVector = items[it]!!.second, contentDescription = null) },
             onClick = onFilter,
             onDismissRequest = { expandMenu = false },

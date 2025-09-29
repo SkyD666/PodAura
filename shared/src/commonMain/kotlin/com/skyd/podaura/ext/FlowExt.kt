@@ -3,8 +3,6 @@ package com.skyd.podaura.ext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
-import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +22,7 @@ import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 
 fun <T> Flow<T>.catchMap(transform: FlowCollector<T>.(Throwable) -> T): Flow<T> =
     catch {
@@ -61,17 +60,16 @@ fun <T, R> Flow<T>.flatMapFirst(transform: suspend (value: T) -> Flow<R>): Flow<
  * Converts a higher-order [Flow] into a first-order [Flow] by dropping inner [Flow] while the previous inner [Flow] has not yet completed.
  */
 fun <T> Flow<Flow<T>>.flattenFirst(): Flow<T> = channelFlow {
-    val busy = atomic(false)
+    val mutex = Mutex()
 
     collect { inner ->
-        if (busy.compareAndSet(false, true)) {
+        if (mutex.tryLock()) {
             // Do not pay for dispatch here, it's never necessary
             launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     inner.collect { send(it) }
-                    busy.value = false
-                } catch (_: CancellationException) {
-                    busy.value = false
+                } finally {
+                    mutex.unlock()
                 }
             }
         }
