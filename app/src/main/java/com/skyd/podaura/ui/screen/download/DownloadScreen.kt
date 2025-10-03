@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.download
 
 import android.content.Intent
+import android.os.Build
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -83,7 +84,12 @@ data object DownloadDeepLinkRoute {
 
     @Composable
     fun DownloadDeepLinkLauncher(entry: NavBackStackEntry) {
-        val intent = entry.arguments?.getParcelable<Intent>(NavController.KEY_DEEP_LINK_INTENT)
+        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            entry.arguments?.getParcelable(NavController.KEY_DEEP_LINK_INTENT, Intent::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            entry.arguments?.getParcelable(NavController.KEY_DEEP_LINK_INTENT)
+        }
         DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)
     }
 }

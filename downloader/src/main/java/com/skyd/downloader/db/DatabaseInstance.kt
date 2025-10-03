@@ -15,7 +15,7 @@ internal object DatabaseInstance {
                         context.applicationContext,
                         DownloadDatabase::class.java,
                         "Downloader"
-                    ).fallbackToDestructiveMigration().build()
+                    ).fallbackToDestructiveMigration(false).build()
                 }
             }
         }
