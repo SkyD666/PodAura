@@ -102,8 +102,8 @@ import podaura.shared.generated.resources.article_screen_name
 import podaura.shared.generated.resources.article_screen_search_article
 import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.to_top
-import java.util.UUID
 import kotlin.reflect.typeOf
+import kotlin.uuid.Uuid
 
 
 @Serializable
@@ -123,7 +123,7 @@ data class ArticleRoute(
             articleIds?.let {
                 appendQueryParameter(
                     "articleIds",
-                    UuidListType.encodeUuidList(articleIds.uuids.map { UUID.fromString(it) })
+                    UuidListType.encodeUuidList(articleIds.uuids.map { Uuid.parse(it) })
                 )
             }
         }.build()

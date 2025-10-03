@@ -249,7 +249,7 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowRight),
                         text = stringResource(Res.string.player_config_screen_max_cache_size),
-                        descriptionText = PlayerMaxCacheSizePreference.current.fileSize(context),
+                        descriptionText = PlayerMaxCacheSizePreference.current.fileSize(),
                         onClick = { openMaxCacheSizeDialog = true }
                     )
                 }
@@ -257,7 +257,7 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.AutoMirrored.Outlined.KeyboardArrowLeft),
                         text = stringResource(Res.string.player_config_screen_max_back_cache_size),
-                        descriptionText = PlayerMaxBackCacheSizePreference.current.fileSize(context),
+                        descriptionText = PlayerMaxBackCacheSizePreference.current.fileSize(),
                         onClick = { openMaxBackCacheSizeDialog = true }
                     )
                 }
@@ -441,7 +441,7 @@ internal fun MaxCacheSizeDialog(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .animateContentSize(),
-                    text = value.fileSize(context),
+                    text = value.fileSize(),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 ComponeIconButton(

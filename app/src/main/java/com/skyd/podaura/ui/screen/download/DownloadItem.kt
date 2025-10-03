@@ -136,7 +136,7 @@ fun DownloadItem(
                             .alignByBaseline(),
                         text = stringResource(
                             Res.string.download_download_payload_rate,
-                            (data.speedInBytePerMs * 1000).toLong().fileSize(context) + "/s"
+                            (data.speedInBytePerMs * 1000).toLong().fileSize() + "/s"
                         ),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,

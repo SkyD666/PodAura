@@ -30,3 +30,7 @@ actual fun Long.toRelativeDateTimeString(): String {
         } else 0
     ).toString()
 }
+
+actual fun Long.formatElapsedTime(): String {
+    return DateUtils.formatElapsedTime(this / 1000)
+}

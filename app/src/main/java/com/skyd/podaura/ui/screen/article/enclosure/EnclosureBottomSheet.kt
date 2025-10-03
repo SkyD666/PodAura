@@ -165,7 +165,7 @@ private fun EnclosureItem(
             }
             Row(modifier = Modifier.padding(top = 6.dp)) {
                 Text(
-                    text = enclosure.length.fileSize(context),
+                    text = enclosure.length.fileSize(),
                     style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                 )

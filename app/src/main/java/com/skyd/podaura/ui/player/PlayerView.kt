@@ -52,14 +52,14 @@ import com.skyd.podaura.ui.player.pip.rememberIsInPipMode
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
-import java.io.File
+import io.github.vinceglb.filekit.PlatformFile
 
 
 @Composable
 fun PlayerViewRoute(
     service: PlayerCoordinator?,
     onBack: () -> Unit,
-    onSaveScreenshot: (File) -> Unit,
+    onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
     if (service != null) {
         PlayerView(service, onBack, onSaveScreenshot)
@@ -70,7 +70,7 @@ fun PlayerViewRoute(
 fun PlayerView(
     service: PlayerCoordinator,
     onBack: () -> Unit,
-    onSaveScreenshot: (File) -> Unit,
+    onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -304,7 +304,7 @@ private fun Content(
     dialogState: DialogState,
     dialogCallback: DialogCallback,
     onBack: () -> Unit,
-    onSaveScreenshot: (File) -> Unit,
+    onSaveScreenshot: (PlatformFile) -> Unit,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onCommand: (PlayerCommand) -> Unit,
 ) {

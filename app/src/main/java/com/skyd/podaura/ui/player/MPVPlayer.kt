@@ -22,6 +22,8 @@ import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.player.mpv.DefaultEventObserver
 import com.skyd.podaura.ui.player.mpv.KeyMapping
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.exists
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_DOUBLE
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_FLAG
@@ -617,7 +619,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         paused = false
     }
 
-    fun screenshot(onSaveScreenshot: (File) -> Unit) {
+    fun screenshot(onSaveScreenshot: (PlatformFile) -> Unit) {
         val format = "jpg"
         val filename =
             "$filename-(${timePos.toLong().toDurationString(splitter = "-")})-${Random.nextInt()}"
@@ -626,12 +628,12 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         MPVLib.command(arrayOf("screenshot"))
 
         scope.launch {
-            val picture = File(Const.PICTURES_DIR, "$filename.$format")
+            val picture = PlatformFile(File(Const.PICTURES_DIR, "$filename.$format"))
             try {
                 withTimeout(10000) {
                     while (!picture.exists()) delay(100)
                 }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 Log.e(TAG, "Failed to save screenshot")
                 return@launch
             }

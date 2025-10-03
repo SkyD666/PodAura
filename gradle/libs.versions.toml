@@ -28,7 +28,7 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.0.1" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.11.0" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
-androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version = "1.1.1" }
+androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 android-material = { module = "com.google.android.material:material", version = "1.13.0" }

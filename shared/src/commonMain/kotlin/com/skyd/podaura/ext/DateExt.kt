@@ -10,3 +10,5 @@ expect fun Long.toAbsoluteDateTimeString(): String
 expect fun Long.toRelativeDateTimeString(): String
 
 fun Clock.Companion.currentTimeMillis(): Long = Clock.System.now().toEpochMilliseconds()
+
+expect fun Long.formatElapsedTime(): String

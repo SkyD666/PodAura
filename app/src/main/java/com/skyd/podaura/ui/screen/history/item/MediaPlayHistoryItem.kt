@@ -45,18 +45,16 @@ import coil3.request.crossfade
 import com.skyd.compone.component.TagText
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.isLocalFile
+import com.skyd.podaura.ext.isLocalFileExists
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
-import com.skyd.podaura.ui.player.isFdFileExists
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.screen.read.ReadRoute
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.delete
@@ -76,11 +74,7 @@ fun MediaPlayHistoryItem(
         articleWithEnclosure?.article?.title ?: path.substringAfterLast("/")
     }
     val isLocal = path.isLocalFile()
-    val mediaExists = remember(path) {
-        !isLocal ||
-                (path.startsWith("fd://") && isFdFileExists(path)
-                        || SystemFileSystem.exists(Path(path)))
-    }
+    val mediaExists = remember(path) { !isLocal || path.isLocalFileExists() }
     val playerJumper = rememberPlayerJumper()
     Row(
         modifier = Modifier

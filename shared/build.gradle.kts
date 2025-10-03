@@ -1,6 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import com.google.devtools.ksp.gradle.KspAATask
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -75,6 +76,7 @@ kotlin {
             implementation(libs.androidx.graphics.shapes)
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
+            implementation(libs.androidx.constraintlayout.compose)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)

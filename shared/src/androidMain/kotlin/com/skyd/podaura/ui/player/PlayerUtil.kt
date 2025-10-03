@@ -74,23 +74,6 @@ fun findRealPath(fd: Int): String? {
     return null
 }
 
-fun isFdFileExists(fdPath: String): Boolean {
-    var pfd: ParcelFileDescriptor? = null
-    var inputStream: InputStream? = null
-    return try {
-        val fd = fdPath.substringAfterLast("fd://").toInt()
-        pfd = ParcelFileDescriptor.fromFd(fd)
-        inputStream = FileInputStream(pfd.fileDescriptor)
-        inputStream.read() != -1
-    } catch (e: IOException) {
-        e.printStackTrace()
-        false
-    } finally {
-        inputStream?.close()
-        pfd?.close()
-    }
-}
-
 suspend fun createThumbnailFile(
     thumbnailPath: String?,
 ): File? {

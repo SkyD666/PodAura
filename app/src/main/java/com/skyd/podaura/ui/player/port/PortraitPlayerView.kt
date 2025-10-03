@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.player.port
 
 import android.content.Intent
-import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,11 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.activity.MainActivity
@@ -52,7 +51,8 @@ import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
-import com.skyd.podaura.ui.player.pip.manualEnterPictureInPictureMode
+import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
+import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.SmallController
 import com.skyd.podaura.ui.screen.article.ArticleRoute
@@ -77,7 +77,6 @@ internal fun PortraitPlayerView(
     onEnterFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val playlistSheetState = rememberModalBottomSheetState()
     var showMenu by rememberSaveable { mutableStateOf(false) }
@@ -91,9 +90,10 @@ internal fun PortraitPlayerView(
                 title = { },
                 navigationIcon = { BackIcon(onClick = onBack) },
                 actions = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (supportPip) {
+                        val onEnterPip = rememberOnEnterPip()
                         ComponeIconButton(
-                            onClick = { context.activity.manualEnterPictureInPictureMode() },
+                            onClick = onEnterPip::enter,
                             imageVector = Icons.Outlined.PictureInPictureAlt,
                             contentDescription = stringResource(Res.string.player_picture_in_picture),
                         )
@@ -345,7 +345,7 @@ private fun Menu(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    ReadRoute(articleId = articleId!!).toDeeplink(),
+                    ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
                     context,
                     MainActivity::class.java
                 )

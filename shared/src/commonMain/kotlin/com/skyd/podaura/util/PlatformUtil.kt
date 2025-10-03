@@ -10,4 +10,6 @@ enum class Platform {
     Windows
 }
 
+val Platform.isPhone: Boolean get() = this == Platform.Android || this == Platform.IOS
+
 expect fun exitApp()

@@ -1,7 +1,5 @@
 package com.skyd.podaura.ui.screen.read
 
-import android.net.Uri
-import android.text.format.DateUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,14 +69,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.navDeepLink
@@ -96,6 +92,8 @@ import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
+import com.skyd.podaura.ext.format
+import com.skyd.podaura.ext.formatElapsedTime
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.safeOpenUri
@@ -109,6 +107,7 @@ import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
+import com.skyd.podaura.ui.component.rememberTextSharing
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
@@ -117,7 +116,7 @@ import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.util.Platform
-import com.skyd.podaura.util.ShareUtil
+import com.skyd.podaura.util.isPhone
 import com.skyd.podaura.util.isWifiAvailable
 import com.skyd.podaura.util.platform
 import kotlinx.coroutines.launch
@@ -141,16 +140,11 @@ import podaura.shared.generated.resources.read_screen_open_article_screen
 import podaura.shared.generated.resources.read_screen_open_image_in_browser
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
-import java.util.Locale
 
 
 @Serializable
 data class ReadRoute(@SerialName("articleId") val articleId: String) {
-    fun toDeeplink(): Uri {
-        return DEEP_LINK.toUri().buildUpon()
-            .appendPath(articleId)
-            .build()
-    }
+    fun toDeeplink(): String = "$DEEP_LINK/$articleId"
 
     companion object {
         private const val DEEP_LINK = "podaura://read.screen"
@@ -168,7 +162,6 @@ data class ReadRoute(@SerialName("articleId") val articleId: String) {
 @Composable
 fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val uriHandler = LocalUriHandler.current
 
@@ -198,25 +191,25 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                     ),
                 ),
                 actions = {
-                    ComponeIconButton(
-                        enabled = uiState.articleState is ArticleState.Success,
-                        onClick = {
-                            val articleState = uiState.articleState
-                            if (articleState is ArticleState.Success) {
-                                val article = articleState.article.articleWithEnclosure.article
-                                val link = article.link
-                                val title = article.title
-                                if (!link.isNullOrBlank()) {
-                                    ShareUtil.shareText(
-                                        context = context,
-                                        text = if (title.isNullOrBlank()) link else "[$title] $link",
-                                    )
+                    if (platform.isPhone) {
+                        val textSharing = rememberTextSharing()
+                        ComponeIconButton(
+                            enabled = uiState.articleState is ArticleState.Success,
+                            onClick = {
+                                val articleState = uiState.articleState
+                                if (articleState is ArticleState.Success) {
+                                    val article = articleState.article.articleWithEnclosure.article
+                                    val link = article.link
+                                    val title = article.title
+                                    if (!link.isNullOrBlank()) {
+                                        textSharing.share(if (title.isNullOrBlank()) link else "[$title] $link")
+                                    }
                                 }
-                            }
-                        },
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = stringResource(Res.string.share),
-                    )
+                            },
+                            imageVector = Icons.Outlined.Share,
+                            contentDescription = stringResource(Res.string.share),
+                        )
+                    }
                     val isFavorite = (uiState.articleState as? ArticleState.Success)
                         ?.article?.articleWithEnclosure?.article?.isFavorite == true
                     ComponeIconButton(
@@ -532,7 +525,7 @@ private fun ReadTextSizeSliderDialog(
             val textSize = ReadTextSizePreference.current
             Text(
                 modifier = Modifier.padding(start = 16.dp),
-                text = String.format(Locale.getDefault(), "%.2f Sp", textSize),
+                text = "${textSize.format(2)} Sp",
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -559,7 +552,7 @@ private fun RssMediaEpisode(modifier: Modifier = Modifier, episode: String) {
 private fun RssMediaDuration(modifier: Modifier = Modifier, duration: Long) {
     Text(
         modifier = modifier,
-        text = DateUtils.formatElapsedTime(duration / 1000),
+        text = duration.formatElapsedTime(),
         color = Color.White,
     )
 }

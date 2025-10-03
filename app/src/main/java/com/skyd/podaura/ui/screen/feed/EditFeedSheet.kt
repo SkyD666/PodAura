@@ -4,7 +4,6 @@ import android.webkit.URLUtil
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.ContextualFlowRowOverflowScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -62,7 +59,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,7 +72,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -85,20 +80,19 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.paging.compose.LazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.ext.setText
-import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
+import com.skyd.podaura.ui.component.SheetChip
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.showToast
@@ -754,58 +748,6 @@ internal fun GroupArea(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-internal fun SheetChip(
-    modifier: Modifier = Modifier,
-    icon: ImageVector?,
-    iconBackgroundColor: Color = MaterialTheme.colorScheme.primary,
-    iconTint: Color = contentColorFor(iconBackgroundColor),
-    text: String?,
-    contentDescription: String? = null,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-    onIconClick: (() -> Unit)? = null,
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(100))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .height(35.dp)
-            .combinedClickable(onLongClick = onLongClick, onClick = onClick)
-            .padding(5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (icon != null) {
-            Icon(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(iconBackgroundColor)
-                    .thenIfNotNull(onIconClick) { clickable(onClick = it) }
-                    .padding(3.dp)
-                    .fillMaxHeight()
-                    .aspectRatio(1f),
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = iconTint,
-            )
-            if (text != null) {
-                Spacer(modifier = Modifier.width(4.dp))
-            }
-        }
-        if (text != null) {
-            Text(
-                modifier = Modifier.padding(horizontal = 6.dp),
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                fontSize = 15.sp,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
         }
     }
 }

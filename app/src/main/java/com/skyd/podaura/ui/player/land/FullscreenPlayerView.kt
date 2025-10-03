@@ -7,9 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.skyd.podaura.ui.component.rememberSystemUiController
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
@@ -18,7 +16,7 @@ import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChang
 import com.skyd.podaura.ui.player.land.controller.PlayerController
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
-import java.io.File
+import io.github.vinceglb.filekit.PlatformFile
 
 @Composable
 internal fun FullscreenPlayerView(
@@ -26,12 +24,11 @@ internal fun FullscreenPlayerView(
     playStateCallback: PlayStateCallback,
     dialogState: DialogState,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
-    onSaveScreenshot: (File) -> Unit,
+    onSaveScreenshot: (PlatformFile) -> Unit,
     onCommand: (PlayerCommand) -> Unit,
     onExitFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
 ) {
-    val systemUiController = rememberSystemUiController()
     var transformState by remember { mutableStateOf(TransformState.initial) }
     val transformStateCallback = remember {
         TransformStateCallback(
@@ -62,17 +59,9 @@ internal fun FullscreenPlayerView(
         onExitFullscreen = onExitFullscreen,
     )
 
+    val systemBarsVisibilityController = rememberSystemBarsVisibilityController()
     LifecycleResumeEffect(Unit) {
-        with(systemUiController) {
-            isSystemBarsVisible = false
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
-
-        onPauseOrDispose {
-            with(systemUiController) {
-                isSystemBarsVisible = true
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-            }
-        }
+        systemBarsVisibilityController.hide()
+        onPauseOrDispose { systemBarsVisibilityController.show() }
     }
 }

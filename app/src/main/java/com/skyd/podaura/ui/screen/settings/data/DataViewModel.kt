@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.data
 
 import com.skyd.mvi.AbstractMviViewModel
-import com.skyd.podaura.appContext
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.startWith
@@ -50,7 +49,7 @@ class DataViewModel(
                     DataEvent.ClearCacheResultEvent.Success(
                         getString(
                             Res.string.data_screen_data_cleared_size,
-                            change.deletedSize.fileSize(appContext),
+                            change.deletedSize.fileSize(),
                         )
                     )
                 }

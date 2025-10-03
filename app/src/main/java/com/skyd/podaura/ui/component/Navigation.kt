@@ -29,7 +29,7 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.nio.ByteBuffer
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 
 inline fun <reified T> serializableType(
@@ -88,24 +88,27 @@ abstract class UuidListType<T>(
     isNullableAllowed: Boolean = false,
 ) : NavType<T>(isNullableAllowed) {
     companion object {
-        fun encodeUuidList(uuidList: List<UUID>): String {
+        fun encodeUuidList(uuidList: List<Uuid>): String {
             val totalBytes = ByteArray(16 * uuidList.size)
             val buf = ByteBuffer.wrap(totalBytes)
             for (u in uuidList) {
-                buf.putLong(u.mostSignificantBits)
-                buf.putLong(u.leastSignificantBits)
+                val (mostSignificantBits, leastSignificantBits) = u.toLongs { most, least ->
+                    most to least
+                }
+                buf.putLong(mostSignificantBits)
+                buf.putLong(leastSignificantBits)
             }
             return Base64.encodeToString(totalBytes, Base64.NO_WRAP or Base64.URL_SAFE)
         }
 
-        fun decodeUuidList(uuidListString: String): List<UUID> {
+        fun decodeUuidList(uuidListString: String): List<Uuid> {
             val bytes: ByteArray = Base64.decode(uuidListString, Base64.NO_WRAP or Base64.URL_SAFE)
-            val uuids = mutableListOf<UUID>()
+            val uuids = mutableListOf<Uuid>()
             val buffer = ByteBuffer.wrap(bytes)
             while (buffer.remaining() >= 16) {
                 val msb = buffer.long
                 val lsb = buffer.long
-                uuids += UUID(msb, lsb)
+                uuids += Uuid.fromLongs(msb, lsb)
             }
             return uuids
         }
@@ -117,7 +120,7 @@ fun uuidListType(
 ) = if (isNullableAllowed) {
     object : UuidListType<UuidList?>(isNullableAllowed = true) {
         override fun get(bundle: Bundle, key: String) =
-            bundle.getString(key)?.let<String, UuidList?>(::parseValue)
+            bundle.getString(key)?.let(::parseValue)
 
         override fun parseValue(value: String): UuidList? {
             if (value == "null") return null
@@ -125,7 +128,7 @@ fun uuidListType(
         }
 
         override fun serializeAsValue(value: UuidList?) =
-            value?.let { encodeUuidList(value.uuids.map { UUID.fromString(it) }) } ?: "null"
+            value?.let { encodeUuidList(value.uuids.map { Uuid.parse(it) }) } ?: "null"
 
         override fun put(bundle: Bundle, key: String, value: UuidList?) {
             bundle.putString(key, serializeAsValue(value))
@@ -134,13 +137,13 @@ fun uuidListType(
 } else {
     object : NavType<UuidList>(isNullableAllowed = false) {
         override fun get(bundle: Bundle, key: String) =
-            bundle.getString(key)?.let<String, UuidList>(::parseValue)
+            bundle.getString(key)?.let(::parseValue)
 
         override fun parseValue(value: String) =
             UuidList(decodeUuidList(value).map { it.toString() })
 
         override fun serializeAsValue(value: UuidList) =
-            encodeUuidList(value.uuids.map { UUID.fromString(it) })
+            encodeUuidList(value.uuids.map { Uuid.parse(it) })
 
         override fun put(bundle: Bundle, key: String, value: UuidList) {
             bundle.putString(key, serializeAsValue(value))

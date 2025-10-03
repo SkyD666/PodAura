@@ -5,7 +5,7 @@ import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import java.io.File
+import io.github.vinceglb.filekit.PlatformFile
 
 sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
@@ -34,7 +34,7 @@ sealed interface PlayerCommand {
     data class SetSpeed(val speed: Float) : PlayerCommand
     data class SetSubtitleTrack(val trackId: Int) : PlayerCommand
     data class SetAudioTrack(val trackId: Int) : PlayerCommand
-    data class Screenshot(val onSaveScreenshot: (File) -> Unit) : PlayerCommand
+    data class Screenshot(val onSaveScreenshot: (PlatformFile) -> Unit) : PlayerCommand
     data class AddSubtitle(val filePath: String) : PlayerCommand
     data class AddAudio(val filePath: String) : PlayerCommand
     data class Shuffle(val shuffle: Boolean) : PlayerCommand

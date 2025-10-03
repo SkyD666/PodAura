@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.Window
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.runBlocking
@@ -93,4 +95,14 @@ fun Context.getString(resource: StringResource): String = runBlocking {
 
 fun Context.getString(resource: StringResource, vararg formatArgs: Any): String = runBlocking {
     org.jetbrains.compose.resources.getString(resource, formatArgs)
+}
+
+fun Context.vibrator(): Vibrator {
+    return if (SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
 }

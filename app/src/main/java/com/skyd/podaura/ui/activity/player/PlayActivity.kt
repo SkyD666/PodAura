@@ -31,17 +31,17 @@ import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.service.PlayerService
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.player_no_permission_cannot_save_screenshot
-import java.io.File
 
 
 class PlayActivity : BaseComposeActivity() {
     private val viewModel: PlayerViewModel by viewModel()
-    private lateinit var picture: File
+    private lateinit var picture: PlatformFile
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->

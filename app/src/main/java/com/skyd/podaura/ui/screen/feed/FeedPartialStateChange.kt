@@ -102,10 +102,8 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    editFeedDialogBean = oldState.editFeedDialogBean?.let {
-                        feeds.firstOrNull { feed ->
-                            feed.feed.url == oldState.editFeedDialogBean.feed.url
-                        }
+                    editFeedDialogBean = oldState.editFeedDialogBean?.let { editFeedDialogBean ->
+                        feeds.firstOrNull { feed -> feed.feed.url == editFeedDialogBean.feed.url }
                     } ?: oldState.editFeedDialogBean,
                     loadingDialog = false,
                 )
@@ -124,10 +122,8 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    editFeedDialogBean = oldState.editFeedDialogBean?.let {
-                        feeds.firstOrNull { feed ->
-                            feed.feed.url == oldState.editFeedDialogBean.feed.url
-                        }
+                    editFeedDialogBean = oldState.editFeedDialogBean?.let { editFeedDialogBean ->
+                        feeds.firstOrNull { feed -> feed.feed.url == editFeedDialogBean.feed.url }
                     },
                     loadingDialog = false,
                 )
