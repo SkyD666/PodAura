@@ -39,7 +39,7 @@ jobs:
       run: |
         cd secret/PodAura
         cp key.jks ../..
-        cp secret.gradle.kts ../..
+        cp signing.properties ../..
 
     # Clean secret files
     - name: Clean Temp Secret Files

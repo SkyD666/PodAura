@@ -37,7 +37,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -46,10 +46,8 @@ room {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.android.material)
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.room.runtime)
@@ -59,6 +57,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.junit.ktx)
     androidTestImplementation(libs.androidx.espresso.core)
 }

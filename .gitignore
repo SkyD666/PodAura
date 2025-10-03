@@ -13,4 +13,4 @@
 /app/debug
 /app/GitHub
 local.properties
-secret.gradle.kts
+signing.properties

@@ -5,14 +5,14 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlinx.atomicfu)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.buildkonfig)
 }
@@ -24,11 +24,11 @@ kotlin {
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+            jvmTarget = JvmTarget.JVM_17
         }
     }
 
-    jvm("desktop")
+    jvm()
 
 // For iOS targets, this is also where you should
 // configure native binary output. For more information, see:
@@ -54,96 +54,90 @@ kotlin {
 // common to share sources between related targets.
 // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                implementation(libs.compose.runtime)
-                implementation(libs.compose.ui)
-                implementation(libs.compose.foundation)
-                implementation(libs.compose.material3)
-                implementation(compose.components.resources)
-                implementation(compose.components.uiToolingPreview)
-                implementation(libs.compose.material.icons)
-                implementation(libs.jetbrains.lifecycle.viewmodel)
-                implementation(libs.jetbrains.lifecycle.runtime.compose)
-                implementation(libs.jetbrains.navigation.compose)
-                implementation(libs.jetbrains.compose.adaptive)
-                implementation(libs.jetbrains.compose.adaptive.layout)
-                implementation(libs.jetbrains.compose.adaptive.navigation)
-                implementation(libs.jetbrains.compose.window.size)
-                implementation(libs.jetbrains.compose.ui.backhandler)
-                implementation(libs.androidx.datastore.preferences)
-                implementation(libs.androidx.graphics.shapes)
-                implementation(libs.androidx.paging.common)
-                implementation(libs.androidx.paging.compose)
+        commonMain.dependencies {
+            implementation(libs.kotlin.stdlib)
+            implementation(compose.runtime)
+            implementation(compose.ui)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
+            implementation(compose.materialIconsExtended)
+            implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.runtime.compose)
+            implementation(libs.jetbrains.navigation.compose)
+            implementation(libs.jetbrains.compose.adaptive)
+            implementation(libs.jetbrains.compose.adaptive.layout)
+            implementation(libs.jetbrains.compose.adaptive.navigation)
+            implementation(libs.jetbrains.compose.window.size)
+            implementation(libs.jetbrains.compose.ui.backhandler)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.androidx.graphics.shapes)
+            implementation(libs.androidx.paging.common)
+            implementation(libs.androidx.paging.compose)
 
-                implementation(libs.koin.core)
-                implementation(libs.koin.compose.viewmodel)
-                implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
 
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.kotlinx.atomicfu)
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.io.core)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.atomicfu)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.io.core)
 
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
 
-                implementation(libs.androidx.room.runtime)
-                implementation(libs.androidx.room.paging)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.room.paging)
 
-                implementation(libs.coil.compose)
-                implementation(libs.coil.network.ktor3)
-                implementation(libs.coil.svg)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+            implementation(libs.coil.svg)
 
-                implementation(libs.xmlutil.core)
-                implementation(libs.xmlutil.serialization)
-                implementation(libs.xmlutil.serialization.io)
+            implementation(libs.xmlutil.core)
+            implementation(libs.xmlutil.serialization)
+            implementation(libs.xmlutil.serialization.io)
 
-                implementation(libs.filekit.core)
-                implementation(libs.filekit.dialogs)
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.dialogs)
 
-                implementation(libs.compottie)
-                implementation(libs.kermit)
-                implementation(libs.kotlin.codepoints.deluxe)
-                implementation(libs.ksoup)
-                implementation(libs.material.kolor)
-                implementation(libs.reorderable)
-                implementation(libs.skyd666.settings)
-                implementation(libs.skyd666.compone)
-                implementation(libs.skyd666.mvi)
+            implementation(libs.compottie)
+            implementation(libs.kermit)
+            implementation(libs.codepoints.deluxe)
+            implementation(libs.ksoup)
+            implementation(libs.material.kolor)
+            implementation(libs.reorderable)
+            implementation(libs.skyd666.settings)
+            implementation(libs.skyd666.compone)
+            implementation(libs.skyd666.mvi)
 
-                implementation(project(":ksp"))
-            }
+            implementation(projects.ksp)
         }
 
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
 
-        androidMain {
-            dependencies {
-                // Add Android-specific dependencies here. Note that this source set depends on
-                // commonMain by default and will correctly pull the Android artifacts of any KMP
-                // dependencies declared in commonMain.
-                implementation(libs.androidx.core.ktx)
-                implementation(libs.androidx.appcompat)
-                implementation(libs.android.material)
-                implementation(libs.androidx.work.runtime.ktx)
-                implementation(libs.androidx.media)
+        androidMain.dependencies {
+            // Add Android-specific dependencies here. Note that this source set depends on
+            // commonMain by default and will correctly pull the Android artifacts of any KMP
+            // dependencies declared in commonMain.
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.appcompat)
+            implementation(libs.android.material)
+            implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.androidx.media)
 
-                implementation(libs.androidx.room.ktx)
+            implementation(libs.androidx.room.ktx)
 
-                implementation(libs.ktor.client.okhttp)
+            implementation(libs.ktor.client.okhttp)
 
-                implementation(libs.coil.gif)
-                implementation(libs.coil.video)
-            }
+            implementation(libs.coil.gif)
+            implementation(libs.coil.video)
         }
 
 //        iosMain {
@@ -157,8 +151,7 @@ kotlin {
 //            }
 //        }
 
-        val desktopMain by getting
-        desktopMain.dependencies {
+        jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(compose.desktop.common)
@@ -192,7 +185,7 @@ kotlin {
     }
 
     // KSP Common sourceSet
-    sourceSets.named("commonMain").configure {
+    sourceSets.commonMain.configure {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
     }
 }
@@ -230,8 +223,8 @@ compose.desktop {
 }
 
 dependencies {
-    listOf("kspCommonMainMetadata", "kspAndroid", "kspDesktop").forEach {
-        add(it, project(":ksp"))
+    listOf("kspCommonMainMetadata", "kspAndroid", "kspJvm").forEach {
+        add(it, projects.ksp)
         if (it != "kspCommonMainMetadata") {
             add(it, libs.androidx.room.compiler)
         }
@@ -239,17 +232,15 @@ dependencies {
 }
 
 // Trigger Common Metadata Generation from Native tasks
-project.tasks.withType(KspAATask::class.java).configureEach {
+project.tasks.withType(KspAATask::class).configureEach {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }
 }
 
-tasks {
-    configureEach {
-        if (name.contains("kspDebugKotlinAndroid") || name.contains("kspReleaseKotlinAndroid")) {
-            dependsOn("kspCommonMainKotlinMetadata")
-        }
+tasks.configureEach {
+    if (name.contains("kspDebugKotlinAndroid") || name.contains("kspReleaseKotlinAndroid")) {
+        dependsOn("kspCommonMainKotlinMetadata")
     }
 }
 

@@ -1,6 +1,7 @@
 import com.android.build.api.variant.FilterConfiguration
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,12 +9,10 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
-
-apply(from = "../secret.gradle.kts")
 
 android {
     namespace = "com.skyd.podaura"
@@ -29,14 +28,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val signing = rootProject.file("signing.properties").readProperties()
+
     signingConfigs {
-        create("release") {
-            @Suppress("UNCHECKED_CAST")
-            val sign = ((extra["secret"] as Map<*, *>)["sign"] as Map<String, String>)
-            storeFile = file("../key.jks")
-            storePassword = sign["RELEASE_STORE_PASSWORD"]
-            keyAlias = sign["RELEASE_KEY_ALIAS"]
-            keyPassword = sign["RELEASE_KEY_PASSWORD"]
+        if (signing != null) {
+            create("release") {
+                storeFile = rootProject.file(signing.getProperty("KEYSTORE_FILE"))
+                storePassword = signing.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = signing.getProperty("KEY_ALIAS")
+                keyPassword = signing.getProperty("KEY_PASSWORD")
+            }
         }
     }
 
@@ -90,7 +91,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            signingConfig = signingConfigs.getByName("release")    // signing
+            if (signing != null) {
+                signingConfig = signingConfigs.getByName("release")    // signing
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -143,7 +146,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -185,39 +188,36 @@ tasks.withType(KotlinCompile::class).configureEach {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.constraintlayout.compose)
+    implementation(libs.androidx.profileinstaller)
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.compose.runtime.tracing)
+    implementation(libs.android.material)
+    implementation(libs.accompanist.permissions)
+
+    implementation(compose.materialIconsExtended)
+    implementation(compose.runtime)
+    implementation(compose.ui)
+    implementation(compose.foundation)
+    implementation(compose.material3)
+    implementation(compose.components.resources)
     implementation(libs.jetbrains.navigation.compose)
     implementation(libs.jetbrains.lifecycle.runtime.compose)
-    implementation(libs.compose.material.icons)
-    implementation(libs.compose.runtime)
-    implementation(libs.compose.ui)
-    implementation(libs.compose.foundation)
-//    implementation(compose.material)
-    implementation(libs.compose.material3)
-    implementation(compose.components.resources)
-    implementation(libs.androidx.compose.runtime.tracing)
     implementation(libs.jetbrains.compose.window.size)
     implementation(libs.jetbrains.compose.adaptive)
     implementation(libs.jetbrains.compose.adaptive.layout)
     implementation(libs.jetbrains.compose.adaptive.navigation)
+
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.paging)
-    implementation(libs.androidx.junit.ktx)
-    implementation(libs.androidx.test.rules)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.paging.compose)
-    implementation(libs.androidx.profileinstaller)
-    implementation(libs.androidx.media)
-
-    implementation(libs.android.material)
-    implementation(libs.material.kolor)
-    implementation(libs.accompanist.permissions)
 
     implementation(libs.koin.core)
     implementation(libs.koin.android)
@@ -244,7 +244,7 @@ dependencies {
 
     implementation(libs.rome)
     implementation(libs.rome.modules)
-    implementation("com.prof18.rssparser:rssparser:6.0.10")
+    implementation(libs.rssparser)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
     implementation(libs.xmlutil.serialization.io)
@@ -253,25 +253,32 @@ dependencies {
     implementation(libs.filekit.dialogs)
 
     implementation(libs.reorderable)
+    implementation(libs.material.kolor)
 
     implementation(libs.skyd666.settings)
     implementation(libs.skyd666.compone)
     implementation(libs.skyd666.mvi)
 
-    implementation(compose.components.resources)
-
-    implementation(project(":shared"))
-    implementation(project(":downloader"))
+    implementation(projects.shared)
+    implementation(projects.downloader)
 
 //    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.junit.ktx)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.paging.test)
     androidTestImplementation(libs.androidx.work.test)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.uiautomator)
+}
+
+fun File.readProperties(): Properties? {
+    return if (exists()) {
+        Properties().apply {
+            this@readProperties.inputStream().use { load(it) }
+        }
+    } else null
 }
