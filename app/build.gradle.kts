@@ -1,6 +1,7 @@
 import com.android.build.api.variant.FilterConfiguration
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,8 +13,6 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.room)
 }
-
-apply(from = "../secret.gradle.kts")
 
 android {
     namespace = "com.skyd.podaura"
@@ -29,14 +28,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val signing = rootProject.file("signing.properties").readProperties()
+
     signingConfigs {
-        create("release") {
-            @Suppress("UNCHECKED_CAST")
-            val sign = ((extra["secret"] as Map<*, *>)["sign"] as Map<String, String>)
-            storeFile = file("../key.jks")
-            storePassword = sign["RELEASE_STORE_PASSWORD"]
-            keyAlias = sign["RELEASE_KEY_ALIAS"]
-            keyPassword = sign["RELEASE_KEY_PASSWORD"]
+        if (signing != null) {
+            create("release") {
+                storeFile = rootProject.file(signing.getProperty("KEYSTORE_FILE"))
+                storePassword = signing.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = signing.getProperty("KEY_ALIAS")
+                keyPassword = signing.getProperty("KEY_PASSWORD")
+            }
         }
     }
 
@@ -90,7 +91,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            signingConfig = signingConfigs.getByName("release")    // signing
+            if (signing != null) {
+                signingConfig = signingConfigs.getByName("release")    // signing
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -143,7 +146,7 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
@@ -274,4 +277,12 @@ dependencies {
     androidTestImplementation(libs.androidx.work.test)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.uiautomator)
+}
+
+fun File.readProperties(): Properties? {
+    return if (exists()) {
+        Properties().apply {
+            this@readProperties.inputStream().use { load(it) }
+        }
+    } else null
 }
