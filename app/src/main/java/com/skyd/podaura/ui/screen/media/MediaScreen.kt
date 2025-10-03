@@ -55,7 +55,6 @@ import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.preference.appearance.media.MediaShowGroupTabPreference
@@ -63,12 +62,12 @@ import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPrefe
 import com.skyd.podaura.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaListSortByPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.podaura.model.repository.player.PlayDataMode
-import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.LongClickListener
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.player.resolveUri
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
@@ -115,6 +114,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val pagerState = rememberPagerState(pageCount = { uiState.groups.size })
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
     var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
+    val playerJumper = rememberPlayerJumper()
 
     ListenToFilePicker { result ->
         if (result.pickFolder) {
@@ -122,17 +122,18 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
         } else {
             val url = File(result.result).toUri().resolveUri(context)
             if (url != null) {
-                PlayActivity.playMediaList(
-                    activity = context.activity,
-                    startMediaPath = url,
-                    mediaList = listOf(
-                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                            path = url,
-                            articleId = null,
-                            title = null,
-                            thumbnail = null,
-                        )
-                    ),
+                playerJumper.jump(
+                    PlayDataMode.MediaLibraryList(
+                        startMediaPath = url,
+                        mediaList = listOf(
+                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                                path = url,
+                                articleId = null,
+                                title = null,
+                                thumbnail = null,
+                            )
+                        ),
+                    )
                 )
             }
         }

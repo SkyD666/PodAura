@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.ClearAll
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Download
@@ -44,11 +45,14 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Http
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -109,6 +113,7 @@ import podaura.shared.generated.resources.auto_download_rule_screen_name
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.clear
 import podaura.shared.generated.resources.collapse
+import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.delete
 import podaura.shared.generated.resources.expend
 import podaura.shared.generated.resources.feed_group
@@ -135,6 +140,7 @@ import podaura.shared.generated.resources.feed_screen_sort_xml_articles_on_updat
 import podaura.shared.generated.resources.feed_screen_unmute_all_feeds
 import podaura.shared.generated.resources.feed_screen_unmute_feed
 import podaura.shared.generated.resources.item_selected
+import podaura.shared.generated.resources.open_link_in_browser
 import podaura.shared.generated.resources.read_all
 import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.reorder_feed_screen_name
@@ -418,17 +424,45 @@ private fun InfoArea(
 @Composable
 private fun LinkArea(link: String, onLinkClick: () -> Unit) {
     val scope = rememberCoroutineScope()
+    var openMenu by rememberSaveable { mutableStateOf(false) }
     val clipboard = LocalClipboard.current
     val uriHandler = LocalUriHandler.current
-    SheetChip(
-        modifier = Modifier.fillMaxWidth(),
-        icon = Icons.Outlined.Link,
-        text = link,
-        contentDescription = stringResource(Res.string.feed_screen_rss_url),
-        onClick = onLinkClick,
-        onLongClick = { scope.launch { clipboard.setText(link) } },
-        onIconClick = { uriHandler.safeOpenUri(link) },
-    )
+
+    // For correct DropdownMenu position
+    Box {
+        SheetChip(
+            modifier = Modifier.fillMaxWidth(),
+            icon = Icons.Outlined.Link,
+            text = link,
+            contentDescription = stringResource(Res.string.feed_screen_rss_url),
+            onClick = onLinkClick,
+            onLongClick = { openMenu = true },
+            onIconClick = { uriHandler.safeOpenUri(link) },
+        )
+
+        DropdownMenu(expanded = openMenu, onDismissRequest = { openMenu = false }) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Outlined.OpenInBrowser, contentDescription = null)
+                },
+                onClick = {
+                    uriHandler.safeOpenUri(link)
+                    openMenu = false
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(text = stringResource(Res.string.copy)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Outlined.ContentCopy, contentDescription = null)
+                },
+                onClick = {
+                    scope.launch { clipboard.setText(link) }
+                    openMenu = false
+                },
+            )
+        }
+    }
 }
 
 @Composable

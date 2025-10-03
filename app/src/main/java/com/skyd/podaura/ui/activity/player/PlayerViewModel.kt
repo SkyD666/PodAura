@@ -7,10 +7,11 @@ import com.skyd.podaura.ext.getOrDefaultSuspend
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePlaylistPreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.model.repository.player.PlayerRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistMediaRepository
-import com.skyd.podaura.ui.activity.player.PlayActivity.Companion.PLAY_DATA_MODE_KEY
+import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,7 +31,9 @@ class PlayerViewModel(
         intent ?: return
 
         viewModelScope.launch(Dispatchers.IO) {
-            when (val playDataMode = intent.getParcelableExtra<PlayDataMode>(PLAY_DATA_MODE_KEY)) {
+            when (val playDataMode = intent.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
+                PlayDataMode.decodeFromString(it)
+            }) {
                 is PlayDataMode.ArticleList -> mediaInfos.emit(
                     playDataMode.url to playerRepo.requestPlaylistByArticleId(
                         articleId = playDataMode.articleId,
@@ -54,7 +57,8 @@ class PlayerViewModel(
                 null -> {
                     val externalUri = intent.data
                     if (externalUri != null) {
-                        val playlist = playerRepo.requestPlaylistByUri(externalUri)
+                        val playlist =
+                            playerRepo.requestPlaylistByPlatformFile(PlatformFile(externalUri))
                         if (playlist != null) {
                             mediaInfos.emit(playlist[0].playlistMediaBean.url to playlist)
                         }

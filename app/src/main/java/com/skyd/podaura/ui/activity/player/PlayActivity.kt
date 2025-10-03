@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.activity.player
 
 import android.Manifest
-import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
@@ -27,7 +26,6 @@ import com.skyd.podaura.ext.safeLaunch
 import com.skyd.podaura.ext.savePictureToMediaStore
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
-import com.skyd.podaura.model.repository.player.PlayDataMode
 import com.skyd.podaura.ui.activity.BaseComposeActivity
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.player.PlayerCommand
@@ -42,50 +40,6 @@ import java.io.File
 
 
 class PlayActivity : BaseComposeActivity() {
-    companion object {
-        const val PLAY_DATA_MODE_KEY = "playDataMode"
-
-        fun playArticleList(
-            activity: Activity,
-            articleId: String,
-            url: String,
-        ) {
-            activity.startActivity(
-                Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(PLAY_DATA_MODE_KEY, PlayDataMode.ArticleList(articleId, url))
-                }
-            )
-        }
-
-        fun playMediaList(
-            activity: Activity,
-            startMediaPath: String,
-            mediaList: List<PlayDataMode.MediaLibraryList.PlayMediaListItem>,
-        ) {
-            activity.startActivity(
-                Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(
-                        PLAY_DATA_MODE_KEY, PlayDataMode.MediaLibraryList(
-                            startMediaPath, ArrayList(mediaList)
-                        )
-                    )
-                }
-            )
-        }
-
-        fun playPlaylist(
-            activity: Activity,
-            playlistId: String,
-            mediaUrl: String?,
-        ) {
-            activity.startActivity(
-                Intent(activity, PlayActivity::class.java).apply {
-                    putExtra(PLAY_DATA_MODE_KEY, PlayDataMode.Playlist(playlistId, mediaUrl))
-                }
-            )
-        }
-    }
-
     private val viewModel: PlayerViewModel by viewModel()
     private lateinit var picture: File
     private val requestPermissionLauncher = registerForActivityResult(

@@ -35,25 +35,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.EventListener
+import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.compone.component.TagText
 import com.skyd.compone.local.LocalNavController
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
-import com.skyd.podaura.model.repository.player.PlayDataMode
-import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.isFdFileExists
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import kotlinx.io.files.Path
@@ -71,7 +70,6 @@ fun MediaPlayHistoryItem(
     data: MediaPlayHistoryWithArticle,
     onDelete: (MediaPlayHistoryWithArticle) -> Unit,
 ) {
-    val context = LocalContext.current
     val articleWithEnclosure = data.article?.articleWithEnclosure
     val path = data.mediaPlayHistoryBean.path
     val fileName = rememberSaveable(data) {
@@ -83,6 +81,7 @@ fun MediaPlayHistoryItem(
                 (path.startsWith("fd://") && isFdFileExists(path)
                         || SystemFileSystem.exists(Path(path)))
     }
+    val playerJumper = rememberPlayerJumper()
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -93,24 +92,21 @@ fun MediaPlayHistoryItem(
                 }
                 val articleId = articleWithEnclosure?.article?.articleId
                 if (isLocal || articleId == null) {
-                    PlayActivity.playMediaList(
-                        activity = context.activity,
-                        startMediaPath = path,
-                        mediaList = listOf(
-                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                path = path,
-                                articleId = articleId,
-                                title = null,
-                                thumbnail = null,
-                            )
-                        ),
+                    playerJumper.jump(
+                        PlayDataMode.MediaLibraryList(
+                            startMediaPath = path,
+                            mediaList = listOf(
+                                PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                                    path = path,
+                                    articleId = articleId,
+                                    title = null,
+                                    thumbnail = null,
+                                )
+                            ),
+                        )
                     )
                 } else {
-                    PlayActivity.playArticleList(
-                        activity = context.activity,
-                        articleId = articleId,
-                        url = path,
-                    )
+                    playerJumper.jump(PlayDataMode.ArticleList(articleId = articleId, url = path))
                 }
             }
             .padding(vertical = 6.dp)
@@ -127,6 +123,7 @@ fun MediaPlayHistoryItem(
                     .size(50.dp),
                 contentAlignment = Alignment.Center,
             ) {
+                val context = LocalPlatformContext.current
                 PodAuraImage(
                     modifier = Modifier.fillMaxSize(),
                     model = remember(image) {

@@ -17,6 +17,8 @@ import com.skyd.podaura.model.repository.importexport.opml.IImportOpmlRepository
 import com.skyd.podaura.model.repository.importexport.opml.ImportExportOpmlRepository
 import com.skyd.podaura.model.repository.media.IMediaRepository
 import com.skyd.podaura.model.repository.media.MediaRepository
+import com.skyd.podaura.model.repository.player.IPlayerRepository
+import com.skyd.podaura.model.repository.player.PlayerRepository
 import com.skyd.podaura.model.repository.playlist.AddToPlaylistRepository
 import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistMediaRepository
@@ -67,4 +69,8 @@ val repositoryModule = module {
         IImportOpmlRepository::class,
         IExportOpmlRepository::class,
     )
+
+    factory {
+        PlayerRepository(get(), get(), get())
+    } binds arrayOf(IPlayerRepository::class)
 }

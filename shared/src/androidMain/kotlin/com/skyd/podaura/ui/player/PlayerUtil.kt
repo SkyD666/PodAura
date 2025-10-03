@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import com.skyd.podaura.appContext
+import com.skyd.podaura.di.get
 import com.skyd.podaura.ext.getImage
 import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.ui.player.service.PlayerState
@@ -18,7 +18,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 
-internal fun Uri.resolveUri(context: Context): String? {
+/*internal*/ fun Uri.resolveUri(context: Context): String? {
     var filepath = when (scheme) {
         "file" -> path
         "content" -> openContentFd(context)
@@ -95,8 +95,9 @@ suspend fun createThumbnailFile(
     thumbnailPath: String?,
 ): File? {
     thumbnailPath ?: return null
-    return appContext.imageLoaderBuilder().build()
-        .getImage(appContext, thumbnailPath)?.toString()?.let { File(it) }
+    val context = get<Context>()
+    return context.imageLoaderBuilder().build()
+        .getImage(context, thumbnailPath)?.toString()?.let { File(it) }
 }
 
 suspend fun createThumbnail(

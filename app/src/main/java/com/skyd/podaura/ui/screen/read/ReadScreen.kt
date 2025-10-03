@@ -96,7 +96,6 @@ import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.safeOpenUri
@@ -108,10 +107,11 @@ import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
-import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
@@ -384,9 +384,9 @@ private fun Content(
     copyImage: (url: String) -> Unit,
     shareImage: (url: String) -> Unit,
 ) {
-    val context = LocalContext.current
     val article = articleState.article.articleWithEnclosure
     var openImageSheet by rememberSaveable { mutableStateOf<String?>(null) }
+    val playerJumper = rememberPlayerJumper()
 
     SelectionContainer {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -435,10 +435,11 @@ private fun Content(
         }
     }
     MediaRow(articleWithFeed = articleState.article, onPlay = { url ->
-        PlayActivity.playArticleList(
-            activity = context.activity,
-            articleId = article.article.articleId,
-            url = url,
+        playerJumper.jump(
+            PlayDataMode.ArticleList(
+                articleId = article.article.articleId,
+                url = url,
+            )
         )
     })
     PodAuraWebView(

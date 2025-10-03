@@ -21,7 +21,6 @@ import com.skyd.podaura.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.player.mpv.DefaultEventObserver
-import com.skyd.podaura.ui.player.mpv.EventObserver
 import com.skyd.podaura.ui.player.mpv.KeyMapping
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.mpvFormat.MPV_FORMAT_DOUBLE
@@ -344,7 +343,9 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         get() = MPVLib.getPropertyString("media-title")
     var paused: Boolean
         get() = MPVLib.getPropertyBoolean("pause")
-        set(paused) = MPVLib.setPropertyBoolean("pause", paused)
+        set(paused) {
+            MPVLib.setPropertyBoolean("pause", paused)
+        }
     val playlistCount: Int
         get() = MPVLib.getPropertyInt("playlist-count") ?: 0
     var playlistPos: Int
@@ -516,23 +517,14 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             else realFiles.indexOf(startFile).takeIf { it >= 0 } ?: 0
             val currentPlaylist = loadPlaylist()
             if (currentPlaylist != realFiles) {
-                MPVLib.addObserver(
-                    EventObserver(
-                        onEvent = { eventId ->
-                            if (eventId == MPVLib.mpvEventId.MPV_EVENT_START_FILE) {
-                                MPVLib.command(arrayOf("playlist-play-index", index.toString()))
-                                paused = false
-                                MPVLib.removeObserver(this)
-                            }
-                        }
-                    )
-                )
                 paused = true
                 MPVLib.command(arrayOf("stop"))
-                files.forEachIndexed { index, path ->
+                realFiles.forEachIndexed { index, path ->
                     val mode = if (index == 0) "replace" else "append"
                     MPVLib.command(arrayOf("loadfile", path, mode))
                 }
+                MPVLib.command(arrayOf("playlist-play-index", index.toString()))
+                paused = false
             } else if (path != startFile && playlistCount > 0) {
                 MPVLib.command(arrayOf("playlist-play-index", index.toString()))
                 paused = false

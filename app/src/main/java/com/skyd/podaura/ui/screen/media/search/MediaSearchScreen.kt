@@ -32,7 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -48,13 +47,12 @@ import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaSubListItemTypePreference
-import com.skyd.podaura.model.repository.player.PlayDataMode
-import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.media.list.MediaList
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
 import com.skyd.podaura.ui.screen.search.TrailingIcon
@@ -86,7 +84,6 @@ fun MediaSearchScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -163,6 +160,7 @@ fun MediaSearchScreen(
             }
         },
     ) { innerPaddings ->
+        val playerJumper = rememberPlayerJumper()
         when (val searchResultState = uiState.searchResultState) {
             is SearchResultState.Failed -> ErrorPlaceholder(
                 modifier = Modifier.sizeIn(maxHeight = 200.dp),
@@ -180,18 +178,19 @@ fun MediaSearchScreen(
                 listItemType = if (isSubList) MediaSubListItemTypePreference.current
                 else MediaListItemTypePreference.current,
                 onPlay = { media ->
-                    PlayActivity.playMediaList(
-                        context.activity,
-                        startMediaPath = media.filePath,
-                        mediaList = searchResultState.result.filter { it.isMedia }.map {
-                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                path = it.filePath,
-                                articleId = it.articleId,
-                                title = it.displayName,
-                                thumbnail = it.feedBean?.customIcon
-                                    ?: it.feedBean?.icon,
-                            )
-                        },
+                    playerJumper.jump(
+                        PlayDataMode.MediaLibraryList(
+                            startMediaPath = media.filePath,
+                            mediaList = searchResultState.result.filter { it.isMedia }.map {
+                                PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                                    path = it.filePath,
+                                    articleId = it.articleId,
+                                    title = it.displayName,
+                                    thumbnail = it.feedBean?.customIcon
+                                        ?: it.feedBean?.icon,
+                                )
+                            },
+                        )
                     )
                 },
                 onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },

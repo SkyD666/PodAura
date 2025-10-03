@@ -58,6 +58,7 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
+        playerCoordinator.onCommand(PlayerCommand.Destroy)
         sessionManager.onDestroy()
         lifecycleScope.cancel()
         unregisterReceiver(playerNotificationReceiver)

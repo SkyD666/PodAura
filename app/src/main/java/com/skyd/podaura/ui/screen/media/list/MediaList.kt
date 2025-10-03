@@ -25,24 +25,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.preference.appearance.media.item.BaseMediaItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
 import com.skyd.podaura.model.preference.appearance.media.item.MediaSubListItemTypePreference
-import com.skyd.podaura.model.repository.player.PlayDataMode
-import com.skyd.podaura.ui.activity.player.PlayActivity
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.media.CreateGroupDialog
 import com.skyd.podaura.ui.screen.media.list.item.MediaItem
@@ -69,7 +67,6 @@ internal fun MediaList(
     viewModel: MediaListViewModel = koinViewModel(key = path + groupInfo?.group)
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
     val navController = LocalNavController.current
 
     Scaffold(
@@ -110,6 +107,7 @@ internal fun MediaList(
                     } else {
                         val listItemType = if (isSubList) MediaSubListItemTypePreference.current
                         else MediaListItemTypePreference.current
+                        val playerJumper = rememberPlayerJumper()
                         MediaList(
                             modifier = modifier,
                             list = listState.list,
@@ -117,18 +115,19 @@ internal fun MediaList(
                             groupInfo = groupInfo,
                             listItemType = listItemType,
                             onPlay = { media ->
-                                PlayActivity.playMediaList(
-                                    context.activity,
-                                    startMediaPath = media.filePath,
-                                    mediaList = listState.list.filter { it.isMedia }.map {
-                                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                            path = it.filePath,
-                                            articleId = it.articleId,
-                                            title = it.displayName,
-                                            thumbnail = it.feedBean?.customIcon
-                                                ?: it.feedBean?.icon,
-                                        )
-                                    },
+                                playerJumper.jump(
+                                    PlayDataMode.MediaLibraryList(
+                                        startMediaPath = media.filePath,
+                                        mediaList = listState.list.filter { it.isMedia }.map {
+                                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                                                path = it.filePath,
+                                                articleId = it.articleId,
+                                                title = it.displayName,
+                                                thumbnail = it.feedBean?.customIcon
+                                                    ?: it.feedBean?.icon,
+                                            )
+                                        },
+                                    )
                                 )
                             },
                             onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },

@@ -1,31 +1,46 @@
-package com.skyd.podaura.model.repository.player
+package com.skyd.podaura.ui.player.jumper
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
-sealed interface PlayDataMode : Parcelable {
-    @Parcelize
+@Serializable
+sealed interface PlayDataMode {
+    companion object {
+        val json: Json by lazy {
+            Json { classDiscriminator = "type" }
+        }
+
+        fun decodeFromString(jsonString: String): PlayDataMode {
+            return json.decodeFromString(jsonString)
+        }
+    }
+
+    fun encodeToString(): String {
+        return json.encodeToString(this)
+    }
+
+    @Serializable
     data class ArticleList(
         val articleId: String,
         val url: String,
     ) : PlayDataMode
 
-    @Parcelize
+    @Serializable
     data class MediaLibraryList(
         val startMediaPath: String,
         val mediaList: List<PlayMediaListItem>,
     ) : PlayDataMode {
-        @Parcelize
+        @Serializable
         data class PlayMediaListItem(
             val path: String,
             val articleId: String?,
             // If articleId is invalid, use the following fields
             val title: String?,
             val thumbnail: String?,
-        ) : Parcelable
+        )
     }
 
-    @Parcelize
+    @Serializable
     data class Playlist(
         val playlistId: String,
         val mediaUrl: String?,

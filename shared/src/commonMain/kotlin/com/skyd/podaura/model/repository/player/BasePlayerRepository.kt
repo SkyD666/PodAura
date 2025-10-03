@@ -1,7 +1,5 @@
 package com.skyd.podaura.model.repository.player
 
-import android.net.Uri
-import com.skyd.podaura.appContext
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
@@ -10,13 +8,14 @@ import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
 import com.skyd.podaura.model.repository.BaseRepository
-import com.skyd.podaura.ui.player.resolveUri
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-class PlayerRepository(
+abstract class BasePlayerRepository(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
     private val articleDao: ArticleDao,
     private val enclosureDao: EnclosureDao,
@@ -93,14 +92,5 @@ class PlayerRepository(
         }
     }
 
-    fun requestPlaylistByUri(externalUri: Uri): List<PlaylistMediaWithArticleBean>? =
-        externalUri.resolveUri(appContext)?.let { path ->
-            listOf(
-                PlaylistMediaWithArticleBean.fromUrl(
-                    playlistId = "",
-                    url = path,
-                    orderPosition = 1.0,
-                )
-            )
-        }
+    abstract fun requestPlaylistByPlatformFile(file: PlatformFile): List<PlaylistMediaWithArticleBean>?
 }

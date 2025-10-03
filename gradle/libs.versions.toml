@@ -31,6 +31,7 @@ androidx-media = { module = "androidx.media:media", version = "1.7.1" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha04" }
 jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version = "2.9.0" }
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
@@ -67,7 +68,6 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 material-kolor = { module = "com.materialkolor:material-kolor", version = "3.0.1" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
 
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha04" }
 retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "3.0.0" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
@@ -96,7 +96,7 @@ skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta0
 skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta05" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta02" }
 
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.0" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.1" }
 
 rome = { module = "com.rometools:rome", version.ref = "rome" }
 rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
