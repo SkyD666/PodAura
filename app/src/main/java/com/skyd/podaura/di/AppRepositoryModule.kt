@@ -4,7 +4,9 @@ import com.skyd.podaura.model.repository.RssHelper
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter
+import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.DownloadRepository
+import com.skyd.podaura.model.repository.download.IDownloadManager
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import com.skyd.podaura.model.repository.feed.IFeedRepository
 import com.skyd.podaura.model.worker.download.AutoDownloadStarterImpl
@@ -22,4 +24,8 @@ val repositoryModule = module {
     factory {
         FeedRepository(get(), get(), get(), get(), get())
     } binds arrayOf(IFeedRepository::class)
+
+    factory {
+        DownloadManager.getInstance(get())
+    } binds arrayOf(IDownloadManager::class)
 }

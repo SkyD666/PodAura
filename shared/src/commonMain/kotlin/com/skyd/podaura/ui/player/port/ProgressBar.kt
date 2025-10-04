@@ -24,7 +24,7 @@ import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 
 
 @Composable
-internal fun ProgressBar(
+/*internal*/ fun ProgressBar(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     modifier: Modifier = Modifier,

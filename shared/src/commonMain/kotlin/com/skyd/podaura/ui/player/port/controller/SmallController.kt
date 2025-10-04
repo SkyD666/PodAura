@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.podaura.ext.format
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.ControllerIconButton
 import com.skyd.podaura.ui.player.component.ControllerIconToggleButton
@@ -29,11 +30,10 @@ import podaura.shared.generated.resources.fullscreen
 import podaura.shared.generated.resources.loop_playlist_mode
 import podaura.shared.generated.resources.playlist
 import podaura.shared.generated.resources.shuffle_playlist
-import java.util.Locale
 
 
 @Composable
-internal fun SmallController(
+/*internal*/ fun SmallController(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -62,7 +62,7 @@ internal fun SmallController(
         )
         // Speed button
         ControllerTextButton(
-            text = "${String.format(Locale.getDefault(), "%.2f", playState.speed)}x",
+            text = "${playState.speed.format(2)}x",
             enabled = playState.mediaLoaded,
             colors = ButtonDefaults.textButtonColors().copy(
                 contentColor = LocalContentColor.current,

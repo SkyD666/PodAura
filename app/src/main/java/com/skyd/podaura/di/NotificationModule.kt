@@ -1,6 +1,7 @@
 package com.skyd.podaura.di
 
 import android.content.Intent
+import androidx.core.net.toUri
 import com.skyd.podaura.R
 import com.skyd.podaura.ui.activity.MainActivity
 import com.skyd.podaura.ui.component.UuidList
@@ -15,7 +16,7 @@ val notificationModule = module {
             openActivityIntent = { matchedData ->
                 Intent(
                     Intent.ACTION_VIEW,
-                    ArticleRoute(articleIds = UuidList(matchedData.map { it.first })).toDeeplink(),
+                    ArticleRoute(articleIds = UuidList(matchedData.map { it.first })).toDeeplink().toUri(),
                     get(),
                     MainActivity::class.java
                 ).apply {

@@ -20,7 +20,6 @@ import com.skyd.podaura.model.db.instance
 import com.skyd.podaura.model.preference.createDataStore
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.DownloadRepository
-import com.skyd.podaura.model.repository.download.DownloadStarter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After

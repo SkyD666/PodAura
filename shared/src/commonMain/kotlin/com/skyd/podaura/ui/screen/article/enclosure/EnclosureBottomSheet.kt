@@ -34,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.compone.component.ComponeIconButton
@@ -48,7 +47,7 @@ import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
-import com.skyd.podaura.model.repository.download.DownloadStarter
+import com.skyd.podaura.model.repository.download.rememberDownloadStarter
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import kotlinx.coroutines.launch
@@ -77,7 +76,8 @@ fun EnclosureBottomSheet(
     dataList: List<Any>,
     article: ArticleWithFeed,
 ) {
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val downloadStarter = rememberDownloadStarter()
     val onDownload: (Any) -> Unit = remember {
         {
             val url = when (it) {
@@ -86,11 +86,12 @@ fun EnclosureBottomSheet(
                 else -> null
             }
             if (!url.isNullOrBlank()) {
-                DownloadStarter.download(
-                    context = context,
-                    url = url,
-                    type = (it as? EnclosureBean)?.type,
-                )
+                scope.launch {
+                    downloadStarter.download(
+                        url = url,
+                        type = (it as? EnclosureBean)?.type,
+                    )
+                }
             }
         }
     }
@@ -139,7 +140,6 @@ private fun EnclosureItem(
     onDownload: (EnclosureBean) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val articleWithEnclosure = article.articleWithEnclosure
 
     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

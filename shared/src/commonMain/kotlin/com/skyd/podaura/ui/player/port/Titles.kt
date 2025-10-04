@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.skyd.podaura.ui.player.component.state.PlayState
 
 @Composable
-internal fun Titles(playState: PlayState, modifier: Modifier = Modifier) {
+/*internal*/ fun Titles(playState: PlayState, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val title = playState.run { title.orEmpty().ifBlank { mediaTitle } }
         if (!title.isNullOrBlank()) {

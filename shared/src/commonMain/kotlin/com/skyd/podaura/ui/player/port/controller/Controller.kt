@@ -61,7 +61,7 @@ import kotlin.math.abs
 
 
 @Composable
-internal fun Controller(
+/*internal*/ fun Controller(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     modifier: Modifier = Modifier,

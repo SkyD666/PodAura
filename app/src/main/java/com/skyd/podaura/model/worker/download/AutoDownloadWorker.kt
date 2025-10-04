@@ -12,8 +12,8 @@ import com.skyd.podaura.di.get
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
+import com.skyd.podaura.model.repository.download.AndroidDownloadStarter
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter
-import com.skyd.podaura.model.repository.download.DownloadStarter
 import kotlinx.coroutines.flow.first
 
 class AutoDownloadWorker(context: Context, parameters: WorkerParameters) :
@@ -24,8 +24,7 @@ class AutoDownloadWorker(context: Context, parameters: WorkerParameters) :
         val enclosureDao = get<EnclosureDao>()
         val enclosure = enclosureDao.getEnclosureList(articleId).first().firstOrNull()
             ?: return Result.success()
-        DownloadStarter.download(
-            context = applicationContext,
+        AndroidDownloadStarter(applicationContext).download(
             url = enclosure.url,
             type = enclosure.type,
         )
