@@ -33,7 +33,7 @@ import podaura.shared.generated.resources.download_pause
 import podaura.shared.generated.resources.download_resume
 import podaura.shared.generated.resources.download_retry
 
-class DownloadManager private constructor(context: Context) {
+class DownloadManager private constructor(context: Context): IDownloadManager {
     private val downloader = Downloader.init(
         context.applicationContext as Application,
         NotificationConfig(
@@ -52,10 +52,10 @@ class DownloadManager private constructor(context: Context) {
     val downloadInfoListFlow: Flow<List<DownloadInfoBean>> = downloader.observeDownloads()
         .map { list -> list.map { it.toDownloadInfoBean() } }
 
-    fun download(
+    override fun download(
         url: String,
         path: String,
-        fileName: String? = null,
+        fileName: String?,
     ): Any {
         return if (fileName == null) {
             downloader.download(url = url, path = path)

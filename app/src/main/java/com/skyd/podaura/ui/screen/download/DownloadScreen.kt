@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -41,10 +42,11 @@ import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.type
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.download.DownloadManager
-import com.skyd.podaura.model.repository.download.DownloadStarter
+import com.skyd.podaura.model.repository.download.rememberDownloadStarter
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -101,7 +103,7 @@ fun DownloadScreen(
     viewModel: DownloadViewModel = koinViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var openLinkDialog by rememberSaveable { mutableStateOf(downloadLink) }
 
@@ -149,6 +151,7 @@ fun DownloadScreen(
         }
     }
 
+    val downloadStarter = rememberDownloadStarter()
     TextFieldDialog(
         visible = openLinkDialog != null,
         icon = { Icon(imageVector = Icons.Outlined.Download, contentDescription = null) },
@@ -159,7 +162,7 @@ fun DownloadScreen(
         onDismissRequest = { openLinkDialog = null },
         onConfirm = { text ->
             openLinkDialog = null
-            DownloadStarter.download(context = context, url = text, type = mimetype)
+            scope.launch { downloadStarter.download(url = text, type = mimetype) }
         },
     )
 }

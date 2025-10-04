@@ -327,7 +327,7 @@ private fun Menu(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink(),
+                    ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
                     context,
                     MainActivity::class.java
                 )

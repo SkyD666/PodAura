@@ -91,6 +91,8 @@ article {
     font-size: var(--font-size) !important;
     font-weight: var(--text-bold) !important;
     color: var(--text-color) !important;
+    word-wrap: break-all !important;
+    overflow-wrap: break-word !important;
 }
 
 /* Page  */
@@ -122,7 +124,7 @@ h6 {
 /* Paragraph */
 p {
     max-width: 100% !important;
-    word-wrap: break-word !important;
+    word-wrap: break-all !important;
     overflow-wrap: break-word !important;
     line-height: var(--line-height) !important;
     letter-spacing: var(--letter-spacing) !important;
@@ -299,7 +301,7 @@ code {
 
 li code {
     white-space: pre-wrap !important;
-    word-wrap: break-word !important;
+    word-wrap: break-all !important;
     overflow-wrap: break-word !important;
     max-width: 100% !important;
 }

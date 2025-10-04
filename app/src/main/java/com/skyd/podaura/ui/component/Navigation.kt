@@ -38,7 +38,7 @@ inline fun <reified T> serializableType(
 ) = if (isNullableAllowed) {
     object : NavType<T?>(isNullableAllowed = true) {
         override fun get(bundle: Bundle, key: String) =
-            bundle.getString(key)?.let<String, T?>(::parseValue)
+            bundle.getString(key)?.let(::parseValue)
 
         override fun parseValue(value: String): T? {
             if (value == "null") return null
@@ -56,7 +56,7 @@ inline fun <reified T> serializableType(
 } else {
     object : NavType<T>(isNullableAllowed = false) {
         override fun get(bundle: Bundle, key: String) =
-            bundle.getString(key)?.let<String, T>(::parseValue)
+            bundle.getString(key)?.let(::parseValue)
 
         override fun parseValue(value: String): T =
             json.decodeFromString(value.hexToByteArray().decodeToString())

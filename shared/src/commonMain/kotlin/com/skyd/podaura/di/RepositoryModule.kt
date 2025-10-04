@@ -11,6 +11,7 @@ import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
 import com.skyd.podaura.model.repository.feed.ReorderFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderGroupRepository
 import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
+import com.skyd.podaura.model.repository.feed.RssHelper
 import com.skyd.podaura.model.repository.importexport.ImportExportRepository
 import com.skyd.podaura.model.repository.importexport.opml.IExportOpmlRepository
 import com.skyd.podaura.model.repository.importexport.opml.IImportOpmlRepository
@@ -73,4 +74,6 @@ val repositoryModule = module {
     factory {
         PlayerRepository(get(), get(), get())
     } binds arrayOf(IPlayerRepository::class)
+
+    factory { RssHelper(get()) }
 }

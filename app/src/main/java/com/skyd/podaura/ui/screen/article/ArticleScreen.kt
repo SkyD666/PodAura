@@ -1,7 +1,5 @@
 package com.skyd.podaura.ui.screen.article
 
-import android.net.Uri
-import android.os.Parcelable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -55,7 +53,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.navDeepLink
@@ -90,8 +87,8 @@ import com.skyd.podaura.ui.component.UuidListType
 import com.skyd.podaura.ui.component.listType
 import com.skyd.podaura.ui.component.uuidListType
 import com.skyd.podaura.ui.screen.search.SearchRoute
+import io.ktor.http.URLBuilder
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -107,7 +104,6 @@ import kotlin.uuid.Uuid
 
 
 @Serializable
-@Parcelize
 data class ArticleRoute(
     @SerialName("feedUrls")
     val feedUrls: List<String>? = null,
@@ -115,18 +111,18 @@ data class ArticleRoute(
     val groupIds: List<String>? = null,
     @SerialName("articleIds")
     val articleIds: UuidList? = null,
-) : Parcelable {
-    fun toDeeplink(): Uri {
-        return DEEP_LINK.toUri().buildUpon().apply {
-            feedUrls?.let { appendQueryParameter("feedUrls", Json.encodeToString(feedUrls)) }
-            groupIds?.let { appendQueryParameter("groupIds", Json.encodeToString(groupIds)) }
+) {
+    fun toDeeplink(): String {
+        return URLBuilder(DEEP_LINK).apply {
+            feedUrls?.let { parameters.append("feedUrls", Json.encodeToString(feedUrls)) }
+            groupIds?.let { parameters.append("groupIds", Json.encodeToString(groupIds)) }
             articleIds?.let {
-                appendQueryParameter(
+                parameters.append(
                     "articleIds",
                     UuidListType.encodeUuidList(articleIds.uuids.map { Uuid.parse(it) })
                 )
             }
-        }.build()
+        }.toString()
     }
 
     companion object {

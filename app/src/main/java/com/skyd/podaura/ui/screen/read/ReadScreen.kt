@@ -87,6 +87,7 @@ import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.TagText
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
@@ -550,11 +551,7 @@ private fun RssMediaEpisode(modifier: Modifier = Modifier, episode: String) {
 
 @Composable
 private fun RssMediaDuration(modifier: Modifier = Modifier, duration: Long) {
-    Text(
-        modifier = modifier,
-        text = duration.formatElapsedTime(),
-        color = Color.White,
-    )
+    TagText(modifier = modifier, text = duration.formatElapsedTime())
 }
 
 @Composable
@@ -587,7 +584,7 @@ private fun MediaRow(articleWithFeed: ArticleWithFeed, onPlay: (String) -> Unit)
             Row {
                 if (episode != null) RssMediaEpisode(episode = episode)
                 if (duration != null) {
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
                     RssMediaDuration(duration = duration)
                 }
             }

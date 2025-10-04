@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.feed.reorder.group
 
-import android.os.Parcelable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -53,7 +52,6 @@ import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import kotlinx.coroutines.channels.Channel
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -64,8 +62,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 @Serializable
-@Parcelize
-data object ReorderGroupRoute : Parcelable
+data object ReorderGroupRoute
 
 @Composable
 fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {

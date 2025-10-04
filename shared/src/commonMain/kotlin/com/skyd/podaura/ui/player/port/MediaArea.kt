@@ -29,7 +29,7 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.util.coil.localmedia.LocalMediaFetcher
 
 @Composable
-internal fun MediaArea(
+/*internal*/ fun MediaArea(
     playState: PlayState,
     modifier: Modifier = Modifier,
     playerContent: @Composable () -> Unit,
