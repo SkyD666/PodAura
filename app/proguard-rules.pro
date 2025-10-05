@@ -92,12 +92,6 @@ public static final ** CREATOR;
 -dontwarn org.xmlpull.v1.XmlSerializer
 -keep class org.xmlpull.v1.* { *; }
 
-# Rome
--keep class com.rometools.** { *; }
-
-# libtorrent4j
--keep class org.libtorrent4j.** { *; }
-
 # FFmpeg
 -dontwarn com.arthenica.smartexception.java.Exceptions
 
@@ -106,3 +100,7 @@ public static final ** CREATOR;
 
 # https://stackoverflow.com/questions/63505503/notserializableexception-kotlin-uninitialized-value-after-setting-minifyenabled
 -keep class * implements kotlin.Lazy { *; }
+
+-keepclassmembers class <2>$<3> {
+   kotlinx.serialization.KSerializer serializer(...);
+}

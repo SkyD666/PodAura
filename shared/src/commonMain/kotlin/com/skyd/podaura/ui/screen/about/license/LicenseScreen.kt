@@ -151,11 +151,6 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/JakeWharton/retrofit2-kotlinx-serialization-converter",
         ),
         LicenseBean(
-            name = "ROME",
-            license = "Apache-2.0",
-            link = "https://github.com/rometools/rome",
-        ),
-        LicenseBean(
             name = "Read You",
             license = "GPL-3.0",
             link = "https://github.com/Ashinch/ReadYou",
@@ -164,11 +159,6 @@ private fun getLicenseList(): List<LicenseBean> {
             name = "Ksoup",
             license = "MIT",
             link = "https://github.com/fleeksoft/ksoup",
-        ),
-        LicenseBean(
-            name = "libtorrent4j",
-            license = "MIT",
-            link = "https://github.com/aldenml/libtorrent4j",
         ),
         LicenseBean(
             name = "mpv-android",

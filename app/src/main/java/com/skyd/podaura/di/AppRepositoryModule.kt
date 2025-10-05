@@ -1,6 +1,5 @@
 package com.skyd.podaura.di
 
-import com.skyd.podaura.model.repository.RssHelper
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter
@@ -15,7 +14,6 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
     factory { AutoDownloadStarterImpl() } binds arrayOf(AutoDownloadStarter::class)
-    factory { RssHelper(get(), get()) }
     factory { DownloadRepository() }
     factory {
         ArticleRepository(get(), get(), get(), get())

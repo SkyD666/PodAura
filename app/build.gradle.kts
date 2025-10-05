@@ -125,7 +125,6 @@ android {
             "META-INF/jdom-info.xml",
             "kotlin-tooling-metadata.json",
             "okhttp3/internal/publicsuffix/NOTICE",
-            "rome-utils-*.jar",
         )
         jniLibs {
             excludes += mutableSetOf(
@@ -225,6 +224,8 @@ dependencies {
     implementation(libs.koin.compose.viewmodel.navigation)
 
     implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.xml)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.json.io)
     implementation(libs.kotlinx.coroutines.guava)
@@ -241,9 +242,6 @@ dependencies {
     implementation(libs.kotlinx.io.core)
     implementation(libs.kotlinx.io.okio)
 
-    implementation(libs.rome)
-    implementation(libs.rome.modules)
-    implementation(libs.rssparser)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
     implementation(libs.xmlutil.serialization.io)

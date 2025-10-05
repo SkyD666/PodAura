@@ -21,7 +21,7 @@ import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPrefere
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
-import com.skyd.podaura.model.repository.RssHelper
+import com.skyd.podaura.model.repository.feed.RssHelper
 import com.skyd.podaura.ui.component.showToast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
