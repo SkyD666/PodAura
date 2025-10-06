@@ -1,14 +1,10 @@
 package com.skyd.podaura.model.repository.article
 
-import android.database.DatabaseUtils
-import android.widget.Toast
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.RoomRawQuery
-import com.skyd.podaura.appContext
 import com.skyd.podaura.ext.getOrDefault
-import com.skyd.podaura.ext.getString
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
@@ -22,7 +18,6 @@ import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreferenc
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
 import com.skyd.podaura.model.repository.feed.RssHelper
-import com.skyd.podaura.ui.component.showToast
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -38,6 +33,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.rss_update_failed
 import kotlin.coroutines.cancellation.CancellationException
@@ -131,6 +127,8 @@ class ArticleRepository(
         refreshArticleList(feedUrls = it, full = full)
     }.flowOn(Dispatchers.IO)
 
+    class RefreshFeedsException(msg: String) : RuntimeException(msg)
+
     override fun refreshArticleList(feedUrls: List<String>, full: Boolean): Flow<Unit> = flow {
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
@@ -168,15 +166,16 @@ class ArticleRepository(
             }
             requests.awaitAll()
             if (failMsg.isNotEmpty()) {
-                appContext.getString(
-                    Res.string.rss_update_failed,
-                    failMsg.size,
-                    failMsg.joinToString(
-                        separator = "\n",
-                        prefix = "\n",
-                        limit = 10,
-                        transform = { "- ${it.first}" }),
-                ).showToast(Toast.LENGTH_LONG)
+                throw RefreshFeedsException(
+                    getString(
+                        Res.string.rss_update_failed, failMsg.size,
+                        failMsg.joinToString(
+                            separator = "\n",
+                            limit = 10,
+                            transform = { "-${it.first}" }
+                        ),
+                    )
+                )
             }
             emit(Unit)
         }
@@ -211,6 +210,7 @@ class ArticleRepository(
             isRead: Boolean?,
             orderBy: FeedBean.SortBy,
         ): RoomRawQuery {
+            val args = mutableListOf<String>()
             val sql = buildString {
                 append("SELECT DISTINCT * FROM `$ARTICLE_TABLE_NAME` WHERE 1 ")
                 if (isFavorite != null) {
@@ -222,16 +222,14 @@ class ArticleRepository(
                 if (feedUrls.isEmpty()) {
                     append("AND (0 ")
                 } else {
-                    val feedUrlsStr = feedUrls.joinToString(", ") {
-                        DatabaseUtils.sqlEscapeString(it)
-                    }
+                    val feedUrlsStr = feedUrls.joinToString(", ") { "?" }
                     append("AND (`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
+                    args += feedUrls
                 }
                 if (articleIds.isNotEmpty()) {
-                    val articleIdsStr = articleIds.joinToString(", ") {
-                        DatabaseUtils.sqlEscapeString(it)
-                    }
+                    val articleIdsStr = articleIds.joinToString(", ") { "?" }
                     append("OR `${ArticleBean.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
+                    args += articleIds
                 }
                 append(") ")
                 val ascOrDesc = if (orderBy.asc) "ASC" else "DESC"
@@ -241,7 +239,11 @@ class ArticleRepository(
                 }
                 append("\nORDER BY `$orderField` $ascOrDesc")
             }
-            return RoomRawQuery(sql)
+            return RoomRawQuery(sql) {
+                args.forEachIndexed { index, text ->
+                    it.bindText(index + 1, text)
+                }
+            }
         }
     }
 }

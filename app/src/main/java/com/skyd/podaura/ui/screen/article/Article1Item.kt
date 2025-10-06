@@ -49,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -68,7 +69,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.skyd.compone.component.blockString
 import com.skyd.compone.component.menu.DropdownMenuDeleteItem
 import com.skyd.compone.ext.thenIf
 import com.skyd.compone.local.LocalGlobalNavController
@@ -90,13 +90,14 @@ import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDesc
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
-import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.settings.suspendString
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add_to_playlist
@@ -117,9 +118,11 @@ fun Article1Item(
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     val globalNavController = LocalGlobalNavController.current
     val uriHandler = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val currentData by rememberUpdatedState(newValue = data)
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf(false) }
@@ -165,7 +168,7 @@ fun Article1Item(
                     }
                 )
                 when (dismissValue) {
-                    SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> {
+                    SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> scope.launch {
                         val articleWithEnclosure = currentData.articleWithEnclosure
                         swipeAction(
                             articleSwipeAction = articleSwipeAction,
@@ -179,7 +182,8 @@ fun Article1Item(
                             },
                             onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
                             onOpenLink = { uriHandler.safeOpenUri(it) },
-                            onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true }
+                            onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
+                            onMessage = onMessage,
                         )
                     }
 
@@ -758,7 +762,7 @@ fun Article1ItemPlaceholder() {
     }
 }
 
-private fun swipeAction(
+private suspend fun swipeAction(
     articleSwipeAction: String,
     navController: NavController,
     data: ArticleWithEnclosureBean,
@@ -767,6 +771,7 @@ private fun swipeAction(
     onShowEnclosureBottomSheet: () -> Unit,
     onOpenLink: (String) -> Unit,
     onOpenAddToPlaylistSheet: () -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     when (articleSwipeAction) {
         ArticleSwipeActionPreference.READ ->
@@ -774,7 +779,7 @@ private fun swipeAction(
 
         ArticleSwipeActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet()
         ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.link?.let { onOpenLink(it) }
-            ?: blockString(Res.string.article_screen_no_link_tip).showToast()
+            ?: onMessage(getString(Res.string.article_screen_no_link_tip))
 
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()

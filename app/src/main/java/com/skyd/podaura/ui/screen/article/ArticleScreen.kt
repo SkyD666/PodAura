@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.LoadingIndicator
@@ -49,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -67,6 +69,7 @@ import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
+import com.skyd.compone.ext.setText
 import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
@@ -92,11 +95,13 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_name
 import podaura.shared.generated.resources.article_screen_search_article
+import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.to_top
 import kotlin.reflect.typeOf
@@ -167,6 +172,7 @@ fun ArticleScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
 
     val listState: LazyGridState = rememberLazyGridState()
     var fabHeight by remember { mutableStateOf(0.dp) }
@@ -324,6 +330,7 @@ fun ArticleScreen(
                     )
                 )
             },
+            onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
             contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
         )
 
@@ -334,8 +341,15 @@ fun ArticleScreen(
                 is ArticleEvent.InitArticleListResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
 
-                is ArticleEvent.RefreshArticleListResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
+                is ArticleEvent.RefreshArticleListResultEvent.Failed -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.msg,
+                        actionLabel = getString(Res.string.copy),
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        clipboard.setText(event.msg)
+                    }
+                }
 
                 is ArticleEvent.FavoriteArticleResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
@@ -361,6 +375,7 @@ private fun Content(
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
+    onMessage: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
     val state = rememberPullToRefreshState()
@@ -405,6 +420,7 @@ private fun Content(
                     onRead = onRead,
                     onDelete = onDelete,
                     contentPadding = currentContentPadding,
+                    onMessage = onMessage,
                 )
             }
         }
@@ -427,6 +443,7 @@ private fun ArticleList(
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
+    onMessage: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
     PagingRefreshStateIndicator(
@@ -454,6 +471,7 @@ private fun ArticleList(
                         onFavorite = onFavorite,
                         onRead = onRead,
                         onDelete = onDelete,
+                        onMessage = onMessage,
                     )
 
                     null -> Article1ItemPlaceholder()

@@ -223,6 +223,7 @@ fun SearchScreen(
                 dispatch = dispatch,
                 innerPaddings = innerPaddings,
                 fabHeight = fabHeight,
+                onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
             )
         }
 
@@ -251,6 +252,7 @@ private fun SuccessContent(
     dispatch: (SearchIntent) -> Unit,
     innerPaddings: PaddingValues,
     fabHeight: Dp,
+    onMessage: (String) -> Unit,
 ) {
     val result = searchResultState.result.collectAsLazyPagingItems()
     PagingRefreshStateIndicator(
@@ -290,6 +292,7 @@ private fun SuccessContent(
                             SearchIntent.Delete(articleWithFeed.articleWithEnclosure.article.articleId)
                         )
                     },
+                    onMessage = onMessage,
                 )
             }
         }
@@ -330,6 +333,7 @@ private fun LazyGridScope.articleItems(
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     items(
         count = result.itemCount,
@@ -341,6 +345,7 @@ private fun LazyGridScope.articleItems(
                 onFavorite = onFavorite,
                 onRead = onRead,
                 onDelete = onDelete,
+                onMessage = onMessage,
             )
 
             null -> Article1ItemPlaceholder()

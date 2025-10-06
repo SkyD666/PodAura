@@ -101,6 +101,5 @@ public static final ** CREATOR;
 # https://stackoverflow.com/questions/63505503/notserializableexception-kotlin-uninitialized-value-after-setting-minifyenabled
 -keep class * implements kotlin.Lazy { *; }
 
--keepclassmembers class <2>$<3> {
-   kotlinx.serialization.KSerializer serializer(...);
-}
+# RSS parser
+-keep, allowoptimization, allowobfuscation, allowshrinking class com.skyd.podaura.model.repository.feed.rssparser.BaseXml

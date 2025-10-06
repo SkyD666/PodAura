@@ -8,6 +8,8 @@ import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.UpdateNotificationRepository
 import com.skyd.podaura.model.repository.UpdateRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
+import com.skyd.podaura.model.repository.feed.FeedRepository
+import com.skyd.podaura.model.repository.feed.IFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderGroupRepository
 import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
@@ -76,4 +78,8 @@ val repositoryModule = module {
     } binds arrayOf(IPlayerRepository::class)
 
     factory { RssHelper(get()) }
+
+    factory {
+        FeedRepository(get(), get(), get(), get(), get())
+    } binds arrayOf(IFeedRepository::class)
 }

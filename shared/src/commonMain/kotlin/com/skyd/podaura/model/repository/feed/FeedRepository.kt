@@ -30,7 +30,6 @@ import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPrefere
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
-import com.skyd.podaura.model.repository.feed.RssHelper
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.copyTo
 import io.github.vinceglb.filekit.utils.div
@@ -83,7 +82,7 @@ class FeedRepository(
                 if (entity.group == null && entity.feed == null) {
                     GroupVo.DefaultGroup
                 } else if (entity.group != null) {
-                    entity.group!!.toVo()
+                    entity.group.toVo()
                 } else {
                     entity.feed!!
                 }
