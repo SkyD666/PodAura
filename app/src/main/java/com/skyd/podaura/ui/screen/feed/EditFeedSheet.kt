@@ -93,6 +93,7 @@ import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.ui.component.SheetChip
+import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.showToast
@@ -144,6 +145,7 @@ import podaura.shared.generated.resources.reset
 @Composable
 fun EditFeedSheet(
     onDismissRequest: () -> Unit,
+    snackbarHost: @Composable () -> Unit = {},
     feedView: FeedViewBean,
     groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
@@ -224,6 +226,7 @@ fun EditFeedSheet(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+        TopSnackbatHostBox(snackbarHost = snackbarHost)
     }
 
     TextFieldDialog(

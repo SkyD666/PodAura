@@ -41,11 +41,13 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -82,7 +84,6 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevatio
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
@@ -111,7 +112,7 @@ import podaura.shared.generated.resources.feed_style_screen_name
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.mute_feed_screen_name
 import podaura.shared.generated.resources.reorder_group_screen_name
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 
 @Serializable
@@ -131,7 +132,7 @@ fun FeedScreen() {
 
     val scope = rememberCoroutineScope()
     val globalNavController = LocalGlobalNavController.current
-    var nestedNavKey by remember { mutableStateOf(UUID.randomUUID()) }
+    var nestedNavKey by remember { mutableStateOf(Uuid.random()) }
     val navController = key(nestedNavKey) { rememberNavController() }
     val windowSizeClass = LocalWindowSizeClass.current
 
@@ -143,7 +144,7 @@ fun FeedScreen() {
             navController.navigate(it) { popUpTo(currentRoute) { inclusive = true } }
         } else {
             // Otherwise, recreate the NavHost entirely, and start at the new destination
-            nestedNavKey = UUID.randomUUID()
+            nestedNavKey = Uuid.random()
         }
         currentRoute = it
         scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) }
@@ -218,6 +219,7 @@ private fun FeedList(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val navController = LocalNavController.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val bottomSheetSnackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
     var openAddDialog by rememberSaveable { mutableStateOf(false) }
@@ -299,6 +301,17 @@ private fun FeedList(
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPadding ->
+        val bottomSheetShowing by remember {
+            derivedStateOf { uiState.editGroupDialogBean != null || uiState.editFeedDialogBean != null }
+        }
+        val currentSnackbarHostState by rememberUpdatedState(
+            if (bottomSheetShowing) bottomSheetSnackbarHostState else snackbarHostState
+        )
+        LaunchedEffect(bottomSheetShowing) {
+            if (!bottomSheetShowing) {
+                bottomSheetSnackbarHostState.currentSnackbarData?.dismiss()
+            }
+        }
         when (val listState = uiState.listState) {
             is ListState.Failed, ListState.Init, ListState.Loading -> {}
             is ListState.Success -> FeedList(
@@ -320,25 +333,50 @@ private fun FeedList(
 
         MviEventListener(viewModel.singleEvent) { event ->
             when (event) {
-                is FeedEvent.AddFeedResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+                is FeedEvent.AddFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
                 is FeedEvent.InitFeetListResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
+                    currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.CollapseAllGroupResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
+                    currentSnackbarHostState.showSnackbar(event.msg)
 
-                is FeedEvent.EditFeedResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.RemoveFeedResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.RefreshFeedResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.CreateGroupResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.MoveFeedsToGroupResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.DeleteGroupResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.EditGroupResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.ReadAllResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.ClearFeedArticlesResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.ClearGroupArticlesResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.MuteFeedResultEvent.Failed -> event.msg.showToast()
-                is FeedEvent.MuteFeedsInGroupResultEvent.Failed -> event.msg.showToast()
+                is FeedEvent.EditFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.RemoveFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.RefreshFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.CreateGroupResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.MoveFeedsToGroupResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.DeleteGroupResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.EditGroupResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.ReadAllResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.ClearFeedArticlesResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.ClearGroupArticlesResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.MuteFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.MuteFeedsInGroupResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
 
                 else -> Unit
             }
@@ -365,6 +403,7 @@ private fun FeedList(
         uiState.editFeedDialogBean?.let { feedView ->
             EditFeedSheet(
                 onDismissRequest = { dispatch(FeedIntent.OnEditFeedDialog(null)) },
+                snackbarHost = { SnackbarHost(hostState = bottomSheetSnackbarHostState) },
                 feedView = feedView,
                 groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInFeed(it)) },
@@ -414,6 +453,7 @@ private fun FeedList(
         uiState.editGroupDialogBean?.let { group ->
             EditGroupSheet(
                 onDismissRequest = { dispatch(FeedIntent.OnEditGroupDialog(null)) },
+                snackbarHost = { SnackbarHost(hostState = bottomSheetSnackbarHostState) },
                 group = group,
                 groups = uiState.groups.collectAsLazyPagingItems(),
                 onReadAll = { dispatch(FeedIntent.ReadAllInGroup(it)) },
@@ -499,7 +539,7 @@ private fun CreateGroupDialog(
         onConfirm = { text ->
             onCreateGroup(
                 GroupVo(
-                    groupId = UUID.randomUUID().toString(),
+                    groupId = Uuid.random().toString(),
                     name = text,
                     isExpanded = true,
                 )

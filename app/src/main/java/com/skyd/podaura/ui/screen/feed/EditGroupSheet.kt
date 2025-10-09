@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
+import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -36,6 +37,7 @@ import podaura.shared.generated.resources.feed_screen_rss_title
 @Composable
 fun EditGroupSheet(
     onDismissRequest: () -> Unit,
+    snackbarHost: @Composable () -> Unit = {},
     group: GroupVo,
     groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
@@ -105,6 +107,7 @@ fun EditGroupSheet(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+        TopSnackbatHostBox(snackbarHost = snackbarHost)
     }
 
     TextFieldDialog(
