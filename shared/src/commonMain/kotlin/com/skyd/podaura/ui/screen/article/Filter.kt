@@ -130,7 +130,7 @@ fun FilterIcon(
 }
 
 @Composable
-/*internal*/ fun FilterRow(
+internal fun FilterRow(
     modifier: Modifier = Modifier,
     articleFilterMask: Int,
     onFilterMaskChanged: (Int) -> Unit,

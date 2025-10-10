@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.feed
 
-import android.webkit.URLUtil
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,7 +72,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -81,13 +79,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import co.touchlab.kermit.Logger
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.blockString
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
-import com.skyd.podaura.ext.getString
+import com.skyd.podaura.ext.isNetworkUrl
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -96,7 +96,6 @@ import com.skyd.podaura.ui.component.SheetChip
 import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -160,6 +159,7 @@ fun EditFeedSheet(
     onSortXmlArticlesOnUpdateChanged: (Boolean) -> Unit,
     onGroupChange: (GroupVo) -> Unit,
     openCreateGroupDialog: () -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     val navController = LocalNavController.current
     val feed = feedView.feed
@@ -188,6 +188,7 @@ fun EditFeedSheet(
                 onCustomIconChange = onCustomIconChange,
                 onNicknameChanged = { openNicknameDialog = true },
                 onCustomDescriptionChanged = { openCustomDescriptionDialog = true },
+                onMessage = onMessage,
             )
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -214,6 +215,7 @@ fun EditFeedSheet(
                 onEditRequestHeaders = {
                     navController.navigate(RequestHeadersRoute(feedUrl = feed.url))
                 },
+                onMessage = onMessage,
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -311,7 +313,8 @@ private fun InfoArea(
     feedView: FeedViewBean,
     onCustomIconChange: (String?) -> Unit,
     onNicknameChanged: () -> Unit,
-    onCustomDescriptionChanged: () -> Unit
+    onCustomDescriptionChanged: () -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     val feed = feedView.feed
     Row {
@@ -393,7 +396,7 @@ private fun InfoArea(
         }
 
         var networkIcon by rememberSaveable(feed.customIcon) {
-            mutableStateOf(if (URLUtil.isNetworkUrl(feed.customIcon)) feed.customIcon!! else "")
+            mutableStateOf(if (feed.customIcon?.isNetworkUrl() == true) feed.customIcon!! else "")
         }
         if (openNetworkIconDialog) {
             TextFieldDialog(
@@ -402,15 +405,15 @@ private fun InfoArea(
                 value = networkIcon,
                 onValueChange = { networkIcon = it },
                 placeholder = stringResource(Res.string.feed_screen_rss_icon_source_network_hint),
-                enableConfirm = { URLUtil.isNetworkUrl(networkIcon) },
+                enableConfirm = { networkIcon.isNetworkUrl() },
                 onConfirm = {
                     runCatching {
                         onCustomIconChange(it)
                     }.onSuccess {
                         openNetworkIconDialog = false
-                    }.onFailure {
-                        it.printStackTrace()
-                        it.message?.showToast()
+                    }.onFailure { e ->
+                        Logger.e("Network icon failed", e)
+                        e.message?.let { msg -> onMessage(msg) }
                     }
                 },
             )
@@ -477,8 +480,8 @@ internal fun OptionArea(
     onAutoDownload: (() -> Unit)? = null,
     onEditRequestHeaders: (() -> Unit)? = null,
     onReorderFeedsInGroup: (() -> Unit)? = null,
+    onMessage: (String) -> Unit,
 ) {
-    val context = LocalContext.current
     var openClearWarningDialog by rememberSaveable { mutableStateOf(false) }
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
     var openRefreshDialog by rememberSaveable { mutableStateOf(false) }
@@ -545,8 +548,7 @@ internal fun OptionArea(
                 onClick = {
                     onSortXmlArticlesOnUpdateChanged?.invoke(!sortXmlArticlesOnUpdate)
                     if (!sortXmlArticlesOnUpdate) {
-                        context.getString(Res.string.feed_screen_sort_xml_articles_on_update_tip)
-                            .showToast()
+                        onMessage(blockString(Res.string.feed_screen_sort_xml_articles_on_update_tip))
                     }
                 },
             )
@@ -603,12 +605,10 @@ private fun RefreshDialog(
     onDismissRequest: () -> Unit,
     onRefresh: (full: Boolean) -> Unit,
 ) {
-    val context = LocalContext.current
-
-    val texts = remember {
+    val textsRes = remember {
         listOf(
-            context.getString(Res.string.feed_screen_incremental_refresh),
-            context.getString(Res.string.feed_screen_full_refresh)
+            Res.string.feed_screen_incremental_refresh,
+            Res.string.feed_screen_full_refresh
         )
     }
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -630,16 +630,16 @@ private fun RefreshDialog(
                         alignment = Alignment.CenterHorizontally,
                     ),
                 ) {
-                    texts.forEachIndexed { index, text ->
+                    textsRes.forEachIndexed { index, textRes ->
                         ToggleButton(
                             checked = index == currentIndex,
                             onCheckedChange = { if (it) currentIndex = index },
                             modifier = Modifier
                                 .weight(1f)
                                 .semantics { role = Role.RadioButton },
-                            shapes = ButtonGroupDefaults.connectedButtonShapes(texts, index),
+                            shapes = ButtonGroupDefaults.connectedButtonShapes(textsRes, index),
                         ) {
-                            Text(text)
+                            Text(stringResource(textRes))
                         }
                     }
                 }

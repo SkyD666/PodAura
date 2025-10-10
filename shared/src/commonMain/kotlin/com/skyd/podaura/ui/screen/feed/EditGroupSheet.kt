@@ -49,6 +49,7 @@ fun EditGroupSheet(
     onMoveTo: (GroupVo) -> Unit,
     onReorderFeedsInGroup: (String?) -> Unit,
     openCreateGroupDialog: () -> Unit,
+    onMessage: (String) -> Unit,
 ) {
     var openNameDialog by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable(group.name) { mutableStateOf(group.name) }
@@ -90,7 +91,8 @@ fun EditGroupSheet(
                         onDismissRequest()
                     }
                 },
-                onReorderFeedsInGroup = { onReorderFeedsInGroup(group.groupId) }
+                onReorderFeedsInGroup = { onReorderFeedsInGroup(group.groupId) },
+                onMessage = onMessage,
             )
             Spacer(modifier = Modifier.height(12.dp))
 

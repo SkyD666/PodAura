@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -52,8 +53,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -345,6 +344,7 @@ fun ArticleScreen(
                     val result = snackbarHostState.showSnackbar(
                         message = event.msg,
                         actionLabel = getString(Res.string.copy),
+                        duration = SnackbarDuration.Long,
                     )
                     if (result == SnackbarResult.ActionPerformed) {
                         clipboard.setText(event.msg)
@@ -453,7 +453,6 @@ private fun ArticleList(
         LazyVerticalGrid(
             modifier = modifier
                 .fillMaxSize()
-                .semantics { testTagsAsResourceId = true }
                 .testTag("ArticleLazyVerticalGrid"),
             columns = GridCells.Adaptive(ArticleItemMinWidthPreference.current.dp),
             state = listState,

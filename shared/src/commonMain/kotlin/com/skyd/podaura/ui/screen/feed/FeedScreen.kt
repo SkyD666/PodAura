@@ -34,7 +34,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
-import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
@@ -53,8 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,6 +78,7 @@ import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
 import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
+import com.skyd.podaura.ui.component.NavigableListDetailPaneScaffold
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
@@ -218,6 +216,7 @@ private fun FeedList(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val navController = LocalNavController.current
+    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val bottomSheetSnackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
@@ -447,6 +446,7 @@ private fun FeedList(
                     openCreateGroupDialog = true
                     createGroupDialogGroup = ""
                 },
+                onMessage = { scope.launch { currentSnackbarHostState.showSnackbar(it) } }
             )
         }
 
@@ -483,6 +483,7 @@ private fun FeedList(
                     openCreateGroupDialog = true
                     createGroupDialogGroup = ""
                 },
+                onMessage = { scope.launch { currentSnackbarHostState.showSnackbar(it) } }
             )
         }
 
@@ -570,7 +571,6 @@ private fun FeedList(
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
-                .semantics { testTagsAsResourceId = true }
                 .testTag("FeedLazyColumn"),
             contentPadding = contentPadding + PaddingValues(
                 bottom = fabPadding,

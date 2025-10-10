@@ -31,8 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.local.LocalNavController
@@ -86,7 +84,6 @@ fun Feed1Item(
             )
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .padding(bottom = if (inGroup && isEnd) 6.dp else 0.dp)
-            .semantics { testTagsAsResourceId = true }
             .testTag("FeedItem"),
     ) {
         FeedIcon(modifier = Modifier.padding(vertical = 3.dp), data = feed, size = 36.dp)

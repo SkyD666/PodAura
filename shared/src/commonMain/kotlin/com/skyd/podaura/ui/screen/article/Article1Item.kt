@@ -63,8 +63,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -140,7 +138,6 @@ fun Article1Item(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .semantics { testTagsAsResourceId = true }
             .testTag("ArticleItem"),
     ) {
         val enableDismissFromStartToEnd =
