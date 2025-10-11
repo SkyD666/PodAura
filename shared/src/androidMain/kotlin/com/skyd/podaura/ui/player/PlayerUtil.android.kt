@@ -12,6 +12,8 @@ import com.skyd.podaura.ext.getImage
 import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.util.image.decodeSampledBitmap
+import io.github.vinceglb.filekit.AndroidFile
+import io.github.vinceglb.filekit.PlatformFile
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -128,3 +130,10 @@ fun PlayerState.playbackState(): Int = when {
 
 val PlayerState.isPlaying
     get() = playbackState() != PlaybackStateCompat.STATE_PLAYING
+
+actual fun PlatformFile.resolveToPlayer(): String? {
+    return when (val file = androidFile) {
+        is AndroidFile.FileWrapper -> file.file.path
+        is AndroidFile.UriWrapper -> file.uri.resolveUri(get())
+    }
+}

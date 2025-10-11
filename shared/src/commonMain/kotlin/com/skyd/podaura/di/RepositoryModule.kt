@@ -7,6 +7,8 @@ import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.UpdateNotificationRepository
 import com.skyd.podaura.model.repository.UpdateRepository
+import com.skyd.podaura.model.repository.article.ArticleRepository
+import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import com.skyd.podaura.model.repository.feed.IFeedRepository
@@ -82,4 +84,8 @@ val repositoryModule = module {
     factory {
         FeedRepository(get(), get(), get(), get(), get())
     } binds arrayOf(IFeedRepository::class)
+
+    factory {
+        ArticleRepository(get(), get(), get(), get())
+    } binds arrayOf(IArticleRepository::class)
 }

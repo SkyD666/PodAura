@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.data
 
-import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoDelete
@@ -49,7 +48,6 @@ import com.skyd.podaura.ui.screen.settings.data.deleteconstraint.DeleteConstrain
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -80,8 +78,7 @@ import podaura.shared.generated.resources.import_export_screen_name
 
 
 @Serializable
-@Parcelize
-data object DataRoute : Parcelable
+data object DataRoute : java.io.Serializable // TODO
 
 @Composable
 fun DataScreen(

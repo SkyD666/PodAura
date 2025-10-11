@@ -26,7 +26,7 @@ import podaura.shared.generated.resources.plus
 import podaura.shared.generated.resources.reset
 
 @Composable
-fun DelayMillisDialog(
+internal fun DelayMillisDialog(
     title: String,
     delay: Long,
     onConform: (Long) -> Unit,

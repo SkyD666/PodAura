@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.appearance
 
-import android.os.Parcelable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,12 +44,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.google.android.material.color.DynamicColors
 import com.materialkolor.ktx.from
 import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
@@ -61,7 +58,6 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.local.LocalNavController
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseThemePreference
@@ -82,7 +78,6 @@ import com.skyd.settings.SettingsDefaults
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
 import com.skyd.settings.suspendString
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -106,13 +101,11 @@ import podaura.shared.generated.resources.search_style_screen_name
 
 
 @Serializable
-@Parcelize
-data object AppearanceRoute : Parcelable
+data object AppearanceRoute: java.io.Serializable // TODO
 
 @Composable
 fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val context = LocalContext.current
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     var expandTextFieldStyleMenu by rememberSaveable { mutableStateOf(false) }
@@ -129,6 +122,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             )
         }
     ) { paddingValues ->
+        val platformThemeOperator = rememberPlatformThemeOperator()
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -142,7 +136,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 otherItem {
                     Palettes(colors = extractAllColors(darkTheme = false))
                 }
-                if (DynamicColors.isDynamicColorAvailable()) {
+                if (platformThemeOperator.isDynamicColorAvailable) {
                     item {
                         SwitchSettingsItem(
                             imageVector = Icons.Outlined.Colorize,
@@ -155,7 +149,7 @@ fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                                     value = if (it) BaseThemePreference.DYNAMIC
                                     else ThemePreference.basicValues.first(),
                                 ) {
-                                    context.activity.recreate()
+                                    platformThemeOperator.onThemeChanged()
                                 }
                             }
                         )
@@ -362,8 +356,8 @@ fun Palettes(
     colors: Map<String, ColorScheme>,
     themeName: String = ThemePreference.current,
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val platformThemeOperator = rememberPlatformThemeOperator()
 
     Row(
         modifier = Modifier
@@ -376,7 +370,7 @@ fun Palettes(
                 selected = t == themeName,
                 onClick = {
                     ThemePreference.put(scope, t) {
-                        context.activity.recreate()
+                        platformThemeOperator.onThemeChanged()
                     }
                 },
                 contentDescription = { ThemePreference.toDisplayName(t) },

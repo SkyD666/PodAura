@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.behavior
 
-import android.os.Parcelable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -34,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.CheckableListMenu
@@ -42,7 +40,6 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.ComponeDialog
-import com.skyd.podaura.R
 import com.skyd.podaura.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeActionPreference
@@ -58,9 +55,9 @@ import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
 import com.skyd.settings.suspendString
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.behavior_screen_article_screen_category
@@ -81,13 +78,13 @@ import podaura.shared.generated.resources.behavior_screen_media_screen_category
 import podaura.shared.generated.resources.behavior_screen_name
 import podaura.shared.generated.resources.behavior_screen_reverse_load_article_playlist
 import podaura.shared.generated.resources.cancel
+import podaura.shared.generated.resources.ic_ink_eraser_24
 import podaura.shared.generated.resources.ok
 import podaura.shared.generated.resources.playlist_screen_name
 
 
 @Serializable
-@Parcelize
-data object BehaviorRoute : Parcelable
+data object BehaviorRoute: java.io.Serializable // TODO
 
 @Composable
 fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
@@ -153,7 +150,7 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
             group(text = { getString(Res.string.behavior_screen_article_screen_category) }) {
                 item {
                     SwitchSettingsItem(
-                        painter = painterResource(id = R.drawable.ic_ink_eraser_24),
+                        painter = painterResource(Res.drawable.ic_ink_eraser_24),
                         text = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc),
                         description = stringResource(Res.string.behavior_screen_article_screen_deduplicate_title_in_desc_description),
                         checked = DeduplicateTitleInDescPreference.current,

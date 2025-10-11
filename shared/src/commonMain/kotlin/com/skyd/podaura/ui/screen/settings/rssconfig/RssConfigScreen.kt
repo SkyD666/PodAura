@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.rssconfig
 
-import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryFull
@@ -37,7 +36,6 @@ import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchSettingsItem
 import com.skyd.settings.suspendString
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -57,8 +55,7 @@ import podaura.shared.generated.resources.update_notification_screen_name
 
 
 @Serializable
-@Parcelize
-data object RssConfigRoute : Parcelable
+data object RssConfigRoute : java.io.Serializable // TODO
 
 @Composable
 fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {

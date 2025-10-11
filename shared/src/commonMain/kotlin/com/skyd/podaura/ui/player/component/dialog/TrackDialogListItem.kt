@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable
-/*internal*/ fun TrackDialogListItem(
+internal fun TrackDialogListItem(
     imageVector: ImageVector?,
     iconContentDescription: String? = null,
     text: String,

@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.transmission
 
-import android.os.Parcelable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -12,9 +11,7 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
-import com.skyd.compone.local.LocalNavController
 import com.skyd.settings.SettingsLazyColumn
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -23,14 +20,12 @@ import podaura.shared.generated.resources.transmission_screen_config_category
 import podaura.shared.generated.resources.transmission_screen_name
 
 
-@Parcelize
 @Serializable
-data object TransmissionRoute : Parcelable
+data object TransmissionRoute : java.io.Serializable // TODO
 
 @Composable
 fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
 
     Scaffold(
         topBar = {

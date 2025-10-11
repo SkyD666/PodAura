@@ -22,7 +22,6 @@ import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.CrashScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
 
-
 /**
  * CrashActivity, do not extends BaseActivity
  */

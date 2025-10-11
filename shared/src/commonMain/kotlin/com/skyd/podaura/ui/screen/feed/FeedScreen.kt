@@ -228,7 +228,6 @@ private fun FeedList(
     var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
 
     var fabHeight by remember { mutableStateOf(0.dp) }
-    var fabWidth by remember { mutableStateOf(0.dp) }
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = FeedIntent.Init)
@@ -282,10 +281,7 @@ private fun FeedList(
         floatingActionButton = {
             ComponeFloatingActionButton(
                 onClick = { openAddDialog = true },
-                onSizeWithSinglePaddingChanged = { width, height ->
-                    fabWidth = width
-                    fabHeight = height
-                },
+                onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.add),
             ) {
                 Icon(

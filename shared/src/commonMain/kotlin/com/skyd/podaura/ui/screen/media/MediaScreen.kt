@@ -43,9 +43,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
@@ -68,13 +66,14 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
-import com.skyd.podaura.ui.player.resolveUri
+import com.skyd.podaura.ui.player.resolveToPlayer
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.podaura.ui.screen.media.list.GroupInfo
 import com.skyd.podaura.ui.screen.media.list.MediaList
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.media.MediaStyleRoute
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -90,7 +89,6 @@ import podaura.shared.generated.resources.media_screen_style
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.open_file
 import podaura.shared.generated.resources.sort
-import java.io.File
 import kotlin.math.min
 
 
@@ -102,7 +100,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = LocalNavController.current
-    val context = LocalContext.current
     val windowSizeClass = LocalWindowSizeClass.current
     val scope = rememberCoroutineScope()
 
@@ -120,7 +117,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
         if (result.pickFolder) {
             MediaLibLocationPreference.put(this, result.result)
         } else {
-            val url = File(result.result).toUri().resolveUri(context)
+            val url = PlatformFile(result.result).resolveToPlayer()
             if (url != null) {
                 playerJumper.jump(
                     PlayDataMode.MediaLibraryList(

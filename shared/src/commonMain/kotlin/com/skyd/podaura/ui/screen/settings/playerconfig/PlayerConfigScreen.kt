@@ -1,7 +1,5 @@
 package com.skyd.podaura.ui.screen.settings.playerconfig
 
-import android.os.Build
-import android.os.Parcelable
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.CheckableListMenu
 import com.skyd.compone.component.ComponeIconButton
@@ -68,7 +65,6 @@ import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.SwitchBaseSettingsItem
 import com.skyd.settings.SwitchSettingsItem
 import com.skyd.settings.suspendString
-import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -102,13 +98,11 @@ import podaura.shared.generated.resources.reset
 
 
 @Serializable
-@Parcelize
-data object PlayerConfigRoute : Parcelable
+data object PlayerConfigRoute : java.io.Serializable // TODO
 
 @Composable
 fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     var expandDoubleTapMenu by rememberSaveable { mutableStateOf(false) }
@@ -332,7 +326,7 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-internal fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
+        /*internal*/ fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
     if (visible()) {
         val scope = rememberCoroutineScope()
         SecondsDialog(
@@ -349,7 +343,10 @@ internal fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () ->
 
 
 @Composable
-internal fun ForwardSecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
+        /*internal*/ fun ForwardSecondsDialog(
+    visible: () -> Boolean,
+    onDismissRequest: () -> Unit
+) {
     if (visible()) {
         val scope = rememberCoroutineScope()
         SecondsDialog(
@@ -425,16 +422,12 @@ internal fun MaxCacheSizeDialog(
     onConfirm: (Long) -> Unit,
 ) {
     var value by rememberSaveable { mutableLongStateOf(initValue) }
-    val context = LocalContext.current
-
-    // 64 MB / 32 MB
-    val maxSize = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) 64f else 32f
 
     SliderDialog(
         onDismissRequest = onDismissRequest,
         value = value / 1048576f,
         onValueChange = { value = it.toLong() * 1048576 },
-        valueRange = 1f..maxSize,
+        valueRange = 1f..maxCacheSizeMB.toFloat(),
         valueLabel = {
             Box(modifier = Modifier.fillMaxWidth()) {
                 Text(

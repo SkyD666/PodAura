@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-/*internal*/ fun BasicPlayerDialog(
+internal fun BasicPlayerDialog(
     onDismissRequest: () -> Unit,
     content: @Composable () -> Unit,
 ) {

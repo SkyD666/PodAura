@@ -1,7 +1,5 @@
-package com.skyd.podaura.ui.player.component.dialog.audio
+package com.skyd.podaura.ui.player.component.dialog.subtitle
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,42 +15,38 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
-import com.skyd.podaura.ext.safeLaunch
 import com.skyd.podaura.ui.player.component.dialog.BasicPlayerDialog
 import com.skyd.podaura.ui.player.component.dialog.DelayMillisDialog
 import com.skyd.podaura.ui.player.component.dialog.TrackDialogListItem
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
-import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogCallback
-import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
-import com.skyd.podaura.ui.player.resolveUri
+import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
+import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
+import com.skyd.podaura.ui.player.resolveToPlayer
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.item_selected
-import podaura.shared.generated.resources.player_add_external_audio
-import podaura.shared.generated.resources.player_audio_delay
-import podaura.shared.generated.resources.player_audio_track
+import podaura.shared.generated.resources.player_add_external_subtitle
+import podaura.shared.generated.resources.player_subtitle_delay
+import podaura.shared.generated.resources.player_subtitle_track
 import podaura.shared.generated.resources.settings
 
 
 @Composable
-internal fun AudioTrackDialog(
+/*internal*/ fun SubtitleTrackDialog(
     onDismissRequest: () -> Unit,
     playState: () -> PlayState,
-    audioTrackDialogState: () -> AudioTrackDialogState,
-    audioTrackDialogCallback: AudioTrackDialogCallback,
+    subtitleTrackDialogState: () -> SubtitleTrackDialogState,
+    subtitleTrackDialogCallback: SubtitleTrackDialogCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
 ) {
-    val state = audioTrackDialogState()
-    val context = LocalContext.current
-    val pickAudioFileLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { subtitleUri ->
-        subtitleUri?.resolveUri(context)?.let { filePath ->
-            audioTrackDialogCallback.onAddAudioTrack(filePath)
+    val state = subtitleTrackDialogState()
+    val pickSubtitleFileLauncher = rememberFilePickerLauncher { subtitleFile ->
+        subtitleFile?.resolveToPlayer()?.let { filePath ->
+            subtitleTrackDialogCallback.onAddSubtitle(filePath)
         }
     }
 
@@ -68,32 +62,32 @@ internal fun AudioTrackDialog(
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 16.dp, bottom = 6.dp),
-                        text = stringResource(Res.string.player_audio_track),
+                        text = stringResource(Res.string.player_subtitle_track),
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     ComponeIconButton(
-                        onClick = { onDialogVisibilityChanged.onAudioSettingDialog(true) },
+                        onClick = { onDialogVisibilityChanged.onSubtitleSettingDialog(true) },
                         imageVector = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
                     )
                     ComponeIconButton(
-                        onClick = { pickAudioFileLauncher.safeLaunch("*/*") },
+                        onClick = { pickSubtitleFileLauncher.launch() },
                         imageVector = Icons.Outlined.Add,
-                        contentDescription = stringResource(Res.string.player_add_external_audio),
+                        contentDescription = stringResource(Res.string.player_add_external_subtitle),
                     )
                 }
                 val currentPlayState = playState()
-                repeat(currentPlayState.audioTracks.size) { index ->
-                    val track = currentPlayState.audioTracks[index]
-                    val currentTrack = currentPlayState.audioTracks.find {
-                        it.trackId == currentPlayState.audioTrackId
+                repeat(currentPlayState.subtitleTracks.size) { index ->
+                    val track = currentPlayState.subtitleTracks[index]
+                    val currentTrack = currentPlayState.subtitleTracks.find {
+                        it.trackId == currentPlayState.subtitleTrackId
                     }
                     TrackDialogListItem(
                         imageVector = if (currentTrack?.trackId == track.trackId)
                             Icons.Outlined.Check else null,
                         iconContentDescription = stringResource(Res.string.item_selected),
                         text = track.name,
-                        onClick = { audioTrackDialogCallback.onAudioTrackChanged(track) }
+                        onClick = { subtitleTrackDialogCallback.onSubtitleTrackChanged(track) }
                     )
                 }
             }
@@ -103,10 +97,10 @@ internal fun AudioTrackDialog(
     if (state.showSetting) {
         val currentPlayState = playState()
         DelayMillisDialog(
-            title = stringResource(Res.string.player_audio_delay),
-            delay = currentPlayState.audioDelay,
-            onConform = { audioTrackDialogCallback.onAudioDelayChanged(it) },
-            onDismiss = { onDialogVisibilityChanged.onAudioSettingDialog(false) },
+            title = stringResource(Res.string.player_subtitle_delay),
+            delay = currentPlayState.subTitleDelay,
+            onConform = { subtitleTrackDialogCallback.onSubtitleDelayChanged(it) },
+            onDismiss = { onDialogVisibilityChanged.onSubtitleSettingDialog(false) },
         )
     }
 }

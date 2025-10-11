@@ -2,16 +2,17 @@ package com.skyd.podaura.util
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
+import co.touchlab.kermit.Logger
 import com.skyd.podaura.ui.activity.CrashActivity
 import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.system.exitProcess
 
-
 class CrashHandler private constructor(
     val context: Context
 ) : Thread.UncaughtExceptionHandler {
+    private val log = Logger.Companion.withTag(TAG)
+
     private val mDefaultHandler: Thread.UncaughtExceptionHandler? =
         Thread.getDefaultUncaughtExceptionHandler()
 
@@ -30,7 +31,7 @@ class CrashHandler private constructor(
             }
             printWriter.close()
             val unCaughtException = stringWriter.toString()
-            Log.e("Crash Info", unCaughtException)
+            log.e("Crash Info: $unCaughtException")
             CrashActivity.start(context, unCaughtException)
             exitProcess(0)
         } catch (e: Exception) {
@@ -40,6 +41,8 @@ class CrashHandler private constructor(
     }
 
     companion object {
+        const val TAG = "AndroidCrashHandler"
+
         @SuppressLint("StaticFieldLeak")
         private var instance: CrashHandler? = null
 
