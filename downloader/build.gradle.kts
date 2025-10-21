@@ -38,6 +38,7 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
+        optIn.add("kotlin.time.ExperimentalTime")
     }
 }
 
@@ -53,8 +54,13 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.retrofit2)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.filekit.core)
+    implementation(libs.ktor.client.core)
+    implementation(libs.koin.core)
+    implementation(libs.kermit)
+
+    implementation(projects.fundation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.ktx)

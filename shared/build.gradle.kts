@@ -118,6 +118,7 @@ kotlin {
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
 
+            implementation(projects.fundation)
             implementation(projects.ksp)
         }
 

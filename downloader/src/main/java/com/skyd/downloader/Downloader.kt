@@ -8,7 +8,6 @@ import com.skyd.downloader.download.DownloadEvent
 import com.skyd.downloader.download.DownloadManager
 import com.skyd.downloader.download.DownloadRequest
 import com.skyd.downloader.download.DownloadTask.Companion.ETAG_HEADER
-import com.skyd.downloader.net.RetrofitInstance
 import com.skyd.downloader.util.FileUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -147,20 +146,6 @@ class Downloader private constructor(
      */
     fun clearDb(id: Int, deleteFile: Boolean = true) {
         downloadManager.clearDbAsync(id, deleteFile)
-    }
-
-    /**
-     * Suspend function to make headers only api call to get and compare ETag string of content
-     *
-     * @param url Download Url
-     * @param eTag Existing ETag of content
-     * @return Boolean to compare existing and newly fetched ETag of the content
-     */
-    suspend fun isContentValid(
-        url: String,
-        eTag: String
-    ): Boolean = withContext(Dispatchers.IO) {
-        RetrofitInstance.getDownloadService().getHeadersOnly(url).headers().get(ETAG_HEADER) == eTag
     }
 
     fun find(id: Int, onResult: (DownloadEntity?) -> Unit) = downloadManager.findAsync(id, onResult)

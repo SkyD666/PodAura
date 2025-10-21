@@ -3,9 +3,9 @@ package com.skyd.podaura.model.repository
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.FEED_ICON_DIR
 import com.skyd.podaura.config.TEMP_TORRENT_DIR
-import com.skyd.podaura.ext.deleteRecursively
+import com.skyd.fundation.ext.deleteRecursively
 import com.skyd.podaura.ext.getOrDefault
-import com.skyd.podaura.ext.walk
+import com.skyd.fundation.ext.walk
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao

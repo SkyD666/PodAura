@@ -2,7 +2,7 @@ package com.skyd.podaura.model.bean.playlist
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.skyd.podaura.ext.currentTimeMillis
+import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.model.bean.BaseBean
 import com.skyd.podaura.model.bean.article.ArticleBean

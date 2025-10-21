@@ -1,6 +1,6 @@
 package com.skyd.podaura.util
 
-import com.skyd.podaura.ext.currentTimeMillis
+import com.skyd.fundation.ext.currentTimeMillis
 import kotlin.random.Random
 import kotlin.time.Clock
 

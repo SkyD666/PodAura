@@ -7,7 +7,7 @@ import androidx.paging.map
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.FEED_ICON_DIR
 import com.skyd.podaura.ext.asPlatformFile
-import com.skyd.podaura.ext.deleteRecursively
+import com.skyd.fundation.ext.deleteRecursively
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.isHttpOrHttps

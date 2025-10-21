@@ -42,7 +42,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
-import com.skyd.podaura.ext.formatElapsedTime
+import com.skyd.fundation.ext.formatElapsedTime
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean

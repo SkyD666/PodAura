@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.bean
 
-import com.skyd.podaura.ext.lastModifiedTime
+import com.skyd.fundation.ext.lastModifiedTime
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.util.fileicon.fileIcon

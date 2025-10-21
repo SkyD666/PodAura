@@ -1,28 +1,51 @@
 package com.skyd.downloader.download
 
-import com.skyd.downloader.net.DownloadService
 import com.skyd.downloader.util.FileUtil
 import com.skyd.downloader.util.FileUtil.tempFile
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import com.skyd.fundation.ext.currentTimeMillis
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.atomicMove
+import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.sink
+import io.github.vinceglb.filekit.size
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.call.body
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.RequestedRangeNotSatisfiable
+import io.ktor.http.contentLength
+import io.ktor.http.isSuccess
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.core.remaining
+import io.ktor.utils.io.exhausted
+import io.ktor.utils.io.readRemaining
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.io.IOException
+import kotlinx.io.RawSink
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 internal class DownloadTask(
     private var url: String,
     private var path: String,
     private var fileName: String,
-    private val downloadService: DownloadService,
-) {
+) : KoinComponent {
 
     companion object {
-        private const val VALUE_200 = 200
-        private const val VALUE_299 = 299
-        private const val TIME_TO_TRIGGER_PROGRESS = 500
-
         private const val RANGE_HEADER = "Range"
-        private const val HTTP_RANGE_NOT_SATISFY = 416
         internal const val ETAG_HEADER = "ETag"
     }
+
+    private val httpClientConfig: HttpClientConfig<*>.() -> Unit by inject()
+    private val httpClient by lazy { HttpClient(httpClientConfig) }
 
     suspend fun download(
         headers: MutableMap<String, String> = mutableMapOf(),
@@ -30,79 +53,128 @@ internal class DownloadTask(
         onProgress: suspend (Long, Long, Float) -> Unit
     ): Long {
         var rangeStart = 0L
-        val file = File(path, fileName)
+        val file = PlatformFile(path) / fileName
         val tempFile = file.tempFile
 
         if (tempFile.exists()) {
-            rangeStart = tempFile.length()
+            rangeStart = tempFile.size()
         }
 
         if (rangeStart != 0L) {
             headers[RANGE_HEADER] = "bytes=$rangeStart-"
         }
 
-        var response = downloadService.getUrl(url, headers)
-        if (response.code() == HTTP_RANGE_NOT_SATISFY) {
-            FileUtil.deleteDownloadFileIfExists(path, fileName)
-            headers.remove(RANGE_HEADER)
-            rangeStart = 0
-            response = downloadService.getUrl(url, headers)
-        }
-
-        val responseBody = response.body()
-
-        if (response.code() !in VALUE_200..VALUE_299 ||
-            responseBody == null
-        ) {
-            throw IOException(
-                "Something went wrong, response code: ${response.code()}, responseBody null: ${responseBody == null}"
+        var totalBytes = 0L
+        tempFile.sink(append = true).use { sink ->
+            var lastReceived = 0L
+            var speed: Float
+            var lastProgressTime = System.currentTimeMillis()
+            requestWithAutoRetry(
+                url = url,
+                headers = headers,
+                sink = sink,
+                rangeStart = rangeStart,
+                onRangeStart = {
+                    rangeStart = it
+                    lastReceived = rangeStart
+                },
+                onContentLength = { contentLength ->
+                    totalBytes = contentLength
+                    onStart(contentLength)
+                },
+                onProgress = { received: Long ->
+                    val currentTime = Clock.currentTimeMillis()
+                    speed = (received - lastReceived) / ((currentTime - lastProgressTime).toFloat())
+                    lastReceived = received
+                    lastProgressTime = currentTime
+                    onProgress(
+                        received.coerceAtMost(totalBytes),
+                        totalBytes,
+                        speed
+                    )
+                },
             )
+            onProgress.invoke(totalBytes, totalBytes, 0f)
         }
 
-        var totalBytes = responseBody.contentLength()
-        if (totalBytes < 0) throw IOException("Content Length is wrong: $totalBytes")
-        totalBytes += rangeStart
-
-        var progressBytes = 0L
-
-        responseBody.byteStream().use { inputStream ->
-            FileOutputStream(tempFile, true).use { outputStream ->
-                if (rangeStart != 0L) {
-                    progressBytes = rangeStart
-                }
-
-                onStart.invoke(totalBytes)
-
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                var bytes = inputStream.read(buffer)
-                var tempBytes = 0L
-                var progressInvokeTime = System.currentTimeMillis()
-                var speed: Float
-
-                while (bytes >= 0) {
-                    outputStream.write(buffer, 0, bytes)
-                    progressBytes += bytes
-                    tempBytes += bytes
-                    bytes = inputStream.read(buffer)
-                    val finalTime = System.currentTimeMillis()
-                    if (finalTime - progressInvokeTime >= TIME_TO_TRIGGER_PROGRESS) {
-                        speed = tempBytes.toFloat() / ((finalTime - progressInvokeTime).toFloat())
-                        tempBytes = 0L
-                        progressInvokeTime = System.currentTimeMillis()
-                        if (progressBytes > totalBytes) progressBytes = totalBytes
-                        onProgress.invoke(
-                            progressBytes,
-                            totalBytes,
-                            speed
-                        )
-                    }
-                }
-                onProgress.invoke(totalBytes, totalBytes, 0F)
-            }
-        }
-
-        require(tempFile.renameTo(file)) { "Temp file rename failed" }
+        tempFile.atomicMove(file)
 
         return totalBytes
+    }
+
+    private suspend fun requestWithAutoRetry(
+        url: String,
+        headers: MutableMap<String, String> = mutableMapOf(),
+        sink: RawSink,
+        rangeStart: Long,
+        onRangeStart: suspend (Long) -> Unit,
+        onContentLength: suspend (Long) -> Unit,
+        onProgress: suspend (Long) -> Unit,
+    ) {
+        val status = request(
+            url = url,
+            headers = headers,
+            sink = sink,
+            rangeStart = rangeStart,
+            onRangeStart = onRangeStart,
+            onContentLength = onContentLength,
+            onProgress = onProgress,
+        )
+        if (status == RequestedRangeNotSatisfiable) {
+            FileUtil.deleteDownloadFileIfExists(path, fileName)
+            headers.remove(RANGE_HEADER)
+            request(
+                url = url,
+                headers = headers,
+                sink = sink,
+                rangeStart = 0,
+                onRangeStart = onRangeStart,
+                onContentLength = onContentLength,
+                onProgress = onProgress,
+            )
+        } else {
+            throw IOException("Something went wrong, response code: ${status.value}")
+        }
+    }
+
+    private suspend fun request(
+        url: String,
+        headers: MutableMap<String, String> = mutableMapOf(),
+        sink: RawSink,
+        rangeStart: Long,
+        onRangeStart: suspend (Long) -> Unit,
+        onContentLength: suspend (Long) -> Unit,
+        onProgress: suspend (Long) -> Unit,
+    ): HttpStatusCode {
+        return httpClient.prepareGet(url) {
+            headers.forEach { (k, v) -> header(k, v) }
+        }.execute { response ->
+            if (!response.status.isSuccess()) {
+                return@execute response.status
+            }
+            val channel: ByteReadChannel = response.body()
+            var count = 0L
+            coroutineScope {
+                sink.use {
+                    onRangeStart(rangeStart)
+                    onContentLength(rangeStart + (response.contentLength() ?: 0L))
+                    onProgress(rangeStart)
+                    val periodicJob = launch {
+                        while (isActive) {
+                            delay(0.5.seconds)
+                            onProgress(rangeStart + count)
+                        }
+                    }
+                    while (!channel.exhausted()) {
+                        val chunk = channel.readRemaining(100)
+                        count += chunk.remaining
+                        chunk.transferTo(sink)
+                    }
+                    periodicJob.cancel()
+                    onProgress(rangeStart + count)
+                }
+                return@coroutineScope response.status
+            }
+        }
     }
 }

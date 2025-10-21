@@ -1,6 +1,6 @@
 package com.skyd.podaura.util.fileicon
 
-import com.skyd.podaura.ext.isDirectory
+import com.skyd.fundation.ext.isDirectory
 import kotlinx.io.files.Path
 import org.jetbrains.compose.resources.DrawableResource
 import podaura.shared.generated.resources.Res

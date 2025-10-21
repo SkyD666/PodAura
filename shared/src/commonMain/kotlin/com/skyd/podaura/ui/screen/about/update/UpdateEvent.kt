@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.about.update
 
+import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.mvi.MviSingleEvent
-import com.skyd.podaura.ext.currentTimeMillis
 import kotlin.random.Random
 import kotlin.time.Clock
 

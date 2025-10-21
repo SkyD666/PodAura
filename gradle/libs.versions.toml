@@ -76,8 +76,6 @@ koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-view
 kermit = { module = "co.touchlab:kermit", version = "2.0.8" }
 codepoints-deluxe = { module = "de.cketti.unicode:kotlin-codepoints-deluxe", version = "0.11.0" }
 
-retrofit2 = { module = "com.squareup.retrofit2:retrofit", version = "3.0.0" }
-
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }

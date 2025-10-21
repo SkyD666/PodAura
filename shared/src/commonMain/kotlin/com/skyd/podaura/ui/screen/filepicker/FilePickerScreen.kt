@@ -49,7 +49,7 @@ import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.config.Const
 import com.skyd.podaura.config.DEFAULT_FILE_PICKER_PATH
-import com.skyd.podaura.ext.isDirectory
+import com.skyd.fundation.ext.isDirectory
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.util.fileicon.fileIcon
 import kotlinx.coroutines.CoroutineScope

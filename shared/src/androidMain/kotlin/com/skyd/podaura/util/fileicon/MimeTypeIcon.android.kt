@@ -1,8 +1,8 @@
 package com.skyd.podaura.util.fileicon
 
 import android.webkit.MimeTypeMap
-import com.skyd.podaura.ext.extension
-import com.skyd.podaura.ext.isDirectory
+import com.skyd.fundation.ext.extension
+import com.skyd.fundation.ext.isDirectory
 import kotlinx.io.files.Path
 
 actual fun Path.mimeType(): String? {

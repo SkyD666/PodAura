@@ -2,14 +2,19 @@ package com.skyd.downloader.util
 
 import android.os.Environment
 import android.webkit.URLUtil
+import com.skyd.fundation.ext.deleteRecursively
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.toKotlinxIoPath
 import java.io.File
 import java.security.MessageDigest
 import kotlin.experimental.and
 
 internal object FileUtil {
 
-    internal val File.tempFile
-        get() = File("$absolutePath.temp")
+    internal val PlatformFile.tempFile
+        get() = PlatformFile("$path.temp")
 
     fun getFileNameFromUrl(url: String): String {
         return URLUtil.guessFileName(url, null, null)
@@ -39,8 +44,8 @@ internal object FileUtil {
     }
 
     fun deleteDownloadFileIfExists(path: String, name: String) {
-        val file = File(path, name)
-        file.deleteRecursively()
-        file.tempFile.deleteRecursively()
+        val file = PlatformFile(path) / name
+        file.toKotlinxIoPath().deleteRecursively(mustExist = false)
+        file.tempFile.toKotlinxIoPath().deleteRecursively(mustExist = false)
     }
 }

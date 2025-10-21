@@ -8,19 +8,23 @@ import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
 import com.skyd.downloader.UserAction
 import com.skyd.downloader.db.DatabaseInstance
-import com.skyd.downloader.net.RetrofitInstance
 import com.skyd.downloader.notification.DownloadNotificationManager
 import com.skyd.downloader.util.FileUtil
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.request.head
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 internal class DownloadWorker(
     private val context: Context,
     workerParameters: WorkerParameters
-) : CoroutineWorker(context, workerParameters) {
+) : CoroutineWorker(context, workerParameters), KoinComponent {
 
     companion object {
         internal const val INPUT_DATA_ID_KEY = "id"
@@ -39,6 +43,9 @@ internal class DownloadWorker(
 
     private var downloadNotificationManager: DownloadNotificationManager? = null
     private val downloadDao = DatabaseInstance.getInstance(context).downloadDao()
+
+    private val httpClientConfig: HttpClientConfig<*>.() -> Unit by inject()
+    private val httpClient by lazy { HttpClient(httpClientConfig) }
 
     override suspend fun doWork(): Result {
         val entityId = inputData.keyValueMap[INPUT_DATA_ID_KEY] as Int
@@ -64,13 +71,10 @@ internal class DownloadWorker(
             fileName = fileName
         )
 
-        val downloadService = RetrofitInstance.getDownloadService()
-
         return try {
             downloadNotificationManager?.sendUpdateNotification()?.let { setForeground(it) }
 
-            val latestETag = downloadService.getHeadersOnly(url).headers()
-                .get(DownloadTask.ETAG_HEADER).orEmpty()
+            val latestETag = httpClient.head(url).headers[DownloadTask.ETAG_HEADER].orEmpty()
             val existingETag = downloadDao.find(id)?.eTag.orEmpty()
             if (latestETag != existingETag) {
                 FileUtil.deleteDownloadFileIfExists(path = dirPath, name = fileName)
@@ -83,7 +87,6 @@ internal class DownloadWorker(
                 url = url,
                 path = dirPath,
                 fileName = fileName,
-                downloadService = downloadService
             ).download(
                 onStart = { length ->
                     downloadDao.find(id)?.copy(
