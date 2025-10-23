@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.ext.format
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.component.ControllerBarGray

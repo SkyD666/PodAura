@@ -14,6 +14,7 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.RequestedRangeNotSatisfiable
 import io.ktor.http.contentLength
@@ -38,12 +39,6 @@ internal class DownloadTask(
     private var path: String,
     private var fileName: String,
 ) : KoinComponent {
-
-    companion object {
-        private const val RANGE_HEADER = "Range"
-        internal const val ETAG_HEADER = "ETag"
-    }
-
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit by inject()
     private val httpClient by lazy { HttpClient(httpClientConfig) }
 
@@ -61,7 +56,7 @@ internal class DownloadTask(
         }
 
         if (rangeStart != 0L) {
-            headers[RANGE_HEADER] = "bytes=$rangeStart-"
+            headers[HttpHeaders.Range] = "bytes=$rangeStart-"
         }
 
         var totalBytes = 0L
@@ -122,7 +117,7 @@ internal class DownloadTask(
         )
         if (status == RequestedRangeNotSatisfiable) {
             FileUtil.deleteDownloadFileIfExists(path, fileName)
-            headers.remove(RANGE_HEADER)
+            headers.remove(HttpHeaders.Range)
             request(
                 url = url,
                 headers = headers,

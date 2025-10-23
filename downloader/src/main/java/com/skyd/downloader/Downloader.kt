@@ -7,11 +7,8 @@ import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.DownloadEvent
 import com.skyd.downloader.download.DownloadManager
 import com.skyd.downloader.download.DownloadRequest
-import com.skyd.downloader.download.DownloadTask.Companion.ETAG_HEADER
 import com.skyd.downloader.util.FileUtil
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 
 class Downloader private constructor(
     application: Application,

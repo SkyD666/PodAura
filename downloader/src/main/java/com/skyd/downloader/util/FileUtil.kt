@@ -1,14 +1,11 @@
 package com.skyd.downloader.util
 
-import android.os.Environment
-import android.webkit.URLUtil
 import com.skyd.fundation.ext.deleteRecursively
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.toKotlinxIoPath
-import java.io.File
-import java.security.MessageDigest
+import org.kotlincrypto.hash.md.MD5
 import kotlin.experimental.and
 
 internal object FileUtil {
@@ -17,18 +14,19 @@ internal object FileUtil {
         get() = PlatformFile("$path.temp")
 
     fun getFileNameFromUrl(url: String): String {
-        return URLUtil.guessFileName(url, null, null)
-    }
-
-    fun getDefaultDownloadPath(): String {
-        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path
+        val cleanUrl = url.substringBefore('?').substringBefore('#')
+        return cleanUrl.substringAfterLast('/').takeIf { it.isNotEmpty() } ?: "download"
     }
 
     fun getUniqueId(url: String, dirPath: String, fileName: String): Int {
-        val string = url + File.separator + dirPath + File.separator + fileName
         val hash: ByteArray = try {
-            MessageDigest.getInstance("MD5").digest(string.toByteArray(charset("UTF-8")))
-        } catch (e: Exception) {
+            val string = (PlatformFile(url) / dirPath / fileName).path
+            val digest = MD5()
+            digest.update(string.toByteArray(charset("UTF-8")))
+            ByteArray(digest.digestLength()).apply {
+                digest.digestInto(dest = this, destOffset = 0)
+            }
+        } catch (_: Exception) {
             return getUniqueIdFallback(url, dirPath, fileName)
         }
         val hex = StringBuilder(hash.size * 2)

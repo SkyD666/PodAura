@@ -73,7 +73,7 @@ import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.format
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.safeOpenUri

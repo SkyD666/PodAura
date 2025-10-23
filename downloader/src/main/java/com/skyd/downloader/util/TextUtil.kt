@@ -1,5 +1,7 @@
 package com.skyd.downloader.util
 
+import com.skyd.fundation.ext.format
+
 internal object TextUtil {
     fun getSpeedText(speedInBPerMs: Float): String {
         var value = speedInBPerMs * 1000
@@ -11,7 +13,7 @@ internal object TextUtil {
             unitIndex++
         }
 
-        return "%.2f %s".format(value, units[unitIndex])
+        return "${value.format(2)} ${units[unitIndex]}"
     }
 
     fun getTotalLengthText(lengthInBytes: Long): String {
@@ -24,6 +26,6 @@ internal object TextUtil {
             unitIndex++
         }
 
-        return "%.2f %s".format(value, units[unitIndex])
+        return "${value.format(2)} ${units[unitIndex]}"
     }
 }

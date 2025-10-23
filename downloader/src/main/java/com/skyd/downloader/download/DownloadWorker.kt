@@ -13,6 +13,7 @@ import com.skyd.downloader.util.FileUtil
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.request.head
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,7 +75,7 @@ internal class DownloadWorker(
         return try {
             downloadNotificationManager?.sendUpdateNotification()?.let { setForeground(it) }
 
-            val latestETag = httpClient.head(url).headers[DownloadTask.ETAG_HEADER].orEmpty()
+            val latestETag = httpClient.head(url).headers[HttpHeaders.ETag].orEmpty()
             val existingETag = downloadDao.find(id)?.eTag.orEmpty()
             if (latestETag != existingETag) {
                 FileUtil.deleteDownloadFileIfExists(path = dirPath, name = fileName)

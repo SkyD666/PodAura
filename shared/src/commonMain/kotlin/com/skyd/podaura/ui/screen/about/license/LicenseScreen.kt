@@ -205,5 +205,10 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "MIT",
             link = "https://github.com/cketti/kotlin-codepoints",
         ),
+        LicenseBean(
+            name = "hash",
+            license = "Apache-2.0",
+            link = "https://github.com/KotlinCrypto/hash",
+        ),
     ).sortedBy { it.name }
 }

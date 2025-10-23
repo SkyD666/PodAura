@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.koin.core)
     implementation(libs.kermit)
+    implementation(libs.kotlincrypto.hash.md)
 
     implementation(projects.fundation)
 
