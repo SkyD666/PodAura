@@ -3,7 +3,7 @@ package com.skyd.podaura.util
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 
 actual fun isWifiAvailable(): Boolean {
     val connectivityManager =

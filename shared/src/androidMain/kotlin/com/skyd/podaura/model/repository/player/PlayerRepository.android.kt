@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.repository.player
 
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao

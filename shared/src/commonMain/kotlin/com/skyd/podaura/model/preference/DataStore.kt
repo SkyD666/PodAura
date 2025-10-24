@@ -4,7 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.skyd.ksp.preference.PreferencesList
-import com.skyd.podaura.di.inject
+import com.skyd.fundation.di.inject
 import okio.Path.Companion.toPath
 import kotlin.reflect.KClass
 

@@ -39,6 +39,7 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
         optIn.add("kotlin.time.ExperimentalTime")
+        optIn.add("kotlin.uuid.ExperimentalUuidApi")
     }
 }
 

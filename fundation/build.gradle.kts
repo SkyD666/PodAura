@@ -1,5 +1,6 @@
 import com.google.devtools.ksp.gradle.KspAATask
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.compose)
@@ -17,6 +18,9 @@ kotlin {
         namespace = "com.skyd.fundation"
         compileSdk = 36
         minSdk = 24
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 
     // For iOS targets, this is also where you should

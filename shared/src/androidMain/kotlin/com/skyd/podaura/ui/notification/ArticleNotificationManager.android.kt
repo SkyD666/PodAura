@@ -13,7 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.skyd.compone.component.blockString
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter

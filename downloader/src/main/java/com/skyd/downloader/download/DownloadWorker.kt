@@ -5,22 +5,9 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.skyd.downloader.NotificationConfig
-import com.skyd.downloader.Status
-import com.skyd.downloader.UserAction
-import com.skyd.downloader.db.DatabaseInstance
 import com.skyd.downloader.notification.DownloadNotificationManager
-import com.skyd.downloader.util.FileUtil
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.request.head
-import io.ktor.http.HttpHeaders
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 internal class DownloadWorker(
     private val context: Context,
@@ -38,136 +25,63 @@ internal class DownloadWorker(
         const val KEY_DOWNLOADED_BYTES = "keyDownloadedBytes"
         const val DOWNLOADING_STATE = "downloading"
         const val STARTED_STATE = "started"
-
-        private val scope = CoroutineScope(Dispatchers.IO)
     }
 
-    private var downloadNotificationManager: DownloadNotificationManager? = null
-    private val downloadDao = DatabaseInstance.getInstance(context).downloadDao()
-
-    private val httpClientConfig: HttpClientConfig<*>.() -> Unit by inject()
-    private val httpClient by lazy { HttpClient(httpClientConfig) }
+    private var notificationManager: DownloadNotificationManager? = null
 
     override suspend fun doWork(): Result {
         val entityId = inputData.keyValueMap[INPUT_DATA_ID_KEY] as Int
-        val downloadRequest = downloadDao.find(entityId) ?: return Result.failure(
-            workDataOf(KEY_EXCEPTION to EXCEPTION_NO_ENTITY)
-        )
-
         val notificationConfig: NotificationConfig = runCatching {
             Json.decodeFromString<NotificationConfig>(
                 inputData.getString(INPUT_DATA_NOTIFICATION_CONFIG_KEY).orEmpty()
             )
         }.getOrNull() ?: return Result.failure(workDataOf(KEY_EXCEPTION to EXCEPTION_NO_ENTITY))
 
-        val id = downloadRequest.id
-        val url = downloadRequest.url
-        val dirPath = downloadRequest.path
-        val fileName = downloadRequest.fileName
-
-        downloadNotificationManager = DownloadNotificationManager(
-            context = context,
-            notificationConfig = notificationConfig,
-            requestId = id,
-            fileName = fileName
-        )
-
-        return try {
-            downloadNotificationManager?.sendUpdateNotification()?.let { setForeground(it) }
-
-            val latestETag = httpClient.head(url).headers[HttpHeaders.ETag].orEmpty()
-            val existingETag = downloadDao.find(id)?.eTag.orEmpty()
-            if (latestETag != existingETag) {
-                FileUtil.deleteDownloadFileIfExists(path = dirPath, name = fileName)
-                downloadDao.find(id)?.copy(eTag = latestETag)?.let { downloadDao.update(it) }
-            }
-
-            var progressPercentage = 0
-
-            val totalLength = DownloadTask(
-                url = url,
-                path = dirPath,
-                fileName = fileName,
-            ).download(
-                onStart = { length ->
-                    downloadDao.find(id)?.copy(
-                        totalBytes = length,
-                        status = Status.Started.toString(),
-                    )?.let { downloadDao.update(it) }
-
-                    setProgress(workDataOf(KEY_STATE to STARTED_STATE))
-                },
-                onProgress = { downloadedBytes, length, speed ->
-                    val progress = if (length != 0L) {
-                        ((downloadedBytes * 100) / length).toInt()
-                    } else {
-                        0
-                    }
-
-                    if (progressPercentage != progress) {
-                        progressPercentage = progress
-                        downloadDao.find(id)?.copy(
-                            downloadedBytes = downloadedBytes,
-                            speedInBytePerMs = speed,
-                            status = Status.Downloading.toString(),
-                        )?.let { downloadDao.update(it) }
-                    }
-
-                    setProgress(
-                        workDataOf(
-                            KEY_STATE to DOWNLOADING_STATE,
-                            KEY_DOWNLOADED_BYTES to downloadedBytes
-                        )
+        val result = DownloadChecker().tryDownload(
+            id = entityId,
+            onStart = {
+                notificationManager = DownloadNotificationManager(
+                    context = context,
+                    notificationConfig = notificationConfig,
+                    requestId = it.id,
+                    fileName = it.fileName
+                )
+                notificationManager?.sendUpdateNotification()?.let { setForeground(it) }
+                setProgress(workDataOf(KEY_STATE to STARTED_STATE))
+            },
+            onProgress = { downloadedBytes: Long, totalBytes: Long, speedInBPerMs: Float ->
+                setProgress(
+                    workDataOf(
+                        KEY_STATE to DOWNLOADING_STATE,
+                        KEY_DOWNLOADED_BYTES to downloadedBytes
                     )
-                    downloadNotificationManager?.sendUpdateNotification(
-                        downloadedBytes = downloadedBytes,
-                        speedInBPerMs = speed,
-                        totalBytes = length,
-                    )?.let { setForeground(it) }
-                }
-            )
-
-            downloadDao.find(id)?.copy(
-                totalBytes = totalLength,
-                status = Status.Success.toString(),
-            )?.let { downloadDao.update(it) }
-
-            downloadNotificationManager?.sendDownloadSuccessNotification(totalLength)
-
-            downloadDao.find(id)?.let { DownloadEvent.sendEvent(Event.Success(it)) }
+                )
+                notificationManager?.sendUpdateNotification(
+                    downloadedBytes = downloadedBytes,
+                    speedInBPerMs = speedInBPerMs,
+                    totalBytes = totalBytes,
+                )?.let { setForeground(it) }
+            },
+            onPaused = { downloadedBytes: Long, totalBytes: Long ->
+                notificationManager?.sendDownloadPausedNotification(
+                    downloadedBytes = downloadedBytes,
+                    totalBytes = totalBytes,
+                )
+            },
+            onCanceled = {
+                notificationManager?.sendDownloadCancelledNotification()
+            },
+            onSuccess = {
+                notificationManager?.sendDownloadSuccessNotification(it)
+            },
+            onFailed = {
+                notificationManager?.sendDownloadFailedNotification(downloadedBytes = it)
+            },
+        )
+        return if (result) {
             Result.success()
-        } catch (e: Exception) {
-            scope.launch {
-                if (e is CancellationException) {
-                    var downloadEntity = downloadDao.find(id)
-                    if (downloadEntity?.userAction == UserAction.Pause.toString()) {
-                        downloadEntity = downloadEntity.copy(status = Status.Paused.toString())
-                        downloadDao.update(downloadEntity)
-                        downloadNotificationManager?.sendDownloadPausedNotification(
-                            downloadedBytes = downloadEntity.downloadedBytes,
-                            totalBytes = downloadEntity.totalBytes,
-                        )
-                    } else {
-                        downloadDao.remove(id)
-                        FileUtil.deleteDownloadFileIfExists(dirPath, fileName)
-                        downloadNotificationManager?.sendDownloadCancelledNotification()
-                    }
-                } else {
-                    e.printStackTrace()
-                    var downloadEntity = downloadDao.find(id)
-                    if (downloadEntity != null) {
-                        downloadEntity = downloadEntity.copy(
-                            status = Status.Failed.toString(),
-                            failureReason = e.message.orEmpty(),
-                        )
-                        downloadDao.update(downloadEntity)
-                        downloadNotificationManager?.sendDownloadFailedNotification(
-                            downloadedBytes = downloadEntity.downloadedBytes
-                        )
-                    }
-                }
-            }
-            Result.failure(workDataOf(KEY_EXCEPTION to e.message))
+        } else {
+            Result.failure()
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.skyd.podaura.util.favicon
 
 import androidx.compose.ui.util.fastMaxBy
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.util.favicon.extractor.BaseUrlIconTagExtractor
 import com.skyd.podaura.util.favicon.extractor.HardCodedExtractor
 import com.skyd.podaura.util.favicon.extractor.IconTagExtractor

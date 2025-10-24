@@ -3,7 +3,7 @@ package com.skyd.podaura.model.worker.deletearticle
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getOrDefaultSuspend
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference

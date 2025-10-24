@@ -3,6 +3,7 @@ package com.skyd.podaura
 import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import com.skyd.downloader.di.databaseModule
 import com.skyd.mvi.mviConfig
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.di.notificationModule
@@ -30,7 +31,11 @@ class App : Application() {
             androidLogger()
             androidContext(this@App)
         }
-        loadKoinModules(listOf(notificationModule, repositoryModule, viewModelModule))
+        loadKoinModules(
+            listOf(
+                notificationModule, repositoryModule, viewModelModule, databaseModule,
+            )
+        )
         AppCompatDelegate.setDefaultNightMode(dataStore.getOrDefault(DarkModePreference))
 
         mviConfig { printLog = isDebug }

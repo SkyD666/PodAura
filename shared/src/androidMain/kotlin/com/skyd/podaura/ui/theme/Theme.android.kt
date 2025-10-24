@@ -9,7 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.Contrast
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.preference.appearance.BaseThemePreference
 
 

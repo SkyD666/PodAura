@@ -115,20 +115,22 @@ internal class DownloadTask(
             onContentLength = onContentLength,
             onProgress = onProgress,
         )
-        if (status == RequestedRangeNotSatisfiable) {
-            FileUtil.deleteDownloadFileIfExists(path, fileName)
-            headers.remove(HttpHeaders.Range)
-            request(
-                url = url,
-                headers = headers,
-                sink = sink,
-                rangeStart = 0,
-                onRangeStart = onRangeStart,
-                onContentLength = onContentLength,
-                onProgress = onProgress,
-            )
-        } else {
-            throw IOException("Something went wrong, response code: ${status.value}")
+        if (!status.isSuccess()) {
+            if (status == RequestedRangeNotSatisfiable) {
+                FileUtil.deleteDownloadFileIfExists(path, fileName)
+                headers.remove(HttpHeaders.Range)
+                request(
+                    url = url,
+                    headers = headers,
+                    sink = sink,
+                    rangeStart = 0,
+                    onRangeStart = onRangeStart,
+                    onContentLength = onContentLength,
+                    onProgress = onProgress,
+                )
+            } else {
+                throw IOException("Something went wrong, response code: ${status.value}")
+            }
         }
     }
 

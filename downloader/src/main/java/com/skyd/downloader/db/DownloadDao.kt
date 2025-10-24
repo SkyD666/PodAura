@@ -13,10 +13,13 @@ internal interface DownloadDao {
     suspend fun insert(entity: DownloadEntity)
 
     @Update
-    suspend fun update(entity: DownloadEntity)
+    suspend fun update(entity: DownloadEntity): Int
 
     @Query("SELECT * FROM ${DownloadEntity.TABLE_NAME} WHERE id = :id")
     suspend fun find(id: Int): DownloadEntity?
+
+    @Query("SELECT * FROM ${DownloadEntity.TABLE_NAME} WHERE status IN (:status)")
+    suspend fun findAllInStatuses(status: List<String>): List<DownloadEntity>
 
     @Query("DELETE FROM ${DownloadEntity.TABLE_NAME} WHERE id = :id")
     suspend fun remove(id: Int)

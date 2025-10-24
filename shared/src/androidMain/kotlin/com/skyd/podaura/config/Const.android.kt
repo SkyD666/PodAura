@@ -2,7 +2,7 @@ package com.skyd.podaura.config
 
 import android.content.Context
 import android.os.Environment
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import java.io.File
 
 actual val Const.FEED_ICON_DIR: String

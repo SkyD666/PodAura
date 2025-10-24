@@ -5,7 +5,7 @@ import android.widget.Toast
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import co.touchlab.kermit.Logger
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository

@@ -7,7 +7,7 @@ import androidx.room.RawQuery
 import androidx.room.RoomRawQuery
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean

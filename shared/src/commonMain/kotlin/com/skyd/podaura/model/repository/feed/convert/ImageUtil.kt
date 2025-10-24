@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.repository.feed.convert
 
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.util.favicon.FaviconExtractor
 
 internal suspend fun getRssIcon(url: String): String? = runCatching {

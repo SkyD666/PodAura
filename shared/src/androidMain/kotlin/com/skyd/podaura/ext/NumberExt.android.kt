@@ -1,7 +1,7 @@
 package com.skyd.podaura.ext
 
 import android.text.format.Formatter
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 
 actual fun Long.fileSize(): String = Formatter.formatFileSize(get(), this)
     // On some systems, zero-width characters are inserted into the string

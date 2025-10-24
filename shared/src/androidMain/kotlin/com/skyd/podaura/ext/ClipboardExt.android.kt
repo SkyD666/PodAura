@@ -4,7 +4,7 @@ import android.content.ClipData
 import android.net.Uri
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.toClipEntry
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.PlatformFile
 import org.jetbrains.compose.resources.getString

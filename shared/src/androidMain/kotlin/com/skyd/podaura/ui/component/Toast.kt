@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.component
 
 import android.widget.Toast
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

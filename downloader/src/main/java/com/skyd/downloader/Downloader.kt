@@ -3,12 +3,17 @@ package com.skyd.downloader
 import android.app.Application
 import androidx.work.WorkManager
 import com.skyd.downloader.db.DatabaseInstance
+import com.skyd.downloader.db.DownloadDao
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.DownloadEvent
 import com.skyd.downloader.download.DownloadManager
 import com.skyd.downloader.download.DownloadRequest
 import com.skyd.downloader.util.FileUtil
+import com.skyd.fundation.di.get
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 class Downloader private constructor(
     application: Application,
@@ -157,6 +162,21 @@ class Downloader private constructor(
     companion object {
         fun observeEvent() = DownloadEvent.eventFlow
 
+        private val scope = CoroutineScope(Dispatchers.IO)
+
+        init {
+            // todo needs to refactor to better implementation
+            scope.launch {
+                val downloadDao = get<DownloadDao>()
+                val downloadEntities = downloadDao.findAllInStatuses(
+                    listOf(Status.Started, Status.Downloading).map { it.toString() }
+                )
+                downloadEntities.forEach { entity ->
+                    downloadDao.update(entity.copy(status = Status.Paused.toString()))
+                }
+            }
+        }
+
         @Volatile
         private var instance: Downloader? = null
 
@@ -169,7 +189,9 @@ class Downloader private constructor(
             if (instance == null) {
                 synchronized(Downloader) {
                     if (instance == null) {
-                        instance = Downloader(application, notificationConfig)
+                        instance = Downloader(application, notificationConfig).apply {
+                            pauseAll()        // todo decouple worker manager
+                        }
                     }
                 }
             }

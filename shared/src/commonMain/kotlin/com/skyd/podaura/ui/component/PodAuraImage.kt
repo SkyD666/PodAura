@@ -18,7 +18,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import coil3.util.DebugLogger
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import io.ktor.client.HttpClient
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.koin.core.qualifier.named

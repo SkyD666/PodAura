@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GROUP_TABLE_NAME

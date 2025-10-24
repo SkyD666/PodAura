@@ -5,7 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.RoomRawQuery
 import com.skyd.podaura.config.allSearchDomain
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.splitByBlank
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME

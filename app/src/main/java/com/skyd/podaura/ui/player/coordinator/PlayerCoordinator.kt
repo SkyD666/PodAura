@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import com.skyd.fundation.di.inject
 import com.skyd.podaura.appContext
-import com.skyd.podaura.di.inject
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean

@@ -1,11 +1,11 @@
 package com.skyd.downloader.download
 
 import android.content.Context
-import android.util.Log
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import co.touchlab.kermit.Logger
 import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
 import com.skyd.downloader.UserAction
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import java.util.UUID
+import kotlin.uuid.Uuid
 
 internal class DownloadManager(
     private val context: Context,
@@ -35,8 +35,10 @@ internal class DownloadManager(
         const val TAG = "DownloadManager"
     }
 
+    private val log = Logger.withTag(TAG)
+
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.i(TAG, "Exception in DownloadManager Scope: ${throwable.message}")
+        log.i("Exception in DownloadManager Scope: ${throwable.message}")
     }
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob() + exceptionHandler)
@@ -121,7 +123,7 @@ internal class DownloadManager(
         }
     }
 
-    private suspend fun findDownloadEntityFromUUID(uuid: UUID): DownloadEntity? {
+    private suspend fun findDownloadEntityFromUUID(uuid: Uuid): DownloadEntity? {
         return downloadDao.getAllEntity().find { it.workerUuid == uuid.toString() }
     }
 

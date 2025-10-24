@@ -8,8 +8,8 @@ import com.skyd.downloader.NotificationConfig
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.Event
+import com.skyd.fundation.di.get
 import com.skyd.podaura.R
-import com.skyd.podaura.di.get
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import com.skyd.podaura.model.db.dao.ArticleDao
@@ -33,7 +33,7 @@ import podaura.shared.generated.resources.download_pause
 import podaura.shared.generated.resources.download_resume
 import podaura.shared.generated.resources.download_retry
 
-class DownloadManager private constructor(context: Context): IDownloadManager {
+class DownloadManager private constructor(context: Context) : IDownloadManager {
     private val downloader = Downloader.init(
         context.applicationContext as Application,
         NotificationConfig(

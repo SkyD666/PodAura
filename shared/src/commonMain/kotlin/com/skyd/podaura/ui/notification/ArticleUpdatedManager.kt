@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.notification
 
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.onSubList
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean

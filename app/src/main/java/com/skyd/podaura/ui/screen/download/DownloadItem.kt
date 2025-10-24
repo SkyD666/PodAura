@@ -25,13 +25,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.blockString
 import com.skyd.downloader.Status
 import com.skyd.podaura.ext.fileSize
-import com.skyd.podaura.ext.getString
 import com.skyd.podaura.model.bean.download.DownloadInfoBean
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -55,8 +54,7 @@ fun DownloadItem(
     onRetry: (DownloadInfoBean) -> Unit,
     onDelete: (DownloadInfoBean) -> Unit,
 ) {
-    val context = LocalContext.current
-    var description by remember { mutableStateOf(context.getString(Res.string.download_initializing)) }
+    var description by remember { mutableStateOf(blockString(Res.string.download_initializing)) }
     var pauseButtonIcon by remember { mutableStateOf(Icons.Outlined.Pause) }
     var pauseButtonContentDescription by rememberSaveable { mutableStateOf("") }
     var pauseButtonEnabled by rememberSaveable { mutableStateOf(true) }

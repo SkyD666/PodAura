@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.AndroidSQLiteDriver
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 
 actual fun SearchDomainDatabase.Companion.builder(): RoomDatabase.Builder<SearchDomainDatabase> {
     val appContext = get<Context>()

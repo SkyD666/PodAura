@@ -8,7 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao

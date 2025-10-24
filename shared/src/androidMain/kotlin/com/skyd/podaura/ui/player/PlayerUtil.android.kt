@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
-import com.skyd.podaura.di.get
+import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getImage
 import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.ui.player.service.PlayerState
