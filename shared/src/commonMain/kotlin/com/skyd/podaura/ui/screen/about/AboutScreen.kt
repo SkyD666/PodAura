@@ -69,7 +69,6 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
-import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.config.Const
@@ -336,7 +335,7 @@ private fun HelpArea(
     ButtonGroup(
         overflowIndicator = { menuState ->
             FilledIconButton(
-                onClick = { if (menuState.isExpanded) menuState.dismiss() else menuState.show() }
+                onClick = { if (menuState.isShowing) menuState.dismiss() else menuState.show() }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.MoreVert,
