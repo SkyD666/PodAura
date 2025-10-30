@@ -12,6 +12,7 @@ import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.AnimatedPaneScope
 import androidx.compose.material3.adaptive.layout.ExtendedPaneScaffoldPaneScope
 import androidx.compose.material3.adaptive.layout.PaneMotionDefaults
+import androidx.compose.material3.adaptive.layout.PaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -182,7 +183,7 @@ fun PodAuraNavHost(
 )
 
 @Composable
-fun <S, T : PaneScaffoldValue<S>> ExtendedPaneScaffoldPaneScope<S, T>.PodAuraAnimatedPane(
+fun <S : PaneScaffoldRole, T : PaneScaffoldValue<S>> ExtendedPaneScaffoldPaneScope<S, T>.PodAuraAnimatedPane(
     modifier: Modifier = Modifier,
     boundsAnimationSpec: FiniteAnimationSpec<IntRect> = PaneMotionDefaults.AnimationSpec,
     content: (@Composable AnimatedPaneScope.() -> Unit),

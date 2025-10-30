@@ -1,25 +1,25 @@
 [versions]
 agp = "8.13.0"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-datetime = "0.7.1"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
 kotlinx-io = "0.8.0"
-ksp = "2.2.20-2.0.2"
-compose = "1.10.0-alpha01"
-adaptive = "1.1.2"
-lifecycle = "2.9.4"
-navigation = "2.9.0"
-ktor = "3.3.0"
+ksp = "2.3.0"
+compose = "1.10.0-alpha03"
+adaptive = "1.2.0"
+lifecycle = "2.9.5"
+navigation = "2.9.1"
+ktor = "3.3.1"
 koin = "4.1.1"
 ksoup = "0.2.5"
 coil = "3.3.0"
 paging = "3.4.0-alpha04"
-worker = "2.10.5"
-room = "2.8.1"
-filekit = "0.11.0"
-xmlutil = "0.91.2"
+worker = "2.11.0"
+room = "2.8.3"
+filekit = "0.12.0"
+xmlutil = "0.91.3"
 tracing-perfetto = "1.0.0"
 
 [libraries]
@@ -54,7 +54,7 @@ kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.re
 kotlinx-io-okio = { module = "org.jetbrains.kotlinx:kotlinx-io-okio", version.ref = "kotlinx-io" }
 ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 
-androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0-rc01" }
+androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0" }
 
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.1" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.7" }
@@ -94,8 +94,8 @@ xmlutil-serialization-io = { module = "io.github.pdvrieze.xmlutil:serialization-
 
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 
-mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.17.n" }
-ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.17" }
+mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.18.n" }
+ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.18" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
@@ -103,9 +103,9 @@ coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
-material-kolor = { module = "com.materialkolor:material-kolor", version = "3.0.1" }
+material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha02" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.1" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta03" }
 skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta05" }
@@ -122,7 +122,7 @@ androidx-work-test = { module = "androidx.work:work-testing", version.ref = "wor
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
-androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.9.2" }
+androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.10.0-alpha05" }
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracing-perfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracing-perfetto" }
 

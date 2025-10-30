@@ -25,7 +25,7 @@ import podaura.shared.generated.resources.article_notification_content_text
 import podaura.shared.generated.resources.article_notification_new_articles
 
 class ArticleNotificationData(
-    @DrawableRes
+    @param:DrawableRes
     val icon: Int,
     val openActivityIntent: (List<Pair<String, ArticleNotificationRuleBean>>) -> Intent,
 )
