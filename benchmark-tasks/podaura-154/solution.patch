@@ -1,0 +1,6 @@
+# On a feature branch based off the baseline SHA:
+git checkout -b fix/podaura-154
+# ...make changes and add tests...
+git add -A
+git commit -m "Fix: <clear message mapping to PodAura #154>"
+git format-patch -1 HEAD --stdout > ../task-podaura-154/solution.patch
