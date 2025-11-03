@@ -26,9 +26,7 @@
     <string name="downloading">ダウンロード中…</string>
     <string name="download_screen_name">ダウンロードタスク</string>
     <string name="download_pause">一時停止</string>
-    <string name="download_retry">再試行</string>
     <string name="download_error_paused">エラー</string>
-    <string name="download_paused">一時停止中</string>
     <string name="download_click_to_seeding">シード</string>
     <string name="download_initializing">初期化中…</string>
     <string name="download_completed">完了しました</string>
@@ -352,8 +350,6 @@
     <string name="nickname">ニックネーム</string>
     <string name="download_screen_download_tasks">ダウンロードタスク</string>
     <string name="download_screen_bt_tasks">BT タスク</string>
-    <string name="download_resume">再開</string>
-    <string name="download_cancel">キャンセル</string>
     <string name="player_notification_channel_name">プレーヤー</string>
     <string name="player_notification_channel_description">プレーヤーのコントローラー</string>
     <string name="player_config_screen_background_play">バックグラウンド再生</string>
