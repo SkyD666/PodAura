@@ -18,6 +18,5 @@
     <string name="download">Elŝuti</string>
     <string name="downloading">Elŝutas…</string>
     <string name="download_error_paused">Eraro</string>
-    <string name="download_paused">Paŭzigita</string>
     <string name="download_completed">Finita</string>
 </resources>
