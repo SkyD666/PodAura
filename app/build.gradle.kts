@@ -7,9 +7,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.compose)       // Compose compiler plugin (AGP+Kotlin manage versions)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.compose.multiplatform) // ok to keep if used elsewhere; does not force JB deps by itself
+    // REMOVE if Android-only: alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
@@ -101,15 +101,18 @@ android {
             applicationIdSuffix = ".benchmark"
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     buildFeatures {
         compose = true
         viewBinding = true
         buildConfig = true
     }
+
     packaging {
         resources.excludes += mutableSetOf(
             "DebugProbesKt.bin",
@@ -121,8 +124,8 @@ android {
         )
         jniLibs {
             excludes += mutableSetOf(
-                "lib/*/libffmpegkit.so",                // mpv-android
-                "lib/*/libffmpegkit_abidetect.so",      // mpv-android
+                "lib/*/libffmpegkit.so",
+                "lib/*/libffmpegkit_abidetect.so",
             )
             useLegacyPackaging = true
         }
@@ -130,6 +133,7 @@ android {
             useLegacyPackaging = true
         }
     }
+
     androidResources {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
@@ -147,8 +151,8 @@ room {
 }
 
 composeCompiler {
+    // With modern AGP/Kotlin, the extension aligns automatically; no manual version here.
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
-    // keep this; with modern AGP the compiler extension aligns automatically to Kotlin/Compose
 }
 
 tasks.withType(KotlinCompile::class).configureEach {
@@ -176,9 +180,8 @@ tasks.withType(KotlinCompile::class).configureEach {
 }
 
 dependencies {
-
-    // ==== Compose BOM: controls versions for ALL androidx.compose* artifacts ====
-    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
+    // ---------- Compose BOM (must be first for compose artifacts) ----------
+    implementation(platform(libs.compose.bom))
 
     // AndroidX core & Android
     implementation(libs.androidx.core.ktx)
@@ -187,39 +190,27 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.media)
-    implementation(libs.androidx.compose.runtime.tracing)
+    implementation(libs.androidx.compose.runtime.tracing) // version managed by BOM
     implementation(libs.android.material)
     implementation(libs.accompanist.permissions)
 
-    // ==== Compose (AndroidX only; no explicit versions with BOM) ====
-    implementation("androidx.activity:activity-compose")
+    // ---------- Compose (AndroidX only; no explicit versions) ----------
+    implementation(libs.androidx.activity.compose)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose")
-    implementation("androidx.navigation:navigation-compose")
 
-    // ==== Material3 Adaptive (AndroidX line) ====
+    // Navigation + Lifecycle (AndroidX)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // ---------- Material3 Adaptive (AndroidX line) ----------
     implementation("androidx.compose.material3.adaptive:adaptive")
     implementation("androidx.compose.material3.adaptive:adaptive-layout")
     implementation("androidx.compose.material3.adaptive:adaptive-navigation")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite")
-
-    // (REMOVED JetBrains Compose artifacts that can mismatch at runtime)
-    // implementation(compose.materialIconsExtended)
-    // implementation(compose.runtime)
-    // implementation(compose.ui)
-    // implementation(compose.foundation)
-    // implementation(compose.material3)
-    // implementation(compose.components.resources)
-    // implementation(libs.jetbrains.navigation.compose)
-    // implementation(libs.jetbrains.lifecycle.runtime.compose)
-    // implementation(libs.jetbrains.compose.window.size)
-    // implementation(libs.jetbrains.compose.adaptive)
-    // implementation(libs.jetbrains.compose.adaptive.layout)
-    // implementation(libs.jetbrains.compose.adaptive.navigation)
 
     // AndroidX / Jetpack libs
     implementation(libs.androidx.work.runtime.ktx)
@@ -259,7 +250,6 @@ dependencies {
     implementation(projects.shared)
     implementation(projects.downloader)
 
-//    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
