@@ -1,0 +1,18 @@
+{
+  "task_id": "podaura-154",
+  "repo_url": "https://github.com/SkyD666/PodAura",
+  "commit_sha": "9ab6bc0f6f631e89daa754439afa7c23c41bffb6",
+  "license": "GPL-3.0 (source inspiration only; fix implemented in-place for upstream)",
+  "title": "Crashed on opening any podcast",
+  "description": "Align AndroidX Compose + Material3 Adaptive via the Compose BOM and remove mixed JetBrains Compose artifacts to resolve runtime NoSuchMethodError when opening a podcast.",
+  "domain_tags": ["UI", "Navigation", "Build"],
+  "tech_tags": ["Compose", "Material3", "Material3-Adaptive", "Navigation"],
+  "test_type": "instrumentation",
+  "test_paths": ["app/src/androidTest/java/com/skyd/podaura/PodcastOpensTest.kt"],
+  "gradle_commands": [
+    "./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.skyd.podaura.PodcastOpensTest"
+  ],
+  "estimated_runtime_sec": 45,
+  "solution_patch_file": "solution.patch",
+  "notes": "Fails on baseline with mixed Compose families; passes after BOM alignment."
+}
