@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.multiplatform) // ok to keep if used elsewhere; does not force JB deps by itself
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
@@ -50,22 +50,15 @@ android {
 
     // https://github.com/SkyD666/PodAura/issues/59#issuecomment-2597764128
     dependenciesInfo {
-        // Disables dependency metadata when building APKs.
         includeInApk = false
-        // Disables dependency metadata when building Android App Bundles.
         includeInBundle = false
     }
 
     splits {
         abi {
-            // Enables building multiple APKs per ABI.
             isEnable = true
-            // By default all ABIs are included, so use reset() and include().
-            // Resets the list of ABIs for Gradle to create APKs for to none.
             reset()
-            // A list of ABIs for Gradle to create APKs for.
             include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-            // We want to also generate a universal APK that includes all ABIs.
             isUniversalApk = true
         }
     }
@@ -92,7 +85,7 @@ android {
         }
         release {
             if (signing != null) {
-                signingConfig = signingConfigs.getByName("release")    // signing
+                signingConfig = signingConfigs.getByName("release")
             }
             isMinifyEnabled = true
             isShrinkResources = true
@@ -155,7 +148,7 @@ room {
 
 composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
-//    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
+    // keep this; with modern AGP the compiler extension aligns automatically to Kotlin/Compose
 }
 
 tasks.withType(KotlinCompile::class).configureEach {
@@ -184,6 +177,10 @@ tasks.withType(KotlinCompile::class).configureEach {
 
 dependencies {
 
+    // ==== Compose BOM: controls versions for ALL androidx.compose* artifacts ====
+    implementation(platform("androidx.compose:compose-bom:2025.01.00"))
+
+    // AndroidX core & Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
@@ -194,22 +191,41 @@ dependencies {
     implementation(libs.android.material)
     implementation(libs.accompanist.permissions)
 
-    implementation(compose.materialIconsExtended)
-    implementation(compose.runtime)
-    implementation(compose.ui)
-    implementation(compose.foundation)
-    implementation(compose.material3)
-    implementation(compose.components.resources)
-    implementation(libs.jetbrains.navigation.compose)
-    implementation(libs.jetbrains.lifecycle.runtime.compose)
-    implementation(libs.jetbrains.compose.window.size)
-    implementation(libs.jetbrains.compose.adaptive)
-    implementation(libs.jetbrains.compose.adaptive.layout)
-    implementation(libs.jetbrains.compose.adaptive.navigation)
+    // ==== Compose (AndroidX only; no explicit versions with BOM) ====
+    implementation("androidx.activity:activity-compose")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose")
+    implementation("androidx.navigation:navigation-compose")
 
+    // ==== Material3 Adaptive (AndroidX line) ====
+    implementation("androidx.compose.material3.adaptive:adaptive")
+    implementation("androidx.compose.material3.adaptive:adaptive-layout")
+    implementation("androidx.compose.material3.adaptive:adaptive-navigation")
+    implementation("androidx.compose.material3:material3-adaptive-navigation-suite")
+
+    // (REMOVED JetBrains Compose artifacts that can mismatch at runtime)
+    // implementation(compose.materialIconsExtended)
+    // implementation(compose.runtime)
+    // implementation(compose.ui)
+    // implementation(compose.foundation)
+    // implementation(compose.material3)
+    // implementation(compose.components.resources)
+    // implementation(libs.jetbrains.navigation.compose)
+    // implementation(libs.jetbrains.lifecycle.runtime.compose)
+    // implementation(libs.jetbrains.compose.window.size)
+    // implementation(libs.jetbrains.compose.adaptive)
+    // implementation(libs.jetbrains.compose.adaptive.layout)
+    // implementation(libs.jetbrains.compose.adaptive.navigation)
+
+    // AndroidX / Jetpack libs
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
 
+    // DI & coroutines & misc
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
@@ -218,19 +234,23 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.guava)
 
+    // media & network helpers
     implementation(libs.mpv.lib)
     implementation(libs.ffmpeg.kit)
 
+    // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.network.ktor3)
     implementation(libs.coil.video)
 
+    // logging / io
     implementation(libs.kermit)
     implementation(libs.kotlinx.io.core)
     implementation(libs.kotlinx.io.okio)
 
     implementation(libs.filekit.core)
 
+    // internal libs
     implementation(libs.skyd666.settings)
     implementation(libs.skyd666.compone)
     implementation(libs.skyd666.mvi)
