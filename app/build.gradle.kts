@@ -165,12 +165,10 @@ tasks.withType(KotlinCompile::class).configureEach {
             "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "-opt-in=androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
             "-opt-in=androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
-            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
             "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
             "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-            "-opt-in=coil.annotation.ExperimentalCoilApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
@@ -211,11 +209,6 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.paging.compose)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.room.paging)
-    ksp(libs.androidx.room.compiler)
 
     implementation(libs.koin.core)
     implementation(libs.koin.android)
@@ -223,13 +216,7 @@ dependencies {
     implementation(libs.koin.compose.viewmodel)
     implementation(libs.koin.compose.viewmodel.navigation)
 
-    implementation(libs.ktor.client.okhttp)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.xml)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.kotlinx.serialization.json.io)
     implementation(libs.kotlinx.coroutines.guava)
-    implementation(libs.kotlinx.datetime)
 
     implementation(libs.mpv.lib)
     implementation(libs.ffmpeg.kit)
@@ -242,15 +229,7 @@ dependencies {
     implementation(libs.kotlinx.io.core)
     implementation(libs.kotlinx.io.okio)
 
-    implementation(libs.xmlutil.core)
-    implementation(libs.xmlutil.serialization)
-    implementation(libs.xmlutil.serialization.io)
-
     implementation(libs.filekit.core)
-    implementation(libs.filekit.dialogs)
-
-    implementation(libs.reorderable)
-    implementation(libs.material.kolor)
 
     implementation(libs.skyd666.settings)
     implementation(libs.skyd666.compone)

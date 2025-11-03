@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_retry">重試</string>
+    <string name="download_paused">已暫停</string>
+</resources>

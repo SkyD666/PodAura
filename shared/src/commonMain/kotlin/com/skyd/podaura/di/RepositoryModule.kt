@@ -10,6 +10,9 @@ import com.skyd.podaura.model.repository.UpdateRepository
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
+import com.skyd.podaura.model.repository.download.DownloadManager
+import com.skyd.podaura.model.repository.download.DownloadRepository
+import com.skyd.podaura.model.repository.download.IDownloadManager
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import com.skyd.podaura.model.repository.feed.IFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderFeedRepository
@@ -88,4 +91,8 @@ val repositoryModule = module {
     factory {
         ArticleRepository(get(), get(), get(), get())
     } binds arrayOf(IArticleRepository::class)
+
+    factory { DownloadRepository() }
+
+    factory { DownloadManager.instance } binds arrayOf(IDownloadManager::class)
 }

@@ -27,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -40,7 +39,7 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.type
-import com.skyd.podaura.model.bean.download.DownloadInfoBean
+import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
@@ -174,7 +173,6 @@ private fun DownloadList(
     contentPadding: PaddingValues,
 ) {
     if (downloadInfoBeanList.isNotEmpty()) {
-        val context = LocalContext.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxHeight()
@@ -185,7 +183,7 @@ private fun DownloadList(
                 items = downloadInfoBeanList,
                 key = { _, item -> item.id },
             ) { index, item ->
-                val downloadManager = remember { DownloadManager.getInstance(context) }
+                val downloadManager = remember { DownloadManager.instance }
                 if (index > 0) HorizontalDivider()
                 DownloadItem(
                     data = item,

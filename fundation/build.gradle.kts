@@ -1,5 +1,3 @@
-import com.google.devtools.ksp.gradle.KspAATask
-import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {

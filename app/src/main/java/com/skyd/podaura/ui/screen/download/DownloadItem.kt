@@ -31,9 +31,11 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.downloader.Status
 import com.skyd.podaura.ext.fileSize
-import com.skyd.podaura.model.bean.download.DownloadInfoBean
+import com.skyd.podaura.model.download.DownloadInfoBean
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import podaura.downloader.generated.resources.download_paused
+import podaura.downloader.generated.resources.download_retry
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.delete
 import podaura.shared.generated.resources.download
@@ -42,8 +44,6 @@ import podaura.shared.generated.resources.download_download_payload_rate
 import podaura.shared.generated.resources.download_error_paused
 import podaura.shared.generated.resources.download_initializing
 import podaura.shared.generated.resources.download_pause
-import podaura.shared.generated.resources.download_paused
-import podaura.shared.generated.resources.download_retry
 import podaura.shared.generated.resources.downloading
 
 @Composable
@@ -72,7 +72,8 @@ fun DownloadItem(
             Status.Failed -> {
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.Refresh
-                pauseButtonContentDescription = getString(Res.string.download_retry)
+                pauseButtonContentDescription =
+                    getString(podaura.downloader.generated.resources.Res.string.download_retry)
                 description = getString(Res.string.download_error_paused)
             }
 
@@ -80,7 +81,8 @@ fun DownloadItem(
                 pauseButtonEnabled = true
                 pauseButtonIcon = Icons.Outlined.PlayArrow
                 pauseButtonContentDescription = getString(Res.string.download)
-                description = getString(Res.string.download_paused)
+                description =
+                    getString(podaura.downloader.generated.resources.Res.string.download_paused)
             }
 
             Status.Init,

@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.download
 
-import com.skyd.podaura.model.bean.download.DownloadInfoBean
+import com.skyd.podaura.model.download.DownloadInfoBean
 
 
 internal sealed interface DownloadPartialStateChange {

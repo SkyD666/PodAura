@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_retry">再試行</string>
+    <string name="download_resume">再開</string>
+    <string name="download_cancel">キャンセル</string>
+    <string name="download_paused">一時停止中</string>
+</resources>

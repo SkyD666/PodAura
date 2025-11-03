@@ -26,9 +26,7 @@
     <string name="downloading">Downloading…</string>
     <string name="download_screen_name">Download task</string>
     <string name="download_pause">Pause</string>
-    <string name="download_retry">Retry</string>
     <string name="download_error_paused">Error</string>
-    <string name="download_paused">Paused</string>
     <string name="download_click_to_seeding">Seed</string>
     <string name="download_initializing">Initializing…</string>
     <string name="download_completed">Completed</string>
@@ -370,8 +368,6 @@
     <string name="nickname">Nickname</string>
     <string name="download_screen_download_tasks">Download Tasks</string>
     <string name="download_screen_bt_tasks">BT Tasks</string>
-    <string name="download_resume">Resume</string>
-    <string name="download_cancel">Cancel</string>
     <string name="player_notification_channel_name">Player</string>
     <string name="player_notification_channel_description">Player controller</string>
     <string name="player_config_screen_background_play">Background playback</string>

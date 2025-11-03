@@ -1,45 +1,111 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
 
-android {
-    namespace = "com.skyd.downloader"
-    compileSdk = 36
+kotlin {
 
-    defaultConfig {
+    // Target declarations - add or remove as needed below. These define
+    // which platforms this KMP module supports.
+    // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
+    androidLibrary {
+        namespace = "com.skyd.downloader"
+        compileSdk = 36
         minSdk = 24
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+        androidResources.enable = true
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    // For iOS targets, this is also where you should
+    // configure native binary output. For more information, see:
+    // https://kotlinlang.org/docs/multiplatform-build-native-binaries.html#build-xcframeworks
+
+    // A step-by-step guide on how to include this library in an XCode
+    // project can be found here:
+    // https://developer.android.com/kotlin/multiplatform/migrate
+//    val xcfName = "downloaderKit"
+//
+//    iosX64 {
+//        binaries.framework {
+//            baseName = xcfName
+//        }
+//    }
+//
+//    iosArm64 {
+//        binaries.framework {
+//            baseName = xcfName
+//        }
+//    }
+//
+//    iosSimulatorArm64 {
+//        binaries.framework {
+//            baseName = xcfName
+//        }
+//    }
+
+    jvm()
+
+    // Source set declarations.
+    // Declaring a target automatically creates a source set with the same name. By default, the
+    // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
+    // common to share sources between related targets.
+    // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(libs.kotlin.stdlib)
+                implementation(compose.runtime)
+                implementation(compose.components.resources)
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.filekit.core)
+                implementation(libs.ktor.client.core)
+                implementation(libs.koin.core)
+                implementation(libs.kermit)
+                implementation(libs.kotlincrypto.hash.md)
+                implementation(libs.skyd666.compone)
+
+                implementation(projects.fundation)
+            }
         }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+
+        androidMain {
+            dependencies {
+                implementation(libs.androidx.core.ktx)
+                implementation(libs.androidx.room.ktx)
+                implementation(libs.androidx.work.runtime.ktx)
+            }
+        }
+
+//        iosMain {
+//            dependencies {
+//                // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
+//                // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
+//                // part of KMP’s default source set hierarchy. Note that this source set depends
+//                // on common by default and will correctly pull the iOS artifacts of any
+//                // KMP dependencies declared in commonMain.
+//            }
+//        }
+        all {
+            with(languageSettings) {
+                optIn("kotlin.time.ExperimentalTime")
+                optIn("kotlin.uuid.ExperimentalUuidApi")
+                optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
+            }
+        }
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
-        optIn.add("kotlin.time.ExperimentalTime")
-        optIn.add("kotlin.uuid.ExperimentalUuidApi")
+dependencies {
+    listOf("kspCommonMainMetadata", "kspAndroid", "kspJvm").forEach {
+        add(it, projects.ksp)
+        if (it != "kspCommonMainMetadata") {
+            add(it, libs.androidx.room.compiler)
+        }
     }
 }
 
@@ -47,24 +113,6 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
-dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.filekit.core)
-    implementation(libs.ktor.client.core)
-    implementation(libs.koin.core)
-    implementation(libs.kermit)
-    implementation(libs.kotlincrypto.hash.md)
-
-    implementation(projects.fundation)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit.ktx)
-    androidTestImplementation(libs.androidx.espresso.core)
+compose.resources {
+    publicResClass = true
 }

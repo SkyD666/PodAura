@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="downloading_title">下载中 %s</string>
-    <string name="download_successful">下载成功（%s）</string>
-    <string name="download_failed">下载失败</string>
-    <string name="download_paused">暂停下载</string>
-    <string name="download_cancelled">取消下载</string>
-</resources>

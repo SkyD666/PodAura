@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_paused">Duraklatıldı</string>
+    <string name="download_retry">Yeniden Dene</string>
+</resources>

@@ -120,6 +120,7 @@ kotlin {
 
             implementation(projects.fundation)
             implementation(projects.ksp)
+            implementation(projects.downloader)
         }
 
         commonTest.dependencies {
@@ -168,18 +169,15 @@ kotlin {
                 optIn("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
                 optIn("androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi")
                 optIn("androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi")
-                optIn("androidx.compose.material.ExperimentalMaterialApi")
                 optIn("androidx.compose.animation.ExperimentalAnimationApi")
                 optIn("androidx.compose.foundation.ExperimentalFoundationApi")
                 optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
                 optIn("androidx.compose.ui.ExperimentalComposeUiApi")
-                optIn("coil.annotation.ExperimentalCoilApi")
                 optIn("kotlinx.coroutines.FlowPreview")
                 optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
                 optIn("kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi")
                 optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
                 optIn("kotlinx.serialization.ExperimentalSerializationApi")
-                optIn("com.google.accompanist.permissions.ExperimentalPermissionsApi")
                 optIn("kotlin.contracts.ExperimentalContracts")
                 optIn("kotlin.ExperimentalStdlibApi")
                 optIn("kotlin.uuid.ExperimentalUuidApi")
