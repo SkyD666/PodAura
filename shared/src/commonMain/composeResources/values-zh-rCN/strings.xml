@@ -27,9 +27,7 @@
     <string name="downloading">下载中…</string>
     <string name="download_screen_name">下载任务</string>
     <string name="download_pause">暂停</string>
-    <string name="download_retry">重试</string>
     <string name="download_error_paused">下载失败</string>
-    <string name="download_paused">已暂停</string>
     <string name="download_click_to_seeding">做种</string>
     <string name="download_initializing">初始化中…</string>
     <string name="download_completed">已完成</string>
@@ -355,8 +353,6 @@
     <string name="nickname">昵称</string>
     <string name="download_screen_download_tasks">下载任务</string>
     <string name="download_screen_bt_tasks">BT 任务</string>
-    <string name="download_resume">继续下载</string>
-    <string name="download_cancel">取消下载</string>
     <string name="player_notification_channel_name">播放器</string>
     <string name="player_notification_channel_description">播放器通知栏控制</string>
     <string name="player_config_screen_background_play">后台播放</string>
