@@ -67,7 +67,7 @@ ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processin
 
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0" }
 
-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.1" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.1" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.7" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }

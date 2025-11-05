@@ -74,7 +74,6 @@ kotlin {
             implementation(libs.jetbrains.navigation.compose)
 
             implementation(libs.androidx.datastore.preferences)
-            implementation(libs.androidx.graphics.shapes)
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.constraintlayout.compose)
@@ -97,6 +96,7 @@ kotlin {
 
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.room.paging)
+            implementation(libs.androidx.sqlite.bundled)
 
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
@@ -137,8 +137,10 @@ kotlin {
             implementation(libs.android.material)
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.media)
-
             implementation(libs.androidx.room.ktx)
+            implementation(libs.androidx.graphics.shapes)
+
+            implementation(libs.accompanist.permissions)
 
             implementation(libs.ktor.client.okhttp)
 
@@ -183,6 +185,7 @@ kotlin {
                 optIn("kotlin.ExperimentalStdlibApi")
                 optIn("kotlin.uuid.ExperimentalUuidApi")
                 optIn("kotlin.time.ExperimentalTime")
+                optIn("com.google.accompanist.permissions.ExperimentalPermissionsApi")
             }
             compilerOptions {
                 freeCompilerArgs.add("-Xexpect-actual-classes")

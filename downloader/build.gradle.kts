@@ -62,6 +62,7 @@ kotlin {
                 implementation(libs.jetbrains.compose.runtime)
                 implementation(libs.jetbrains.compose.components.resources)
                 implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.filekit.core)
                 implementation(libs.ktor.client.core)

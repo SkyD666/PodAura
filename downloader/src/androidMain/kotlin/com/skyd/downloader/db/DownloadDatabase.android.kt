@@ -8,7 +8,7 @@ import com.skyd.fundation.di.get
 
 actual fun DownloadDatabase.Companion.builder(): RoomDatabase.Builder<DownloadDatabase> {
     val appContext = get<Context>()
-    val dbFile = appContext.getDatabasePath(APP_DATA_BASE_FILE_NAME)
+    val dbFile = appContext.getDatabasePath(DOWNLOAD_FILE_NAME)
     return Room.databaseBuilder<DownloadDatabase>(
         context = appContext,
         name = dbFile.absolutePath

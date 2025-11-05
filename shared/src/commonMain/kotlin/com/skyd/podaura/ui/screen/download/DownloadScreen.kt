@@ -1,7 +1,5 @@
 package com.skyd.podaura.ui.screen.download
 
-import android.content.Intent
-import android.os.Build
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +28,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
+import androidx.navigation.NavDeepLink
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.skyd.compone.component.ComponeFloatingActionButton
@@ -38,7 +36,6 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.type
 import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
@@ -75,24 +72,11 @@ data class DownloadRoute(
 }
 
 @Serializable
-data object DownloadDeepLinkRoute {
-    val deepLinks = listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
-        navDeepLink {
-            action = Intent.ACTION_VIEW
-            uriPattern = it
-        }
-    }
+expect object DownloadDeepLinkRoute {
+    val deepLinks: List<NavDeepLink>
 
     @Composable
-    fun DownloadDeepLinkLauncher(entry: NavBackStackEntry) {
-        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            entry.arguments?.getParcelable(NavController.KEY_DEEP_LINK_INTENT, Intent::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            entry.arguments?.getParcelable(NavController.KEY_DEEP_LINK_INTENT)
-        }
-        DownloadScreen(downloadLink = intent?.data?.toString(), mimetype = intent?.data?.type)
-    }
+    fun DownloadDeepLinkLauncher(entry: NavBackStackEntry)
 }
 
 @Composable

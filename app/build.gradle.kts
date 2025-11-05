@@ -172,7 +172,6 @@ tasks.withType(KotlinCompile::class).configureEach {
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
-            "-opt-in=com.google.accompanist.permissions.ExperimentalPermissionsApi",
             "-opt-in=kotlin.contracts.ExperimentalContracts",
             "-opt-in=kotlin.ExperimentalStdlibApi",
             "-opt-in=kotlin.uuid.ExperimentalUuidApi",
@@ -191,7 +190,6 @@ dependencies {
     implementation(libs.androidx.media)
     implementation(libs.androidx.compose.runtime.tracing)
     implementation(libs.android.material)
-    implementation(libs.accompanist.permissions)
 
     implementation(libs.jetbrains.compose.runtime)
     implementation(libs.jetbrains.compose.foundation)

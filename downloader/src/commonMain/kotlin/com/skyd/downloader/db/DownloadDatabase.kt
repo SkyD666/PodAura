@@ -7,7 +7,7 @@ import androidx.room.RoomDatabaseConstructor
 import androidx.room.migration.Migration
 
 
-const val APP_DATA_BASE_FILE_NAME = "Downloader"
+const val DOWNLOAD_FILE_NAME = "Downloader"
 
 // The Room compiler generates the `actual` implementations.
 @Suppress("KotlinNoActualForExpect")
