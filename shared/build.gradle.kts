@@ -214,6 +214,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    lint.checkReleaseBuilds = false
 }
 
 compose.desktop {

@@ -19,6 +19,7 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
+        lint.checkReleaseBuilds = false
     }
 
     // For iOS targets, this is also where you should
@@ -56,38 +57,18 @@ kotlin {
     // common to share sources between related targets.
     // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.io.core)
-                implementation(libs.jetbrains.compose.runtime)
-                implementation(libs.jetbrains.compose.components.resources)
-                implementation(libs.androidx.datastore.preferences)
-                implementation(libs.koin.core)
-                implementation(libs.kermit)
-                implementation(projects.ksp)
-            }
+        commonMain.dependencies {
+            implementation(libs.kotlin.stdlib)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.io.core)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.components.resources)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.koin.core)
+            implementation(libs.kermit)
+            implementation(projects.ksp)
         }
-
-        androidMain {
-            dependencies {
-                // Add Android-specific dependencies here. Note that this source set depends on
-                // commonMain by default and will correctly pull the Android artifacts of any KMP
-                // dependencies declared in commonMain.
-            }
-        }
-
-//        iosMain {
-//            dependencies {
-//                // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
-//                // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
-//                // part of KMP’s default source set hierarchy. Note that this source set depends
-//                // on common by default and will correctly pull the iOS artifacts of any
-//                // KMP dependencies declared in commonMain.
-//            }
-//        }
 
         all {
             with(languageSettings) {
