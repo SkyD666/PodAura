@@ -113,8 +113,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
-        compose = true
-        viewBinding = true
         buildConfig = true
     }
     packaging {
@@ -141,6 +139,7 @@ android {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
     }
+    lint.checkReleaseBuilds = false
 }
 
 kotlin {

@@ -18,6 +18,7 @@ kotlin {
         compileSdk = 36
         minSdk = 24
         androidResources.enable = true
+        lint.checkReleaseBuilds = false
     }
 
     // For iOS targets, this is also where you should
@@ -95,6 +96,9 @@ kotlin {
                 optIn("kotlin.time.ExperimentalTime")
                 optIn("kotlin.uuid.ExperimentalUuidApi")
                 optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
+            }
+            compilerOptions {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
             }
         }
     }
