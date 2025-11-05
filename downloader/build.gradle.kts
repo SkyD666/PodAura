@@ -58,8 +58,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.kotlin.stdlib)
-                implementation(compose.runtime)
-                implementation(compose.components.resources)
+                implementation(libs.jetbrains.compose.runtime)
+                implementation(libs.jetbrains.compose.components.resources)
                 implementation(libs.androidx.room.runtime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.filekit.core)
