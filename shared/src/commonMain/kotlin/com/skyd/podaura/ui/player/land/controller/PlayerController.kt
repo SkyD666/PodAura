@@ -64,8 +64,8 @@ import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
 import com.skyd.podaura.ui.player.land.rememberSystemBarsVisibilityController
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.podaura.util.Platform
-import com.skyd.podaura.util.platform
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive

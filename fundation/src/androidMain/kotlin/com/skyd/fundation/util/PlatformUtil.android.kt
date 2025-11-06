@@ -1,4 +1,4 @@
-package com.skyd.podaura.util
+package com.skyd.fundation.util
 
 import kotlin.system.exitProcess
 

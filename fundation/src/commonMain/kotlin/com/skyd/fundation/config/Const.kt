@@ -1,4 +1,4 @@
-package com.skyd.podaura.config
+package com.skyd.fundation.config
 
 object Const {
     const val GITHUB_REPO = "https://github.com/SkyD666/PodAura"
@@ -23,8 +23,6 @@ expect val Const.MPV_CONFIG_DIR: String
 expect val Const.VIDEO_DIR: String
 expect val Const.DEFAULT_FILE_PICKER_PATH: String
 expect val Const.TEMP_PICTURES_DIR: String
-expect val Const.TEMP_TORRENT_DIR: String
-expect val Const.TORRENT_RESUME_DATA_DIR: String
 expect val Const.MPV_FONT_DIR: String
 expect val Const.PICTURES_DIR: String
 expect val Const.PODAURA_PICTURES_DIR: String

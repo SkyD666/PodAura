@@ -8,9 +8,9 @@ import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
-import com.skyd.podaura.config.Const
-import com.skyd.podaura.config.MPV_FONT_DIR
-import com.skyd.podaura.config.PICTURES_DIR
+import com.skyd.fundation.config.Const
+import com.skyd.fundation.config.MPV_FONT_DIR
+import com.skyd.fundation.config.PICTURES_DIR
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference

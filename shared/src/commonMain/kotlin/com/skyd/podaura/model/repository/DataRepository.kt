@@ -1,11 +1,10 @@
 package com.skyd.podaura.model.repository
 
-import com.skyd.podaura.config.Const
-import com.skyd.podaura.config.FEED_ICON_DIR
-import com.skyd.podaura.config.TEMP_TORRENT_DIR
+import com.skyd.fundation.config.Const
+import com.skyd.fundation.config.FEED_ICON_DIR
 import com.skyd.fundation.ext.deleteRecursively
-import com.skyd.podaura.ext.getOrDefault
 import com.skyd.fundation.ext.walk
+import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
@@ -26,7 +25,6 @@ class DataRepository(
 ) : BaseRepository() {
     fun requestClearCache(): Flow<Long> = flow {
         var size: Long = 0
-        size += Path(Const.TEMP_TORRENT_DIR).deleteRecursively() ?: 0L
         Path(Const.FEED_ICON_DIR).walk().forEach {
             if (it.toString() != Const.FEED_ICON_DIR) {
                 val contains = feedDao.containsByCustomIcon(it.toString())

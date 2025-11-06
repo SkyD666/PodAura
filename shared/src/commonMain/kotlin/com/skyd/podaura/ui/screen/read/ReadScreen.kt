@@ -89,9 +89,9 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.podaura.util.Platform
-import com.skyd.podaura.util.isPhone
-import com.skyd.podaura.util.platform
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.isPhone
+import com.skyd.fundation.util.platform
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -96,7 +96,6 @@ kotlin {
 
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.room.paging)
-            implementation(libs.androidx.sqlite.bundled)
 
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
@@ -163,6 +162,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.jetbrains.compose.desktop.common)
+            implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.ktor.client.apache5)
         }
 
         all {
@@ -258,6 +259,7 @@ buildkonfig {
     packageName = "com.skyd.podaura"
 
     defaultConfigs {
+        buildConfigField(STRING, "packageName", "com.skyd.podaura")
         buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())
         buildConfigField(INT, "versionCode", properties["versionCode"]!!.toString())
     }

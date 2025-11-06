@@ -53,8 +53,8 @@ import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
-import com.skyd.podaura.util.isPhone
-import com.skyd.podaura.util.platform
+import com.skyd.fundation.util.isPhone
+import com.skyd.fundation.util.platform
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.openFileWithDefaultApplication

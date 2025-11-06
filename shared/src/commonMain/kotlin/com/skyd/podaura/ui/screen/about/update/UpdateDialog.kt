@@ -33,7 +33,7 @@ import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.config.Const
+import com.skyd.fundation.config.Const
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.UpdateBean

@@ -71,8 +71,8 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.ext.plus
 import com.skyd.compone.local.LocalNavController
+import com.skyd.fundation.config.Const
 import com.skyd.podaura.BuildKonfig
-import com.skyd.podaura.config.Const
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean

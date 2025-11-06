@@ -11,7 +11,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
-import com.skyd.podaura.config.Const
+import com.skyd.fundation.config.Const
 import com.skyd.podaura.ext.getAppVersionCode
 import com.skyd.podaura.ext.getAppVersionName
 import com.skyd.podaura.ext.safeOpenUri

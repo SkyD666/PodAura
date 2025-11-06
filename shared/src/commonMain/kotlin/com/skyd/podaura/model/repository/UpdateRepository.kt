@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.repository
 
-import com.skyd.podaura.config.Const
+import com.skyd.fundation.config.Const
 import com.skyd.podaura.model.bean.UpdateBean
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
