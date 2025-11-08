@@ -73,6 +73,10 @@ kotlin {
             implementation(projects.ksp)
         }
 
+        jvmMain.dependencies {
+            implementation(libs.java.jna)
+        }
+
         all {
             with(languageSettings) {
                 optIn("kotlin.time.ExperimentalTime")

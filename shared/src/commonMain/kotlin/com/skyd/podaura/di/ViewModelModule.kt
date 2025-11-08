@@ -2,6 +2,7 @@ package com.skyd.podaura.di
 
 import com.skyd.podaura.ui.screen.about.update.UpdateViewModel
 import com.skyd.podaura.ui.screen.article.ArticleViewModel
+import com.skyd.podaura.ui.screen.download.DownloadViewModel
 import com.skyd.podaura.ui.screen.feed.FeedViewModel
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleViewModel
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedViewModel
@@ -52,4 +53,5 @@ val viewModelModule = module {
     viewModel { ReadViewModel(get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { DataViewModel(get()) }
+    viewModel { DownloadViewModel(get()) }
 }

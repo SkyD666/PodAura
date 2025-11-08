@@ -1,5 +1,16 @@
 package com.skyd.podaura.util
 
-actual fun isWifiAvailable(): Boolean {
-    TODO("Not yet implemented")
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
+
+actual fun isFreeNetworkAvailable(): Boolean {
+    return when (platform) {
+        Platform.Android,
+        Platform.IOS -> error("Not supported platform")
+
+        Platform.Linux,
+        Platform.MacOS -> true
+
+        Platform.Windows -> TODO()
+    }
 }

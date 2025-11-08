@@ -1,3 +1,3 @@
 package com.skyd.podaura.util
 
-expect fun isWifiAvailable(): Boolean
+expect fun isFreeNetworkAvailable(): Boolean

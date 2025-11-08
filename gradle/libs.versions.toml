@@ -119,6 +119,8 @@ material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
 compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 
+java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
+
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta05" }
 skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta07" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta04" }

@@ -3,7 +3,7 @@ package com.skyd.podaura.di
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.util.isWifiAvailable
+import com.skyd.podaura.util.isFreeNetworkAvailable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
@@ -56,7 +56,7 @@ val ioModule = module {
                     onRequest { request, _ ->
                         val loadNetImageOnWifiOnly =
                             dataStore.getOrDefault(LoadNetImageOnWifiOnlyPreference)
-                        if (loadNetImageOnWifiOnly && isWifiAvailable()) {
+                        if (loadNetImageOnWifiOnly && isFreeNetworkAvailable()) {
                             throw IOException("Not on Wi-Fi; network load denied.")
                         }
                         request.headers.append("Cache-Control", "max-age=31536000,public")

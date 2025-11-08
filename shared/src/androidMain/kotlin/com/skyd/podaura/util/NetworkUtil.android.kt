@@ -5,7 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.skyd.fundation.di.get
 
-actual fun isWifiAvailable(): Boolean {
+actual fun isFreeNetworkAvailable(): Boolean {
     val connectivityManager =
         get<Context>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val network = connectivityManager.activeNetwork ?: return false

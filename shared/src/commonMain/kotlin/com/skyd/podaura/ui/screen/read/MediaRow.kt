@@ -49,7 +49,7 @@ import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
-import com.skyd.podaura.util.isWifiAvailable
+import com.skyd.podaura.util.isFreeNetworkAvailable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add_to_playlist
@@ -80,7 +80,7 @@ private fun MediaCover(
                 .align(Alignment.Companion.Center),
         ) {
             var realImage by rememberSaveable(enclosure) {
-                mutableStateOf(if (isWifiAvailable() && enclosure.isVideo) enclosure.url else cover)
+                mutableStateOf(if (isFreeNetworkAvailable() && enclosure.isVideo) enclosure.url else cover)
             }
             PodAuraImage(
                 modifier = Modifier.Companion
