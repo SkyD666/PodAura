@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.fundation.config.Const
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.fundation.config.Const
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.UpdateBean
@@ -133,10 +133,11 @@ private fun NewerDialog(
         scrollable = false,
         text = {
             Column {
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .weight(weight = 1f, fill = false)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(scrollState)
                 ) {
                     SelectionContainer {
                         Text(

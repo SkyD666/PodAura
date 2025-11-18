@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.read
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -71,9 +72,12 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.setText
 import com.skyd.compone.local.LocalNavController
+import com.skyd.fundation.ext.format
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.isPhone
+import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.fundation.ext.format
 import com.skyd.podaura.ext.httpDomain
 import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.safeOpenUri
@@ -89,9 +93,6 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.fundation.util.Platform
-import com.skyd.fundation.util.isPhone
-import com.skyd.fundation.util.platform
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -244,11 +245,12 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                     ReadContentTonalElevationPreference.current.dp
         ),
     ) { paddingValues ->
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(paddingValues)
                 .padding(bottom = fabHeight)
                 .testTag("ReadColumn"),
@@ -269,6 +271,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                 is ArticleState.Success -> {
                     val clipboard = LocalClipboard.current
                     Content(
+                        scrollState = scrollState,
                         articleState = articleState,
                         shareImage = { dispatcher(ReadIntent.ShareImage(url = it)) },
                         copyImage = {
@@ -341,6 +344,7 @@ private fun CategoryArea(categories: List<ArticleCategoryBean>) {
 
 @Composable
 private fun Content(
+    scrollState: ScrollState,
     articleState: ArticleState.Success,
     downloadImage: (url: String) -> Unit,
     copyImage: (url: String) -> Unit,
@@ -405,12 +409,13 @@ private fun Content(
         )
     })
     PodAuraWebView(
+        modifier = Modifier.fillMaxWidth(),
         content = article.article.content.ifNullOfBlank {
             article.article.description.orEmpty()
         },
         refererDomain = article.article.link?.httpDomain(),
         horizontalPadding = 16f,
-        onImageClick = { imageUrl, alt -> openImageSheet = imageUrl }
+        onImageClick = { imageUrl, alt -> openImageSheet = imageUrl },
     )
     CategoryArea(article.categories)
 

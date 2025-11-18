@@ -121,6 +121,7 @@ kotlin {
             implementation(projects.fundation)
             implementation(projects.ksp)
             implementation(projects.downloader)
+            implementation(projects.htmlrender)
         }
 
         commonTest.dependencies {

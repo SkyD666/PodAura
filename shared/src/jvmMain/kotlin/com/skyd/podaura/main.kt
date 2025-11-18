@@ -12,6 +12,9 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
 
 fun main() = application {
+    // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-desktop-swing-interoperability.html#experimental-interop-blending
+    System.setProperty("compose.interop.blending", "true")
+
     val windowController = WindowController(onClose = ::exitApplication)
     initKoin {}
     onAppStart()
