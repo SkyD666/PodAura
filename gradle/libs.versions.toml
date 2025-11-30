@@ -1,33 +1,33 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.1"
 kotlin = "2.2.21"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-datetime = "0.7.1"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.9.0"
-kotlinx-io = "0.8.0"
+kotlinx-io = "0.8.2"
 ksp = "2.3.0"
-compose = "1.10.0-beta01"
-compose-material3 = "1.10.0-alpha04"
-compose-material3-adaptive = "1.3.0-alpha01"
+compose = "1.10.0-beta02"
+compose-material3 = "1.10.0-alpha05"
+compose-material3-adaptive = "1.3.0-alpha02"
 compose-materialIconsExtended = "1.7.3"
 lifecycle = "2.9.6"
 navigation = "2.9.1"
-ktor = "3.3.1"
+ktor = "3.3.3"
 koin = "4.1.1"
 ksoup = "0.2.5"
 coil = "3.3.0"
 paging = "3.4.0-alpha04"
 worker = "2.11.0"
-room = "2.8.3"
+room = "2.8.4"
 filekit = "0.12.0"
 xmlutil = "0.91.3"
-tracing-perfetto = "1.0.0"
+tracing-perfetto = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
-androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.0.1" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.11.0" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.12.0" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
 androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
@@ -67,8 +67,8 @@ ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processin
 
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0" }
 
-androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.1" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.7" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version = "2.6.2" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.2.0" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "worker" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
@@ -115,15 +115,15 @@ coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
-material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha02" }
+material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha04" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
 compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 
 java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
 
-skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta05" }
+skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta06" }
 skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta07" }
-skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta04" }
+skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta05" }
 
 junit = { module = "junit:junit", version = "4.13.2" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version = "1.3.0" }
@@ -136,7 +136,7 @@ androidx-work-test = { module = "androidx.work:work-testing", version.ref = "wor
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
-androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.10.0-beta01" }
+androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.10.0-rc01" }
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracing-perfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracing-perfetto" }
 

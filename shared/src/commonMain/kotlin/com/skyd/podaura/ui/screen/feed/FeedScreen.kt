@@ -137,9 +137,13 @@ fun FeedScreen() {
     var currentRoute by remember { mutableStateOf(ArticleRoute()) }
     val onNavigate: (ArticleRoute) -> Unit = {
         if (navigator.isDetailPaneVisible) {
-            // If the detail pane was visible, then use the nestedNavController navigate call
-            // directly
-            navController.navigate(it) { popUpTo(currentRoute) { inclusive = true } }
+            // If the detail pane was visible, then use the nestedNavController navigate call directly
+            // else recreate the NavHost to avoid invoke navigate on a NavController without graph
+            if (navController.currentDestination != null) {
+                navController.navigate(it) { popUpTo(currentRoute) { inclusive = true } }
+            } else {
+                nestedNavKey = Uuid.random()
+            }
         } else {
             // Otherwise, recreate the NavHost entirely, and start at the new destination
             nestedNavKey = Uuid.random()

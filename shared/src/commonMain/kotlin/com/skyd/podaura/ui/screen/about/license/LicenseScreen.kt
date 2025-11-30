@@ -210,5 +210,10 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "Apache-2.0",
             link = "https://github.com/KotlinCrypto/hash",
         ),
+        LicenseBean(
+            name = "HtmlAnnotator",
+            license = "Apache-2.0",
+            link = "https://github.com/RavenLiao/HtmlAnnotator",
+        ),
     ).sortedBy { it.name }
 }
