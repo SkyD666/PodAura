@@ -4,6 +4,8 @@ import java.io.File
 
 val Const.DB_DIR: String
     get() = getAppDirectories().dataDir + File.separator + "Database"
+val Const.DATA_STORE_DIR: String
+    get() = getAppDirectories().dataDir + File.separator + "DataStore"
 actual val Const.FEED_ICON_DIR: String
     get() = File(getAppDirectories().dataDir, "Pictures/FeedIcon")
         .apply { if (!exists()) mkdirs() }.path
