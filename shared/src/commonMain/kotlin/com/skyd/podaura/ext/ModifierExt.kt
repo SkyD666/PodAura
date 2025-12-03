@@ -1,5 +1,6 @@
 package com.skyd.podaura.ext
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.layout
@@ -55,3 +56,9 @@ fun Modifier.aspectRatioIn(
     val placeable = measurable.measure(Constraints.fixed(width, height))
     layout(width, height) { placeable.place(0, 0) }
 }
+
+expect fun Modifier.onRightClickIfSupported(
+    interactionSource: MutableInteractionSource? = null,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+): Modifier

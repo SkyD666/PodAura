@@ -46,15 +46,16 @@ import coil3.request.crossfade
 import com.skyd.compone.component.TagText
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.menu.DropdownMenuDeleteItem
+import com.skyd.fundation.util.isPhone
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.fileSize
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.share
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
-import com.skyd.fundation.util.isPhone
-import com.skyd.fundation.util.platform
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.openFileWithDefaultApplication
@@ -116,25 +117,28 @@ fun MediaItemContainer(
                     expandMenu = value
                 }
 
-            override fun Modifier.itemClickable(): Modifier = combinedClickable(
-                onLongClick = {
+            override fun Modifier.itemClickable(): Modifier {
+                val onShowMenu = {
                     if (onLongClick == null) {
                         expandMenu = true
                     } else {
                         expandMenu = false
                         onLongClick(data)
                     }
-                },
-                onClick = {
-                    if (data.isDir) {
-                        onOpenDir(data)
-                    } else if (data.isMedia) {
-                        onPlay(data)
-                    } else {
-                        FileKit.openFileWithDefaultApplication(PlatformFile(data.filePath))
-                    }
-                },
-            )
+                }
+                return combinedClickable(
+                    onLongClick = onShowMenu,
+                    onClick = {
+                        if (data.isDir) {
+                            onOpenDir(data)
+                        } else if (data.isMedia) {
+                            onPlay(data)
+                        } else {
+                            FileKit.openFileWithDefaultApplication(PlatformFile(data.filePath))
+                        }
+                    },
+                ).onRightClickIfSupported(onClick = onShowMenu)
+            }
         }
     }.content()
 }

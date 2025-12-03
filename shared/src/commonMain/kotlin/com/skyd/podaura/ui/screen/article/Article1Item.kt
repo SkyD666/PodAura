@@ -72,6 +72,7 @@ import com.skyd.compone.ext.thenIf
 import com.skyd.compone.local.LocalGlobalNavController
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.ext.toDateTimeString
@@ -265,7 +266,8 @@ private fun Article1ItemContent(
                             onShowEnclosureBottomSheet,
                         )
                     },
-                ),
+                )
+                .onRightClickIfSupported(onClick = onLongClick),
         ) {
             val title = article.title?.readable().orEmpty()
 

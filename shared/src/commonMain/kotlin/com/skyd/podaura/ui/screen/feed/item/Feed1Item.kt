@@ -33,7 +33,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.compone.local.LocalNavController
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -56,6 +58,9 @@ fun Feed1Item(
 ) {
     val navController = LocalNavController.current
     val feed = data.feed
+    val onEditBlock = if (onEdit != null) {
+        { onEdit(data) }
+    } else null
 
     Row(
         modifier = Modifier
@@ -73,15 +78,14 @@ fun Feed1Item(
                 )
             )
             .combinedClickable(
-                onLongClick = if (onEdit != null) {
-                    { onEdit(data) }
-                } else null,
+                onLongClick = onEditBlock,
                 onClick = {
                     if (onClick == null) {
                         navController.navigate(ArticleRoute(feedUrls = arrayListOf(feed.url)))
                     } else onClick(feed)
                 },
             )
+            .thenIfNotNull(onEditBlock) { onRightClickIfSupported(onClick = it) }
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .padding(bottom = if (inGroup && isEnd) 6.dp else 0.dp)
             .testTag("FeedItem"),

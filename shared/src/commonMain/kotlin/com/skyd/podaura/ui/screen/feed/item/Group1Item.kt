@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.ext.thenIfNotNull
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
@@ -51,6 +53,9 @@ fun Group1Item(
         backgroundShapeCorner,
         backgroundShapeCorner,
     )
+    val onEditBlock = if (onEdit == null) null else {
+        { onEdit(data) }
+    }
 
     Row(
         modifier = Modifier
@@ -61,11 +66,10 @@ fun Group1Item(
             )
             .clip(shape)
             .combinedClickable(
-                onLongClick = if (onEdit == null) null else {
-                    { onEdit(data) }
-                },
+                onLongClick = onEditBlock,
                 onClick = { onShowAllArticles(data) },
             )
+            .thenIfNotNull(onEditBlock) { onRightClickIfSupported(onClick = it) }
             .padding(start = 20.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
