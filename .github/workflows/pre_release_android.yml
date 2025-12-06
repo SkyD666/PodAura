@@ -1,4 +1,4 @@
-name: Pre-Release
+name: Pre-Release-Android
 
 # Trigger
 on:
@@ -122,7 +122,7 @@ jobs:
         PRE_RELEASE_X86: ${{ env.PRE_RELEASE_APK_X86 }}
         PRE_RELEASE_UNIVERSAL: ${{ env.PRE_RELEASE_APK_UNIVERSAL }}
         COMMIT_MESSAGE: |+
-          GitHub New CI: PodAura\
+          GitHub New CI: PodAura for Android\
         
           `${{ github.event.head_commit.message }}`
         

@@ -228,8 +228,22 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.skyd.podaura"
+            packageName = "PodAura"
             packageVersion = "1.0.0"
+
+            macOS {
+                iconFile = project.file("icons/icon_512x512.icns")
+            }
+
+            modules(
+                "jdk.unsupported",
+                "java.sql",
+            )
+        }
+
+        buildTypes.release.proguard {
+//            obfuscate = true
+            configurationFiles.from(project.file("compose-desktop.pro"))
         }
     }
 }

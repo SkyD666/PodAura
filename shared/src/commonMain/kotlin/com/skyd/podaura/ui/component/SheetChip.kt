@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.compone.ext.thenIfNotNull
+import com.skyd.podaura.ext.onRightClickIfSupported
 
 @Composable
 fun SheetChip(
@@ -37,6 +38,7 @@ fun SheetChip(
     contentDescription: String? = null,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
+    onRightClick: (() -> Unit)? = null,
     onIconClick: (() -> Unit)? = null,
 ) {
     Row(
@@ -45,6 +47,7 @@ fun SheetChip(
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .height(35.dp)
             .combinedClickable(onLongClick = onLongClick, onClick = onClick)
+            .thenIfNotNull(onRightClick) { onRightClickIfSupported(onClick = it) }
             .padding(5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -437,6 +437,7 @@ private fun LinkArea(link: String, onLinkClick: () -> Unit) {
             contentDescription = stringResource(Res.string.feed_screen_rss_url),
             onClick = onLinkClick,
             onLongClick = { openMenu = true },
+            onRightClick = { openMenu = true },
             onIconClick = { uriHandler.safeOpenUri(link) },
         )
 
@@ -506,6 +507,7 @@ internal fun OptionArea(
             text = stringResource(Res.string.refresh),
             onClick = { onRefresh(false) },
             onLongClick = { openRefreshDialog = true },
+            onRightClick = { openRefreshDialog = true },
         )
         if (onMuteChanged != null && mute != null) {
             SheetChip(

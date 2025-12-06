@@ -1,0 +1,70 @@
+name: Pre-Release-MacOS
+
+# Trigger
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+      - 'doc/**'
+      - 'image/**'
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'adopt'
+        java-version: '17'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    # Build
+    - name: Build with Gradle
+      run: |
+        bash ./gradlew packageReleaseDmg
+
+    # Upload DMG
+    - name: Upload Pre-Release DMG
+      uses: actions/upload-artifact@v4
+      with:
+        name: Pre-Release DMG
+        path: shared/build/compose/binaries/main-release/dmg/*.dmg
+        compression-level: 9
+
+    # Upload mapping
+#    - name: Upload Pre-Release Mapping
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: Pre-Release Mapping
+#        path: app/build/outputs/mapping/GitHubRelease/mapping.txt
+#        compression-level: 9
+
+    # Send Message to Telegram
+    - name: Post to Telegram Channel
+      if: github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[skip_post]') == false
+      env:
+        CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
+        BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        PRE_RELEASE_ARM64_V8: ${{ env.PRE_RELEASE_APK_ARM64_V8 }}
+        COMMIT_MESSAGE: |+
+          GitHub New CI: PodAura for MacOS\
+        
+          Warning: Beta support for this platform; media playback is not supported
+        
+          `${{ github.event.head_commit.message }}`
+        
+          by `${{ github.event.head_commit.author.name }}`
+        
+          Commit details [here](${{ github.event.head_commit.url }})
+      run: |
+        ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
+        curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22%3A%22document%22%2C%22parse_mode%22%3A%22MarkdownV2%22%2C%22caption%22%3A${ESCAPED}%7D%5D"

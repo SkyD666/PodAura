@@ -27,7 +27,7 @@ tracing-perfetto = "1.0.1"
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.17.0" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.12.0" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.12.1" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
 androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
@@ -136,7 +136,7 @@ androidx-work-test = { module = "androidx.work:work-testing", version.ref = "wor
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 
-androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.10.0-rc01" }
+androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-tracing", version = "1.10.0" }
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracing-perfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracing-perfetto" }
 
