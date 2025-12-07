@@ -2,6 +2,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import com.google.devtools.ksp.gradle.KspAATask
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -229,7 +230,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "PodAura"
-            packageVersion = "1.0.0"
+            packageVersion = properties["versionForDesktop"]!!.toString()
 
             macOS {
                 iconFile = project.file("icons/icon_512x512.icns")
@@ -245,6 +246,13 @@ compose.desktop {
 //            obfuscate = true
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
+    }
+}
+
+// Distribution's icon
+tasks.withType<AbstractJPackageTask>().all {
+    if (targetFormat == TargetFormat.Dmg) {
+        freeArgs.addAll("--icon", "icons/icon_512x512.icns")
     }
 }
 
@@ -277,6 +285,7 @@ buildkonfig {
         buildConfigField(STRING, "packageName", "com.skyd.podaura")
         buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())
         buildConfigField(INT, "versionCode", properties["versionCode"]!!.toString())
+        buildConfigField(STRING, "versionForDesktop", properties["versionForDesktop"]!!.toString())
     }
 }
 
