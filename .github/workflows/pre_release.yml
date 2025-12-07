@@ -38,12 +38,12 @@ jobs:
             target-platform: Jvm macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (macOS arm64) ]
+            artifact-name: [ Pre-Release DMG (macOS arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-15-intel
             target-platform: Jvm macOS x64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (macOS x64) ]
+            artifact-name: [ Pre-Release DMG (macOS x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository
@@ -87,7 +87,7 @@ jobs:
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[1] }}
-        if: matrix.artifact-name.length > 1
+        if: matrix.artifact-path[1] != null
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact-name[1] }}
@@ -95,7 +95,7 @@ jobs:
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[2] }}
-        if: matrix.artifact-name.length > 2
+        if: matrix.artifact-path[2] != null
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact-name[2] }}
@@ -103,7 +103,7 @@ jobs:
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[3] }}
-        if: matrix.artifact-name.length > 3
+        if: matrix.artifact-path[3] != null
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact-name[3] }}
@@ -111,7 +111,7 @@ jobs:
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[4] }}
-        if: matrix.artifact-name.length > 4
+        if: matrix.artifact-path[4] != null
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact-name[4] }}
@@ -119,15 +119,14 @@ jobs:
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[5] }}
-        if: matrix.artifact-name.length > 5
+        if: matrix.artifact-path[5] != null
         uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact-name[5] }}
           path: ${{ matrix.artifact-path[5] }}
           compression-level: 9
 
-      # Get apk path
-      - name: Get Pre-Release Apk File Path
+      - name: Get File Path
         if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[skip_post]') == false
         run: |
           echo "PRE_RELEASE_APK_ARM64_V8=$(find app/build/outputs/apk/GitHub/release -name '*arm64-v8a*.apk' -type f | head -1)" >> $GITHUB_ENV
