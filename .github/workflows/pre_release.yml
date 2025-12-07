@@ -25,7 +25,7 @@ jobs:
             artifact-path: [ app/build/outputs/apk/GitHub/release/*arm64-v8a*.apk,
                              app/build/outputs/apk/GitHub/release/*armeabi-v7a*.apk,
                              app/build/outputs/apk/GitHub/release/*x86_64*.apk,
-                             app/build/outputs/apk/GitHub/release/*x86*.apk,
+                             'app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
                              app/build/outputs/apk/GitHub/release/*universal*.apk,
                              app/build/outputs/mapping/GitHubRelease/mapping.txt ]
             artifact-name: [ Pre-Release APK (arm64-v8a),
@@ -38,12 +38,12 @@ jobs:
             target-platform: Jvm macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (macOS arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release DMG (arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-15-intel
             target-platform: Jvm macOS x64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (macOS x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release DMG (x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository
