@@ -271,7 +271,6 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                 is ArticleState.Success -> {
                     val clipboard = LocalClipboard.current
                     Content(
-                        scrollState = scrollState,
                         articleState = articleState,
                         shareImage = { dispatcher(ReadIntent.ShareImage(url = it)) },
                         copyImage = {
@@ -344,7 +343,6 @@ private fun CategoryArea(categories: List<ArticleCategoryBean>) {
 
 @Composable
 private fun Content(
-    scrollState: ScrollState,
     articleState: ArticleState.Success,
     downloadImage: (url: String) -> Unit,
     copyImage: (url: String) -> Unit,

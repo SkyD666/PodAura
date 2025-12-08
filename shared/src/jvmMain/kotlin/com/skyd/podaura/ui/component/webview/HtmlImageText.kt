@@ -3,7 +3,9 @@ package com.skyd.podaura.ui.component.webview
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.onClick
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,8 +23,9 @@ import com.skyd.podaura.ui.component.PodAuraImage
 @Composable
 fun HtmlImageText(
     html: String,
-    textStyle: TextStyle = TextStyle.Default,
+    textStyle: TextStyle = LocalTextStyle.current,
     modifier: Modifier = Modifier,
+    onImageClick: ((imageUrl: String, alt: String) -> Unit)?,
 ) = BasicHtmlImageText(
     html = html,
     styleConfig = StyleConfig(
@@ -41,7 +44,8 @@ fun HtmlImageText(
             contentDescription = "photo",
             modifier = Modifier
                 .widthIn(max = 1000.dp)
-                .wrapContentHeight(),
+                .wrapContentHeight()
+                .onClick(onClick = { onImageClick?.invoke(it, "") }),
             contentScale = ContentScale.FillWidth,
         )
     },
@@ -56,6 +60,7 @@ fun HtmlImageText(
         BasicText(
             text = text,
             modifier = Modifier.fillMaxWidth(),
+            style = textStyle,
         )
     }
 )
