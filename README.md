@@ -20,6 +20,9 @@
         <a href="https://www.android.com/versions/nougat-7-0" style="text-decoration:none" >
             <img src="https://img.shields.io/badge/Android 7.0+-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Support platform"/>
         </a>
+        <a href="https://www.apple.com/os/macos/" style="text-decoration:none" >
+            <img src="https://img.shields.io/badge/macOS%20(beta)-black?style=for-the-badge&logo=apple&logoColor=white" alt="Support platform"/>
+        </a>
         <a href="https://github.com/SkyD666/PodAura/blob/master/LICENSE" style="text-decoration:none" >
             <img src="https://img.shields.io/github/license/SkyD666/PodAura?style=for-the-badge" alt="GitHub license"/>
         </a>
@@ -34,7 +37,7 @@
         An <b>all-in-one Podcast app</b> for <b>RSS subscription and updates</b>, <b>media downloads</b> and <b>playback</b>.
     </p>
     <p>
-        PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Jetpack Compose</b>.
+        PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Compose Multiplatform</b>.
     </p>
     <p>
         <b><a href="https://crowdin.com/project/podaura">Help us translate</a></b>
@@ -81,12 +84,13 @@ If you are interested, please help us **translate**, thank you.
 ## 🛠 Primary technology stack
 
 - **MVI** Architecture
-- Jetpack **Compose**
-- Kotlin ﻿**Coroutines and Flow**
+- **Compose** Multiplatform
+- Kotlin **Coroutines and Flow**
 - **Material You**
 - **ViewModel**
 - **Room**
 - **Paging 3**
+- **Ktor**
 - **Koin**
 - **MPV**
 - **WorkManager**
@@ -95,6 +99,7 @@ If you are interested, please help us **translate**, thank you.
 - Splash Screen
 - Navigation
 - Coil
+- JNA
 
 ## ✨ Star History
 
