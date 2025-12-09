@@ -8,6 +8,7 @@ import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.ArticleDao
@@ -101,6 +102,7 @@ class ArticleRepository(
     }.flatMapLatest { filterMask }.flatMapLatest { filterMask ->
         val favorite = FeedBean.parseFilterMaskToFavorite(filterMask)
         val read = FeedBean.parseFilterMaskToRead(filterMask)
+        val mute = FeedBean.parseFilterMaskToMute(filterMask)
         val sortBy = FeedBean.parseFilterMaskToSort(filterMask)
         val realFeedUrls = requestRealFeedUrls(
             feedUrls = feedUrls,
@@ -114,6 +116,7 @@ class ArticleRepository(
                     articleIds = articleIds,
                     isFavorite = favorite,
                     isRead = read,
+                    isMute = mute,
                     orderBy = sortBy,
                 )
             )
@@ -208,6 +211,7 @@ class ArticleRepository(
             articleIds: List<String>,
             isFavorite: Boolean?,
             isRead: Boolean?,
+            isMute: Boolean?,
             orderBy: FeedBean.SortBy,
         ): RoomRawQuery {
             val args = mutableListOf<String>()
@@ -218,6 +222,10 @@ class ArticleRepository(
                 }
                 if (isRead != null) {
                     append("AND `${ArticleBean.IS_READ_COLUMN}` = ${if (isRead) 1 else 0} ")
+                }
+                if (isMute != null) {
+                    append("AND `${ArticleBean.FEED_URL_COLUMN}` IN  ")
+                    append("(SELECT DISTINCT `${FeedBean.URL_COLUMN}` FROM `$FEED_TABLE_NAME` WHERE `${FeedBean.MUTE_COLUMN}` = ${if (isMute) 1 else 0}) ")
                 }
                 if (feedUrls.isEmpty()) {
                     append("AND (0 ")

@@ -261,6 +261,8 @@
     <string name="article_screen_filter_unfavorite">Not favorite</string>
     <string name="article_screen_filter_read">Read</string>
     <string name="article_screen_filter_unread">Unread</string>
+    <string name="article_screen_filter_mute">Mute</string>
+    <string name="article_screen_filter_unmute">Unmute</string>
     <string name="article_screen_filter_all">All</string>
     <string name="article_screen_filter_clear_all_filter">Clear all filters</string>
     <string name="tonal_elevation">Tonal elevation</string>

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import co.touchlab.kermit.Logger
 import com.skyd.podaura.model.bean.BaseBean
 import kotlinx.serialization.Serializable
 
@@ -46,9 +47,10 @@ data class FeedBean(
     val orderPosition: Double = 0.0,
     /**
      * From low to high
-     * | Favorite filter | 1-2bit | 00=None,   01=Favorite, 10=Unfavorite, 11=Not used |
-     * |   Read filter   | 3-4bit | 00=None,   01=Read,     10=Unread,     11=Not used |
-     * |      Sort       | 5-8bit | 000x=Date, 001x=Title,  xxx0=Desc,      xxx1=Asc   |
+     * | Favorite filter | 1- 2bit | 00=None,   01=Favorite, 10=Unfavorite, 11=Not used |
+     * |   Read filter   | 3- 4bit | 00=None,   01=Read,     10=Unread,     11=Not used |
+     * |      Sort       | 5- 8bit | 000x=Date, 001x=Title,  xxx0=Desc,      xxx1=Asc   |
+     * |   Mute filter   | 9-10bit | 00=None,   01=Mute,     10=Unmute,     11=Not used |
      */
     @ColumnInfo(name = FILTER_MASK_COLUMN)
     val filterMask: Int = 0,
@@ -69,6 +71,7 @@ data class FeedBean(
         const val ORDER_POSITION_COLUMN = "orderPosition"
         const val FILTER_MASK_COLUMN = "filterMask"
 
+        const val TAG = "FeedBean"
         const val DEFAULT_FILTER_MASK = 0
         fun parseFilterMaskToFavorite(filterMask: Int): Boolean? {
             val twoBit = filterMask and 0B11
@@ -76,7 +79,10 @@ data class FeedBean(
                 0 -> null
                 1 -> true
                 2 -> false
-                else -> error("Illegal favorite filterMask")
+                else -> {
+                    Logger.w(TAG) { "Illegal favorite filterMask: $twoBit" }
+                    null
+                }
             }
         }
 
@@ -86,7 +92,10 @@ data class FeedBean(
                 0 -> null
                 1 -> true
                 2 -> false
-                else -> error("Illegal read filterMask")
+                else -> {
+                    Logger.w(TAG) { "Illegal read filterMask: $twoBit" }
+                    null
+                }
             }
         }
 
@@ -97,7 +106,23 @@ data class FeedBean(
             return when (field) {
                 0 -> SortBy.Date(asc)
                 1 -> SortBy.Title(asc)
-                else -> error("Illegal read sort")
+                else -> {
+                    Logger.w(TAG) { "Illegal read sort: $twoBit" }
+                    SortBy.Date(asc)
+                }
+            }
+        }
+
+        fun parseFilterMaskToMute(filterMask: Int): Boolean? {
+            val twoBit = (filterMask and 0B1100000000) shr 8
+            return when (twoBit) {
+                0 -> null
+                1 -> true
+                2 -> false
+                else -> {
+                    Logger.w(TAG) { "Illegal mute filterMask: $twoBit" }
+                    null
+                }
             }
         }
 
@@ -105,11 +130,13 @@ data class FeedBean(
             filterMask: Int,
             filterFavorite: Boolean? = parseFilterMaskToFavorite(filterMask),
             filterRead: Boolean? = parseFilterMaskToRead(filterMask),
+            filterMute: Boolean? = parseFilterMaskToMute(filterMask),
             sort: SortBy = parseFilterMaskToSort(filterMask),
         ): Int {
-            var newFilterMask = filterMask and 0B111111.inv()
+            var newFilterMask = filterMask and 0B1111111111.inv()
             val filterFavoriteBit = if (filterFavorite == null) 0 else if (filterFavorite) 1 else 2
             val filterReadBit = if (filterRead == null) 0 else if (filterRead) 1 else 2
+            val filterMuteBit = if (filterMute == null) 0 else if (filterMute) 1 else 2
             val sortField = when (sort) {
                 is SortBy.Date -> 0
                 is SortBy.Title -> 1
@@ -118,7 +145,8 @@ data class FeedBean(
             newFilterMask = newFilterMask or
                     filterFavoriteBit or
                     (filterReadBit shl 2) or
-                    (sortBit shl 4)
+                    (sortBit shl 4) or
+                    (filterMuteBit shl 8)
             return newFilterMask
         }
     }

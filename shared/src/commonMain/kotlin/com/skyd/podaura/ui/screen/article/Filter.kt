@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeDown
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -49,8 +52,10 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_filter_all
 import podaura.shared.generated.resources.article_screen_filter_clear_all_filter
 import podaura.shared.generated.resources.article_screen_filter_favorite
+import podaura.shared.generated.resources.article_screen_filter_mute
 import podaura.shared.generated.resources.article_screen_filter_read
 import podaura.shared.generated.resources.article_screen_filter_unfavorite
+import podaura.shared.generated.resources.article_screen_filter_unmute
 import podaura.shared.generated.resources.article_screen_filter_unread
 import podaura.shared.generated.resources.article_screen_hide_filter_bar
 import podaura.shared.generated.resources.article_screen_show_filter_bar
@@ -160,6 +165,14 @@ internal fun FilterRow(
                     )
                 },
             )
+            MuteFilter(
+                current = FeedBean.parseFilterMaskToMute(filterMask = articleFilterMask),
+                onFilterMute = {
+                    onFilterMaskChanged(
+                        FeedBean.newFilterMask(filterMask = articleFilterMask, filterMute = it)
+                    )
+                },
+            )
             SortSetting(
                 current = FeedBean.parseFilterMaskToSort(filterMask = articleFilterMask),
                 onSort = {
@@ -256,7 +269,7 @@ internal fun FavoriteFilter(
             ),
         )
     }
-    FavoriteReadFilter(
+    FavoriteReadMuteFilter(
         current = current,
         items = items,
         onFilter = onFilterFavorite,
@@ -284,7 +297,7 @@ internal fun ReadFilter(
             ),
         )
     }
-    FavoriteReadFilter(
+    FavoriteReadMuteFilter(
         current = current,
         items = items,
         onFilter = onFilterRead,
@@ -292,7 +305,35 @@ internal fun ReadFilter(
 }
 
 @Composable
-private fun FavoriteReadFilter(
+internal fun MuteFilter(
+    current: Boolean?,
+    onFilterMute: (Boolean?) -> Unit,
+) {
+    val items = remember {
+        mapOf(
+            null to Pair(
+                Res.string.article_screen_filter_all,
+                Icons.AutoMirrored.Outlined.VolumeDown,
+            ),
+            true to Pair(
+                Res.string.article_screen_filter_mute,
+                Icons.AutoMirrored.Outlined.VolumeOff,
+            ),
+            false to Pair(
+                Res.string.article_screen_filter_unmute,
+                Icons.AutoMirrored.Outlined.VolumeUp,
+            ),
+        )
+    }
+    FavoriteReadMuteFilter(
+        current = current,
+        items = items,
+        onFilter = onFilterMute,
+    )
+}
+
+@Composable
+private fun FavoriteReadMuteFilter(
     current: Boolean?,
     items: Map<Boolean?, Pair<StringResource, ImageVector>>,
     onFilter: (Boolean?) -> Unit,

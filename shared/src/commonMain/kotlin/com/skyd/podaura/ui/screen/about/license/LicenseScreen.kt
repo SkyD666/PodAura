@@ -215,5 +215,10 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "Apache-2.0",
             link = "https://github.com/RavenLiao/HtmlAnnotator",
         ),
+        LicenseBean(
+            name = "Java Native Access (JNA)",
+            license = "LGPL-2.1",
+            link = "https://github.com/java-native-access/jna",
+        ),
     ).sortedBy { it.name }
 }

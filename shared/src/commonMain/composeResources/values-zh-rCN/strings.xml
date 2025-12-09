@@ -254,6 +254,8 @@
     <string name="article_screen_filter_unfavorite">未收藏</string>
     <string name="article_screen_filter_read">已读</string>
     <string name="article_screen_filter_unread">未读</string>
+    <string name="article_screen_filter_mute">静音</string>
+    <string name="article_screen_filter_unmute">未静音</string>
     <string name="article_screen_filter_all">全部</string>
     <string name="article_screen_filter_clear_all_filter">清除所有过滤</string>
     <string name="tonal_elevation">色调高程</string>
