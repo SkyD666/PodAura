@@ -4,8 +4,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
@@ -30,6 +35,10 @@ fun main() {
 
             Window(
                 onCloseRequest = ::exitApplication,
+                state = rememberWindowState(
+                    position = WindowPosition.Aligned(alignment = Alignment.Center),
+                    size = DpSize(1200.dp, 800.dp),
+                ),
                 title = stringResource(Res.string.app_name),
             ) {
                 CompositionLocalProvider(

@@ -9,8 +9,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.rememberWindowState
 import com.skyd.fundation.config.Const
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.safeOpenUri
@@ -34,7 +37,10 @@ fun CrashWindow(onCloseRequest: () -> Unit, crashInfo: String) {
             append(crashInfo)
         }
     }
-    Window(onCloseRequest = onCloseRequest) {
+    Window(
+        onCloseRequest = onCloseRequest,
+        state = rememberWindowState(position = WindowPosition.Aligned(alignment = Alignment.Center)),
+    ) {
         CompositionLocalProvider(LocalWindowSizeClass provides calculateWindowSizeClass()) {
             val dataStore = remember { dataStore }
             SettingsProvider(dataStore) {
