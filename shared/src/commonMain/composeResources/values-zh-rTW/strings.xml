@@ -10,6 +10,7 @@
     <string name="warning">警告</string>
     <string name="cancel">取消</string>
     <string name="ok">確定</string>
+    <string name="copy">複製</string>
     <string name="info">資訊</string>
     <string name="waiting">請稍後…</string>
     <string name="close">關閉</string>
@@ -273,6 +274,8 @@
     <string name="storage_permission_request_screen_rationale">沒有儲存權限，應用程式無法啟動，請授予權限</string>
     <string name="storage_permission_request_screen_title">PodAura 需要儲存存取權限</string>
     <string name="storage_permission_request_screen_request_permission">要求權限</string>
+    <string name="file_picker_screen_open_file">打開檔案</string>
+    <string name="file_picker_screen_open_folder">打開資料夾</string>
     <string name="file_picker_screen_pick">文件選擇器</string>
     <string name="file_picker_screen_internal_storage">內部儲存空間</string>
     <string name="media_screen_delete_file_warning">刪除此檔案？</string>
