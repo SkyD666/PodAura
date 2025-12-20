@@ -1,6 +1,8 @@
 package com.skyd.podaura.util
 
-import com.skyd.podaura.shared.BuildConfig
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import com.skyd.fundation.di.get
 
 actual val isDebug: Boolean
-    get() = BuildConfig.DEBUG
+    get() = get<Context>().applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0

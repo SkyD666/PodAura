@@ -1,18 +1,15 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import com.google.devtools.ksp.gradle.KspAATask
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlinx.atomicfu)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.buildkonfig)
@@ -23,10 +20,15 @@ kotlin {
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    androidTarget {
+    android {
+        namespace = "com.skyd.podaura.shared"
+        compileSdk = 36
+        minSdk = 24
+        androidResources.enable = true
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
+        lint.checkReleaseBuilds = false
     }
 
     jvm()
@@ -85,7 +87,6 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.atomicfu)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.io.core)
 
@@ -206,23 +207,6 @@ compose.resources {
     publicResClass = true
 }
 
-android {
-    namespace = "com.skyd.podaura.shared"
-    compileSdk = 36
-
-    defaultConfig {
-        minSdk = 24
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    buildFeatures {
-        buildConfig = true
-    }
-    lint.checkReleaseBuilds = false
-}
-
 compose.desktop {
     application {
         mainClass = "com.skyd.podaura.MainKt"
@@ -257,24 +241,9 @@ tasks.withType<AbstractJPackageTask>().all {
 }
 
 dependencies {
-    listOf("kspCommonMainMetadata", "kspAndroid", "kspJvm").forEach {
+    listOf("kspAndroid", "kspJvm").forEach {
         add(it, projects.ksp)
-        if (it != "kspCommonMainMetadata") {
-            add(it, libs.androidx.room.compiler)
-        }
-    }
-}
-
-// Trigger Common Metadata Generation from Native tasks
-project.tasks.withType(KspAATask::class).configureEach {
-    if (name != "kspCommonMainKotlinMetadata") {
-        dependsOn("kspCommonMainKotlinMetadata")
-    }
-}
-
-tasks.configureEach {
-    if (name.contains("kspDebugKotlinAndroid") || name.contains("kspReleaseKotlinAndroid")) {
-        dependsOn("kspCommonMainKotlinMetadata")
+        add(it, libs.androidx.room.compiler)
     }
 }
 
@@ -282,10 +251,10 @@ buildkonfig {
     packageName = "com.skyd.podaura"
 
     defaultConfigs {
-        buildConfigField(STRING, "packageName", "com.skyd.podaura")
-        buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())
-        buildConfigField(INT, "versionCode", properties["versionCode"]!!.toString())
-        buildConfigField(STRING, "versionForDesktop", properties["versionForDesktop"]!!.toString())
+        buildConfigField(FieldSpec.Type.STRING, "packageName", "com.skyd.podaura")
+        buildConfigField(FieldSpec.Type.STRING, "versionName", properties["versionName"]!!.toString())
+        buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
+        buildConfigField(FieldSpec.Type.STRING, "versionForDesktop", properties["versionForDesktop"]!!.toString())
     }
 }
 
