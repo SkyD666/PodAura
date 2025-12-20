@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.screen.article
 
-import androidx.compose.animation.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -38,18 +36,13 @@ import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -67,11 +60,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.skyd.compone.component.blockString
 import com.skyd.compone.component.menu.DropdownMenuDeleteItem
 import com.skyd.compone.ext.thenIf
 import com.skyd.compone.local.LocalGlobalNavController
 import com.skyd.compone.local.LocalNavController
-import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -86,17 +79,16 @@ import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeLeftAction
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDescPreference
-import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
+import com.skyd.podaura.ui.component.swipe.SwipeAction
+import com.skyd.podaura.ui.component.swipe.SwipeableActionsBox
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.settings.suspendString
-import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add_to_playlist
@@ -121,21 +113,30 @@ fun Article1Item(
 ) {
     val globalNavController = LocalGlobalNavController.current
     val uriHandler = LocalUriHandler.current
-    val scope = rememberCoroutineScope()
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val currentData by rememberUpdatedState(newValue = data)
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf(false) }
     var openAddToPlaylistSheet by rememberSaveable { mutableStateOf(false) }
 
-    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(positionalThreshold = { it * .15f })
-    LaunchedEffect(data) { swipeToDismissBoxState.reset() }
-    var isSwipeToDismissActive by remember(data) { mutableStateOf(false) }
+    val articleWithEnclosure = currentData.articleWithEnclosure
 
-    LaunchedEffect(swipeToDismissBoxState.progress > 0.15f) {
-        isSwipeToDismissActive = swipeToDismissBoxState.progress > 0.15f &&
-                swipeToDismissBoxState.targetValue != SwipeToDismissBoxValue.Settled
+    fun onAction(articleSwipeAction: String) {
+        swipeAction(
+            articleSwipeAction = articleSwipeAction,
+            navController = globalNavController,
+            data = articleWithEnclosure,
+            onMarkAsRead = {
+                onRead(currentData, !articleWithEnclosure.article.isRead)
+            },
+            onMarkAsFavorite = {
+                onFavorite(currentData, !articleWithEnclosure.article.isFavorite)
+            },
+            onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
+            onOpenLink = { uriHandler.safeOpenUri(it) },
+            onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
+            onMessage = onMessage,
+        )
     }
-
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -145,50 +146,27 @@ fun Article1Item(
             ArticleSwipeRightActionPreference.current != ArticleSwipeActionPreference.NONE
         val enableDismissFromEndToStart =
             ArticleSwipeLeftActionPreference.current != ArticleSwipeActionPreference.NONE
-        SwipeToDismissBox(
-            state = swipeToDismissBoxState,
-            backgroundContent = {
-                SwipeBackgroundContent(
-                    article = data.articleWithEnclosure.article,
-                    direction = swipeToDismissBoxState.dismissDirection,
-                    isActive = isSwipeToDismissActive,
-                )
-            },
-            enableDismissFromStartToEnd = enableDismissFromStartToEnd,
-            enableDismissFromEndToStart = enableDismissFromEndToStart,
-            gesturesEnabled = enableDismissFromStartToEnd || enableDismissFromEndToStart,
-            onDismiss = { dismissValue ->
-                val articleSwipeAction = dataStore.getOrDefault(
-                    if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
-                        ArticleSwipeRightActionPreference
-                    } else {
-                        ArticleSwipeLeftActionPreference
-                    }
-                )
-                when (dismissValue) {
-                    SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> scope.launch {
-                        val articleWithEnclosure = currentData.articleWithEnclosure
-                        swipeAction(
-                            articleSwipeAction = articleSwipeAction,
-                            navController = globalNavController,
-                            data = articleWithEnclosure,
-                            onMarkAsRead = {
-                                onRead(currentData, !articleWithEnclosure.article.isRead)
-                            },
-                            onMarkAsFavorite = {
-                                onFavorite(currentData, !articleWithEnclosure.article.isFavorite)
-                            },
-                            onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
-                            onOpenLink = { uriHandler.safeOpenUri(it) },
-                            onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
-                            onMessage = onMessage,
-                        )
-                    }
 
-                    SwipeToDismissBoxValue.Settled -> Unit
-                }
-                false
+        SwipeableActionsBox(
+            startActions = if (enableDismissFromStartToEnd) {
+                rememberSwipeActions(
+                    isStart = true,
+                    article = articleWithEnclosure.article,
+                    onSwipe = ::onAction,
+                )
+            } else {
+                emptyList()
             },
+            endActions = if (enableDismissFromEndToStart) {
+                rememberSwipeActions(
+                    isStart = false,
+                    article = articleWithEnclosure.article,
+                    onSwipe = ::onAction,
+                )
+            } else {
+                emptyList()
+            },
+            backgroundUntilSwipeThreshold = MaterialTheme.colorScheme.background,
         ) {
             Article1ItemContent(
                 data = data,
@@ -594,74 +572,53 @@ private fun ArticleMenu(
 }
 
 @Composable
-private fun SwipeBackgroundContent(
+private fun rememberSwipeActions(
+    isStart: Boolean,
     article: ArticleBean,
-    direction: SwipeToDismissBoxValue,
-    isActive: Boolean,
-) {
-    val containerColor = MaterialTheme.colorScheme.background
-    val containerColorElevated = MaterialTheme.colorScheme.tertiaryContainer
-    val backgroundColor = remember(isActive) { Animatable(containerColor) }
-    val articleSwipeAction = if (direction == SwipeToDismissBoxValue.StartToEnd) {
+    onSwipe: (String) -> Unit,
+): List<SwipeAction> {
+    val articleSwipeAction = if (isStart) {
         ArticleSwipeRightActionPreference.current
     } else {
         ArticleSwipeLeftActionPreference.current
     }
+    val background = MaterialTheme.colorScheme.tertiaryContainer
+    val icon = rememberVectorPainter(
+        when (articleSwipeAction) {
+            ArticleSwipeActionPreference.READ -> Icons.Outlined.ImportContacts
+            ArticleSwipeActionPreference.SHOW_ENCLOSURES -> Icons.Outlined.AttachFile
+            ArticleSwipeActionPreference.SWITCH_READ_STATE ->
+                if (article.isRead) Icons.Outlined.MarkEmailUnread
+                else Icons.Outlined.Drafts
 
-    LaunchedEffect(isActive) {
-        backgroundColor.animateTo(if (isActive) containerColorElevated else containerColor)
+            ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE ->
+                if (article.isFavorite) Icons.Outlined.FavoriteBorder
+                else Icons.Outlined.Favorite
+
+            ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> Icons.Outlined.OpenInBrowser
+            ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> Icons.AutoMirrored.Outlined.PlaylistAdd
+
+            else -> Icons.Outlined.ImportContacts
+        }
+    )
+    val contentDescription = suspendString {
+        ArticleSwipeActionPreference.toDisplayName(articleSwipeAction)
     }
-
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(backgroundColor.value)
-            .padding(horizontal = 20.dp),
-        contentAlignment = if (direction == SwipeToDismissBoxValue.StartToEnd) {
-            Alignment.CenterStart
-        } else {
-            Alignment.CenterEnd
-        },
-    ) {
-        val painter = when (direction) {
-            SwipeToDismissBoxValue.StartToEnd,
-            SwipeToDismissBoxValue.EndToStart -> rememberVectorPainter(
-                when (articleSwipeAction) {
-                    ArticleSwipeActionPreference.READ -> Icons.Outlined.ImportContacts
-                    ArticleSwipeActionPreference.SHOW_ENCLOSURES -> Icons.Outlined.AttachFile
-                    ArticleSwipeActionPreference.SWITCH_READ_STATE ->
-                        if (article.isRead) Icons.Outlined.MarkEmailUnread
-                        else Icons.Outlined.Drafts
-
-                    ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE ->
-                        if (article.isFavorite) Icons.Outlined.FavoriteBorder
-                        else Icons.Outlined.Favorite
-
-                    ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> Icons.Outlined.OpenInBrowser
-                    ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> Icons.AutoMirrored.Outlined.PlaylistAdd
-
-                    else -> Icons.Outlined.ImportContacts
-                }
+    return remember(onSwipe, articleSwipeAction, background, icon, contentDescription) {
+        listOf(
+            SwipeAction(
+                onSwipe = { onSwipe(articleSwipeAction) },
+                icon = {
+                    Icon(
+                        painter = icon,
+                        contentDescription = contentDescription,
+                        modifier = Modifier.padding(20.dp),
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
+                },
+                background = background,
             )
-
-            SwipeToDismissBoxValue.Settled -> null
-        }
-        val contentDescription = when (direction) {
-            SwipeToDismissBoxValue.StartToEnd,
-            SwipeToDismissBoxValue.EndToStart -> suspendString {
-                ArticleSwipeActionPreference.toDisplayName(articleSwipeAction)
-            }
-
-            SwipeToDismissBoxValue.Settled -> null
-        }
-
-        if (painter != null) {
-            Icon(
-                painter = painter,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onTertiaryContainer,
-            )
-        }
+        )
     }
 }
 
@@ -761,7 +718,7 @@ fun Article1ItemPlaceholder() {
     }
 }
 
-private suspend fun swipeAction(
+private fun swipeAction(
     articleSwipeAction: String,
     navController: NavController,
     data: ArticleWithEnclosureBean,
@@ -778,7 +735,7 @@ private suspend fun swipeAction(
 
         ArticleSwipeActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet()
         ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.link?.let { onOpenLink(it) }
-            ?: onMessage(getString(Res.string.article_screen_no_link_tip))
+            ?: onMessage(blockString(Res.string.article_screen_no_link_tip))
 
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()

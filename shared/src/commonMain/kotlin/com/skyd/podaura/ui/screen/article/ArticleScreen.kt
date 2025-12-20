@@ -73,6 +73,7 @@ import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
+import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.feed.FeedBean
@@ -81,6 +82,8 @@ import com.skyd.podaura.model.preference.appearance.article.ArticleListTonalElev
 import com.skyd.podaura.model.preference.appearance.article.ArticleTopBarTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticlePullRefreshPreference
 import com.skyd.podaura.model.preference.appearance.article.ShowArticleTopBarRefreshPreference
+import com.skyd.podaura.model.preference.behavior.article.AlwaysShowArticleFilterPreference
+import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
@@ -175,7 +178,9 @@ fun ArticleScreen(
 
     val listState: LazyGridState = rememberLazyGridState()
     var fabHeight by remember { mutableStateOf(0.dp) }
-    var showFilterBar by rememberSaveable { mutableStateOf(false) }
+    var showFilterBar by rememberSaveable {
+        mutableStateOf(dataStore.getOrDefault(AlwaysShowArticleFilterPreference))
+    }
 
     val dispatch = viewModel.getDispatcher(
         feedUrls, groupIds, articleIds,

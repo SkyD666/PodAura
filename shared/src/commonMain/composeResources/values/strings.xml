@@ -176,6 +176,7 @@
     <string name="behavior_screen_article_tap_action">Tap item</string>
     <string name="behavior_screen_article_swipe_left_action">Swipe left</string>
     <string name="behavior_screen_article_swipe_right_action">Swipe right</string>
+    <string name="behavior_screen_article_screen_always_show_filter">Always show the filter</string>
     <string name="to_top">To top</string>
     <string name="default_feed_group">Default</string>
     <string name="default_media_group">Default</string>

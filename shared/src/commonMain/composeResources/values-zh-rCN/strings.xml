@@ -169,6 +169,7 @@
     <string name="behavior_screen_article_tap_action">点击项</string>
     <string name="behavior_screen_article_swipe_left_action">左滑</string>
     <string name="behavior_screen_article_swipe_right_action">右滑</string>
+    <string name="behavior_screen_article_screen_always_show_filter">过滤器常驻</string>
     <string name="to_top">到顶部</string>
     <string name="default_feed_group">默认</string>
     <string name="default_media_group">默认</string>

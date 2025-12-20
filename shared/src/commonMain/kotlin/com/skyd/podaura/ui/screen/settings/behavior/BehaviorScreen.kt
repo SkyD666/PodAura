@@ -42,6 +42,7 @@ import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.podaura.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
+import com.skyd.podaura.model.preference.behavior.article.AlwaysShowArticleFilterPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeActionPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeLeftActionPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeRightActionPreference
@@ -60,6 +61,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.behavior_screen_article_screen_always_show_filter
 import podaura.shared.generated.resources.behavior_screen_article_screen_category
 import podaura.shared.generated.resources.behavior_screen_article_screen_deduplicate_title_in_desc
 import podaura.shared.generated.resources.behavior_screen_article_screen_deduplicate_title_in_desc_description
@@ -84,7 +86,7 @@ import podaura.shared.generated.resources.playlist_screen_name
 
 
 @Serializable
-data object BehaviorRoute: java.io.Serializable // TODO
+data object BehaviorRoute : java.io.Serializable // TODO
 
 @Composable
 fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
@@ -215,6 +217,14 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                             )
                         },
                         onClick = { expandArticleSwipeRightActionMenu = true },
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.FilterAlt,
+                        text = stringResource(Res.string.behavior_screen_article_screen_always_show_filter),
+                        checked = AlwaysShowArticleFilterPreference.current,
+                        onCheckedChange = { AlwaysShowArticleFilterPreference.put(scope, it) }
                     )
                 }
             }
