@@ -20,11 +20,13 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.UnfoldLess
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.Workspaces
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -627,60 +629,54 @@ private fun MoreMenu(
     onDismissRequest: () -> Unit,
 ) {
     val navController = LocalNavController.current
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = stringResource(
-                        if (allGroupCollapsed) Res.string.expand_all_groups
-                        else Res.string.collapse_all_groups
-                    )
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = if (allGroupCollapsed) Icons.Outlined.UnfoldMore
-                    else Icons.Outlined.UnfoldLess,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+    DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val texts = listOf(
+            stringResource(
+                if (allGroupCollapsed) Res.string.expand_all_groups
+                else Res.string.collapse_all_groups
+            ),
+            stringResource(Res.string.reorder_group_screen_name),
+            stringResource(Res.string.mute_feed_screen_name),
+            stringResource(Res.string.feed_style_screen_name),
+        )
+        val leadingIcons = listOf(
+            if (allGroupCollapsed) Icons.Outlined.UnfoldMore else Icons.Outlined.UnfoldLess,
+            Icons.AutoMirrored.Outlined.Sort,
+            Icons.AutoMirrored.Outlined.VolumeOff,
+            null,
+        )
+        val onClicks = listOf(
+            {
                 onDismissRequest()
                 onCollapseAllGroup(!allGroupCollapsed)
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.reorder_group_screen_name)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.Sort,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+            {
                 onDismissRequest()
                 navController.navigate(ReorderGroupRoute)
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.mute_feed_screen_name)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+            {
                 onDismissRequest()
                 navController.navigate(MuteFeedRoute)
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.feed_style_screen_name)) },
-            onClick = {
+            {
                 onDismissRequest()
                 navController.navigate(FeedStyleRoute)
             },
         )
+
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(index, texts.size).shape,
+                    leadingIcon = leadingIcons[index]?.let { icon ->
+                        {
+                            Icon(imageVector = icon, contentDescription = null)
+                        }
+                    },
+                    onClick = onClicks[index],
+                )
+            }
+        }
     }
 }

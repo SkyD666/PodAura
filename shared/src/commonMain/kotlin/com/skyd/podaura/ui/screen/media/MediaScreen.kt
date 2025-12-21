@@ -23,10 +23,12 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Workspaces
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -370,36 +372,42 @@ private fun MoreMenu(
     onChangeLibLocation: () -> Unit,
 ) {
     val navController = LocalNavController.current
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.data_screen_change_lib_location)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.MyLocation, contentDescription = null)
-            },
-            onClick = {
+    DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val texts = listOf(
+            stringResource(Res.string.data_screen_change_lib_location),
+            stringResource(Res.string.media_screen_refresh_group),
+            stringResource(Res.string.media_screen_style),
+        )
+        val leadingIcons = listOf(
+            Icons.Outlined.MyLocation,
+            Icons.Outlined.Refresh,
+            Icons.Outlined.Palette,
+        )
+        val onClicks = listOf(
+            {
+                onDismissRequest()
                 onChangeLibLocation()
+            },
+            {
                 onDismissRequest()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.media_screen_refresh_group)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
-            },
-            onClick = {
                 onRefresh()
-                onDismissRequest()
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.media_screen_style)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.Palette, contentDescription = null)
-            },
-            onClick = {
+            {
                 onDismissRequest()
                 navController.navigate(MediaStyleRoute)
             },
         )
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(index, texts.size).shape,
+                    leadingIcon = {
+                        Icon(imageVector = leadingIcons[index], contentDescription = null)
+                    },
+                    onClick = onClicks[index],
+                )
+            }
+        }
     }
 }

@@ -27,12 +27,14 @@ import androidx.compose.material.icons.outlined.Markunread
 import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,8 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.skyd.compone.component.ListMenu
 import com.skyd.compone.component.blockString
+import com.skyd.compone.component.menu.ListMenu
 import com.skyd.podaura.model.bean.feed.FeedBean
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -96,41 +98,44 @@ fun FilterIcon(
         icon()
     }
 
-    DropdownMenu(
+    DropdownMenuPopup(
         expanded = expandMenu,
         onDismissRequest = { expandMenu = false },
     ) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.article_screen_filter_clear_all_filter)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.ClearAll, contentDescription = null)
-            },
-            onClick = {
+        val texts = listOf(
+            stringResource(Res.string.article_screen_filter_clear_all_filter),
+            stringResource(
+                if (showFilterBar) Res.string.article_screen_hide_filter_bar
+                else Res.string.article_screen_show_filter_bar
+            ),
+        )
+        val leadingIcons = listOf(
+            Icons.Outlined.ClearAll,
+            if (showFilterBar) Icons.Outlined.FilterAltOff
+            else Icons.Outlined.FilterAlt,
+        )
+        val onClicks = listOf(
+            {
                 onFilterMaskChanged(FeedBean.DEFAULT_FILTER_MASK)
                 expandMenu = false
             },
-        )
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = stringResource(
-                        if (showFilterBar) Res.string.article_screen_hide_filter_bar
-                        else Res.string.article_screen_show_filter_bar
-                    )
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = if (showFilterBar) Icons.Outlined.FilterAltOff
-                    else Icons.Outlined.FilterAlt,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+            {
                 onFilterBarVisibilityChanged(!showFilterBar)
                 expandMenu = false
             },
         )
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(index, texts.size).shape,
+                    leadingIcon = {
+                        Icon(imageVector = leadingIcons[index], contentDescription = null)
+                    },
+                    onClick = onClicks[index],
+                )
+            }
+        }
     }
 }
 

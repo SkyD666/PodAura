@@ -15,11 +15,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -41,6 +43,7 @@ import com.skyd.compone.component.TagText
 import com.skyd.compone.ext.setText
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.model.bean.LinkEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
@@ -149,10 +152,12 @@ private fun EnclosureItem(
             // For correct DropdownMenu position
             Box {
                 Text(
-                    modifier = Modifier.combinedClickable(
-                        onLongClick = { openMenu = true },
-                        onClick = {},
-                    ),
+                    modifier = Modifier
+                        .combinedClickable(
+                            onLongClick = { openMenu = true },
+                            onClick = {},
+                        )
+                        .onRightClickIfSupported(onClick = { openMenu = true }),
                     text = enclosure.url,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 4,
@@ -223,10 +228,12 @@ private fun LinkEnclosureItem(
             // For correct DropdownMenu position
             Box {
                 Text(
-                    modifier = Modifier.combinedClickable(
-                        onLongClick = { openMenu = true },
-                        onClick = {},
-                    ),
+                    modifier = Modifier
+                        .combinedClickable(
+                            onLongClick = { openMenu = true },
+                            onClick = {},
+                        )
+                        .onRightClickIfSupported(onClick = { openMenu = true }),
                     text = enclosure.link,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 5,
@@ -273,16 +280,26 @@ private fun EnclosureItemMenu(
     onDismissRequest: () -> Unit,
     onCopy: () -> Unit,
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.copy)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.ContentCopy, contentDescription = null)
-            },
-            onClick = {
+    DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val texts = listOf(stringResource(Res.string.copy))
+        val leadingIcons = listOf(Icons.Outlined.ContentCopy)
+        val onClicks = listOf(
+            {
                 onCopy()
                 onDismissRequest()
             },
         )
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(index, texts.size).shape,
+                    leadingIcon = {
+                        Icon(imageVector = leadingIcons[index], contentDescription = null)
+                    },
+                    onClick = onClicks[index],
+                )
+            }
+        }
     }
 }

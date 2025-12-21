@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,11 +16,12 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -282,90 +285,87 @@ private fun Menu(
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    DropdownMenu(
+    DropdownMenuPopup(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
     ) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.open_with)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+        val texts = listOf(
+            stringResource(Res.string.open_with),
+            stringResource(Res.string.share),
+            stringResource(Res.string.add_to_playlist),
+            stringResource(Res.string.feed_screen_name),
+            stringResource(Res.string.read_screen_name),
+        )
+        val visible = listOf(
+            true,
+            platform.isPhone,
+            onOpenAddToPlaylistSheet != null && data.isMedia,
+            onOpenFeed != null,
+            onOpenArticle != null
+        )
+        val leadingIcons = listOf(
+            Icons.AutoMirrored.Outlined.OpenInNew,
+            Icons.Outlined.Share,
+            Icons.AutoMirrored.Outlined.PlaylistAdd,
+            Icons.Outlined.RssFeed,
+            Icons.AutoMirrored.Outlined.Article
+        )
+        val onClicks = listOf(
+            {
                 FileKit.openFileWithDefaultApplication(PlatformFile(data.filePath))
                 onDismissRequest()
             },
-        )
-        if (platform.isPhone) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.share)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = null,
-                    )
-                },
-                onClick = {
-                    scope.launch { PlatformFile(data.path).share() }
-                    onDismissRequest()
-                },
-            )
-        }
-        if (onOpenAddToPlaylistSheet != null && data.isMedia) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.add_to_playlist)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                        contentDescription = null,
-                    )
-                },
-                onClick = {
-                    onOpenAddToPlaylistSheet(data)
-                    onDismissRequest()
-                },
-            )
-        }
-        if (onOpenFeed != null) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.feed_screen_name)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.RssFeed,
-                        contentDescription = null,
-                    )
-                },
-                onClick = {
-                    onOpenFeed(data)
-                    onDismissRequest()
-                },
-            )
-        }
-        if (onOpenArticle != null) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.read_screen_name)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Article,
-                        contentDescription = null,
-                    )
-                },
-                onClick = {
-                    onOpenArticle(data)
-                    onDismissRequest()
-                },
-            )
-        }
-        HorizontalDivider()
-        DropdownMenuDeleteItem(
-            onClick = {
-                openDeleteWarningDialog = true
+            {
+                scope.launch { PlatformFile(data.path).share() }
                 onDismissRequest()
-            }
+            },
+            {
+                onOpenAddToPlaylistSheet?.invoke(data)
+                onDismissRequest()
+            },
+            {
+                onOpenFeed?.invoke(data)
+                onDismissRequest()
+            },
+            {
+                onOpenArticle?.invoke(data)
+                onDismissRequest()
+            },
         )
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 2)) {
+            var invisibleItemCount = 0
+            val visibleCount = visible.count { it }
+            texts.forEachIndexed { itemIndex, text ->
+                if (visible[itemIndex]) {
+                    DropdownMenuItem(
+                        text = { Text(text = text) },
+                        shape = MenuDefaults.itemShape(
+                            itemIndex - invisibleItemCount,
+                            visibleCount,
+                        ).shape,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = leadingIcons[itemIndex],
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClicks[itemIndex],
+                    )
+                } else {
+                    invisibleItemCount++
+                }
+            }
+        }
+        Spacer(Modifier.height(MenuDefaults.GroupSpacing))
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(1, 2)) {
+            DropdownMenuDeleteItem(
+                shape = MenuDefaults.itemShape(0, 1).shape,
+                onClick = {
+                    openDeleteWarningDialog = true
+                    onDismissRequest()
+                }
+            )
+        }
     }
 
     DeleteWarningDialog(

@@ -24,11 +24,13 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -167,25 +169,37 @@ private fun Menu(
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.rename)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.DriveFileRenameOutline, contentDescription = null)
-            },
-            onClick = {
+    DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val texts = listOf(
+            stringResource(Res.string.rename),
+            stringResource(Res.string.delete),
+        )
+        val leadingIcons = listOf(
+            Icons.Outlined.DriveFileRenameOutline,
+            Icons.Outlined.Delete,
+        )
+        val onClicks = listOf(
+            {
                 onRename()
                 onDismissRequest()
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.delete)) },
-            leadingIcon = { Icon(imageVector = Icons.Outlined.Delete, contentDescription = null) },
-            onClick = {
+            {
                 onDelete()
                 onDismissRequest()
             },
         )
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { itemIndex, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(itemIndex, texts.size).shape,
+                    leadingIcon = {
+                        Icon(imageVector = leadingIcons[itemIndex], contentDescription = null)
+                    },
+                    onClick = onClicks[itemIndex],
+                )
+            }
+        }
     }
 }
 

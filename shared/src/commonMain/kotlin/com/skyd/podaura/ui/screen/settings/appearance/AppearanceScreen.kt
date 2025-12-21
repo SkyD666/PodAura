@@ -52,11 +52,11 @@ import com.materialkolor.ktx.from
 import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
 import com.skyd.compone.component.BackIcon
-import com.skyd.compone.component.CheckableListMenu
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.connectedButtonShapes
+import com.skyd.compone.component.menu.CheckableListMenu
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
@@ -101,7 +101,7 @@ import podaura.shared.generated.resources.search_style_screen_name
 
 
 @Serializable
-data object AppearanceRoute: java.io.Serializable // TODO
+data object AppearanceRoute : java.io.Serializable // TODO
 
 @Composable
 fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {

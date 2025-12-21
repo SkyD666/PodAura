@@ -19,10 +19,11 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
 import androidx.compose.material.icons.outlined.RssFeed
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -293,66 +294,91 @@ private fun Menu(
 ) {
     val context = LocalContext.current
 
-    DropdownMenu(
+    DropdownMenuPopup(
         expanded = expanded,
         onDismissRequest = onDismissRequest
     ) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.player_audio_track)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.MusicNote, contentDescription = null)
-            },
-            onClick = {
-                onDialogVisibilityChanged.onAudioTrackDialog(true)
-                onDismissRequest()
-            },
-            enabled = playState.mediaLoaded,
+        val texts = listOf(
+            listOf(
+                stringResource(Res.string.player_audio_track),
+                stringResource(Res.string.player_subtitle_track),
+            ),
+            listOf(
+                stringResource(Res.string.feed_screen_name),
+                stringResource(Res.string.read_screen_name),
+            )
         )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.player_subtitle_track)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Outlined.ClosedCaption, contentDescription = null)
-            },
-            onClick = {
-                onDialogVisibilityChanged.onSubtitleTrackDialog(true)
-                onDismissRequest()
-            },
-            enabled = playState.mediaLoaded,
+        val leadingIcons = listOf(
+            listOf(
+                Icons.Outlined.MusicNote,
+                Icons.Outlined.ClosedCaption,
+            ),
+            listOf(
+                Icons.Outlined.RssFeed,
+                Icons.AutoMirrored.Outlined.Article,
+            )
         )
-        HorizontalDivider()
         val feedUrl = media?.article?.feed?.url
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.feed_screen_name)) },
-            leadingIcon = { Icon(imageVector = Icons.Outlined.RssFeed, contentDescription = null) },
-            onClick = {
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
-                    context,
-                    MainActivity::class.java
-                )
-                context.startActivity(intent)
-                onDismissRequest()
-            },
-            enabled = feedUrl != null
-        )
         val articleId = media?.article?.articleWithEnclosure?.article?.articleId
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.read_screen_name)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.AutoMirrored.Outlined.Article, contentDescription = null)
-            },
-            onClick = {
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
-                    context,
-                    MainActivity::class.java
-                )
-                context.startActivity(intent)
-                onDismissRequest()
-            },
-            enabled = articleId != null
+        val onClicks = listOf(
+            listOf(
+                {
+                    onDialogVisibilityChanged.onAudioTrackDialog(true)
+                    onDismissRequest()
+                },
+                {
+                    onDialogVisibilityChanged.onSubtitleTrackDialog(true)
+                    onDismissRequest()
+                },
+            ),
+            listOf(
+                {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
+                        context,
+                        MainActivity::class.java
+                    )
+                    context.startActivity(intent)
+                    onDismissRequest()
+                },
+                {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
+                        context,
+                        MainActivity::class.java
+                    )
+                    context.startActivity(intent)
+                    onDismissRequest()
+                },
+            ),
         )
+        val enables = listOf(
+            listOf(playState.mediaLoaded, playState.mediaLoaded),
+            listOf(feedUrl != null, articleId != null)
+        )
+        val groupCount = texts.size
+        texts.forEachIndexed { groupIndex, subTexts ->
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(groupIndex, groupCount)) {
+                subTexts.forEachIndexed { itemIndex, text ->
+                    DropdownMenuItem(
+                        text = { Text(text = text) },
+                        shape = MenuDefaults.itemShape(itemIndex, subTexts.size).shape,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = leadingIcons[groupIndex][itemIndex],
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClicks[groupIndex][itemIndex],
+                        enabled = enables[groupIndex][itemIndex],
+                    )
+                }
+            }
+            if (groupIndex != groupCount - 1) {
+                Spacer(Modifier.height(MenuDefaults.GroupSpacing))
+            }
+        }
     }
 }

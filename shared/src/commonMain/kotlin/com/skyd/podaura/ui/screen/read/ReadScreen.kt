@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.read
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,11 +28,13 @@ import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -436,47 +437,45 @@ private fun MoreMenu(
     onReadTextSizeClick: () -> Unit,
     onOpenArticleScreen: () -> Unit,
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.OpenInBrowser,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+    DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val texts = listOf(
+            stringResource(Res.string.open_link_in_browser),
+            stringResource(Res.string.read_screen_text_size),
+            stringResource(Res.string.read_screen_open_article_screen),
+        )
+        val leadingIcons = listOf(
+            Icons.Outlined.OpenInBrowser,
+            Icons.Outlined.FormatSize,
+            Icons.Outlined.RssFeed,
+        )
+        val onClicks = listOf<() -> Unit>(
+            {
                 onDismissRequest()
                 onOpenInBrowserClick?.invoke()
             },
-            enabled = onOpenInBrowserClick != null,
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.read_screen_text_size)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.FormatSize,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+            {
                 onDismissRequest()
                 onReadTextSizeClick()
             },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.read_screen_open_article_screen)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.RssFeed,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
+            {
                 onDismissRequest()
                 onOpenArticleScreen()
             },
         )
+        val enables = listOf(onOpenInBrowserClick != null, true, true)
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+            texts.forEachIndexed { index, text ->
+                DropdownMenuItem(
+                    text = { Text(text = text) },
+                    shape = MenuDefaults.itemShape(index, texts.size).shape,
+                    leadingIcon = {
+                        Icon(imageVector = leadingIcons[index], contentDescription = null)
+                    },
+                    onClick = onClicks[index],
+                    enabled = enables[index],
+                )
+            }
+        }
     }
 }
 

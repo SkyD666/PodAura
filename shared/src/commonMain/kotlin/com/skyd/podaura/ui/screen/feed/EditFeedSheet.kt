@@ -47,13 +47,15 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material3.ButtonGroupDefaults
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -441,27 +443,37 @@ private fun LinkArea(link: String, onLinkClick: () -> Unit) {
             onIconClick = { uriHandler.safeOpenUri(link) },
         )
 
-        DropdownMenu(expanded = openMenu, onDismissRequest = { openMenu = false }) {
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Outlined.OpenInBrowser, contentDescription = null)
-                },
-                onClick = {
+        DropdownMenuPopup(expanded = openMenu, onDismissRequest = { openMenu = false }) {
+            val texts = listOf(
+                stringResource(Res.string.open_link_in_browser),
+                stringResource(Res.string.copy)
+            )
+            val leadingIcons = listOf(
+                Icons.Outlined.OpenInBrowser,
+                Icons.Outlined.ContentCopy
+            )
+            val onClicks = listOf(
+                {
                     uriHandler.safeOpenUri(link)
                     openMenu = false
                 },
-            )
-            DropdownMenuItem(
-                text = { Text(text = stringResource(Res.string.copy)) },
-                leadingIcon = {
-                    Icon(imageVector = Icons.Outlined.ContentCopy, contentDescription = null)
-                },
-                onClick = {
+                {
                     scope.launch { clipboard.setText(link) }
                     openMenu = false
-                },
+                }
             )
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+                texts.forEachIndexed { index, text ->
+                    DropdownMenuItem(
+                        text = { Text(text = text) },
+                        shape = MenuDefaults.itemShape(index, texts.size).shape,
+                        leadingIcon = {
+                            Icon(imageVector = leadingIcons[index], contentDescription = null)
+                        },
+                        onClick = onClicks[index],
+                    )
+                }
+            }
         }
     }
 }

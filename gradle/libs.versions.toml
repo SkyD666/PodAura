@@ -122,7 +122,7 @@ compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta08" }
-skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta10" }
+skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta12" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta05" }
 
 junit = { module = "junit:junit", version = "4.13.2" }

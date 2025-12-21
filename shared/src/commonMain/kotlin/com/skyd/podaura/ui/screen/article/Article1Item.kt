@@ -28,13 +28,14 @@ import androidx.compose.material.icons.outlined.ImportContacts
 import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
@@ -447,116 +448,106 @@ private fun ArticleMenu(
     val articleLink = articleWithEnclosure.article.link
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
 
-    DropdownMenu(
+    DropdownMenuPopup(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
     ) {
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = stringResource(
-                        if (isFavorite) Res.string.article_screen_unfavorite
-                        else Res.string.article_screen_favorite
+        val texts = listOf(
+            listOf(
+                stringResource(
+                    if (isFavorite) Res.string.article_screen_unfavorite
+                    else Res.string.article_screen_favorite
+                ),
+                stringResource(
+                    if (isRead) Res.string.article_screen_mark_as_unread
+                    else Res.string.article_screen_mark_as_read
+                )
+            ),
+            listOf(
+                stringResource(Res.string.article_screen_read),
+                stringResource(Res.string.bottom_sheet_enclosure_title),
+                stringResource(Res.string.add_to_playlist),
+                stringResource(Res.string.open_link_in_browser),
+            ),
+        )
+        val leadingIcons = listOf(
+            listOf(
+                if (isFavorite) Icons.Outlined.FavoriteBorder else Icons.Outlined.Favorite,
+                if (isRead) Icons.Outlined.MarkEmailUnread else Icons.Outlined.MarkEmailRead,
+            ),
+            listOf(
+                Icons.Outlined.ImportContacts,
+                Icons.Outlined.AttachFile,
+                Icons.AutoMirrored.Outlined.PlaylistAdd,
+                Icons.Outlined.OpenInBrowser,
+            ),
+        )
+        val onClicks = listOf(
+            listOf(
+                {
+                    onFavorite(data, !isFavorite)
+                    onDismissRequest()
+                },
+                {
+                    onRead(data, !isRead)
+                    onDismissRequest()
+                },
+            ),
+            listOf(
+                {
+                    navigateToReadScreen(
+                        navController = globalNavController,
+                        data = articleWithEnclosure,
                     )
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Outlined.FavoriteBorder
-                    else Icons.Outlined.Favorite,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                onFavorite(data, !isFavorite)
-                onDismissRequest()
-            },
+                    onDismissRequest()
+                },
+                {
+                    onShowEnclosureBottomSheet()
+                    onDismissRequest()
+                },
+                {
+                    onOpenAddToPlaylistSheet()
+                    onDismissRequest()
+                },
+                {
+                    articleLink?.let { uriHandler.safeOpenUri(it) }
+                    onDismissRequest()
+                },
+            ),
         )
-        DropdownMenuItem(
-            text = {
-                Text(
-                    text = stringResource(
-                        if (isRead) Res.string.article_screen_mark_as_unread
-                        else Res.string.article_screen_mark_as_read
+        val enables = listOf(
+            listOf(true, true),
+            listOf(true, true, true, articleLink != null),
+        )
+        val groupCount = texts.size
+        texts.forEachIndexed { groupIndex, subTexts ->
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(groupIndex, groupCount + 1)) {
+                subTexts.forEachIndexed { itemIndex, text ->
+                    DropdownMenuItem(
+                        text = { Text(text = text) },
+                        shape = MenuDefaults.itemShape(itemIndex, subTexts.size).shape,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = leadingIcons[groupIndex][itemIndex],
+                                contentDescription = null,
+                            )
+                        },
+                        onClick = onClicks[groupIndex][itemIndex],
+                        enabled = enables[groupIndex][itemIndex],
                     )
-                )
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = if (isRead) Icons.Outlined.MarkEmailUnread
-                    else Icons.Outlined.MarkEmailRead,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                onRead(data, !isRead)
-                onDismissRequest()
-            },
-        )
-        HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.article_screen_read)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.ImportContacts,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                navigateToReadScreen(
-                    navController = globalNavController,
-                    data = articleWithEnclosure,
-                )
-                onDismissRequest()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.bottom_sheet_enclosure_title)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.AttachFile,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                onShowEnclosureBottomSheet()
-                onDismissRequest()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.add_to_playlist)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                onOpenAddToPlaylistSheet()
-                onDismissRequest()
-            },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(Res.string.open_link_in_browser)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.OpenInBrowser,
-                    contentDescription = null,
-                )
-            },
-            onClick = {
-                articleLink?.let { uriHandler.safeOpenUri(it) }
-                onDismissRequest()
-            },
-            enabled = articleLink != null
-        )
-        HorizontalDivider()
-        DropdownMenuDeleteItem(
-            onClick = {
-                openDeleteWarningDialog = true
-                onDismissRequest()
+                }
             }
-        )
+            Spacer(Modifier.height(MenuDefaults.GroupSpacing))
+        }
+        DropdownMenuGroup(shapes = MenuDefaults.groupShape(groupCount, groupCount + 1)) {
+            DropdownMenuDeleteItem(
+                shape = MenuDefaults.itemShape(0, 1).shape,
+                onClick = {
+                    openDeleteWarningDialog = true
+                    onDismissRequest()
+                },
+            )
+        }
     }
     if (openDeleteWarningDialog) {
         DeleteArticleWarningDialog(
