@@ -31,10 +31,21 @@ private object MacAppDirectories : AppDirectories {
 }
 
 private object WindowsAppDirectories : AppDirectories {
+    private val appDataLocal = System.getenv("LOCALAPPDATA")
     override val dataDir: String
-        get() = TODO("Not yet implemented")
+        get() = if (appDataLocal != null) {
+            appDataLocal + File.separator + BuildKonfig.packageName + File.separator + "Data"
+        } else {
+            homeDir + File.separator + "AppData" + File.separator + "Local" +
+                    File.separator + BuildKonfig.packageName + File.separator + "Data"
+        }
     override val cacheDir: String
-        get() = TODO("Not yet implemented")
+        get() = if (appDataLocal != null) {
+            appDataLocal + File.separator + BuildKonfig.packageName + File.separator + "Cache"
+        } else {
+            homeDir + File.separator + "AppData" + File.separator + "Local" +
+                    File.separator + BuildKonfig.packageName + File.separator + "Cache"
+        }
 }
 
 private object LinuxAppDirectories : AppDirectories {
