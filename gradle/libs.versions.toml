@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "9.0.0"
 kotlin = "2.3.0"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-datetime = "0.7.1"
@@ -17,7 +17,7 @@ ktor = "3.3.3"
 koin = "4.1.1"
 ksoup = "0.2.5"
 coil = "3.3.0"
-paging = "3.4.0-beta01"
+paging = "3.4.0-rc01"
 worker = "2.11.0"
 room = "2.8.4"
 filekit = "0.12.0"
@@ -115,7 +115,7 @@ coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
-material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha04" }
+material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha05" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
 compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 
@@ -141,13 +141,12 @@ androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", vers
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracing-perfetto" }
 
 mockito-core = { module = "org.mockito:mockito-core", version = "5.21.0" }
-mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.1.0" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.2.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-test = { id = "com.android.test", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

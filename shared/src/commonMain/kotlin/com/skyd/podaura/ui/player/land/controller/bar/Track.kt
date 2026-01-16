@@ -210,7 +210,7 @@ private fun DrawScope.drawTrack(
             }
         }
 
-        val outsideFraction = tick > activeRangeFraction || tick < activeRangeStart
+        val outsideFraction = tick !in activeRangeStart..activeRangeFraction
         val center = Offset(lerp(start, end, tick).x, center.y)
         // skip ticks that fall on a gap
         if (center.x in endGap) {

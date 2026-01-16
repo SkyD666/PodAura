@@ -276,7 +276,7 @@ private fun MaxDownloadCountDialog(
                         .align(Alignment.Center)
                         .animateContentSize(),
                     text = if (value == 0) stringResource(Res.string.unlimited)
-                    else value.toInt().toString(),
+                    else value.toString(),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 ComponeIconButton(

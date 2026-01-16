@@ -165,11 +165,11 @@ fun PlaylistMediaListScreen(
                             )
                         )
                     },
-                    onDelete = {
+                    onDelete = { beans ->
                         dispatch(
                             PlaylistMediaListIntent.Delete(
                                 playlistId = playlistId,
-                                deletes = it.map { it.toMediaUrlWithArticleIdBean() },
+                                deletes = beans.map { it.toMediaUrlWithArticleIdBean() },
                             )
                         )
                     },

@@ -45,7 +45,7 @@ fun Rss.rssUpdateFeedWithArticleBean(
         ),
         articles = channel.items.run {
             if (feed.sortXmlArticlesOnUpdate) {
-                sortedByDescending { it.pubDate?.let { Instant.tryParse(it) } }
+                sortedByDescending { item -> item.pubDate?.let { Instant.tryParse(it) } }
             } else {
                 this
             }
@@ -64,7 +64,7 @@ fun Item.toArticleWithEnclosureBean(feedUrl: String): ArticleWithEnclosureBean {
         article = article,
         enclosures = toEnclosures(articleId),
         categories = categories.map { it.toArticleCategoryBean(articleId) } +
-                itunesCategories?.map { it.toArticleCategoryBean(articleId) }?.flatten().orEmpty(),
+                itunesCategories?.flatMap { it.toArticleCategoryBean(articleId) }.orEmpty(),
         media = toRssMediaBean(articleId),
     )
 }

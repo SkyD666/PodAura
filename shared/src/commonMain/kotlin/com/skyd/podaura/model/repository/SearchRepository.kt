@@ -70,19 +70,19 @@ class SearchRepository(
                         append("(0 ")
                     } else {
                         val feedUrlsStr = realFeedUrls.joinToString(", ") { "?" }
-                        append("(`${ArticleBean.Companion.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
+                        append("(`${ArticleBean.FEED_URL_COLUMN}` IN ($feedUrlsStr) ")
                         args += realFeedUrls
                     }
                     if (articleIds.isNotEmpty()) {
                         val articleIdsStr = articleIds.joinToString(", ") { "?" }
-                        append("OR `${ArticleBean.Companion.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
+                        append("OR `${ArticleBean.ARTICLE_ID_COLUMN}` IN ($articleIdsStr) ")
                         args += articleIds
                     }
                     append(")")
                 } to args
             },
             orderBy = {
-                ArticleBean.Companion.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
+                ArticleBean.DATE_COLUMN to if (searchSortDateDesc.value) "DESC" else "ASC"
             }
         )
         Pager(pagingConfig) { articleDao.getArticlePagingSource(sql) }.flow

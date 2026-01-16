@@ -8,7 +8,7 @@ import kotlin.math.roundToInt
 
 private const val MODULE = "CSSColorParser-compose"
 
-class CSSColorParser() {
+class CSSColorParser {
     private val blankRegex by lazy { "\\s+".toRegex() }
 
     fun parseColor(cssColor: String): Color? = when {

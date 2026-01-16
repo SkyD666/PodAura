@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.repository.importexport.opml
 
-import OPML
+import com.skyd.podaura.model.repository.importexport.opmlparser.OPML
 import com.skyd.podaura.ext.takeIfNotBlank
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -9,11 +9,11 @@ import com.skyd.podaura.model.bean.group.GroupWithFeedBean
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.repository.BaseRepository
+import com.skyd.podaura.model.repository.importexport.opmlparser.decodeFromSource
 import com.skyd.podaura.model.repository.importexport.opmlparser.dsl.OutlineDsl
 import com.skyd.podaura.model.repository.importexport.opmlparser.dsl.opml
+import com.skyd.podaura.model.repository.importexport.opmlparser.encodeToSink
 import com.skyd.podaura.model.repository.importexport.opmlparser.entity.Outline
-import decodeFromSource
-import encodeToSink
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sink
 import io.github.vinceglb.filekit.source

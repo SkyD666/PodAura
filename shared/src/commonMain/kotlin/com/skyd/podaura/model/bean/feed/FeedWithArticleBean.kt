@@ -13,7 +13,7 @@ data class FeedWithArticleBean(
     var feed: FeedBean,
     @Relation(
         parentColumn = FeedBean.URL_COLUMN,
-        entityColumn = ArticleBean.Companion.FEED_URL_COLUMN,
+        entityColumn = ArticleBean.FEED_URL_COLUMN,
     )
     var articles: List<ArticleWithEnclosureBean>,
 )

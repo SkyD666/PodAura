@@ -1,11 +1,12 @@
+@file:Suppress("UnstableApiUsage")
+
 import com.android.build.api.variant.FilterConfiguration
+import com.android.build.api.variant.impl.VariantOutputImpl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
@@ -60,7 +61,7 @@ android {
         abi {
             // Enables building multiple APKs per ABI.
             isEnable = true
-            // By default all ABIs are included, so use reset() and include().
+            // By default, all ABIs are included, so use reset() and include().
             // Resets the list of ABIs for Gradle to create APKs for to none.
             reset()
             // A list of ABIs for Gradle to create APKs for.
@@ -70,26 +71,7 @@ android {
         }
     }
 
-    applicationVariants.all {
-        outputs
-            .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
-            .forEach { output ->
-                val abi = output.getFilter(FilterConfiguration.FilterType.ABI.name) ?: "universal"
-                output.outputFileName =
-                    "PodAura_${versionName}_${abi}_${buildType.name}_${flavorName}.apk"
-            }
-    }
-
     buildTypes {
-        debug {
-            isMinifyEnabled = false
-            isShrinkResources = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-            applicationIdSuffix = ".debug"
-        }
         release {
             if (signing != null) {
                 signingConfig = signingConfigs.getByName("release")    // signing
@@ -101,20 +83,26 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            applicationIdSuffix = ".debug"
+        }
         create("benchmark") {
             initWith(buildTypes.getByName("release"))
-            matchingFallbacks += listOf("release")
+            matchingFallbacks += "release"
             isDebuggable = false
             applicationIdSuffix = ".benchmark"
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     buildFeatures {
         buildConfig = true
     }
+
     packaging {
         resources.excludes += mutableSetOf(
             "DebugProbesKt.bin",
@@ -135,16 +123,49 @@ android {
             useLegacyPackaging = true
         }
     }
+
     androidResources {
-        @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
     }
+
     lint.checkReleaseBuilds = false
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs
+            .map { it as VariantOutputImpl }
+            .forEach { output ->
+                val versionName = properties["versionName"]
+                val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
+                val buildType = variant.buildType
+                val flavorName = variant.flavorName
+                output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
+            }
+    }
 }
 
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
+        optIn.addAll(
+            "androidx.compose.material3.ExperimentalMaterial3Api",
+            "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+            "androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
+            "androidx.compose.animation.ExperimentalAnimationApi",
+            "androidx.compose.foundation.ExperimentalFoundationApi",
+            "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+            "androidx.compose.ui.ExperimentalComposeUiApi",
+            "kotlinx.coroutines.FlowPreview",
+            "kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
+            "kotlinx.serialization.ExperimentalSerializationApi",
+            "kotlin.contracts.ExperimentalContracts",
+            "kotlin.ExperimentalStdlibApi",
+            "kotlin.uuid.ExperimentalUuidApi",
+            "kotlin.time.ExperimentalTime"
+        )
     }
 }
 
@@ -157,31 +178,7 @@ composeCompiler {
 //    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
 }
 
-tasks.withType(KotlinCompile::class).configureEach {
-    compilerOptions {
-        freeCompilerArgs.addAll(
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
-            "-opt-in=androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
-            "-opt-in=androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
-            "-opt-in=androidx.compose.animation.ExperimentalAnimationApi",
-            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-            "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
-            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
-            "-opt-in=kotlinx.coroutines.FlowPreview",
-            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-            "-opt-in=kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
-            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
-            "-opt-in=kotlin.contracts.ExperimentalContracts",
-            "-opt-in=kotlin.ExperimentalStdlibApi",
-            "-opt-in=kotlin.uuid.ExperimentalUuidApi",
-            "-opt-in=kotlin.time.ExperimentalTime",
-        )
-    }
-}
-
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
@@ -250,9 +247,9 @@ dependencies {
 }
 
 fun File.readProperties(): Properties? {
-    return if (exists()) {
-        Properties().apply {
-            this@readProperties.inputStream().use { load(it) }
+    return if (this.exists()) {
+        inputStream().use { stream ->
+            Properties().apply { load(stream) }
         }
     } else null
 }

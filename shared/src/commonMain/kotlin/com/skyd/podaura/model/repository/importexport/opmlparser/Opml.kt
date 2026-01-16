@@ -1,4 +1,5 @@
-import com.skyd.podaura.model.repository.importexport.opmlparser.OpmlConfiguration
+package com.skyd.podaura.model.repository.importexport.opmlparser
+
 import com.skyd.podaura.model.repository.importexport.opmlparser.entity.Opml
 import kotlinx.io.Sink
 import kotlinx.io.Source

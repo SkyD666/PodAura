@@ -20,7 +20,7 @@ kotlin {
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    android {
+    androidLibrary {
         namespace = "com.skyd.podaura.shared"
         compileSdk = 36
         minSdk = 24
@@ -28,7 +28,6 @@ kotlin {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
-        lint.checkReleaseBuilds = false
     }
 
     jvm()
@@ -46,7 +45,7 @@ kotlin {
 //        iosSimulatorArm64()
 //    ).forEach {
 //        it.binaries.framework {
-//            baseName = "shared"
+//            baseName = "Shared"
 //            isStatic = true
 //        }
 //    }
@@ -168,33 +167,31 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.ktor.client.apache5)
         }
+    }
 
-        all {
-            with(languageSettings) {
-                optIn("org.jetbrains.compose.resources.ExperimentalResourceApi")
-                optIn("androidx.compose.material3.ExperimentalMaterial3Api")
-                optIn("androidx.compose.material3.ExperimentalMaterial3ExpressiveApi")
-                optIn("androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi")
-                optIn("androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi")
-                optIn("androidx.compose.animation.ExperimentalAnimationApi")
-                optIn("androidx.compose.foundation.ExperimentalFoundationApi")
-                optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
-                optIn("androidx.compose.ui.ExperimentalComposeUiApi")
-                optIn("kotlinx.coroutines.FlowPreview")
-                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-                optIn("kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi")
-                optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
-                optIn("kotlinx.serialization.ExperimentalSerializationApi")
-                optIn("kotlin.contracts.ExperimentalContracts")
-                optIn("kotlin.ExperimentalStdlibApi")
-                optIn("kotlin.uuid.ExperimentalUuidApi")
-                optIn("kotlin.time.ExperimentalTime")
-                optIn("com.google.accompanist.permissions.ExperimentalPermissionsApi")
-            }
-            compilerOptions {
-                freeCompilerArgs.add("-Xexpect-actual-classes")
-            }
-        }
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+        optIn.addAll(
+            "org.jetbrains.compose.resources.ExperimentalResourceApi",
+            "androidx.compose.material3.ExperimentalMaterial3Api",
+            "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+            "androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi",
+            "androidx.compose.animation.ExperimentalAnimationApi",
+            "androidx.compose.foundation.ExperimentalFoundationApi",
+            "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+            "androidx.compose.ui.ExperimentalComposeUiApi",
+            "kotlinx.coroutines.FlowPreview",
+            "kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
+            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
+            "kotlinx.serialization.ExperimentalSerializationApi",
+            "kotlin.contracts.ExperimentalContracts",
+            "kotlin.ExperimentalStdlibApi",
+            "kotlin.uuid.ExperimentalUuidApi",
+            "kotlin.time.ExperimentalTime",
+            "com.google.accompanist.permissions.ExperimentalPermissionsApi"
+        )
     }
 
     // KSP Common sourceSet
@@ -234,7 +231,7 @@ compose.desktop {
 }
 
 // Distribution's icon
-tasks.withType<AbstractJPackageTask>().all {
+tasks.withType<AbstractJPackageTask> {
     if (targetFormat == TargetFormat.Dmg) {
         freeArgs.addAll("--icon", "icons/icon_512x512.icns")
     }

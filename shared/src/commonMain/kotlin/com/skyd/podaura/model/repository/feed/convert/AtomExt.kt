@@ -43,12 +43,12 @@ fun Feed.feedUpdateFeedWithArticleBean(
         ),
         articles = entries.run {
             if (feed.sortXmlArticlesOnUpdate) {
-                sortedByDescending { it.published?.let { Instant.tryParse(it) } }
+                sortedByDescending { entry -> entry.published?.let { Instant.tryParse(it) } }
             } else {
                 this
             }
-        }.takeWhile {
-            articleTakeWhile(it.links?.firstOrNull { it.rel == "alternate" }?.href)
+        }.takeWhile { entry ->
+            articleTakeWhile(entry.links?.firstOrNull { it.rel == "alternate" }?.href)
         }.map {
             it.toArticleWithEnclosureBean(url)
         },

@@ -13,7 +13,7 @@ actual class PlayerRepository actual constructor(
 ) : BasePlayerRepository(mediaPlayHistoryDao, articleDao, enclosureDao) {
     override fun requestPlaylistByPlatformFile(file: PlatformFile): List<PlaylistMediaWithArticleBean>? {
         return listOf(
-            PlaylistMediaWithArticleBean.Companion.fromUrl(
+            PlaylistMediaWithArticleBean.fromUrl(
                 playlistId = "",
                 url = file.file.path,
                 orderPosition = 1.0,

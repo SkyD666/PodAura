@@ -121,7 +121,7 @@ class MediaRepository(
         Path(path, MEDIA_LIB_JSON_NAME).sink().use {
             json.encodeToSink(formatMediaLibJson(data), it)
         }
-        refreshPath.emit(path.toString())
+        refreshPath.emit(path)
     }
 
     private val appendFilesMutex = Mutex()
@@ -268,12 +268,12 @@ class MediaRepository(
         )
     ) { list, sortBy ->
         when (sortBy) {
-            BaseMediaListSortByPreference.Companion.DATE -> list.sortedBy { it.date }
-            BaseMediaListSortByPreference.Companion.NAME -> list.sortedBy {
+            BaseMediaListSortByPreference.DATE -> list.sortedBy { it.date }
+            BaseMediaListSortByPreference.NAME -> list.sortedBy {
                 it.displayName ?: it.name
             }
 
-            BaseMediaListSortByPreference.Companion.FILE_COUNT -> list.sortedBy { it.fileCount }
+            BaseMediaListSortByPreference.FILE_COUNT -> list.sortedBy { it.fileCount }
             else -> list.sortedBy { it.displayName ?: it.name }
         }
     }.combine(
