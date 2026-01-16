@@ -18,6 +18,7 @@ plugins {
 android {
     namespace = "com.skyd.podaura"
     compileSdk = 36
+    ndkVersion = "29.0.14206865"
 
     defaultConfig {
         applicationId = "com.skyd.anivu"

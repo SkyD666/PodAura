@@ -420,7 +420,7 @@ fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25
         }
     }
 
-    if (data.cover != null && MediaShowThumbnailPreference.current) {
+    if (MediaShowThumbnailPreference.current) {
         if (showThumbnail) {
             PodAuraImage(
                 modifier = modifier.fillMaxSize(),
