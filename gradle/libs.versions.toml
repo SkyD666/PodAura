@@ -33,6 +33,7 @@ androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constrain
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
+desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 
 jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 jetbrains-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
