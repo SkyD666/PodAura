@@ -190,7 +190,6 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.media)
     implementation(libs.androidx.compose.runtime.tracing)
-    implementation(libs.android.material)
 
     implementation(libs.jetbrains.compose.runtime)
     implementation(libs.jetbrains.compose.foundation)

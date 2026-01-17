@@ -32,7 +32,6 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1
 androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform", version = "0.6.1-shaded" }
 androidx-media = { module = "androidx.media:media", version = "1.7.1" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
-android-material = { module = "com.google.android.material:material", version = "1.13.0" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
 
 jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }

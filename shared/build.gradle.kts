@@ -138,7 +138,6 @@ kotlin {
             // dependencies declared in commonMain.
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
-            implementation(libs.android.material)
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.media)
             implementation(libs.androidx.room.ktx)
