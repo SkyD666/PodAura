@@ -1,7 +1,6 @@
 package com.skyd.ksp.preference
 
 import androidx.datastore.preferences.core.Preferences
-import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
@@ -33,7 +32,6 @@ class PreferenceProcessor(
         return lastOverridee
     }
 
-    @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
         logger.info("PreferenceProcessor start: ${resolver.getModuleName().asString()}")
 
@@ -46,8 +44,8 @@ class PreferenceProcessor(
 
         val annotationName = Preference::class.qualifiedName!!
         val symbols = resolver.getSymbolsWithAnnotation(annotationName)
-            .filterIsInstance<KSClassDeclaration>().filter {
-                val excludeFromList = it.annotations.first {
+            .filterIsInstance<KSClassDeclaration>().filter { declaration ->
+                val excludeFromList = declaration.annotations.first {
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
                 }.arguments.first {
                     it.name?.asString() == Preference::excludeFromList.name
@@ -110,11 +108,14 @@ class PreferenceProcessor(
         }
         return emptyList()
     }
+
     private fun generatePreferencesFile(
         entries: List<Entity>,
         basePreference: KSName,
         pkg: String
     ) {
+        // For reproducible builds, sort by name.
+        val sortedEntities = entries.sortedBy { it.preferenceSimpleName.asString() }
         val file = codeGenerator.createNewFile(
             dependencies = Dependencies.ALL_FILES,
             packageName = pkg,
@@ -128,7 +129,7 @@ class PreferenceProcessor(
             writer.appendLine("import kotlin.reflect.KClass")
             writer.appendLine("")
             writer.appendLine("actual val preferences: List<Pair<${basePreference.asString()}<*>, KClass<*>>> = listOf(")
-            for (entity in entries) {
+            for (entity in sortedEntities) {
                 writer.append("    ")
                 writer.appendLine("${entity.preferenceQualifiedName.asString()} to ${entity.dataType.asString()}::class,")
             }

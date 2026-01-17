@@ -16,8 +16,11 @@ kotlin {
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     androidLibrary {
         namespace = "com.skyd.fundation"
-        compileSdk = 36
         minSdk = 24
+        compileSdk {
+            version = release(36) { minorApiLevel = 1 }
+        }
+        buildToolsVersion = "36.1.0"
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }

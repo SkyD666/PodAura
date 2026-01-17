@@ -17,7 +17,10 @@ plugins {
 
 android {
     namespace = "com.skyd.podaura"
-    compileSdk = 36
+    compileSdk {
+        version = release(36) { minorApiLevel = 1 }
+    }
+    buildToolsVersion = "36.1.0"
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
@@ -247,10 +250,7 @@ dependencies {
     androidTestImplementation(libs.androidx.uiautomator)
 }
 
-fun File.readProperties(): Properties? {
-    return if (this.exists()) {
-        inputStream().use { stream ->
-            Properties().apply { load(stream) }
-        }
-    } else null
-}
+fun File.readProperties(): Properties? =
+    takeIf { exists() }?.inputStream()?.use { stream ->
+        Properties().apply { load(stream) }
+    }
