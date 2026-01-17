@@ -2,6 +2,7 @@
 
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.gradle.tasks.PackageAndroidArtifact
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -111,11 +112,9 @@ android {
     packaging {
         resources.excludes += mutableSetOf(
             "DebugProbesKt.bin",
-            "META-INF/CHANGES",
-            "META-INF/README.md",
-            "META-INF/jdom-info.xml",
-            "kotlin-tooling-metadata.json",
-            "okhttp3/internal/publicsuffix/NOTICE",
+            "META-INF/*.version",
+            "META-INF/**/LICENSE.txt",
+            "META-INF/native-image/**"
         )
         jniLibs {
             excludes += mutableSetOf(
@@ -148,6 +147,11 @@ androidComponents {
                 output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
             }
     }
+}
+
+// https://stackoverflow.com/a/77745844
+tasks.withType<PackageAndroidArtifact> {
+    doFirst { appMetadata.asFile.orNull?.writeText("") }
 }
 
 kotlin {
