@@ -58,7 +58,7 @@ internal fun DelayMillisDialog(
                 )
                 ComponeTextField(
                     modifier = Modifier.weight(1f),
-                    value = currentDelay.toString(),
+                    value = currentDelay,
                     onValueChange = {
                         if (it.isEmpty() || pattern.matches(it)) currentDelay = it
                     },

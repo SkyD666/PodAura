@@ -51,7 +51,7 @@ class PlayerCoordinator : LifecycleOwner {
                     player.loadPlaylist().forEachIndexed { index, url ->
                         playlistMap[url] =
                             cachedPlaylistMap[url]
-                                ?: PlaylistMediaWithArticleBean.Companion.fromUrl(
+                                ?: PlaylistMediaWithArticleBean.fromUrl(
                                     playlistId = playlistId,
                                     url = url,
                                     orderPosition = index.toDouble(),

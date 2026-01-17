@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 abstract class BasePreference<T> {
     abstract val key: Preferences.Key<T>
     abstract val default: T
-    val local: ProvidableCompositionLocal<T> = compositionLocalOf<T> { default }
+    val local: ProvidableCompositionLocal<T> = compositionLocalOf { default }
 
     val current: T
         @ReadOnlyComposable

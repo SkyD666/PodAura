@@ -12,7 +12,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import com.skyd.htmlrender.base.handler.TagHandler
 import com.skyd.htmlrender.core.HtmlAnnotator
-import com.skyd.htmlrender.core.StyleConfig
 import com.skyd.htmlrender.core.css.CSSAnnotatedHandler
 import com.skyd.htmlrender.ui.RawHtmlData
 import com.skyd.htmlrender.ui.cache.HtmlAnnotatorCache

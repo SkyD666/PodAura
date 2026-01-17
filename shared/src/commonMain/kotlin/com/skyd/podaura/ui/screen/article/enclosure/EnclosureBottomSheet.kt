@@ -283,12 +283,10 @@ private fun EnclosureItemMenu(
     DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
         val texts = listOf(stringResource(Res.string.copy))
         val leadingIcons = listOf(Icons.Outlined.ContentCopy)
-        val onClicks = listOf(
-            {
-                onCopy()
-                onDismissRequest()
-            },
-        )
+        val onClicks = listOf {
+            onCopy()
+            onDismissRequest()
+        }
         DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
             texts.forEachIndexed { index, text ->
                 DropdownMenuItem(

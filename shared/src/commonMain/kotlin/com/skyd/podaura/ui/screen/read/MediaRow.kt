@@ -72,18 +72,18 @@ private fun MediaCover(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.Companion.Black.copy(alpha = 0.5f)),
+            .background(Color.Black.copy(alpha = 0.5f)),
     ) {
         Box(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .clickable(onClick = onClick)
-                .align(Alignment.Companion.Center),
+                .align(Alignment.Center),
         ) {
             var realImage by rememberSaveable(enclosure) {
                 mutableStateOf(if (isFreeNetworkAvailable() && enclosure.isVideo) enclosure.url else cover)
             }
             PodAuraImage(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxHeight()
                     .widthIn(min = 200.dp),
                 imageLoader = rememberPodAuraImageLoader(
@@ -97,39 +97,39 @@ private fun MediaCover(
                     components = components,
                 ),
                 model = realImage,
-                contentScale = ContentScale.Companion.FillHeight,
-                colorFilter = ColorFilter.Companion.tint(
-                    Color.Companion.Black.copy(alpha = 0.5f),
-                    blendMode = BlendMode.Companion.Darken,
+                contentScale = ContentScale.FillHeight,
+                colorFilter = ColorFilter.tint(
+                    Color.Black.copy(alpha = 0.5f),
+                    blendMode = BlendMode.Darken,
                 ),
             )
             Icon(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .size(50.dp)
-                    .align(Alignment.Companion.Center),
+                    .align(Alignment.Center),
                 imageVector = Icons.Outlined.PlayCircleOutline,
                 contentDescription = stringResource(Res.string.play),
-                tint = Color.Companion.White,
+                tint = Color.White,
             )
             ComponeIconButton(
                 onClick = { openAddToPlaylistSheet = true },
-                modifier = Modifier.Companion.align(Alignment.Companion.BottomStart),
-                tint = Color.Companion.White,
+                modifier = Modifier.align(Alignment.BottomStart),
+                tint = Color.White,
                 imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
                 contentDescription = stringResource(Res.string.add_to_playlist),
             )
             if (episode != null) {
                 RssMediaEpisode(
-                    modifier = Modifier.Companion
-                        .align(Alignment.Companion.TopEnd)
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
                         .padding(end = 10.dp, top = 10.dp),
                     episode = episode,
                 )
             }
             if (duration != null) {
                 RssMediaDuration(
-                    modifier = Modifier.Companion
-                        .align(Alignment.Companion.BottomEnd)
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
                         .padding(end = 10.dp, bottom = 10.dp),
                     duration = duration,
                 )

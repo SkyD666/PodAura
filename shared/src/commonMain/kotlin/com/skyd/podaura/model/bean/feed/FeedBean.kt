@@ -74,8 +74,7 @@ data class FeedBean(
         const val TAG = "FeedBean"
         const val DEFAULT_FILTER_MASK = 0
         fun parseFilterMaskToFavorite(filterMask: Int): Boolean? {
-            val twoBit = filterMask and 0B11
-            return when (twoBit) {
+            return when (val twoBit = filterMask and 0B11) {
                 0 -> null
                 1 -> true
                 2 -> false
@@ -87,8 +86,7 @@ data class FeedBean(
         }
 
         fun parseFilterMaskToRead(filterMask: Int): Boolean? {
-            val twoBit = (filterMask and 0B1100) shr 2
-            return when (twoBit) {
+            return when (val twoBit = (filterMask and 0B1100) shr 2) {
                 0 -> null
                 1 -> true
                 2 -> false
@@ -114,8 +112,7 @@ data class FeedBean(
         }
 
         fun parseFilterMaskToMute(filterMask: Int): Boolean? {
-            val twoBit = (filterMask and 0B1100000000) shr 8
-            return when (twoBit) {
+            return when (val twoBit = (filterMask and 0B1100000000) shr 8) {
                 0 -> null
                 1 -> true
                 2 -> false

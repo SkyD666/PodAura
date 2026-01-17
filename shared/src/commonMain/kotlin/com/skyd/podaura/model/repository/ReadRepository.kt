@@ -65,7 +65,7 @@ class ReadRepository(
             file = PlatformFile(imageFile),
             filename = ("${
                 title.orEmpty().ifEmpty { url.substringAfterLast('/') }
-            }_${Random.Default.nextInt()}").validateFileName() + format.toString(),
+            }_${Random.nextInt()}").validateFileName() + format.toString(),
         )
         emit(Unit)
     }.flowOn(Dispatchers.IO)
@@ -110,9 +110,8 @@ class ReadRepository(
         maxSize: Int = 5_242_880,
         exclude: (file: Path) -> Boolean,
     ) {
-        if (walk(PathWalkOption.Companion.BreadthFirst).filter { it.isFile }.map { it.size }
-                .sum() > maxSize) {
-            walk(PathWalkOption.Companion.Default).forEach { if (!exclude(it)) it.deleteRecursively() }
+        if (walk(PathWalkOption.BreadthFirst).filter { it.isFile }.sumOf { it.size } > maxSize) {
+            walk(PathWalkOption.Default).forEach { if (!exclude(it)) it.deleteRecursively() }
         }
     }
 }

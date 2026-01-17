@@ -1,5 +1,4 @@
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
-import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -17,12 +16,14 @@ kotlin {
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     androidLibrary {
         namespace = "com.skyd.fundation"
-        compileSdk = 36
         minSdk = 24
+        compileSdk {
+            version = release(36) { minorApiLevel = 1 }
+        }
+        buildToolsVersion = "36.1.0"
         compilerOptions {
             jvmTarget = JvmTarget.JVM_17
         }
-        lint.checkReleaseBuilds = false
     }
 
     // For iOS targets, this is also where you should
@@ -32,25 +33,18 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-//    val xcfName = "fundationKit"
-//
-//    iosX64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
-//
-//    iosArm64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
-//
-//    iosSimulatorArm64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
+/*
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "FundationKit"
+            isStatic = true
+        }
+    }
+ */
 
     jvm()
 
@@ -76,12 +70,10 @@ kotlin {
         jvmMain.dependencies {
             implementation(libs.java.jna)
         }
+    }
 
-        all {
-            with(languageSettings) {
-                optIn("kotlin.time.ExperimentalTime")
-            }
-        }
+    compilerOptions {
+        optIn.addAll("kotlin.time.ExperimentalTime")
     }
 }
 
@@ -89,21 +81,14 @@ buildkonfig {
     packageName = "com.skyd.fundation"
 
     defaultConfigs {
-        buildConfigField(STRING, "packageName", "com.skyd.podaura")
-        buildConfigField(STRING, "versionName", properties["versionName"]!!.toString())
-        buildConfigField(INT, "versionCode", properties["versionCode"]!!.toString())
+        buildConfigField(FieldSpec.Type.STRING, "packageName", "com.skyd.podaura")
+        buildConfigField(FieldSpec.Type.STRING, "versionName", properties["versionName"]!!.toString())
+        buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
     }
 }
 
 //dependencies {
 //    listOf("kspCommonMainMetadata", "kspAndroid", "kspJvm").forEach {
 //        add(it, projects.ksp)
-//    }
-//}
-//
-//// Trigger Common Metadata Generation from Native tasks
-//project.tasks.withType(KspAATask::class).configureEach {
-//    if (name != "kspCommonMainKotlinMetadata") {
-//        dependsOn("kspCommonMainKotlinMetadata")
 //    }
 //}

@@ -7,10 +7,5 @@
 /captures
 .externalNativeBuild
 .cxx
-/app/build
-/app/schemas
-/app/release
-/app/debug
-/app/GitHub
 local.properties
 signing.properties

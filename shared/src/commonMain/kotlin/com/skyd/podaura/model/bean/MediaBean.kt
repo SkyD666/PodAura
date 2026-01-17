@@ -31,6 +31,6 @@ data class MediaBean(
     val icon: DrawableResource by lazy { path.fileIcon().resource }
     val articleId get() = articleWithEnclosure?.article?.articleId
     val feedUrl get() = feedBean?.url
-    val cover: String?
-        get() = articleWithEnclosure?.media?.image ?: feedBean?.icon ?: filePath.toString()
+    val cover: String
+        get() = articleWithEnclosure?.media?.image ?: feedBean?.icon ?: filePath
 }

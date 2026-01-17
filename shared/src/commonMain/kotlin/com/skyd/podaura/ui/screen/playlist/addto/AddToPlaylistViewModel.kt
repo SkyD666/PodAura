@@ -30,7 +30,7 @@ class AddToPlaylistViewModel(
     override val viewState: StateFlow<AddToPlaylistState>
 
     init {
-        val initialVS = AddToPlaylistState.Companion.initial()
+        val initialVS = AddToPlaylistState.initial()
 
         viewState = merge(
             intentFlow.filterIsInstance<AddToPlaylistIntent.Init>().distinctUntilChanged(),

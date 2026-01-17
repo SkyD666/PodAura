@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -15,10 +17,15 @@ kotlin {
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     androidLibrary {
         namespace = "com.skyd.downloader"
-        compileSdk = 36
         minSdk = 24
+        compileSdk {
+            version = release(36) { minorApiLevel = 1 }
+        }
+        buildToolsVersion = "36.1.0"
         androidResources.enable = true
-        lint.checkReleaseBuilds = false
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 
     // For iOS targets, this is also where you should
@@ -28,25 +35,18 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-//    val xcfName = "downloaderKit"
-//
-//    iosX64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
-//
-//    iosArm64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
-//
-//    iosSimulatorArm64 {
-//        binaries.framework {
-//            baseName = xcfName
-//        }
-//    }
+/*
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "DownloaderKit"
+            isStatic = true
+        }
+    }
+ */
 
     jvm()
 
@@ -56,31 +56,27 @@ kotlin {
     // common to share sources between related targets.
     // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.kotlin.stdlib)
-                implementation(libs.jetbrains.compose.runtime)
-                implementation(libs.jetbrains.compose.components.resources)
-                implementation(libs.androidx.room.runtime)
-                implementation(libs.androidx.sqlite.bundled)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.filekit.core)
-                implementation(libs.ktor.client.core)
-                implementation(libs.koin.core)
-                implementation(libs.kermit)
-                implementation(libs.kotlincrypto.hash.md)
-                implementation(libs.skyd666.compone)
+        commonMain.dependencies {
+            implementation(libs.kotlin.stdlib)
+            implementation(libs.jetbrains.compose.runtime)
+            implementation(libs.jetbrains.compose.components.resources)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite.bundled)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.filekit.core)
+            implementation(libs.ktor.client.core)
+            implementation(libs.koin.core)
+            implementation(libs.kermit)
+            implementation(libs.kotlincrypto.hash.md)
+            implementation(libs.skyd666.compone)
 
-                implementation(projects.fundation)
-            }
+            implementation(projects.fundation)
         }
 
-        androidMain {
-            dependencies {
-                implementation(libs.androidx.core.ktx)
-                implementation(libs.androidx.room.ktx)
-                implementation(libs.androidx.work.runtime.ktx)
-            }
+        androidMain.dependencies {
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.room.ktx)
+            implementation(libs.androidx.work.runtime.ktx)
         }
 
 //        iosMain {
@@ -92,16 +88,15 @@ kotlin {
 //                // KMP dependencies declared in commonMain.
 //            }
 //        }
-        all {
-            with(languageSettings) {
-                optIn("kotlin.time.ExperimentalTime")
-                optIn("kotlin.uuid.ExperimentalUuidApi")
-                optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
-            }
-            compilerOptions {
-                freeCompilerArgs.add("-Xexpect-actual-classes")
-            }
-        }
+    }
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+        optIn.addAll(
+            "kotlin.time.ExperimentalTime",
+            "kotlin.uuid.ExperimentalUuidApi",
+            "kotlin.concurrent.atomics.ExperimentalAtomicApi"
+        )
     }
 }
 

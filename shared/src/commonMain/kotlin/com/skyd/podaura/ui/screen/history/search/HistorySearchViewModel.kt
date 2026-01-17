@@ -27,7 +27,7 @@ class HistorySearchViewModel(
     override val viewState: StateFlow<HistorySearchState>
 
     init {
-        val initialVS = HistorySearchState.Companion.initial()
+        val initialVS = HistorySearchState.initial()
 
         viewState = merge(
             intentFlow.filterIsInstance<HistorySearchIntent.Query>().distinctUntilChanged(),

@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.activity.player
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
@@ -148,6 +149,7 @@ class PlayActivity : BaseComposeActivity() {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (serviceBound && service.playerCoordinator.player.onKey(event)) {
             return true

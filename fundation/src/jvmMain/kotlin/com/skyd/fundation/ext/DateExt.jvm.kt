@@ -97,7 +97,7 @@ actual fun Long.formatElapsedTime(): String {
                 )
                 setZeroFormattingBehavior(NSDateComponentsFormatter.ZeroFormattingBehavior.BEHAVIOR_PAD)
             }
-            return formatter.stringFromTimeInterval(this / 1000.0)
+            formatter.stringFromTimeInterval(this / 1000.0)
         }
 
         Platform.Windows -> TODO()

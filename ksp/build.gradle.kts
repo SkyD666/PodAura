@@ -1,18 +1,14 @@
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotlin.jvm)
 }
 
 kotlin {
-    jvm()
-
-    sourceSets {
-        jvmMain {
-            dependencies {
-                implementation(libs.ksp.symbol.processing.api)
-                implementation(libs.androidx.datastore.preferences)
-            }
-            kotlin.srcDir("src/main/kotlin")
-            resources.srcDir("src/main/resources")
-        }
+    compilerOptions {
+        optIn.addAll("com.google.devtools.ksp.KspExperimental")
     }
+}
+
+dependencies {
+    api(libs.ksp.symbol.processing.api)
+    api(libs.androidx.datastore.preferences)
 }

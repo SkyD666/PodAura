@@ -55,7 +55,7 @@ abstract class BasePlayerRepository(
         articleId: String,
         reverse: Boolean = true,
     ): List<PlaylistMediaWithArticleBean> {
-        return articleDao.getArticlesForPlaylist(articleId).map { articleWithFeed ->
+        return articleDao.getArticlesForPlaylist(articleId).flatMap { articleWithFeed ->
             val enclosures = articleWithFeed.articleWithEnclosure.enclosures
             enclosures.mapIndexed { index, enclosure ->
                 PlaylistMediaWithArticleBean(
@@ -69,7 +69,7 @@ abstract class BasePlayerRepository(
                     article = articleWithFeed,
                 )
             }
-        }.flatten().run { if (reverse) reversed() else this }
+        }.run { if (reverse) reversed() else this }
     }
 
     suspend fun requestPlaylistByMediaLibraryList(

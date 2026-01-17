@@ -15,12 +15,11 @@ actual class PlayerRepository actual constructor(
     enclosureDao: EnclosureDao
 ) : BasePlayerRepository(mediaPlayHistoryDao, articleDao, enclosureDao) {
     override fun requestPlaylistByPlatformFile(file: PlatformFile): List<PlaylistMediaWithArticleBean>? {
-        val androidFile = file.androidFile
-        return when (androidFile) {
+        return when (val androidFile = file.androidFile) {
             is AndroidFile.UriWrapper -> {
                 androidFile.uri.resolveUri(get())?.let { path ->
                     listOf(
-                        PlaylistMediaWithArticleBean.Companion.fromUrl(
+                        PlaylistMediaWithArticleBean.fromUrl(
                             playlistId = "",
                             url = path,
                             orderPosition = 1.0,
@@ -30,7 +29,7 @@ actual class PlayerRepository actual constructor(
             }
 
             is AndroidFile.FileWrapper -> listOf(
-                PlaylistMediaWithArticleBean.Companion.fromUrl(
+                PlaylistMediaWithArticleBean.fromUrl(
                     playlistId = "",
                     url = androidFile.file.path,
                     orderPosition = 1.0,

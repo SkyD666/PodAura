@@ -69,8 +69,7 @@ class RssHelper(
             httpClientConfig()
             xmlConfig()
         }
-        val rssData: BaseXml? = httpClient.get(url).body()
-        when (rssData) {
+        when (val rssData: BaseXml? = httpClient.get(url).body()) {
             is Rss -> rssData.rssToFeedWithArticleBean(url, iconAsync.await())
             is Feed -> rssData.feedToFeedWithArticleBean(url, iconAsync.await())
             else -> error("Not supported XML type")
@@ -97,8 +96,7 @@ class RssHelper(
                     }
                 )
             }
-            val rssData: BaseXml? = currentHttpClient.get(feed.url).body()
-            when (rssData) {
+            when (val rssData: BaseXml? = currentHttpClient.get(feed.url).body()) {
                 is Rss -> rssData.rssUpdateFeedWithArticleBean(
                     url = feed.url,
                     feed = feed,

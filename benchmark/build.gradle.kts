@@ -1,15 +1,16 @@
-@file:Suppress("UnstableApiUsage")
-
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.test)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.skyd.macrobenchmark"
-    compileSdk = 36
+    compileSdk {
+        version = release(36) { minorApiLevel = 1 }
+    }
+    buildToolsVersion = "36.1.0"
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
