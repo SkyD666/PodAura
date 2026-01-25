@@ -69,6 +69,8 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(libs.java.jna)
+            implementation(libs.java.jna.platform)
+            implementation(libs.ocpsoft.prettytime)
         }
     }
 

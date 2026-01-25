@@ -1,3 +1,3 @@
-package com.skyd.podaura.util
+package com.skyd.fundation.util
 
 expect fun notSupport(operation: String): Nothing

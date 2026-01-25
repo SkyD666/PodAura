@@ -1,8 +1,10 @@
 package com.skyd.podaura.ext
 
 import com.skyd.fundation.jna.mac.NSByteCountFormatter
+import com.skyd.fundation.jna.windows.Shlwapi
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+
 
 actual fun Long.fileSize(): String {
     when (platform) {
@@ -20,7 +22,9 @@ actual fun Long.fileSize(): String {
             )
         }
 
-        Platform.Windows -> TODO()
+        Platform.Windows -> {
+            return Shlwapi.strFormatByteSizeW(byteCount = this)
+        }
     }
 }
 

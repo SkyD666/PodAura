@@ -168,6 +168,7 @@ kotlin {
             implementation(libs.jetbrains.compose.desktop.common)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.ktor.client.apache5)
+            implementation(libs.java.jna)
         }
     }
 
@@ -217,6 +218,9 @@ compose.desktop {
 
             macOS {
                 iconFile = project.file("icons/icon_512x512.icns")
+            }
+            windows {
+                iconFile = project.file("icons/icon.ico")
             }
 
             modules(

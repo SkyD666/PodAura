@@ -495,8 +495,6 @@
     <string name="terms_of_service_screen_agree">Accept</string>
     <string name="terms_of_service_screen_disagree">Decline and exit</string>
     <string name="bt_deprecated_warning">ATTENTION: BT Transfer is deprecated and will be removed later!</string>
-    <string name="elapsed_time_mm_ss">%1$d:%2$d</string>
-    <string name="elapsed_time_hh_mm_ss">%1$d:%2$d:%3$d</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>

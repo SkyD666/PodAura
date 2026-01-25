@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.LicenseBean
 import kotlinx.serialization.Serializable
@@ -99,7 +101,7 @@ private fun LicenseItem(data: LicenseBean) {
 }
 
 private fun getLicenseList(): List<LicenseBean> {
-    return listOf(
+    return mutableListOf(
         LicenseBean(
             name = "Android Open Source Project",
             license = "Apache-2.0",
@@ -220,5 +222,15 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "LGPL-2.1",
             link = "https://github.com/java-native-access/jna",
         ),
-    ).sortedBy { it.name }
+    ).apply {
+        if (platform == Platform.Windows || platform == Platform.Linux) {
+            add(
+                LicenseBean(
+                    name = "prettytime",
+                    license = "Apache-2.0",
+                    link = "https://github.com/ocpsoft/prettytime",
+                )
+            )
+        }
+    }.sortedBy { it.name }
 }

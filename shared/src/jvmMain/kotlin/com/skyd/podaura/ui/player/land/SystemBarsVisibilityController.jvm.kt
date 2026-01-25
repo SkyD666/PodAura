@@ -2,7 +2,7 @@ package com.skyd.podaura.ui.player.land
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.skyd.podaura.util.notSupport
+import com.skyd.fundation.util.notSupport
 
 @Composable
 actual fun rememberSystemBarsVisibilityController(): SystemBarsVisibilityController {

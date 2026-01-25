@@ -5,7 +5,9 @@ import com.skyd.fundation.jna.mac.NSDate
 import com.skyd.fundation.jna.mac.NSDateComponentsFormatter
 import com.skyd.fundation.jna.mac.NSDateFormatter
 import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.notSupport
 import com.skyd.fundation.util.platform
+import org.ocpsoft.prettytime.PrettyTime
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -17,8 +19,9 @@ import java.util.TimeZone
 actual fun Long.toAbsoluteDateTimeString(): String {
     when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.IOS -> notSupport("toAbsoluteDateTimeString")
 
+        Platform.Windows,
         Platform.Linux -> {
             val formatter = DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
@@ -37,16 +40,15 @@ actual fun Long.toAbsoluteDateTimeString(): String {
             }
             return formatter.stringFromDate(date)
         }
-
-        Platform.Windows -> TODO()
     }
 }
 
 actual fun Long.toRelativeDateTimeString(): String {
     when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.IOS -> notSupport("toRelativeDateTimeString")
 
+        Platform.Windows,
         Platform.Linux -> {
             val formatter = DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
@@ -66,28 +68,21 @@ actual fun Long.toRelativeDateTimeString(): String {
             }
             return formatter.stringFromDate(date)
         }
-
-        Platform.Windows -> TODO()
     }
 }
 
 actual fun Long.formatElapsedTime(): String {
     return when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.IOS -> notSupport("formatElapsedTime")
 
-        Platform.Linux -> {
-//            val hours = this / 3600
-//            val minutes = (this % 3600) / 60
-//            val seconds = this % 60
-//
-//            return if (hours == 0L) {
-//                blockString(Res.string.elapsed_time_hh_mm_ss, hours, minutes, seconds)
-//            } else {
-//                blockString(Res.string.elapsed_time_mm_ss, hours, minutes, seconds)
-//            }
-            TODO()
-        }
+        Platform.Windows,
+        Platform.Linux -> PrettyTime().format(
+            LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(this),
+                TimeZone.getDefault().toZoneId()
+            )
+        )
 
         Platform.MacOS -> {
             val formatter = NSDateComponentsFormatter().apply {
@@ -100,6 +95,5 @@ actual fun Long.formatElapsedTime(): String {
             formatter.stringFromTimeInterval(this / 1000.0)
         }
 
-        Platform.Windows -> TODO()
     }
 }
