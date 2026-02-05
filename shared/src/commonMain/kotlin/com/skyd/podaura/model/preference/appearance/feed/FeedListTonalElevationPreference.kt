@@ -1,7 +1,8 @@
 package com.skyd.podaura.model.preference.appearance.feed
 
 import androidx.datastore.preferences.core.floatPreferencesKey
-import com.skyd.ksp.preference.Preference
+import com.skyd.fundation.ext.format
+import com.skyd.ksp.annotation.Preference
 import com.skyd.podaura.model.preference.BasePreference
 
 @Preference
@@ -14,6 +15,6 @@ object FeedListTonalElevationPreference : BasePreference<Float>() {
 
 object TonalElevationPreferenceUtil {
     fun toDisplay(value: Float): String {
-        return "%.2fdp".format(value)
+        return value.format(2) + "dp"
     }
 }

@@ -31,7 +31,8 @@ include(
     ":android:app",
     ":android:benchmark",
     ":downloader",
-    ":ksp",
+    ":ksp:processor",
+    ":ksp:annotation",
     ":shared",
     ":fundation",
     ":htmlrender"

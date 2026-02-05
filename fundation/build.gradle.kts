@@ -34,10 +34,8 @@ kotlin {
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
-        macosX64(),
         macosArm64()
     ).forEach { target ->
         target.binaries.framework {

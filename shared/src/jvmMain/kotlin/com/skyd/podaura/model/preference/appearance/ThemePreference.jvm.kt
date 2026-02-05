@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.preference.appearance
 
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 
 @Preference
 actual object ThemePreference : BaseThemePreference() {

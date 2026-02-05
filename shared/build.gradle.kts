@@ -42,16 +42,15 @@ kotlin {
 // A step-by-step guide on how to include this library in an XCode
 // project can be found here:
 // https://developer.android.com/kotlin/multiplatform/migrate
-//    listOf(
-//        iosX64(),
-//        iosArm64(),
-//        iosSimulatorArm64()
-//    ).forEach {
-//        it.binaries.framework {
-//            baseName = "Shared"
-//            isStatic = true
-//        }
-//    }
+    listOf(
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+        }
+    }
 
 // Source set declarations.
 // Declaring a target automatically creates a source set with the same name. By default, the
@@ -123,7 +122,7 @@ kotlin {
             implementation(libs.skyd666.mvi)
 
             implementation(projects.fundation)
-            implementation(projects.ksp)
+            implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
         }
@@ -151,16 +150,14 @@ kotlin {
             implementation(libs.coil.video)
         }
 
-//        iosMain {
-//            dependencies {
-//                // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
-//                // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
-//                // part of KMP’s default source set hierarchy. Note that this source set depends
-//                // on common by default and will correctly pull the iOS artifacts of any
-//                // KMP dependencies declared in commonMain.
-//                implementation(libs.ktor.client.darwin)
-//            }
-//        }
+        iosMain.dependencies {
+            // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
+            // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
+            // part of KMP’s default source set hierarchy. Note that this source set depends
+            // on common by default and will correctly pull the iOS artifacts of any
+            // KMP dependencies declared in commonMain.
+            implementation(libs.ktor.client.darwin)
+        }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -246,8 +243,8 @@ tasks.withType<AbstractJPackageTask> {
 }
 
 dependencies {
-    listOf("kspAndroid", "kspJvm").forEach {
-        add(it, projects.ksp)
+    listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64").forEach {
+        add(it, projects.ksp.processor)
         add(it, libs.androidx.room.compiler)
     }
 }

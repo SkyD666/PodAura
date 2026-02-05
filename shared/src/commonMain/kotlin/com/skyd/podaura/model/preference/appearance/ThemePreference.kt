@@ -7,6 +7,7 @@ import com.skyd.podaura.model.preference.BasePreference
 import com.skyd.podaura.model.preference.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString

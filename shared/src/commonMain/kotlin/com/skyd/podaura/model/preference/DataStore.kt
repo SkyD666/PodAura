@@ -3,8 +3,8 @@ package com.skyd.podaura.model.preference
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import com.skyd.ksp.preference.PreferencesList
 import com.skyd.fundation.di.inject
+import com.skyd.ksp.annotation.PreferencesList
 import okio.Path.Companion.toPath
 import kotlin.reflect.KClass
 

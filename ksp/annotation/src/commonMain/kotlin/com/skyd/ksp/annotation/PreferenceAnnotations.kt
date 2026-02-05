@@ -1,4 +1,4 @@
-package com.skyd.ksp.preference
+package com.skyd.ksp.annotation
 
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)

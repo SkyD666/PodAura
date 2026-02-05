@@ -11,6 +11,8 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSName
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.skyd.ksp.annotation.Preference
+import com.skyd.ksp.annotation.PreferencesList
 
 class PreferenceProcessor(
     private val codeGenerator: CodeGenerator,

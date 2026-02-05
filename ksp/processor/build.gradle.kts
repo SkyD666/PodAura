@@ -9,6 +9,7 @@ kotlin {
 }
 
 dependencies {
-    api(libs.ksp.symbol.processing.api)
-    api(libs.androidx.datastore.preferences)
+    implementation(projects.ksp.annotation)
+    implementation(libs.ksp.symbol.processing.api)
+    implementation(libs.androidx.datastore.preferences)
 }

@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.preference.player
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.BasePreference
 import com.skyd.podaura.model.preference.dataStore
