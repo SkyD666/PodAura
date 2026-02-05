@@ -6,7 +6,6 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSHomeDirectory
 import platform.Foundation.NSPicturesDirectory
-import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 
 fun String.ensureDirectoryExists(): String {
@@ -27,42 +26,52 @@ fun joinPath(vararg paths: String): String {
 }
 
 object Directories {
+    val fileManager = NSFileManager.defaultManager
+
     val home: String
         get() = NSHomeDirectory()
     val documents: String
         get() {
-            val paths = NSSearchPathForDirectoriesInDomains(
+            val url = fileManager.URLForDirectory(
                 directory = NSDocumentDirectory,
-                domainMask = NSUserDomainMask,
-                expandTilde = true
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null
             )
-            return paths.first() as String
+            return url!!.path!!
         }
-    val pictures : String
+    val pictures: String
         get() {
-            val paths = NSSearchPathForDirectoriesInDomains(
+            val url = fileManager.URLForDirectory(
                 directory = NSPicturesDirectory,
-                domainMask = NSUserDomainMask,
-                expandTilde = true
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null
             )
-            return paths.first() as String
+            return url!!.path!!
         }
     val applicationSupport: String
         get() {
-            val paths = NSSearchPathForDirectoriesInDomains(
+            val url = fileManager.URLForDirectory(
                 directory = NSApplicationSupportDirectory,
-                domainMask = NSUserDomainMask,
-                expandTilde = true
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null
             )
-            return paths.first() as String
+            return url!!.path!!
         }
     val caches: String
         get() {
-            val paths = NSSearchPathForDirectoriesInDomains(
+            val url = fileManager.URLForDirectory(
                 directory = NSCachesDirectory,
-                domainMask = NSUserDomainMask,
-                expandTilde = true
+                inDomain = NSUserDomainMask,
+                appropriateForURL = null,
+                create = true,
+                error = null
             )
-            return paths.first() as String
+            return url!!.path!!
         }
 }

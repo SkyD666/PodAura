@@ -10,7 +10,7 @@ actual object DarkModePreference : BaseDarkModePreference() {
         add(MODE_NIGHT_YES)
     }
 
-    actual override val default: Int = MODE_NIGHT_NO
+    actual override val default: Int = MODE_NIGHT_FOLLOW_SYSTEM
 
     actual override fun onChangeNightMode(mode: Int) {}
 }

@@ -36,7 +36,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
-import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
@@ -84,6 +83,7 @@ import com.skyd.podaura.ui.component.NavigableListDetailPaneScaffold
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.component.rememberListDetailPaneScaffoldNavigator
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item

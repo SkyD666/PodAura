@@ -13,7 +13,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
-import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +32,7 @@ import com.skyd.compone.ext.isSinglePane
 import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ui.component.NavigableListDetailPaneScaffold
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
+import com.skyd.podaura.ui.component.rememberListDetailPaneScaffoldNavigator
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute

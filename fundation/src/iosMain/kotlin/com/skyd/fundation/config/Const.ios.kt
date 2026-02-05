@@ -1,29 +1,34 @@
 package com.skyd.fundation.config
 
-import com.skyd.fundation.BuildKonfig
 import com.skyd.fundation.util.Directories
 import com.skyd.fundation.util.ensureDirectoryExists
 import com.skyd.fundation.util.joinPath
 
+actual val Const.DB_DIR: String
+    get() = joinPath(Directories.applicationSupport, "Database")
+        .ensureDirectoryExists()
+actual val Const.DATA_STORE_DIR: String
+    get() = joinPath(Directories.applicationSupport, "DataStore")
+        .ensureDirectoryExists()
 actual val Const.FEED_ICON_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures", "FeedIcon")
+    get() = joinPath(Directories.applicationSupport, "Pictures", "FeedIcon")
         .ensureDirectoryExists()
 actual val Const.MPV_CACHE_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Mpv", "Cache")
+    get() = joinPath(Directories.applicationSupport, "Mpv", "Cache")
         .ensureDirectoryExists()
 actual val Const.MPV_CONFIG_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Mpv", "Config")
+    get() = joinPath(Directories.applicationSupport, "Mpv", "Config")
         .ensureDirectoryExists()
 actual val Const.VIDEO_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Video")
+    get() = joinPath(Directories.applicationSupport, "Video")
         .ensureDirectoryExists()
 actual val Const.DEFAULT_FILE_PICKER_PATH: String
     get() = Directories.documents
 actual val Const.TEMP_PICTURES_DIR: String
-    get() = joinPath(Directories.caches, BuildKonfig.packageName, "Pictures")
+    get() = joinPath(Directories.caches, "Pictures")
         .ensureDirectoryExists()
 actual val Const.PICTURES_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures")
+    get() = joinPath(Directories.applicationSupport, "Pictures")
         .ensureDirectoryExists()
 actual val Const.MPV_FONT_DIR: String
     get() = joinPath(MPV_CONFIG_DIR, "Font")

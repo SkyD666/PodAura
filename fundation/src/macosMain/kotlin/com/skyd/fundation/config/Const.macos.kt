@@ -5,6 +5,12 @@ import com.skyd.fundation.util.Directories
 import com.skyd.fundation.util.ensureDirectoryExists
 import com.skyd.fundation.util.joinPath
 
+actual val Const.DB_DIR: String
+    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Database")
+        .ensureDirectoryExists()
+actual val Const.DATA_STORE_DIR: String
+    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "DataStore")
+        .ensureDirectoryExists()
 actual val Const.FEED_ICON_DIR: String
     get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures", "FeedIcon")
         .ensureDirectoryExists()
