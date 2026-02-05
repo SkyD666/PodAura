@@ -86,7 +86,7 @@ import podaura.shared.generated.resources.playlist_screen_name
 
 
 @Serializable
-data object BehaviorRoute : java.io.Serializable // TODO
+data object BehaviorRoute
 
 @Composable
 fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {

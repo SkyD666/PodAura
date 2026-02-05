@@ -2,7 +2,7 @@ package com.skyd.podaura.ui.component.webview
 
 object WebViewStyle {
 
-    private fun argbToCssColor(argb: Int): String = String.format("#%06X", 0xFFFFFF and argb)
+    private fun argbToCssColor(argb: Int): String = "#${(0xFFFFFF and argb).toString(16).uppercase().padStart(6, '0')}"
 
     private fun applyFontFace(
         fontPath: String? = null

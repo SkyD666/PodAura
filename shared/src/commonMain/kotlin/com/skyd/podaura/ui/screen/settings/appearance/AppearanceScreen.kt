@@ -101,7 +101,7 @@ import podaura.shared.generated.resources.search_style_screen_name
 
 
 @Serializable
-data object AppearanceRoute : java.io.Serializable // TODO
+data object AppearanceRoute
 
 @Composable
 fun AppearanceScreen(onBack: (() -> Unit)? = DefaultBackClick) {

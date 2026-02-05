@@ -98,7 +98,7 @@ import podaura.shared.generated.resources.reset
 
 
 @Serializable
-data object PlayerConfigRoute : java.io.Serializable // TODO
+data object PlayerConfigRoute
 
 @Composable
 fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {

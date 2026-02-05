@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.model.preference.appearance.feed.TonalElevationPreferenceUtil
 import com.skyd.podaura.model.preference.appearance.search.SearchItemMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.search.SearchListTonalElevationPreference
@@ -94,7 +95,7 @@ fun SearchStyleScreen() {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.WidthNormal),
                         text = stringResource(Res.string.min_width_dp),
-                        descriptionText = "%.2f".format(SearchItemMinWidthPreference.current) + " dp",
+                        descriptionText = SearchItemMinWidthPreference.current.format(2) + " dp",
                         onClick = { openSearchItemMinWidthDialog = true }
                     )
                 }

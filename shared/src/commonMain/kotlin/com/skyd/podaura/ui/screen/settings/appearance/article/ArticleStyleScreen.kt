@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.model.preference.appearance.article.ArticleItemMinWidthPreference
 import com.skyd.podaura.model.preference.appearance.article.ArticleItemTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.article.ArticleListTonalElevationPreference
@@ -132,7 +133,7 @@ fun ArticleStyleScreen() {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.WidthNormal),
                         text = stringResource(Res.string.min_width_dp),
-                        descriptionText = "%.2f".format(ArticleItemMinWidthPreference.current) + " dp",
+                        descriptionText = ArticleItemMinWidthPreference.current.format(2) + " dp",
                         onClick = { openArticleItemMinWidthDialog = true }
                     )
                 }

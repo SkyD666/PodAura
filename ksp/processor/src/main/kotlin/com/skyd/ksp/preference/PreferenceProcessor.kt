@@ -49,10 +49,10 @@ class PreferenceProcessor(
             .filterIsInstance<KSClassDeclaration>().filter { declaration ->
                 val excludeFromList = declaration.annotations.first {
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationName
-                }.arguments.first {
+                }.arguments.firstOrNull {
                     it.name?.asString() == Preference::excludeFromList.name
                 }
-                !(excludeFromList.value as Boolean)
+                !((excludeFromList?.value ?: false) as Boolean)
             }
         val entries = mutableListOf<Entity>()
         var basePreference: KSName? = null

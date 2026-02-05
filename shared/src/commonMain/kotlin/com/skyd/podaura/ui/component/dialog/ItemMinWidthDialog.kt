@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WidthNormal
 import androidx.compose.runtime.Composable
 import com.skyd.compone.component.dialog.SliderWithLabelDialog
+import com.skyd.fundation.ext.format
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.min_width_dp
@@ -23,7 +24,7 @@ fun ItemMinWidthDialog(
         valueRange = valueRange,
         icon = Icons.Outlined.WidthNormal,
         title = stringResource(Res.string.min_width_dp),
-        label = { "%.2f".format(it) + " dp" },
+        label = { it.format(2) + " dp" },
         onConfirm = onConfirm,
     )
 }

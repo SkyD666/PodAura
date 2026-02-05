@@ -21,6 +21,7 @@ import com.skyd.podaura.model.preference.search.IntersectSearchBySpacePreference
 import com.skyd.podaura.model.preference.search.UseRegexSearchPreference
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -199,5 +200,4 @@ class SearchRepository(
             return filter to leadingFilter.second + args
         }
     }
-
 }

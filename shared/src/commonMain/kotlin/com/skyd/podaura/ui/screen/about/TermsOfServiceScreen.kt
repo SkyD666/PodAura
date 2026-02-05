@@ -27,6 +27,7 @@ import com.skyd.podaura.ext.put
 import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.model.preference.dataStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable

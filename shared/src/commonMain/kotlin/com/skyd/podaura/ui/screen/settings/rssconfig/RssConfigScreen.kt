@@ -55,7 +55,7 @@ import podaura.shared.generated.resources.update_notification_screen_name
 
 
 @Serializable
-data object RssConfigRoute : java.io.Serializable // TODO
+data object RssConfigRoute
 
 @Composable
 fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {

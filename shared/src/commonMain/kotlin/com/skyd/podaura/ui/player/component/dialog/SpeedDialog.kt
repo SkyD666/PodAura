@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.dialog.SpeedDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.SpeedDialogState
@@ -25,7 +26,6 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.player_speed
 import podaura.shared.generated.resources.reset
-import java.util.Locale
 
 
 @Composable
@@ -51,7 +51,7 @@ import java.util.Locale
                     )
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = String.format(Locale.getDefault() /*TODO*/, "%.2f", value),
+                        text = value.format(2),
                     )
                     ComponeIconButton(
                         onClick = {

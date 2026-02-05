@@ -29,6 +29,7 @@ import io.github.vinceglb.filekit.saveImageToGallery
 import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toPath
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -53,7 +54,7 @@ class ReadRepository(
             readHistoryDao.updateReadHistory(
                 ReadHistoryBean(
                     articleId = articleId,
-                    lastTime = System.currentTimeMillis(),
+                    lastTime = Clock.System.now().toEpochMilliseconds(),
                 )
             )
         }

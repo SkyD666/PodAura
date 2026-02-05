@@ -8,7 +8,7 @@ interface PlatformThemeOperator {
 }
 
 object DefaultPlatformThemeOperator : PlatformThemeOperator {
-    override val isDynamicColorAvailable: Boolean get() = false
+    override val isDynamicColorAvailable: Boolean = false
     override fun onThemeChanged() = Unit
 }
 

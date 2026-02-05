@@ -21,7 +21,7 @@ import podaura.shared.generated.resources.transmission_screen_name
 
 
 @Serializable
-data object TransmissionRoute : java.io.Serializable // TODO
+data object TransmissionRoute
 
 @Composable
 fun TransmissionScreen(onBack: (() -> Unit)? = DefaultBackClick) {

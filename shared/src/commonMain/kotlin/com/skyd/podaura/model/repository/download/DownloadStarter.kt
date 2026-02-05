@@ -10,10 +10,10 @@ import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreferenc
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.media.MediaRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
-
 
 abstract class DownloadStarter {
     open suspend fun download(url: String, type: String? = null) {

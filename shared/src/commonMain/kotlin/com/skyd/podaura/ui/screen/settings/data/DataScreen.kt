@@ -78,7 +78,7 @@ import podaura.shared.generated.resources.import_export_screen_name
 
 
 @Serializable
-data object DataRoute : java.io.Serializable // TODO
+data object DataRoute
 
 @Composable
 fun DataScreen(

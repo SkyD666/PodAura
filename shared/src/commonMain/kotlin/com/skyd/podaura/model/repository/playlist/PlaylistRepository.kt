@@ -21,6 +21,7 @@ import com.skyd.podaura.model.preference.behavior.playlist.PlaylistSortByPrefere
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 class PlaylistRepository(
@@ -76,7 +78,7 @@ class PlaylistRepository(
                 playlistId = Uuid.random().toString(),
                 name = name,
                 orderPosition = orderPosition,
-                createTime = System.currentTimeMillis(),
+                createTime = Clock.System.now().toEpochMilliseconds(),
                 deleteMediaOnFinish = false,
             )
         )
