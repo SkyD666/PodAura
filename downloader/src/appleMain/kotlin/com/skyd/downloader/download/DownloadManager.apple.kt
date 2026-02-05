@@ -6,10 +6,12 @@ import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.util.FileUtil.deleteDownloadFileIfExists
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 
 actual class DownloadManager : BaseDownloadManager() {
     companion object {
@@ -40,7 +42,7 @@ actual class DownloadManager : BaseDownloadManager() {
                     path = downloadRequest.path,
                     fileName = downloadRequest.fileName,
                     id = downloadRequest.id,
-                    timeQueued = System.currentTimeMillis(),
+                    timeQueued = Clock.System.now().toEpochMilliseconds(),
                     status = Status.Queued.toString(),
                     userAction = UserAction.Start.toString(),
                 )

@@ -41,7 +41,7 @@ android {
         create("GitHub") { dimension = "version" }
     }
 
-    targetProjectPath = ":app"
+    targetProjectPath = ":android:app"
     experimentalProperties["android.experimental.self-instrumenting"] = true
 }
 

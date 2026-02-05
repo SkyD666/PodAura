@@ -9,6 +9,7 @@ import com.skyd.downloader.util.FileUtil
 import com.skyd.fundation.di.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 

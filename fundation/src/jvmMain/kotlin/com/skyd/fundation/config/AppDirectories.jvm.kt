@@ -11,8 +11,8 @@ interface AppDirectories {
     val cacheDir: String
 }
 
-fun getAppDirectories(): AppDirectories {
-    return when (platform) {
+val appDirectories: AppDirectories
+    get() = when (platform) {
         Platform.Android,
         Platform.IOS -> error("Not supported platform")
 
@@ -20,7 +20,6 @@ fun getAppDirectories(): AppDirectories {
         Platform.MacOS -> MacAppDirectories
         Platform.Windows -> WindowsAppDirectories
     }
-}
 
 private object MacAppDirectories : AppDirectories {
     private val libraryDir = homeDir + File.separator + "Library"

@@ -33,18 +33,18 @@ kotlin {
     // A step-by-step guide on how to include this library in an XCode
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
-/*
     listOf(
         iosX64(),
         iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+        iosSimulatorArm64(),
+        macosX64(),
+        macosArm64()
+    ).forEach { target ->
+        target.binaries.framework {
             baseName = "FundationKit"
             isStatic = true
         }
     }
- */
 
     jvm()
 
@@ -64,7 +64,6 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.koin.core)
             implementation(libs.kermit)
-            implementation(projects.ksp)
         }
 
         jvmMain.dependencies {
@@ -75,7 +74,10 @@ kotlin {
     }
 
     compilerOptions {
-        optIn.addAll("kotlin.time.ExperimentalTime")
+        optIn.addAll(
+            "kotlin.time.ExperimentalTime",
+            "kotlinx.cinterop.ExperimentalForeignApi"
+        )
     }
 }
 
@@ -88,9 +90,3 @@ buildkonfig {
         buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
     }
 }
-
-//dependencies {
-//    listOf("kspCommonMainMetadata", "kspAndroid", "kspJvm").forEach {
-//        add(it, projects.ksp)
-//    }
-//}

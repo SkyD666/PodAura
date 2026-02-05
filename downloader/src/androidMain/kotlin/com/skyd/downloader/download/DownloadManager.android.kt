@@ -76,11 +76,11 @@ actual class DownloadManager : BaseDownloadManager(), KoinComponent {
         )
     }
 
-    override suspend fun onPause(id: Int) {
+    actual override suspend fun onPause(id: Int) {
         workManager.cancelUniqueWork(id.toString())
     }
 
-    override suspend fun onClearDbAsync(id: Int) {
+    actual override suspend fun onClearDbAsync(id: Int) {
         workManager.cancelUniqueWork(id.toString())
         removeNotification(context, id)
     }

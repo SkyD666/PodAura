@@ -63,7 +63,7 @@ internal class DownloadTask(
         tempFile.sink(append = true).use { sink ->
             var lastReceived = 0L
             var speed: Float
-            var lastProgressTime = System.currentTimeMillis()
+            var lastProgressTime = Clock.System.now().toEpochMilliseconds()
             requestWithAutoRetry(
                 url = url,
                 headers = headers,
