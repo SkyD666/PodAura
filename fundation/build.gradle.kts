@@ -22,7 +22,7 @@ kotlin {
         }
         buildToolsVersion = "36.1.0"
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
+            jvmTarget = JvmTarget.JVM_21
         }
     }
 

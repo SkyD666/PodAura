@@ -29,7 +29,7 @@ kotlin {
         buildToolsVersion = "36.1.0"
         androidResources.enable = true
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
+            jvmTarget = JvmTarget.JVM_21
         }
     }
 
@@ -217,10 +217,12 @@ compose.desktop {
             packageVersion = properties["versionForDesktop"]!!.toString()
 
             macOS {
+                bundleID = "com.skyd.podaura"
                 iconFile = project.file("icons/icon_512x512.icns")
             }
             windows {
                 iconFile = project.file("icons/icon.ico")
+                dirChooser = true
             }
 
             modules(
