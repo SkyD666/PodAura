@@ -15,6 +15,6 @@ object FeedListTonalElevationPreference : BasePreference<Float>() {
 
 object TonalElevationPreferenceUtil {
     fun toDisplay(value: Float): String {
-        return value.format(2) + "dp"
+        return value.format(2) + " dp"
     }
 }
