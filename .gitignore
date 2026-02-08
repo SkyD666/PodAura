@@ -13,5 +13,6 @@
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+*.xcuserdatad
 local.properties
 signing.properties

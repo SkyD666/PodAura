@@ -22,12 +22,12 @@ jobs:
           - os: ubuntu-latest
             target-platform: Android
             build-command: ./gradlew assembleGitHubRelease
-            artifact-path: [ app/build/outputs/apk/GitHub/release/*arm64-v8a*.apk,
-                             app/build/outputs/apk/GitHub/release/*armeabi-v7a*.apk,
-                             app/build/outputs/apk/GitHub/release/*x86_64*.apk,
-                             'app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
-                             app/build/outputs/apk/GitHub/release/*universal*.apk,
-                             app/build/outputs/mapping/GitHubRelease/mapping.txt ]
+            artifact-path: [ platform/android/app/build/outputs/apk/GitHub/release/*arm64-v8a*.apk,
+                             platform/android/app/build/outputs/apk/GitHub/release/*armeabi-v7a*.apk,
+                             platform/android/app/build/outputs/apk/GitHub/release/*x86_64*.apk,
+                             'platform/android/app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
+                             platform/android/app/build/outputs/apk/GitHub/release/*universal*.apk,
+                             platform/android/app/build/outputs/mapping/GitHubRelease/mapping.txt ]
             artifact-name: [ Pre-Release APK (arm64-v8a),
                              Pre-Release APK (armeabi-v7a),
                              Pre-Release APK (x86_64),
@@ -127,7 +127,7 @@ jobs:
       - name: Get File Path
         if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[skip_post]') == false
         run: |
-          echo "PRE_RELEASE_APK_ARM64_V8=$(find app/build/outputs/apk/GitHub/release -name '*arm64-v8a*.apk' -type f | head -1)" >> $GITHUB_ENV
+          echo "PRE_RELEASE_APK_ARM64_V8=$(find platform/android/app/build/outputs/apk/GitHub/release -name '*arm64-v8a*.apk' -type f | head -1)" >> $GITHUB_ENV
 
       # Send to Telegram
       - name: Post to Telegram Channel
