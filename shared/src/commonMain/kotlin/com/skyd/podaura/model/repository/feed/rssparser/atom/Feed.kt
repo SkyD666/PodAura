@@ -39,7 +39,7 @@ data class Feed(
 
     @XmlSerialName("entry")
     val entries: List<Entry>,
-) : BaseXml {
+) : BaseXml() {
     @Serializable
     data class Person(
         @XmlSerialName("name")

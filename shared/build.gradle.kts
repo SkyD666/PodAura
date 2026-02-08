@@ -190,7 +190,8 @@ kotlin {
             "kotlin.ExperimentalStdlibApi",
             "kotlin.uuid.ExperimentalUuidApi",
             "kotlin.time.ExperimentalTime",
-            "com.google.accompanist.permissions.ExperimentalPermissionsApi"
+            "com.google.accompanist.permissions.ExperimentalPermissionsApi",
+            "kotlinx.cinterop.ExperimentalForeignApi"
         )
     }
 

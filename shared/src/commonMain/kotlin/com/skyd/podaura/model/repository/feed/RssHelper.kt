@@ -84,7 +84,7 @@ class RssHelper(
     ): FeedWithArticleBean? = withContext(Dispatchers.IO) {
         runCatching {
             val iconAsync = async { getRssIcon(feed.url) }
-            val currentHttpClient = HttpClient {
+            val httpClient = HttpClient {
                 httpClientConfig()
                 xmlConfig()
                 install(
@@ -97,7 +97,7 @@ class RssHelper(
                     }
                 )
             }
-            when (val rssData: BaseXml? = currentHttpClient.get(feed.url).body()) {
+            when (val rssData: BaseXml? = httpClient.get(feed.url).body()) {
                 is Rss -> rssData.rssUpdateFeedWithArticleBean(
                     url = feed.url,
                     feed = feed,
