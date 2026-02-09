@@ -1,5 +1,9 @@
 package com.skyd.podaura.ui.screen.feed
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -14,17 +18,27 @@ internal fun FeedDetailPaneNavHost(
     navController: NavHostController,
     startDestination: Any,
     onPaneBack: (() -> Unit)?,
-    articleRoute: ArticleRoute,
+    articleRoute: ArticleRoute
 ) {
+    val windowInsets = WindowInsets.safeDrawing.only(
+        WindowInsetsSides.Vertical + WindowInsetsSides.End
+    )
     PodAuraNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
         composable<ArticleRoute>(typeMap = ArticleRoute.typeMap) {
-            ArticleLauncher(route = articleRoute, onBack = onPaneBack)
+            ArticleLauncher(
+                route = articleRoute,
+                onBack = onPaneBack,
+                windowInsets = windowInsets
+            )
         }
         composable<SearchRoute.Article>(typeMap = SearchRoute.Article.typeMap) {
-            SearchArticleLauncher(it)
+            SearchArticleLauncher(
+                entry = it,
+                windowInsets = windowInsets
+            )
         }
     }
 }

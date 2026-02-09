@@ -35,6 +35,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.thenIfNotNull
+import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.getDispatcher
@@ -89,14 +90,14 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                 }
             )
         },
-    ) { paddingValues ->
+    ) { innerPadding ->
         when (val historyListState = uiState.historyListState) {
             is HistoryListState.Failed -> ErrorPlaceholder(text = historyListState.msg)
             HistoryListState.Init,
-            HistoryListState.Loading -> CircularProgressPlaceholder(contentPadding = paddingValues)
+            HistoryListState.Loading -> CircularProgressPlaceholder(contentPadding = innerPadding)
 
             is HistoryListState.Success -> {
-                val listContentPadding = paddingValues.withoutTop() +
+                val listContentPadding = innerPadding.withoutTop() +
                         PaddingValues(horizontal = 12.dp, vertical = 12.dp)
                 val nestedScrollConnection = scrollBehavior.nestedScrollConnection
                 val pagerState = rememberPagerState(pageCount = { 2 })
@@ -118,8 +119,11 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                         )
                     }
                 )
-                Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
-                    PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
+                Column(modifier = Modifier.padding(top = innerPadding.calculateTopPadding())) {
+                    PrimaryTabRow(
+                        modifier = Modifier.padding(innerPadding.withoutTop().withoutBottom()),
+                        selectedTabIndex = pagerState.currentPage
+                    ) {
                         tabs.forEachIndexed { index, (title, _) ->
                             Tab(
                                 selected = pagerState.currentPage == index,

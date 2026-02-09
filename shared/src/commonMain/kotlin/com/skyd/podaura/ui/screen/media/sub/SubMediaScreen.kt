@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.screen.media.sub
 
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.outlined.Search
@@ -115,11 +117,12 @@ private fun SubMediaScreen(media: MediaBean) {
                     )
                 }
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         MediaList(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
             path = media.filePath,
             isSubList = true,
         )

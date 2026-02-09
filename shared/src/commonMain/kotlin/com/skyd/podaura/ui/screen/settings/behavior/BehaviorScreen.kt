@@ -3,8 +3,12 @@ package com.skyd.podaura.ui.screen.settings.behavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
@@ -89,7 +93,10 @@ import podaura.shared.generated.resources.playlist_screen_name
 data object BehaviorRoute
 
 @Composable
-fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
+fun BehaviorScreen(
+    onBack: (() -> Unit)? = DefaultBackClick,
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
     var expandArticleTapActionMenu by rememberSaveable { mutableStateOf(false) }
@@ -104,14 +111,16 @@ fun BehaviorScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.behavior_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.behavior_screen_common_category) }) {
                 item {

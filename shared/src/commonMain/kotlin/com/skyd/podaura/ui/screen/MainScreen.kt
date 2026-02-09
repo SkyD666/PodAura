@@ -6,12 +6,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
@@ -41,7 +39,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
@@ -72,7 +69,7 @@ fun MainScreen() {
     val windowSizeClass = LocalWindowSizeClass.current
     val mainNavController = rememberNavController()
 
-    val navigationBarOrRail: @Composable () -> Unit = @Composable {
+    val navigationBarOrRail: @Composable () -> Unit = {
         NavigationBarOrRail(navController = mainNavController)
     }
 
@@ -82,16 +79,12 @@ fun MainScreen() {
                 navigationBarOrRail()
             }
         },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-    ) { padding ->
+        contentWindowInsets = WindowInsets()
+    ) { innerPadding ->
         Row(
             Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .consumeWindowInsets(padding)
-                .thenIf(!windowSizeClass.isCompact) {
-                    windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                },
+                .padding(innerPadding)
         ) {
             if (!windowSizeClass.isCompact) {
                 navigationBarOrRail()
@@ -149,8 +142,8 @@ private fun NavigationBarOrRail(navController: NavController) {
             // Pop up to the previous (?: start) destination of the graph to
             // avoid building up a large stack of destinations on the back stack as users select items
             popUpTo(
-                id = navController.currentDestination?.id
-                    ?: navController.graph.findStartDestination().id
+                route = navController.currentDestination?.route
+                    ?: navController.graph.findStartDestination().route!!
             ) {
                 saveState = true
                 inclusive = true
@@ -164,7 +157,11 @@ private fun NavigationBarOrRail(navController: NavController) {
 
     val navigationBarLabel = NavigationBarLabelPreference.current
     if (LocalWindowSizeClass.current.isCompact) {
-        NavigationBar {
+        NavigationBar(
+            windowInsets = WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+            )
+        ) {
             items.forEachIndexed { index, item ->
                 val selected = navBackStackEntry.selected(item.second::class)
                 NavigationBarItem(
@@ -179,7 +176,11 @@ private fun NavigationBarOrRail(navController: NavController) {
             }
         }
     } else {
-        NavigationRail {
+        NavigationRail(
+            windowInsets = WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Vertical + WindowInsetsSides.Start
+            )
+        ) {
             items.forEachIndexed { index, item ->
                 val selected = navBackStackEntry.selected(item.second::class)
                 NavigationRailItem(

@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -67,7 +71,10 @@ import podaura.shared.generated.resources.update_notification_screen_name
 data object UpdateNotificationRoute
 
 @Composable
-fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewModel()) {
+fun UpdateNotificationScreen(
+    viewModel: UpdateNotificationViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -84,6 +91,7 @@ fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewMo
                 style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.update_notification_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
         },
         floatingActionButton = {
@@ -97,15 +105,16 @@ fun UpdateNotificationScreen(viewModel: UpdateNotificationViewModel = koinViewMo
                     contentDescription = stringResource(Res.string.add),
                 )
             }
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         when (val ruleListState = uiState.ruleListState) {
             is RuleListState.Failed,
             RuleListState.Init -> Unit
 
             is RuleListState.Success -> {
                 RuleList(
-                    contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
+                    contentPadding = innerPadding + PaddingValues(bottom = fabHeight),
                     ruleListState = ruleListState,
                     dispatcher = dispatcher,
                 )

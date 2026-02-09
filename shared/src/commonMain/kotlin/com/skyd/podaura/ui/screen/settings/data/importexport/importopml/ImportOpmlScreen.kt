@@ -3,8 +3,12 @@ package com.skyd.podaura.ui.screen.settings.data.importexport.importopml
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
@@ -96,6 +100,7 @@ expect fun ImportOpmlDeepLinkLauncher(entry: NavBackStackEntry)
 fun ImportOpmlScreen(
     opmlUrl: String? = null,
     viewModel: ImportOpmlViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
@@ -125,6 +130,7 @@ fun ImportOpmlScreen(
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.import_opml_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
         },
         floatingActionButton = {
@@ -150,12 +156,13 @@ fun ImportOpmlScreen(
                 contentDescription = null,
             )
         },
-    ) { paddingValues ->
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
+            contentPadding = innerPadding + PaddingValues(bottom = fabHeight),
             state = lazyListState,
         ) {
             group {

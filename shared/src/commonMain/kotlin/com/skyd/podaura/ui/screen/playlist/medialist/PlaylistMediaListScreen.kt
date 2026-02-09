@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
@@ -126,11 +128,12 @@ fun PlaylistMediaListScreen(
                 }
             )
         },
-    ) { paddingValues ->
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         when (val listState = uiState.listState) {
-            is ListState.Failed -> ErrorPlaceholder(listState.msg, paddingValues)
-            ListState.Init -> CircularProgressPlaceholder(paddingValues)
-            is ListState.Success -> Column(modifier = Modifier.padding(paddingValues)) {
+            is ListState.Failed -> ErrorPlaceholder(listState.msg, innerPadding)
+            ListState.Init -> CircularProgressPlaceholder(innerPadding)
+            is ListState.Success -> Column(modifier = Modifier.padding(innerPadding)) {
                 val lazyPagingItems =
                     listState.playlistMediaPagingDataFlow.collectAsLazyPagingItems()
                 val reorderSemaphore = remember { Channel<Unit>(Channel.UNLIMITED) }

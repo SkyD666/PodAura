@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -106,8 +108,9 @@ fun RequestHeadersScreen(feedUrl: String, viewModel: RequestHeadersViewModel = k
                     contentDescription = stringResource(Res.string.add),
                 )
             }
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         when (val headersState = uiState.headersState) {
             is HeadersState.Failed,
             HeadersState.Init -> Unit
@@ -115,7 +118,7 @@ fun RequestHeadersScreen(feedUrl: String, viewModel: RequestHeadersViewModel = k
             is HeadersState.Success -> {
                 HeadersMap(
                     feedUrl = feedUrl,
-                    contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
+                    contentPadding = innerPadding + PaddingValues(bottom = fabHeight),
                     headersState = headersState,
                     dispatcher = dispatcher,
                 )

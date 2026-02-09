@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RssFeed
@@ -30,9 +34,11 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.isSinglePane
 import com.skyd.compone.local.LocalNavController
+import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ui.component.NavigableListDetailPaneScaffold
 import com.skyd.podaura.ui.component.PodAuraAnimatedPane
 import com.skyd.podaura.ui.component.rememberListDetailPaneScaffoldNavigator
+import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute
@@ -122,14 +128,26 @@ fun SettingsList(
     onItemSelected: (Any) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val windowSizeClass = LocalWindowSizeClass.current
+
     Scaffold(
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.settings)) },
+                windowInsets =
+                    if (windowSizeClass.isCompact)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    else
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Start)
             )
-        }
+        },
+        contentWindowInsets =
+            if (windowSizeClass.isCompact)
+                WindowInsets.safeDrawing
+            else
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
     ) { paddingValues ->
         SettingsLazyColumn(
             modifier = Modifier

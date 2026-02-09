@@ -3,8 +3,10 @@ package com.skyd.podaura.ui.screen.feed.autodl
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
@@ -98,17 +100,18 @@ fun AutoDownloadRuleScreen(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.auto_download_rule_screen_name)) },
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         when (val ruleState = uiState.ruleState) {
             is RuleState.Failed -> ErrorPlaceholder(
                 text = ruleState.msg,
-                contentPadding = paddingValues,
+                contentPadding = innerPadding,
             )
 
-            RuleState.Init -> CircularProgressPlaceholder(contentPadding = paddingValues)
+            RuleState.Init -> CircularProgressPlaceholder(contentPadding = innerPadding)
             is RuleState.Success -> RuleContent(
-                contentPadding = paddingValues,
+                contentPadding = innerPadding,
                 connection = scrollBehavior.nestedScrollConnection,
                 ruleState = ruleState,
                 dispatcher = { intent -> dispatcher(intent) },

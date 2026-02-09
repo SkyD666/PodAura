@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.appearance.article
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tonality
@@ -52,7 +56,9 @@ import podaura.shared.generated.resources.tonal_elevation
 data object ArticleStyleRoute
 
 @Composable
-fun ArticleStyleScreen() {
+fun ArticleStyleScreen(
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
 
@@ -62,9 +68,11 @@ fun ArticleStyleScreen() {
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.article_style_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         var openTopBarTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openArticleListTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openArticleItemTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
@@ -74,7 +82,7 @@ fun ArticleStyleScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.article_style_screen_top_bar_category) }) {
                 item {

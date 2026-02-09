@@ -15,16 +15,18 @@ fun <T : Any> PagingRefreshStateIndicator(
     lazyPagingItems: LazyPagingItems<T>,
     errorContent: @Composable (Throwable) -> Unit = { ErrorPlaceholder(it.message.orEmpty()) },
     loadingContent: @Composable () -> Unit = { CircularProgressPlaceholder() },
-    emptyContent: @Composable () -> Unit = {
-        EmptyPlaceholder(modifier = Modifier.verticalScroll(rememberScrollState()))
-    },
+    emptyContent: @Composable () -> Unit = { EmptyPlaceholder() },
     placeholderPadding: PaddingValues = PaddingValues(),
     content: @Composable () -> Unit,
 ) {
     val loadStateRefresh = lazyPagingItems.loadState.refresh
     when {
         loadStateRefresh is LoadState.Error -> {
-            Box(modifier = Modifier.padding(placeholderPadding)) {
+            Box(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(placeholderPadding)
+            ) {
                 errorContent(loadStateRefresh.error)
             }
         }
@@ -38,7 +40,11 @@ fun <T : Any> PagingRefreshStateIndicator(
         }
 
         loadStateRefresh is LoadState.NotLoading -> {
-            Box(modifier = Modifier.padding(placeholderPadding)) {
+            Box(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(placeholderPadding)
+            ) {
                 emptyContent()
             }
         }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -36,7 +35,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -158,12 +156,6 @@ fun FeedScreen() {
     }
 
     NavigableListDetailPaneScaffold(
-        modifier = Modifier.windowInsetsPadding(
-            WindowInsets.safeDrawing.only(
-                WindowInsetsSides.Right.run {
-                    if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
-                }
-            )),
         navigator = navigator,
         listPane = {
             PodAuraAnimatedPane {
@@ -220,7 +212,7 @@ private fun FeedList(
     onShowArticleListByGroupId: (String) -> Unit,
     viewModel: FeedViewModel = koinViewModel(),
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -268,11 +260,11 @@ private fun FeedList(
                     )
                 },
                 navigationIcon = {},
-                windowInsets = WindowInsets.safeDrawing.only(
-                    (WindowInsetsSides.Top + WindowInsetsSides.Right).run {
-                        if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
-                    }
-                ),
+                windowInsets =
+                    if (windowSizeClass.isCompact)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    else
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
                         FeedTopBarTonalElevationPreference.current.dp
@@ -296,6 +288,11 @@ private fun FeedList(
                 )
             }
         },
+        contentWindowInsets =
+            if (windowSizeClass.isCompact)
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            else
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     FeedListTonalElevationPreference.current.dp

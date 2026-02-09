@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -50,6 +50,7 @@ import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
+import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
@@ -122,8 +123,7 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .windowInsetsPadding(
-                        WindowInsets.systemBars
-                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                     )
             ) {
                 SearchBarInputField(
@@ -147,8 +147,8 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 HorizontalDivider()
             }
         },
-    ) { paddingValues ->
-        val listContentPadding = paddingValues.withoutTop() +
+    ) { innerPadding ->
+        val listContentPadding = innerPadding.withoutTop() +
                 PaddingValues(horizontal = 12.dp, vertical = 12.dp)
         val pagerState = rememberPagerState(pageCount = { 2 })
         val tabs = listOf<Pair<String, @Composable PagerScope.() -> Unit>>(
@@ -167,8 +167,11 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 )
             }
         )
-        Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
-            PrimaryTabRow(selectedTabIndex = pagerState.currentPage) {
+        Column(modifier = Modifier.padding(top = innerPadding.calculateTopPadding())) {
+            PrimaryTabRow(
+                modifier = Modifier.padding(innerPadding.withoutTop().withoutBottom()),
+                selectedTabIndex = pagerState.currentPage
+            ) {
                 tabs.forEachIndexed { index, (title, _) ->
                     Tab(
                         selected = pagerState.currentPage == index,

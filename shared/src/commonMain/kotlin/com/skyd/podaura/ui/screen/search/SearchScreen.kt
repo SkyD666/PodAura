@@ -9,10 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -89,8 +88,11 @@ sealed interface SearchRoute {
         val typeMap = mapOf(typeOf<Feed>() to serializableType<Feed>())
 
         @Composable
-        fun SearchFeedLauncher(entry: NavBackStackEntry) {
-            SearchScreen(searchRoute = entry.toRoute<Feed>())
+        fun SearchFeedLauncher(
+            entry: NavBackStackEntry,
+            windowInsets: WindowInsets = WindowInsets.safeDrawing
+        ) {
+            SearchScreen(searchRoute = entry.toRoute<Feed>(), windowInsets = windowInsets)
         }
     }
 
@@ -104,8 +106,11 @@ sealed interface SearchRoute {
             val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
 
             @Composable
-            fun SearchArticleLauncher(entry: NavBackStackEntry) {
-                SearchScreen(searchRoute = entry.toRoute<Article>())
+            fun SearchArticleLauncher(
+                entry: NavBackStackEntry,
+                windowInsets: WindowInsets = WindowInsets.safeDrawing
+            ) {
+                SearchScreen(searchRoute = entry.toRoute<Article>(), windowInsets = windowInsets)
             }
         }
     }
@@ -115,6 +120,7 @@ sealed interface SearchRoute {
 fun SearchScreen(
     searchRoute: SearchRoute,
     viewModel: SearchViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -141,7 +147,6 @@ fun SearchScreen(
     )
 
     Scaffold(
-        modifier = Modifier.imePadding(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             AnimatedVisibility(
@@ -175,8 +180,7 @@ fun SearchScreen(
                         )
                     )
                     .windowInsetsPadding(
-                        WindowInsets.systemBars
-                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                        windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                     )
             ) {
                 SearchBarInputField(
@@ -200,6 +204,7 @@ fun SearchScreen(
                 HorizontalDivider()
             }
         },
+        contentWindowInsets = windowInsets,
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     SearchListTonalElevationPreference.current.dp

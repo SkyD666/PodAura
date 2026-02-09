@@ -1,7 +1,9 @@
 package com.skyd.podaura.ui.screen.download
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -119,17 +121,18 @@ fun DownloadScreen(
                     contentDescription = stringResource(Res.string.download_screen_add_download),
                 )
             }
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         when (val downloadListState = uiState.downloadListState) {
             is DownloadListState.Failed -> Unit
             DownloadListState.Init,
-            DownloadListState.Loading -> CircularProgressPlaceholder(contentPadding = paddingValues)
+            DownloadListState.Loading -> CircularProgressPlaceholder(contentPadding = innerPadding)
 
             is DownloadListState.Success -> DownloadList(
                 downloadInfoBeanList = downloadListState.downloadInfoBeanList,
                 nestedScrollConnection = scrollBehavior.nestedScrollConnection,
-                contentPadding = paddingValues + PaddingValues(bottom = fabHeight + 16.dp),
+                contentPadding = innerPadding + PaddingValues(bottom = fabHeight + 16.dp),
             )
         }
     }

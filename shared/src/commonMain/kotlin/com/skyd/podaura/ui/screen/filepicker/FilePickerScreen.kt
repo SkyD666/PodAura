@@ -6,8 +6,12 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -95,7 +99,10 @@ data class FilePickerRoute(
 ) {
     companion object {
         @Composable
-        fun FilePickerLauncher(entry: NavBackStackEntry) {
+        fun FilePickerLauncher(
+            entry: NavBackStackEntry,
+            windowInsets: WindowInsets = WindowInsets.safeDrawing
+        ) {
             val filePickerRoute = entry.toRoute<FilePickerRoute>()
             FilePickerScreen(
                 path = filePickerRoute.path.takeIf {
@@ -127,6 +134,7 @@ fun FilePickerScreen(
     extensionName: String? = null,
     id: String?,
     viewModel: FilePickerViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
@@ -179,11 +187,13 @@ fun FilePickerScreen(
                         imageVector = Icons.Outlined.PhoneAndroid,
                         contentDescription = stringResource(Res.string.file_picker_screen_internal_storage),
                     )
-                }
+                },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(top = paddingValues.calculateTopPadding())) {
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(top = innerPadding.calculateTopPadding())) {
             PathLevelIndication(
                 path = uiState.path,
                 onRouteTo = { dispatch(FilePickerIntent.NewLocation(it)) },
@@ -193,8 +203,8 @@ fun FilePickerScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = paddingValues.onlyHorizontal() + PaddingValues(
-                    bottom = if (pickFolder) 0.dp else paddingValues.calculateBottomPadding(),
+                contentPadding = innerPadding.onlyHorizontal() + PaddingValues(
+                    bottom = if (pickFolder) 0.dp else innerPadding.calculateBottomPadding(),
                 ),
             ) {
                 (uiState.fileListState as? FileListState.Success)?.list?.forEach { filePath ->
@@ -240,7 +250,7 @@ fun FilePickerScreen(
                     modifier = Modifier
                         .padding(
                             top = 12.dp,
-                            bottom = 12.dp + paddingValues.calculateBottomPadding(),
+                            bottom = 12.dp + innerPadding.calculateBottomPadding(),
                         )
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),

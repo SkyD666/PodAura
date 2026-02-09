@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.appearance.search
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tonality
 import androidx.compose.material.icons.outlined.WidthNormal
@@ -43,7 +47,9 @@ import podaura.shared.generated.resources.tonal_elevation
 data object SearchStyleRoute
 
 @Composable
-fun SearchStyleScreen() {
+fun SearchStyleScreen(
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
 
@@ -53,9 +59,11 @@ fun SearchStyleScreen() {
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.search_style_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         var openTopBarTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openSearchListTonalElevationDialog by rememberSaveable { mutableStateOf(false) }
         var openSearchItemMinWidthDialog by rememberSaveable { mutableStateOf(false) }
@@ -64,7 +72,7 @@ fun SearchStyleScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.search_style_screen_top_bar_category) }) {
                 item {

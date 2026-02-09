@@ -1,5 +1,9 @@
 package com.skyd.podaura.ui.screen.settings
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -49,28 +53,30 @@ internal fun SettingsDetailPaneNavHost(
     startDestination: Any,
     onPaneBack: (() -> Unit)?,
 ) {
+    val windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+
     PodAuraNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        composable<AppearanceRoute> { AppearanceScreen(onBack = onPaneBack) }
-        composable<ArticleStyleRoute> { ArticleStyleScreen() }
-        composable<FeedStyleRoute> { FeedStyleScreen() }
-        composable<ReadStyleRoute> { ReadStyleScreen() }
-        composable<MediaStyleRoute> { MediaStyleScreen() }
-        composable<ReorderGroupRoute> { ReorderGroupScreen() }
-        composable<SearchStyleRoute> { SearchStyleScreen() }
-        composable<BehaviorRoute> { BehaviorScreen(onBack = onPaneBack) }
-        composable<AutoDeleteRoute> { AutoDeleteScreen() }
-        composable<ImportOpmlRoute> { ImportOpmlScreen() }
-        composable<ImportExportRoute> { ImportExportScreen() }
-        composable<DataRoute> { DataScreen(onBack = onPaneBack) }
-        composable<PlayerConfigRoute> { PlayerConfigScreen(onBack = onPaneBack) }
-        composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
-        composable<RssConfigRoute> { RssConfigScreen(onBack = onPaneBack) }
-        composable<TransmissionRoute> { TransmissionScreen(onBack = onPaneBack) }
-        composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
-        composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
-        composable<FilePickerRoute> { FilePickerLauncher(it) }
+        composable<AppearanceRoute> { AppearanceScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<ArticleStyleRoute> { ArticleStyleScreen(windowInsets = windowInsets) }
+        composable<FeedStyleRoute> { FeedStyleScreen(windowInsets = windowInsets) }
+        composable<ReadStyleRoute> { ReadStyleScreen(windowInsets = windowInsets) }
+        composable<MediaStyleRoute> { MediaStyleScreen(windowInsets = windowInsets) }
+        composable<ReorderGroupRoute> { ReorderGroupScreen(windowInsets = windowInsets) }
+        composable<SearchStyleRoute> { SearchStyleScreen(windowInsets = windowInsets) }
+        composable<BehaviorRoute> { BehaviorScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<AutoDeleteRoute> { AutoDeleteScreen(windowInsets = windowInsets) }
+        composable<ImportOpmlRoute> { ImportOpmlScreen(windowInsets = windowInsets) }
+        composable<ImportExportRoute> { ImportExportScreen(windowInsets = windowInsets) }
+        composable<DataRoute> { DataScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<PlayerConfigRoute> { PlayerConfigScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen(windowInsets = windowInsets) }
+        composable<RssConfigRoute> { RssConfigScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<TransmissionRoute> { TransmissionScreen(onBack = onPaneBack, windowInsets = windowInsets) }
+        composable<UpdateNotificationRoute> { UpdateNotificationScreen(windowInsets = windowInsets) }
+        composable<DeleteConstraintRoute> { DeleteConstraintScreen(windowInsets = windowInsets) }
+        composable<FilePickerRoute> { FilePickerLauncher(entry = it, windowInsets = windowInsets) }
     }
 }
