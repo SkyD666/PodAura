@@ -7,11 +7,12 @@
       "blur-material" : null,
       "layers" : [
         {
+          "blend-mode" : "normal",
           "fill" : "automatic",
           "glass" : true,
           "hidden" : false,
-          "image-name" : "Foreground.svg",
-          "name" : "Foreground",
+          "image-name" : "PodAura.svg",
+          "name" : "PodAura",
           "position" : {
             "scale" : 1,
             "translation-in-points" : [

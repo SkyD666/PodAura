@@ -34,7 +34,7 @@ jobs:
                              Pre-Release APK (x86),
                              Pre-Release APK (universal),
                              Pre-Release Mapping ]
-          - os: macos-latest
+          - os: macos-26
             target-platform: Jvm macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]

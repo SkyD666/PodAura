@@ -49,8 +49,8 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
-import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
@@ -169,7 +169,7 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
         )
         Column(modifier = Modifier.padding(top = innerPadding.calculateTopPadding())) {
             PrimaryTabRow(
-                modifier = Modifier.padding(innerPadding.withoutTop().withoutBottom()),
+                modifier = Modifier.padding(innerPadding.onlyHorizontal()),
                 selectedTabIndex = pagerState.currentPage
             ) {
                 tabs.forEachIndexed { index, (title, _) ->

@@ -33,9 +33,9 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.thenIfNotNull
-import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.getDispatcher
@@ -121,7 +121,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                 )
                 Column(modifier = Modifier.padding(top = innerPadding.calculateTopPadding())) {
                     PrimaryTabRow(
-                        modifier = Modifier.padding(innerPadding.withoutTop().withoutBottom()),
+                        modifier = Modifier.padding(innerPadding.onlyHorizontal()),
                         selectedTabIndex = pagerState.currentPage
                     ) {
                         tabs.forEachIndexed { index, (title, _) ->
