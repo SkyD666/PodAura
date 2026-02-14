@@ -34,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -76,6 +78,7 @@ data object MoreRoute
 @Composable
 fun MoreScreen() {
     val navController = LocalNavController.current
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
 
@@ -86,19 +89,20 @@ fun MoreScreen() {
                 style = ComponeTopBarStyle.Small,
                 title = { Text(text = stringResource(Res.string.more_screen_name)) },
                 navigationIcon = {},
-                windowInsets = WindowInsets.safeDrawing.only(
-                    (WindowInsetsSides.Top + WindowInsetsSides.Right).run {
-                        if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
-                    }
-                )
+                windowInsets =
+                    if (windowSizeClass.isCompact)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    else
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End),
+                scrollBehavior = scrollBehavior
             )
         },
-        contentWindowInsets = WindowInsets.safeDrawing.only(
-            (WindowInsetsSides.Top + WindowInsetsSides.Right).run {
-                if (windowSizeClass.isCompact) plus(WindowInsetsSides.Left) else this
-            }
-        )
-    ) {
+        contentWindowInsets =
+            if (windowSizeClass.isCompact)
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            else
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+    ) { innerPadding ->
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
         var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
 
@@ -107,8 +111,8 @@ fun MoreScreen() {
         }
 
         LazyVerticalGrid(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = it + PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+            contentPadding = innerPadding + PaddingValues(horizontal = 16.dp, vertical = 10.dp),
             columns = GridCells.Adaptive(135.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

@@ -7,6 +7,7 @@ import com.skyd.podaura.model.bean.download.autorule.AutoDownloadRuleBean
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import com.skyd.podaura.model.repository.BaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -96,5 +97,4 @@ class AutoDownloadRuleRepository(
             )
         )
     }.flowOn(Dispatchers.IO)
-
 }

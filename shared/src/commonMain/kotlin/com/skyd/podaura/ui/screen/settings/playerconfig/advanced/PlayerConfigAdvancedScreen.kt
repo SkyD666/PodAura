@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.playerconfig.advanced
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Keyboard
@@ -50,7 +54,9 @@ import podaura.shared.generated.resources.reset
 data object PlayerConfigAdvancedRoute
 
 @Composable
-fun PlayerConfigAdvancedScreen() {
+fun PlayerConfigAdvancedScreen(
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
@@ -73,14 +79,16 @@ fun PlayerConfigAdvancedScreen() {
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_advanced_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group {
                 item {

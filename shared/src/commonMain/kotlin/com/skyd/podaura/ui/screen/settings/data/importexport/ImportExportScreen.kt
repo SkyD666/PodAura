@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.data.importexport
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
@@ -58,7 +62,10 @@ import kotlin.time.Clock
 data object ImportExportRoute
 
 @Composable
-fun ImportExportScreen(viewModel: ImportExportViewModel = koinViewModel()) {
+fun ImportExportScreen(
+    viewModel: ImportExportViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -92,14 +99,16 @@ fun ImportExportScreen(viewModel: ImportExportViewModel = koinViewModel()) {
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.import_export_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.import_export_screen_feed_category) }) {
                 item {

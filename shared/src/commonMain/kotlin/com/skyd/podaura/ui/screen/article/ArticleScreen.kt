@@ -12,8 +12,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -37,7 +41,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.LoadingIndicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -146,17 +149,26 @@ data class ArticleRoute(
         )
 
         @Composable
-        fun ArticleLauncher(entry: NavBackStackEntry, onBack: (() -> Unit)? = DefaultBackClick) {
-            ArticleLauncher(entry.toRoute<ArticleRoute>(), onBack)
+        fun ArticleLauncher(
+            entry: NavBackStackEntry,
+            onBack: (() -> Unit)? = DefaultBackClick,
+            windowInsets: WindowInsets = WindowInsets.safeDrawing
+        ) {
+            ArticleLauncher(entry.toRoute<ArticleRoute>(), onBack, windowInsets)
         }
 
         @Composable
-        fun ArticleLauncher(route: ArticleRoute, onBack: (() -> Unit)? = DefaultBackClick) {
+        fun ArticleLauncher(
+            route: ArticleRoute,
+            onBack: (() -> Unit)? = DefaultBackClick,
+            windowInsets: WindowInsets = WindowInsets.safeDrawing
+        ) {
             ArticleScreen(
                 feedUrls = route.feedUrls.orEmpty(),
                 groupIds = route.groupIds.orEmpty(),
                 articleIds = route.articleIds?.uuids.orEmpty(),
                 onBackClick = onBack,
+                windowInsets = windowInsets
             )
         }
     }
@@ -169,8 +181,9 @@ fun ArticleScreen(
     articleIds: List<String>,
     onBackClick: (() -> Unit)? = DefaultBackClick,
     viewModel: ArticleViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
@@ -268,6 +281,7 @@ fun ArticleScreen(
                         contentDescription = stringResource(Res.string.article_screen_search_article),
                     )
                 },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior,
             )
         },
@@ -289,6 +303,7 @@ fun ArticleScreen(
                 }
             }
         },
+        contentWindowInsets = windowInsets,
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     ArticleListTonalElevationPreference.current.dp

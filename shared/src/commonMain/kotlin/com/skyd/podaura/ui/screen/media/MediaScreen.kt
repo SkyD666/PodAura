@@ -160,11 +160,11 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                 ),
                 navigationIcon = {},
                 scrollBehavior = scrollBehavior,
-                windowInsets = WindowInsets.safeDrawing.run {
-                    var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-                    if (windowSizeClass.isCompact) sides += WindowInsetsSides.Left
-                    only(sides)
-                },
+                windowInsets =
+                    if (windowSizeClass.isCompact)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    else
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End),
                 actions = {
                     ComponeIconButton(
                         onClick = {
@@ -203,12 +203,11 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                 Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = null)
             }
         },
-        contentWindowInsets = WindowInsets.safeDrawing.run {
-            var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-            sides += if (windowSizeClass.isCompact) WindowInsetsSides.Left
-            else WindowInsetsSides.Bottom
-            only(sides)
-        },
+        contentWindowInsets =
+            if (windowSizeClass.isCompact)
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            else
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
     ) { innerPadding ->
         var openCreateGroupDialog by rememberSaveable { mutableStateOf(false) }
         var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }

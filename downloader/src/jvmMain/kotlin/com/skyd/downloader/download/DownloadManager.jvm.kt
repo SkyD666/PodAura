@@ -71,11 +71,11 @@ actual class DownloadManager : BaseDownloadManager() {
         }
     }
 
-    override suspend fun onPause(id: Int) {
+    actual override suspend fun onPause(id: Int) {
         removeFromDownloadQueue(id)
     }
 
-    override suspend fun onClearDbAsync(id: Int) {
+    actual override suspend fun onClearDbAsync(id: Int) {
         removeFromDownloadQueue(id)
     }
 

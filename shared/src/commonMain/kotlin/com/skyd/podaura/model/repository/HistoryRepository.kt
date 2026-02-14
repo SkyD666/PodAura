@@ -14,6 +14,7 @@ import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
 import com.skyd.podaura.model.db.dao.ReadHistoryDao
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn

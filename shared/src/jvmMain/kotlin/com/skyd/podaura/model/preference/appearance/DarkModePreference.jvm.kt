@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.preference.appearance
 
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 
 @Preference
 actual object DarkModePreference : BaseDarkModePreference() {
@@ -12,6 +12,5 @@ actual object DarkModePreference : BaseDarkModePreference() {
 
     actual override val default: Int = MODE_NIGHT_NO
 
-    override fun onChangeNightMode(mode: Int) {
-    }
+    actual override fun onChangeNightMode(mode: Int) {}
 }

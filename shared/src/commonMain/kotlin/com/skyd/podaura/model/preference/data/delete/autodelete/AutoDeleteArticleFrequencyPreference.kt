@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.preference.data.delete.autodelete
 
 import androidx.datastore.preferences.core.longPreferencesKey
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 import com.skyd.podaura.model.preference.BasePreference
 import org.jetbrains.compose.resources.getPluralString
 import podaura.shared.generated.resources.Res

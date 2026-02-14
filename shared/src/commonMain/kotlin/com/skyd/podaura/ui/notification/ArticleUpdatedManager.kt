@@ -9,6 +9,7 @@ import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive

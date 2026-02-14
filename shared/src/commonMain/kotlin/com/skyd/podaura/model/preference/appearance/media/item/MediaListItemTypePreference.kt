@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.preference.appearance.media.item
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 
 @Preference
 object MediaListItemTypePreference : BaseMediaItemTypePreference() {

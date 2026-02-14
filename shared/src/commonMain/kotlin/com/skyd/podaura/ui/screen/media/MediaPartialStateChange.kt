@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.media
 
 import com.skyd.podaura.model.bean.MediaGroupBean
+import kotlin.time.Clock
 
 
 internal sealed interface MediaPartialStateChange {
@@ -17,7 +18,7 @@ internal sealed interface MediaPartialStateChange {
             return when (this) {
                 is Success -> oldState.copy(
                     groups = groups.map {
-                        it to System.currentTimeMillis()
+                        it to Clock.System.now().toEpochMilliseconds()
                     },
                     loadingDialog = false,
                 )

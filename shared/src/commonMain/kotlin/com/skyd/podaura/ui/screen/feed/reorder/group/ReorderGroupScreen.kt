@@ -7,10 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -65,7 +69,10 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 data object ReorderGroupRoute
 
 @Composable
-fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
+fun ReorderGroupScreen(
+    viewModel: ReorderGroupViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -79,15 +86,17 @@ fun ReorderGroupScreen(viewModel: ReorderGroupViewModel = koinViewModel()) {
                 style = ComponeTopBarStyle.Small,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.reorder_group_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         when (val groupListState = uiState.groupListState) {
-            is GroupListState.Failed -> ErrorPlaceholder(groupListState.msg, paddingValues)
-            GroupListState.Init -> CircularProgressPlaceholder(paddingValues)
+            is GroupListState.Failed -> ErrorPlaceholder(groupListState.msg, innerPadding)
+            GroupListState.Init -> CircularProgressPlaceholder(innerPadding)
 
             is GroupListState.Success -> GroupList(
-                contentPadding = paddingValues,
+                contentPadding = innerPadding,
                 groupListState = groupListState,
                 dispatcher = dispatcher,
                 nestedScrollConnection = scrollBehavior.nestedScrollConnection,

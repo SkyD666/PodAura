@@ -32,7 +32,7 @@ internal object FileUtil {
         val hex = StringBuilder(hash.size * 2)
         for (b in hash) {
             if (b and 0xFF.toByte() < 0x10) hex.append("0")
-            hex.append(Integer.toHexString((b and 0xFF.toByte()).toInt()))
+            hex.append((b and 0xFF.toByte()).toString(16))
         }
         return hex.toString().hashCode()
     }

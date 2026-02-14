@@ -2,7 +2,7 @@ package com.skyd.podaura.model.preference.appearance
 
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 
 @Preference
 actual object DarkModePreference : BaseDarkModePreference() {
@@ -20,14 +20,14 @@ actual object DarkModePreference : BaseDarkModePreference() {
         MODE_NIGHT_NO
     }
 
-    private fun toAndroidNightMode(mode: Int) = when (mode) {
+    private fun Int.toAndroidNightMode() = when (this) {
         MODE_NIGHT_NO -> AppCompatDelegate.MODE_NIGHT_NO
         MODE_NIGHT_YES -> AppCompatDelegate.MODE_NIGHT_YES
         MODE_NIGHT_FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
     }
 
-    override fun onChangeNightMode(mode: Int) {
-        AppCompatDelegate.setDefaultNightMode(toAndroidNightMode(mode))
+    actual override fun onChangeNightMode(mode: Int) {
+        AppCompatDelegate.setDefaultNightMode(mode.toAndroidNightMode())
     }
 }

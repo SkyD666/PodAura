@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
@@ -129,7 +129,7 @@ fun MediaSearchScreen(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .windowInsetsPadding(
-                        WindowInsets.systemBars
+                        WindowInsets.safeDrawing
                             .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                     )
             ) {
@@ -159,6 +159,7 @@ fun MediaSearchScreen(
                 HorizontalDivider()
             }
         },
+        contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPaddings ->
         val playerJumper = rememberPlayerJumper()
         when (val searchResultState = uiState.searchResultState) {

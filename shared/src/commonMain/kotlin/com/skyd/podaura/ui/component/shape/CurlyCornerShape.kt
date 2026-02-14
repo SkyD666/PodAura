@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.LayoutDirection
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -54,7 +55,7 @@ class CurlyCornerShape(
             val i2 = i + 1
             val d3 = r13
             val r5: List<Float> = sineCircleXYatAngle(
-                r2, r13, r18, amp, Math.toRadians(i.toDouble()).toFloat(), count
+                r2, r13, r18, amp, (i * PI / 180.0).toFloat(), count
             )
             path.lineTo(r5[0], r5[1])
             if (i2 >= 360) {

@@ -20,6 +20,7 @@ import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.xml.xml
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.modules.SerializersModule
@@ -83,7 +84,7 @@ class RssHelper(
     ): FeedWithArticleBean? = withContext(Dispatchers.IO) {
         runCatching {
             val iconAsync = async { getRssIcon(feed.url) }
-            val currentHttpClient = HttpClient {
+            val httpClient = HttpClient {
                 httpClientConfig()
                 xmlConfig()
                 install(
@@ -96,7 +97,7 @@ class RssHelper(
                     }
                 )
             }
-            when (val rssData: BaseXml? = currentHttpClient.get(feed.url).body()) {
+            when (val rssData: BaseXml? = httpClient.get(feed.url).body()) {
                 is Rss -> rssData.rssUpdateFeedWithArticleBean(
                     url = feed.url,
                     feed = feed,

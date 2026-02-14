@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.Preferences
 import com.skyd.podaura.ext.put
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
 abstract class BasePreference<T> {

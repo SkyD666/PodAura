@@ -1,9 +1,9 @@
 package com.skyd.podaura.model.preference.player
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.skyd.ksp.preference.Preference
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_CACHE_DIR
+import com.skyd.ksp.annotation.Preference
 import com.skyd.podaura.model.preference.BasePreference
 
 @Preference

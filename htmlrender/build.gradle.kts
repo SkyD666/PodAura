@@ -20,7 +20,7 @@ kotlin {
         }
         buildToolsVersion = "36.1.0"
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
+            jvmTarget = JvmTarget.JVM_21
         }
     }
 
@@ -32,9 +32,9 @@ kotlin {
     // project can be found here:
     // https://developer.android.com/kotlin/multiplatform/migrate
     listOf(
-        iosX64(),
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
+        macosArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "HtmlRenderKit"

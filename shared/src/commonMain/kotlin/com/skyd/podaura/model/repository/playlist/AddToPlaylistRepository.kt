@@ -8,10 +8,12 @@ import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_DELTA
 import com.skyd.podaura.model.repository.BaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlin.time.Clock
 
 class AddToPlaylistRepository(
     private val articleDao: ArticleDao,
@@ -44,7 +46,7 @@ class AddToPlaylistRepository(
                 url = url,
                 articleId = realArticleId,
                 orderPosition = orderPosition,
-                createTime = System.currentTimeMillis(),
+                createTime = Clock.System.now().toEpochMilliseconds(),
             )
         )
         emit(true)

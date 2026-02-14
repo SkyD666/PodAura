@@ -3,8 +3,10 @@ package com.skyd.podaura.ui.screen.about
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,10 +25,12 @@ import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.BackInvoker
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.fundation.util.exitApp
 import com.skyd.podaura.ext.put
 import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.model.preference.dataStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -37,7 +41,6 @@ import podaura.shared.generated.resources.terms_of_service_screen_disagree
 import podaura.shared.generated.resources.terms_of_service_screen_name
 import podaura.shared.generated.resources.terms_of_service_screen_tip
 import podaura.shared.generated.resources.tos
-import kotlin.system.exitProcess
 
 
 @Serializable
@@ -53,7 +56,7 @@ fun TermsOfServiceScreen() {
         scope.launch(Dispatchers.IO) {
             dataStore.put(AcceptTermsPreference.key, false)
             withContext(Dispatchers.Main) {
-                exitProcess(0)
+                exitApp()
             }
         }
     }
@@ -70,9 +73,10 @@ fun TermsOfServiceScreen() {
                 title = { Text(text = stringResource(Res.string.terms_of_service_screen_name)) },
                 navigationIcon = {},
             )
-        }
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues)) {
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
             Column(
                 modifier = Modifier
                     .weight(1f)

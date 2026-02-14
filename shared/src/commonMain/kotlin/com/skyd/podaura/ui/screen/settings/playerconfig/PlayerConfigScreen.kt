@@ -2,8 +2,12 @@ package com.skyd.podaura.ui.screen.settings.playerconfig
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -98,10 +102,13 @@ import podaura.shared.generated.resources.reset
 
 
 @Serializable
-data object PlayerConfigRoute : java.io.Serializable // TODO
+data object PlayerConfigRoute
 
 @Composable
-fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
+fun PlayerConfigScreen(
+    onBack: (() -> Unit)? = DefaultBackClick,
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
@@ -119,14 +126,16 @@ fun PlayerConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.player_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.player_config_screen_behavior_category) }) {
                 item {

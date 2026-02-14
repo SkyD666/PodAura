@@ -11,7 +11,7 @@ data class Rss(
     @XmlElement
     @XmlSerialName("channel")
     val channel: Channel
-) : BaseXml {
+) : BaseXml() {
     companion object {
         const val MEDIA_PREFIX = "media"
         const val MEDIA_NAMESPACE = "http://search.yahoo.com/mrss/"

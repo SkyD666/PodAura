@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.preference
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import com.skyd.ksp.preference.Preference
+import com.skyd.ksp.annotation.Preference
 
 @Preference(excludeFromList = true)
 object AcceptTermsPreference : BasePreference<Boolean>() {

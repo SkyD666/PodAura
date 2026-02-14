@@ -2,6 +2,7 @@ package com.skyd.podaura.util.image.format
 
 import com.skyd.podaura.ext.indexOf
 import com.skyd.podaura.util.image.format.FormatStandardUtil.baseCheck
+import io.ktor.utils.io.core.toByteArray
 import kotlinx.io.Source
 import kotlinx.io.readByteArray
 

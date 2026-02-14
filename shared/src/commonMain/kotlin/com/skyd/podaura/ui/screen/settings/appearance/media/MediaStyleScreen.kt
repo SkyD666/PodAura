@@ -2,9 +2,13 @@ package com.skyd.podaura.ui.screen.settings.appearance.media
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +39,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.SliderWithLabelDialog
+import com.skyd.fundation.ext.format
 import com.skyd.podaura.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.model.preference.appearance.media.item.BaseMediaItemTypePreference
@@ -71,7 +76,9 @@ import podaura.shared.generated.resources.unlimited
 data object MediaStyleRoute
 
 @Composable
-fun MediaStyleScreen() {
+fun MediaStyleScreen(
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
     var openMediaListItemTypeDialog by rememberSaveable { mutableStateOf(false) }
@@ -85,14 +92,16 @@ fun MediaStyleScreen() {
                 style = ComponeTopBarStyle.LargeFlexible,
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.media_style_screen_name)) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.media_style_screen_media_list_category) }) {
                 item {
@@ -126,7 +135,7 @@ fun MediaStyleScreen() {
                     BaseSettingsItem(
                         icon = null,
                         text = stringResource(Res.string.media_style_screen_media_item_list_type_min_width_dp),
-                        descriptionText = "%.2f".format(MediaItemListTypeMinWidthPreference.current) + " dp",
+                        descriptionText = MediaItemListTypeMinWidthPreference.current.format(2) + " dp",
                         onClick = { openMediaItemListTypeMinWidthDialog = true },
                     )
                 }
@@ -134,7 +143,7 @@ fun MediaStyleScreen() {
                     BaseSettingsItem(
                         icon = null,
                         text = stringResource(Res.string.media_style_screen_media_item_grid_type_min_width_dp),
-                        descriptionText = "%.2f".format(MediaItemGridTypeMinWidthPreference.current) + " dp",
+                        descriptionText = MediaItemGridTypeMinWidthPreference.current.format(2) + " dp",
                         onClick = { openMediaItemGridMinWidthDialog = true },
                     )
                 }
@@ -152,7 +161,7 @@ fun MediaStyleScreen() {
                         description = if (coverRatio == 0f) {
                             stringResource(Res.string.unlimited)
                         } else {
-                            "%.2f".format(coverRatio)
+                            coverRatio.format(2)
                         },
                         onClick = { openMediaItemGridCoverRatioDialog = true },
                     )
@@ -287,7 +296,7 @@ fun GridCoverRatioDialog(
         valueRange = valueRange,
         icon = Icons.Outlined.AspectRatio,
         title = stringResource(Res.string.media_style_screen_media_item_grid_type_cover_ratio),
-        label = { if (it == 0f) stringResource(Res.string.unlimited) else "%.2f".format(it) },
+        label = { if (it == 0f) stringResource(Res.string.unlimited) else it.format(2) },
         onConfirm = onConfirm,
     )
 }

@@ -11,9 +11,11 @@ import com.skyd.podaura.model.repository.BaseRepository
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlin.time.Clock
 
 abstract class BasePlayerRepository(
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
@@ -29,13 +31,13 @@ abstract class BasePlayerRepository(
             val old = mediaPlayHistoryDao.getMediaPlayHistory(path)
             val currentHistory = old?.copy(
                 duration = duration,
-                lastTime = System.currentTimeMillis(),
+                lastTime = Clock.System.now().toEpochMilliseconds(),
                 articleId = realArticleId,
             ) ?: MediaPlayHistoryBean(
                 path = path,
                 duration = duration,
                 lastPlayPosition = 0L,
-                lastTime = System.currentTimeMillis(),
+                lastTime = Clock.System.now().toEpochMilliseconds(),
                 articleId = realArticleId,
             )
             mediaPlayHistoryDao.updateMediaPlayHistory(currentHistory)
@@ -64,7 +66,7 @@ abstract class BasePlayerRepository(
                         url = enclosure.url,
                         articleId = articleWithFeed.articleWithEnclosure.article.articleId,
                         orderPosition = index.toDouble(),
-                        createTime = System.currentTimeMillis(),
+                        createTime = Clock.System.now().toEpochMilliseconds(),
                     ),
                     article = articleWithFeed,
                 )
@@ -85,7 +87,7 @@ abstract class BasePlayerRepository(
                     url = playMediaListItem.path,
                     articleId = articleMap[playMediaListItem.articleId]?.articleWithEnclosure?.article?.articleId,
                     orderPosition = index.toDouble(),
-                    createTime = System.currentTimeMillis(),
+                    createTime = Clock.System.now().toEpochMilliseconds(),
                 ).apply { updateLocalMediaMetadata() },
                 article = articleMap[playMediaListItem.articleId],
             )

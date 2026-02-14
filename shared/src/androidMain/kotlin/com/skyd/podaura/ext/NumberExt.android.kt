@@ -9,6 +9,6 @@ actual fun Long.fileSize(): String = Formatter.formatFileSize(get(), this)
     .replace(Regex("[\\u200B\\u200C\\u200E\\u200F\\u202A-\\u202E\\u2060]"), "")
 
 actual fun Float.toPercentage(point: Int): String {
-    assert(point >= 0) { "Float.toPercentage error, point should be positive" }
+    require(point >= 0) { "Float.toPercentage error, point should be positive" }
     return "%.${point}f%%".format(this * 100)
 }

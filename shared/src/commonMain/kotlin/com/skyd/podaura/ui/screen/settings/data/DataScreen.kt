@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.data
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoDelete
 import androidx.compose.material.icons.outlined.Delete
@@ -78,12 +82,13 @@ import podaura.shared.generated.resources.import_export_screen_name
 
 
 @Serializable
-data object DataRoute : java.io.Serializable // TODO
+data object DataRoute
 
 @Composable
 fun DataScreen(
     onBack: (() -> Unit)? = DefaultBackClick,
     viewModel: DataViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
@@ -105,9 +110,11 @@ fun DataScreen(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.data_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
         var openDeletePlayHistoryWarningDialog by rememberSaveable { mutableStateOf(false) }
         var openDeleteBeforeDatePickerDialog by rememberSaveable { mutableStateOf(false) }
@@ -116,7 +123,7 @@ fun DataScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.data_screen_media_lib_category) }) {
                 item {

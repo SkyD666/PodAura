@@ -30,7 +30,7 @@ fun main() {
 
         if (crashMessage.isBlank()) {
             val windowController = WindowController(onClose = ::exitApplication)
-            initKoin {}
+            initKoin()
             onAppStart()
 
             Window(

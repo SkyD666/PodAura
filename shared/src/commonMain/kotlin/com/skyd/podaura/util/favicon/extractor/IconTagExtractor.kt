@@ -8,11 +8,14 @@ import io.ktor.client.request.prepareGet
 import io.ktor.http.charset
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.charsets.Charsets
+import io.ktor.utils.io.charsets.decode
 import io.ktor.utils.io.readBuffer
 import io.ktor.utils.io.readByteArray
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.Buffer
 
 open class IconTagExtractor(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
@@ -25,7 +28,8 @@ open class IconTagExtractor(
                 val bytes = channel.readByteArray(
                     (128 * 1024L).coerceAtMost(channel.readBuffer().size).toInt()
                 )
-                String(bytes, httpResponse.contentType()?.charset() ?: Charsets.UTF_8)
+                val charset = httpResponse.contentType()?.charset() ?: Charsets.UTF_8
+                charset.newDecoder().decode(Buffer().apply { write(bytes) })
             }
             extractIconFromHtml(html).map {
                 it.copy(

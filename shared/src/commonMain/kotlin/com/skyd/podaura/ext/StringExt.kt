@@ -1,6 +1,7 @@
 package com.skyd.podaura.ext
 
 import com.fleeksoft.ksoup.Ksoup
+import de.cketti.codepoints.codePointAt
 import de.cketti.codepoints.deluxe.toCodePoint
 import io.github.vinceglb.filekit.PlatformFile
 import io.ktor.http.URLBuilder
@@ -36,7 +37,7 @@ expect fun String.asPlatformFile(): PlatformFile
 fun CharSequence.splitByBlank(limit: Int = 0): List<String> = trim().split("\\s+".toRegex(), limit)
 
 fun String.firstCodePointOrNull(): String? =
-    if (isEmpty()) null else String(codePointAt(0).toCodePoint().toChars())
+    if (isEmpty()) null else codePointAt(0).toCodePoint().toChars().concatToString()
 
 fun String.readable(): String = Ksoup.parse(html = this).text()
 

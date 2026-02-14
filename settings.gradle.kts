@@ -27,10 +27,13 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "PodAura"
-include(":app")
-include(":downloader")
-include(":benchmark")
-include(":ksp")
-include(":shared")
-include(":fundation")
-include(":htmlrender")
+include(
+    ":shared",
+    ":fundation",
+    ":htmlrender",
+    ":downloader",
+    ":ksp:processor",
+    ":ksp:annotation",
+    ":platform:android:app",
+    ":platform:android:benchmark"
+)

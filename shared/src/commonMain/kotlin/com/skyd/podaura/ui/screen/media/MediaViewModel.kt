@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
+import kotlin.time.Clock
 
 class MediaViewModel(
     private val mediaRepo: MediaRepository
@@ -45,25 +46,25 @@ class MediaViewModel(
                     MediaEvent.DeleteGroupResultEvent.Failed(change.msg)
 
                 is MediaPartialStateChange.DeleteGroup.Success ->
-                    MediaEvent.DeleteGroupResultEvent.Success(System.currentTimeMillis())
+                    MediaEvent.DeleteGroupResultEvent.Success(Clock.System.now().toEpochMilliseconds())
 
                 is MediaPartialStateChange.MoveFilesToGroup.Failed ->
                     MediaEvent.MoveFilesToGroupResultEvent.Failed(change.msg)
 
                 is MediaPartialStateChange.MoveFilesToGroup.Success ->
-                    MediaEvent.MoveFilesToGroupResultEvent.Success(System.currentTimeMillis())
+                    MediaEvent.MoveFilesToGroupResultEvent.Success(Clock.System.now().toEpochMilliseconds())
 
                 is MediaPartialStateChange.ChangeMediaGroup.Failed ->
                     MediaEvent.ChangeFileGroupResultEvent.Failed(change.msg)
 
                 is MediaPartialStateChange.ChangeMediaGroup.Success ->
-                    MediaEvent.ChangeFileGroupResultEvent.Success(System.currentTimeMillis())
+                    MediaEvent.ChangeFileGroupResultEvent.Success(Clock.System.now().toEpochMilliseconds())
 
                 is MediaPartialStateChange.CreateGroup.Failed ->
                     MediaEvent.CreateGroupResultEvent.Failed(change.msg)
 
                 is MediaPartialStateChange.CreateGroup.Success ->
-                    MediaEvent.CreateGroupResultEvent.Success(System.currentTimeMillis())
+                    MediaEvent.CreateGroupResultEvent.Success(Clock.System.now().toEpochMilliseconds())
 
                 is MediaPartialStateChange.EditGroup.Failed ->
                     MediaEvent.EditGroupResultEvent.Failed(change.msg)

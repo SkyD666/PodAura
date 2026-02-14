@@ -1,6 +1,10 @@
 package com.skyd.podaura.ui.screen.settings.rssconfig
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryFull
 import androidx.compose.material.icons.outlined.Bolt
@@ -55,10 +59,13 @@ import podaura.shared.generated.resources.update_notification_screen_name
 
 
 @Serializable
-data object RssConfigRoute : java.io.Serializable // TODO
+data object RssConfigRoute
 
 @Composable
-fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
+fun RssConfigScreen(
+    onBack: (() -> Unit)? = DefaultBackClick,
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navController = LocalNavController.current
     val scope = rememberCoroutineScope()
@@ -71,14 +78,16 @@ fun RssConfigScreen(onBack: (() -> Unit)? = DefaultBackClick) {
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = stringResource(Res.string.rss_config_screen_name)) },
                 navigationIcon = { if (onBack != null) BackIcon(onClick = onBack) },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = windowInsets
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.rss_config_screen_sync_category) }) {
                 item {

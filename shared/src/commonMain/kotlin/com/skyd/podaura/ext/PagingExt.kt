@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
+import kotlin.jvm.JvmSuppressWildcards
 
 fun <T : Any> LazyPagingItems<T>.safeItemKey(
     default: (Int) -> Any = { it },

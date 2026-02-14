@@ -1,10 +1,8 @@
 package com.skyd.podaura.model.bean
 
-import androidx.annotation.Keep
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Keep
 @Serializable
 data class UpdateBean(
     @SerialName("tag_name")
@@ -21,7 +19,6 @@ data class UpdateBean(
     var body: String
 ) : BaseBean {
 
-    @Keep
     @Serializable
     class AssetsBean(
         @SerialName("name")

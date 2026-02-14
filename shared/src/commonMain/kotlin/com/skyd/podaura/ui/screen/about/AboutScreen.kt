@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -161,8 +163,9 @@ fun AboutScreen() {
                     )
                 },
             )
-        }
-    ) { paddingValues ->
+        },
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         val windowSizeClass = LocalWindowSizeClass.current
         val otherWorksList = rememberOtherWorksList()
         val uriHandler = LocalUriHandler.current
@@ -171,7 +174,7 @@ fun AboutScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues + PaddingValues(16.dp),
+            contentPadding = innerPadding + PaddingValues(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (windowSizeClass.isCompact) {

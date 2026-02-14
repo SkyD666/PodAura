@@ -19,7 +19,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
@@ -76,7 +76,7 @@ data object PlaylistRoute
 
 @Composable
 fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
     val navController = LocalNavController.current
@@ -108,11 +108,11 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                         contentDescription = stringResource(Res.string.sort),
                     )
                 },
-                windowInsets = WindowInsets.safeDrawing.run {
-                    var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-                    if (windowSizeClass.isCompact) sides += WindowInsetsSides.Left
-                    only(sides)
-                },
+                windowInsets =
+                    if (windowSizeClass.isCompact)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+                    else
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End)
             )
         },
         floatingActionButton = {
@@ -127,16 +127,15 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                 )
             }
         },
-        contentWindowInsets = WindowInsets.safeDrawing.run {
-            var sides = WindowInsetsSides.Top + WindowInsetsSides.Right
-            sides += if (windowSizeClass.isCompact) WindowInsetsSides.Left
-            else WindowInsetsSides.Bottom
-            only(sides)
-        },
-    ) { paddingValues ->
+        contentWindowInsets =
+            if (windowSizeClass.isCompact)
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+            else
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+    ) { innerPadding ->
         when (val listState = uiState.listState) {
-            is ListState.Failed -> ErrorPlaceholder(listState.msg, paddingValues)
-            ListState.Init -> CircularProgressPlaceholder(paddingValues)
+            is ListState.Failed -> ErrorPlaceholder(listState.msg, innerPadding)
+            ListState.Init -> CircularProgressPlaceholder(innerPadding)
             is ListState.Success -> {
                 val lazyPagingItems = listState.playlistPagingDataFlow.collectAsLazyPagingItems()
                 val reorderSemaphore = remember { Channel<Unit>(Channel.UNLIMITED) }
@@ -145,6 +144,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                     sendData = { reorderSemaphore.tryReceive().getOrNull() },
                 )
                 PlayList(
+                    modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                     playlist = lazyPagingItems,
                     state = lazyListState,
                     draggable = PlaylistSortByPreference.current == BasePlaylistSortByPreference.MANUAL,
@@ -167,7 +167,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                         openRenameDialog = it.playlist.playlistId
                     },
                     onDelete = { openDeleteWarningDialog = it.playlist.playlistId },
-                    contentPadding = paddingValues,
+                    contentPadding = innerPadding
                 )
             }
         }

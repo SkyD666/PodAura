@@ -32,6 +32,7 @@ import com.skyd.podaura.model.preference.behavior.media.MediaSubListSortByPrefer
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asFlow
@@ -79,7 +80,7 @@ class MediaRepository(
         }
         if (!mediaLibRootJsonFile.exists()) return null
         return json.decodeFromSource<MediaLibJson>(mediaLibRootJsonFile.source()).apply {
-            files.removeIf {
+            files.removeAll {
                 !Path(mediaLibRootJsonFile.parent!!, it.fileName).exists() ||
                         it.fileName.equals(FOLDER_INFO_JSON_NAME, true) ||
                         it.fileName.equals(MEDIA_LIB_JSON_NAME, true)
@@ -141,7 +142,7 @@ class MediaRepository(
         },
     ) = appendFilesMutex.withLock {
         if (files.isEmpty()) return@withLock
-        removeIf { !Path(files[0].parent!!, it.fileName).exists() }
+        removeAll { !Path(files[0].parent!!, it.fileName).exists() }
         files.forEach { file ->
             if (file.name.equals(FOLDER_INFO_JSON_NAME, true) ||
                 file.name.equals(MEDIA_LIB_JSON_NAME, true)
@@ -154,7 +155,7 @@ class MediaRepository(
         }
     }
 
-    // Try fix wrong articleId
+    // Try to fix wrong articleId
     private suspend fun tryFixWrongArticleId(
         path: String,
         mediaLibJson: MediaLibJson,
@@ -333,7 +334,7 @@ class MediaRepository(
     override fun deleteFile(file: Path): Flow<Boolean> = flow {
         val path = file.parent!!.toString()
         val mediaLibJson = getOrReadMediaLibJson(path).apply {
-            files.removeIf { it.fileName == file.name }
+            files.removeAll { it.fileName == file.name }
         }
         writeMediaLibJson(path = path, mediaLibJson)
         emit(file.deleteRecursively() != null)
