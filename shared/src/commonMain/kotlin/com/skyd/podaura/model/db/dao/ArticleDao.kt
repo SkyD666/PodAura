@@ -204,6 +204,14 @@ interface ArticleDao {
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class, EnclosureBean::class])
     fun getArticlePagingSource(sql: RoomRawQuery): PagingSource<Int, ArticleWithFeed>
 
+    @Transaction
+    @Query(
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp " +
+                "ORDER BY ${ArticleBean.DATE_COLUMN} ASC"
+    )
+    fun getArticlesIn(startTimestamp: Long, endTimestamp: Long): PagingSource<Int, ArticleWithFeed>
+
 
     @Transaction
     @RawQuery(observedEntities = [ArticleBean::class])

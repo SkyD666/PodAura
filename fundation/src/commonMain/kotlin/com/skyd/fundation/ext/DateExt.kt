@@ -1,9 +1,14 @@
 package com.skyd.fundation.ext
 
 import co.touchlab.kermit.Logger
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.parse
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -11,6 +16,12 @@ import kotlin.time.Instant
 expect fun Long.toAbsoluteDateTimeString(): String
 
 expect fun Long.toRelativeDateTimeString(): String
+
+expect fun Long.toShortDateString(): String
+
+expect fun Long.toTimeString(): String
+
+expect fun Long.toWeekdayString(): String
 
 fun Clock.Companion.currentTimeMillis(): Long = Clock.System.now().toEpochMilliseconds()
 
@@ -55,3 +66,10 @@ fun LocalTime.Companion.tryParse(input: CharSequence): LocalTime? {
 @Suppress("UnusedReceiverParameter")
 val LocalTime.Formats.SECONDS
     get() = LocalTime.Format { second() }
+
+fun Long.nextMidnight(timeZone: TimeZone = TimeZone.currentSystemDefault()): Long {
+    val instant = Instant.fromEpochMilliseconds(this)
+    val date = instant.toLocalDateTime(timeZone).date
+    val nextDate = date.plus(1, DateTimeUnit.DAY)
+    return nextDate.atStartOfDayIn(timeZone).toEpochMilliseconds()
+}

@@ -26,7 +26,6 @@ import androidx.compose.material.icons.outlined.Workspaces
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -223,7 +222,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                         modifier = Modifier.fillMaxWidth(),
                         selectedTabIndex = min(uiState.groups.size - 1, pagerState.currentPage),
                         edgePadding = 0.dp,
-                        divider = {},
                     ) {
                         uiState.groups.forEachIndexed { index, group ->
                             val interactionSource = remember { MutableInteractionSource() }
@@ -250,7 +248,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                             )
                         }
                     }
-                    HorizontalDivider()
                 }
 
                 HorizontalPager(state = pagerState) { index ->

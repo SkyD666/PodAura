@@ -2,9 +2,11 @@ package com.skyd.podaura.ui.screen.feed
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Search
@@ -84,6 +87,7 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.rememberListDetailPaneScaffoldNavigator
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.article.ArticleRoute
+import com.skyd.podaura.ui.screen.calendar.portrait.CalendarRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Group1Item
@@ -98,6 +102,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.collapse_all_groups
 import podaura.shared.generated.resources.expand_all_groups
 import podaura.shared.generated.resources.feed_group
@@ -243,9 +248,9 @@ private fun FeedList(
                         contentDescription = stringResource(Res.string.feed_screen_search_feed),
                     )
                     ComponeIconButton(
-                        onClick = { onShowArticleListByFeedUrls(emptyList()) },
-                        imageVector = Icons.AutoMirrored.Outlined.Article,
-                        contentDescription = stringResource(Res.string.feed_screen_all_articles),
+                        onClick = { navController.navigate(CalendarRoute) },
+                        imageVector = Icons.Outlined.CalendarMonth,
+                        contentDescription = stringResource(Res.string.calendar_screen_name),
                     )
                     ComponeIconButton(
                         onClick = { openMoreMenu = true },
@@ -255,6 +260,7 @@ private fun FeedList(
                     MoreMenu(
                         expanded = openMoreMenu,
                         allGroupCollapsed = uiState.allGroupCollapsed,
+                        onShowAllArticles = { onShowArticleListByFeedUrls(emptyList()) },
                         onCollapseAllGroup = { dispatch(FeedIntent.CollapseAllGroup(it)) },
                         onDismissRequest = { openMoreMenu = false },
                     )
@@ -622,58 +628,78 @@ private fun FeedList(
 private fun MoreMenu(
     expanded: Boolean,
     allGroupCollapsed: Boolean,
+    onShowAllArticles: () -> Unit,
     onCollapseAllGroup: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     val navController = LocalNavController.current
     DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
         val texts = listOf(
-            stringResource(
-                if (allGroupCollapsed) Res.string.expand_all_groups
-                else Res.string.collapse_all_groups
+            listOf(
+                stringResource(Res.string.feed_screen_all_articles),
             ),
-            stringResource(Res.string.reorder_group_screen_name),
-            stringResource(Res.string.mute_feed_screen_name),
-            stringResource(Res.string.feed_style_screen_name),
+            listOf(
+                stringResource(
+                    if (allGroupCollapsed) Res.string.expand_all_groups
+                    else Res.string.collapse_all_groups
+                ),
+                stringResource(Res.string.reorder_group_screen_name),
+                stringResource(Res.string.mute_feed_screen_name),
+                stringResource(Res.string.feed_style_screen_name),
+            )
         )
         val leadingIcons = listOf(
-            if (allGroupCollapsed) Icons.Outlined.UnfoldMore else Icons.Outlined.UnfoldLess,
-            Icons.AutoMirrored.Outlined.Sort,
-            Icons.AutoMirrored.Outlined.VolumeOff,
-            null,
+            listOf(Icons.AutoMirrored.Outlined.Article),
+            listOf(
+                if (allGroupCollapsed) Icons.Outlined.UnfoldMore else Icons.Outlined.UnfoldLess,
+                Icons.AutoMirrored.Outlined.Sort,
+                Icons.AutoMirrored.Outlined.VolumeOff,
+                null,
+            )
         )
         val onClicks = listOf(
-            {
-                onDismissRequest()
-                onCollapseAllGroup(!allGroupCollapsed)
-            },
-            {
-                onDismissRequest()
-                navController.navigate(ReorderGroupRoute)
-            },
-            {
-                onDismissRequest()
-                navController.navigate(MuteFeedRoute)
-            },
-            {
-                onDismissRequest()
-                navController.navigate(FeedStyleRoute)
-            },
+            listOf(
+                {
+                    onDismissRequest()
+                    onShowAllArticles()
+                }
+            ),
+            listOf(
+                {
+                    onDismissRequest()
+                    onCollapseAllGroup(!allGroupCollapsed)
+                },
+                {
+                    onDismissRequest()
+                    navController.navigate(ReorderGroupRoute)
+                },
+                {
+                    onDismissRequest()
+                    navController.navigate(MuteFeedRoute)
+                },
+                {
+                    onDismissRequest()
+                    navController.navigate(FeedStyleRoute)
+                },
+            )
         )
 
-        DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
-            texts.forEachIndexed { index, text ->
-                DropdownMenuItem(
-                    text = { Text(text = text) },
-                    shape = MenuDefaults.itemShape(index, texts.size).shape,
-                    leadingIcon = leadingIcons[index]?.let { icon ->
-                        {
-                            Icon(imageVector = icon, contentDescription = null)
-                        }
-                    },
-                    onClick = onClicks[index],
-                )
+        texts.forEachIndexed { groupIndex, subTexts ->
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(groupIndex, texts.size)) {
+                subTexts.forEachIndexed { index, text ->
+                    DropdownMenuItem(
+                        text = { Text(text = text) },
+                        shape = MenuDefaults.itemShape(index, subTexts.size).shape,
+                        leadingIcon = leadingIcons[groupIndex][index]?.let { icon ->
+                            {
+                                Icon(imageVector = icon, contentDescription = null)
+                            }
+                        },
+                        onClick = onClicks[groupIndex][index],
+                    )
+                }
             }
+            Spacer(Modifier.height(MenuDefaults.GroupSpacing))
         }
     }
 }

@@ -487,7 +487,7 @@
     <string name="terms_of_service_screen_tip">欢迎使用 PodAura！在继续使用前，请您仔细阅读并接受我们的《服务条款》。</string>
     <string name="terms_of_service_screen_agree">接受</string>
     <string name="terms_of_service_screen_disagree">不接受并退出</string>
-    <string name="bt_deprecated_warning">注意：BT传输功能已被废弃，将在后续被移除！</string>
+    <string name="calendar_screen_name">日历</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

@@ -8,6 +8,7 @@ import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.notSupport
 import com.skyd.fundation.util.platform
 import org.ocpsoft.prettytime.PrettyTime
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -96,4 +97,17 @@ actual fun Long.formatElapsedTime(): String {
         }
 
     }
+}
+
+actual fun Long.toShortDateString(): String {
+    TODO("Not yet implemented")
+}
+
+actual fun Long.toTimeString(): String {
+    TODO("Not yet implemented")
+}
+
+actual fun Long.toWeekdayString(): String {
+    val formatter = SimpleDateFormat("EEE", Locale.getDefault())
+    return formatter.format(this)
 }

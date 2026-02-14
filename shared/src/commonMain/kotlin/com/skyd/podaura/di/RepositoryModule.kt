@@ -9,6 +9,7 @@ import com.skyd.podaura.model.repository.UpdateNotificationRepository
 import com.skyd.podaura.model.repository.UpdateRepository
 import com.skyd.podaura.model.repository.article.ArticleRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
+import com.skyd.podaura.model.repository.calendar.CalendarRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.DownloadRepository
@@ -57,6 +58,7 @@ val repositoryModule = module {
     factory { UpdateRepository(get()) }
     factory { ImportExportRepository() }
     factory { AutoDownloadRuleRepository(get(), get()) }
+    factory { CalendarRepository(get(), get()) }
     factory { MediaRepository(get(), get(), get()) } binds arrayOf(IMediaRepository::class)
     factory {
         AddToPlaylistRepository(get(), get(), get())

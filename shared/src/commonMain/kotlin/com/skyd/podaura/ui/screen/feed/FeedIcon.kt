@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -28,14 +29,19 @@ import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 
 
 @Composable
-fun FeedIcon(modifier: Modifier = Modifier, data: FeedBean, size: Dp = 22.dp) {
+fun FeedIcon(
+    modifier: Modifier = Modifier,
+    data: FeedBean,
+    size: Dp = 22.dp,
+    shape: Shape = CircleShape,
+) {
     val defaultIcon: @Composable () -> Unit = {
         Box(
             modifier = modifier
                 .size(size)
                 .background(
                     color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = CircleShape,
+                    shape = shape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -56,7 +62,7 @@ fun FeedIcon(modifier: Modifier = Modifier, data: FeedBean, size: Dp = 22.dp) {
         PodAuraImage(
             modifier = modifier
                 .size(size)
-                .clip(CircleShape),
+                .clip(shape),
             model = icon,
             imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
                 override fun onError(request: ImageRequest, result: ErrorResult) {
