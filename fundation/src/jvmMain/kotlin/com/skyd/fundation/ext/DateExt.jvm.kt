@@ -1,5 +1,6 @@
 package com.skyd.fundation.ext
 
+import com.ibm.icu.text.DateFormat
 import com.skyd.fundation.jna.mac.NSCalendar
 import com.skyd.fundation.jna.mac.NSDate
 import com.skyd.fundation.jna.mac.NSDateComponentsFormatter
@@ -15,6 +16,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.time.Duration.Companion.days
 
 
 actual fun Long.toAbsoluteDateTimeString(): String {
@@ -100,14 +102,31 @@ actual fun Long.formatElapsedTime(): String {
 }
 
 actual fun Long.toShortDateString(): String {
-    TODO("Not yet implemented")
+    val formatter = DateFormat.getPatternInstance(DateFormat.NUM_MONTH_DAY, Locale.getDefault())
+    return formatter.format(this)
 }
 
 actual fun Long.toTimeString(): String {
-    TODO("Not yet implemented")
+    val formatter = DateFormat.getPatternInstance(DateFormat.HOUR_MINUTE, Locale.getDefault())
+    return formatter.format(this)
 }
 
 actual fun Long.toWeekdayString(): String {
-    val formatter = SimpleDateFormat("EEE", Locale.getDefault())
-    return formatter.format(this)
+    val current = System.currentTimeMillis()
+    val delta = current - this
+    return if (delta < 3.days.inWholeMilliseconds) {
+        toRelativeDateTimeString()
+    } else {
+        val formatter = SimpleDateFormat("EEE", Locale.getDefault())
+        formatter.format(this)
+    }
+}
+
+actual fun is24HourStyle(): Boolean {
+    val format = SimpleDateFormat.getTimeInstance(DateFormat.LONG, Locale.US)
+    if (format is SimpleDateFormat) {
+        val pattern = format.toPattern()
+        return !pattern.contains("a", ignoreCase = true)
+    }
+    return false
 }

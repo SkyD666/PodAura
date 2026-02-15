@@ -1,9 +1,10 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist.item
+package com.skyd.podaura.ui.screen.calendar.daylist.item
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,6 +45,7 @@ fun ArticleItem(articleWithFeed: ArticleWithFeed) {
     }
     Row(
         modifier = Modifier
+            .fillMaxWidth()
             .clickable { navController.navigate(ReadRoute(articleId = article.articleId)) }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist
+package com.skyd.podaura.ui.screen.calendar.daylist
 
 import androidx.paging.PagingData
 import com.skyd.mvi.MviViewState
@@ -17,6 +17,7 @@ data class DayListState(
 sealed class ArticleListState(open val loading: Boolean = false) {
     data class Success(
         val articlePagingDataFlow: Flow<PagingData<Any>>,
+        val hours: List<Int>,
         override val loading: Boolean = false
     ) : ArticleListState()
 

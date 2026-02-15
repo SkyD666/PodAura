@@ -24,26 +24,16 @@ import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.fundation.ext.toShortDateString
 import com.skyd.fundation.ext.toWeekdayString
-import com.skyd.podaura.ui.screen.calendar.portrait.daylist.DayList
+import com.skyd.podaura.ui.screen.calendar.daylist.DayList
+import com.skyd.podaura.ui.screen.calendar.remember2WeeksList
 import kotlinx.coroutines.launch
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
-import kotlinx.datetime.todayIn
-import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.calendar_screen_name
-import kotlin.time.Clock
 
-
-@Serializable
-data object CalendarRoute
 
 @Composable
-fun CalendarScreen() {
+fun PortraitCalendarScreen() {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -67,6 +57,7 @@ fun CalendarScreen() {
                     .padding(innerPaddings.withoutBottom()),
                 selectedTabIndex = pagerState.currentPage,
                 edgePadding = 0.dp,
+                minTabWidth = 60.dp,
             ) {
                 days.forEachIndexed { index, day ->
                     Tab(
@@ -85,22 +76,10 @@ fun CalendarScreen() {
                 DayList(
                     day = days[index],
                     contentPadding = innerPaddings.withoutTop(),
+                    nestedScrollConnection = scrollBehavior.nestedScrollConnection,
                     onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun remember2WeeksList(): List<Long> {
-    return remember {
-        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val fourteenDaysAgo = today.minus(14, DateTimeUnit.DAY)
-        (0..14).map { offset ->
-            fourteenDaysAgo.plus(offset, DateTimeUnit.DAY)
-                .atStartOfDayIn(TimeZone.currentSystemDefault())
-                .toEpochMilliseconds()
         }
     }
 }

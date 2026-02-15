@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist.item
+package com.skyd.podaura.ui.screen.calendar.daylist.item
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +16,7 @@ fun TimeItem(time: Long) {
         text = time.toTimeString(),
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.surfaceContainerHighest)
+            .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
             .padding(horizontal = 16.dp, vertical = 6.dp),
         style = MaterialTheme.typography.labelLarge,
     )

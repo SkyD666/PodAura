@@ -495,6 +495,8 @@
     <string name="terms_of_service_screen_agree">Accept</string>
     <string name="terms_of_service_screen_disagree">Decline and exit</string>
     <string name="calendar_screen_name">Calendar</string>
+    <string name="horizontal_scroll_control_scroll_forward">Scroll forward</string>
+    <string name="horizontal_scroll_control_scroll_backward">Scroll backward</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>

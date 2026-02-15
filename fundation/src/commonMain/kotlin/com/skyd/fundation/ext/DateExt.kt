@@ -2,13 +2,16 @@ package com.skyd.fundation.ext
 
 import co.touchlab.kermit.Logger
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.parse
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -73,3 +76,34 @@ fun Long.nextMidnight(timeZone: TimeZone = TimeZone.currentSystemDefault()): Lon
     val nextDate = date.plus(1, DateTimeUnit.DAY)
     return nextDate.atStartOfDayIn(timeZone).toEpochMilliseconds()
 }
+
+val Long.hour: Int
+    get() {
+        val instant = Instant.fromEpochMilliseconds(this)
+        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+        return localDateTime.hour
+    }
+
+val Long.hourWithStyle: Int
+    get() = hour.withStyle
+
+val Int.withStyle: Int
+    get() {
+        return if (is24HourStyle()) {
+            this
+        } else {
+            if (this <= 12) {
+                this
+            } else {
+                this - 12
+            }
+        }
+    }
+
+fun Int.timestampForTodayHour(): Long {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val dateTime = LocalDateTime(today, LocalTime(this, 0))
+    return dateTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+}
+
+expect fun is24HourStyle(): Boolean

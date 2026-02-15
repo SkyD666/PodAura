@@ -120,6 +120,7 @@ compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
 java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
 java-jna-platform = { module = "net.java.dev.jna:jna-platform", version = "5.18.1" }
 
+icu4j = { module = "com.ibm.icu:icu4j", version = "78.1" }
 ocpsoft-prettytime = { module = "org.ocpsoft.prettytime:prettytime", version = "5.0.9.Final" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta08" }

@@ -488,6 +488,8 @@
     <string name="terms_of_service_screen_agree">接受</string>
     <string name="terms_of_service_screen_disagree">不接受并退出</string>
     <string name="calendar_screen_name">日历</string>
+    <string name="horizontal_scroll_control_scroll_forward">向前滚动</string>
+    <string name="horizontal_scroll_control_scroll_backward">向后滚动</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

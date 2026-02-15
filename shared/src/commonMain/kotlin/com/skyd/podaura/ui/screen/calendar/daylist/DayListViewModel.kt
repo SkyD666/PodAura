@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist
+package com.skyd.podaura.ui.screen.calendar.daylist
 
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
@@ -8,12 +8,12 @@ import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.calendar.CalendarRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
@@ -54,12 +54,16 @@ class DayListViewModel(
     private fun Flow<DayListIntent>.toArticlePartialStateChangeFlow(): Flow<DayListPartialStateChange> {
         return merge(
             filterIsInstance<DayListIntent.Init>().flatMapConcat { intent ->
-                flowOf(
-                    calendarRepo.requestArticlesInOneDay(day = intent.day)
-                        .cachedIn(viewModelScope)
-                ).map { articleList ->
+                combine(
+                    flowOf(
+                        calendarRepo.requestArticlesInOneDay(day = intent.day)
+                            .cachedIn(viewModelScope)
+                    ),
+                    calendarRepo.requestArticleHoursInOneDay(day = intent.day)
+                ) { articleList, hours ->
                     DayListPartialStateChange.Init.Success(
                         articlePagingDataFlow = articleList,
+                        hours = hours,
                     )
                 }.startWith(DayListPartialStateChange.Init.Loading).catchMap {
                     DayListPartialStateChange.Init.Failed(it.message.toString())

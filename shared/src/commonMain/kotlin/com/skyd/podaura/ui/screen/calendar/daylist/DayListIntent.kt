@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist
+package com.skyd.podaura.ui.screen.calendar.daylist
 
 import com.skyd.mvi.MviIntent
 

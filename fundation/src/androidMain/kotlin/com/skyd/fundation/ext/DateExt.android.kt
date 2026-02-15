@@ -38,6 +38,21 @@ actual fun Long.toTimeString(): String {
 }
 
 actual fun Long.toWeekdayString(): String {
-    val formatter = SimpleDateFormat("EEE", Locale.getDefault())
-    return formatter.format(this)
+    val current = System.currentTimeMillis()
+    val delta = current - this
+    return if (delta < DateUtils.DAY_IN_MILLIS * 3) {
+        DateUtils.getRelativeTimeSpanString(
+            this,
+            current,
+            DateUtils.DAY_IN_MILLIS,
+            DateUtils.FORMAT_SHOW_WEEKDAY
+        ).toString()
+    } else {
+        val formatter = SimpleDateFormat("EEE", Locale.getDefault())
+        formatter.format(this)
+    }
+}
+
+actual fun is24HourStyle(): Boolean {
+    return DateFormat.is24HourFormat(get())
 }

@@ -87,7 +87,7 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.rememberListDetailPaneScaffoldNavigator
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.article.ArticleRoute
-import com.skyd.podaura.ui.screen.calendar.portrait.CalendarRoute
+import com.skyd.podaura.ui.screen.calendar.CalendarRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Group1Item

@@ -220,11 +220,6 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "Apache-2.0",
             link = "https://github.com/RavenLiao/HtmlAnnotator",
         ),
-        LicenseBean(
-            name = "Java Native Access (JNA)",
-            license = "LGPL-2.1",
-            link = "https://github.com/java-native-access/jna",
-        ),
     ).apply {
         if (platform == Platform.Windows || platform == Platform.Linux) {
             add(
@@ -233,6 +228,22 @@ private fun getLicenseList(): List<LicenseBean> {
                     license = "Apache-2.0",
                     link = "https://github.com/ocpsoft/prettytime",
                 )
+            )
+        }
+        if (platform == Platform.Windows || platform == Platform.Linux || platform == Platform.MacOS) {
+            add(
+                LicenseBean(
+                    name = "Java Native Access (JNA)",
+                    license = "LGPL-2.1",
+                    link = "https://github.com/java-native-access/jna",
+                ),
+            )
+            add(
+                LicenseBean(
+                    name = "ICU4J",
+                    license = "Others",
+                    link = "https://github.com/unicode-org/icu/tree/main/icu4j",
+                ),
             )
         }
     }.sortedBy { it.name }

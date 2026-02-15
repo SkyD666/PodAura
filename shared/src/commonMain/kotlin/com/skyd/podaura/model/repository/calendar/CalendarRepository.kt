@@ -4,10 +4,12 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.insertSeparators
+import com.skyd.fundation.ext.hour
 import com.skyd.fundation.ext.nextMidnight
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.repository.BaseRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -27,9 +29,7 @@ class CalendarRepository(
             val afterDate = after?.articleWithEnclosure?.article?.date
             if (afterDate == null) {
                 null
-            } else if (beforeDate == null ||
-                !isSameHour(timestamp = beforeDate, otherTimestamp = afterDate)
-            ) {
+            } else if (beforeDate == null || beforeDate.hour != afterDate.hour) {
                 startOfTheHour(afterDate)
             } else {
                 null
@@ -37,10 +37,10 @@ class CalendarRepository(
         }
     }.flowOn(Dispatchers.IO)
 
-    private fun isSameHour(timestamp: Long, otherTimestamp: Long): Boolean {
-        val oneHourMillis = 60 * 60 * 1000L
-        return timestamp / oneHourMillis == otherTimestamp / oneHourMillis
-    }
+    fun requestArticleHoursInOneDay(day: Long): Flow<List<Int>> = articleDao.getArticleHoursIn(
+        startTimestamp = day,
+        endTimestamp = day.nextMidnight(),
+    ).flowOn(Dispatchers.IO)
 
     private fun startOfTheHour(timestamp: Long): Long {
         val oneHourMillis = 60 * 60 * 1000L

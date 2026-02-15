@@ -212,6 +212,15 @@ interface ArticleDao {
     )
     fun getArticlesIn(startTimestamp: Long, endTimestamp: Long): PagingSource<Int, ArticleWithFeed>
 
+    @Transaction
+    @Query(
+        "SELECT DISTINCT CAST(strftime('%H', datetime(${ArticleBean.DATE_COLUMN} / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS H " +
+                "FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp " +
+                "ORDER BY H ASC"
+    )
+    fun getArticleHoursIn(startTimestamp: Long, endTimestamp: Long): Flow<List<Int>>
+
 
     @Transaction
     @RawQuery(observedEntities = [ArticleBean::class])

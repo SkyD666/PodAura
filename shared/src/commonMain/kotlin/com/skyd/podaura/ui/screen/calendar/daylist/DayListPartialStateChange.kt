@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.calendar.portrait.daylist
+package com.skyd.podaura.ui.screen.calendar.daylist
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +13,7 @@ internal sealed interface DayListPartialStateChange {
                 is Success -> oldState.copy(
                     articleListState = ArticleListState.Success(
                         articlePagingDataFlow = articlePagingDataFlow,
+                        hours = hours,
                         loading = false,
                     ),
                 )
@@ -33,7 +34,11 @@ internal sealed interface DayListPartialStateChange {
             }
         }
 
-        data class Success(val articlePagingDataFlow: Flow<PagingData<Any>>) : Init
+        data class Success(
+            val articlePagingDataFlow: Flow<PagingData<Any>>,
+            val hours: List<Int>,
+        ) : Init
+
         data class Failed(val msg: String) : Init
         data object Loading : Init
     }

@@ -51,8 +51,8 @@ import com.skyd.podaura.ui.screen.about.license.LicenseScreen
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
-import com.skyd.podaura.ui.screen.calendar.portrait.CalendarRoute
-import com.skyd.podaura.ui.screen.calendar.portrait.CalendarScreen
+import com.skyd.podaura.ui.screen.calendar.CalendarRoute
+import com.skyd.podaura.ui.screen.calendar.CalendarScreen
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute.DownloadDeepLinkLauncher
 import com.skyd.podaura.ui.screen.download.DownloadRoute

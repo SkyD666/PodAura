@@ -68,6 +68,7 @@ kotlin {
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
             implementation(libs.ocpsoft.prettytime)
+            implementation(libs.icu4j)
         }
     }
 

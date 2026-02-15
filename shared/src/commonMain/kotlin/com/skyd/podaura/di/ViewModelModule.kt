@@ -2,7 +2,7 @@ package com.skyd.podaura.di
 
 import com.skyd.podaura.ui.screen.about.update.UpdateViewModel
 import com.skyd.podaura.ui.screen.article.ArticleViewModel
-import com.skyd.podaura.ui.screen.calendar.portrait.daylist.DayListViewModel
+import com.skyd.podaura.ui.screen.calendar.daylist.DayListViewModel
 import com.skyd.podaura.ui.screen.download.DownloadViewModel
 import com.skyd.podaura.ui.screen.feed.FeedViewModel
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleViewModel
