@@ -40,7 +40,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -67,12 +66,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
-import com.skyd.compone.local.LocalNavController
 import com.skyd.fundation.config.Const
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.isCompact
@@ -127,18 +128,18 @@ import kotlin.time.Clock
 
 
 @Serializable
-data object AboutRoute
+data object AboutRoute : NavKey
 
 @Composable
 fun AboutScreen() {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var openUpdateDialog by rememberSaveable { mutableStateOf(false) }
     var openSponsorDialog by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -149,12 +150,12 @@ fun AboutScreen() {
                     ComponeIconButton(
                         imageVector = Icons.Outlined.Gavel,
                         contentDescription = stringResource(Res.string.terms_of_service_screen_name),
-                        onClick = { navController.navigate(TermsOfServiceRoute) }
+                        onClick = { navBackStack.add(TermsOfServiceRoute) }
                     )
                     ComponeIconButton(
                         imageVector = Icons.Outlined.Balance,
                         contentDescription = stringResource(Res.string.license_screen_name),
-                        onClick = { navController.navigate(LicenseRoute) }
+                        onClick = { navBackStack.add(LicenseRoute) }
                     )
                     ComponeIconButton(
                         onClick = { openUpdateDialog = true },

@@ -42,8 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
@@ -78,11 +77,11 @@ import podaura.shared.generated.resources.sort
 
 
 @Serializable
-data class PlaylistMediaListRoute(val playlistId: String) {
+data class PlaylistMediaListRoute(val playlistId: String) : NavKey {
     companion object {
         @Composable
-        fun PlaylistMediaListLauncher(entry: NavBackStackEntry) {
-            PlaylistMediaListScreen(playlistId = entry.toRoute<PlaylistMediaListRoute>().playlistId)
+        fun PlaylistMediaListLauncher(route: PlaylistMediaListRoute) {
+            PlaylistMediaListScreen(playlistId = route.playlistId)
         }
     }
 }

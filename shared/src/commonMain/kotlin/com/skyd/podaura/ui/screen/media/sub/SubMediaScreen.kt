@@ -20,14 +20,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
-import com.skyd.compone.ext.popBackStackWithLifecycle
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.fundation.ext.exists
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPreference
@@ -49,20 +47,20 @@ import kotlin.reflect.typeOf
 
 
 @Serializable
-data class SubMediaRoute(val media: MediaBean) {
+data class SubMediaRoute(val media: MediaBean) : NavKey {
     companion object {
         val typeMap = mapOf(typeOf<MediaBean>() to serializableType<MediaBean>())
 
         @Composable
-        fun SubMediaLauncher(entry: NavBackStackEntry) {
-            SubMediaScreenRoute(media = entry.toRoute<SubMediaRoute>().media)
+        fun SubMediaLauncher(route: SubMediaRoute) {
+            SubMediaScreenRoute(media = route.media)
         }
     }
 }
 
 @Composable
 fun SubMediaScreenRoute(media: MediaBean?) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     if (media == null || !media.path.exists() || !media.isDir) {
         ComponeDialog(
             icon = {
@@ -71,7 +69,7 @@ fun SubMediaScreenRoute(media: MediaBean?) {
             title = { Text(text = stringResource(Res.string.warning)) },
             text = { Text(text = stringResource(Res.string.sub_media_screen_path_illegal)) },
             confirmButton = {
-                TextButton(onClick = { navController.popBackStackWithLifecycle() }) {
+                TextButton(onClick = { navBackStack.removeFirstOrNull() }) {
                     Text(text = stringResource(Res.string.exit))
                 }
             },
@@ -84,7 +82,7 @@ fun SubMediaScreenRoute(media: MediaBean?) {
 @Composable
 private fun SubMediaScreen(media: MediaBean) {
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -103,7 +101,7 @@ private fun SubMediaScreen(media: MediaBean) {
                 actions = {
                     ComponeIconButton(
                         onClick = {
-                            navController.navigate(
+                            navBackStack.add(
                                 MediaSearchRoute(path = media.filePath, isSubList = true)
                             )
                         },

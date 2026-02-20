@@ -43,7 +43,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.compone.component.TagText
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.ext.isLocalFileExists
 import com.skyd.podaura.ext.toDateTimeString
@@ -182,11 +182,11 @@ fun MediaPlayHistoryItem(
                     onClick = { onDelete(data) },
                 )
                 if (articleWithEnclosure != null) {
-                    val navController = LocalNavController.current
+                    val navBackStack = LocalNavBackStack.current
                     ActionIconButton(
                         imageVector = Icons.AutoMirrored.Outlined.Article,
                         contentDescription = stringResource(Res.string.read_screen_name),
-                        onClick = { navController.navigate(ReadRoute(articleId = articleWithEnclosure.article.articleId)) },
+                        onClick = { navBackStack.add(ReadRoute(articleId = articleWithEnclosure.article.articleId)) },
                     )
                 }
             }

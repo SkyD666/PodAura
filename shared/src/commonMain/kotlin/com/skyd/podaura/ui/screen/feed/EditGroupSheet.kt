@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.podaura.ui.component.TopSnackbatHostBox
@@ -56,6 +57,7 @@ fun EditGroupSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(

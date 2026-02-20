@@ -27,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
-import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.bean.MediaBean
@@ -67,7 +67,7 @@ internal fun MediaList(
     viewModel: MediaListViewModel = koinViewModel(key = path + groupInfo?.group)
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -130,7 +130,7 @@ internal fun MediaList(
                                     )
                                 )
                             },
-                            onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
+                            onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
                             onRename = { oldMedia, newName ->
                                 dispatch(MediaListIntent.RenameFile(oldMedia.path, newName))
                             },
@@ -184,7 +184,7 @@ internal fun MediaList(
     onRemove: (MediaBean) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     var openEditMediaDialog by rememberSaveable { mutableStateOf<String?>(null) }
     var openCreateGroupDialog by rememberSaveable { mutableStateOf(false) }
     var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
@@ -194,7 +194,7 @@ internal fun MediaList(
         mediaBean.feedBean?.let {
             { it: MediaBean ->
                 it.feedUrl?.let { feedUrl ->
-                    navController.navigate(ArticleRoute(feedUrls = listOf(feedUrl)))
+                    navBackStack.add(ArticleRoute(feedUrls = listOf(feedUrl)))
                 }
             }
         }
@@ -202,7 +202,7 @@ internal fun MediaList(
     val onOpenArticle: (MediaBean) -> ((MediaBean) -> Unit)? = { mediaBean: MediaBean ->
         mediaBean.articleWithEnclosure?.let {
             { it: MediaBean ->
-                it.articleId?.let { navController.navigate(ReadRoute(articleId = it)) }
+                it.articleId?.let { navBackStack.add(ReadRoute(articleId = it)) }
             }
         }
     }

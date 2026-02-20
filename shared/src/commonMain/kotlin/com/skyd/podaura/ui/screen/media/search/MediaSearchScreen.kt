@@ -37,14 +37,13 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
-import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.preference.appearance.media.item.MediaListItemTypePreference
@@ -66,11 +65,10 @@ import podaura.shared.generated.resources.to_top
 
 
 @Serializable
-data class MediaSearchRoute(val path: String, val isSubList: Boolean) {
+data class MediaSearchRoute(val path: String, val isSubList: Boolean) : NavKey {
     companion object {
         @Composable
-        fun MediaSearchLauncher(entry: NavBackStackEntry) {
-            val route = entry.toRoute<MediaSearchRoute>()
+        fun MediaSearchLauncher(route: MediaSearchRoute) {
             MediaSearchScreen(path = route.path, isSubList = route.isSubList)
         }
     }
@@ -84,7 +82,7 @@ fun MediaSearchScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -194,7 +192,7 @@ fun MediaSearchScreen(
                         )
                     )
                 },
-                onOpenDir = { navController.navigate(SubMediaRoute(media = it)) },
+                onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
                 onRename = { oldMedia, newName ->
                     dispatch(MediaSearchIntent.RenameFile(oldMedia.path, newName))
                 },

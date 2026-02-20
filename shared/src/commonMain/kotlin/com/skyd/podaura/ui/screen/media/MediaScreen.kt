@@ -29,7 +29,6 @@ import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -48,10 +47,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.isCompact
@@ -100,7 +100,7 @@ data object MediaRoute
 fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val windowSizeClass = LocalWindowSizeClass.current
     val scope = rememberCoroutineScope()
 
@@ -137,7 +137,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
         }
     }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -167,7 +167,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                 actions = {
                     ComponeIconButton(
                         onClick = {
-                            navController.navigate(MediaSearchRoute(path = path, isSubList = false))
+                            navBackStack.add(MediaSearchRoute(path = path, isSubList = false))
                         },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.media_screen_search_hint),
@@ -186,16 +186,14 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
                         onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
-                        onChangeLibLocation = { navController.navigate(FilePickerRoute(path = path)) }
+                        onChangeLibLocation = { navBackStack.add(FilePickerRoute(path = path)) }
                     )
                 }
             )
         },
         floatingActionButton = {
             ComponeFloatingActionButton(
-                onClick = {
-                    navController.navigate(FilePickerRoute(path = path, pickFolder = false))
-                },
+                onClick = { navBackStack.add(FilePickerRoute(path = path, pickFolder = false)) },
                 onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.open_file),
             ) {
@@ -367,7 +365,7 @@ private fun MoreMenu(
     onRefresh: () -> Unit,
     onChangeLibLocation: () -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
         val texts = listOf(
             stringResource(Res.string.data_screen_change_lib_location),
@@ -379,7 +377,7 @@ private fun MoreMenu(
             Icons.Outlined.Refresh,
             Icons.Outlined.Palette,
         )
-        val onClicks = listOf(
+        val onClicks = listOf<() -> Unit>(
             {
                 onDismissRequest()
                 onChangeLibLocation()
@@ -390,7 +388,7 @@ private fun MoreMenu(
             },
             {
                 onDismissRequest()
-                navController.navigate(MediaStyleRoute)
+                navBackStack.add(MediaStyleRoute)
             },
         )
         DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {

@@ -32,8 +32,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.thenIf
-import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
@@ -51,7 +51,7 @@ fun ReadHistoryItem(
     data: ReadHistoryWithArticle,
     onDelete: (ReadHistoryWithArticle) -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val articleWithEnclosure = data.article.articleWithEnclosure
     val article = articleWithEnclosure.article
 
@@ -61,7 +61,7 @@ fun ReadHistoryItem(
             .background(MaterialTheme.colorScheme.secondary.copy(0.1f))
             .fillMaxWidth()
             .thenIf(!article.image.isNullOrBlank()) { height(IntrinsicSize.Max) }
-            .clickable { navigateToReadScreen(navController, articleWithEnclosure) },
+            .clickable { navigateToReadScreen(navBackStack, articleWithEnclosure) },
     ) {
         val title = article.title?.readable().orEmpty()
 

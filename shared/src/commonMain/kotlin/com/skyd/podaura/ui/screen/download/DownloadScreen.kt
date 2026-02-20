@@ -11,7 +11,6 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -29,11 +28,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavDeepLink
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeFloatingActionButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
@@ -44,7 +41,11 @@ import com.skyd.podaura.model.repository.download.rememberDownloadStarter
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
+import io.ktor.http.URLBuilder
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -59,27 +60,38 @@ import podaura.shared.generated.resources.download_screen_name
 data class DownloadRoute(
     val downloadLink: String? = null,
     val mimetype: String? = null,
-) {
+) : NavKey {
     companion object {
         const val BASE_PATH = "podaura://download.screen"
 
-        val deepLinks = listOf(navDeepLink<DownloadRoute>(basePath = BASE_PATH))
+        val deepLinkPattern = DeepLinkPattern(
+            serializer(),
+            urlPattern = URLBuilder(BASE_PATH).build()
+        )
 
         @Composable
-        fun DownloadLauncher(entry: NavBackStackEntry) {
-            val route = entry.toRoute<DownloadRoute>()
+        fun DownloadLauncher(route: DownloadRoute) {
             DownloadScreen(downloadLink = route.downloadLink, mimetype = route.mimetype)
         }
     }
 }
 
 @Serializable
-expect object DownloadDeepLinkRoute {
-    val deepLinks: List<NavDeepLink>
-
-    @Composable
-    fun DownloadDeepLinkLauncher(entry: NavBackStackEntry)
+data class DownloadDeepLinkRoute(
+    @SerialName(ExternalUrlHandler.UrlData.URL_NAME)
+    val url: String? = null,
+    @SerialName(ExternalUrlHandler.UrlData.MIMETYPE_NAME)
+    val mimeType: String? = null,
+) : NavKey {
+    companion object {
+        @Composable
+        fun DownloadDeepLinkLauncher(route: DownloadDeepLinkRoute) {
+            DownloadScreen(downloadLink = route.url, mimetype = route.mimeType)
+        }
+    }
 }
+
+expect val DownloadDeepLinkRoute.Companion.deepLinkPatterns: List<DeepLinkPattern<DownloadDeepLinkRoute>>
 
 @Composable
 fun DownloadScreen(
@@ -101,7 +113,7 @@ fun DownloadScreen(
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     viewModel.getDispatcher(startWith = DownloadIntent.Init)
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(

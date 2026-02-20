@@ -87,8 +87,9 @@ import com.skyd.compone.component.blockString
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
-import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.isNetworkUrl
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -163,7 +164,7 @@ fun EditFeedSheet(
     openCreateGroupDialog: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val feed = feedView.feed
     var openUrlDialog by rememberSaveable { mutableStateOf(false) }
     var url by rememberSaveable(feed.url) { mutableStateOf(feed.url) }
@@ -178,6 +179,7 @@ fun EditFeedSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
@@ -211,12 +213,8 @@ fun EditFeedSheet(
                     onDismissRequest()
                 },
                 onSortXmlArticlesOnUpdateChanged = onSortXmlArticlesOnUpdateChanged,
-                onAutoDownload = {
-                    navController.navigate(AutoDownloadRuleRoute(feedUrl = feed.url))
-                },
-                onEditRequestHeaders = {
-                    navController.navigate(RequestHeadersRoute(feedUrl = feed.url))
-                },
+                onAutoDownload = { navBackStack.add(AutoDownloadRuleRoute(feedUrl = feed.url)) },
+                onEditRequestHeaders = { navBackStack.add(RequestHeadersRoute(feedUrl = feed.url)) },
                 onMessage = onMessage,
             )
             Spacer(modifier = Modifier.height(12.dp))

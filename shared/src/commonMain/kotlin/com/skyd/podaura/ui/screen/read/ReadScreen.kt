@@ -38,7 +38,6 @@ import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -65,16 +64,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
-import com.skyd.compone.local.LocalNavController
 import com.skyd.fundation.ext.format
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.isPhone
@@ -89,6 +88,7 @@ import com.skyd.podaura.model.bean.article.ArticleCategoryBean
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.rememberTextSharing
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
@@ -96,6 +96,8 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
+import io.ktor.http.URLBuilder
+import io.ktor.http.appendPathSegments
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -117,18 +119,23 @@ import podaura.shared.generated.resources.share
 
 
 @Serializable
-data class ReadRoute(@SerialName("articleId") val articleId: String) {
+data class ReadRoute(@SerialName("articleId") val articleId: String) : NavKey {
     fun toDeeplink(): String = "$DEEP_LINK/$articleId"
 
     companion object {
         private const val DEEP_LINK = "podaura://read.screen"
         const val BASE_PATH = DEEP_LINK
 
-        val deepLinks = listOf(navDeepLink<ReadRoute>(basePath = BASE_PATH))
+        val deepLinkPattern = DeepLinkPattern(
+            serializer(),
+            urlPattern = URLBuilder(BASE_PATH).apply {
+                appendPathSegments("{articleId}")
+            }.build()
+        )
 
         @Composable
-        fun ReadLauncher(entry: NavBackStackEntry) {
-            ReadScreen(articleId = entry.toRoute<ReadRoute>().articleId)
+        fun ReadLauncher(route: ReadRoute) {
+            ReadScreen(articleId = route.articleId)
         }
     }
 }
@@ -136,7 +143,7 @@ data class ReadRoute(@SerialName("articleId") val articleId: String) {
 @Composable
 fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -149,7 +156,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
 
     var fabHeight by remember { mutableStateOf(0.dp) }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -222,7 +229,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                         onOpenArticleScreen = {
                             val articleState = uiState.articleState
                             if (articleState is ArticleState.Success) {
-                                navController.navigate(ArticleRoute(feedUrls = listOf(articleState.article.feed.url)))
+                                navBackStack.add(ArticleRoute(feedUrls = listOf(articleState.article.feed.url)))
                             }
                         },
                     )
@@ -489,6 +496,7 @@ private fun ReadTextSizeSliderDialog(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
         sheetState = rememberModalBottomSheetState()
     ) {
         Column(
@@ -523,7 +531,10 @@ private fun ImageBottomSheet(
     downloadImage: (url: String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
+    ) {
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)

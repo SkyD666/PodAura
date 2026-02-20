@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.dialog.DeleteWarningDialog
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
@@ -86,7 +87,10 @@ fun EditMediaSheet(
 ) {
     val scope = rememberCoroutineScope()
 
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
+    ) {
         var openRenameInputDialog by rememberSaveable { mutableStateOf<String?>(null) }
         var openSetFileDisplayNameInputDialog by rememberSaveable { mutableStateOf<String?>(null) }
 

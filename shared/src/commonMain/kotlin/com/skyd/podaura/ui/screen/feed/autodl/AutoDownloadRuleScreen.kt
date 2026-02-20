@@ -34,8 +34,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
@@ -71,11 +70,11 @@ import podaura.shared.generated.resources.unlimited
 
 
 @Serializable
-data class AutoDownloadRuleRoute(@SerialName("feedUrl") val feedUrl: String) {
+data class AutoDownloadRuleRoute(@SerialName("feedUrl") val feedUrl: String) : NavKey {
     companion object {
         @Composable
-        fun AutoDownloadRuleLauncher(entry: NavBackStackEntry) {
-            AutoDownloadRuleScreen(feedUrl = entry.toRoute<AutoDownloadRuleRoute>().feedUrl)
+        fun AutoDownloadRuleLauncher(route: AutoDownloadRuleRoute) {
+            AutoDownloadRuleScreen(feedUrl = route.feedUrl)
         }
     }
 }

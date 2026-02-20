@@ -29,8 +29,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
@@ -59,11 +58,11 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 @Serializable
-data class ReorderFeedRoute(val groupId: String?) {
+data class ReorderFeedRoute(val groupId: String?) : NavKey {
     companion object {
         @Composable
-        fun ReorderFeedLauncher(entry: NavBackStackEntry) {
-            ReorderFeedScreen(groupId = entry.toRoute<ReorderFeedRoute>().groupId)
+        fun ReorderFeedLauncher(route: ReorderFeedRoute) {
+            ReorderFeedScreen(groupId = route.groupId)
         }
     }
 }

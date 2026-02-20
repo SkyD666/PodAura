@@ -2,6 +2,7 @@ package com.skyd.podaura.ui.screen.calendar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation3.runtime.NavKey
 import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.calendar.large.LargeCalendarScreen
@@ -17,7 +18,7 @@ import kotlin.time.Clock
 
 
 @Serializable
-data object CalendarRoute
+data object CalendarRoute : NavKey
 
 @Composable
 fun CalendarScreen() {

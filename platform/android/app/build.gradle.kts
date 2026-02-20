@@ -156,6 +156,9 @@ tasks.withType<PackageAndroidArtifact> {
 
 kotlin {
     compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xskip-prerelease-check",
+        )
         jvmTarget = JvmTarget.JVM_21
         optIn.addAll(
             "androidx.compose.material3.ExperimentalMaterial3Api",
@@ -205,10 +208,9 @@ dependencies {
     implementation(libs.jetbrains.compose.material3.window.size)
     implementation(libs.jetbrains.compose.material3.adaptive)
     implementation(libs.jetbrains.compose.material3.adaptive.layout)
-    implementation(libs.jetbrains.compose.material3.adaptive.navigation)
     implementation(libs.jetbrains.compose.materialIconsExtended)
     implementation(libs.jetbrains.compose.components.resources)
-    implementation(libs.jetbrains.navigation.compose)
+    implementation(libs.jetbrains.navigation3.ui)
     implementation(libs.jetbrains.lifecycle.runtime.compose)
 
     implementation(libs.androidx.work.runtime.ktx)

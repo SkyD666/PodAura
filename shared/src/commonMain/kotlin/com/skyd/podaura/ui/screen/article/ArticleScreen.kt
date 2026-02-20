@@ -31,7 +31,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -58,22 +57,21 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.setText
 import com.skyd.compone.ext.withoutTop
-import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.getOrDefault
@@ -93,12 +91,15 @@ import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.UuidList
 import com.skyd.podaura.ui.component.UuidListType
 import com.skyd.podaura.ui.component.listType
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.uuidListType
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import io.ktor.http.URLBuilder
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -109,7 +110,6 @@ import podaura.shared.generated.resources.article_screen_search_article
 import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.to_top
-import kotlin.reflect.typeOf
 import kotlin.uuid.Uuid
 
 
@@ -121,9 +121,9 @@ data class ArticleRoute(
     val groupIds: List<String>? = null,
     @SerialName("articleIds")
     val articleIds: UuidList? = null,
-) {
+) : NavKey {
     fun toDeeplink(): String {
-        return URLBuilder(DEEP_LINK).apply {
+        return URLBuilder(BASE_PATH).apply {
             feedUrls?.let { parameters.append("feedUrls", Json.encodeToString(feedUrls)) }
             groupIds?.let { parameters.append("groupIds", Json.encodeToString(groupIds)) }
             articleIds?.let {
@@ -136,26 +136,20 @@ data class ArticleRoute(
     }
 
     companion object {
-        private const val DEEP_LINK = "podaura://article.screen"
-        const val BASE_PATH = DEEP_LINK
+        private const val BASE_PATH = "podaura://article.screen"
 
-        val typeMap = mapOf(
-            typeOf<UuidList?>() to uuidListType(isNullableAllowed = true),
-            typeOf<List<String>?>() to listType<String>(isNullableAllowed = true),
+        val deepLinkPattern = DeepLinkPattern(
+            serializer(),
+            urlPattern = URLBuilder(BASE_PATH).apply {
+                parameters.append("feedUrls", "{feedUrls}")
+                parameters.append("groupIds", "{groupIds}")
+                parameters.append("articleIds", "{articleIds}")
+            }.build(),
+            typeParsers = mapOf(
+                UuidList.serializer().descriptor.kind to uuidListType(),
+                ListSerializer(String.serializer()).descriptor.kind to listType<String>(),
+            )
         )
-
-        val deepLinks = listOf(
-            navDeepLink<ArticleRoute>(basePath = BASE_PATH, typeMap = typeMap),
-        )
-
-        @Composable
-        fun ArticleLauncher(
-            entry: NavBackStackEntry,
-            onBack: (() -> Unit)? = DefaultBackClick,
-            windowInsets: WindowInsets = WindowInsets.safeDrawing
-        ) {
-            ArticleLauncher(entry.toRoute<ArticleRoute>(), onBack, windowInsets)
-        }
 
         @Composable
         fun ArticleLauncher(
@@ -185,7 +179,7 @@ fun ArticleScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
 
@@ -205,7 +199,7 @@ fun ArticleScreen(
     )
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -269,7 +263,7 @@ fun ArticleScreen(
                     )
                     ComponeIconButton(
                         onClick = {
-                            navController.navigate(
+                            navBackStack.add(
                                 SearchRoute.Article(
                                     feedUrls = feedUrls,
                                     groupIds = groupIds,

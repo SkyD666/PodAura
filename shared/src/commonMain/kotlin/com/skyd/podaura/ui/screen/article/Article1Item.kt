@@ -60,12 +60,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.blockString
 import com.skyd.compone.component.menu.DropdownMenuDeleteItem
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.thenIf
-import com.skyd.compone.local.LocalGlobalNavController
-import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -112,7 +111,7 @@ fun Article1Item(
     onDelete: (ArticleWithFeed) -> Unit,
     onMessage: (String) -> Unit,
 ) {
-    val globalNavController = LocalGlobalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
     val currentData by rememberUpdatedState(newValue = data)
@@ -124,7 +123,7 @@ fun Article1Item(
     fun onAction(articleSwipeAction: String) {
         swipeAction(
             articleSwipeAction = articleSwipeAction,
-            navController = globalNavController,
+            navBackStack = navBackStack,
             data = articleWithEnclosure,
             onMarkAsRead = {
                 onRead(currentData, !articleWithEnclosure.article.isRead)
@@ -216,7 +215,7 @@ private fun Article1ItemContent(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onShowEnclosureBottomSheet: () -> Unit,
 ) {
-    val globalNavController = LocalGlobalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val articleTapAction = ArticleTapActionPreference.current
     val articleWithEnclosure = data.articleWithEnclosure
     val article = articleWithEnclosure.article
@@ -240,7 +239,7 @@ private fun Article1ItemContent(
                     onClick = {
                         tapAction(
                             articleTapAction,
-                            globalNavController,
+                            navBackStack,
                             articleWithEnclosure,
                             onShowEnclosureBottomSheet,
                         )
@@ -400,12 +399,12 @@ fun ArticleItemIconButton(
 
 @Composable
 fun RowScope.ArticleItemFeedInfo(data: ArticleWithFeed, colorAlpha: Float = 1f) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     Box(modifier = Modifier.weight(1f)) {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(3.dp))
-                .clickable { navController.navigate(ArticleRoute(feedUrls = listOf(data.feed.url))) }
+                .clickable { navBackStack.add(ArticleRoute(feedUrls = listOf(data.feed.url))) }
                 .padding(horizontal = 4.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -440,7 +439,7 @@ private fun ArticleMenu(
     onShowEnclosureBottomSheet: () -> Unit,
     onOpenAddToPlaylistSheet: () -> Unit,
 ) {
-    val globalNavController = LocalGlobalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
     val articleWithEnclosure = data.articleWithEnclosure
     val isFavorite = articleWithEnclosure.article.isFavorite
@@ -496,7 +495,7 @@ private fun ArticleMenu(
             listOf(
                 {
                     navigateToReadScreen(
-                        navController = globalNavController,
+                        navBackStack = navBackStack,
                         data = articleWithEnclosure,
                     )
                     onDismissRequest()
@@ -711,7 +710,7 @@ fun Article1ItemPlaceholder() {
 
 private fun swipeAction(
     articleSwipeAction: String,
-    navController: NavController,
+    navBackStack: MutableList<NavKey>,
     data: ArticleWithEnclosureBean,
     onMarkAsRead: () -> Unit,
     onMarkAsFavorite: () -> Unit,
@@ -722,7 +721,7 @@ private fun swipeAction(
 ) {
     when (articleSwipeAction) {
         ArticleSwipeActionPreference.READ ->
-            navigateToReadScreen(navController = navController, data = data)
+            navigateToReadScreen(navBackStack = navBackStack, data = data)
 
         ArticleSwipeActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet()
         ArticleSwipeActionPreference.OPEN_LINK_IN_BROWSER -> data.article.link?.let { onOpenLink(it) }
@@ -731,25 +730,25 @@ private fun swipeAction(
         ArticleSwipeActionPreference.SWITCH_READ_STATE -> onMarkAsRead()
         ArticleSwipeActionPreference.SWITCH_FAVORITE_STATE -> onMarkAsFavorite()
         ArticleSwipeActionPreference.ADD_TO_PLAYLIST -> onOpenAddToPlaylistSheet()
-        else -> navigateToReadScreen(navController = navController, data = data)
+        else -> navigateToReadScreen(navBackStack = navBackStack, data = data)
     }
 }
 
 private fun tapAction(
     articleTapAction: String,
-    navController: NavController,
+    navBackStack: MutableList<NavKey>,
     data: ArticleWithEnclosureBean,
     onShowEnclosureBottomSheet: () -> Unit,
 ) {
     when (articleTapAction) {
         ArticleTapActionPreference.READ ->
-            navigateToReadScreen(navController = navController, data = data)
+            navigateToReadScreen(navBackStack = navBackStack, data = data)
 
         ArticleTapActionPreference.SHOW_ENCLOSURES -> onShowEnclosureBottomSheet()
-        else -> navigateToReadScreen(navController = navController, data = data)
+        else -> navigateToReadScreen(navBackStack = navBackStack, data = data)
     }
 }
 
-fun navigateToReadScreen(navController: NavController, data: ArticleWithEnclosureBean) {
-    navController.navigate(ReadRoute(articleId = data.article.articleId))
+fun navigateToReadScreen(navBackStack: MutableList<NavKey>, data: ArticleWithEnclosureBean) {
+    navBackStack.add(ReadRoute(articleId = data.article.articleId))
 }

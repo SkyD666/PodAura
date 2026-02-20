@@ -17,7 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,20 +26,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavUri
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.skyd.compone.local.LocalGlobalNavController
-import com.skyd.compone.local.LocalNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.navigation.LocalResultStore
+import com.skyd.compone.component.navigation.newNavBackStack
+import com.skyd.compone.component.navigation.rememberResultStore
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.ui.component.PodAuraNavHost
+import com.skyd.podaura.ui.component.PodAuraNavDisplay
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
-import com.skyd.podaura.ui.component.navigation.ExternalUriHandler
+import com.skyd.podaura.ui.component.navigation.ExternalUrlListener
+import com.skyd.podaura.ui.component.navigation.PodAuraSerializersModule
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
+import com.skyd.podaura.ui.component.navigation.initialNavKey
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.about.AboutScreen
@@ -54,9 +60,10 @@ import com.skyd.podaura.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
 import com.skyd.podaura.ui.screen.calendar.CalendarRoute
 import com.skyd.podaura.ui.screen.calendar.CalendarScreen
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute
-import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute.DownloadDeepLinkLauncher
+import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute.Companion.DownloadDeepLinkLauncher
 import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.download.DownloadRoute.Companion.DownloadLauncher
+import com.skyd.podaura.ui.screen.download.deepLinkPatterns
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute.Companion.AutoDownloadRuleLauncher
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
@@ -108,8 +115,8 @@ import com.skyd.podaura.ui.screen.settings.data.deleteconstraint.DeleteConstrain
 import com.skyd.podaura.ui.screen.settings.data.deleteconstraint.DeleteConstraintScreen
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportScreen
-import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlDeepLinkLauncher
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlDeepLinkRoute
+import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlDeepLinkRoute.Companion.ImportOpmlDeepLinkLauncher
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute.Companion.ImportOpmlLauncher
 import com.skyd.podaura.ui.screen.settings.playerconfig.PlayerConfigRoute
@@ -130,32 +137,51 @@ import podaura.shared.generated.resources.storage_permission_request_screen_rati
 import podaura.shared.generated.resources.storage_permission_request_screen_request_permission
 import podaura.shared.generated.resources.storage_permission_request_screen_title
 
+
+internal val deepLinkPatterns: List<DeepLinkPattern<out NavKey>> = buildList {
+    add(ArticleRoute.deepLinkPattern)
+    add(ImportOpmlDeepLinkRoute.deepLinkPattern)
+    add(DownloadRoute.deepLinkPattern)
+    addAll(DownloadDeepLinkRoute.deepLinkPatterns)
+    add(ReadRoute.deepLinkPattern)
+}
+
 @Composable
 fun AppEntrance() {
-    val navController = rememberNavController()
     SettingsProvider {
-        CompositionLocalProvider(
-            LocalGlobalNavController provides navController,
-            LocalNavController provides navController,
-        ) {
-            if (AcceptTermsPreference.current) {
-                PermissionChecker(
-                    onMainContent = {
+        if (AcceptTermsPreference.current) {
+            PermissionChecker(
+                onMainContent = {
+                    val resultStore = rememberResultStore()
+                    val navBackStack = newNavBackStack(
+                        base = rememberNavBackStack(
+                            configuration = SavedStateConfiguration {
+                                serializersModule = PodAuraSerializersModule
+                            },
+                            initialNavKey() ?: MainRoute
+                        ),
+                        parent = null,
+                    )
+                    CompositionLocalProvider(
+                        LocalNavBackStack provides navBackStack,
+                        LocalGlobalNavBackStack provides navBackStack,
+                        LocalResultStore provides resultStore,
+                    ) {
+                        ExternalUrlListener(navBackStack = navBackStack)
                         MainNavHost()
-                        IntentHandler()
-                        var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
-                        if (openUpdateDialog) {
-                            UpdateDialog(
-                                silence = true,
-                                onClosed = { openUpdateDialog = false },
-                                onError = { openUpdateDialog = false },
-                            )
-                        }
                     }
-                )
-            } else {
-                TermsOfServiceScreen()
-            }
+                    var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
+                    if (openUpdateDialog) {
+                        UpdateDialog(
+                            silence = true,
+                            onClosed = { openUpdateDialog = false },
+                            onError = { openUpdateDialog = false },
+                        )
+                    }
+                }
+            )
+        } else {
+            TermsOfServiceScreen()
         }
     }
 }
@@ -181,83 +207,55 @@ fun SettingsProvider(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun IntentHandler() {
-    val navController = LocalNavController.current
-
-    DisposableEffect(navController) {
-        ExternalUriHandler.listener = { uri ->
-            navController.navigate(NavUri(uri))
-        }
-        onDispose {
-            // Removes the listener when the composable is no longer active
-            ExternalUriHandler.listener = null
-        }
-    }
-}
-
-@Composable
 private fun MainNavHost() {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
 
-    PodAuraNavHost(
-        navController = navController,
-        startDestination = MainRoute,
-    ) {
-        composable<MainRoute> { MainScreen() }
-        composable<ArticleRoute>(
-            typeMap = ArticleRoute.typeMap,
-            deepLinks = ArticleRoute.deepLinks,
-        ) {
-            ArticleLauncher(entry = it)
+    PodAuraNavDisplay(
+        backStack = navBackStack,
+        entryProvider = entryProvider {
+            entry<MainRoute> { MainScreen() }
+            entry<ArticleRoute> { ArticleLauncher(it) }
+            entry<LicenseRoute> { LicenseScreen() }
+            entry<AboutRoute> { AboutScreen() }
+            entry<TermsOfServiceRoute> { TermsOfServiceScreen() }
+            entry<SettingsRoute> { SettingsScreen() }
+            entry<AppearanceRoute> { AppearanceScreen() }
+            entry<ArticleStyleRoute> { ArticleStyleScreen() }
+            entry<FeedStyleRoute> { FeedStyleScreen() }
+            entry<ReadStyleRoute> { ReadStyleScreen() }
+            entry<MediaStyleRoute> { MediaStyleScreen() }
+            entry<ReorderGroupRoute> { ReorderGroupScreen() }
+            entry<ReorderFeedRoute> { ReorderFeedLauncher(it) }
+            entry<SearchStyleRoute> { SearchStyleScreen() }
+            entry<CalendarRoute> { CalendarScreen() }
+            entry<BehaviorRoute> { BehaviorScreen() }
+            entry<AutoDeleteRoute> { AutoDeleteScreen() }
+            entry<HistoryRoute> { HistoryScreen() }
+            entry<ImportOpmlRoute> { ImportOpmlLauncher(it) }
+            entry<ImportOpmlDeepLinkRoute> { ImportOpmlDeepLinkLauncher(it) }
+            entry<ImportExportRoute> { ImportExportScreen() }
+            entry<DataRoute> { DataScreen() }
+            entry<PlayerConfigRoute> { PlayerConfigScreen() }
+            entry<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
+            entry<RssConfigRoute> { RssConfigScreen() }
+            entry<TransmissionRoute> { TransmissionScreen() }
+            entry<UpdateNotificationRoute> { UpdateNotificationScreen() }
+            entry<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }
+            entry<MuteFeedRoute> { MuteFeedScreen() }
+            entry<DeleteConstraintRoute> { DeleteConstraintScreen() }
+            entry<PlaylistMediaListRoute> { PlaylistMediaListLauncher(it) }
+            entry<RequestHeadersRoute> { RequestHeadersLauncher(it) }
+            entry<FilePickerRoute> { FilePickerLauncher(it) }
+            entry<DownloadRoute> { DownloadLauncher(it) }
+            entry<DownloadDeepLinkRoute> { DownloadDeepLinkLauncher(it) }
+            entry<ReadRoute> { ReadLauncher(it) }
+            entry<SearchRoute.Feed> { SearchFeedLauncher(it) }
+            entry<SearchRoute.Article> { SearchArticleLauncher(it) }
+            entry<MediaSearchRoute> { MediaSearchLauncher(it) }
+            entry<SubMediaRoute> { SubMediaLauncher(it) }
+            entry<HistorySearchRoute> { HistorySearchScreen() }
         }
-        composable<LicenseRoute> { LicenseScreen() }
-        composable<AboutRoute> { AboutScreen() }
-        composable<TermsOfServiceRoute> { TermsOfServiceScreen() }
-        composable<SettingsRoute> { SettingsScreen() }
-        composable<AppearanceRoute> { AppearanceScreen() }
-        composable<ArticleStyleRoute> { ArticleStyleScreen() }
-        composable<FeedStyleRoute> { FeedStyleScreen() }
-        composable<ReadStyleRoute> { ReadStyleScreen() }
-        composable<MediaStyleRoute> { MediaStyleScreen() }
-        composable<ReorderGroupRoute> { ReorderGroupScreen() }
-        composable<ReorderFeedRoute> { ReorderFeedLauncher(it) }
-        composable<SearchStyleRoute> { SearchStyleScreen() }
-        composable<CalendarRoute> { CalendarScreen() }
-        composable<BehaviorRoute> { BehaviorScreen() }
-        composable<AutoDeleteRoute> { AutoDeleteScreen() }
-        composable<HistoryRoute> { HistoryScreen() }
-        composable<ImportOpmlRoute> { ImportOpmlLauncher(it) }
-        composable<ImportOpmlDeepLinkRoute>(deepLinks = ImportOpmlDeepLinkRoute.deepLinks) {
-            ImportOpmlDeepLinkLauncher(it)
-        }
-        composable<ImportExportRoute> { ImportExportScreen() }
-        composable<DataRoute> { DataScreen() }
-        composable<PlayerConfigRoute> { PlayerConfigScreen() }
-        composable<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
-        composable<RssConfigRoute> { RssConfigScreen() }
-        composable<TransmissionRoute> { TransmissionScreen() }
-        composable<UpdateNotificationRoute> { UpdateNotificationScreen() }
-        composable<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }
-        composable<MuteFeedRoute> { MuteFeedScreen() }
-        composable<DeleteConstraintRoute> { DeleteConstraintScreen() }
-        composable<PlaylistMediaListRoute> { PlaylistMediaListLauncher(it) }
-        composable<RequestHeadersRoute> { RequestHeadersLauncher(it) }
-        composable<FilePickerRoute> { FilePickerLauncher(it) }
-        composable<DownloadRoute>(deepLinks = DownloadRoute.deepLinks) { DownloadLauncher(it) }
-        composable<DownloadDeepLinkRoute>(deepLinks = DownloadDeepLinkRoute.deepLinks) {
-            DownloadDeepLinkLauncher(it)
-        }
-        composable<ReadRoute>(deepLinks = ReadRoute.deepLinks) { ReadLauncher(it) }
-        composable<SearchRoute.Feed>(typeMap = SearchRoute.Feed.typeMap) {
-            SearchFeedLauncher(it)
-        }
-        composable<SearchRoute.Article>(typeMap = SearchRoute.Article.typeMap) {
-            SearchArticleLauncher(it)
-        }
-        composable<MediaSearchRoute> { MediaSearchLauncher(it) }
-        composable<SubMediaRoute>(typeMap = SubMediaRoute.typeMap) { SubMediaLauncher(it) }
-        composable<HistorySearchRoute> { HistorySearchScreen() }
-    }
+    )
 }
 
 @Composable

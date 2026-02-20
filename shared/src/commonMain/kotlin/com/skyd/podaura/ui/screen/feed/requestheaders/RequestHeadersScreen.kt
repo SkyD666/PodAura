@@ -39,8 +39,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
@@ -67,11 +66,11 @@ import podaura.shared.generated.resources.request_headers_screen_value
 
 
 @Serializable
-data class RequestHeadersRoute(val feedUrl: String) {
+data class RequestHeadersRoute(val feedUrl: String) : NavKey {
     companion object {
         @Composable
-        fun RequestHeadersLauncher(entry: NavBackStackEntry) {
-            RequestHeadersScreen(feedUrl = entry.toRoute<RequestHeadersRoute>().feedUrl)
+        fun RequestHeadersLauncher(route: RequestHeadersRoute) {
+            RequestHeadersScreen(feedUrl = route.feedUrl)
         }
     }
 }

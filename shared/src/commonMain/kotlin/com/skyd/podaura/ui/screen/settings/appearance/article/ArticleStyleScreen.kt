@@ -9,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tonality
 import androidx.compose.material.icons.outlined.WidthNormal
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -21,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.navigation3.runtime.NavKey
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.fundation.ext.format
@@ -53,7 +54,7 @@ import podaura.shared.generated.resources.tonal_elevation
 
 
 @Serializable
-data object ArticleStyleRoute
+data object ArticleStyleRoute : NavKey
 
 @Composable
 fun ArticleStyleScreen(
@@ -62,7 +63,7 @@ fun ArticleStyleScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
 
-    Scaffold(
+    ComponeScaffold(
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,

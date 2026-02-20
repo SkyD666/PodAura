@@ -25,7 +25,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -45,13 +44,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
@@ -84,15 +83,13 @@ import kotlin.reflect.typeOf
 @Serializable
 sealed interface SearchRoute {
     @Serializable
-    data object Feed : SearchRoute {
-        val typeMap = mapOf(typeOf<Feed>() to serializableType<Feed>())
-
+    data object Feed : SearchRoute, NavKey {
         @Composable
         fun SearchFeedLauncher(
-            entry: NavBackStackEntry,
+            route: Feed,
             windowInsets: WindowInsets = WindowInsets.safeDrawing
         ) {
-            SearchScreen(searchRoute = entry.toRoute<Feed>(), windowInsets = windowInsets)
+            SearchScreen(searchRoute = route, windowInsets = windowInsets)
         }
     }
 
@@ -101,16 +98,16 @@ sealed interface SearchRoute {
         val feedUrls: List<String>,
         val groupIds: List<String>,
         val articleIds: List<String>,
-    ) : SearchRoute {
+    ) : SearchRoute, NavKey {
         companion object {
             val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
 
             @Composable
             fun SearchArticleLauncher(
-                entry: NavBackStackEntry,
+                route: Article,
                 windowInsets: WindowInsets = WindowInsets.safeDrawing
             ) {
-                SearchScreen(searchRoute = entry.toRoute<Article>(), windowInsets = windowInsets)
+                SearchScreen(searchRoute = route, windowInsets = windowInsets)
             }
         }
     }
@@ -146,7 +143,7 @@ fun SearchScreen(
         }
     )
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             AnimatedVisibility(

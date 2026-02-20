@@ -1,21 +1,16 @@
 package com.skyd.podaura.ui.screen.download
 
-import androidx.compose.runtime.Composable
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavDeepLink
-import androidx.navigation.navDeepLink
-import kotlinx.serialization.Serializable
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
+import io.ktor.http.URLBuilder
+import io.ktor.http.URLProtocol
 
-@Serializable
-actual object DownloadDeepLinkRoute {
-    @Composable
-    actual fun DownloadDeepLinkLauncher(entry: NavBackStackEntry) {
+actual val DownloadDeepLinkRoute.Companion.deepLinkPatterns: List<DeepLinkPattern<DownloadDeepLinkRoute>>
+    get() = listOf("http", "https").map {
+        DeepLinkPattern(
+            DownloadDeepLinkRoute.serializer(),
+            urlPattern = URLBuilder(
+                protocol = URLProtocol(name = it, defaultPort = -1)
+            ).build(),
+            urlOnlyProtocol = true,
+        )
     }
-
-    actual val deepLinks: List<NavDeepLink> =
-        listOf("magnet:.*", "http://.*", "https://.*", "file://.*").map {
-            navDeepLink {
-                uriPattern = it
-            }
-        }
-}

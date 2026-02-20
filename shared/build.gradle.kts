@@ -70,17 +70,19 @@ kotlin {
             implementation(libs.jetbrains.compose.material3.window.size)
             implementation(libs.jetbrains.compose.material3.adaptive)
             implementation(libs.jetbrains.compose.material3.adaptive.layout)
-            implementation(libs.jetbrains.compose.material3.adaptive.navigation)
+            implementation(libs.jetbrains.compose.material3.adaptive.navigation3)
             implementation(libs.jetbrains.compose.materialIconsExtended)
             implementation(libs.jetbrains.compose.components.resources)
             implementation(libs.jetbrains.lifecycle.viewmodel)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
-            implementation(libs.jetbrains.navigation.compose)
+            implementation(libs.jetbrains.navigation3.ui)
 
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.constraintlayout.compose)
+            implementation(libs.androidx.navigation3.runtime)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
@@ -170,7 +172,10 @@ kotlin {
     }
 
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll(
+            "-Xexpect-actual-classes",
+            "-XXLanguage:+ExplicitBackingFields"
+        )
         optIn.addAll(
             "org.jetbrains.compose.resources.ExperimentalResourceApi",
             "androidx.compose.material3.ExperimentalMaterial3Api",
@@ -255,9 +260,17 @@ buildkonfig {
 
     defaultConfigs {
         buildConfigField(FieldSpec.Type.STRING, "packageName", "com.skyd.podaura")
-        buildConfigField(FieldSpec.Type.STRING, "versionName", properties["versionName"]!!.toString())
+        buildConfigField(
+            FieldSpec.Type.STRING,
+            "versionName",
+            properties["versionName"]!!.toString()
+        )
         buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
-        buildConfigField(FieldSpec.Type.STRING, "versionForDesktop", properties["versionForDesktop"]!!.toString())
+        buildConfigField(
+            FieldSpec.Type.STRING,
+            "versionForDesktop",
+            properties["versionForDesktop"]!!.toString()
+        )
     }
 }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -20,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.blockString
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.fundation.ext.toAbsoluteDateTimeString
 import com.skyd.mvi.MviEventListener
@@ -59,7 +60,7 @@ import kotlin.time.Clock
 
 
 @Serializable
-data object ImportExportRoute
+data object ImportExportRoute : NavKey
 
 @Composable
 fun ImportExportScreen(
@@ -67,7 +68,7 @@ fun ImportExportScreen(
     windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val snackbarHostState = remember { SnackbarHostState() }
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = ImportExportIntent.Init)
@@ -92,7 +93,7 @@ fun ImportExportScreen(
         }
     }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -116,7 +117,7 @@ fun ImportExportScreen(
                         icon = rememberVectorPainter(Icons.Outlined.FileDownload),
                         text = stringResource(Res.string.import_opml_screen_name),
                         descriptionText = null,
-                        onClick = { navController.navigate(ImportOpmlRoute()) }
+                        onClick = { navBackStack.add(ImportOpmlRoute()) }
                     )
                 }
                 item {

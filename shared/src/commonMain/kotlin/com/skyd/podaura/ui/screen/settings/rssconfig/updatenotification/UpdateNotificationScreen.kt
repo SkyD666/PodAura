@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Pattern
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -43,8 +42,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
@@ -68,7 +69,7 @@ import podaura.shared.generated.resources.update_notification_screen_name
 
 
 @Serializable
-data object UpdateNotificationRoute
+data object UpdateNotificationRoute : NavKey
 
 @Composable
 fun UpdateNotificationScreen(
@@ -84,7 +85,7 @@ fun UpdateNotificationScreen(
     var fabHeight by remember { mutableStateOf(0.dp) }
     var openAddDialog by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(

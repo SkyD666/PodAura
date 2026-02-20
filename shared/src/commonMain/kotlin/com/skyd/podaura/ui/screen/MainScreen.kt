@@ -39,6 +39,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
@@ -62,7 +63,7 @@ import kotlin.reflect.KClass
 
 
 @Serializable
-data object MainRoute
+data object MainRoute : NavKey
 
 @Composable
 fun MainScreen() {

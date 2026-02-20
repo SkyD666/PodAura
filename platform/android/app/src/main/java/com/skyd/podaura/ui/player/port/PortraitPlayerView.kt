@@ -44,6 +44,7 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.activity.MainActivity
@@ -141,6 +142,7 @@ internal fun PortraitPlayerView(
         if (showPlaylistSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showPlaylistSheet = false },
+                modifier = Modifier.pointerOnBack(onBack = { showPlaylistSheet = false }),
                 sheetState = playlistSheetState
             ) {
                 PlaylistMediaList(

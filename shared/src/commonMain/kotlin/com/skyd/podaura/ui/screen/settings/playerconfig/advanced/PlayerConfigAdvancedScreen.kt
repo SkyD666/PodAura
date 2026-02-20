@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Keyboard
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.rounded.DeveloperBoard
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -22,10 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
 import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
@@ -51,14 +52,14 @@ import podaura.shared.generated.resources.reset
 
 
 @Serializable
-data object PlayerConfigAdvancedRoute
+data object PlayerConfigAdvancedRoute : NavKey
 
 @Composable
 fun PlayerConfigAdvancedScreen(
     windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
     var mpvConfEditDialogValue by rememberSaveable { mutableStateOf("") }
     var openMpvConfEditDialog by rememberSaveable { mutableStateOf(false) }
@@ -73,7 +74,7 @@ fun PlayerConfigAdvancedScreen(
         }
     }
 
-    Scaffold(
+    ComponeScaffold(
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,
@@ -129,12 +130,7 @@ fun PlayerConfigAdvancedScreen(
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_config_dir),
                         descriptionText = configDir,
                         onClick = {
-                            navController.navigate(
-                                FilePickerRoute(
-                                    path = configDir,
-                                    id = "configDir"
-                                )
-                            )
+                            navBackStack.add(FilePickerRoute(path = configDir, id = "configDir"))
                         },
                         content = {
                             ComponeIconButton(
@@ -157,12 +153,7 @@ fun PlayerConfigAdvancedScreen(
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_cache_dir),
                         descriptionText = cacheDir,
                         onClick = {
-                            navController.navigate(
-                                FilePickerRoute(
-                                    path = cacheDir,
-                                    id = "cacheDir"
-                                )
-                            )
+                            navBackStack.add(FilePickerRoute(path = cacheDir, id = "cacheDir"))
                         },
                         content = {
                             ComponeIconButton(

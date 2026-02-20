@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,12 +37,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.menu.CheckableListMenu
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.preference.appearance.media.MediaFileFilterPreference
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.behavior.article.AlwaysShowArticleFilterPreference
@@ -90,7 +92,7 @@ import podaura.shared.generated.resources.playlist_screen_name
 
 
 @Serializable
-data object BehaviorRoute
+data object BehaviorRoute : NavKey
 
 @Composable
 fun BehaviorScreen(
@@ -104,7 +106,8 @@ fun BehaviorScreen(
     var expandArticleSwipeRightActionMenu by rememberSaveable { mutableStateOf(false) }
     var openMediaFileFilterDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
-    Scaffold(
+    ComponeScaffold(
+        modifier = Modifier.pointerOnBack(onBack = onBack),
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,

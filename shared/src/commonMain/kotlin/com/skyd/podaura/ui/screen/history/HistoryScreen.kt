@@ -12,7 +12,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -28,16 +27,18 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.compone.ext.withoutTop
-import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
@@ -62,19 +63,19 @@ import podaura.shared.generated.resources.history_search_screen_hint
 
 
 @Serializable
-data object HistoryRoute
+data object HistoryRoute : NavKey
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = HistoryIntent.Init)
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -83,7 +84,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                 title = { Text(text = stringResource(Res.string.history_screen_name)) },
                 actions = {
                     ComponeIconButton(
-                        onClick = { navController.navigate(HistorySearchRoute) },
+                        onClick = { navBackStack.add(HistorySearchRoute) },
                         imageVector = Icons.Outlined.Search,
                         contentDescription = stringResource(Res.string.history_search_screen_hint),
                     )

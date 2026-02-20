@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import coil3.EventListener
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.ui.component.PodAuraImage
@@ -37,7 +37,7 @@ import com.skyd.podaura.ui.screen.read.ReadRoute
 
 @Composable
 fun ArticleItem(articleWithFeed: ArticleWithFeed) {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val articleWithEnclosure = articleWithFeed.articleWithEnclosure
     val article = articleWithEnclosure.article
     val feedName = articleWithFeed.feed.nickname.orEmpty().ifBlank {
@@ -46,7 +46,7 @@ fun ArticleItem(articleWithFeed: ArticleWithFeed) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { navController.navigate(ReadRoute(articleId = article.articleId)) }
+            .clickable { navBackStack.add(ReadRoute(articleId = article.articleId)) }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

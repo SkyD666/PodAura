@@ -23,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -40,24 +39,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.navigation.LocalResultStore
 import com.skyd.compone.ext.onlyHorizontal
 import com.skyd.compone.ext.plus
-import com.skyd.compone.ext.popBackStackWithLifecycle
-import com.skyd.compone.local.LocalNavController
-import com.skyd.mvi.MviEventListener
-import com.skyd.mvi.getDispatcher
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.DEFAULT_FILE_PICKER_PATH
 import com.skyd.fundation.ext.isDirectory
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.util.fileicon.fileIcon
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemPathSeparator
 import kotlinx.serialization.Serializable
@@ -77,15 +75,12 @@ const val FILE_PICKER_NEW_PATH_KEY = "newPath"
 
 @Composable
 fun ListenToFilePicker(onNewPath: CoroutineScope.(FilePickerResult) -> Unit) {
-    val navController = LocalNavController.current
-    LaunchedEffect(Unit) {
-        navController.currentBackStackEntry?.savedStateHandle?.apply {
-            getStateFlow<String?>(FILE_PICKER_NEW_PATH_KEY, null)
-                .filterNotNull()
-                .collect {
-                    onNewPath(Json.decodeFromString(it))
-                    remove<FilePickerResult?>(FILE_PICKER_NEW_PATH_KEY)
-                }
+    val resultStore = LocalResultStore.current
+    val result = resultStore.getResult<FilePickerResult?>(FILE_PICKER_NEW_PATH_KEY)
+    LaunchedEffect(result) {
+        if (result != null) {
+            onNewPath(result)
+            resultStore.removeResult<FilePickerResult?>(FILE_PICKER_NEW_PATH_KEY)
         }
     }
 }
@@ -96,21 +91,17 @@ data class FilePickerRoute(
     val pickFolder: Boolean = true,
     val extensionName: String = "",
     val id: String? = null,
-) {
+) : NavKey {
     companion object {
         @Composable
-        fun FilePickerLauncher(
-            entry: NavBackStackEntry,
-            windowInsets: WindowInsets = WindowInsets.safeDrawing
-        ) {
-            val filePickerRoute = entry.toRoute<FilePickerRoute>()
+        fun FilePickerLauncher(route: FilePickerRoute) {
             FilePickerScreen(
-                path = filePickerRoute.path.takeIf {
-                    filePickerRoute.path != MediaLibLocationPreference.default
+                path = route.path.takeIf {
+                    route.path != MediaLibLocationPreference.default
                 } ?: Const.DEFAULT_FILE_PICKER_PATH,
-                pickFolder = filePickerRoute.pickFolder,
-                extensionName = filePickerRoute.extensionName,
-                id = filePickerRoute.id,
+                pickFolder = route.pickFolder,
+                extensionName = route.extensionName,
+                id = route.id,
             )
         }
     }
@@ -138,7 +129,7 @@ fun FilePickerScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackbarHostState = remember { SnackbarHostState() }
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(
         startWith = FilePickerIntent.NewLocation(
@@ -156,11 +147,11 @@ fun FilePickerScreen(
         ) {
             dispatch(FilePickerIntent.NewLocation(parent))
         } else {
-            navController.popBackStackWithLifecycle()
+            navBackStack.removeFirstOrNull()
         }
     }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -176,7 +167,7 @@ fun FilePickerScreen(
                 },
                 navigationIcon = {
                     ComponeIconButton(
-                        onClick = { navController.popBackStackWithLifecycle() },
+                        onClick = { navBackStack.removeFirstOrNull() },
                         imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(Res.string.close),
                     )
@@ -198,6 +189,7 @@ fun FilePickerScreen(
                 path = uiState.path,
                 onRouteTo = { dispatch(FilePickerIntent.NewLocation(it)) },
             )
+            val resultStore = LocalResultStore.current
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -215,19 +207,17 @@ fun FilePickerScreen(
                                     dispatch(FilePickerIntent.NewLocation(filePath.toString()))
                                 } else {
                                     if (!pickFolder) {
-                                        navController.previousBackStackEntry
-                                            ?.savedStateHandle
-                                            ?.set(
-                                                FILE_PICKER_NEW_PATH_KEY,
-                                                FilePickerResult(
-                                                    id = id,
-                                                    path = path,
-                                                    pickFolder = false,
-                                                    extensionName = extensionName,
-                                                    result = filePath.toString(),
-                                                ).toJson()
+                                        resultStore.setResult(
+                                            FILE_PICKER_NEW_PATH_KEY,
+                                            FilePickerResult(
+                                                id = id,
+                                                path = path,
+                                                pickFolder = false,
+                                                extensionName = extensionName,
+                                                result = filePath.toString(),
                                             )
-                                        navController.popBackStackWithLifecycle()
+                                        )
+                                        navBackStack.removeFirstOrNull()
                                     }
                                 }
                             },
@@ -255,19 +245,17 @@ fun FilePickerScreen(
                         .padding(horizontal = 16.dp)
                         .fillMaxWidth(),
                     onClick = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(
-                                FILE_PICKER_NEW_PATH_KEY,
-                                FilePickerResult(
-                                    id = id,
-                                    path = path,
-                                    pickFolder = true,
-                                    extensionName = extensionName,
-                                    result = uiState.path,
-                                ).toJson()
+                        resultStore.setResult(
+                            FILE_PICKER_NEW_PATH_KEY,
+                            FilePickerResult(
+                                id = id,
+                                path = path,
+                                pickFolder = true,
+                                extensionName = extensionName,
+                                result = uiState.path,
                             )
-                        navController.popBackStackWithLifecycle()
+                        )
+                        navBackStack.removeFirstOrNull()
                     },
                 ) {
                     Text(text = stringResource(Res.string.file_picker_screen_pick))

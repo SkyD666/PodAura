@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
@@ -44,7 +45,10 @@ fun AddToPlaylistSheet(
     )
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
+    ) {
         Text(
             text = stringResource(Res.string.add_to_playlist),
             modifier = Modifier.align(Alignment.CenterHorizontally),

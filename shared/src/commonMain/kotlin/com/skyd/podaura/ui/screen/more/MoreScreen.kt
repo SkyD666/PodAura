@@ -47,11 +47,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
-import com.skyd.compone.local.LocalNavController
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.bean.MoreBean
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
@@ -77,7 +77,7 @@ data object MoreRoute
 
 @Composable
 fun MoreScreen() {
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
@@ -107,7 +107,7 @@ fun MoreScreen() {
         var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
 
         LaunchedEffect(Unit) {
-            dataList = getMoreBeanList(colorScheme, navController)
+            dataList = getMoreBeanList(colorScheme, navBackStack)
         }
 
         LazyVerticalGrid(
@@ -175,7 +175,7 @@ fun MoreItem(
 
 private suspend fun getMoreBeanList(
     colorScheme: ColorScheme,
-    navController: NavController,
+    navBackStack: MutableList<NavKey>,
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
@@ -184,7 +184,7 @@ private suspend fun getMoreBeanList(
             iconTint = colorScheme.onPrimary,
             shape = MaterialShapes.Pill,
             shapeColor = colorScheme.primary,
-            action = { navController.navigate(HistoryRoute) },
+            action = { navBackStack.add(HistoryRoute) },
         ),
         MoreBean(
             title = getString(Res.string.download_screen_name),
@@ -192,7 +192,7 @@ private suspend fun getMoreBeanList(
             iconTint = colorScheme.onSecondary,
             shape = MaterialShapes.Clover8Leaf,
             shapeColor = colorScheme.secondary,
-            action = { navController.navigate(DownloadRoute()) },
+            action = { navBackStack.add(DownloadRoute()) },
         ),
         MoreBean(
             title = getString(Res.string.import_export_screen_name),
@@ -200,7 +200,7 @@ private suspend fun getMoreBeanList(
             iconTint = colorScheme.onTertiary,
             shape = MaterialShapes.Clover4Leaf,
             shapeColor = colorScheme.tertiary,
-            action = { navController.navigate(ImportExportRoute) },
+            action = { navBackStack.add(ImportExportRoute) },
         ),
         MoreBean(
             title = getString(Res.string.settings),
@@ -208,7 +208,7 @@ private suspend fun getMoreBeanList(
             iconTint = colorScheme.onPrimary,
             shape = MaterialShapes.Slanted,
             shapeColor = colorScheme.primary,
-            action = { navController.navigate(SettingsRoute) },
+            action = { navBackStack.add(SettingsRoute) },
         ),
         MoreBean(
             title = getString(Res.string.about_screen_name),
@@ -216,7 +216,7 @@ private suspend fun getMoreBeanList(
             iconTint = colorScheme.onSecondary,
             shape = MaterialShapes.Cookie12Sided,
             shapeColor = colorScheme.secondary,
-            action = { navController.navigate(AboutRoute) }
+            action = { navBackStack.add(AboutRoute) }
         ),
     )
 }

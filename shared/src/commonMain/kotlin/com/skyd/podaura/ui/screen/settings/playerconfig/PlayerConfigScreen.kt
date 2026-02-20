@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -41,14 +40,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.compone.component.menu.CheckableListMenu
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
@@ -102,7 +104,7 @@ import podaura.shared.generated.resources.reset
 
 
 @Serializable
-data object PlayerConfigRoute
+data object PlayerConfigRoute : NavKey
 
 @Composable
 fun PlayerConfigScreen(
@@ -111,7 +113,7 @@ fun PlayerConfigScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     var expandDoubleTapMenu by rememberSaveable { mutableStateOf(false) }
     var expandSeekOptionMenu by rememberSaveable { mutableStateOf(false) }
     var openReplaySecondDialog by rememberSaveable { mutableStateOf(false) }
@@ -119,7 +121,8 @@ fun PlayerConfigScreen(
     var openMaxCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
     var openMaxBackCacheSizeDialog by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
+    ComponeScaffold(
+        modifier = Modifier.pointerOnBack(onBack = onBack),
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,
@@ -271,7 +274,7 @@ fun PlayerConfigScreen(
                         icon = null,
                         text = stringResource(Res.string.player_config_advanced_screen_name),
                         descriptionText = null,
-                        onClick = { navController.navigate(PlayerConfigAdvancedRoute) },
+                        onClick = { navBackStack.add(PlayerConfigAdvancedRoute) },
                     )
                 }
             }

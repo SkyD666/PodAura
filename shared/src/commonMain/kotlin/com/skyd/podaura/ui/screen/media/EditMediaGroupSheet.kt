@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
@@ -46,7 +47,10 @@ fun EditMediaGroupSheet(
     var openNameDialog by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable(group.name) { mutableStateOf(group.name) }
 
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
+    ) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())

@@ -37,8 +37,8 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.thenIf
-import com.skyd.compone.local.LocalNavController
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.isCompact
@@ -79,7 +79,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = LocalWindowSizeClass.current
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
 
     val lazyListState = rememberLazyStaggeredGridState()
@@ -160,7 +160,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                         }
                     },
                     onClick = {
-                        navController.navigate(PlaylistMediaListRoute(playlistId = it.playlist.playlistId))
+                        navBackStack.add(PlaylistMediaListRoute(playlistId = it.playlist.playlistId))
                     },
                     onRename = {
                         renameDialogText = it.playlist.name

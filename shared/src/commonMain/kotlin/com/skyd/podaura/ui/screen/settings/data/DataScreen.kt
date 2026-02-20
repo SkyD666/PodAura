@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -34,14 +33,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
@@ -82,7 +84,7 @@ import podaura.shared.generated.resources.import_export_screen_name
 
 
 @Serializable
-data object DataRoute
+data object DataRoute : NavKey
 
 @Composable
 fun DataScreen(
@@ -91,7 +93,7 @@ fun DataScreen(
     windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -102,7 +104,8 @@ fun DataScreen(
         MediaLibLocationPreference.put(this, result.result)
     }
 
-    Scaffold(
+    ComponeScaffold(
+        modifier = Modifier.pointerOnBack(onBack = onBack),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -132,7 +135,7 @@ fun DataScreen(
                         icon = rememberVectorPainter(Icons.Outlined.PermMedia),
                         text = stringResource(Res.string.data_screen_change_lib_location),
                         descriptionText = localMediaLibLocation,
-                        onClick = { navController.navigate(FilePickerRoute(path = localMediaLibLocation)) },
+                        onClick = { navBackStack.add(FilePickerRoute(path = localMediaLibLocation)) },
                     ) {
                         ComponeIconButton(
                             onClick = {
@@ -160,7 +163,7 @@ fun DataScreen(
                         icon = null,
                         text = stringResource(Res.string.delete_constraint_screen_name),
                         descriptionText = stringResource(Res.string.delete_constraint_screen_name_description),
-                        onClick = { navController.navigate(DeleteConstraintRoute) },
+                        onClick = { navBackStack.add(DeleteConstraintRoute) },
                     )
                 }
                 item {
@@ -176,7 +179,7 @@ fun DataScreen(
                         icon = rememberVectorPainter(Icons.Outlined.AutoDelete),
                         text = stringResource(Res.string.auto_delete_screen_name),
                         descriptionText = stringResource(Res.string.auto_delete_article_screen_description),
-                        onClick = { navController.navigate(AutoDeleteRoute) }
+                        onClick = { navBackStack.add(AutoDeleteRoute) }
                     )
                 }
                 item {
@@ -194,7 +197,7 @@ fun DataScreen(
                         icon = rememberVectorPainter(Icons.Outlined.SwapVert),
                         text = stringResource(Res.string.import_export_screen_name),
                         descriptionText = stringResource(Res.string.import_export_screen_description),
-                        onClick = { navController.navigate(ImportExportRoute) }
+                        onClick = { navBackStack.add(ImportExportRoute) }
                     )
                 }
             }

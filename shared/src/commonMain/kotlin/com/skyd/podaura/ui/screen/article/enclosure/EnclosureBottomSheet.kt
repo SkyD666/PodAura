@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.getOrDefault
@@ -101,6 +102,7 @@ fun EnclosureBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
         sheetState = sheetState
     ) {
         Column(

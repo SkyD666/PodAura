@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.outlined.Segment
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -39,10 +38,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeExtendedFloatingActionButton
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.connectedButtonShapes
@@ -52,6 +50,7 @@ import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
+import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.TipSettingsItem
@@ -77,24 +76,30 @@ import podaura.shared.generated.resources.import_opml_screen_select_file
 
 
 @Serializable
-data class ImportOpmlRoute(val opmlUrl: String? = null) {
+data class ImportOpmlRoute(val opmlUrl: String? = null) : NavKey {
     companion object {
         @Composable
-        fun ImportOpmlLauncher(entry: NavBackStackEntry) {
-            ImportOpmlScreen(opmlUrl = entry.toRoute<ImportOpmlRoute>().opmlUrl)
+        fun ImportOpmlLauncher(route: ImportOpmlRoute) {
+            ImportOpmlScreen(opmlUrl = route.opmlUrl)
         }
     }
 }
 
 @Serializable
-data object ImportOpmlDeepLinkRoute {
-    val deepLinks = listOf("text/xml", "application/xml", "text/x-opml").map { type ->
-        navDeepLink { mimeType = type }
+data class ImportOpmlDeepLinkRoute(val opmlUrl: String? = null) : NavKey {
+    companion object {
+        val deepLinkPattern = DeepLinkPattern(
+            serializer(),
+            urlPattern = null,
+            mimeTypes = listOf("text/xml", "application/xml", "text/x-opml")
+        )
+
+        @Composable
+        fun ImportOpmlDeepLinkLauncher(route: ImportOpmlDeepLinkRoute) {
+            ImportOpmlScreen(opmlUrl = route.opmlUrl)
+        }
     }
 }
-
-@Composable
-expect fun ImportOpmlDeepLinkLauncher(entry: NavBackStackEntry)
 
 @Composable
 fun ImportOpmlScreen(
@@ -123,7 +128,7 @@ fun ImportOpmlScreen(
     val lazyListState = rememberLazyListState()
     var fabHeight by remember { mutableStateOf(0.dp) }
 
-    Scaffold(
+    ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(

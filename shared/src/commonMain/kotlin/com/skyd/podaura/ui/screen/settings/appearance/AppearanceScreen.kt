@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -52,16 +51,19 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import com.materialkolor.ktx.from
 import com.materialkolor.ktx.toneColor
 import com.materialkolor.palettes.TonalPalette
 import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.menu.CheckableListMenu
-import com.skyd.compone.local.LocalNavController
+import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.preference.appearance.AmoledDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseDarkModePreference
 import com.skyd.podaura.model.preference.appearance.BaseThemePreference
@@ -105,7 +107,7 @@ import podaura.shared.generated.resources.search_style_screen_name
 
 
 @Serializable
-data object AppearanceRoute
+data object AppearanceRoute : NavKey
 
 @Composable
 fun AppearanceScreen(
@@ -113,13 +115,14 @@ fun AppearanceScreen(
     windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val navController = LocalNavController.current
+    val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
     var expandTextFieldStyleMenu by rememberSaveable { mutableStateOf(false) }
     var expandDateStyleMenu by rememberSaveable { mutableStateOf(false) }
     var expandNavigationBarLabelMenu by rememberSaveable { mutableStateOf(false) }
 
-    Scaffold(
+    ComponeScaffold(
+        modifier = Modifier.pointerOnBack(onBack = onBack),
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,
@@ -241,7 +244,7 @@ fun AppearanceScreen(
                         icon = null,
                         text = stringResource(Res.string.feed_style_screen_name),
                         description = null,
-                        onClick = { navController.navigate(FeedStyleRoute) },
+                        onClick = { navBackStack.add(FeedStyleRoute) },
                     )
                 }
                 item {
@@ -249,7 +252,7 @@ fun AppearanceScreen(
                         icon = null,
                         text = stringResource(Res.string.article_style_screen_name),
                         description = null,
-                        onClick = { navController.navigate(ArticleStyleRoute) },
+                        onClick = { navBackStack.add(ArticleStyleRoute) },
                     )
                 }
                 item {
@@ -257,7 +260,7 @@ fun AppearanceScreen(
                         icon = null,
                         text = stringResource(Res.string.read_style_screen_name),
                         description = null,
-                        onClick = { navController.navigate(ReadStyleRoute) },
+                        onClick = { navBackStack.add(ReadStyleRoute) },
                     )
                 }
                 item {
@@ -265,7 +268,7 @@ fun AppearanceScreen(
                         icon = null,
                         text = stringResource(Res.string.search_style_screen_name),
                         description = null,
-                        onClick = { navController.navigate(SearchStyleRoute) },
+                        onClick = { navBackStack.add(SearchStyleRoute) },
                     )
                 }
                 item {
@@ -273,7 +276,7 @@ fun AppearanceScreen(
                         icon = null,
                         text = stringResource(Res.string.media_style_screen_name),
                         description = null,
-                        onClick = { navController.navigate(MediaStyleRoute) },
+                        onClick = { navBackStack.add(MediaStyleRoute) },
                     )
                 }
             }

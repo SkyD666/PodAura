@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
+import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
@@ -275,6 +276,7 @@ import tech.annexflow.constraintlayout.compose.ConstraintLayout
     if (showPlaylistSheet) {
         ModalBottomSheet(
             onDismissRequest = { showPlaylistSheet = false },
+            modifier = Modifier.pointerOnBack(onBack = { showPlaylistSheet = false }),
             sheetState = playlistSheetState
         ) {
             val playStateValue = playState()

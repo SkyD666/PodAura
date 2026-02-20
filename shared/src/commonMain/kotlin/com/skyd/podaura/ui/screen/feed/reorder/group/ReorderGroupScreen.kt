@@ -40,6 +40,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
@@ -66,7 +67,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 @Serializable
-data object ReorderGroupRoute
+data object ReorderGroupRoute : NavKey
 
 @Composable
 fun ReorderGroupScreen(

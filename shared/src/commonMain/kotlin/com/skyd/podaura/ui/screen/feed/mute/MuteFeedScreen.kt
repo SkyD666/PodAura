@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
@@ -62,7 +63,7 @@ import podaura.shared.generated.resources.mute_feed_screen_tip
 
 
 @Serializable
-data object MuteFeedRoute
+data object MuteFeedRoute : NavKey
 
 @Composable
 fun MuteFeedScreen(viewModel: MuteFeedViewModel = koinViewModel()) {
