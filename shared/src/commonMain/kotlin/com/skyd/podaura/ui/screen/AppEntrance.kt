@@ -30,6 +30,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.skyd.compone.component.BackInvoker
 import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.navigation.LocalResultStore
@@ -181,7 +182,7 @@ fun AppEntrance() {
                 }
             )
         } else {
-            TermsOfServiceScreen()
+            TermsOfServiceScreen(onAgree = {})
         }
     }
 }
@@ -217,7 +218,7 @@ private fun MainNavHost() {
             entry<ArticleRoute> { ArticleLauncher(it) }
             entry<LicenseRoute> { LicenseScreen() }
             entry<AboutRoute> { AboutScreen() }
-            entry<TermsOfServiceRoute> { TermsOfServiceScreen() }
+            entry<TermsOfServiceRoute> { TermsOfServiceScreen(onAgree = BackInvoker()) }
             entry<SettingsRoute> { SettingsScreen() }
             entry<AppearanceRoute> { AppearanceScreen() }
             entry<ArticleStyleRoute> { ArticleStyleScreen() }

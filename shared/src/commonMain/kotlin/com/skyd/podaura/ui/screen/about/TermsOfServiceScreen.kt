@@ -48,10 +48,9 @@ import podaura.shared.generated.resources.tos
 data object TermsOfServiceRoute : NavKey
 
 @Composable
-fun TermsOfServiceScreen() {
+fun TermsOfServiceScreen(onAgree: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
-    val backInvoker = BackInvoker()
 
     val onDisagree = {
         scope.launch(Dispatchers.IO) {
@@ -106,7 +105,7 @@ fun TermsOfServiceScreen() {
                         scope.launch(Dispatchers.IO) {
                             dataStore.put(AcceptTermsPreference.key, true)
                             withContext(Dispatchers.Main) {
-                                backInvoker.invoke()
+                                onAgree()
                             }
                         }
                     },
