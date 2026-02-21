@@ -1,3 +1,6 @@
 package com.skyd.podaura.util
 
-actual val isDebug: Boolean = TODO("Not yet implemented")
+import java.lang.management.ManagementFactory
+
+actual val isDebug: Boolean = ManagementFactory.getRuntimeMXBean()
+    .inputArguments.toString().contains("jdwp")
