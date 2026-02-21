@@ -89,8 +89,6 @@ import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.UuidList
-import com.skyd.podaura.ui.component.UuidListType
-import com.skyd.podaura.ui.component.listType
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.uuidListType
 import com.skyd.podaura.ui.screen.search.SearchRoute
@@ -98,8 +96,6 @@ import io.ktor.http.URLBuilder
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -129,7 +125,7 @@ data class ArticleRoute(
             articleIds?.let {
                 parameters.append(
                     "articleIds",
-                    UuidListType.encodeUuidList(articleIds.uuids.map { Uuid.parse(it) })
+                    UuidList.encodeUuidList(articleIds.uuids.map { Uuid.parse(it) })
                 )
             }
         }.toString()
@@ -145,10 +141,7 @@ data class ArticleRoute(
                 parameters.append("groupIds", "{groupIds}")
                 parameters.append("articleIds", "{articleIds}")
             }.build(),
-            typeParsers = mapOf(
-                UuidList.serializer().descriptor.kind to uuidListType(),
-                ListSerializer(String.serializer()).descriptor.kind to listType<String>(),
-            )
+            typeParsers = mapOf(UuidList.serializer().descriptor.kind to uuidListType())
         )
 
         @Composable

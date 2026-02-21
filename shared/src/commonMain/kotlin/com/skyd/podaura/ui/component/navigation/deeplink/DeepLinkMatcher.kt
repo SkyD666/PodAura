@@ -4,6 +4,8 @@ import androidx.navigation3.runtime.NavKey
 import co.touchlab.kermit.Logger
 import io.ktor.http.authority
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 internal class DeepLinkMatcher<T : NavKey>(
     val request: DeepLinkRequest,
@@ -44,12 +46,12 @@ internal class DeepLinkMatcher<T : NavKey>(
                 }
                 // exact match (url does not contain any arguments)
                 if (request.uri == deepLinkPattern.urlPattern) {
-                    return DeepLinkMatchResult(deepLinkPattern.serializer, mapOf())
+                    return DeepLinkMatchResult(deepLinkPattern.serializer, JsonObject(mapOf()))
                 }
             }
         }
 
-        val args = mutableMapOf<String, Any>()
+        val args = mutableMapOf<String, JsonElement>()
         // match the path
         request.pathSegments
             .asSequence()
@@ -91,7 +93,7 @@ internal class DeepLinkMatcher<T : NavKey>(
             args[name] = queryParsedValue
         }
         // provide the serializer of the matching key and map of arg names to parsed arg values
-        return DeepLinkMatchResult(deepLinkPattern.serializer, args)
+        return DeepLinkMatchResult(deepLinkPattern.serializer, JsonObject(args))
     }
 }
 
@@ -101,11 +103,9 @@ internal class DeepLinkMatcher<T : NavKey>(
  *
  * @param [T] the backstack key associated with the deeplink that matched with the requested deeplink
  * @param serializer serializer for [T]
- * @param args The map of argument name to argument value. The value is expected to have already
- * been parsed from the raw url string back into its proper KType as declared in [T].
- * Includes arguments for all parts of the uri - path, query, etc.
+ * @param args The JsonObject of argument name to argument value.
  * */
 internal data class DeepLinkMatchResult<T : NavKey>(
     val serializer: KSerializer<T>,
-    val args: Map<String, Any>
+    val args: JsonObject
 )

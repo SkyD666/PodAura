@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data object FeedRoute
+data object FeedRoute : NavKey
 
 @Composable
 fun FeedScreen() {

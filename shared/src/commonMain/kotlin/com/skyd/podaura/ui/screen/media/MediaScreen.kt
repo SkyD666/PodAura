@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeScaffold
@@ -94,7 +95,7 @@ import kotlin.math.min
 
 
 @Serializable
-data object MediaRoute
+data object MediaRoute : NavKey
 
 @Composable
 fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {

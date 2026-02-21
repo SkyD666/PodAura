@@ -65,7 +65,6 @@ import com.skyd.podaura.model.preference.appearance.search.SearchTopBarTonalElev
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
-import com.skyd.podaura.ui.component.serializableType
 import com.skyd.podaura.ui.screen.article.Article1Item
 import com.skyd.podaura.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
@@ -78,7 +77,6 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.clear_input_text
 import podaura.shared.generated.resources.search_screen_hint
 import podaura.shared.generated.resources.to_top
-import kotlin.reflect.typeOf
 
 @Serializable
 sealed interface SearchRoute {
@@ -100,8 +98,6 @@ sealed interface SearchRoute {
         val articleIds: List<String>,
     ) : SearchRoute, NavKey {
         companion object {
-            val typeMap = mapOf(typeOf<Article>() to serializableType<Article>())
-
             @Composable
             fun SearchArticleLauncher(
                 route: Article,

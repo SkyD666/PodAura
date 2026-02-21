@@ -1,11 +1,16 @@
 package com.skyd.podaura.ui.component.navigation.deeplink
 
 import androidx.navigation3.runtime.NavKey
+import com.skyd.podaura.util.from
 import io.ktor.http.Url
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Parse a supported deeplink and stores its metadata as a easily readable format
@@ -112,26 +117,27 @@ class DeepLinkPattern<T : NavKey>(
 }
 
 /**
- * Parses a String into a Primitive
+ * Parses a String into a JsonElement
  */
-typealias TypeParser = (String) -> Any
+typealias TypeParser = (String) -> JsonElement
 
 private fun getTypeParser(kind: SerialKind, additional: Map<SerialKind, TypeParser>): TypeParser {
-    additional[kind]?.let {
-        return it
-    }
+    additional[kind]?.let { return it }
     return when (kind) {
-        PrimitiveKind.STRING -> Any::toString
-        PrimitiveKind.INT -> String::toInt
-        PrimitiveKind.BOOLEAN -> String::toBoolean
-        PrimitiveKind.BYTE -> String::toByte
-        PrimitiveKind.CHAR -> String::toCharArray
-        PrimitiveKind.DOUBLE -> String::toDouble
-        PrimitiveKind.FLOAT -> String::toFloat
-        PrimitiveKind.LONG -> String::toLong
-        PrimitiveKind.SHORT -> String::toShort
+        PrimitiveKind.STRING -> ::JsonPrimitive
+        PrimitiveKind.INT -> ::JsonPrimitive
+        PrimitiveKind.BOOLEAN -> ::JsonPrimitive
+        PrimitiveKind.DOUBLE -> ::JsonPrimitive
+        PrimitiveKind.FLOAT -> ::JsonPrimitive
+        PrimitiveKind.LONG -> ::JsonPrimitive
+        PrimitiveKind.SHORT -> ::JsonPrimitive
+        StructureKind.LIST -> { value: Any? ->
+            val list = value as? List<*> ?: throw IllegalArgumentException("Expected List")
+            JsonArray.from(list)
+        }
+
         else -> throw IllegalArgumentException(
-            "Unsupported argument type of SerialKind:$kind. The argument type must be a Primitive."
+            "Unsupported argument type of SerialKind:$kind. The argument type must be a Primitive or in the additional."
         )
     }
 }

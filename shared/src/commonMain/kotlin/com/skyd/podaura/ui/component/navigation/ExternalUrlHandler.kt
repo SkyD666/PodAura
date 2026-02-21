@@ -5,11 +5,13 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.navigation3.runtime.NavKey
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkMatcher
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkRequest
-import com.skyd.podaura.ui.component.navigation.deeplink.KeyDecoder
 import com.skyd.podaura.ui.screen.deepLinkPatterns
 import io.ktor.http.URLBuilder
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 
 object ExternalUrlHandler {
     // Storage for when a Url arrives before the listener is set up
@@ -83,12 +85,19 @@ internal fun ExternalUrlHandler.UrlData.toNavKey(): NavKey? {
     val match = deepLinkPatterns.firstNotNullOfOrNull { pattern ->
         DeepLinkMatcher(request, pattern).match()
     }
+
+    val json = Json {
+        isLenient = true
+        ignoreUnknownKeys = true
+    }
     return match?.let {
-        KeyDecoder(buildMap {
-            putAll(match.args)
-            url?.let { put(ExternalUrlHandler.UrlData.URL_NAME, it) }
-            mimeType?.let { put(ExternalUrlHandler.UrlData.MIMETYPE_NAME, it) }
-            action?.let { put(ExternalUrlHandler.UrlData.ACTION_NAME, it) }
-        }).decodeSerializableValue(match.serializer)
+        json.decodeFromJsonElement(match.serializer, buildJsonObject {
+            for (entry in match.args) {
+                put(entry.key, entry.value)
+            }
+            url?.let { put(ExternalUrlHandler.UrlData.URL_NAME, JsonPrimitive(it)) }
+            mimeType?.let { put(ExternalUrlHandler.UrlData.MIMETYPE_NAME, JsonPrimitive(it)) }
+            action?.let { put(ExternalUrlHandler.UrlData.ACTION_NAME, JsonPrimitive(it)) }
+        })
     }
 }

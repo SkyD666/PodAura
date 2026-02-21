@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.NavKey
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.skyd.compone.component.ComponeFloatingActionButton
@@ -72,7 +73,7 @@ import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
 
 @Serializable
-data object PlaylistRoute
+data object PlaylistRoute : NavKey
 
 @Composable
 fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {

@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.screen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -27,22 +28,19 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.skyd.compone.component.navigation.multiplestacks.NavigationState
+import com.skyd.compone.component.navigation.multiplestacks.Navigator
+import com.skyd.compone.component.navigation.multiplestacks.rememberNavigationState
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.podaura.ui.component.navigation.PodAuraSerializersModule
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.feed.FeedRoute
 import com.skyd.podaura.ui.screen.feed.FeedScreen
@@ -59,7 +57,6 @@ import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.media_screen_name
 import podaura.shared.generated.resources.more_screen_name
 import podaura.shared.generated.resources.playlist
-import kotlin.reflect.KClass
 
 
 @Serializable
@@ -68,10 +65,20 @@ data object MainRoute : NavKey
 @Composable
 fun MainScreen() {
     val windowSizeClass = LocalWindowSizeClass.current
-    val mainNavController = rememberNavController()
+    val routes = listOf(FeedRoute, PlaylistRoute, MediaRoute, MoreRoute)
+    val navigationState = rememberNavigationState(
+        startRoute = FeedRoute,
+        topLevelRoutes = routes.toSet(),
+        configuration = SavedStateConfiguration { serializersModule = PodAuraSerializersModule }
+    )
+    val navigator = remember { Navigator(navigationState) }
 
     val navigationBarOrRail: @Composable () -> Unit = {
-        NavigationBarOrRail(navController = mainNavController)
+        NavigationBarOrRail(
+            routes = routes,
+            navigationState = navigationState,
+            onSelectedChanged = { navigator.navigate(it) },
+        )
     }
 
     Scaffold(
@@ -90,34 +97,38 @@ fun MainScreen() {
             if (!windowSizeClass.isCompact) {
                 navigationBarOrRail()
             }
-            NavHost(
-                navController = mainNavController,
-                startDestination = FeedRoute,
-                modifier = Modifier.weight(1f),
-                enterTransition = { fadeIn(animationSpec = tween(170)) },
-                exitTransition = { fadeOut(animationSpec = tween(170)) },
-                popEnterTransition = { fadeIn(animationSpec = tween(170)) },
-                popExitTransition = { fadeOut(animationSpec = tween(170)) },
-            ) {
-                composable<FeedRoute> { FeedScreen() }
-                composable<PlaylistRoute> { PlaylistScreen() }
-                composable<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
-                composable<MoreRoute> { MoreScreen() }
+
+            val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
+                    fadeOut(animationSpec = tween(170))
+            val entryProvider = entryProvider {
+                entry<FeedRoute> { FeedScreen() }
+                entry<PlaylistRoute> { PlaylistScreen() }
+                entry<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
+                entry<MoreRoute> { MoreScreen() }
             }
+            NavDisplay(
+                entries = navigationState.toDecoratedEntries(entryProvider),
+                modifier = Modifier.weight(1f),
+                transitionSpec = { contentTransform },
+                popTransitionSpec = { contentTransform },
+                predictivePopTransitionSpec = { contentTransform },
+                onBack = { navigator.goBack() },
+            )
         }
     }
 }
 
-private fun <T : Any> NavBackStackEntry?.selected(route: KClass<T>) =
-    this?.destination?.hierarchy?.any { it.hasRoute(route) } == true
-
 @Composable
-private fun NavigationBarOrRail(navController: NavController) {
+private fun NavigationBarOrRail(
+    routes: List<NavKey>,
+    navigationState: NavigationState,
+    onSelectedChanged: (NavKey) -> Unit,
+) {
     val items = listOf(
-        stringResource(Res.string.feed_screen_name) to FeedRoute,
-        stringResource(Res.string.playlist) to PlaylistRoute,
-        stringResource(Res.string.media_screen_name) to MediaRoute,
-        stringResource(Res.string.more_screen_name) to MoreRoute,
+        stringResource(Res.string.feed_screen_name),
+        stringResource(Res.string.playlist),
+        stringResource(Res.string.media_screen_name),
+        stringResource(Res.string.more_screen_name),
     )
     val icons = remember {
         mapOf(
@@ -136,26 +147,6 @@ private fun NavigationBarOrRail(navController: NavController) {
         )
     }
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-
-    val onClick: (Int) -> Unit = { index ->
-        navController.navigate(items[index].second) {
-            // Pop up to the previous (?: start) destination of the graph to
-            // avoid building up a large stack of destinations on the back stack as users select items
-            popUpTo(
-                route = navController.currentDestination?.route
-                    ?: navController.graph.findStartDestination().route!!
-            ) {
-                saveState = true
-                inclusive = true
-            }
-            // Avoid multiple copies of the same destination when reselecting the same item
-            launchSingleTop = true
-            // Restore state when reselecting a previously selected item
-            restoreState = true
-        }
-    }
-
     val navigationBarLabel = NavigationBarLabelPreference.current
     if (LocalWindowSizeClass.current.isCompact) {
         NavigationBar(
@@ -164,15 +155,15 @@ private fun NavigationBarOrRail(navController: NavController) {
             )
         ) {
             items.forEachIndexed { index, item ->
-                val selected = navBackStackEntry.selected(item.second::class)
+                val selected = routes[index] == navigationState.topLevelRoute
                 NavigationBarItem(
-                    icon = { Icon(icons[selected]!![index], contentDescription = item.first) },
+                    icon = { Icon(icons[selected]!![index], contentDescription = item) },
                     label = if (navigationBarLabel == NavigationBarLabelPreference.NONE) null else {
-                        { Text(item.first) }
+                        { Text(item) }
                     },
                     alwaysShowLabel = navigationBarLabel == NavigationBarLabelPreference.SHOW,
                     selected = selected,
-                    onClick = { onClick(index) }
+                    onClick = { onSelectedChanged(routes[index]) }
                 )
             }
         }
@@ -183,15 +174,15 @@ private fun NavigationBarOrRail(navController: NavController) {
             )
         ) {
             items.forEachIndexed { index, item ->
-                val selected = navBackStackEntry.selected(item.second::class)
+                val selected = routes[index] == navigationState.topLevelRoute
                 NavigationRailItem(
-                    icon = { Icon(icons[selected]!![index], contentDescription = item.first) },
+                    icon = { Icon(icons[selected]!![index], contentDescription = item) },
                     label = if (navigationBarLabel == NavigationBarLabelPreference.NONE) null else {
-                        { Text(item.first) }
+                        { Text(item) }
                     },
                     alwaysShowLabel = navigationBarLabel == NavigationBarLabelPreference.SHOW,
                     selected = selected,
-                    onClick = { onClick(index) }
+                    onClick = { onSelectedChanged(routes[index]) }
                 )
             }
         }

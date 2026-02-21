@@ -32,7 +32,6 @@ import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPrefe
 import com.skyd.podaura.model.preference.behavior.media.MediaSubListSortAscPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaSubListSortByPreference
 import com.skyd.podaura.ui.component.dialog.SortDialog
-import com.skyd.podaura.ui.component.serializableType
 import com.skyd.podaura.ui.screen.media.list.MediaList
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import kotlinx.serialization.Serializable
@@ -43,14 +42,11 @@ import podaura.shared.generated.resources.media_screen_search_hint
 import podaura.shared.generated.resources.sort
 import podaura.shared.generated.resources.sub_media_screen_path_illegal
 import podaura.shared.generated.resources.warning
-import kotlin.reflect.typeOf
 
 
 @Serializable
 data class SubMediaRoute(val media: MediaBean) : NavKey {
     companion object {
-        val typeMap = mapOf(typeOf<MediaBean>() to serializableType<MediaBean>())
-
         @Composable
         fun SubMediaLauncher(route: SubMediaRoute) {
             SubMediaScreenRoute(media = route.media)

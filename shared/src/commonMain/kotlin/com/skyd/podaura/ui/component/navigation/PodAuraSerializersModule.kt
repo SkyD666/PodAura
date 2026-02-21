@@ -10,6 +10,7 @@ import com.skyd.podaura.ui.screen.calendar.CalendarRoute
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute
 import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.feed.FeedListRoute
+import com.skyd.podaura.ui.screen.feed.FeedRoute
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute
@@ -18,8 +19,11 @@ import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
 import com.skyd.podaura.ui.screen.history.search.HistorySearchRoute
+import com.skyd.podaura.ui.screen.media.MediaRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
+import com.skyd.podaura.ui.screen.more.MoreRoute
+import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.podaura.ui.screen.search.SearchRoute
@@ -50,8 +54,10 @@ import kotlinx.serialization.modules.subclass
 val PodAuraSerializersModule = SerializersModule {
     polymorphic(baseClass = NavKey::class) {
         subclass(MainRoute::class)
+        subclass(FeedRoute::class)
         subclass(FeedListRoute::class)
         subclass(ArticleRoute::class)
+        subclass(MoreRoute::class)
         subclass(LicenseRoute::class)
         subclass(AboutRoute::class)
         subclass(TermsOfServiceRoute::class)
@@ -80,6 +86,7 @@ val PodAuraSerializersModule = SerializersModule {
         subclass(AutoDownloadRuleRoute::class)
         subclass(MuteFeedRoute::class)
         subclass(DeleteConstraintRoute::class)
+        subclass(PlaylistRoute::class)
         subclass(PlaylistMediaListRoute::class)
         subclass(RequestHeadersRoute::class)
         subclass(FilePickerRoute::class)
@@ -88,6 +95,7 @@ val PodAuraSerializersModule = SerializersModule {
         subclass(ReadRoute::class)
         subclass(SearchRoute.Feed::class)
         subclass(SearchRoute.Article::class)
+        subclass(MediaRoute::class)
         subclass(MediaSearchRoute::class)
         subclass(SubMediaRoute::class)
         subclass(HistorySearchRoute::class)

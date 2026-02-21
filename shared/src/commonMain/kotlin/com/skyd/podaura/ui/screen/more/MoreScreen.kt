@@ -73,7 +73,7 @@ import podaura.shared.generated.resources.settings
 
 
 @Serializable
-data object MoreRoute
+data object MoreRoute : NavKey
 
 @Composable
 fun MoreScreen() {

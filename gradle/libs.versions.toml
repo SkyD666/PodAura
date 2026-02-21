@@ -13,7 +13,7 @@ compose-materialIconsExtended = "1.7.3"
 lifecycle = "2.9.6"
 navigation3 = "1.0.1"
 ktor = "3.4.0"
-koin = "4.1.1"
+koin = "4.2.0-RC1"
 ksoup = "0.2.5"
 coil = "3.3.0"
 paging = "3.4.1"
@@ -50,6 +50,7 @@ jetbrains-compose-components-resources = { module = "org.jetbrains.compose.compo
 
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version = "1.1.0-alpha02" }
 jetbrains-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
+jetbrains-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.10.0-alpha08" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
@@ -71,7 +72,6 @@ androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
-androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version = "2.10.0" }
 
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -82,7 +82,7 @@ koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
-koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-viewmodel-navigation", version.ref = "koin" }
+koin-compose-navigation3 = { module = "io.insert-koin:koin-compose-navigation3", version.ref = "koin" }
 
 kermit = { module = "co.touchlab:kermit", version = "2.0.8" }
 kotlincrypto-hash-md = { module = "org.kotlincrypto.hash:md", version = "0.8.0" }
@@ -126,7 +126,7 @@ icu4j = { module = "com.ibm.icu:icu4j", version = "78.1" }
 ocpsoft-prettytime = { module = "org.ocpsoft.prettytime:prettytime", version = "5.0.9.Final" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta08" }
-skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta21" }
+skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta22" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta05" }
 
 junit = { module = "junit:junit", version = "4.13.2" }

@@ -74,6 +74,7 @@ kotlin {
             implementation(libs.jetbrains.compose.materialIconsExtended)
             implementation(libs.jetbrains.compose.components.resources)
             implementation(libs.jetbrains.lifecycle.viewmodel)
+            implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.jetbrains.navigation3.ui)
 
@@ -82,11 +83,10 @@ kotlin {
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.constraintlayout.compose)
             implementation(libs.androidx.navigation3.runtime)
-            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.compose.navigation3)
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)

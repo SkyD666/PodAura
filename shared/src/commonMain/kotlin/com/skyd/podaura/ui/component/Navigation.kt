@@ -1,5 +1,7 @@
 package com.skyd.podaura.ui.component
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -17,48 +19,28 @@ import androidx.compose.material3.adaptive.layout.PaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Modifier.Companion
 import androidx.compose.ui.unit.IntRect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation.NavType
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.scene.Scene
 import androidx.navigation3.scene.SceneStrategy
 import androidx.navigation3.scene.SinglePaneSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import com.skyd.podaura.ui.component.UuidListType.Companion.decodeUuidList
+import androidx.navigationevent.NavigationEvent
 import com.skyd.podaura.ui.component.navigation.deeplink.TypeParser
 import kotlinx.io.Buffer
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 
 
-inline fun <reified T> serializableType(
-    json: Json = Json,
-): TypeParser {
-    return { value ->
-        json.decodeFromString(value.hexToByteArray().decodeToString())
-    }
-}
-
-inline fun <reified T> listType(
-    json: Json = Json,
-): TypeParser {
-    return {
-        serializableType<List<T>>(json)
-    }
-}
-
 @Serializable
-data class UuidList(val uuids: List<String>)
-
-abstract class UuidListType<T>(
-    isNullableAllowed: Boolean = false,
-) : NavType<T>(isNullableAllowed) {
+data class UuidList(val uuids: List<String>) {
     companion object {
         fun encodeUuidList(uuidList: List<Uuid>): String {
             val buffer = Buffer()
@@ -88,7 +70,7 @@ abstract class UuidListType<T>(
 
 fun uuidListType(): TypeParser {
     return { value ->
-        UuidList(decodeUuidList(value).map { it.toString() })
+        Json.encodeToJsonElement(UuidList(UuidList.decodeUuidList(value).map { it.toString() }))
     }
 }
 
@@ -123,6 +105,17 @@ fun <T : Any> PodAuraNavDisplay(
         rememberViewModelStoreNavEntryDecorator()
     ),
     sceneStrategy: SceneStrategy<T> = SinglePaneSceneStrategy(),
+    transitionSpec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+        EnterTransition togetherWith ExitTransition
+    },
+    popTransitionSpec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+        PopEnterTransition togetherWith PopExitTransition
+    },
+    predictivePopTransitionSpec: AnimatedContentTransitionScope<Scene<T>>.(
+        @NavigationEvent.SwipeEdge Int
+    ) -> ContentTransform = {
+        PopEnterTransition togetherWith PopExitTransition
+    },
     entryProvider: (key: T) -> NavEntry<T>,
 ) = NavDisplay(
     backStack = backStack,
@@ -130,9 +123,9 @@ fun <T : Any> PodAuraNavDisplay(
     onBack = onBack,
     entryDecorators = entryDecorators,
     sceneStrategy = sceneStrategy,
-    transitionSpec = { EnterTransition togetherWith ExitTransition },
-    popTransitionSpec = { PopEnterTransition togetherWith PopExitTransition },
-    predictivePopTransitionSpec = { PopEnterTransition togetherWith PopExitTransition },
+    transitionSpec = transitionSpec,
+    popTransitionSpec = popTransitionSpec,
+    predictivePopTransitionSpec = predictivePopTransitionSpec,
     entryProvider = entryProvider,
 )
 
