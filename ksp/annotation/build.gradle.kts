@@ -22,9 +22,9 @@ kotlin {
         iosArm64(),
         iosSimulatorArm64(),
         macosArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "AnnotationKit"
+    ).forEach { target ->
+        target.binaries.framework {
+            baseName = "KspAnnotation"
             isStatic = true
         }
     }

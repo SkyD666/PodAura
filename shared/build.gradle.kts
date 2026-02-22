@@ -174,10 +174,11 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
             "-Xexpect-actual-classes",
-            "-XXLanguage:+ExplicitBackingFields"
+            "-Xexplicit-backing-fields"
         )
         optIn.addAll(
             "org.jetbrains.compose.resources.ExperimentalResourceApi",
+            "org.jetbrains.compose.resources.InternalResourceApi",
             "androidx.compose.material3.ExperimentalMaterial3Api",
             "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",

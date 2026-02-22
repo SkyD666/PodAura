@@ -39,7 +39,7 @@ fun SettingsScreen() {
             if (!listDetailStrategy.isSinglePane) {
                 add(AppearanceRoute)
             }
-        }.toTypedArray()
+        }.toTypedArray<NavKey>()
     )
 
     CompositionLocalProvider(LocalNavBackStack provides newNavBackStack(newBackStack)) {

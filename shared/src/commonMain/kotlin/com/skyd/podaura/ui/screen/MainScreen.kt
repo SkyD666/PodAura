@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -100,7 +101,7 @@ fun MainScreen() {
 
             val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
                     fadeOut(animationSpec = tween(170))
-            val entryProvider = entryProvider {
+            val entryProvider: (NavKey) -> NavEntry<NavKey> = entryProvider {
                 entry<FeedRoute> { FeedScreen() }
                 entry<PlaylistRoute> { PlaylistScreen() }
                 entry<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }

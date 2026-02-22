@@ -1,10 +1,10 @@
 [versions]
-agp = "9.0.0"
+agp = "9.0.1"
 kotlin = "2.3.10"
 kotlinx-datetime = "0.7.1"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.10.0"
-kotlinx-io = "0.8.2"
+kotlinx-io = "0.9.0"
 ksp = "2.3.4"
 compose = "1.11.0-alpha02"
 compose-material3 = "1.11.0-alpha02"
@@ -14,7 +14,7 @@ lifecycle = "2.9.6"
 navigation3 = "1.0.1"
 ktor = "3.4.0"
 koin = "4.2.0-RC1"
-ksoup = "0.2.5"
+ksoup = "0.2.6"
 coil = "3.3.0"
 paging = "3.4.1"
 worker = "2.11.1"
@@ -117,16 +117,16 @@ coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha06" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.2" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.3" }
 
 java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
 java-jna-platform = { module = "net.java.dev.jna:jna-platform", version = "5.18.1" }
 
-icu4j = { module = "com.ibm.icu:icu4j", version = "78.1" }
+icu4j = { module = "com.ibm.icu:icu4j", version = "78.2" }
 ocpsoft-prettytime = { module = "org.ocpsoft.prettytime:prettytime", version = "5.0.9.Final" }
 
 skyd666-settings = { module = "io.github.skyd666:settings", version = "1.0-beta08" }
-skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta22" }
+skyd666-compone = { module = "io.github.skyd666:compone", version = "1.0-beta23" }
 skyd666-mvi = { module = "io.github.skyd666:mvi", version = "1.0-beta05" }
 
 junit = { module = "junit:junit", version = "4.13.2" }

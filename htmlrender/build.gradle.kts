@@ -35,8 +35,8 @@ kotlin {
         iosArm64(),
         iosSimulatorArm64(),
         macosArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    ).forEach { target ->
+        target.binaries.framework {
             baseName = "HtmlRenderKit"
             isStatic = true
         }
