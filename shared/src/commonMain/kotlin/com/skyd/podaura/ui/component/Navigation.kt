@@ -2,7 +2,9 @@ package com.skyd.podaura.ui.component
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.PathEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -19,6 +21,7 @@ import androidx.compose.material3.adaptive.layout.PaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneScaffoldValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.IntRect
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavEntry
@@ -74,22 +77,58 @@ fun uuidListType(): TypeParser {
     }
 }
 
-val EnterTransition = fadeIn(animationSpec = tween(220, delayMillis = 30)) + scaleIn(
-    animationSpec = tween(220, delayMillis = 30),
-    initialScale = 0.92f,
+private val MotionEmphasizedEasing = PathEasing(
+    Path().apply {
+        moveTo(0f, 0f)
+        cubicTo(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f)
+        cubicTo(0.208333f, 0.82f, 0.25f, 1f, 1f, 1f)
+    }
 )
 
-val ExitTransition = fadeOut(animationSpec = tween(90))
+private const val DefaultDuration: Int = 450
+private const val ProgressThreshold: Float = 0.35f
 
-val PopEnterTransition = fadeIn(animationSpec = tween(220)) + scaleIn(
-    animationSpec = tween(220),
-    initialScale = 0.92f,
-)
+private val FadeInEasing = Easing { fraction ->
+    ((MotionEmphasizedEasing.transform(fraction) - ProgressThreshold) / (1f - ProgressThreshold))
+        .coerceIn(0f, 1f)
+}
 
-val PopExitTransition = fadeOut(animationSpec = tween(220)) + scaleOut(
-    animationSpec = tween(220),
-    targetScale = 0.92f,
-)
+private val FadeOutEasing = Easing { fraction ->
+    (MotionEmphasizedEasing.transform(fraction) / ProgressThreshold)
+        .coerceIn(0f, 1f)
+}
+
+val EnterTransition =
+    scaleIn(
+        initialScale = 0.8f,
+        animationSpec = tween(durationMillis = DefaultDuration, easing = MotionEmphasizedEasing)
+    ) + fadeIn(
+        animationSpec = tween(durationMillis = DefaultDuration, easing = FadeInEasing)
+    )
+
+val ExitTransition =
+    scaleOut(
+        targetScale = 1.1f,
+        animationSpec = tween(durationMillis = DefaultDuration, easing = MotionEmphasizedEasing)
+    ) + fadeOut(
+        animationSpec = tween(durationMillis = DefaultDuration, easing = FadeOutEasing)
+    )
+
+val PopEnterTransition =
+    scaleIn(
+        initialScale = 1.1f,
+        animationSpec = tween(durationMillis = DefaultDuration, easing = MotionEmphasizedEasing)
+    ) + fadeIn(
+        animationSpec = tween(durationMillis = DefaultDuration, easing = FadeInEasing)
+    )
+
+val PopExitTransition =
+    scaleOut(
+        targetScale = 0.8f,
+        animationSpec = tween(durationMillis = DefaultDuration, easing = MotionEmphasizedEasing)
+    ) + fadeOut(
+        animationSpec = tween(durationMillis = DefaultDuration, easing = FadeOutEasing)
+    )
 
 @Composable
 fun <T : Any> PodAuraNavDisplay(
