@@ -35,6 +35,7 @@ import com.skyd.podaura.ext.validateFileName
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -73,7 +74,9 @@ fun ImportExportScreen(
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = ImportExportIntent.Init)
 
-    val opmlSaverLauncher = rememberFileSaverLauncher { file ->
+    val opmlSaverLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { file ->
         if (file != null) {
             dispatch(ImportExportIntent.ExportOpml(file))
         }
@@ -87,7 +90,9 @@ fun ImportExportScreen(
             dispatch(ImportExportIntent.ImportPrefer(file))
         }
     }
-    val jsonPreferenceSaverLauncher = rememberFileSaverLauncher { file ->
+    val jsonPreferenceSaverLauncher = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault()
+    ) { file ->
         if (file != null) {
             dispatch(ImportExportIntent.ExportPrefer(file))
         }

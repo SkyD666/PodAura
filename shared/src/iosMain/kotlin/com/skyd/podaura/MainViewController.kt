@@ -10,14 +10,9 @@ import platform.UIKit.UIViewController
 fun MainViewController(): UIViewController {
     initKoin()
     onAppStart()
-    return ComposeUIViewController(
-        configure = {
-            parallelRendering = true
-        },
-        content = {
-            ResourceEnvironmentFix {
-                AppEntrance()
-            }
+    return ComposeUIViewController {
+        ResourceEnvironmentFix {
+            AppEntrance()
         }
-    )
+    }
 }

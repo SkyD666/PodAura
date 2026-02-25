@@ -3,9 +3,7 @@ package com.skyd.podaura.ui.screen.download
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
-import kotlinx.serialization.Serializable
 
-@Serializable
 actual val DownloadDeepLinkRoute.Companion.deepLinkPatterns: List<DeepLinkPattern<DownloadDeepLinkRoute>>
     get() = listOf("http", "https").map {
         DeepLinkPattern(

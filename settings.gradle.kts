@@ -33,6 +33,7 @@ include(
     ":shared",
     ":fundation",
     ":htmlrender",
+    ":reorderable",
     ":downloader",
     ":ksp:processor",
     ":ksp:annotation",

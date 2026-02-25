@@ -52,6 +52,12 @@ kotlin {
         }
     }
 
+    macosArm64 {
+        binaries.executable {
+            entryPoint = "com.skyd.podaura.main"
+        }
+    }
+
 // Source set declarations.
 // Declaring a target automatically creates a source set with the same name. By default, the
 // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
@@ -118,7 +124,7 @@ kotlin {
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
             implementation(libs.material.kolor)
-            implementation(libs.reorderable)
+            // implementation(libs.reorderable)
             implementation(libs.skyd666.settings)
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
@@ -127,6 +133,7 @@ kotlin {
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
+            implementation(projects.reorderable)
         }
 
         commonTest.dependencies {
@@ -134,9 +141,6 @@ kotlin {
         }
 
         androidMain.dependencies {
-            // Add Android-specific dependencies here. Note that this source set depends on
-            // commonMain by default and will correctly pull the Android artifacts of any KMP
-            // dependencies declared in commonMain.
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.work.runtime.ktx)
@@ -152,12 +156,7 @@ kotlin {
             implementation(libs.coil.video)
         }
 
-        iosMain.dependencies {
-            // Add iOS-specific dependencies here. This a source set created by Kotlin Gradle
-            // Plugin (KGP) that each specific iOS target (e.g., iosX64) depends on as
-            // part of KMP’s default source set hierarchy. Note that this source set depends
-            // on common by default and will correctly pull the iOS artifacts of any
-            // KMP dependencies declared in commonMain.
+        appleMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }
 
@@ -197,7 +196,8 @@ kotlin {
             "kotlin.uuid.ExperimentalUuidApi",
             "kotlin.time.ExperimentalTime",
             "com.google.accompanist.permissions.ExperimentalPermissionsApi",
-            "kotlinx.cinterop.ExperimentalForeignApi"
+            "kotlinx.cinterop.ExperimentalForeignApi",
+            "kotlin.experimental.ExperimentalNativeApi"
         )
     }
 
@@ -240,6 +240,21 @@ compose.desktop {
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
     }
+    nativeApplication {
+        targets(kotlin.macosArm64())
+        distributions {
+            targetFormats(TargetFormat.Dmg)
+            packageName = "PodAura"
+            packageVersion = properties["versionForDesktop"]!!.toString()
+
+            macOS {
+                bundleID = "com.skyd.podaura"
+                // https://github.com/JetBrains/compose-multiplatform/blob/e68123684b732adb34a5fb3704c9de868bdbed0e/gradle-plugins/compose/src/main/kotlin/org/jetbrains/compose/desktop/application/tasks/AbstractNativeMacApplicationPackageAppDirTask.kt#L63-L64
+                // The icon file in Contents/Resources has been hardcoded to "$packageName.icns".
+                iconFile = project.file("icons/PodAura.icns")
+            }
+        }
+    }
 }
 
 // Distribution's icon
@@ -250,7 +265,7 @@ tasks.withType<AbstractJPackageTask> {
 }
 
 dependencies {
-    listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64").forEach {
+    listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64", "kspMacosArm64").forEach {
         add(it, projects.ksp.processor)
         add(it, libs.androidx.room.compiler)
     }
