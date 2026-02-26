@@ -17,7 +17,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-26, macos-15-intel ]
         include:
           - os: ubuntu-latest
             target-platform: Android
@@ -38,12 +37,17 @@ jobs:
             target-platform: Jvm macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release DMG (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-15-intel
             target-platform: Jvm macOS x64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+          - os: macos-26
+            target-platform: Native macOS arm64
+            build-command: ./gradlew packageDmgNativeReleaseMacosArm64
+            artifact-path: [ shared/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg ]
+            artifact-name: [ Pre-Release DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository
