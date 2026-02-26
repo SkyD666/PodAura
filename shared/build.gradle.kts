@@ -186,6 +186,7 @@ kotlin {
             "androidx.compose.foundation.ExperimentalFoundationApi",
             "androidx.compose.foundation.layout.ExperimentalLayoutApi",
             "androidx.compose.ui.ExperimentalComposeUiApi",
+            "androidx.compose.ui.InternalComposeUiApi",
             "kotlinx.coroutines.FlowPreview",
             "kotlinx.coroutines.ExperimentalCoroutinesApi",
             "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
