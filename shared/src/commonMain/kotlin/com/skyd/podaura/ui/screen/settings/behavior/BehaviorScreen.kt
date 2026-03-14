@@ -54,6 +54,7 @@ import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeLeftAction
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeRightActionPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleTapActionPreference
 import com.skyd.podaura.model.preference.behavior.article.DeduplicateTitleInDescPreference
+import com.skyd.podaura.model.preference.behavior.calendar.CalendarHideMutedArticlePreference
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
 import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePlaylistPreference
@@ -74,6 +75,7 @@ import podaura.shared.generated.resources.behavior_screen_article_screen_dedupli
 import podaura.shared.generated.resources.behavior_screen_article_swipe_left_action
 import podaura.shared.generated.resources.behavior_screen_article_swipe_right_action
 import podaura.shared.generated.resources.behavior_screen_article_tap_action
+import podaura.shared.generated.resources.behavior_screen_calendar_hide_muted_article
 import podaura.shared.generated.resources.behavior_screen_common_category
 import podaura.shared.generated.resources.behavior_screen_feed_screen_category
 import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_empty_default
@@ -85,6 +87,7 @@ import podaura.shared.generated.resources.behavior_screen_media_file_filter_plac
 import podaura.shared.generated.resources.behavior_screen_media_screen_category
 import podaura.shared.generated.resources.behavior_screen_name
 import podaura.shared.generated.resources.behavior_screen_reverse_load_article_playlist
+import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.ic_ink_eraser_24
 import podaura.shared.generated.resources.ok
@@ -248,6 +251,21 @@ fun BehaviorScreen(
                         imageVector = Icons.Outlined.SwapVert,
                         description = null,
                         onCheckedChange = { ReverseLoadArticlePlaylistPreference.put(scope, it) },
+                    )
+                }
+            }
+            group(text = { getString(Res.string.calendar_screen_name) }) {
+                item {
+                    SwitchSettingsItem(
+                        checked = CalendarHideMutedArticlePreference.current,
+                        text = stringResource(Res.string.behavior_screen_calendar_hide_muted_article),
+                        imageVector = if (CalendarHideMutedArticlePreference.current) {
+                            Icons.Outlined.VisibilityOff
+                        } else {
+                            Icons.Outlined.Visibility
+                        },
+                        description = null,
+                        onCheckedChange = { CalendarHideMutedArticlePreference.put(scope, it) },
                     )
                 }
             }

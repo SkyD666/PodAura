@@ -118,7 +118,7 @@ coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha06" }
 # reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.0.0" }
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.0.3" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.1.0" }
 
 java-jna = { module = "net.java.dev.jna:jna", version = "5.18.1" }
 java-jna-platform = { module = "net.java.dev.jna:jna-platform", version = "5.18.1" }

@@ -206,20 +206,36 @@ interface ArticleDao {
 
     @Transaction
     @Query(
-        "SELECT * FROM $ARTICLE_TABLE_NAME " +
-                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp " +
+        "SELECT * FROM $ARTICLE_TABLE_NAME A " +
+                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp AND " +
+                "(NOT :excludeMuted OR NOT EXISTS (" +
+                "    SELECT 1 FROM $FEED_TABLE_NAME F " +
+                "    WHERE F.${FeedBean.URL_COLUMN} = A.${ArticleBean.FEED_URL_COLUMN} AND " +
+                "    ${FeedBean.MUTE_COLUMN} = 1))" +
                 "ORDER BY ${ArticleBean.DATE_COLUMN} ASC"
     )
-    fun getArticlesIn(startTimestamp: Long, endTimestamp: Long): PagingSource<Int, ArticleWithFeed>
+    fun getArticlesIn(
+        startTimestamp: Long,
+        endTimestamp: Long,
+        excludeMuted: Boolean,
+    ): PagingSource<Int, ArticleWithFeed>
 
     @Transaction
     @Query(
         "SELECT DISTINCT CAST(strftime('%H', datetime(${ArticleBean.DATE_COLUMN} / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS H " +
-                "FROM $ARTICLE_TABLE_NAME " +
-                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp " +
+                "FROM $ARTICLE_TABLE_NAME A " +
+                "WHERE ${ArticleBean.DATE_COLUMN} >= :startTimestamp AND ${ArticleBean.DATE_COLUMN} < :endTimestamp AND " +
+                "(NOT :excludeMuted OR NOT EXISTS (" +
+                "    SELECT 1 FROM $FEED_TABLE_NAME F " +
+                "    WHERE F.${FeedBean.URL_COLUMN} = A.${ArticleBean.FEED_URL_COLUMN} AND " +
+                "    ${FeedBean.MUTE_COLUMN} = 1))" +
                 "ORDER BY H ASC"
     )
-    fun getArticleHoursIn(startTimestamp: Long, endTimestamp: Long): Flow<List<Int>>
+    fun getArticleHoursIn(
+        startTimestamp: Long,
+        endTimestamp: Long,
+        excludeMuted: Boolean,
+    ): Flow<List<Int>>
 
 
     @Transaction
