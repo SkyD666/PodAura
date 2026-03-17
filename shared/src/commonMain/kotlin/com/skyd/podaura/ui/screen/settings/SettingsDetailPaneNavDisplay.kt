@@ -62,7 +62,7 @@ internal fun SettingsDetailPaneNavDisplay(
     PodAuraNavDisplay(
         backStack = navBackStack,
         modifier = Modifier.pointerOnBack(),
-        sceneStrategy = sceneStrategy,
+        sceneStrategies = listOf(sceneStrategy),
         entryProvider = entryProvider {
             entry<SettingsListRoute>(metadata = ListDetailSceneStrategy.listPane()) { _ ->
                 SettingsList(onItemSelected = { itemRoute ->

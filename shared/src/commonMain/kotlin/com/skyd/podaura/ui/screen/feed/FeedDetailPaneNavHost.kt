@@ -29,7 +29,7 @@ internal fun FeedDetailPaneNavDisplay(
     )
     PodAuraNavDisplay(
         backStack = navBackStack,
-        sceneStrategy = sceneStrategy,
+        sceneStrategies = listOf(sceneStrategy),
         entryProvider = entryProvider {
             entry<FeedListRoute>(metadata = ListDetailSceneStrategy.listPane()) { _ ->
                 val currentArticleRoute =

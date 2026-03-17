@@ -143,7 +143,7 @@ fun <T : Any> PodAuraNavDisplay(
         rememberSaveableStateHolderNavEntryDecorator(),
         rememberViewModelStoreNavEntryDecorator()
     ),
-    sceneStrategy: SceneStrategy<T> = SinglePaneSceneStrategy(),
+    sceneStrategies: List<SceneStrategy<T>> = listOf(SinglePaneSceneStrategy()),
     transitionSpec: AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
         EnterTransition togetherWith ExitTransition
     },
@@ -161,7 +161,7 @@ fun <T : Any> PodAuraNavDisplay(
     modifier = modifier.background(MaterialTheme.colorScheme.background),
     onBack = onBack,
     entryDecorators = entryDecorators,
-    sceneStrategy = sceneStrategy,
+    sceneStrategies = sceneStrategies,
     transitionSpec = transitionSpec,
     popTransitionSpec = popTransitionSpec,
     predictivePopTransitionSpec = predictivePopTransitionSpec,
