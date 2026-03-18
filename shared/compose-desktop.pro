@@ -28,3 +28,8 @@
 # Jna
 -keep class com.sun.jna.** { *; }
 -keep class com.skyd.fundation.jna.** { *; }
+
+# Compottie
+-dontwarn io.github.alexzhirkevich.compottie.dynamic._DynamicDrawProviderKt
+-dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientFillShape
+-dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientStrokeShape
