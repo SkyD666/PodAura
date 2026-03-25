@@ -4,15 +4,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.skyd.fundation.config.Const
-import com.skyd.fundation.config.FEED_ICON_DIR
-import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.fundation.ext.deleteRecursively
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.isHttpOrHttps
-import com.skyd.podaura.ext.isLocalFile
-import com.skyd.podaura.ext.isNetworkUrl
 import com.skyd.podaura.ext.put
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -30,10 +25,7 @@ import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPrefere
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
-import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.copyTo
-import io.github.vinceglb.filekit.utils.div
-import io.github.vinceglb.filekit.utils.toPath
+import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -43,7 +35,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.io.files.Path
-import kotlin.uuid.Uuid
 
 class FeedRepository(
     private val groupDao: GroupDao,
@@ -51,17 +42,14 @@ class FeedRepository(
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
-) : BaseRepository(), IFeedRepository {
+    private val feedSheetRepository: IFeedSheetRepository,
+) : BaseRepository(), IFeedRepository, IFeedSheetRepository by feedSheetRepository {
     fun allGroupCollapsed(): Flow<Boolean> = combine(
         groupDao.existsExpandedGroup(),
         dataStore.flowOf(FeedDefaultGroupExpandPreference),
     ) { existsExpandedGroup, defaultGroupExpanded ->
         existsExpandedGroup == 0 && !defaultGroupExpanded
     }.flowOn(Dispatchers.IO)
-
-    fun requestGroups(): Flow<PagingData<GroupVo>> = Pager(pagingConfig) {
-        groupDao.getGroups()
-    }.flow.map { pagingData -> pagingData.map { it.toVo() } }.flowOn(Dispatchers.IO)
 
     fun requestGroupAnyPaging(): Flow<PagingData<Any>> = dataStore.run {
         combine(
@@ -148,10 +136,6 @@ class FeedRepository(
         emit(groupDao.moveGroupFeedsTo(realFromGroupId, realToGroupId))
     }.flowOn(Dispatchers.IO)
 
-    fun getFeedViewsByUrls(urls: List<String>) = flow {
-        emit(feedDao.getFeedsIn(urls))
-    }.flowOn(Dispatchers.IO)
-
     fun getFeedViewsByGroupId(groupId: String?) = flow {
         emit(feedDao.getFeedsByGroupId(groupId))
     }.flowOn(Dispatchers.IO)
@@ -179,122 +163,6 @@ class FeedRepository(
         emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)
 
-    fun editFeedUrl(
-        oldUrl: String,
-        newUrl: String,
-    ): Flow<FeedViewBean> = flow {
-        val oldFeed = feedDao.getFeedView(oldUrl)
-        var newFeed = oldFeed
-        if (oldUrl != newUrl) {
-            val feedWithArticleBean = rssHelper.searchFeed(url = newUrl).run {
-                copy(
-                    feed = feed.copy(
-                        groupId = oldFeed.feed.groupId,
-                        nickname = oldFeed.feed.nickname,
-                        customDescription = oldFeed.feed.customDescription,
-                        customIcon = oldFeed.feed.customIcon,
-                    )
-                )
-            }
-            feedDao.removeFeed(oldUrl)
-            feedDao.setFeedWithArticle(feedWithArticleBean)
-            newFeed = feedDao.getFeedView(newUrl)
-        }
-        emit(newFeed)
-    }.flowOn(Dispatchers.IO)
-
-    fun editFeedNickname(
-        url: String,
-        nickname: String?,
-    ): Flow<FeedViewBean> = flow {
-        val realNickname = if (nickname.isNullOrBlank()) null else nickname
-        feedDao.updateFeed(feedDao.getFeedView(url).feed.copy(nickname = realNickname))
-        emit(feedDao.getFeedView(url))
-    }.flowOn(Dispatchers.IO)
-
-    fun editFeedGroup(
-        url: String,
-        groupId: String?,
-    ): Flow<FeedViewBean> = flow {
-        val realGroupId =
-            if (groupId.isNullOrBlank() || groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
-
-        feedDao.updateFeed(
-            feedDao.getFeedView(url).feed.copy(
-                groupId = realGroupId,
-                orderPosition = feedDao.getMaxOrder(realGroupId) + ORDER_DELTA,
-            )
-        )
-        emit(feedDao.getFeedView(url))
-    }.flowOn(Dispatchers.IO)
-
-    fun editFeedCustomDescription(
-        url: String,
-        customDescription: String?,
-    ): Flow<FeedViewBean> = flow {
-        feedDao.updateFeed(feedDao.getFeedView(url).feed.copy(customDescription = customDescription))
-        emit(feedDao.getFeedView(url))
-    }.flowOn(Dispatchers.IO)
-
-    fun editFeedCustomIcon(
-        url: String,
-        customIcon: String?,
-    ): Flow<FeedViewBean> = flow {
-        var filePath: String? = null
-        if (customIcon != null) {
-            if (customIcon.isLocalFile()) {
-                val dest = PlatformFile(Const.FEED_ICON_DIR.toPath() / Uuid.random().toString())
-                filePath = dest.toString()
-                customIcon.asPlatformFile().copyTo(dest)
-            } else if (customIcon.isNetworkUrl()) {
-                filePath = customIcon
-            }
-        }
-        val oldFeed = feedDao.getFeedView(url)
-        oldFeed.feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
-        feedDao.updateFeed(oldFeed.feed.copy(customIcon = filePath))
-        emit(feedDao.getFeedView(url))
-    }.flowOn(Dispatchers.IO)
-
-    fun editFeedSortXmlArticlesOnUpdate(
-        url: String,
-        sort: Boolean,
-    ): Flow<FeedViewBean> = flow {
-        feedDao.updateFeedSortXmlArticlesOnUpdate(feedUrl = url, sort = sort)
-        emit(feedDao.getFeedView(url))
-    }.flowOn(Dispatchers.IO)
-
-    fun removeFeed(url: String): Flow<Int> {
-        return flow {
-            feedDao.getFeedView(url).feed.customIcon?.let { icon -> tryDeleteFeedIconFile(icon) }
-            emit(feedDao.removeFeed(url))
-        }.flowOn(Dispatchers.IO)
-    }
-
-    fun clearFeedArticles(url: String): Flow<Int> = flow {
-        val count = with(dataStore) {
-            articleDao.deleteArticleInFeed(
-                feedUrl = url,
-                keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
-                keepUnread = getOrDefault(KeepUnreadArticlesPreference),
-                keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
-            )
-        }
-        emit(count)
-    }.flowOn(Dispatchers.IO)
-
-    fun createGroup(group: GroupVo): Flow<Unit> = flow {
-        if (groupDao.containsByName(group.name) == 0) {
-            emit(
-                groupDao.setGroup(
-                    group.toPo(orderPosition = groupDao.getMaxOrder() + GroupDao.ORDER_DELTA)
-                )
-            )
-        } else {
-            emit(Unit)
-        }
-    }.flowOn(Dispatchers.IO)
-
     fun changeGroupExpanded(groupId: String?, expanded: Boolean): Flow<Unit> = flow {
         if (groupId == null || groupId == GroupVo.DEFAULT_GROUP_ID) {
             dataStore.put(
@@ -310,14 +178,6 @@ class FeedRepository(
     fun readAllInGroup(groupId: String?): Flow<Int> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
         emit(articleDao.readAllInGroup(realGroupId))
-    }.flowOn(Dispatchers.IO)
-
-    fun readAllInFeed(feedUrl: String): Flow<Int> = flow {
-        emit(articleDao.readAllInFeed(feedUrl))
-    }.flowOn(Dispatchers.IO)
-
-    override fun muteFeed(feedUrl: String, mute: Boolean): Flow<Int> = flow {
-        emit(feedDao.muteFeed(feedUrl, mute))
     }.flowOn(Dispatchers.IO)
 
     fun muteFeedsInGroup(groupId: String?, mute: Boolean): Flow<Int> = flow {

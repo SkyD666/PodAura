@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.UnfoldLess
 import androidx.compose.material.icons.outlined.UnfoldMore
-import androidx.compose.material.icons.outlined.Workspaces
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -82,6 +81,7 @@ import com.skyd.podaura.ui.screen.feed.item.Group1Item
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
+import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
 import kotlinx.coroutines.launch
@@ -93,8 +93,6 @@ import podaura.shared.generated.resources.add
 import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.collapse_all_groups
 import podaura.shared.generated.resources.expand_all_groups
-import podaura.shared.generated.resources.feed_group
-import podaura.shared.generated.resources.feed_screen_add_group
 import podaura.shared.generated.resources.feed_screen_all_articles
 import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.feed_screen_rss_url
@@ -103,7 +101,6 @@ import podaura.shared.generated.resources.feed_style_screen_name
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.mute_feed_screen_name
 import podaura.shared.generated.resources.reorder_group_screen_name
-import kotlin.uuid.Uuid
 
 @Serializable
 data class FeedListRoute(
@@ -175,9 +172,9 @@ internal fun FeedList(
                 navigationIcon = {},
                 windowInsets =
                     if (windowSizeClass.isCompact)
-                        WindowInsets.Companion.safeDrawing.only(WindowInsetsSides.Companion.Top + WindowInsetsSides.Companion.Horizontal)
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
                     else
-                        WindowInsets.Companion.safeDrawing.only(WindowInsetsSides.Companion.Top),
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
                         FeedTopBarTonalElevationPreference.current.dp
@@ -203,9 +200,9 @@ internal fun FeedList(
         },
         contentWindowInsets =
             if (windowSizeClass.isCompact)
-                WindowInsets.Companion.safeDrawing.only(WindowInsetsSides.Companion.Top + WindowInsetsSides.Companion.Horizontal)
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             else
-                WindowInsets.Companion.safeDrawing.only(WindowInsetsSides.Companion.Vertical),
+                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     FeedListTonalElevationPreference.current.dp
@@ -213,7 +210,7 @@ internal fun FeedList(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPadding ->
         val bottomSheetShowing by remember {
-            derivedStateOf { uiState.editGroupDialogBean != null || uiState.editFeedDialogBean != null }
+            derivedStateOf { uiState.editGroupDialogBean != null || uiState.editFeedUrl != null }
         }
         val currentSnackbarHostState by rememberUpdatedState(
             if (bottomSheetShowing) bottomSheetSnackbarHostState else snackbarHostState
@@ -226,7 +223,7 @@ internal fun FeedList(
         when (val listState = uiState.listState) {
             is ListState.Failed, ListState.Init, ListState.Loading -> {}
             is ListState.Success -> FeedList(
-                modifier = Modifier.Companion.nestedScroll(scrollBehavior.nestedScrollConnection),
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
                 lazyPagingItems = listState.dataPagingDataFlow.collectAsLazyPagingItems(),
                 contentPadding = innerPadding,
                 fabPadding = fabHeight + 16.dp,
@@ -237,7 +234,7 @@ internal fun FeedList(
                 onExpandChanged = { group, expanded ->
                     dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
                 },
-                onEditFeed = { feed -> dispatch(FeedIntent.OnEditFeedDialog(feed)) },
+                onEditFeed = { feed -> dispatch(FeedIntent.OnEditFeedDialog(feed.feed.url)) },
                 onEditGroup = { group -> dispatch(FeedIntent.OnEditGroupDialog(group)) },
             )
         }
@@ -251,12 +248,6 @@ internal fun FeedList(
                     currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.CollapseAllGroupResultEvent.Failed ->
-                    currentSnackbarHostState.showSnackbar(event.msg)
-
-                is FeedEvent.EditFeedResultEvent.Failed ->
-                    currentSnackbarHostState.showSnackbar(event.msg)
-
-                is FeedEvent.RemoveFeedResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.RefreshFeedResultEvent.Failed ->
@@ -277,13 +268,7 @@ internal fun FeedList(
                 is FeedEvent.ReadAllResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
 
-                is FeedEvent.ClearFeedArticlesResultEvent.Failed ->
-                    currentSnackbarHostState.showSnackbar(event.msg)
-
                 is FeedEvent.ClearGroupArticlesResultEvent.Failed ->
-                    currentSnackbarHostState.showSnackbar(event.msg)
-
-                is FeedEvent.MuteFeedResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.MuteFeedsInGroupResultEvent.Failed ->
@@ -311,54 +296,11 @@ internal fun FeedList(
             )
         }
 
-        uiState.editFeedDialogBean?.let { feedView ->
+        uiState.editFeedUrl?.let { editFeedUrl ->
             EditFeedSheet(
+                feedUrl = editFeedUrl,
                 onDismissRequest = { dispatch(FeedIntent.OnEditFeedDialog(null)) },
-                snackbarHost = { SnackbarHost(hostState = bottomSheetSnackbarHostState) },
-                feedView = feedView,
-                groups = uiState.groups.collectAsLazyPagingItems(),
-                onReadAll = { dispatch(FeedIntent.ReadAllInFeed(it)) },
-                onRefresh = { feedUrl, full -> dispatch(FeedIntent.RefreshFeed(feedUrl, full)) },
-                onMute = { feedUrl, mute -> dispatch(FeedIntent.MuteFeed(feedUrl, mute)) },
-                onClear = { dispatch(FeedIntent.ClearFeedArticles(it)) },
-                onDelete = { dispatch(FeedIntent.RemoveFeed(it)) },
-                onUrlChange = {
-                    dispatch(FeedIntent.EditFeedUrl(oldUrl = feedView.feed.url, newUrl = it))
-                },
-                onNicknameChange = {
-                    dispatch(FeedIntent.EditFeedNickname(url = feedView.feed.url, nickname = it))
-                },
-                onCustomDescriptionChange = {
-                    dispatch(
-                        FeedIntent.EditFeedCustomDescription(
-                            url = feedView.feed.url, customDescription = it,
-                        )
-                    )
-                },
-                onCustomIconChange = {
-                    dispatch(
-                        FeedIntent.EditFeedCustomIcon(
-                            url = feedView.feed.url, customIcon = it,
-                        )
-                    )
-                },
-                onSortXmlArticlesOnUpdateChanged = {
-                    dispatch(
-                        FeedIntent.EditFeedSortXmlArticlesOnUpdate(
-                            url = feedView.feed.url, sort = it,
-                        )
-                    )
-                },
-                onGroupChange = {
-                    dispatch(
-                        FeedIntent.EditFeedGroup(url = feedView.feed.url, groupId = it.groupId)
-                    )
-                },
-                openCreateGroupDialog = {
-                    openCreateGroupDialog = true
-                    createGroupDialogGroup = ""
-                },
-                onMessage = { scope.launch { currentSnackbarHostState.showSnackbar(it) } }
+                snackbarHostState = snackbarHostState
             )
         }
 
@@ -400,19 +342,6 @@ internal fun FeedList(
         }
 
         WaitingDialog(visible = uiState.loadingDialog)
-
-        CreateGroupDialog(
-            visible = openCreateGroupDialog,
-            value = createGroupDialogGroup,
-            onValueChange = { text -> createGroupDialogGroup = text },
-            onCreateGroup = {
-                dispatch(FeedIntent.CreateGroup(it))
-                openCreateGroupDialog = false
-            },
-            onDismissRequest = {
-                openCreateGroupDialog = false
-            }
-        )
     }
 }
 
@@ -431,34 +360,6 @@ private fun AddFeedDialog(
         onValueChange = onUrlChange,
         onDismissRequest = onDismissRequest,
         onConfirm = onConfirm,
-    )
-}
-
-@Composable
-private fun CreateGroupDialog(
-    visible: Boolean,
-    value: String,
-    onValueChange: (String) -> Unit,
-    onCreateGroup: (GroupVo) -> Unit,
-    onDismissRequest: () -> Unit,
-) {
-    TextFieldDialog(
-        visible = visible,
-        icon = { Icon(imageVector = Icons.Outlined.Workspaces, contentDescription = null) },
-        titleText = stringResource(Res.string.feed_screen_add_group),
-        placeholder = stringResource(Res.string.feed_group),
-        value = value,
-        onValueChange = onValueChange,
-        onConfirm = { text ->
-            onCreateGroup(
-                GroupVo(
-                    groupId = Uuid.random().toString(),
-                    name = text,
-                    isExpanded = true,
-                )
-            )
-        },
-        onDismissRequest = onDismissRequest,
     )
 }
 

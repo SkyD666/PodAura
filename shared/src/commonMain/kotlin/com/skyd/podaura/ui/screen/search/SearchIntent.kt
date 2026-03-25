@@ -15,4 +15,5 @@ sealed interface SearchIntent : MviIntent {
     data class Favorite(val articleId: String, val favorite: Boolean) : SearchIntent
     data class Read(val articleId: String, val read: Boolean) : SearchIntent
     data class Delete(val articleId: String) : SearchIntent
+    data class OnEditFeedDialog(val feedUrl: String?) : SearchIntent
 }

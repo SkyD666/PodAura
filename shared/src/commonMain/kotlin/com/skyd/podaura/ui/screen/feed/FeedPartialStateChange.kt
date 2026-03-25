@@ -19,7 +19,7 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    editFeedDialogBean = feed,
+                    editFeedUrl = feed.feed.url,
                     loadingDialog = false,
                 )
 
@@ -33,9 +33,9 @@ internal sealed interface FeedPartialStateChange {
         data class Failed(val msg: String) : AddFeed
     }
 
-    data class OnEditFeedDialog(val feed: FeedViewBean?) : FeedPartialStateChange {
+    data class OnEditFeedDialog(val feedUrl: String?) : FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
-            return oldState.copy(editFeedDialogBean = feed)
+            return oldState.copy(editFeedUrl = feedUrl)
         }
     }
 
@@ -45,66 +45,13 @@ internal sealed interface FeedPartialStateChange {
         }
     }
 
-    sealed interface EditFeed : FeedPartialStateChange {
-        override fun reduce(oldState: FeedState): FeedState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    editFeedDialogBean = feed.takeIf { oldState.editFeedDialogBean != null },
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val feed: FeedViewBean) : EditFeed
-        data class Failed(val msg: String) : EditFeed
-    }
-
-    sealed interface ClearFeedArticles : FeedPartialStateChange {
-        override fun reduce(oldState: FeedState): FeedState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    editFeedDialogBean = feed.takeIf { oldState.editFeedDialogBean != null },
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val feed: FeedViewBean) : ClearFeedArticles
-        data class Failed(val msg: String) : ClearFeedArticles
-    }
-
-    sealed interface RemoveFeed : FeedPartialStateChange {
-        override fun reduce(oldState: FeedState): FeedState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data object Success : RemoveFeed
-        data class Failed(val msg: String) : RemoveFeed
-    }
-
     sealed interface ReadAll : FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    editFeedDialogBean = oldState.editFeedDialogBean?.let { editFeedDialogBean ->
-                        feeds.firstOrNull { feed -> feed.feed.url == editFeedDialogBean.feed.url }
-                    } ?: oldState.editFeedDialogBean,
+                    editFeedUrl = oldState.editFeedUrl?.let {
+                        feeds.firstOrNull { feed -> feed.feed.url == it }?.feed?.url
+                    } ?: oldState.editFeedUrl,
                     loadingDialog = false,
                 )
 
@@ -122,8 +69,8 @@ internal sealed interface FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
                 is Success -> oldState.copy(
-                    editFeedDialogBean = oldState.editFeedDialogBean?.let { editFeedDialogBean ->
-                        feeds.firstOrNull { feed -> feed.feed.url == editFeedDialogBean.feed.url }
+                    editFeedUrl = oldState.editFeedUrl?.let {
+                        feeds.firstOrNull { feed -> feed.feed.url == it }?.feed?.url
                     },
                     loadingDialog = false,
                 )
@@ -258,26 +205,6 @@ internal sealed interface FeedPartialStateChange {
 
         data class Failed(val msg: String) : FeedList
         data object Loading : FeedList
-    }
-
-    sealed interface MuteFeed : FeedPartialStateChange {
-        override fun reduce(oldState: FeedState): FeedState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    editFeedDialogBean = oldState.editFeedDialogBean?.let { feedView ->
-                        feedView.copy(feed = feedView.feed.copy(mute = mute))
-                    },
-                    loadingDialog = false,
-                )
-
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
-                )
-            }
-        }
-
-        data class Success(val mute: Boolean) : MuteFeed
-        data class Failed(val msg: String) : MuteFeed
     }
 
     sealed interface MuteFeedsInGroup : FeedPartialStateChange {

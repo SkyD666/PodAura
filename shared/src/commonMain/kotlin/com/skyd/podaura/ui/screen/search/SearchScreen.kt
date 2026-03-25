@@ -69,6 +69,7 @@ import com.skyd.podaura.ui.screen.article.Article1Item
 import com.skyd.podaura.ui.screen.article.Article1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
+import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -215,7 +216,9 @@ fun SearchScreen(
             SearchResultState.Loading -> CircularProgressPlaceholder(contentPadding = innerPaddings)
 
             is SearchResultState.Success -> SuccessContent(
+                snackbarHostState = snackbarHostState,
                 searchResultState = searchResultState,
+                editFeedUrl = uiState.editFeedUrl,
                 searchResultListState = searchResultListState,
                 searchRoute = searchRoute,
                 dispatch = dispatch,
@@ -244,7 +247,9 @@ fun SearchScreen(
 
 @Composable
 private fun SuccessContent(
+    snackbarHostState: SnackbarHostState,
     searchResultState: SearchResultState.Success,
+    editFeedUrl: String?,
     searchResultListState: LazyGridState,
     searchRoute: SearchRoute,
     dispatch: (SearchIntent) -> Unit,
@@ -266,7 +271,11 @@ private fun SuccessContent(
         ) {
             @Suppress("UNCHECKED_CAST")
             when (searchRoute) {
-                SearchRoute.Feed -> feedItems(result as LazyPagingItems<FeedViewBean>)
+                SearchRoute.Feed -> feedItems(
+                    result = result as LazyPagingItems<FeedViewBean>,
+                    onEdit = { dispatch(SearchIntent.OnEditFeedDialog(it.feed.url)) },
+                )
+
                 is SearchRoute.Article -> articleItems(
                     result = result as LazyPagingItems<ArticleWithFeed>,
                     onFavorite = { articleWithFeed, favorite ->
@@ -291,8 +300,17 @@ private fun SuccessContent(
                         )
                     },
                     onMessage = onMessage,
+                    onEditFeedSheet = { dispatch(SearchIntent.OnEditFeedDialog(it)) },
                 )
             }
+        }
+
+        if (editFeedUrl != null) {
+            EditFeedSheet(
+                feedUrl = editFeedUrl,
+                onDismissRequest = { dispatch(SearchIntent.OnEditFeedDialog(null)) },
+                snackbarHostState = snackbarHostState
+            )
         }
     }
 }
@@ -314,13 +332,16 @@ private fun SearchResultList(
     ) { items() }
 }
 
-private fun LazyGridScope.feedItems(result: LazyPagingItems<FeedViewBean>) {
+private fun LazyGridScope.feedItems(
+    result: LazyPagingItems<FeedViewBean>,
+    onEdit: (FeedViewBean) -> Unit,
+) {
     items(
         count = result.itemCount,
         key = result.safeItemKey { it.feed.url },
     ) { index ->
         when (val item = result[index]) {
-            is FeedViewBean -> Feed1Item(item)
+            is FeedViewBean -> Feed1Item(item, onEdit = onEdit)
             null -> Feed1ItemPlaceholder()
         }
     }
@@ -332,6 +353,7 @@ private fun LazyGridScope.articleItems(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
     onMessage: (String) -> Unit,
+    onEditFeedSheet: ((String) -> Unit)? = null,
 ) {
     items(
         count = result.itemCount,
@@ -344,6 +366,7 @@ private fun LazyGridScope.articleItems(
                 onRead = onRead,
                 onDelete = onDelete,
                 onMessage = onMessage,
+                onEditFeedSheet = onEditFeedSheet,
             )
 
             null -> Article1ItemPlaceholder()

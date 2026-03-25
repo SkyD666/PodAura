@@ -8,4 +8,5 @@ sealed interface HistoryIntent : MviIntent {
     data class DeleteMediaPlayHistory(val path: String) : HistoryIntent
     data object DeleteAllReadHistory : HistoryIntent
     data object DeleteAllMediaPlayHistory : HistoryIntent
+    data class OnEditFeedDialog(val feedUrl: String?) : HistoryIntent
 }

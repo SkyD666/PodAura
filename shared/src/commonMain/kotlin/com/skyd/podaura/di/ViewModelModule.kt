@@ -10,6 +10,7 @@ import com.skyd.podaura.ui.screen.feed.mute.MuteFeedViewModel
 import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedViewModel
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupViewModel
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersViewModel
+import com.skyd.podaura.ui.screen.feed.sheet.FeedSheetViewModel
 import com.skyd.podaura.ui.screen.filepicker.FilePickerViewModel
 import com.skyd.podaura.ui.screen.history.HistoryViewModel
 import com.skyd.podaura.ui.screen.history.search.HistorySearchViewModel
@@ -42,6 +43,7 @@ val viewModelModule = module {
     viewModel { ReorderFeedViewModel(get()) }
     viewModel { ArticleViewModel(get()) }
     viewModel { FeedViewModel(get(), get()) }
+    viewModel { FeedSheetViewModel(get(), get()) }
     viewModel { HistoryViewModel(get()) }
     viewModel { HistorySearchViewModel(get()) }
     viewModel { MediaViewModel(get()) }

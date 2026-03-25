@@ -144,4 +144,10 @@ internal sealed interface ArticlePartialStateChange {
 
         data class Success(val filterMask: Int) : UpdateFilter
     }
+
+    data class OnEditFeedDialog(val feedUrl: String?) : ArticlePartialStateChange {
+        override fun reduce(oldState: ArticleState): ArticleState {
+            return oldState.copy(editFeedUrl = feedUrl)
+        }
+    }
 }

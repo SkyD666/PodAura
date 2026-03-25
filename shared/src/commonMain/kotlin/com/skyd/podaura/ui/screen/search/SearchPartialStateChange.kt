@@ -88,4 +88,10 @@ internal sealed interface SearchPartialStateChange {
 
         data object Success : UpdateSort
     }
+
+    data class OnEditFeedDialog(val feedUrl: String?) : SearchPartialStateChange {
+        override fun reduce(oldState: SearchState): SearchState {
+            return oldState.copy(editFeedUrl = feedUrl)
+        }
+    }
 }

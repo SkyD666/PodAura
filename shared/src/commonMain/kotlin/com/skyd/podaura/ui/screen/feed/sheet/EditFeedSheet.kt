@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.feed
+package com.skyd.podaura.ui.screen.feed.sheet
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ToggleOff
+import androidx.compose.material.icons.outlined.Workspaces
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
@@ -57,16 +58,21 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -80,16 +86,22 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import co.touchlab.kermit.Logger
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
+import com.skyd.mvi.MviEventListener
+import com.skyd.mvi.getDispatcher
+import com.skyd.podaura.ext.getOrNull
 import com.skyd.podaura.ext.isNetworkUrl
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -99,12 +111,14 @@ import com.skyd.podaura.ui.component.SheetChip
 import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.auto_download_rule_screen_name
 import podaura.shared.generated.resources.cancel
@@ -143,9 +157,141 @@ import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.reorder_feed_screen_name
 import podaura.shared.generated.resources.request_headers_screen_name
 import podaura.shared.generated.resources.reset
+import kotlin.uuid.Uuid
+
 
 @Composable
 fun EditFeedSheet(
+    feedUrl: String,
+    onDismissRequest: () -> Unit,
+    snackbarHostState: SnackbarHostState? = null,
+    viewModel: FeedSheetViewModel = koinViewModel()
+) {
+    val scope = rememberCoroutineScope()
+    val dispatch = viewModel.getDispatcher(
+        feedUrl,
+        startWith = FeedSheetIntent.Init(feedUrl)
+    )
+    val uiState by viewModel.viewState.collectAsStateWithLifecycle()
+
+    var openCreateGroupDialog by rememberSaveable { mutableStateOf(false) }
+    var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
+
+    val bottomSheetSnackbarHostState = remember { SnackbarHostState() }
+
+    val bottomSheetShowing by remember {
+        derivedStateOf { uiState.editFeedDialogBean != null }
+    }
+    val currentSnackbarHostState by rememberUpdatedState(
+        if (bottomSheetShowing) bottomSheetSnackbarHostState else snackbarHostState
+    )
+    LaunchedEffect(bottomSheetShowing) {
+        if (!bottomSheetShowing) {
+            bottomSheetSnackbarHostState.currentSnackbarData?.dismiss()
+        }
+    }
+
+    MviEventListener(viewModel.singleEvent) { event ->
+        when (event) {
+            is FeedSheetEvent.EditFeedResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.RemoveFeedResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.RefreshFeedResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.CreateGroupResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.MoveFeedsToGroupResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.ReadAllResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.ClearFeedArticlesResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.MuteFeedResultEvent.Failed ->
+                currentSnackbarHostState?.showSnackbar(event.msg)
+
+            else -> Unit
+        }
+    }
+
+    uiState.editFeedDialogBean?.let { feedView ->
+        EditFeedSheet(
+            onDismissRequest = onDismissRequest,
+            snackbarHost = { SnackbarHost(hostState = bottomSheetSnackbarHostState) },
+            feedView = feedView,
+            groups = uiState.groups.collectAsLazyPagingItems(),
+            onReadAll = { dispatch(FeedSheetIntent.ReadAllInFeed(it)) },
+            onRefresh = { feedUrl, full ->
+                dispatch(FeedSheetIntent.RefreshFeed(feedUrl, full))
+            },
+            onMute = { feedUrl, mute -> dispatch(FeedSheetIntent.MuteFeed(feedUrl, mute)) },
+            onClear = { dispatch(FeedSheetIntent.ClearFeedArticles(it)) },
+            onDelete = { dispatch(FeedSheetIntent.RemoveFeed(it)) },
+            onUrlChange = {
+                dispatch(FeedSheetIntent.EditFeedUrl(oldUrl = feedView.feed.url, newUrl = it))
+            },
+            onNicknameChange = {
+                dispatch(
+                    FeedSheetIntent.EditFeedNickname(url = feedView.feed.url, nickname = it)
+                )
+            },
+            onCustomDescriptionChange = {
+                dispatch(
+                    FeedSheetIntent.EditFeedCustomDescription(
+                        url = feedView.feed.url, customDescription = it,
+                    )
+                )
+            },
+            onCustomIconChange = {
+                dispatch(
+                    FeedSheetIntent.EditFeedCustomIcon(url = feedView.feed.url, customIcon = it)
+                )
+            },
+            onSortXmlArticlesOnUpdateChanged = {
+                dispatch(
+                    FeedSheetIntent.EditFeedSortXmlArticlesOnUpdate(
+                        url = feedView.feed.url, sort = it,
+                    )
+                )
+            },
+            onGroupChange = {
+                dispatch(
+                    FeedSheetIntent.EditFeedGroup(url = feedView.feed.url, groupId = it.groupId)
+                )
+            },
+            openCreateGroupDialog = {
+                openCreateGroupDialog = true
+                createGroupDialogGroup = ""
+            },
+            onMessage = { scope.launch { currentSnackbarHostState?.showSnackbar(it) } }
+        )
+    }
+
+    CreateGroupDialog(
+        visible = openCreateGroupDialog,
+        value = createGroupDialogGroup,
+        onValueChange = { text -> createGroupDialogGroup = text },
+        onCreateGroup = {
+            dispatch(FeedSheetIntent.CreateGroup(it))
+            openCreateGroupDialog = false
+        },
+        onDismissRequest = {
+            openCreateGroupDialog = false
+        }
+    )
+
+    WaitingDialog(visible = uiState.loadingDialog)
+}
+
+@Composable
+private fun EditFeedSheet(
     onDismissRequest: () -> Unit,
     snackbarHost: @Composable () -> Unit = {},
     feedView: FeedViewBean,
@@ -751,7 +897,7 @@ internal fun GroupArea(
             }
 
             else -> {
-                val group = groups[index - 2]
+                val group = groups.getOrNull(index - 2)
                 if (group != null) {
                     val selected = (currentGroupId ?: GroupVo.DefaultGroup.groupId) == group.groupId
                     SheetChip(
@@ -810,5 +956,33 @@ private fun EditIconDialog(
         },
         selectable = false,
         confirmButton = {},
+    )
+}
+
+@Composable
+private fun CreateGroupDialog(
+    visible: Boolean,
+    value: String,
+    onValueChange: (String) -> Unit,
+    onCreateGroup: (GroupVo) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    TextFieldDialog(
+        visible = visible,
+        icon = { Icon(imageVector = Icons.Outlined.Workspaces, contentDescription = null) },
+        titleText = stringResource(Res.string.feed_screen_add_group),
+        placeholder = stringResource(Res.string.feed_group),
+        value = value,
+        onValueChange = onValueChange,
+        onConfirm = { text ->
+            onCreateGroup(
+                GroupVo(
+                    groupId = Uuid.random().toString(),
+                    name = text,
+                    isExpanded = true,
+                )
+            )
+        },
+        onDismissRequest = onDismissRequest,
     )
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
@@ -99,6 +100,9 @@ class HistoryViewModel(
                 }.startWith(HistoryPartialStateChange.LoadingDialog).catchMap {
                     HistoryPartialStateChange.DeleteMediaPlayHistory.Failed(it.message.orEmpty())
                 }
+            },
+            filterIsInstance<HistoryIntent.OnEditFeedDialog>().flatMapConcat { intent ->
+                flowOf(HistoryPartialStateChange.OnEditFeedDialog(intent.feedUrl))
             },
         )
     }

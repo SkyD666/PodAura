@@ -59,6 +59,7 @@ import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
+import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import com.skyd.podaura.ui.screen.history.MediaPlayHistoryList
 import com.skyd.podaura.ui.screen.history.ReadHistoryList
 import com.skyd.podaura.ui.screen.search.TrailingIcon
@@ -157,7 +158,8 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
                 ReadHistoryContent(
                     state = uiState.readHistorySearchResultState,
                     contentPadding = listContentPadding,
-                    onDelete = { dispatch(HistorySearchIntent.DeleteReadHistory(it.readHistoryBean.articleId)) }
+                    onDelete = { dispatch(HistorySearchIntent.DeleteReadHistory(it.readHistoryBean.articleId)) },
+                    onEditFeedSheet = { dispatch(HistorySearchIntent.OnEditFeedDialog(it)) }
                 )
             },
             stringResource(Res.string.history_screen_media_play) to {
@@ -192,6 +194,14 @@ fun HistorySearchScreen(viewModel: HistorySearchViewModel = koinViewModel()) {
             }
         }
 
+        uiState.editFeedUrl?.let { editFeedUrl ->
+            EditFeedSheet(
+                feedUrl = editFeedUrl,
+                onDismissRequest = { dispatch(HistorySearchIntent.OnEditFeedDialog(null)) },
+                snackbarHostState = snackbarHostState
+            )
+        }
+
         WaitingDialog(visible = uiState.loadingDialog)
 
         MviEventListener(viewModel.singleEvent) { event ->
@@ -211,6 +221,7 @@ private fun ReadHistoryContent(
     state: ReadHistorySearchResultState,
     contentPadding: PaddingValues,
     onDelete: (ReadHistoryWithArticle) -> Unit,
+    onEditFeedSheet: (String?) -> Unit,
 ) {
     when (state) {
         is ReadHistorySearchResultState.Failed -> ErrorPlaceholder(
@@ -227,6 +238,7 @@ private fun ReadHistoryContent(
             nestedScrollConnection = null,
             contentPadding = contentPadding,
             onDelete = onDelete,
+            onEditFeedSheet = onEditFeedSheet,
         )
     }
 }

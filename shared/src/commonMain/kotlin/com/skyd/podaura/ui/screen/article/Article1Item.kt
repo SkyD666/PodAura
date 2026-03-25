@@ -65,6 +65,7 @@ import com.skyd.compone.component.blockString
 import com.skyd.compone.component.menu.DropdownMenuDeleteItem
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.thenIf
+import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.ext.safeOpenUri
@@ -110,6 +111,7 @@ fun Article1Item(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
     onMessage: (String) -> Unit,
+    onEditFeedSheet: ((String) -> Unit)? = null,
 ) {
     val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
@@ -173,7 +175,8 @@ fun Article1Item(
                 onLongClick = { expandMenu = true },
                 onFavorite = onFavorite,
                 onRead = onRead,
-                onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true }
+                onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
+                onEditFeedSheet = onEditFeedSheet,
             )
             ArticleMenu(
                 expanded = expandMenu,
@@ -214,6 +217,7 @@ private fun Article1ItemContent(
     onFavorite: (ArticleWithFeed, Boolean) -> Unit,
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onShowEnclosureBottomSheet: () -> Unit,
+    onEditFeedSheet: ((String) -> Unit)?,
 ) {
     val navBackStack = LocalNavBackStack.current
     val articleTapAction = ArticleTapActionPreference.current
@@ -343,7 +347,11 @@ private fun Article1ItemContent(
                 modifier = Modifier.padding(start = 11.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ArticleItemFeedInfo(data = data, colorAlpha = colorAlpha)
+                ArticleItemFeedInfo(
+                    data = data,
+                    colorAlpha = colorAlpha,
+                    onEditFeedSheet = onEditFeedSheet,
+                )
                 val isFavorite = articleWithEnclosure.article.isFavorite
                 val isRead = articleWithEnclosure.article.isRead
                 ArticleItemIconButton(
@@ -398,13 +406,25 @@ fun ArticleItemIconButton(
 }
 
 @Composable
-fun RowScope.ArticleItemFeedInfo(data: ArticleWithFeed, colorAlpha: Float = 1f) {
+fun RowScope.ArticleItemFeedInfo(
+    data: ArticleWithFeed,
+    colorAlpha: Float = 1f,
+    onEditFeedSheet: ((String) -> Unit)?,
+) {
     val navBackStack = LocalNavBackStack.current
+    val onEditFeedBlock = if (onEditFeedSheet != null) {
+        { onEditFeedSheet(data.feed.url) }
+    } else null
+
     Box(modifier = Modifier.weight(1f)) {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(3.dp))
-                .clickable { navBackStack.add(ArticleRoute(feedUrls = listOf(data.feed.url))) }
+                .combinedClickable(
+                    onLongClick = onEditFeedBlock,
+                    onClick = { navBackStack.add(ArticleRoute(feedUrls = listOf(data.feed.url))) }
+                )
+                .thenIfNotNull(onEditFeedBlock) { onRightClickIfSupported(onClick = it) }
                 .padding(horizontal = 4.dp, vertical = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

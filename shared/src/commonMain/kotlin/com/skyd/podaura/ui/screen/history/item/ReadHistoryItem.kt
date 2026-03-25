@@ -50,6 +50,7 @@ import podaura.shared.generated.resources.delete
 fun ReadHistoryItem(
     data: ReadHistoryWithArticle,
     onDelete: (ReadHistoryWithArticle) -> Unit,
+    onEditFeedSheet: ((String) -> Unit)? = null,
 ) {
     val navBackStack = LocalNavBackStack.current
     val articleWithEnclosure = data.article.articleWithEnclosure
@@ -159,7 +160,7 @@ fun ReadHistoryItem(
             modifier = Modifier.padding(start = 11.dp, end = 9.dp, top = 3.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ArticleItemFeedInfo(data = data.article)
+            ArticleItemFeedInfo(data = data.article, onEditFeedSheet = onEditFeedSheet)
             ArticleItemIconButton(
                 onClick = { onDelete(data) },
                 imageVector = Icons.Outlined.Delete,

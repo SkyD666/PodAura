@@ -111,6 +111,9 @@ class SearchViewModel(
                 }.startWith(SearchPartialStateChange.LoadingDialog.Show)
                     .catchMap { SearchPartialStateChange.DeleteArticle.Failed(it.message.toString()) }
             },
+            filterIsInstance<SearchIntent.OnEditFeedDialog>().flatMapConcat { intent ->
+                flowOf(SearchPartialStateChange.OnEditFeedDialog(intent.feedUrl))
+            },
         )
     }
 }

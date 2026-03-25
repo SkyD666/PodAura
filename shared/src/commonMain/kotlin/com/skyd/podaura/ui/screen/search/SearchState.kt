@@ -6,11 +6,13 @@ import kotlinx.coroutines.flow.Flow
 
 data class SearchState(
     val searchResultState: SearchResultState,
+    val editFeedUrl: String?,
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = SearchState(
             searchResultState = SearchResultState.Init,
+            editFeedUrl = null,
             loadingDialog = false,
         )
     }

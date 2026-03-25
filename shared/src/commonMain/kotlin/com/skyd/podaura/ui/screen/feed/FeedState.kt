@@ -11,7 +11,7 @@ data class FeedState(
     val allGroupCollapsed: Boolean,
     val groups: Flow<PagingData<GroupVo>>,
     val listState: ListState,
-    val editFeedDialogBean: FeedViewBean?,
+    val editFeedUrl: String?,
     val editGroupDialogBean: GroupVo?,
     val loadingDialog: Boolean,
 ) : MviViewState {
@@ -20,7 +20,7 @@ data class FeedState(
             allGroupCollapsed = false,
             groups = flowOf(PagingData.empty()),
             listState = ListState.Init,
-            editFeedDialogBean = null,
+            editFeedUrl = null,
             editGroupDialogBean = null,
             loadingDialog = false,
         )

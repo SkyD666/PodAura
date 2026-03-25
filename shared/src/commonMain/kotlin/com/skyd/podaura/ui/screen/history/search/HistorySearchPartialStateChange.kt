@@ -73,4 +73,10 @@ internal sealed interface HistorySearchPartialStateChange {
         data object Success : DeleteMediaPlayHistory
         data class Failed(val msg: String) : DeleteMediaPlayHistory
     }
+
+    data class OnEditFeedDialog(val feedUrl: String?) : HistorySearchPartialStateChange {
+        override fun reduce(oldState: HistorySearchState): HistorySearchState {
+            return oldState.copy(editFeedUrl = feedUrl)
+        }
+    }
 }

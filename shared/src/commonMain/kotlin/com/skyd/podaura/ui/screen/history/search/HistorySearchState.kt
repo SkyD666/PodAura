@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.Flow
 data class HistorySearchState(
     val readHistorySearchResultState: ReadHistorySearchResultState,
     val mediaPlayHistorySearchResultState: MediaPlayHistorySearchResultState,
+    val editFeedUrl: String?,
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = HistorySearchState(
             readHistorySearchResultState = ReadHistorySearchResultState.Init,
             mediaPlayHistorySearchResultState = MediaPlayHistorySearchResultState.Init,
+            editFeedUrl = null,
             loadingDialog = false,
         )
     }

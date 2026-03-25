@@ -51,21 +51,6 @@ class FeedViewModel(
                 is FeedPartialStateChange.AddFeed.Failed ->
                     FeedEvent.AddFeedResultEvent.Failed(change.msg)
 
-                is FeedPartialStateChange.EditFeed.Success ->
-                    FeedEvent.EditFeedResultEvent.Success(change.feed)
-
-                is FeedPartialStateChange.EditFeed.Failed ->
-                    FeedEvent.EditFeedResultEvent.Failed(change.msg)
-
-                is FeedPartialStateChange.ClearFeedArticles.Success ->
-                    FeedEvent.ClearFeedArticlesResultEvent.Success(change.feed)
-
-                is FeedPartialStateChange.ClearFeedArticles.Failed ->
-                    FeedEvent.ClearFeedArticlesResultEvent.Failed(change.msg)
-
-                is FeedPartialStateChange.RemoveFeed.Failed ->
-                    FeedEvent.RemoveFeedResultEvent.Failed(change.msg)
-
                 is FeedPartialStateChange.RefreshFeed.Success ->
                     FeedEvent.RefreshFeedResultEvent.Success(change.feeds)
 
@@ -98,12 +83,6 @@ class FeedViewModel(
 
                 is FeedPartialStateChange.ReadAll.Failed ->
                     FeedEvent.ReadAllResultEvent.Failed(change.msg)
-
-                is FeedPartialStateChange.MuteFeed.Success ->
-                    FeedEvent.MuteFeedResultEvent.Success(change.mute)
-
-                is FeedPartialStateChange.MuteFeed.Failed ->
-                    FeedEvent.MuteFeedResultEvent.Failed(change.msg)
 
                 is FeedPartialStateChange.MuteFeedsInGroup.Failed ->
                     FeedEvent.MuteFeedsInGroupResultEvent.Failed(change.msg)
@@ -144,85 +123,24 @@ class FeedViewModel(
                     .catchMap { FeedPartialStateChange.AddFeed.Failed(it.message.toString()) }
             },
             filterIsInstance<FeedIntent.OnEditFeedDialog>().flatMapConcat { intent ->
-                flowOf(FeedPartialStateChange.OnEditFeedDialog(intent.feed))
+                flowOf(FeedPartialStateChange.OnEditFeedDialog(intent.feedUrl))
             },
             filterIsInstance<FeedIntent.OnEditGroupDialog>().flatMapConcat { intent ->
                 flowOf(FeedPartialStateChange.OnEditGroupDialog(intent.group))
             },
-            merge(
-                filterIsInstance<FeedIntent.EditFeedUrl>().map { intent ->
-                    feedRepo.editFeedUrl(oldUrl = intent.oldUrl, newUrl = intent.newUrl)
-                },
-                filterIsInstance<FeedIntent.EditFeedGroup>().map { intent ->
-                    feedRepo.editFeedGroup(url = intent.url, groupId = intent.groupId)
-                },
-                filterIsInstance<FeedIntent.EditFeedCustomDescription>().map { intent ->
-                    feedRepo.editFeedCustomDescription(
-                        url = intent.url, customDescription = intent.customDescription,
-                    )
-                },
-                filterIsInstance<FeedIntent.EditFeedCustomIcon>().map { intent ->
-                    feedRepo.editFeedCustomIcon(url = intent.url, customIcon = intent.customIcon)
-                },
-                filterIsInstance<FeedIntent.EditFeedSortXmlArticlesOnUpdate>().map { intent ->
-                    feedRepo.editFeedSortXmlArticlesOnUpdate(url = intent.url, sort = intent.sort)
-                },
-                filterIsInstance<FeedIntent.EditFeedNickname>().map { intent ->
-                    feedRepo.editFeedNickname(url = intent.url, nickname = intent.nickname)
-                },
-            ).flatMapConcat { flow ->
-                flow.map { FeedPartialStateChange.EditFeed.Success(it) }
-                    .startWith(FeedPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedPartialStateChange.EditFeed.Failed(it.message.toString()) }
-            },
-            filterIsInstance<FeedIntent.ClearFeedArticles>().flatMapConcat { intent ->
-                feedRepo.clearFeedArticles(intent.url).flatMapConcat {
-                    feedRepo.getFeedViewsByUrls(listOf(intent.url))
-                }.map {
-                    FeedPartialStateChange.ClearFeedArticles.Success(it.first())
-                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedPartialStateChange.ClearFeedArticles.Failed(it.message.toString()) }
-            },
-            filterIsInstance<FeedIntent.RemoveFeed>().flatMapConcat { intent ->
-                feedRepo.removeFeed(intent.url).map {
-                    if (it > 0) FeedPartialStateChange.RemoveFeed.Success
-                    else FeedPartialStateChange.RemoveFeed.Failed("Remove failed!")
-                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
-            },
-            merge(
-                filterIsInstance<FeedIntent.ReadAllInGroup>().map { intent ->
-                    feedRepo.readAllInGroup(intent.groupId).flatMapConcat {
-                        feedRepo.getFeedViewsByGroupId(intent.groupId)
-                    }
-                },
-                filterIsInstance<FeedIntent.ReadAllInFeed>().map { intent ->
-                    feedRepo.readAllInFeed(intent.feedUrl).flatMapConcat {
-                        feedRepo.getFeedViewsByUrls(listOf(intent.feedUrl))
-                    }
-                },
-            ).flatMapConcat { flow ->
-                flow.map { FeedPartialStateChange.ReadAll.Success(it) }
+            filterIsInstance<FeedIntent.ReadAllInGroup>().flatMapConcat { intent ->
+                feedRepo.readAllInGroup(intent.groupId).flatMapConcat {
+                    feedRepo.getFeedViewsByGroupId(intent.groupId)
+                }.map { FeedPartialStateChange.ReadAll.Success(it) }
                     .startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.ReadAll.Failed(it.message.toString()) }
             },
-            merge(
-                filterIsInstance<FeedIntent.RefreshFeed>().map { intent ->
-                    val urls = listOf(intent.url)
-                    articleRepo.refreshArticleList(
-                        feedUrls = urls, full = intent.full,
-                    ).flatMapConcat {
-                        feedRepo.getFeedViewsByUrls(urls)
-                    }
-                },
-                filterIsInstance<FeedIntent.RefreshGroupFeed>().map { intent ->
-                    articleRepo.refreshGroupArticles(
-                        groupId = intent.groupId, full = intent.full,
-                    ).flatMapConcat {
-                        feedRepo.getFeedViewsByGroupId(intent.groupId)
-                    }
-                },
-            ).flatMapConcat { flow ->
-                flow.map { FeedPartialStateChange.RefreshFeed.Success(it) }
+            filterIsInstance<FeedIntent.RefreshGroupFeed>().flatMapConcat { intent ->
+                articleRepo.refreshGroupArticles(
+                    groupId = intent.groupId, full = intent.full,
+                ).flatMapConcat {
+                    feedRepo.getFeedViewsByGroupId(intent.groupId)
+                }.map { FeedPartialStateChange.RefreshFeed.Success(it) }
                     .startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.RefreshFeed.Failed(it.message.toString()) }
             },
@@ -262,12 +180,6 @@ class FeedViewModel(
                     FeedPartialStateChange.MoveFeedsToGroup.Success
                 }.startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.MoveFeedsToGroup.Failed(it.message.toString()) }
-            },
-            filterIsInstance<FeedIntent.MuteFeed>().flatMapConcat { intent ->
-                feedRepo.muteFeed(intent.feedUrl, intent.mute).map {
-                    FeedPartialStateChange.MuteFeed.Success(intent.mute)
-                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedPartialStateChange.MuteFeed.Failed(it.message.toString()) }
             },
             filterIsInstance<FeedIntent.MuteFeedsInGroup>().flatMapConcat { intent ->
                 feedRepo.muteFeedsInGroup(intent.groupId, intent.mute).map {

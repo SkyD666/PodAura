@@ -6,4 +6,5 @@ sealed interface HistorySearchIntent : MviIntent {
     data class Query(val query: String) : HistorySearchIntent
     data class DeleteReadHistory(val articleId: String) : HistorySearchIntent
     data class DeleteMediaPlayHistory(val path: String) : HistorySearchIntent
+    data class OnEditFeedDialog(val feedUrl: String?) : HistorySearchIntent
 }

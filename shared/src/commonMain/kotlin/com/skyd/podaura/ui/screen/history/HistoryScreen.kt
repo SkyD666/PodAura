@@ -46,6 +46,7 @@ import com.skyd.podaura.model.bean.history.ReadHistoryWithArticle
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
+import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import com.skyd.podaura.ui.screen.history.item.MediaPlayHistoryItem
 import com.skyd.podaura.ui.screen.history.item.MediaPlayItemPlaceholder
 import com.skyd.podaura.ui.screen.history.item.ReadHistoryItem
@@ -108,7 +109,8 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                             historyList = historyListState.readHistoryList.collectAsLazyPagingItems(),
                             nestedScrollConnection = nestedScrollConnection,
                             contentPadding = listContentPadding,
-                            onDelete = { dispatch(HistoryIntent.DeleteReadHistory(it.readHistoryBean.articleId)) }
+                            onDelete = { dispatch(HistoryIntent.DeleteReadHistory(it.readHistoryBean.articleId)) },
+                            onEditFeedSheet = { dispatch(HistoryIntent.OnEditFeedDialog(it)) },
                         )
                     },
                     stringResource(Res.string.history_screen_media_play) to {
@@ -143,6 +145,13 @@ fun HistoryScreen(viewModel: HistoryViewModel = koinViewModel()) {
                         tabs[index].second.invoke(this)
                     }
                 }
+                uiState.editFeedUrl?.let { editFeedUrl ->
+                    EditFeedSheet(
+                        feedUrl = editFeedUrl,
+                        onDismissRequest = { dispatch(HistoryIntent.OnEditFeedDialog(null)) },
+                        snackbarHostState = snackbarHostState
+                    )
+                }
             }
         }
     }
@@ -154,6 +163,7 @@ internal fun ReadHistoryList(
     nestedScrollConnection: NestedScrollConnection?,
     contentPadding: PaddingValues,
     onDelete: (ReadHistoryWithArticle) -> Unit,
+    onEditFeedSheet: (String?) -> Unit,
 ) {
     PagingRefreshStateIndicator(
         lazyPagingItems = historyList,
@@ -177,6 +187,7 @@ internal fun ReadHistoryList(
                     ReadHistoryItem(
                         data = data,
                         onDelete = onDelete,
+                        onEditFeedSheet = onEditFeedSheet,
                     )
                 }
             }

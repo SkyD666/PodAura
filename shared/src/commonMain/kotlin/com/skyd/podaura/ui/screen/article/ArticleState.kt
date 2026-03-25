@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.Flow
 data class ArticleState(
     val articleFilterState: Int,
     val articleListState: ArticleListState,
+    val editFeedUrl: String?,
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = ArticleState(
             articleFilterState = FeedBean.DEFAULT_FILTER_MASK,
             articleListState = ArticleListState.Init(),
+            editFeedUrl = null,
             loadingDialog = false,
         )
     }

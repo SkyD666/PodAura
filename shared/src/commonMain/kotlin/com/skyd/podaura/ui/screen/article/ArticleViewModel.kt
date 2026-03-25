@@ -130,6 +130,9 @@ class ArticleViewModel(
                     ArticlePartialStateChange.DeleteArticle.Failed(it.message.toString())
                 }
             },
+            filterIsInstance<ArticleIntent.OnEditFeedDialog>().flatMapConcat { intent ->
+                flowOf(ArticlePartialStateChange.OnEditFeedDialog(intent.feedUrl))
+            },
         )
     }
 }

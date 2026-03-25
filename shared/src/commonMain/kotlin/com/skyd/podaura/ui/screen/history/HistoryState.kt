@@ -8,11 +8,13 @@ import kotlinx.coroutines.flow.Flow
 
 data class HistoryState(
     val historyListState: HistoryListState,
+    val editFeedUrl: String?,
     val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = HistoryState(
             historyListState = HistoryListState.Init,
+            editFeedUrl = null,
             loadingDialog = false,
         )
     }

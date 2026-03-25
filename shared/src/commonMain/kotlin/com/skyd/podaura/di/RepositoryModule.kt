@@ -20,6 +20,8 @@ import com.skyd.podaura.model.repository.feed.ReorderFeedRepository
 import com.skyd.podaura.model.repository.feed.ReorderGroupRepository
 import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
 import com.skyd.podaura.model.repository.feed.RssHelper
+import com.skyd.podaura.model.repository.feed.sheet.FeedSheetRepository
+import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
 import com.skyd.podaura.model.repository.importexport.ImportExportRepository
 import com.skyd.podaura.model.repository.importexport.opml.IExportOpmlRepository
 import com.skyd.podaura.model.repository.importexport.opml.IImportOpmlRepository
@@ -87,7 +89,11 @@ val repositoryModule = module {
     factory { RssHelper(get()) }
 
     factory {
-        FeedRepository(get(), get(), get(), get(), get())
+        FeedSheetRepository(get(), get(), get(), get(), get())
+    } binds arrayOf(IFeedSheetRepository::class)
+
+    factory {
+        FeedRepository(get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedRepository::class)
 
     factory {

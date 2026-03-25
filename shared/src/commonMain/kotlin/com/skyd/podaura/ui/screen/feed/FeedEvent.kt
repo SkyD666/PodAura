@@ -14,20 +14,6 @@ sealed interface FeedEvent : MviSingleEvent {
         data class Failed(val msg: String) : AddFeedResultEvent
     }
 
-    sealed interface EditFeedResultEvent : FeedEvent {
-        data class Success(val feed: FeedViewBean) : EditFeedResultEvent
-        data class Failed(val msg: String) : EditFeedResultEvent
-    }
-
-    sealed interface RemoveFeedResultEvent : FeedEvent {
-        data class Failed(val msg: String) : RemoveFeedResultEvent
-    }
-
-    sealed interface ClearFeedArticlesResultEvent : FeedEvent {
-        data class Success(val feed: FeedViewBean) : ClearFeedArticlesResultEvent
-        data class Failed(val msg: String) : ClearFeedArticlesResultEvent
-    }
-
     sealed interface RefreshFeedResultEvent : FeedEvent {
         data class Success(val feeds: List<FeedViewBean>) : RefreshFeedResultEvent
         data class Failed(val msg: String) : RefreshFeedResultEvent
@@ -57,11 +43,6 @@ sealed interface FeedEvent : MviSingleEvent {
     sealed interface ReadAllResultEvent : FeedEvent {
         data class Success(val feeds: List<FeedViewBean>) : ReadAllResultEvent
         data class Failed(val msg: String) : ReadAllResultEvent
-    }
-
-    sealed interface MuteFeedResultEvent : FeedEvent {
-        data class Success(val mute: Boolean) : MuteFeedResultEvent
-        data class Failed(val msg: String) : MuteFeedResultEvent
     }
 
     sealed interface MuteFeedsInGroupResultEvent : FeedEvent {

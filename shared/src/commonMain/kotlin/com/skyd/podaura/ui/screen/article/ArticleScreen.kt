@@ -91,6 +91,7 @@ import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.UuidList
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.uuidListType
+import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import io.ktor.http.URLBuilder
 import kotlinx.coroutines.launch
@@ -300,6 +301,7 @@ fun ArticleScreen(
         Content(
             uiState = uiState,
             listState = listState,
+            snackbarHostState = snackbarHostState,
             nestedScrollConnection = scrollBehavior.nestedScrollConnection,
             showFilterBar = showFilterBar,
             onRefresh = { dispatch(ArticleIntent.Refresh(feedUrls, groupIds, articleIds)) },
@@ -337,6 +339,7 @@ fun ArticleScreen(
                 )
             },
             onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
+            onEditFeedSheet = { dispatch(ArticleIntent.OnEditFeedDialog(it)) },
             contentPadding = paddingValues + PaddingValues(bottom = fabHeight),
         )
 
@@ -375,6 +378,7 @@ fun ArticleScreen(
 private fun Content(
     uiState: ArticleState,
     listState: LazyGridState,
+    snackbarHostState: SnackbarHostState,
     nestedScrollConnection: NestedScrollConnection,
     showFilterBar: Boolean,
     onRefresh: () -> Unit,
@@ -383,6 +387,7 @@ private fun Content(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
     onMessage: (String) -> Unit,
+    onEditFeedSheet: (String?) -> Unit,
     contentPadding: PaddingValues,
 ) {
     val state = rememberPullToRefreshState()
@@ -419,16 +424,26 @@ private fun Content(
                     contentPadding = currentContentPadding,
                 )
 
-                is ArticleListState.Success -> ArticleList(
-                    modifier = Modifier.nestedScroll(nestedScrollConnection),
-                    articles = articleListState.articlePagingDataFlow.collectAsLazyPagingItems(),
-                    listState = listState,
-                    onFavorite = onFavorite,
-                    onRead = onRead,
-                    onDelete = onDelete,
-                    contentPadding = currentContentPadding,
-                    onMessage = onMessage,
-                )
+                is ArticleListState.Success -> {
+                    ArticleList(
+                        modifier = Modifier.nestedScroll(nestedScrollConnection),
+                        articles = articleListState.articlePagingDataFlow.collectAsLazyPagingItems(),
+                        listState = listState,
+                        onFavorite = onFavorite,
+                        onRead = onRead,
+                        onDelete = onDelete,
+                        contentPadding = currentContentPadding,
+                        onMessage = onMessage,
+                        onEditFeedSheet = onEditFeedSheet,
+                    )
+                    uiState.editFeedUrl?.let { editFeedUrl ->
+                        EditFeedSheet(
+                            feedUrl = editFeedUrl,
+                            onDismissRequest = { onEditFeedSheet(null) },
+                            snackbarHostState = snackbarHostState
+                        )
+                    }
+                }
             }
         }
 
@@ -451,6 +466,7 @@ private fun ArticleList(
     onRead: (ArticleWithFeed, Boolean) -> Unit,
     onDelete: (ArticleWithFeed) -> Unit,
     onMessage: (String) -> Unit,
+    onEditFeedSheet: (String?) -> Unit,
     contentPadding: PaddingValues,
 ) {
     PagingRefreshStateIndicator(
@@ -478,6 +494,7 @@ private fun ArticleList(
                         onRead = onRead,
                         onDelete = onDelete,
                         onMessage = onMessage,
+                        onEditFeedSheet = onEditFeedSheet,
                     )
 
                     null -> Article1ItemPlaceholder()
