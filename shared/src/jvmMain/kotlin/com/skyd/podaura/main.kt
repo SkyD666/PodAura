@@ -14,6 +14,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
+import com.skyd.podaura.ui.frame.WindowFrame
 import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.util.CrashHandler
@@ -33,18 +34,24 @@ fun main() {
             initKoin()
             onAppStart()
 
+            val windowState = rememberWindowState(
+                position = WindowPosition.Aligned(alignment = Alignment.Center),
+                size = DpSize(1200.dp, 800.dp),
+            )
+
             Window(
                 onCloseRequest = ::exitApplication,
-                state = rememberWindowState(
-                    position = WindowPosition.Aligned(alignment = Alignment.Center),
-                    size = DpSize(1200.dp, 800.dp),
-                ),
+                state = windowState,
                 title = stringResource(Res.string.app_name),
             ) {
                 CompositionLocalProvider(
                     LocalWindowController provides windowController,
                 ) {
-                    AppEntrance()
+                    WindowFrame(
+                        onCloseRequest = ::exitApplication,
+                        state = windowState,
+                        content = ::AppEntrance
+                    )
                 }
             }
         } else {

@@ -4,6 +4,8 @@ package com.skyd.podaura.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import org.jetbrains.compose.resources.ComposeEnvironment
 import org.jetbrains.compose.resources.LocalComposeEnvironment
 import org.jetbrains.compose.resources.RegionQualifier
@@ -17,23 +19,25 @@ import platform.Foundation.preferredLanguages
 
 // From https://youtrack.jetbrains.com/issue/CMP-6614#focus=Comments-27-10849123.0-0
 
-val resourceEnvironmentFix: Unit = run {
-    getResourceEnvironment = ::myResourceEnvironment
-}
-
 @Composable
 fun ResourceEnvironmentFix(content: @Composable () -> Unit) {
-    resourceEnvironmentFix
+
+    SideEffect {
+        getResourceEnvironment = ::myResourceEnvironment
+    }
 
     val default = LocalComposeEnvironment.current
-    CompositionLocalProvider(
-        LocalComposeEnvironment provides object : ComposeEnvironment {
+    val composeEnvironment = remember {
+        object : ComposeEnvironment {
             @Composable
             override fun rememberEnvironment(): ResourceEnvironment {
                 val environment = default.rememberEnvironment()
                 return mapEnvironment(environment)
             }
-        },
+        }
+    }
+    CompositionLocalProvider(
+        LocalComposeEnvironment provides composeEnvironment,
         content = content
     )
 }

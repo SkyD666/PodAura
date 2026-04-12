@@ -13,7 +13,7 @@ interface ObjCRuntime : Library {
     fun objc_msgSend(receiver: Pointer, selector: Pointer, arg1: Any?, arg2: Any?): Pointer
 
     companion object {
-        val INSTANCE: ObjCRuntime = Native.load<ObjCRuntime>("objc", ObjCRuntime::class.java)
+        val INSTANCE: ObjCRuntime = Native.load("objc", ObjCRuntime::class.java)
 
         fun new(className: String): Pointer {
             return INSTANCE.objc_getClass(className)("alloc")("init")

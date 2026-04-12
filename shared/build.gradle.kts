@@ -167,6 +167,7 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.ktor.client.apache5)
             implementation(libs.java.jna)
+            implementation(libs.java.jna.platform)
         }
     }
 
