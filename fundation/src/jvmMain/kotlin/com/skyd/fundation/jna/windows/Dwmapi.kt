@@ -39,9 +39,8 @@ interface Dwmapi : StdCallLibrary {
 
     companion object {
 
-        val INSTANCE: Dwmapi by lazy {
+        val INSTANCE: Dwmapi =
             Native.load("dwmapi", Dwmapi::class.java, W32APIOptions.DEFAULT_OPTIONS)
-        }
 
         // Windows 10 attribute constant for enabling Immersive Dark Mode
         // Note that this constant is not in official headers for all versions,

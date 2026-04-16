@@ -14,7 +14,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
-import com.skyd.podaura.ui.frame.WindowFrame
+import com.skyd.podaura.ui.component.frame.WindowFrame
 import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.util.CrashHandler

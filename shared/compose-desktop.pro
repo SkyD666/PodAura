@@ -33,3 +33,22 @@
 -dontwarn io.github.alexzhirkevich.compottie.dynamic._DynamicDrawProviderKt
 -dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientFillShape
 -dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientStrokeShape
+
+# Windows Window Frame
+-keepnames class androidx.compose.foundation.HoverableNode
+-keepnames class androidx.compose.foundation.gestures.ScrollableNode
+-keepnames class androidx.compose.ui.scene.PlatformLayersComposeSceneImpl
+-keepnames class androidx.compose.ui.scene.CanvasLayersComposeSceneImpl
+-keepnames class androidx.compose.ui.scene.CanvasLayersComposeSceneImpl$AttachedComposeSceneLayer
+-keepclassmembers class androidx.compose.ui.scene.PlatformLayersComposeSceneImpl {
+    private *** getMainOwner();
+}
+-keepclassmembers class androidx.compose.ui.scene.CanvasLayersComposeSceneImpl {
+    private *** mainOwner;
+    private *** _layersCopyCache;
+    private *** focusedLayer;
+}
+-keepclassmembers class androidx.compose.ui.scene.CanvasLayersComposeSceneImpl$AttachedComposeSceneLayer {
+    private *** owner;
+    private *** isInBounds(...);
+}

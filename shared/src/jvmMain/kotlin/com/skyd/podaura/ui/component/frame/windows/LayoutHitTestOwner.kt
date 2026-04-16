@@ -1,6 +1,6 @@
 @file:Suppress("INVISIBLE_REFERENCE")
 
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 import androidx.compose.foundation.AbstractClickableNode
 import androidx.compose.runtime.Composable

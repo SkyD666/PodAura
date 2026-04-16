@@ -1,11 +1,11 @@
-package com.skyd.podaura.ui.frame
+package com.skyd.podaura.ui.component.frame
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
-import com.skyd.podaura.ui.frame.windows.WindowsWindowFrame
+import com.skyd.podaura.ui.component.frame.windows.WindowsWindowFrame
 
 @Composable
 fun FrameWindowScope.WindowFrame(
@@ -14,7 +14,7 @@ fun FrameWindowScope.WindowFrame(
     content: @Composable () -> Unit
 ) {
     when (platform) {
-        /*
+        /* TODO
         Platform.MacOS -> {
             MacOSWindowFrame(windowState, content)
         }

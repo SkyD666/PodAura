@@ -228,7 +228,7 @@ compose.desktop {
                 iconFile = project.file("icons/icon_512x512.icns")
             }
             windows {
-                iconFile = project.file("icons/icon.ico")
+                // iconFile = project.file("icons/icon.ico")
                 dirChooser = true
             }
 

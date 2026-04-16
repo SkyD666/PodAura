@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets

@@ -206,9 +206,8 @@ interface ExtendedUser32 : User32 {
 
     companion object {
 
-        val INSTANCE: ExtendedUser32 by lazy {
+        val INSTANCE: ExtendedUser32 =
             Native.load("user32", ExtendedUser32::class.java, W32APIOptions.DEFAULT_OPTIONS)
-        }
 
         const val SC_RESTORE: Int = 0x0000f120
         const val SC_MOVE: Int = 0xF010

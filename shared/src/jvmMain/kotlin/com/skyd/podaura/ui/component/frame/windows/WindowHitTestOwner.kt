@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 fun interface WindowsWindowHitTestOwner {
     fun hitTest(x: Float, y: Float): WindowsWindowHitResult

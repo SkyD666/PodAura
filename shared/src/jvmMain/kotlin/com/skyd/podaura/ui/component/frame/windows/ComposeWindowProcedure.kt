@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color

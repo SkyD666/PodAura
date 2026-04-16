@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource

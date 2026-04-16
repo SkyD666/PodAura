@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.frame.windows
+package com.skyd.podaura.ui.component.frame.windows
 
 import com.skyd.fundation.jna.windows.ExtendedUser32
 import com.skyd.fundation.util.WindowsUtil
