@@ -20,13 +20,13 @@ kotlin {
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    androidLibrary {
+    android {
         namespace = "com.skyd.podaura.shared"
         minSdk = 24
         compileSdk {
-            version = release(36) { minorApiLevel = 1 }
+            version = release(37) { minorApiLevel = 0 }
         }
-        buildToolsVersion = "36.1.0"
+        buildToolsVersion = "37.0.0"
         androidResources.enable = true
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21
@@ -191,15 +191,16 @@ kotlin {
             "kotlinx.coroutines.FlowPreview",
             "kotlinx.coroutines.ExperimentalCoroutinesApi",
             "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
-            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
             "kotlinx.serialization.ExperimentalSerializationApi",
+            "kotlinx.cinterop.ExperimentalForeignApi",
+            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
             "kotlin.contracts.ExperimentalContracts",
-            "kotlin.ExperimentalStdlibApi",
             "kotlin.uuid.ExperimentalUuidApi",
             "kotlin.time.ExperimentalTime",
+            "kotlin.experimental.ExperimentalNativeApi",
+            "kotlin.ExperimentalStdlibApi",
             "com.google.accompanist.permissions.ExperimentalPermissionsApi",
-            "kotlinx.cinterop.ExperimentalForeignApi",
-            "kotlin.experimental.ExperimentalNativeApi"
+            "coil3.annotation.ExperimentalCoilApi"
         )
     }
 

@@ -24,7 +24,7 @@ open class FontStyleCssAnnotatedHandler : CSSAnnotatedHandler() {
         }
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(MODULE, throwable) {
+        Logger.w(throwable, tag = MODULE) {
             "parse FontStyle fail: $value"
         }
     }

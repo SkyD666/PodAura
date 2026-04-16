@@ -66,7 +66,7 @@ fun getFileIcon(mimetype: String): MimeTypeIcon {
 }
 
 fun Path.fileIcon(): MimeTypeIcon {
-    return if (isDirectory == true) {
+    return if (isDirectory) {
         MimeTypeIcon.DIRECTORY
     } else {
         val mimetype = mimeType() ?: return MimeTypeIcon.GENERIC

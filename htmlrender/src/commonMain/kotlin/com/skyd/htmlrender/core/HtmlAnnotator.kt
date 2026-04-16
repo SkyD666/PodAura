@@ -3,7 +3,6 @@
 package com.skyd.htmlrender.core
 
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -131,7 +130,6 @@ class HtmlAnnotator(
         }
     }
 
-    @OptIn(ExperimentalTextApi::class)
     private suspend fun AnnotatedString.Builder.handleStyleNode(
         node: StyleNode,
         paragraphIntervalList: ArrayList<ParagraphInterval>,

@@ -20,9 +20,7 @@ import coil3.svg.SvgDecoder
 import coil3.util.DebugLogger
 import com.skyd.fundation.di.get
 import io.ktor.client.HttpClient
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.koin.core.qualifier.named
-
 
 fun imageRequest(model: Any?, context: PlatformContext) = ImageRequest.Builder(context)
     .diskCachePolicy(CachePolicy.ENABLED)
@@ -31,7 +29,6 @@ fun imageRequest(model: Any?, context: PlatformContext) = ImageRequest.Builder(c
     .crossfade(true)
     .build()
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun PodAuraImage(
     model: Any?,

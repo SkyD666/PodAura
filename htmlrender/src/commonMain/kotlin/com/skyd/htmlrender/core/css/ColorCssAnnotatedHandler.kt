@@ -19,7 +19,7 @@ open class ColorCssAnnotatedHandler : CSSAnnotatedHandler() {
     internal open fun parseColor(cssColor: String): Color? =
         parser.parseColor(cssColor).also { color ->
             if (color == null) {
-                Logger.w(MODULE) {
+                Logger.w(tag = MODULE) {
                     "unsupported parse color: $cssColor"
                 }
             }

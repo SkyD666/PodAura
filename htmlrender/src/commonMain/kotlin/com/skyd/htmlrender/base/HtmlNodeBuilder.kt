@@ -52,7 +52,7 @@ suspend fun toHtmlNode(
                         map.getOrPut(e) { mutableListOf() }.add(rule)
                     }
                 }.onFailure {
-                    Logger.e(TAG, it) { "unsupported css selector: ${rule.selector}" }
+                    Logger.e(throwable = it, TAG) { "unsupported css selector: ${rule.selector}" }
                 }
             }
         }
@@ -73,7 +73,7 @@ suspend fun toHtmlNode(
         val name = node.nodeName()
         val handler = tagHandles[name]
         if (handler == null && name != "body" && name != "#comment") {
-            Logger.w(TAG) { "unsupported node:${node.nodeName()}" }
+            Logger.w(tag = TAG) { "unsupported node:${node.nodeName()}" }
         }
         val cssDeclarations = buildFinalCSS(cssMap, node)
 

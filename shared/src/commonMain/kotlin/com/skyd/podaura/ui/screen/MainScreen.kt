@@ -7,10 +7,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
@@ -151,7 +153,7 @@ private fun NavigationBarOrRail(
     val navigationBarLabel = NavigationBarLabelPreference.current
     if (LocalWindowSizeClass.current.isCompact) {
         NavigationBar(
-            windowInsets = WindowInsets.safeDrawing.only(
+            windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
                 WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
             )
         ) {
@@ -170,7 +172,7 @@ private fun NavigationBarOrRail(
         }
     } else {
         NavigationRail(
-            windowInsets = WindowInsets.safeDrawing.only(
+            windowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
                 WindowInsetsSides.Vertical + WindowInsetsSides.Start
             )
         ) {

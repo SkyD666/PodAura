@@ -21,7 +21,7 @@ open class BackgroundColorCssAnnotatedHandler : CSSAnnotatedHandler() {
     } else {
         parser.parseColor(cssColor).also { color ->
             if (color == null) {
-                Logger.w(MODULE) {
+                Logger.w(tag = MODULE) {
                     "unsupported parse background color: $cssColor"
                 }
             }

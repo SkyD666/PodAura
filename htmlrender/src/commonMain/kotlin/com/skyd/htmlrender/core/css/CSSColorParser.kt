@@ -37,7 +37,7 @@ class CSSColorParser {
                     else -> throw IllegalArgumentException("Illegal length")
                 }
             }.onFailure {
-                Logger.e(MODULE, it) {
+                Logger.e(throwable = it, tag = MODULE) {
                     "Failed to parse the hex color: $cssColor"
                 }
             }.getOrNull()
@@ -56,7 +56,7 @@ class CSSColorParser {
                 }
                 Color(r, g, b, a)
             }.onFailure {
-                Logger.e(MODULE, it) {
+                Logger.e(throwable = it, tag = MODULE) {
                     "Failed to parse the rgba color: $cssColor"
                 }
             }.getOrNull()
@@ -71,7 +71,7 @@ class CSSColorParser {
                 val a = if (hsla.size == 4) parseAlpha(hsla[3]) else 1f
                 Color.hsl(h, s, l, a)
             }.onFailure {
-                Logger.e(MODULE, it) {
+                Logger.e(throwable = it, tag = MODULE) {
                     "Failed to parse the hsla color: $cssColor"
                 }
             }.getOrNull()
@@ -86,7 +86,7 @@ class CSSColorParser {
                 val a = if (hwba.size == 4) parseAlpha(hwba[3]) else 1f
                 parseHWBColor(h, w, b, a)
             }.onFailure {
-                Logger.e(MODULE, it) {
+                Logger.e(throwable = it, tag = MODULE) {
                     "Failed to parse the hwb color: $cssColor"
                 }
             }.getOrNull()

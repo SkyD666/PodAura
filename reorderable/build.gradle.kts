@@ -8,13 +8,13 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "sh.calvin.reorderable"
         minSdk = 23
         compileSdk {
-            version = release(36) { minorApiLevel = 1 }
+            version = release(37) { minorApiLevel = 0 }
         }
-        buildToolsVersion = "36.1.0"
+        buildToolsVersion = "37.0.0"
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21
         }

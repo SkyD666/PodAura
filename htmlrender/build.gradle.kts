@@ -12,13 +12,13 @@ kotlin {
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
     // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    androidLibrary {
+    android {
         namespace = "com.skyd.htmlrender"
         minSdk = 24
         compileSdk {
-            version = release(36) { minorApiLevel = 1 }
+            version = release(37) { minorApiLevel = 0 }
         }
-        buildToolsVersion = "36.1.0"
+        buildToolsVersion = "37.0.0"
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21
         }
@@ -61,5 +61,11 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.kermit)
         }
+    }
+
+    compilerOptions {
+        optIn.addAll(
+            "androidx.compose.ui.text.ExperimentalTextApi"
+        )
     }
 }
