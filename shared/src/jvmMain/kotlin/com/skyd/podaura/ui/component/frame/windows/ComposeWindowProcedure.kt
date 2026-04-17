@@ -3,7 +3,10 @@ package com.skyd.podaura.ui.component.frame.windows
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import com.skyd.fundation.jna.windows.Dwmapi
-import com.skyd.fundation.jna.windows.ExtendedUser32
+import com.skyd.fundation.jna.windows.Stdint
+import com.skyd.fundation.jna.windows.User32Extend
+import com.skyd.fundation.jna.windows.Uxtheme
+import com.skyd.fundation.jna.windows.WinUserExtend
 import com.skyd.fundation.util.WindowsUtil
 import com.skyd.podaura.util.findSkiaLayer
 import com.sun.jna.CallbackReference
@@ -28,7 +31,7 @@ internal open class BasicWindowProc(
     val accentColor: StateFlow<Color>
         field = MutableStateFlow(currentAccentColor())
 
-    private val defaultWindowProc = ExtendedUser32.INSTANCE.SetWindowLongPtr(
+    private val defaultWindowProc = User32Extend.INSTANCE.SetWindowLongPtr(
         windowHandle,
         WinUser.GWL_WNDPROC,
         CallbackReference.getFunctionPointer(this),
@@ -40,7 +43,7 @@ internal open class BasicWindowProc(
         wParam: WinDef.WPARAM,
         lParam: WinDef.LPARAM
     ): WinDef.LRESULT {
-        if (uMsg == ExtendedUser32.WM_SETTINGCHANGE) {
+        if (uMsg == WinUserExtend.WM_SETTINGCHANGE) {
             val changedKey = Pointer(lParam.toLong()).getWideString(0)
             // Theme changed for color and darkTheme
             if (changedKey == "ImmersiveColorSet") {
@@ -54,12 +57,12 @@ internal open class BasicWindowProc(
     protected open fun onThemeChanged() {}
 
     private fun callDefWindowProc(
-        hwnd: WinDef.HWND,
+        @Suppress("SpellCheckingInspection") hwnd: WinDef.HWND,
         uMsg: Int,
         wParam: WinDef.WPARAM,
         lParam: WinDef.LPARAM
     ): WinDef.LRESULT {
-        return ExtendedUser32.INSTANCE.CallWindowProc(
+        return User32Extend.INSTANCE.CallWindowProc(
             defaultWindowProc, hwnd, uMsg, wParam, lParam
         )
     }
@@ -78,7 +81,7 @@ internal open class BasicWindowProc(
     }
 
     override fun close() {
-        ExtendedUser32.INSTANCE.SetWindowLongPtr(
+        User32Extend.INSTANCE.SetWindowLongPtr(
             windowHandle,
             WinUser.GWL_WNDPROC,
             defaultWindowProc
@@ -93,7 +96,7 @@ internal class ExtendedTitleBarWindowProc(
     private var childHitTestOwner: WindowsWindowHitTestOwner? = null
 
     val windowIsActive: StateFlow<Boolean>
-        field = MutableStateFlow(ExtendedUser32.INSTANCE.GetActiveWindow() == windowHandle)
+        field = MutableStateFlow(User32Extend.INSTANCE.GetActiveWindow() == windowHandle)
 
     val frameIsColorful: StateFlow<Boolean>
         field = MutableStateFlow(isAccentColorWindowFrame())
@@ -103,7 +106,7 @@ internal class ExtendedTitleBarWindowProc(
     private val skiaLayerWindowProc: SkiaLayerHitTestWindowProc? =
         window.findSkiaLayer()?.let { SkiaLayerHitTestWindowProc(it, ::hitTest) }
 
-    private var isMaximized: Boolean = ExtendedUser32.INSTANCE.isWindowInMaximized(windowHandle)
+    private var isMaximized: Boolean = User32Extend.INSTANCE.isWindowInMaximized(windowHandle)
     private var dpi: WinDef.UINT = WinDef.UINT(0)
     private var width: Int = 0
     private var height: Int = 0
@@ -116,7 +119,7 @@ internal class ExtendedTitleBarWindowProc(
     init {
         Dwmapi.INSTANCE.DwmExtendFrameIntoClientArea(
             windowHandle,
-            Dwmapi.WindowMargins(-1, -1, -1, -1)
+            Uxtheme.MARGINS(-1, -1, -1, -1)
         )
         windowHandle.updateWindowStyle { it and WinUser.WS_SYSMENU.inv() }
         eraseWindowBackground()
@@ -193,34 +196,34 @@ internal class ExtendedTitleBarWindowProc(
         return when (uMsg) {
             // Returns 0 to make the window not draw the non-client area (title bar and border)
             // thus effectively making all the window our client area
-            ExtendedUser32.WM_NCCALCSIZE -> {
+            WinUserExtend.WM_NCCALCSIZE -> {
                 if (wParam.toInt() == 0) {
                     super.callback(hwnd, uMsg, wParam, lParam)
                 } else {
                     // this behavior is call full screen mode
-                    val style = ExtendedUser32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE)
+                    val style = User32Extend.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE)
                     if (style and (WinUser.WS_CAPTION or WinUser.WS_THICKFRAME) == 0) {
                         frameX = 0
                         frameY = 0
                         edgeX = 0
                         edgeY = 0
                         padding = 0
-                        isMaximized = ExtendedUser32.INSTANCE.isWindowInMaximized(hwnd)
+                        isMaximized = User32Extend.INSTANCE.isWindowInMaximized(hwnd)
                         return WinDef.LRESULT(0)
                     }
 
-                    dpi = ExtendedUser32.INSTANCE.GetDpiForWindow(hwnd)
-                    frameX = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-                    frameY = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
-                    edgeX = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi)
-                    edgeY = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi)
-                    padding = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(
+                    dpi = User32Extend.INSTANCE.GetDpiForWindow(hwnd)
+                    frameX = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
+                    frameY = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
+                    edgeX = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi)
+                    edgeY = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi)
+                    padding = User32Extend.INSTANCE.GetSystemMetricsForDpi(
                         WinUser.SM_CXPADDEDBORDER,
                         dpi
                     )
-                    isMaximized = ExtendedUser32.INSTANCE.isWindowInMaximized(hwnd)
+                    isMaximized = User32Extend.INSTANCE.isWindowInMaximized(hwnd)
                     val params = Structure.newInstance(
-                        NCCalcSizeParams::class.java,
+                        WinUserExtend.NCCALCSIZE_PARAMS::class.java,
                         Pointer(lParam.toLong())
                     )
                     params.read()
@@ -251,7 +254,7 @@ internal class ExtendedTitleBarWindowProc(
                 }
             }
 
-            ExtendedUser32.WM_NCHITTEST -> {
+            WinUserExtend.WM_NCHITTEST -> {
                 // Skip resizer border hit test if window is maximized
                 if (!isMaximized) {
                     val callResult = lParam.usePoint(::hitTestWindowResizerBorder)
@@ -262,41 +265,41 @@ internal class ExtendedTitleBarWindowProc(
                 WinDef.LRESULT(hitTestResult.value.toLong())
             }
 
-            ExtendedUser32.WM_NCRBUTTONUP -> {
+            WinUserExtend.WM_NCRBUTTONUP -> {
                 if (wParam.toInt() == WindowsWindowHitResult.CAPTION.value) {
-                    val oldStyle = ExtendedUser32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE)
-                    ExtendedUser32.INSTANCE.SetWindowLong(
+                    val oldStyle = User32Extend.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_STYLE)
+                    User32Extend.INSTANCE.SetWindowLong(
                         hwnd,
                         WinUser.GWL_STYLE,
                         oldStyle or WinUser.WS_SYSMENU
                     )
-                    val menu = ExtendedUser32.INSTANCE.GetSystemMenu(hwnd, false)
-                    ExtendedUser32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_STYLE, oldStyle)
-                    isMaximized = ExtendedUser32.INSTANCE.isWindowInMaximized(hwnd)
+                    val menu = User32Extend.INSTANCE.GetSystemMenu(hwnd, false)
+                    User32Extend.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_STYLE, oldStyle)
+                    isMaximized = User32Extend.INSTANCE.isWindowInMaximized(hwnd)
                     if (menu != null) {
                         // Update menu items state.
-                        val menuItemInfo = ExtendedUser32.MENUITEMINFO().apply {
+                        val menuItemInfo = WinUserExtend.MENUITEMINFOW().apply {
                             cbSize = this.size()
-                            fMask = ExtendedUser32.MIIM_STATE
-                            fType = ExtendedUser32.MFT_STRING
+                            fMask = WinUserExtend.MIIM_STATE
+                            fType = WinUserExtend.MFT_STRING
                         }
 
                         updateMenuItemInfo(
                             menu,
                             menuItemInfo,
-                            ExtendedUser32.SC_RESTORE,
+                            WinUserExtend.SC_RESTORE,
                             isMaximized
                         )
-                        updateMenuItemInfo(menu, menuItemInfo, ExtendedUser32.SC_MOVE, !isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, ExtendedUser32.SC_SIZE, !isMaximized)
+                        updateMenuItemInfo(menu, menuItemInfo, WinUserExtend.SC_MOVE, !isMaximized)
+                        updateMenuItemInfo(menu, menuItemInfo, WinUserExtend.SC_SIZE, !isMaximized)
                         updateMenuItemInfo(menu, menuItemInfo, WinUser.SC_MINIMIZE, true)
                         updateMenuItemInfo(menu, menuItemInfo, WinUser.SC_MAXIMIZE, !isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, ExtendedUser32.SC_CLOSE, true)
+                        updateMenuItemInfo(menu, menuItemInfo, WinUserExtend.SC_CLOSE, true)
 
                         // Set default menu item.
-                        ExtendedUser32.INSTANCE.SetMenuDefaultItem(
+                        User32Extend.INSTANCE.SetMenuDefaultItem(
                             menu,
-                            ExtendedUser32.WINT_MAX,
+                            Stdint.WINT_MAX,
                             false
                         )
 
@@ -306,9 +309,9 @@ internal class ExtendedTitleBarWindowProc(
                         val y = highWord(lParamValue)
 
                         // Show menu and get user selection.
-                        val ret = ExtendedUser32.INSTANCE.TrackPopupMenu(
+                        val ret = User32Extend.INSTANCE.TrackPopupMenu(
                             menu,
-                            ExtendedUser32.TPM_RETURNCMD,
+                            WinUserExtend.TPM_RETURNCMD,
                             x,
                             y,
                             0,
@@ -318,7 +321,7 @@ internal class ExtendedTitleBarWindowProc(
                         menuItemInfo.clear()
                         if (ret != 0) {
                             // Send WM_SYSCOMMAND message.
-                            ExtendedUser32.INSTANCE.PostMessage(
+                            User32Extend.INSTANCE.PostMessage(
                                 hwnd,
                                 WinUser.WM_SYSCOMMAND,
                                 WinDef.WPARAM(ret.toLong()),
@@ -337,19 +340,19 @@ internal class ExtendedTitleBarWindowProc(
                 super.callback(hwnd, uMsg, wParam, lParam)
             }
 
-            ExtendedUser32.WM_ACTIVATE -> {
-                windowIsActive.tryEmit(wParam.toInt() != ExtendedUser32.WA_INACTIVE)
+            WinUserExtend.WM_ACTIVATE -> {
+                windowIsActive.tryEmit(wParam.toInt() != WinUserExtend.WA_INACTIVE)
                 super.callback(hwnd, uMsg, wParam, lParam)
             }
 
-            ExtendedUser32.WM_NCMOUSEMOVE -> {
+            WinUserExtend.WM_NCMOUSEMOVE -> {
                 skiaLayerWindowProc?.let {
-                    ExtendedUser32.INSTANCE.PostMessage(it.contentHandle, uMsg, wParam, lParam)
+                    User32Extend.INSTANCE.PostMessage(it.contentHandle, uMsg, wParam, lParam)
                 }
                 super.callback(hwnd, uMsg, wParam, lParam)
             }
 
-            ExtendedUser32.WM_SETTINGCHANGE -> {
+            WinUserExtend.WM_SETTINGCHANGE -> {
                 val changedKey = Pointer(lParam.toLong()).getWideString(0)
                 // Theme changed for color and darkTheme
                 if (changedKey == "ImmersiveColorSet") {
@@ -372,21 +375,21 @@ internal class ExtendedTitleBarWindowProc(
 
     private fun updateMenuItemInfo(
         menu: WinDef.HMENU,
-        menuItemInfo: ExtendedUser32.MENUITEMINFO,
+        menuItemInfo: WinUserExtend.MENUITEMINFOW,
         item: Int,
         enabled: Boolean
     ) {
-        menuItemInfo.fState = if (enabled) ExtendedUser32.MFS_ENABLED else ExtendedUser32.MFS_DISABLED
-        ExtendedUser32.INSTANCE.SetMenuItemInfo(menu, item, false, menuItemInfo)
+        menuItemInfo.fState = if (enabled) WinUserExtend.MFS_ENABLED else WinUserExtend.MFS_DISABLED
+        User32Extend.INSTANCE.SetMenuItemInfo(menu, item, false, menuItemInfo)
     }
 
     // Workaround for background erase.
     private fun eraseWindowBackground() {
         if (!WindowsUtil.isWindows11OrLater()) {
-            val flag = WinUser.SWP_NOZORDER or ExtendedUser32.SWP_NOACTIVATE or
+            val flag = WinUser.SWP_NOZORDER or WinUserExtend.SWP_NOACTIVATE or
                     WinUser.SWP_FRAMECHANGED or WinUser.SWP_NOMOVE or
                     WinUser.SWP_NOSIZE or WinUser.SWP_ASYNCWINDOWPOS
-            ExtendedUser32.INSTANCE.SetWindowPos(
+            User32Extend.INSTANCE.SetWindowPos(
                 windowHandle,
                 null,
                 0,
@@ -395,7 +398,7 @@ internal class ExtendedTitleBarWindowProc(
                 0,
                 flag or WinUser.SWP_HIDEWINDOW
             )
-            ExtendedUser32.INSTANCE.SetWindowPos(
+            User32Extend.INSTANCE.SetWindowPos(
                 windowHandle,
                 null,
                 0,
@@ -426,12 +429,12 @@ internal class ExtendedTitleBarWindowProc(
     }
 
     private fun updateWindowInfo() {
-        dpi = ExtendedUser32.INSTANCE.GetDpiForWindow(windowHandle)
-        frameX = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-        frameY = ExtendedUser32.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
+        dpi = User32Extend.INSTANCE.GetDpiForWindow(windowHandle)
+        frameX = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
+        frameY = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
 
         val rect = WinDef.RECT()
-        if (ExtendedUser32.INSTANCE.GetWindowRect(windowHandle, rect)) {
+        if (User32Extend.INSTANCE.GetWindowRect(windowHandle, rect)) {
             rect.read()
             width = rect.right - rect.left
             height = rect.bottom - rect.top
@@ -444,7 +447,7 @@ internal class ExtendedTitleBarWindowProc(
         val x = lowWord(intValue).toShort().toInt()
         val y = highWord(intValue).toShort().toInt()
         val point = WinDef.POINT(x, y)
-        ExtendedUser32.INSTANCE.ScreenToClient(windowHandle, point)
+        User32Extend.INSTANCE.ScreenToClient(windowHandle, point)
         point.read()
         val result = block(point.x, point.y)
         point.clear()
@@ -452,8 +455,8 @@ internal class ExtendedTitleBarWindowProc(
     }
 
     private inline fun WinDef.HWND.updateWindowStyle(block: (old: Int) -> Int) {
-        val oldStyle = ExtendedUser32.INSTANCE.GetWindowLong(this, WinUser.GWL_STYLE)
-        ExtendedUser32.INSTANCE.SetWindowLong(this, WinUser.GWL_STYLE, block(oldStyle))
+        val oldStyle = User32Extend.INSTANCE.GetWindowLong(this, WinUser.GWL_STYLE)
+        User32Extend.INSTANCE.SetWindowLong(this, WinUser.GWL_STYLE, block(oldStyle))
     }
 
     private fun isAccentColorWindowFrame(): Boolean {
@@ -463,33 +466,6 @@ internal class ExtendedTitleBarWindowProc(
             "ColorPrevalence",
         ) != 0
     }
-
-    @Structure.FieldOrder("rgrc", "lppos")
-    @Suppress("SpellCheckingInspection", "unused")
-    class NCCalcSizeParams(
-        @JvmField var rgrc: Array<WinDef.RECT?> = Array(3) { null },
-        @JvmField var lppos: WindowPos? = null
-    ) : Structure(), Structure.ByReference
-
-    @Structure.FieldOrder(
-        "hwnd",
-        "hwndInsertAfter",
-        "x",
-        "y",
-        "cx",
-        "cy",
-        "flags",
-    )
-    @Suppress("SpellCheckingInspection", "unused")
-    class WindowPos(
-        @JvmField var hwnd: WinDef.HWND? = null,
-        @JvmField var hwndInsertAfter: WinDef.HWND? = null,
-        @JvmField var x: Int = 0,
-        @JvmField var y: Int = 0,
-        @JvmField var cx: Int = 0,
-        @JvmField var cy: Int = 0,
-        @JvmField var flags: WinDef.UINT = WinDef.UINT()
-    ) : Structure(), Structure.ByReference
 
     override fun close() {
         skiaLayerWindowProc?.close()

@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.component.frame.windows
 
-import com.skyd.fundation.jna.windows.ExtendedUser32
+import com.skyd.fundation.jna.windows.User32Extend
+import com.skyd.fundation.jna.windows.WinUserExtend
 import com.skyd.fundation.util.WindowsUtil
 import com.sun.jna.CallbackReference
 import com.sun.jna.Native
@@ -17,7 +18,7 @@ internal class SkiaLayerHitTestWindowProc(
     private val windowHandle = WinDef.HWND(Pointer(skiaLayer.windowHandle))
     internal val contentHandle = WinDef.HWND(skiaLayer.canvas.let(Native::getComponentPointer))
 
-    private val defaultWindowProc = ExtendedUser32.INSTANCE.SetWindowLongPtr(
+    private val defaultWindowProc = User32Extend.INSTANCE.SetWindowLongPtr(
         contentHandle,
         WinUser.GWL_WNDPROC,
         CallbackReference.getFunctionPointer(this)
@@ -37,7 +38,7 @@ internal class SkiaLayerHitTestWindowProc(
     ): WinDef.LRESULT {
         return when (uMsg) {
 
-            ExtendedUser32.WM_NCHITTEST -> {
+            WinUserExtend.WM_NCHITTEST -> {
                 hitResult = hitTest(lParam)
 
                 when (hitResult) {
@@ -50,38 +51,38 @@ internal class SkiaLayerHitTestWindowProc(
                 }.let { WinDef.LRESULT(it.value.toLong()) }
             }
 
-            ExtendedUser32.WM_NCMOUSEMOVE -> {
-                ExtendedUser32.INSTANCE.SendMessage(
+            WinUserExtend.WM_NCMOUSEMOVE -> {
+                User32Extend.INSTANCE.SendMessage(
                     contentHandle,
-                    ExtendedUser32.WM_MOUSEMOVE,
+                    WinUserExtend.WM_MOUSEMOVE,
                     wParam,
                     lParam
                 )
                 WinDef.LRESULT(0)
             }
 
-            ExtendedUser32.WM_NCLBUTTONDOWN -> {
-                ExtendedUser32.INSTANCE.SendMessage(
+            WinUserExtend.WM_NCLBUTTONDOWN -> {
+                User32Extend.INSTANCE.SendMessage(
                     contentHandle,
-                    ExtendedUser32.WM_LBUTTONDOWN,
+                    WinUserExtend.WM_LBUTTONDOWN,
                     wParam,
                     lParam
                 )
                 WinDef.LRESULT(0)
             }
 
-            ExtendedUser32.WM_NCLBUTTONUP -> {
-                ExtendedUser32.INSTANCE.SendMessage(
+            WinUserExtend.WM_NCLBUTTONUP -> {
+                User32Extend.INSTANCE.SendMessage(
                     contentHandle,
-                    ExtendedUser32.WM_LBUTTONUP,
+                    WinUserExtend.WM_LBUTTONUP,
                     wParam,
                     lParam
                 )
                 WinDef.LRESULT(0)
             }
 
-            ExtendedUser32.WM_NCRBUTTONUP -> {
-                ExtendedUser32.INSTANCE.SendMessage(
+            WinUserExtend.WM_NCRBUTTONUP -> {
+                User32Extend.INSTANCE.SendMessage(
                     windowHandle,
                     uMsg,
                     wParam,
@@ -91,7 +92,7 @@ internal class SkiaLayerHitTestWindowProc(
             }
 
             else -> {
-                ExtendedUser32.INSTANCE.CallWindowProc(
+                User32Extend.INSTANCE.CallWindowProc(
                     defaultWindowProc,
                     hwnd,
                     uMsg,
@@ -103,7 +104,7 @@ internal class SkiaLayerHitTestWindowProc(
     }
 
     override fun close() {
-        ExtendedUser32.INSTANCE.SetWindowLongPtr(
+        User32Extend.INSTANCE.SetWindowLongPtr(
             contentHandle,
             WinUser.GWL_WNDPROC,
             defaultWindowProc

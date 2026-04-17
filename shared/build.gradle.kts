@@ -210,6 +210,12 @@ kotlin {
     }
 }
 
+// https://github.com/coil-kt/coil/issues/3382
+// TODO Remove it after coil 3.5.0-beta01 released
+configurations.all {
+    resolutionStrategy.force("org.jetbrains.skiko:skiko:0.144.5")
+}
+
 compose.resources {
     publicResClass = true
 }

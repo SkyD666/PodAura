@@ -2,7 +2,6 @@ package com.skyd.fundation.jna.windows
 
 import com.sun.jna.Native
 import com.sun.jna.Pointer
-import com.sun.jna.Structure
 import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.win32.StdCallLibrary
 import com.sun.jna.win32.W32APIOptions
@@ -21,21 +20,7 @@ interface Dwmapi : StdCallLibrary {
      * @param margins A MARGINS structure that describes the margins to use when extending the frame into the client area.
      * @return If this function succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.
      */
-    fun DwmExtendFrameIntoClientArea(hwnd: WinDef.HWND, margins: WindowMargins): WinDef.LRESULT
-
-    // See https://stackoverflow.com/q/62240901
-    @Structure.FieldOrder(
-        "leftBorderWidth",
-        "rightBorderWidth",
-        "topBorderHeight",
-        "bottomBorderHeight",
-    )
-    data class WindowMargins(
-        @JvmField var leftBorderWidth: Int,
-        @JvmField var rightBorderWidth: Int,
-        @JvmField var topBorderHeight: Int,
-        @JvmField var bottomBorderHeight: Int
-    ) : Structure(), Structure.ByReference
+    fun DwmExtendFrameIntoClientArea(hwnd: WinDef.HWND, margins: Uxtheme.MARGINS): WinDef.LRESULT
 
     companion object {
 

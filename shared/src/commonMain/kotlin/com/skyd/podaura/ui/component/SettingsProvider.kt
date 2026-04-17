@@ -15,11 +15,12 @@ fun SettingsProvider(
     dataStore: DataStore<Preferences>,
     content: @Composable () -> Unit,
 ) {
-    val pref by remember { dataStore.data }.collectAsState(
+    val prefs by remember { dataStore.data }.collectAsState(
         initial = null,
         context = Dispatchers.Default
     )
-    CompositionLocalProvider(*preferences.map { it.first.provide(pref) }.toTypedArray()) {
-        content()
-    }
+    CompositionLocalProvider(
+        *preferences.map { it.first.provide(prefs) }.toTypedArray(),
+        content = content
+    )
 }

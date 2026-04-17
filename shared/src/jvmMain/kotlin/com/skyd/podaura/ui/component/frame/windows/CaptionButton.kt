@@ -142,21 +142,13 @@ private fun CaptionButton(
     val isHovered by interaction.collectIsHoveredAsState()
     val isPressed by interaction.collectIsPressedAsState()
 
-    val stateColors by remember {
-        derivedStateOf {
-            when {
-                isPressed -> colorScheme.pressed
-                isHovered -> colorScheme.hovered
-                else -> colorScheme.default
-            }
-        }
+    val stateColors = when {
+        isPressed -> colorScheme.pressed
+        isHovered -> colorScheme.hovered
+        else -> colorScheme.default
     }
-    val backgroundColor by remember(isActive) {
-        derivedStateOf { if (isActive) stateColors.activeBackground else stateColors.inactiveBackground }
-    }
-    val foregroundColor by remember(isActive) {
-        derivedStateOf { if (isActive) stateColors.activeForeground else stateColors.inactiveForeground }
-    }
+    val backgroundColor = if (isActive) stateColors.activeBackground else stateColors.inactiveBackground
+    val foregroundColor = if (isActive) stateColors.activeForeground else stateColors.inactiveForeground
 
     Surface(
         color = backgroundColor,
