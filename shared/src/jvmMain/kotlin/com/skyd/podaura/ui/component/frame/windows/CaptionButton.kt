@@ -68,10 +68,10 @@ fun CaptionButtonRow(
                 if (isSystemInDarkTheme) darkWindowsColorScheme() else lightWindowsColorScheme()
             }
         }
-        val defaultColorScheme by remember {
+        val defaultColorScheme by remember(frameColorEnabled, accentColor) {
             derivedStateOf {
                 if (frameColorEnabled && accentColor != Color.Unspecified) {
-                    windowsColorScheme.toAccentCaptionButtonColorScheme(accentColor = accentColor)
+                    windowsColorScheme.toAccentCaptionButtonColorScheme(accentColor)
                 } else {
                     windowsColorScheme.toDefaultCaptionButtonColorScheme()
                 }
@@ -96,22 +96,12 @@ fun CaptionButtonRow(
         CaptionButton(
             onClick = {
                 if (isMaximize) {
-                    User32.INSTANCE.ShowWindow(
-                        windowHandle,
-                        WinUser.SW_RESTORE
-                    )
+                    User32.INSTANCE.ShowWindow(windowHandle, WinUser.SW_RESTORE)
                 } else {
-                    User32.INSTANCE.ShowWindow(
-                        windowHandle,
-                        WinUser.SW_MAXIMIZE
-                    )
+                    User32.INSTANCE.ShowWindow(windowHandle, WinUser.SW_MAXIMIZE)
                 }
             },
-            icon = if (isMaximize) {
-                CaptionButtonIcon.Restore
-            } else {
-                CaptionButtonIcon.Maximize
-            },
+            icon = if (isMaximize) CaptionButtonIcon.Restore else CaptionButtonIcon.Maximize,
             isActive = isActive,
             colorScheme = defaultColorScheme,
             modifier = Modifier.onGloballyPositioned {

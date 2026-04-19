@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -38,7 +39,7 @@ fun FrameWindowScope.WindowsWindowFrame(
 
     // 0 is minimize, 1 is maximize, 2 is close
     val captionButtonsRect = remember { Array(3) { Rect.Zero } }
-    var captionButtonsSize by remember { mutableStateOf(IntSize(0,0)) }
+    var captionButtonsSize by remember { mutableStateOf(IntSize(0, 0)) }
 
     LaunchedEffect(this, procedure) {
         procedure.updateChildHitTestProvider { x, y ->
@@ -46,7 +47,9 @@ fun FrameWindowScope.WindowsWindowFrame(
                 captionButtonsRect[0].contains(x, y) -> WindowsWindowHitResult.CAPTION_MIN
                 captionButtonsRect[1].contains(x, y) -> WindowsWindowHitResult.CAPTION_MAX
                 captionButtonsRect[2].contains(x, y) -> WindowsWindowHitResult.CAPTION_CLOSE
-                y <= captionButtonsSize.height && !layoutHitTestOwner.hitTest(x, y) -> WindowsWindowHitResult.CAPTION
+                y <= captionButtonsSize.height && !layoutHitTestOwner.hitTest(x, y)
+                    -> WindowsWindowHitResult.CAPTION
+
                 else -> WindowsWindowHitResult.CLIENT
             }
         }
@@ -56,7 +59,7 @@ fun FrameWindowScope.WindowsWindowFrame(
     val frameIsColorful by procedure.frameIsColorful.collectAsState()
     val accentColor by procedure.accentColor.collectAsState()
 
-    // Keep 1px for showing float window top area border.
+    // Keep 1px for showing float window top area border on Windows 10
     val topBorderFixedInsets by remember {
         derivedStateOf {
             val isFloatingWindow = state.placement == WindowPlacement.Floating
@@ -73,7 +76,7 @@ fun FrameWindowScope.WindowsWindowFrame(
     }
 
     Box(
-        modifier = Modifier.windowInsetsPadding(topBorderFixedInsets)
+        modifier = Modifier.windowInsetsPadding(topBorderFixedInsets).clipToBounds()
     ) {
         CompositionLocalProvider(
             LocalPlatformWindowInsets provides windowInsets,
@@ -108,5 +111,5 @@ fun FrameWindowScope.WindowsWindowFrame(
 }
 
 fun Rect.contains(x: Float, y: Float): Boolean {
-    return x in left..<right && y >= top && y < bottom
+    return x in left..<right && y in top..<bottom
 }
