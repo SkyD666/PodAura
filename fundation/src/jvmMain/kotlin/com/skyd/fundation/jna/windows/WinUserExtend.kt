@@ -24,7 +24,7 @@ interface WinUserExtend {
         @JvmField var dwTypeData: String? = null,
         @JvmField var cch: Int = 0,
         @JvmField var hbmpItem: WinDef.HBITMAP? = null
-    ) : Structure()
+    ) : Structure(), Structure.ByReference
 
     @Structure.FieldOrder("rgrc", "lppos")
     class NCCALCSIZE_PARAMS(

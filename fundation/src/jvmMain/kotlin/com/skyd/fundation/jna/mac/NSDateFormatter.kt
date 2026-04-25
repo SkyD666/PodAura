@@ -1,10 +1,11 @@
 package com.skyd.fundation.jna.mac
 
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.getUtf8String
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.invoke
+import com.skyd.fundation.jna.mac.ObjCRuntime.getUtf8String
+import com.skyd.fundation.jna.mac.ObjCRuntime.invoke
 import com.sun.jna.Pointer
 
 class NSDateFormatter {
+
     object Style {
         const val NO = 0L
         const val SHORT = 1L

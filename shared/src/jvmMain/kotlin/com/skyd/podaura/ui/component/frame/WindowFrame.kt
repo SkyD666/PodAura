@@ -5,6 +5,7 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowState
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.skyd.podaura.ui.component.frame.macos.MacOSWindowFrame
 import com.skyd.podaura.ui.component.frame.windows.WindowsWindowFrame
 
 @Composable
@@ -14,11 +15,9 @@ fun FrameWindowScope.WindowFrame(
     content: @Composable () -> Unit
 ) {
     when (platform) {
-        /* TODO
         Platform.MacOS -> {
-            MacOSWindowFrame(windowState, content)
+            MacOSWindowFrame(content)
         }
-         */
 
         Platform.Windows -> {
             WindowsWindowFrame(
