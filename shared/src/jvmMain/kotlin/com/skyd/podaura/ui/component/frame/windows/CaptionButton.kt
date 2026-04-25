@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -16,10 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -35,6 +36,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.skyd.podaura.ext.flowOf
+import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.model.preference.appearance.DarkModePreference
+import com.skyd.podaura.model.preference.dataStore
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.platform.win32.WinUser
@@ -48,7 +53,7 @@ import podaura.shared.generated.resources.ic_fluent_subtract_48_filled
 
 @Composable
 fun CaptionButtonRow(
-    windowHandle: HWND,
+    windowHandle: () -> HWND,
     isMaximize: Boolean,
     isActive: Boolean,
     accentColor: Color,
@@ -62,10 +67,15 @@ fun CaptionButtonRow(
     Row(
         modifier = modifier.zIndex(1f)
     ) {
-        val isSystemInDarkTheme = isSystemInDarkTheme()
+        val initialDarkModePreference =
+            rememberSaveable { dataStore.getOrDefault(DarkModePreference) }
+        val darkModePreference by dataStore.flowOf(DarkModePreference)
+            .collectAsState(initialDarkModePreference)
+        val useDarkTheme = DarkModePreference.inDark(darkModePreference)
+
         val windowsColorScheme by remember {
             derivedStateOf {
-                if (isSystemInDarkTheme) darkWindowsColorScheme() else lightWindowsColorScheme()
+                if (useDarkTheme) darkWindowsColorScheme() else lightWindowsColorScheme()
             }
         }
         val defaultColorScheme by remember(frameColorEnabled, accentColor) {
@@ -84,7 +94,7 @@ fun CaptionButtonRow(
         }
         CaptionButton(
             onClick = {
-                User32.INSTANCE.ShowWindow(windowHandle, WinUser.SW_MINIMIZE)
+                User32.INSTANCE.ShowWindow(windowHandle(), WinUser.SW_MINIMIZE)
             },
             icon = CaptionButtonIcon.Minimize,
             isActive = isActive,
@@ -96,9 +106,9 @@ fun CaptionButtonRow(
         CaptionButton(
             onClick = {
                 if (isMaximize) {
-                    User32.INSTANCE.ShowWindow(windowHandle, WinUser.SW_RESTORE)
+                    User32.INSTANCE.ShowWindow(windowHandle(), WinUser.SW_RESTORE)
                 } else {
-                    User32.INSTANCE.ShowWindow(windowHandle, WinUser.SW_MAXIMIZE)
+                    User32.INSTANCE.ShowWindow(windowHandle(), WinUser.SW_MAXIMIZE)
                 }
             },
             icon = if (isMaximize) CaptionButtonIcon.Restore else CaptionButtonIcon.Maximize,
@@ -137,8 +147,10 @@ private fun CaptionButton(
         isHovered -> colorScheme.hovered
         else -> colorScheme.default
     }
-    val backgroundColor = if (isActive) stateColors.activeBackground else stateColors.inactiveBackground
-    val foregroundColor = if (isActive) stateColors.activeForeground else stateColors.inactiveForeground
+    val backgroundColor =
+        if (isActive) stateColors.activeBackground else stateColors.inactiveBackground
+    val foregroundColor =
+        if (isActive) stateColors.activeForeground else stateColors.inactiveForeground
 
     Surface(
         color = backgroundColor,
@@ -178,6 +190,7 @@ private fun rememberFontIconFamily(): State<FontFamily?> {
     // Get Windows system font icon, fallback to fluent svg icon if failed.
     val fontFamilyResolver = LocalFontFamilyResolver.current
     LaunchedEffect(fontFamilyResolver) {
+        @Suppress("SpellCheckingInspection")
         fontFamily.value = sequenceOf("Segoe Fluent Icons", "Segoe MDL2 Assets")
             .firstNotNullOfOrNull {
                 val fontFamily = FontFamily(it)

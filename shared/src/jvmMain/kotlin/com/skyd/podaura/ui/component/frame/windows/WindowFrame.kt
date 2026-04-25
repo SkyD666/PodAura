@@ -87,7 +87,7 @@ fun FrameWindowScope.WindowsWindowFrame(
             modifier = Modifier.fillMaxWidth()
         ) {
             CaptionButtonRow(
-                windowHandle = procedure.windowHandle,
+                windowHandle = procedure::windowHandle,
                 isMaximize = state.placement == WindowPlacement.Maximized,
                 isActive = isActive,
                 accentColor = accentColor,
