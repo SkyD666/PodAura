@@ -6,6 +6,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import co.touchlab.kermit.Logger
 
 class LinkAnnotatedStyler(private val url: String) : IUrlAnnotationStyler {
+
     override fun getUrlAnnotation(
         linkStyles: TextLinkStyles,
         uriHandler: UriHandler?

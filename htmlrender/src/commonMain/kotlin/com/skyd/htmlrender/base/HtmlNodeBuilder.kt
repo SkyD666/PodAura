@@ -52,7 +52,10 @@ suspend fun toHtmlNode(
                         map.getOrPut(e) { mutableListOf() }.add(rule)
                     }
                 }.onFailure {
-                    Logger.e(throwable = it, TAG) { "unsupported css selector: ${rule.selector}" }
+                    Logger.e(
+                        throwable = it,
+                        tag = TAG
+                    ) { "unsupported css selector: ${rule.selector}" }
                 }
             }
         }

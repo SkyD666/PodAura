@@ -33,7 +33,7 @@ open class TextDecorationCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(throwable, tag = MODULE) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse Text Decoration fail: $value"
         }
     }

@@ -8,6 +8,7 @@ import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import kotlin.math.roundToInt
 
 open class FontWeightCssAnnotatedHandler : CSSAnnotatedHandler() {
+
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
         parse(value)?.also { weight ->
             list.add(SpanStyleStyler { SpanStyle(fontWeight = weight) })
@@ -33,7 +34,7 @@ open class FontWeightCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(throwable, tag = MODULE) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse FontWeight fail: $value"
         }
     }

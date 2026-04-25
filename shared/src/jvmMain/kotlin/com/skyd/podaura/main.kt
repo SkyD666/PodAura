@@ -3,6 +3,7 @@ package com.skyd.podaura
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -25,14 +26,18 @@ import podaura.shared.generated.resources.app_name
 fun main() {
     var crashMessage by mutableStateOf("")
     CrashHandler.init(onCrash = { crashMessage = it })
-    application {
-        // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-desktop-swing-interoperability.html#experimental-interop-blending
-        System.setProperty("compose.interop.blending", "true")
 
+    // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-desktop-swing-interoperability.html#experimental-interop-blending
+    System.setProperty("compose.interop.blending", "true")
+
+    initKoin()
+    onAppStart()
+
+    application {
         if (crashMessage.isBlank()) {
-            val windowController = WindowController(onClose = ::exitApplication)
-            initKoin()
-            onAppStart()
+            val windowController = remember {
+                WindowController(onClose = ::exitApplication)
+            }
 
             val windowState = rememberWindowState(
                 position = WindowPosition.Aligned(alignment = Alignment.Center),

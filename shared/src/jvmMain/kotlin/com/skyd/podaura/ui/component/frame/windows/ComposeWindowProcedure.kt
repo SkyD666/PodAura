@@ -459,6 +459,14 @@ internal class ExtendedTitleBarWindowProc(
         User32Extend.INSTANCE.SetWindowLong(this, WinUser.GWL_STYLE, block(oldStyle))
     }
 
+    private fun User32.isWindowInMaximized(hWnd: WinDef.HWND): Boolean {
+        val placement = WinUser.WINDOWPLACEMENT()
+        val result = GetWindowPlacement(hWnd, placement).booleanValue() &&
+                placement.showCmd == WinUser.SW_SHOWMAXIMIZED
+        placement.clear()
+        return result
+    }
+
     private fun isAccentColorWindowFrame(): Boolean {
         return Advapi32Util.registryGetIntValue(
             WinReg.HKEY_CURRENT_USER,
@@ -472,12 +480,4 @@ internal class ExtendedTitleBarWindowProc(
         windowHandle.updateWindowStyle { it or WinUser.WS_SYSMENU }
         super.close()
     }
-}
-
-private fun User32.isWindowInMaximized(hWnd: WinDef.HWND): Boolean {
-    val placement = WinUser.WINDOWPLACEMENT()
-    val result = GetWindowPlacement(hWnd, placement).booleanValue() &&
-            placement.showCmd == WinUser.SW_SHOWMAXIMIZED
-    placement.clear()
-    return result
 }

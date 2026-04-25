@@ -8,6 +8,7 @@ import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import com.skyd.htmlrender.core.util.TextUnitParser
 
 open class FontSizeCssAnnotatedHandler : CSSAnnotatedHandler() {
+
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
         parse(value)?.also { size ->
             list.add(SpanStyleStyler { SpanStyle(fontSize = size) })
@@ -25,7 +26,7 @@ open class FontSizeCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(throwable, tag = MODULE) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse FontSize fail: $value"
         }
     }
@@ -34,4 +35,3 @@ open class FontSizeCssAnnotatedHandler : CSSAnnotatedHandler() {
         const val MODULE = "FontSizeCssAnnotatedHandler"
     }
 }
-

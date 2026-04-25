@@ -7,6 +7,7 @@ import com.skyd.htmlrender.base.model.TextStyler
 import com.skyd.htmlrender.core.styler.SpanStyleStyler
 
 open class FontStyleCssAnnotatedHandler : CSSAnnotatedHandler() {
+
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
         parse(value)?.also { style ->
             list.add(SpanStyleStyler { SpanStyle(fontStyle = style) })
@@ -24,7 +25,7 @@ open class FontStyleCssAnnotatedHandler : CSSAnnotatedHandler() {
         }
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(throwable, tag = MODULE) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse FontStyle fail: $value"
         }
     }

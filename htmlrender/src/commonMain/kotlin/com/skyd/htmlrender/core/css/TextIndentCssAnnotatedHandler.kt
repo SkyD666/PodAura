@@ -8,6 +8,7 @@ import com.skyd.htmlrender.core.styler.ParagraphStyleStyler
 import com.skyd.htmlrender.core.util.TextUnitParser
 
 open class TextIndentCssAnnotatedHandler : CSSAnnotatedHandler() {
+
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
         parse(value)?.also { indent ->
             list.add(ParagraphStyleStyler { ParagraphStyle(textIndent = indent) })
@@ -28,7 +29,7 @@ open class TextIndentCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(throwable, tag = MODULE) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse TextIndent fail: $value"
         }
     }
