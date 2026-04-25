@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalViewConfiguration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun LongClickListener(
@@ -28,7 +29,7 @@ fun LongClickListener(
                 is PressInteraction.Press -> {
                     currentOnLongClick?.let { currentOnLongClick ->
                         isLongClick = false
-                        delay(viewConfiguration.longPressTimeoutMillis)
+                        delay(viewConfiguration.longPressTimeoutMillis.milliseconds)
                         isLongClick = true
                         currentOnLongClick()
                     }

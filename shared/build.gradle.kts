@@ -88,7 +88,6 @@ kotlin {
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.constraintlayout.compose)
-            implementation(libs.androidx.navigation3.runtime)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
@@ -124,7 +123,7 @@ kotlin {
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
             implementation(libs.material.kolor)
-            // implementation(libs.reorderable)
+            implementation(libs.reorderable)
             implementation(libs.skyd666.settings)
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
@@ -133,7 +132,6 @@ kotlin {
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
-            implementation(projects.reorderable)
         }
 
         commonTest.dependencies {
@@ -212,6 +210,12 @@ kotlin {
 
 // https://github.com/coil-kt/coil/issues/3382
 // TODO Remove it after coil 3.5.0-beta01 released
+// w: Skiko dependencies' versions are incompatible.
+//    io.coil-kt.coil3:coil-core-jvm:3.4.0
+//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
+//
+//    io.coil-kt.coil3:coil-svg-jvm:3.4.0
+//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
 configurations.all {
     resolutionStrategy.force("org.jetbrains.skiko:skiko:0.144.5")
 }

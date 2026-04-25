@@ -3,9 +3,9 @@ package com.skyd.htmlrender.core.css
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextIndent
 import co.touchlab.kermit.Logger
+import com.skyd.htmlrender.base.model.TextStyler
 import com.skyd.htmlrender.core.styler.ParagraphStyleStyler
 import com.skyd.htmlrender.core.util.TextUnitParser
-import com.skyd.htmlrender.base.model.TextStyler
 
 open class TextIndentCssAnnotatedHandler : CSSAnnotatedHandler() {
     override fun addStyle(list: MutableList<TextStyler>, value: String) {

@@ -40,6 +40,8 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.pointerOnBack
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
@@ -65,13 +67,12 @@ import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
 import com.skyd.podaura.ui.player.land.rememberSystemBarsVisibilityController
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.fundation.util.Platform
-import com.skyd.fundation.util.platform
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tech.annexflow.constraintlayout.compose.ConstraintLayout
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
@@ -101,7 +102,7 @@ import tech.annexflow.constraintlayout.compose.ConstraintLayout
         cancelAutoHideController()
         if (showController) {
             autoHideControllerJob = scope.launch {
-                delay(5000)
+                delay(5000.milliseconds)
                 if (isActive) {
                     showController = false
                 }
@@ -298,7 +299,7 @@ import tech.annexflow.constraintlayout.compose.ConstraintLayout
             dialogState.audioTrackDialogState().show,
             showPlaylistSheet,
         ) {
-            delay(200)
+            delay(200.milliseconds)
             systemBarsVisibilityController.hide()
         }
     }

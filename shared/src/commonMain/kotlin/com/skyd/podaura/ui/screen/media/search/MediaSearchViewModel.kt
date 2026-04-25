@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaSearchViewModel(
     private val mediaRepo: IMediaRepository
@@ -58,7 +59,7 @@ class MediaSearchViewModel(
             merge(
                 filterIsInstance<MediaSearchIntent.Init>().map { it.path to "" },
                 filterIsInstance<MediaSearchIntent.UpdateQuery>().map { it.path to it.query.trim() }
-                    .distinctUntilChanged().debounce(70),
+                    .distinctUntilChanged().debounce(70.milliseconds),
             ).flatMapLatest { (path, query) ->
                 mediaRepo.search(path = path, query = query, recursive = true).map {
                     MediaSearchPartialStateChange.SearchResult.Success(result = it)

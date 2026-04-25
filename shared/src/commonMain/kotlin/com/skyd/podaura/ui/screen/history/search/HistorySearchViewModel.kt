@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
+import kotlin.time.Duration.Companion.milliseconds
 
 class HistorySearchViewModel(
     private val historyRepo: HistoryRepository
@@ -59,7 +60,7 @@ class HistorySearchViewModel(
 
     private fun Flow<HistorySearchIntent>.toSearchPartialStateChangeFlow(): Flow<HistorySearchPartialStateChange> {
         return merge(
-            filterIsInstance<HistorySearchIntent.Query>().debounce(70).flatMapLatest { intent ->
+            filterIsInstance<HistorySearchIntent.Query>().debounce(70.milliseconds).flatMapLatest { intent ->
                 combine(
                     historyRepo.searchReadHistoryList(intent.query)
                         .map { it.flow.cachedIn(viewModelScope) },

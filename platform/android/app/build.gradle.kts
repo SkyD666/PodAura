@@ -1,7 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.getFilter
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -136,15 +136,13 @@ android {
 }
 
 androidComponents.onVariants { variant ->
-    variant.outputs
-        .map { it as VariantOutputImpl } // TODO https://issuetracker.google.com/issues/480062612
-        .forEach { output ->
-            val versionName = properties["versionName"]
-            val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
-            val buildType = variant.buildType
-            val flavorName = variant.flavorName
-            output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
-        }
+    variant.outputs.forEach { output ->
+        val versionName = properties["versionName"]
+        val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
+        val buildType = variant.buildType
+        val flavorName = variant.flavorName
+        output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
+    }
 }
 
 // https://stackoverflow.com/a/77745844

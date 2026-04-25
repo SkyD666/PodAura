@@ -3,8 +3,8 @@ package com.skyd.htmlrender.core.css
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.TextUnit
 import co.touchlab.kermit.Logger
-import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import com.skyd.htmlrender.base.model.TextStyler
+import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import com.skyd.htmlrender.core.util.TextUnitParser
 
 open class FontSizeCssAnnotatedHandler : CSSAnnotatedHandler() {

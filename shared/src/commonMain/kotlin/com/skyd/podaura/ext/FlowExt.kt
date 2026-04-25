@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlin.time.Duration.Companion.milliseconds
 
 fun <T> Flow<T>.catchMap(transform: FlowCollector<T>.(Throwable) -> T): Flow<T> =
     catch {
@@ -84,7 +85,7 @@ suspend fun <T> Flow<T>.collectIn(
 ) = flowWithLifecycle(lifecycleOwner.lifecycle, minActiveState).collect(action)
 
 fun <T> Flow<T>.sampleWithoutFirst(timeoutMillis: Long) = merge(
-    take(1), drop(1).sample(timeoutMillis)
+    take(1), drop(1).sample(timeoutMillis.milliseconds)
 )
 
 /**

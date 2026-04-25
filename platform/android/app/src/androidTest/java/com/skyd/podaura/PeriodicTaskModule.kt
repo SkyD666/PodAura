@@ -60,6 +60,7 @@ import org.junit.runners.MethodSorters
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -295,7 +296,7 @@ class PeriodicTaskModule {
         withContext(Dispatchers.Default) {
             listenRssSyncConfig(context)
             dataStore.put(RssSyncFrequencyPreference.key, RssSyncFrequencyPreference.MANUAL)
-            delay(2000)
+            delay(2000.milliseconds)
 
             assertTrue(
                 workManager.getWorkInfosForUniqueWorkFlow(RssSyncWorker.UNIQUE_WORK_NAME)
@@ -317,7 +318,7 @@ class PeriodicTaskModule {
                 RssSyncFrequencyPreference.key,
                 RssSyncFrequencyPreference.EVERY_15_MINUTE,
             )
-            delay(2000)
+            delay(2000.milliseconds)
 
             assertFalse(
                 workManager.getWorkInfosForUniqueWorkFlow(RssSyncWorker.UNIQUE_WORK_NAME)
@@ -336,7 +337,7 @@ class PeriodicTaskModule {
         withContext(Dispatchers.Default) {
             listenDeleteArticleFrequency(context)
             dataStore.put(UseAutoDeletePreference.key, true)
-            delay(2000)
+            delay(2000.milliseconds)
 
             assertFalse(
                 workManager.getWorkInfosForUniqueWorkFlow(DeleteArticleWorker.UNIQUE_WORK_NAME)
@@ -355,7 +356,7 @@ class PeriodicTaskModule {
         withContext(Dispatchers.Default) {
             listenDeleteArticleFrequency(context)
             dataStore.put(UseAutoDeletePreference.key, false)
-            delay(2000)
+            delay(2000.milliseconds)
 
             assertTrue(
                 workManager.getWorkInfosForUniqueWorkFlow(DeleteArticleWorker.UNIQUE_WORK_NAME)

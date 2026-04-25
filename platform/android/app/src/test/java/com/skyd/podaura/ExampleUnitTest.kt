@@ -1,6 +1,5 @@
 package com.skyd.podaura
 
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
