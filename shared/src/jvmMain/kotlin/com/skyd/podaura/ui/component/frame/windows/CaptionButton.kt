@@ -16,7 +16,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,25 +72,16 @@ fun CaptionButtonRow(
             .collectAsState(initialDarkModePreference)
         val useDarkTheme = DarkModePreference.inDark(darkModePreference)
 
-        val windowsColorScheme by remember {
-            derivedStateOf {
-                if (useDarkTheme) darkWindowsColorScheme() else lightWindowsColorScheme()
+        val windowsColorScheme =
+            if (useDarkTheme) darkWindowsColorScheme() else lightWindowsColorScheme()
+        val defaultColorScheme =
+            if (frameColorEnabled && accentColor != Color.Unspecified) {
+                windowsColorScheme.toAccentCaptionButtonColorScheme(accentColor)
+            } else {
+                windowsColorScheme.toDefaultCaptionButtonColorScheme()
             }
-        }
-        val defaultColorScheme by remember(frameColorEnabled, accentColor) {
-            derivedStateOf {
-                if (frameColorEnabled && accentColor != Color.Unspecified) {
-                    windowsColorScheme.toAccentCaptionButtonColorScheme(accentColor)
-                } else {
-                    windowsColorScheme.toDefaultCaptionButtonColorScheme()
-                }
-            }
-        }
-        val closeColorScheme by remember {
-            derivedStateOf {
-                windowsColorScheme.toAccentCaptionButtonColorScheme()
-            }
-        }
+        val closeColorScheme = windowsColorScheme.toAccentCaptionButtonColorScheme()
+
         CaptionButton(
             onClick = {
                 User32.INSTANCE.ShowWindow(windowHandle(), WinUser.SW_MINIMIZE)
@@ -190,7 +180,6 @@ private fun rememberFontIconFamily(): State<FontFamily?> {
     // Get Windows system font icon, fallback to fluent svg icon if failed.
     val fontFamilyResolver = LocalFontFamilyResolver.current
     LaunchedEffect(fontFamilyResolver) {
-        @Suppress("SpellCheckingInspection")
         fontFamily.value = sequenceOf("Segoe Fluent Icons", "Segoe MDL2 Assets")
             .firstNotNullOfOrNull {
                 val fontFamily = FontFamily(it)
