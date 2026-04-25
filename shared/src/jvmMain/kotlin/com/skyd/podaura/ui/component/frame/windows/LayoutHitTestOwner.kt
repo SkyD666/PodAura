@@ -55,20 +55,22 @@ private abstract class ReflectLayoutHitTestOwner : LayoutHitTestOwner {
         owner.root.hitTest(Offset(x, y), result, PointerType.Mouse, true)
         // pointer input modifier node detection for Material 3 components
         for (index in result.lastIndex downTo result.lastIndex - 1) {
-            val node = result.getOrNull(index) ?: return false
+            val node = result.getOrNull(index) ?: continue
             // SelectableNode, ClickableNode, CombinedClickableNode, ToggleableNode, TriStateToggleableNode
             if (node is AbstractClickableNode) {
                 return true
             }
             val nodeClassName = node.javaClass.name
-            return excludeNodeNames.any { nodeClassName.contains(it) }
+            if (excludeNodeNames.any { nodeClassName.contains(it) }) {
+                return false
+            }
         }
         return false
     }
 
     private val excludeNodeNames = listOf(
         "ScrollableNode",
-        "HoverableNode",
+        "HoverableNode"
     )
 }
 

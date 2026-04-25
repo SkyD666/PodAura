@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -36,6 +37,12 @@ fun FrameWindowScope.WindowsWindowFrame(
 ) {
     val layoutHitTestOwner = rememberLayoutHitTestOwner()
     val procedure = remember { ExtendedTitleBarWindowProc(window) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            procedure.close()
+        }
+    }
 
     // 0 is minimize, 1 is maximize, 2 is close
     val captionButtonsRect = remember { Array(3) { Rect.Zero } }
