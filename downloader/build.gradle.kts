@@ -12,13 +12,13 @@ plugins {
 
 kotlin {
 
-    androidLibrary {
+    android {
         namespace = "com.skyd.downloader"
         minSdk = 24
         compileSdk {
-            version = release(36) { minorApiLevel = 1 }
+            version = release(37) { minorApiLevel = 0 }
         }
-        buildToolsVersion = "36.1.0"
+        buildToolsVersion = "37.0.0"
         androidResources.enable = true
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21
@@ -68,7 +68,8 @@ kotlin {
         optIn.addAll(
             "kotlin.time.ExperimentalTime",
             "kotlin.uuid.ExperimentalUuidApi",
-            "kotlin.concurrent.atomics.ExperimentalAtomicApi"
+            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
+            "kotlinx.coroutines.DelicateCoroutinesApi"
         )
     }
 }

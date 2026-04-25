@@ -3,8 +3,8 @@ package com.skyd.htmlrender.core.css
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
 import co.touchlab.kermit.Logger
-import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import com.skyd.htmlrender.base.model.TextStyler
+import com.skyd.htmlrender.core.styler.SpanStyleStyler
 
 open class TextDecorationCssAnnotatedHandler : CSSAnnotatedHandler() {
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
@@ -33,7 +33,7 @@ open class TextDecorationCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(MODULE, throwable) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse Text Decoration fail: $value"
         }
     }

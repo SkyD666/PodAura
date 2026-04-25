@@ -41,6 +41,7 @@ import java.io.File
 import kotlin.math.log
 import kotlin.random.Random
 import kotlin.reflect.KProperty
+import kotlin.time.Duration.Companion.milliseconds
 
 class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, DefaultEventObserver() {
     companion object {
@@ -630,8 +631,8 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         scope.launch {
             val picture = PlatformFile(File(Const.PICTURES_DIR, "$filename.$format"))
             try {
-                withTimeout(10000) {
-                    while (!picture.exists()) delay(100)
+                withTimeout(10000.milliseconds) {
+                    while (!picture.exists()) delay(100.milliseconds)
                 }
             } catch (_: TimeoutCancellationException) {
                 Log.e(TAG, "Failed to save screenshot")

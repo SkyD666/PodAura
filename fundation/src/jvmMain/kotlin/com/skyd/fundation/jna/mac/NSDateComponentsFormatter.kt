@@ -1,10 +1,11 @@
 package com.skyd.fundation.jna.mac
 
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.getUtf8String
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.invoke
+import com.skyd.fundation.jna.mac.ObjCRuntime.getUtf8String
+import com.skyd.fundation.jna.mac.ObjCRuntime.invoke
 import com.sun.jna.Pointer
 
 class NSDateComponentsFormatter {
+
     object ZeroFormattingBehavior {
         const val BEHAVIOR_PAD = 1L shl 16
     }
@@ -30,5 +31,4 @@ class NSDateComponentsFormatter {
     fun stringFromTimeInterval(interval: Double): String {
         return formatter("stringFromTimeInterval:", interval).getUtf8String(0)
     }
-
 }

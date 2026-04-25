@@ -14,7 +14,6 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import kotlin.uuid.Uuid
@@ -143,7 +142,7 @@ abstract class BaseDownloadManager : KoinComponent {
     }
 
     fun observeDownloadById(id: Int): Flow<DownloadEntity> = downloadDao
-        .getEntityByIdFlow(id).filterNotNull().distinctUntilChanged()
+        .getEntityByIdFlow(id).distinctUntilChanged()
 
     fun observeAllDownloads(): Flow<List<DownloadEntity>> = downloadDao.getAllEntityFlow()
 

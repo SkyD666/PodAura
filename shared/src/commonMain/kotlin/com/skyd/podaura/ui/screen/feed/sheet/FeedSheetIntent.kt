@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.feed.sheet
 
 import com.skyd.mvi.MviIntent
-import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 
 sealed interface FeedSheetIntent : MviIntent {

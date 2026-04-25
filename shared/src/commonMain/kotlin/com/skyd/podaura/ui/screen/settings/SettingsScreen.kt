@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings
 
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
@@ -23,7 +23,7 @@ data object SettingsRoute : NavKey
 
 @Composable
 fun SettingsScreen() {
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
     val listDetailStrategy = rememberListDetailSceneStrategy<NavKey>(
         directive = remember(windowAdaptiveInfo) {
             calculatePaneScaffoldDirective(windowAdaptiveInfo)

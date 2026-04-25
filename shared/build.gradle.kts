@@ -20,13 +20,13 @@ kotlin {
 // Target declarations - add or remove as needed below. These define
 // which platforms this KMP module supports.
 // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
-    androidLibrary {
+    android {
         namespace = "com.skyd.podaura.shared"
         minSdk = 24
         compileSdk {
-            version = release(36) { minorApiLevel = 1 }
+            version = release(37) { minorApiLevel = 0 }
         }
-        buildToolsVersion = "36.1.0"
+        buildToolsVersion = "37.0.0"
         androidResources.enable = true
         compilerOptions {
             jvmTarget = JvmTarget.JVM_21
@@ -88,7 +88,6 @@ kotlin {
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.constraintlayout.compose)
-            implementation(libs.androidx.navigation3.runtime)
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose.viewmodel)
@@ -124,7 +123,7 @@ kotlin {
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
             implementation(libs.material.kolor)
-            // implementation(libs.reorderable)
+            implementation(libs.reorderable)
             implementation(libs.skyd666.settings)
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
@@ -133,7 +132,6 @@ kotlin {
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
-            implementation(projects.reorderable)
         }
 
         commonTest.dependencies {
@@ -167,6 +165,7 @@ kotlin {
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.ktor.client.apache5)
             implementation(libs.java.jna)
+            implementation(libs.java.jna.platform)
         }
     }
 
@@ -190,15 +189,16 @@ kotlin {
             "kotlinx.coroutines.FlowPreview",
             "kotlinx.coroutines.ExperimentalCoroutinesApi",
             "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
-            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
             "kotlinx.serialization.ExperimentalSerializationApi",
+            "kotlinx.cinterop.ExperimentalForeignApi",
+            "kotlin.concurrent.atomics.ExperimentalAtomicApi",
             "kotlin.contracts.ExperimentalContracts",
-            "kotlin.ExperimentalStdlibApi",
             "kotlin.uuid.ExperimentalUuidApi",
             "kotlin.time.ExperimentalTime",
+            "kotlin.experimental.ExperimentalNativeApi",
+            "kotlin.ExperimentalStdlibApi",
             "com.google.accompanist.permissions.ExperimentalPermissionsApi",
-            "kotlinx.cinterop.ExperimentalForeignApi",
-            "kotlin.experimental.ExperimentalNativeApi"
+            "coil3.annotation.ExperimentalCoilApi"
         )
     }
 
@@ -206,6 +206,18 @@ kotlin {
     sourceSets.commonMain.configure {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
     }
+}
+
+// https://github.com/coil-kt/coil/issues/3382
+// TODO Remove it after coil 3.5.0-beta01 released
+// w: Skiko dependencies' versions are incompatible.
+//    io.coil-kt.coil3:coil-core-jvm:3.4.0
+//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
+//
+//    io.coil-kt.coil3:coil-svg-jvm:3.4.0
+//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
+configurations.all {
+    resolutionStrategy.force("org.jetbrains.skiko:skiko:0.144.5")
 }
 
 compose.resources {
@@ -226,7 +238,7 @@ compose.desktop {
                 iconFile = project.file("icons/icon_512x512.icns")
             }
             windows {
-                iconFile = project.file("icons/icon.ico")
+                // iconFile = project.file("icons/icon.ico")
                 dirChooser = true
             }
 

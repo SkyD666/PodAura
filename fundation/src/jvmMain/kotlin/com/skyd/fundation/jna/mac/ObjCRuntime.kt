@@ -1,41 +1,60 @@
 package com.skyd.fundation.jna.mac
 
-import com.sun.jna.Library
-import com.sun.jna.Native
+import com.sun.jna.NativeLibrary
 import com.sun.jna.Pointer
+import com.sun.jna.Structure
 
-@Suppress("FunctionName")
-interface ObjCRuntime : Library {
-    fun objc_getClass(className: String): Pointer
-    fun sel_registerName(selectorName: String): Pointer
-    fun objc_msgSend(receiver: Pointer, selector: Pointer): Pointer
-    fun objc_msgSend(receiver: Pointer, selector: Pointer, arg: Any?): Pointer
-    fun objc_msgSend(receiver: Pointer, selector: Pointer, arg1: Any?, arg2: Any?): Pointer
+@Suppress("SpellCheckingInspection")
+object ObjCRuntime {
 
-    companion object {
-        val INSTANCE: ObjCRuntime = Native.load<ObjCRuntime>("objc", ObjCRuntime::class.java)
+    val INSTANCE: NativeLibrary = NativeLibrary.getInstance("objc")
 
-        fun new(className: String): Pointer {
-            return INSTANCE.objc_getClass(className)("alloc")("init")
+    fun sel_registerName(selectorName: String): Pointer {
+        return INSTANCE.getFunction("sel_registerName").invokePointer(arrayOf(selectorName))
+    }
+
+    fun objc_getClass(className: String): Pointer {
+        return INSTANCE.getFunction("objc_getClass").invokePointer(arrayOf(className))
+    }
+
+    inline fun <reified T> objc_msgSend(
+        receiver: Pointer,
+        selector: Pointer,
+        vararg args: Any?
+    ): T {
+        val function = INSTANCE.getFunction("objc_msgSend")
+        return function.invoke(T::class.java, arrayOf(receiver, selector, *args)) as T
+    }
+
+    inline fun <reified T : Structure> objc_msgSend_stret(
+        receiver: Pointer,
+        selector: Pointer,
+        vararg args: Any?
+    ): T {
+        val function = INSTANCE.getFunction("objc_msgSend_stret")
+        return function.invoke(T::class.java, arrayOf(receiver, selector, *args)) as T
+    }
+
+    fun new(className: String): Pointer {
+        return objc_getClass(className)("alloc")("init")
+    }
+
+    inline fun <reified T: Structure> msgSend(receiver: Pointer, selectorName: String, vararg args: Any?): T {
+        val sel = sel_registerName(selectorName)
+        val isArm64 = System.getProperty("os.arch") == "aarch64"
+        return if (isArm64) {
+            objc_msgSend(receiver, sel, *args)
+        } else {
+            objc_msgSend_stret(receiver, sel, *args)
         }
+    }
 
-        operator fun Pointer.invoke(selectorName: String, arg: Any?): Pointer {
-            val sel = INSTANCE.sel_registerName(selectorName)
-            return INSTANCE.objc_msgSend(this, sel, arg)
-        }
+    operator fun Pointer.invoke(selectorName: String, vararg args: Any?): Pointer {
+        val sel = sel_registerName(selectorName)
+        return objc_msgSend(this, sel, *args)
+    }
 
-        operator fun Pointer.invoke(selectorName: String, arg1: Any?, arg2: Any?): Pointer {
-            val sel = INSTANCE.sel_registerName(selectorName)
-            return INSTANCE.objc_msgSend(this, sel, arg1, arg2)
-        }
-
-        operator fun Pointer.invoke(selectorName: String): Pointer {
-            val sel = INSTANCE.sel_registerName(selectorName)
-            return INSTANCE.objc_msgSend(this, sel)
-        }
-
-        fun Pointer.getUtf8String(offset: Long): String {
-            return this("UTF8String").getString(offset)
-        }
+    fun Pointer.getUtf8String(offset: Long): String {
+        return this("UTF8String").getString(offset)
     }
 }

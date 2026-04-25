@@ -3,11 +3,12 @@ package com.skyd.htmlrender.core.css
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import co.touchlab.kermit.Logger
-import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import com.skyd.htmlrender.base.model.TextStyler
+import com.skyd.htmlrender.core.styler.SpanStyleStyler
 import kotlin.math.roundToInt
 
 open class FontWeightCssAnnotatedHandler : CSSAnnotatedHandler() {
+
     override fun addStyle(list: MutableList<TextStyler>, value: String) {
         parse(value)?.also { weight ->
             list.add(SpanStyleStyler { SpanStyle(fontWeight = weight) })
@@ -33,7 +34,7 @@ open class FontWeightCssAnnotatedHandler : CSSAnnotatedHandler() {
     }.getOrNull()
 
     private fun logFail(value: String, throwable: Throwable? = null) {
-        Logger.w(MODULE, throwable) {
+        Logger.w(throwable = throwable, tag = MODULE) {
             "parse FontWeight fail: $value"
         }
     }

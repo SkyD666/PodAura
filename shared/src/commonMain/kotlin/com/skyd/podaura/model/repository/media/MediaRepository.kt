@@ -55,6 +55,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.io.decodeFromSource
 import kotlinx.serialization.json.io.encodeToSink
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaRepository(
     private val json: Json,
@@ -294,7 +295,7 @@ class MediaRepository(
     ).flatMapLatest { (query, recursive) ->
         merge(
             kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath
-        ).debounce(70).filter { it == path }.map {
+        ).debounce(70.milliseconds).filter { it == path }.map {
             val queries = query.splitByBlank()
 
             val fileJsonsWithDirPath = mutableListOf<Pair<FileJson, String>>()

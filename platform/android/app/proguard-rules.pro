@@ -98,8 +98,17 @@ public static final ** CREATOR;
 # MPV
 -keep,allowoptimization class is.xyz.mpv.MPVLib { public protected *; }
 
-# https://stackoverflow.com/questions/63505503/notserializableexception-kotlin-uninitialized-value-after-setting-minifyenabled
+# https://stackoverflow.com/q/63505503
 -keep class * implements kotlin.Lazy { *; }
 
 # RSS parser
 -keep, allowoptimization, allowobfuscation, allowshrinking class com.skyd.podaura.model.repository.feed.rssparser.BaseXml
+
+# Move all obfuscated classes into the root package to reduce APK size
+-repackageclasses
+
+# Allow ProGuard to widen access modifiers
+-allowaccessmodification
+
+# Strip Kotlin null checks inserted by the compiler to reduce method count and overhead
+-processkotlinnullchecks remove

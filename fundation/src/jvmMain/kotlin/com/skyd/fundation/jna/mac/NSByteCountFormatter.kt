@@ -1,7 +1,7 @@
 package com.skyd.fundation.jna.mac
 
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.getUtf8String
-import com.skyd.fundation.jna.mac.ObjCRuntime.Companion.invoke
+import com.skyd.fundation.jna.mac.ObjCRuntime.getUtf8String
+import com.skyd.fundation.jna.mac.ObjCRuntime.invoke
 import com.sun.jna.Pointer
 
 class NSByteCountFormatter {
@@ -11,7 +11,7 @@ class NSByteCountFormatter {
 
     companion object {
         private val nsByteCountFormatterClass: Pointer =
-            ObjCRuntime.INSTANCE.objc_getClass("NSByteCountFormatter")
+            ObjCRuntime.objc_getClass("NSByteCountFormatter")
 
         fun stringFromByteCount(byteCount: Long, countStyle: Long): String {
             return nsByteCountFormatterClass(

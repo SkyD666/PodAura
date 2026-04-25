@@ -6,6 +6,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import co.touchlab.kermit.Logger
 
 class LinkAnnotatedStyler(private val url: String) : IUrlAnnotationStyler {
+
     override fun getUrlAnnotation(
         linkStyles: TextLinkStyles,
         uriHandler: UriHandler?
@@ -17,7 +18,7 @@ class LinkAnnotatedStyler(private val url: String) : IUrlAnnotationStyler {
                 try {
                     uriHandler.openUri(url)
                 } catch (e: Exception) {
-                    Logger.e(TAG, e) { "Failed to open url: $url" }
+                    Logger.e(throwable = e, tag = TAG) { "Failed to open url: $url" }
                 }
             }
         },

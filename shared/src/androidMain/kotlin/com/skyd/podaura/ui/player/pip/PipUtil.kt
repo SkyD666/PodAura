@@ -48,7 +48,7 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
             onDispose { activity.removeOnUserLeaveHintListener(onUserLeaveBehavior) }
         }
     } else {
-        Logger.i("PIP_TAG") { "API does not support PiP" }
+        Logger.i(tag = "PIP_TAG") { "API does not support PiP" }
     }
 }
 

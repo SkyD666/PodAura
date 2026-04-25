@@ -1,7 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import com.android.build.api.variant.FilterConfiguration
-import com.android.build.api.variant.impl.VariantOutputImpl
+import com.android.build.api.variant.impl.getFilter
 import com.android.build.gradle.tasks.PackageAndroidArtifact
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -19,15 +19,15 @@ plugins {
 android {
     namespace = "com.skyd.podaura"
     compileSdk {
-        version = release(36) { minorApiLevel = 1 }
+        version = release(37) { minorApiLevel = 0 }
     }
-    buildToolsVersion = "36.1.0"
+    buildToolsVersion = "37.0.0"
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
         applicationId = "com.skyd.anivu"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = properties["versionCode"]!!.toString().toInt()
         versionName = properties["versionName"]!!.toString()
 
@@ -135,17 +135,13 @@ android {
     lint.checkReleaseBuilds = false
 }
 
-androidComponents {
-    onVariants { variant ->
-        variant.outputs
-            .map { it as VariantOutputImpl }
-            .forEach { output ->
-                val versionName = properties["versionName"]
-                val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
-                val buildType = variant.buildType
-                val flavorName = variant.flavorName
-                output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
-            }
+androidComponents.onVariants { variant ->
+    variant.outputs.forEach { output ->
+        val versionName = properties["versionName"]
+        val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
+        val buildType = variant.buildType
+        val flavorName = variant.flavorName
+        output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
     }
 }
 

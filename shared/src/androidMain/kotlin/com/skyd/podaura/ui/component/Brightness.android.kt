@@ -19,7 +19,7 @@ actual fun rememberBrightnessController(): BrightnessController {
                             val brightness = activity.getScreenBrightness()
                             if (brightness != null) {
                                 screenBrightness = brightness / 255.0f
-                                activity.window.setAttributes(this)
+                                activity.window.attributes = this
                             }
                         }
                     }.screenBrightness

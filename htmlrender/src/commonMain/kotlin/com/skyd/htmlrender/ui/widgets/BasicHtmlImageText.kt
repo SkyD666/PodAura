@@ -9,7 +9,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,8 +24,6 @@ import com.skyd.htmlrender.ui.styler.MarginStyler
 import com.skyd.htmlrender.ui.styler.OrderedListStyler
 import com.skyd.htmlrender.ui.styler.UnorderedListStyler
 
-
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun BasicHtmlImageText(
     html: String?,
@@ -84,7 +81,6 @@ fun BasicHtmlImageText(
     renderDefault = renderDefault
 )
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
 fun ColumnScope.defaultImageTextRenderTag(
     annotation: AnnotatedString.Range<String>,

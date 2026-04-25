@@ -4,8 +4,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.room.RoomRawQuery
-import com.skyd.podaura.config.allSearchDomain
 import com.skyd.fundation.di.get
+import com.skyd.podaura.config.allSearchDomain
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.splitByBlank
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
+import kotlin.time.Duration.Companion.milliseconds
 
 class SearchRepository(
     private val feedDao: FeedDao,
@@ -55,7 +56,7 @@ class SearchRepository(
         feedUrls: List<String>,
         groupIds: List<String>,
         articleIds: List<String>,
-    ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70).flatMapLatest { query ->
+    ): Flow<PagingData<ArticleWithFeed>> = searchQuery.debounce(70.milliseconds).flatMapLatest { query ->
         val realFeedUrls = articleRepo.requestRealFeedUrls(
             feedUrls = feedUrls,
             groupIds = groupIds,

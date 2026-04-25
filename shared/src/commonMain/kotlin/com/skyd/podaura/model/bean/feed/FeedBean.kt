@@ -79,7 +79,7 @@ data class FeedBean(
                 1 -> true
                 2 -> false
                 else -> {
-                    Logger.w(TAG) { "Illegal favorite filterMask: $twoBit" }
+                    Logger.w(tag = TAG) { "Illegal favorite filterMask: $twoBit" }
                     null
                 }
             }
@@ -91,7 +91,7 @@ data class FeedBean(
                 1 -> true
                 2 -> false
                 else -> {
-                    Logger.w(TAG) { "Illegal read filterMask: $twoBit" }
+                    Logger.w(tag = TAG) { "Illegal read filterMask: $twoBit" }
                     null
                 }
             }
@@ -105,7 +105,7 @@ data class FeedBean(
                 0 -> SortBy.Date(asc)
                 1 -> SortBy.Title(asc)
                 else -> {
-                    Logger.w(TAG) { "Illegal read sort: $twoBit" }
+                    Logger.w(tag = TAG) { "Illegal read sort: $twoBit" }
                     SortBy.Date(asc)
                 }
             }
@@ -117,7 +117,7 @@ data class FeedBean(
                 1 -> true
                 2 -> false
                 else -> {
-                    Logger.w(TAG) { "Illegal mute filterMask: $twoBit" }
+                    Logger.w(tag = TAG) { "Illegal mute filterMask: $twoBit" }
                     null
                 }
             }

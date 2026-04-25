@@ -58,7 +58,7 @@ internal class DeepLinkMatcher<T : NavKey>(
             // zip to compare the two objects side by side, order matters here so we
             // need to make sure the compared segments are at the same position within the url
             .zip(deepLinkPattern.pathSegments.asSequence())
-            .forEach { it ->
+            .forEach {
                 // retrieve the two path segments to compare
                 val requestedSegment = it.first
                 val candidateSegment = it.second
@@ -73,7 +73,7 @@ internal class DeepLinkMatcher<T : NavKey>(
                     }
                     args[candidateSegment.stringValue] = parsedValue
                 } else if (requestedSegment != candidateSegment.stringValue) {
-                    // if it's path arg is not the expected type, its not a match
+                    // if it's path arg is not the expected type, it's not a match
                     return null
                 }
             }

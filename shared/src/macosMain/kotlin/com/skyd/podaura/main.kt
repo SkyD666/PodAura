@@ -28,7 +28,7 @@ fun main() {
         size = DpSize(1200.dp, 800.dp)
     ) {
         ProvidePlatformWindowInsets(
-            window = { window },
+            window = ::window,
             content = {
                 ResourceEnvironmentFix {
                     AppEntrance()

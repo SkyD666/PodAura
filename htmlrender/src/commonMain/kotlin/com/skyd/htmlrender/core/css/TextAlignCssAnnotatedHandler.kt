@@ -21,7 +21,7 @@ open class TextAlignCssAnnotatedHandler : CSSAnnotatedHandler() {
         "center" -> TextAlign.Center
         "justify", "justify-all" -> TextAlign.Justify
         else -> {
-            Logger.w(MODULE) {
+            Logger.w(tag = MODULE) {
                 "parse TextAlign fail: $value"
             }
             null
