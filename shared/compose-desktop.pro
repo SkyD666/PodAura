@@ -6,6 +6,10 @@
 -dontwarn org.brotli.dec.BrotliInputStream
 -keep class io.ktor.client.engine.apache5.Apache5EngineContainer
 
+# ICU4J
+-keep enum com.ibm.icu.text.DateTimePatternGenerator$DTPGflags { *; } # ClassCastException
+-keep enum com.ibm.icu.text.DateFormat$BooleanAttribute { *; } # ClassCastException
+
 # Database
 -keep class com.skyd.podaura.model.db.AppDatabase_Impl # ClassNotFoundError
 -keep class com.skyd.downloader.db.DownloadDatabase_Impl # ClassNotFoundError

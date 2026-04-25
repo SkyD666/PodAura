@@ -27,27 +27,37 @@ jobs:
                              'platform/android/app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
                              platform/android/app/build/outputs/apk/GitHub/release/*universal*.apk,
                              platform/android/app/build/outputs/mapping/GitHubRelease/mapping.txt ]
-            artifact-name: [ Pre-Release APK (arm64-v8a),
-                             Pre-Release APK (armeabi-v7a),
-                             Pre-Release APK (x86_64),
-                             Pre-Release APK (x86),
-                             Pre-Release APK (universal),
-                             Pre-Release Mapping ]
+            artifact-name: [ Pre-Release Android APK (arm64-v8a),
+                             Pre-Release Android APK (armeabi-v7a),
+                             Pre-Release Android APK (x86_64),
+                             Pre-Release Android APK (x86),
+                             Pre-Release Android APK (universal),
+                             Pre-Release Android Mapping ]
           - os: macos-26
             target-platform: Jvm macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release macOS DMG (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26-intel
             target-platform: Jvm macOS x64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release macOS DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+          - os: windows-latest
+            target-platform: Jvm Windows x64
+            build-command: ./gradlew createReleaseDistributable
+            artifact-path: [ shared/build/compose/binaries/main-release/app/ ]
+            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+          - os: windows-11-arm
+            target-platform: Jvm Windows arm64
+            build-command: ./gradlew createReleaseDistributable
+            artifact-path: [ shared/build/compose/binaries/main-release/app/ ]
+            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
             artifact-path: [ shared/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg ]
-            artifact-name: [ Pre-Release DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Pre-Release macOS DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository

@@ -238,8 +238,13 @@ compose.desktop {
                 iconFile = project.file("icons/icon_512x512.icns")
             }
             windows {
-                // iconFile = project.file("icons/icon.ico")
+                iconFile = project.file("icons/PodAura.ico")
                 dirChooser = true
+                shortcut = true
+                menu = true
+                menuGroup = "PodAura"
+                // https://wixtoolset.org/documentation/manual/v3/howtos/general/generate_guids.html
+                upgradeUuid = "451A428C-D349-458F-8B96-309CAA2F533C"
             }
 
             modules(
