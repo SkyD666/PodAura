@@ -229,8 +229,8 @@ internal fun FeedList(
                 fabPadding = fabHeight + 16.dp,
                 selectedFeedUrls = listPaneSelectedFeedUrls,
                 selectedGroupIds = listPaneSelectedGroupIds,
-                onShowArticleListByFeedUrls = { feedUrls -> onShowArticleListByFeedUrls(feedUrls) },
-                onShowArticleListByGroupId = { groupId -> onShowArticleListByGroupId(groupId) },
+                onShowArticleListByFeedUrls = onShowArticleListByFeedUrls,
+                onShowArticleListByGroupId = onShowArticleListByGroupId,
                 onExpandChanged = { group, expanded ->
                     dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
                 },

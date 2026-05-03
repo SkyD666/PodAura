@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ui.component.PodAuraNavDisplay
+import com.skyd.podaura.ui.component.navigation.ListDetailSceneStrategy
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupScreen
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
@@ -56,8 +56,9 @@ internal fun SettingsDetailPaneNavDisplay(
     sceneStrategy: ListDetailSceneStrategy<NavKey>,
     onPaneBack: (() -> Unit)?,
 ) {
-    val windowInsets =
-        WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+    val windowInsets = WindowInsets.safeDrawing.only(
+        WindowInsetsSides.Vertical + WindowInsetsSides.End
+    )
 
     PodAuraNavDisplay(
         backStack = navBackStack,
@@ -65,10 +66,12 @@ internal fun SettingsDetailPaneNavDisplay(
         sceneStrategies = listOf(sceneStrategy),
         entryProvider = entryProvider {
             entry<SettingsListRoute>(metadata = ListDetailSceneStrategy.listPane()) { _ ->
-                SettingsList(onItemSelected = { itemRoute ->
-                    navBackStack.removeAll { it !is SettingsListRoute }
-                    navBackStack.add(itemRoute)
-                })
+                SettingsList(
+                    onItemSelected = { itemRoute ->
+                        navBackStack.removeAll { it !is SettingsListRoute }
+                        navBackStack.add(itemRoute)
+                    }
+                )
             }
             entry<AppearanceRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
                 AppearanceScreen(onBack = onPaneBack, windowInsets = windowInsets)

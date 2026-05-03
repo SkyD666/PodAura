@@ -82,12 +82,12 @@ fun SettingsList(onItemSelected: (NavKey) -> Unit) {
                 WindowInsets.safeDrawing
             else
                 WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
-    ) { paddingValues ->
+    ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = paddingValues,
+            contentPadding = innerPadding,
         ) {
             group {
                 item {
@@ -96,9 +96,7 @@ fun SettingsList(onItemSelected: (NavKey) -> Unit) {
                             icon = rememberVectorPainter(Icons.Outlined.Palette),
                             text = stringResource(Res.string.appearance_screen_name),
                             descriptionText = stringResource(Res.string.appearance_screen_description),
-                            onClick = {
-                                navBackStack.add(AppearanceRoute)
-                            }
+                            onClick = { onItemSelected(AppearanceRoute) }
                         )
                     }
                 }

@@ -422,7 +422,12 @@ fun RowScope.ArticleItemFeedInfo(
                 .clip(RoundedCornerShape(3.dp))
                 .combinedClickable(
                     onLongClick = onEditFeedBlock,
-                    onClick = { navBackStack.add(ArticleRoute(feedUrls = listOf(data.feed.url))) }
+                    onClick = {
+                        val route = ArticleRoute(feedUrls = listOf(data.feed.url))
+                        if (navBackStack.lastOrNull() != route) {
+                            navBackStack.add(route)
+                        }
+                    }
                 )
                 .thenIfNotNull(onEditFeedBlock) { onRightClickIfSupported(onClick = it) }
                 .padding(horizontal = 4.dp, vertical = 3.dp),

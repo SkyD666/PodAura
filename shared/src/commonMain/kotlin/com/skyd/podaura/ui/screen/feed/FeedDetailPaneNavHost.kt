@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
-import com.skyd.compone.ext.isSinglePane
+import com.skyd.podaura.ext.isSinglePane
 import com.skyd.podaura.ui.component.PodAuraNavDisplay
+import com.skyd.podaura.ui.component.navigation.ListDetailSceneStrategy
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
 import com.skyd.podaura.ui.screen.read.ReadRoute

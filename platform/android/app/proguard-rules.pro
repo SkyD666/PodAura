@@ -104,9 +104,6 @@ public static final ** CREATOR;
 # RSS parser
 -keep, allowoptimization, allowobfuscation, allowshrinking class com.skyd.podaura.model.repository.feed.rssparser.BaseXml
 
-# Move all obfuscated classes into the root package to reduce APK size
--repackageclasses
-
 # Allow ProGuard to widen access modifiers
 -allowaccessmodification
 
