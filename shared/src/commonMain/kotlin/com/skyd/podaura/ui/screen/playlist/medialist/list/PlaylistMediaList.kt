@@ -25,11 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.compose.LazyPagingItems
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.ext.thenIf
@@ -68,9 +70,14 @@ fun PlaylistMediaList(
     val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
-    BackHandler(uiState.selectedItems.isNotEmpty()) {
-        dispatch(ListIntent.ClearSelected)
-    }
+    val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = navigationEventState,
+        isBackEnabled = uiState.selectedItems.isNotEmpty(),
+        onBackCompleted = {
+            dispatch(ListIntent.ClearSelected)
+        }
+    )
 
     PlaylistMediaList(
         uiState = uiState,
@@ -127,9 +134,14 @@ fun PlaylistMediaList(
     val dispatch = viewModel.getDispatcher(startWith = ListIntent.Init)
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
-    BackHandler(uiState.selectedItems.isNotEmpty()) {
-        dispatch(ListIntent.ClearSelected)
-    }
+    val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = navigationEventState,
+        isBackEnabled = uiState.selectedItems.isNotEmpty(),
+        onBackCompleted = {
+            dispatch(ListIntent.ClearSelected)
+        }
+    )
 
     PagingRefreshStateIndicator(
         lazyPagingItems = playlist,

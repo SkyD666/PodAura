@@ -22,8 +22,6 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.navigation.LocalNavBackStack
-import com.skyd.podaura.ext.isCompact
-import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.appearance.AppearanceRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute
@@ -54,9 +52,11 @@ import podaura.shared.generated.resources.settings
 data object SettingsListRoute : NavKey
 
 @Composable
-fun SettingsList(onItemSelected: (NavKey) -> Unit) {
+fun SettingsList(
+    onItemSelected: (NavKey) -> Unit,
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val windowSizeClass = LocalWindowSizeClass.current
     val navBackStack = LocalNavBackStack.current
 
     Scaffold(
@@ -70,18 +70,10 @@ fun SettingsList(onItemSelected: (NavKey) -> Unit) {
                         navBackStack.parent?.removeLastOrNull()
                     }
                 },
-                windowInsets =
-                    if (windowSizeClass.isCompact)
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-                    else
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Start)
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
         },
-        contentWindowInsets =
-            if (windowSizeClass.isCompact)
-                WindowInsets.safeDrawing
-            else
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+        contentWindowInsets = windowInsets
     ) { innerPadding ->
         SettingsLazyColumn(
             modifier = Modifier

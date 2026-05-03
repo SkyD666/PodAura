@@ -34,12 +34,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
@@ -94,7 +96,10 @@ data class FilePickerRoute(
 ) : NavKey {
     companion object {
         @Composable
-        fun FilePickerLauncher(route: FilePickerRoute) {
+        fun FilePickerLauncher(
+            route: FilePickerRoute,
+            windowInsets: WindowInsets = WindowInsets.safeDrawing
+        ) {
             FilePickerScreen(
                 path = route.path.takeIf {
                     route.path != MediaLibLocationPreference.default
@@ -102,6 +107,7 @@ data class FilePickerRoute(
                 pickFolder = route.pickFolder,
                 extensionName = route.extensionName,
                 id = route.id,
+                windowInsets = windowInsets
             )
         }
     }
@@ -138,18 +144,22 @@ fun FilePickerScreen(
         )
     )
 
-    BackHandler {
-        val current = Path(uiState.path)
-        val parent = current.parent?.toString()
-        if (!parent.isNullOrBlank() &&
-            uiState.path != Const.DEFAULT_FILE_PICKER_PATH &&
-            uiState.path.startsWith(Const.DEFAULT_FILE_PICKER_PATH)
-        ) {
-            dispatch(FilePickerIntent.NewLocation(parent))
-        } else {
-            navBackStack.removeFirstOrNull()
+    val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = navigationEventState,
+        onBackCompleted = {
+            val current = Path(uiState.path)
+            val parent = current.parent?.toString()
+            if (!parent.isNullOrBlank() &&
+                uiState.path != Const.DEFAULT_FILE_PICKER_PATH &&
+                uiState.path.startsWith(Const.DEFAULT_FILE_PICKER_PATH)
+            ) {
+                dispatch(FilePickerIntent.NewLocation(parent))
+            } else {
+                navBackStack.removeLastOrNull()
+            }
         }
-    }
+    )
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -167,7 +177,7 @@ fun FilePickerScreen(
                 },
                 navigationIcon = {
                     ComponeIconButton(
-                        onClick = { navBackStack.removeFirstOrNull() },
+                        onClick = navBackStack::removeLastOrNull,
                         imageVector = Icons.Outlined.Close,
                         contentDescription = stringResource(Res.string.close),
                     )

@@ -48,12 +48,11 @@ fun <T : Any> PagingRefreshStateIndicator(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(placeholderPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                Box(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    emptyContent()
-                }
+                emptyContent()
             }
         }
     }

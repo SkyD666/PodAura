@@ -8,9 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
+import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.isSinglePane
 import com.skyd.podaura.ui.component.PodAuraNavDisplay
 import com.skyd.podaura.ui.component.navigation.ListDetailSceneStrategy
+import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
 import com.skyd.podaura.ui.screen.read.ReadRoute
@@ -24,9 +26,21 @@ internal fun FeedDetailPaneNavDisplay(
     navBackStack: MutableList<NavKey>,
     sceneStrategy: ListDetailSceneStrategy<NavKey>,
 ) {
-    val windowInsets = WindowInsets.safeDrawing.only(
-        WindowInsetsSides.Vertical + WindowInsetsSides.End
-    )
+    val windowSizeClass = LocalWindowSizeClass.current
+    val safeDrawingInsets = WindowInsets.safeDrawing
+    val listWindowInsets =
+        if (windowSizeClass.isCompact && sceneStrategy.isSinglePane)
+            safeDrawingInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+        else if (sceneStrategy.isSinglePane)
+            safeDrawingInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+        else
+            safeDrawingInsets.only(WindowInsetsSides.Vertical)
+    val detailWindowInsets =
+        if (windowSizeClass.isCompact && sceneStrategy.isSinglePane)
+            safeDrawingInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+        else
+            safeDrawingInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+
     PodAuraNavDisplay(
         backStack = navBackStack,
         sceneStrategies = listOf(sceneStrategy),
@@ -56,6 +70,7 @@ internal fun FeedDetailPaneNavDisplay(
                             navBackStack.add(route)
                         }
                     },
+                    windowInsets = listWindowInsets,
                 )
             }
             entry<ArticleRoute>(metadata = ListDetailSceneStrategy.detailPane()) { route ->
@@ -66,17 +81,17 @@ internal fun FeedDetailPaneNavDisplay(
                     ) {
                         { navBackStack.removeLastOrNull() }
                     } else null,
-                    windowInsets = windowInsets,
+                    windowInsets = detailWindowInsets,
                 )
             }
             entry<SearchRoute.Feed>(metadata = ListDetailSceneStrategy.detailPane()) {
-                SearchFeedLauncher(it)
+                SearchFeedLauncher(route = it, windowInsets = detailWindowInsets)
             }
             entry<SearchRoute.Article>(metadata = ListDetailSceneStrategy.detailPane()) {
-                SearchArticleLauncher(route = it, windowInsets = windowInsets)
+                SearchArticleLauncher(route = it, windowInsets = detailWindowInsets)
             }
             entry<ReadRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ReadLauncher(it)
+                ReadLauncher(route = it, windowInsets = detailWindowInsets)
             }
         }
     )

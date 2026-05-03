@@ -4,10 +4,12 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -42,7 +44,6 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.calendar_screen_name
 
-
 @Composable
 fun LargeCalendarScreen() {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -60,7 +61,8 @@ fun LargeCalendarScreen() {
                 scrollBehavior = scrollBehavior,
             )
         },
-    ) { innerPaddings ->
+        contentWindowInsets = WindowInsets.safeDrawing
+    ) { innerPadding ->
         val density = LocalDensity.current
         val singleColumnWidth = 300.dp
         val singleColumnSpace = 30.dp
@@ -73,12 +75,15 @@ fun LargeCalendarScreen() {
                 )
             },
         )
-        HorizontalScrollControlBox(state = horizontalScrollControlState) {
+        HorizontalScrollControlBox(
+            state = horizontalScrollControlState,
+            contentPadding = innerPadding
+        ) {
             LazyRow(
                 modifier = Modifier.fillMaxSize(),
                 state = listState,
                 horizontalArrangement = Arrangement.spacedBy(singleColumnSpace),
-                contentPadding = innerPaddings.withoutBottom() + PaddingValues(horizontal = singleColumnSpace)
+                contentPadding = innerPadding.withoutBottom() + PaddingValues(horizontal = singleColumnSpace)
             ) {
                 itemsIndexed(items = days, key = { _, day -> day }) { index, day ->
                     SingleColumn(
@@ -87,6 +92,7 @@ fun LargeCalendarScreen() {
                         days = days,
                         width = singleColumnWidth,
                         onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
+                        bottomInsets = innerPadding.calculateBottomPadding()
                     )
                 }
             }
@@ -101,6 +107,7 @@ private fun SingleColumn(
     days: List<Long>,
     width: Dp,
     onError: (String) -> Unit,
+    bottomInsets: Dp = 0.dp
 ) {
     Column(
         modifier = Modifier
@@ -130,6 +137,10 @@ private fun SingleColumn(
                 .padding(vertical = 10.dp)
                 .width(100.dp),
         )
-        DayList(day = days[index], onError = onError)
+        DayList(
+            day = days[index],
+            onError = onError,
+            contentPadding = PaddingValues(bottom = bottomInsets),
+        )
     }
 }

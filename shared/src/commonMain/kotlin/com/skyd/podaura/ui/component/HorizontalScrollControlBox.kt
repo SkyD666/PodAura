@@ -3,6 +3,9 @@ package com.skyd.podaura.ui.component
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -44,8 +48,11 @@ fun HorizontalScrollControlBox(
     scrollBackwardButton: @Composable () -> Unit = {
         ScrollBackwardButton(onClick = { state.scrollBackward() })
     },
+    contentPadding: PaddingValues = PaddingValues(),
     content: @Composable () -> Unit,
 ) {
+    val layoutDirection = LocalLayoutDirection.current
+
     Box(
         modifier = modifier.pointerInput(Unit) {
             awaitPointerEventScope {
@@ -67,6 +74,7 @@ fun HorizontalScrollControlBox(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
+                .padding(contentPadding.calculateStartPadding(layoutDirection))
                 .padding(start = HorizontalScrollControlDefaults.buttonSpace),
         ) {
             Crossfade(targetState = state.showForwardButton) { show ->
@@ -78,6 +86,7 @@ fun HorizontalScrollControlBox(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
+                .padding(contentPadding.calculateEndPadding(layoutDirection))
                 .padding(end = HorizontalScrollControlDefaults.buttonSpace),
         ) {
             Crossfade(targetState = state.showBackwardButton) { show ->

@@ -1,8 +1,10 @@
 package com.skyd.podaura.ui.screen.calendar.portrait
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -49,6 +51,7 @@ fun PortraitCalendarScreen() {
                 scrollBehavior = scrollBehavior,
             )
         },
+        contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPaddings ->
         Column {
             PrimaryScrollableTabRow(

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import com.skyd.compone.component.pointerOnBack
+import com.skyd.podaura.ext.isSinglePane
 import com.skyd.podaura.ui.component.PodAuraNavDisplay
 import com.skyd.podaura.ui.component.navigation.ListDetailSceneStrategy
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
@@ -56,9 +57,17 @@ internal fun SettingsDetailPaneNavDisplay(
     sceneStrategy: ListDetailSceneStrategy<NavKey>,
     onPaneBack: (() -> Unit)?,
 ) {
-    val windowInsets = WindowInsets.safeDrawing.only(
-        WindowInsetsSides.Vertical + WindowInsetsSides.End
-    )
+    val safeDrawingInsets = WindowInsets.safeDrawing
+    val listWindowInsets =
+        if (sceneStrategy.isSinglePane)
+            safeDrawingInsets
+        else
+            safeDrawingInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+    val detailWindowInsets =
+        if (sceneStrategy.isSinglePane)
+            safeDrawingInsets
+        else
+            safeDrawingInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
 
     PodAuraNavDisplay(
         backStack = navBackStack,
@@ -70,65 +79,66 @@ internal fun SettingsDetailPaneNavDisplay(
                     onItemSelected = { itemRoute ->
                         navBackStack.removeAll { it !is SettingsListRoute }
                         navBackStack.add(itemRoute)
-                    }
+                    },
+                    windowInsets = listWindowInsets,
                 )
             }
             entry<AppearanceRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                AppearanceScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                AppearanceScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<ArticleStyleRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ArticleStyleScreen(windowInsets = windowInsets)
+                ArticleStyleScreen(windowInsets = detailWindowInsets)
             }
             entry<FeedStyleRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                FeedStyleScreen(windowInsets = windowInsets)
+                FeedStyleScreen(windowInsets = detailWindowInsets)
             }
             entry<ReadStyleRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ReadStyleScreen(windowInsets = windowInsets)
+                ReadStyleScreen(windowInsets = detailWindowInsets)
             }
             entry<MediaStyleRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                MediaStyleScreen(windowInsets = windowInsets)
+                MediaStyleScreen(windowInsets = detailWindowInsets)
             }
             entry<ReorderGroupRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ReorderGroupScreen(windowInsets = windowInsets)
+                ReorderGroupScreen(windowInsets = detailWindowInsets)
             }
             entry<SearchStyleRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                SearchStyleScreen(windowInsets = windowInsets)
+                SearchStyleScreen(windowInsets = detailWindowInsets)
             }
             entry<BehaviorRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                BehaviorScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                BehaviorScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<AutoDeleteRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                AutoDeleteScreen(windowInsets = windowInsets)
+                AutoDeleteScreen(windowInsets = detailWindowInsets)
             }
             entry<ImportOpmlRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ImportOpmlScreen(windowInsets = windowInsets)
+                ImportOpmlScreen(windowInsets = detailWindowInsets)
             }
             entry<ImportExportRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                ImportExportScreen(windowInsets = windowInsets)
+                ImportExportScreen(windowInsets = detailWindowInsets)
             }
             entry<DataRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                DataScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                DataScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<PlayerConfigRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                PlayerConfigScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                PlayerConfigScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<PlayerConfigAdvancedRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                PlayerConfigAdvancedScreen(windowInsets = windowInsets)
+                PlayerConfigAdvancedScreen(windowInsets = detailWindowInsets)
             }
             entry<RssConfigRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                RssConfigScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                RssConfigScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<TransmissionRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                TransmissionScreen(onBack = onPaneBack, windowInsets = windowInsets)
+                TransmissionScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<UpdateNotificationRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                UpdateNotificationScreen(windowInsets = windowInsets)
+                UpdateNotificationScreen(windowInsets = detailWindowInsets)
             }
             entry<DeleteConstraintRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                DeleteConstraintScreen(windowInsets = windowInsets)
+                DeleteConstraintScreen(windowInsets = detailWindowInsets)
             }
             entry<FilePickerRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
-                FilePickerLauncher(route = it)
+                FilePickerLauncher(route = it, windowInsets = detailWindowInsets)
             }
         }
     )

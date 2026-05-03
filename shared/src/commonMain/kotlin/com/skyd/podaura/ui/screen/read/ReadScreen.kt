@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
@@ -117,9 +119,9 @@ import podaura.shared.generated.resources.read_screen_open_image_in_browser
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
 
-
 @Serializable
 data class ReadRoute(@SerialName("articleId") val articleId: String) : NavKey {
+
     fun toDeeplink(): String = "$DEEP_LINK/$articleId"
 
     companion object {
@@ -134,14 +136,18 @@ data class ReadRoute(@SerialName("articleId") val articleId: String) : NavKey {
         )
 
         @Composable
-        fun ReadLauncher(route: ReadRoute) {
-            ReadScreen(articleId = route.articleId)
+        fun ReadLauncher(route: ReadRoute, windowInsets: WindowInsets = WindowInsets.safeDrawing) {
+            ReadScreen(articleId = route.articleId, windowInsets = windowInsets)
         }
     }
 }
 
 @Composable
-fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
+fun ReadScreen(
+    articleId: String,
+    viewModel: ReadViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
@@ -233,7 +239,8 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                             }
                         },
                     )
-                }
+                },
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
         },
         floatingActionButton = {
@@ -250,7 +257,7 @@ fun ReadScreen(articleId: String, viewModel: ReadViewModel = koinViewModel()) {
                 )
             }
         },
-        contentWindowInsets = WindowInsets.safeDrawing,
+        contentWindowInsets = windowInsets,
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     ReadContentTonalElevationPreference.current.dp
@@ -424,7 +431,7 @@ private fun Content(
         },
         refererDomain = article.article.link?.httpDomain(),
         horizontalPadding = 16f,
-        onImageClick = { imageUrl, alt -> openImageSheet = imageUrl },
+        onImageClick = { imageUrl, _ -> openImageSheet = imageUrl },
     )
     CategoryArea(article.categories)
 

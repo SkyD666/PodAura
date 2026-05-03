@@ -53,6 +53,9 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.ext.onlyHorizontal
+import com.skyd.compone.ext.plus
+import com.skyd.compone.ext.withoutTop
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.isCompact
@@ -104,8 +107,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val navBackStack = LocalNavBackStack.current
     val windowSizeClass = LocalWindowSizeClass.current
     val scope = rememberCoroutineScope()
-
-    var fabHeight by remember { mutableStateOf(0.dp) }
 
     val dispatch = viewModel.getDispatcher(key1 = path, startWith = MediaIntent.Init(path = path))
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
@@ -195,7 +196,6 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
         floatingActionButton = {
             ComponeFloatingActionButton(
                 onClick = { navBackStack.add(FilePickerRoute(path = path, pickFolder = false)) },
-                onSizeWithSinglePaddingChanged = { _, height -> fabHeight = height },
                 contentDescription = stringResource(Res.string.open_file),
             ) {
                 Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = null)
@@ -213,12 +213,12 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(top = innerPadding.calculateTopPadding()),
         ) {
             if (uiState.groups.isNotEmpty()) {
                 if (MediaShowGroupTabPreference.current) {
                     PrimaryScrollableTabRow(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(innerPadding.onlyHorizontal()),
                         selectedTabIndex = min(uiState.groups.size - 1, pagerState.currentPage),
                         edgePadding = 0.dp,
                     ) {
@@ -252,7 +252,8 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                 HorizontalPager(state = pagerState) { index ->
                     MediaList(
                         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                        fabPadding = PaddingValues(bottom = fabHeight),
+                        snackbarHostState = snackbarHostState,
+                        contentPadding = innerPadding.withoutTop() + PaddingValues(bottom = 72.dp), // FAB size + margin
                         path = path,
                         isSubList = false,
                         groupInfo = GroupInfo(

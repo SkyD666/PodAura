@@ -3,7 +3,6 @@ package com.skyd.podaura.ui.screen.media.list
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -11,8 +10,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.LoadingIndicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
@@ -59,113 +56,107 @@ class GroupInfo(
 @Composable
 internal fun MediaList(
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues = PaddingValues(),
-    fabPadding: PaddingValues = PaddingValues(),
     path: String,
     isSubList: Boolean,
     groupInfo: GroupInfo? = null,
     viewModel: MediaListViewModel = koinViewModel(key = path + groupInfo?.group)
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val navBackStack = LocalNavBackStack.current
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-    ) { innerPadding ->
-        val uiState by viewModel.viewState.collectAsStateWithLifecycle()
-        val dispatch = viewModel.getDispatcher(
-            path,
-            groupInfo?.version,
-            startWith = MediaListIntent.Init(
-                path = path,
-                group = groupInfo?.group,
-                isSubList = isSubList,
-                version = groupInfo?.version,
-            )
+    val uiState by viewModel.viewState.collectAsStateWithLifecycle()
+    val dispatch = viewModel.getDispatcher(
+        path,
+        groupInfo?.version,
+        startWith = MediaListIntent.Init(
+            path = path,
+            group = groupInfo?.group,
+            isSubList = isSubList,
+            version = groupInfo?.version,
         )
-        val state = rememberPullToRefreshState()
-        Box(
-            modifier = Modifier.pullToRefresh(
-                isRefreshing = uiState.listState.loading,
-                onRefresh = {
-                    dispatch(MediaListIntent.Refresh(path = path, group = groupInfo?.group))
-                },
-                state = state
-            )
-        ) {
-            when (val listState = uiState.listState) {
-                is ListState.Failed -> Unit
-                is ListState.Init -> CircularProgressPlaceholder(contentPadding = innerPadding + contentPadding)
+    )
+    val state = rememberPullToRefreshState()
+    Box(
+        modifier = Modifier.pullToRefresh(
+            isRefreshing = uiState.listState.loading,
+            onRefresh = {
+                dispatch(MediaListIntent.Refresh(path = path, group = groupInfo?.group))
+            },
+            state = state
+        )
+    ) {
+        when (val listState = uiState.listState) {
+            is ListState.Failed -> Unit
+            is ListState.Init -> CircularProgressPlaceholder(contentPadding = contentPadding)
 
-                is ListState.Success -> {
-                    if (listState.list.isEmpty()) {
-                        EmptyPlaceholder(
-                            modifier = Modifier.verticalScroll(rememberScrollState()),
-                            contentPadding = innerPadding + contentPadding
-                        )
-                    } else {
-                        val listItemType = if (isSubList) MediaSubListItemTypePreference.current
-                        else MediaListItemTypePreference.current
-                        val playerJumper = rememberPlayerJumper()
-                        MediaList(
-                            modifier = modifier,
-                            list = listState.list,
-                            groups = uiState.groups,
-                            groupInfo = groupInfo,
-                            listItemType = listItemType,
-                            onPlay = { media ->
-                                playerJumper.jump(
-                                    PlayDataMode.MediaLibraryList(
-                                        startMediaPath = media.filePath,
-                                        mediaList = listState.list.filter { it.isMedia }.map {
-                                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                                path = it.filePath,
-                                                articleId = it.articleId,
-                                                title = it.displayName,
-                                                thumbnail = it.feedBean?.customIcon
-                                                    ?: it.feedBean?.icon,
-                                            )
-                                        },
-                                    )
+            is ListState.Success -> {
+                if (listState.list.isEmpty()) {
+                    EmptyPlaceholder(
+                        modifier = Modifier.verticalScroll(rememberScrollState()),
+                        contentPadding = contentPadding
+                    )
+                } else {
+                    val listItemType = if (isSubList) MediaSubListItemTypePreference.current
+                    else MediaListItemTypePreference.current
+                    val playerJumper = rememberPlayerJumper()
+                    MediaList(
+                        modifier = modifier,
+                        list = listState.list,
+                        groups = uiState.groups,
+                        groupInfo = groupInfo,
+                        listItemType = listItemType,
+                        onPlay = { media ->
+                            playerJumper.jump(
+                                PlayDataMode.MediaLibraryList(
+                                    startMediaPath = media.filePath,
+                                    mediaList = listState.list.filter { it.isMedia }.map {
+                                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                                            path = it.filePath,
+                                            articleId = it.articleId,
+                                            title = it.displayName,
+                                            thumbnail = it.feedBean?.customIcon
+                                                ?: it.feedBean?.icon,
+                                        )
+                                    },
                                 )
-                            },
-                            onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
-                            onRename = { oldMedia, newName ->
-                                dispatch(MediaListIntent.RenameFile(oldMedia.path, newName))
-                            },
-                            onSetFileDisplayName = { media, displayName ->
-                                dispatch(
-                                    MediaListIntent.SetFileDisplayName(
-                                        media = media,
-                                        displayName = displayName,
-                                    )
+                            )
+                        },
+                        onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
+                        onRename = { oldMedia, newName ->
+                            dispatch(MediaListIntent.RenameFile(oldMedia.path, newName))
+                        },
+                        onSetFileDisplayName = { media, displayName ->
+                            dispatch(
+                                MediaListIntent.SetFileDisplayName(
+                                    media = media,
+                                    displayName = displayName,
                                 )
-                            },
-                            onRemove = { dispatch(MediaListIntent.DeleteFile(it.path)) },
-                            contentPadding = innerPadding + contentPadding + fabPadding,
-                        )
-                    }
+                            )
+                        },
+                        onRemove = { dispatch(MediaListIntent.DeleteFile(it.path)) },
+                        contentPadding = contentPadding,
+                    )
                 }
             }
-
-            LoadingIndicator(
-                modifier = Modifier
-                    .padding(contentPadding + fabPadding)
-                    .align(Alignment.TopCenter),
-                isRefreshing = uiState.listState.loading,
-                state = state
-            )
         }
 
-        MviEventListener(viewModel.singleEvent) { event ->
-            when (event) {
-                is MediaListEvent.DeleteFileResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
+        LoadingIndicator(
+            modifier = Modifier
+                .padding(contentPadding)
+                .align(Alignment.TopCenter),
+            isRefreshing = uiState.listState.loading,
+            state = state
+        )
+    }
 
-                is MediaListEvent.MediaListResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
-            }
+    MviEventListener(viewModel.singleEvent) { event ->
+        when (event) {
+            is MediaListEvent.DeleteFileResultEvent.Failed ->
+                snackbarHostState.showSnackbar(event.msg)
+
+            is MediaListEvent.MediaListResultEvent.Failed ->
+                snackbarHostState.showSnackbar(event.msg)
         }
     }
 }
@@ -216,7 +207,7 @@ internal fun MediaList(
 
     LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
-        contentPadding = contentPadding + PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+        contentPadding = contentPadding + PaddingValues(all = 12.dp),
         columns = GridCells.Adaptive(BaseMediaItemTypePreference.toMinWidth(listItemType).dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

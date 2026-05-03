@@ -19,10 +19,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.fundation.util.exitApp
@@ -51,7 +53,7 @@ fun TermsOfServiceScreen(onAgree: () -> Unit) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
 
-    val onDisagree = {
+    val onDisagree: () -> Unit = {
         scope.launch(Dispatchers.IO) {
             dataStore.put(AcceptTermsPreference.key, false)
             withContext(Dispatchers.Main) {
@@ -60,9 +62,11 @@ fun TermsOfServiceScreen(onAgree: () -> Unit) {
         }
     }
 
-    BackHandler {
-        onDisagree()
-    }
+    val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = navigationEventState,
+        onBackCompleted = onDisagree
+    )
 
     Scaffold(
         topBar = {
@@ -95,7 +99,7 @@ fun TermsOfServiceScreen(onAgree: () -> Unit) {
                 )
             }
             Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                TextButton(onClick = { onDisagree() }) {
+                TextButton(onClick = onDisagree) {
                     Text(text = stringResource(Res.string.terms_of_service_screen_disagree))
                 }
                 Spacer(modifier = Modifier.width(10.dp))

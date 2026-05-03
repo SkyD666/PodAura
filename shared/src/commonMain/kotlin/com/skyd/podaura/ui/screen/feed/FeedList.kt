@@ -63,7 +63,6 @@ import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.lastIndex
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.feed.FeedViewBean
@@ -73,7 +72,6 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationP
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.calendar.CalendarRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
@@ -115,6 +113,7 @@ internal fun FeedList(
     onShowArticleListByFeedUrls: (List<String>) -> Unit,
     onShowArticleListByGroupId: (String) -> Unit,
     viewModel: FeedViewModel = koinViewModel(),
+    windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
@@ -122,7 +121,6 @@ internal fun FeedList(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val bottomSheetSnackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = LocalWindowSizeClass.current
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
     var openAddDialog by rememberSaveable { mutableStateOf(false) }
     var addDialogUrl by rememberSaveable { mutableStateOf("") }
@@ -170,11 +168,7 @@ internal fun FeedList(
                     )
                 },
                 navigationIcon = {},
-                windowInsets =
-                    if (windowSizeClass.isCompact)
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-                    else
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 colors = TopAppBarDefaults.topAppBarColors().copy(
                     containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
                         FeedTopBarTonalElevationPreference.current.dp
@@ -198,11 +192,7 @@ internal fun FeedList(
                 )
             }
         },
-        contentWindowInsets =
-            if (windowSizeClass.isCompact)
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-            else
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical),
+        contentWindowInsets = windowInsets,
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             LocalAbsoluteTonalElevation.current +
                     FeedListTonalElevationPreference.current.dp

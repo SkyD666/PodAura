@@ -90,6 +90,7 @@ fun DayList(
                                 .fillMaxSize()
                                 .thenIfNotNull(nestedScrollConnection) { nestedScroll(it) },
                             state = lazyListState,
+                            contentPadding = contentPadding
                         ) {
                             val keyGenerator = result.safeItemKey {
                                 if (it is ArticleWithFeed) {
