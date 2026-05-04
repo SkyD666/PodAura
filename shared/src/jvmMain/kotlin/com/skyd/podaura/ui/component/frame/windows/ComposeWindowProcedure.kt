@@ -218,8 +218,7 @@ internal class ExtendedTitleBarWindowProc(
                     edgeX = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi)
                     edgeY = User32Extend.INSTANCE.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi)
                     padding = User32Extend.INSTANCE.GetSystemMetricsForDpi(
-                        WinUser.SM_CXPADDEDBORDER,
-                        dpi
+                        WinUser.SM_CXPADDEDBORDER, dpi
                     )
                     isMaximized = User32Extend.INSTANCE.isWindowInMaximized(hwnd)
                     val params = Structure.newInstance(
@@ -228,25 +227,15 @@ internal class ExtendedTitleBarWindowProc(
                     )
                     params.read()
                     params.rgrc[0]?.apply {
-                        left += if (isMaximized) {
-                            frameX + padding
-                        } else {
-                            edgeX
-                        }
-                        right -= if (isMaximized) {
-                            frameX + padding
-                        } else {
-                            edgeX
-                        }
-                        bottom -= if (isMaximized) {
-                            padding + frameX
-                        } else {
-                            edgeY
-                        }
-                        top += if (isMaximized) {
-                            padding + frameX
-                        } else {
-                            0
+                        if (isMaximized) {
+                            left += frameX + padding
+                            right -= frameX + padding
+                            bottom -= padding + frameX
+                            top += padding + frameX
+                        } else if (!WindowsUtil.isWindows11OrLater()) {
+                            left += edgeX
+                            right -= edgeX
+                            bottom -= edgeY
                         }
                     }
                     params.write()

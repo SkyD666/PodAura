@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowState
+import com.skyd.fundation.util.WindowsUtil
 
 @Composable
 fun FrameWindowScope.WindowsWindowFrame(
@@ -44,7 +45,7 @@ fun FrameWindowScope.WindowsWindowFrame(
         }
     }
 
-    // 0 is minimize, 1 is maximize, 2 is close
+    // 0 -> minimize, 1 -> maximize, 2 -> close
     val captionButtonsRect = remember { Array(3) { Rect.Zero } }
     var captionButtonsSize by remember { mutableStateOf(IntSize(0, 0)) }
 
@@ -70,7 +71,8 @@ fun FrameWindowScope.WindowsWindowFrame(
     val topBorderFixedInsets by remember {
         derivedStateOf {
             val isFloatingWindow = state.placement == WindowPlacement.Floating
-            if (isFloatingWindow) WindowInsets(top = 1) else WindowInsets()
+            val isWindows11OrLater = WindowsUtil.isWindows11OrLater()
+            if (isFloatingWindow && !isWindows11OrLater) WindowInsets(top = 1) else WindowInsets()
         }
     }
 
