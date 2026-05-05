@@ -11,11 +11,11 @@ import com.skyd.podaura.model.repository.feed.convert.rssUpdateFeedWithArticleBe
 import com.skyd.podaura.model.repository.feed.rssparser.BaseXml
 import com.skyd.podaura.model.repository.feed.rssparser.atom.Feed
 import com.skyd.podaura.model.repository.feed.rssparser.rss.Rss
+import com.skyd.podaura.util.ktor.ContentNegotiation
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.plugins.api.createClientPlugin
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.xml.xml
