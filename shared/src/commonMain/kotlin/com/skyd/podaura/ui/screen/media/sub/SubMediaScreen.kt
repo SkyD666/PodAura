@@ -68,7 +68,7 @@ fun SubMediaScreenRoute(media: MediaBean?) {
             title = { Text(text = stringResource(Res.string.warning)) },
             text = { Text(text = stringResource(Res.string.sub_media_screen_path_illegal)) },
             confirmButton = {
-                TextButton(onClick = { navBackStack.removeFirstOrNull() }) {
+                TextButton(onClick = navBackStack::removeLastOrNull) {
                     Text(text = stringResource(Res.string.exit))
                 }
             },

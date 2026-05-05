@@ -49,7 +49,8 @@ import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.navigation.LocalResultStore
 import com.skyd.compone.ext.onlyHorizontal
-import com.skyd.compone.ext.plus
+import com.skyd.compone.ext.withoutBottom
+import com.skyd.compone.ext.withoutTop
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.DEFAULT_FILE_PICKER_PATH
 import com.skyd.fundation.ext.isDirectory
@@ -198,6 +199,7 @@ fun FilePickerScreen(
             PathLevelIndication(
                 path = uiState.path,
                 onRouteTo = { dispatch(FilePickerIntent.NewLocation(it)) },
+                contentPadding = innerPadding.onlyHorizontal()
             )
             val resultStore = LocalResultStore.current
             LazyColumn(
@@ -205,9 +207,9 @@ fun FilePickerScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = innerPadding.onlyHorizontal() + PaddingValues(
-                    bottom = if (pickFolder) 0.dp else innerPadding.calculateBottomPadding(),
-                ),
+                contentPadding = innerPadding.withoutTop().run {
+                    if (pickFolder) withoutBottom() else this
+                }
             ) {
                 (uiState.fileListState as? FileListState.Success)?.list?.forEach { filePath ->
                     item {
@@ -227,7 +229,7 @@ fun FilePickerScreen(
                                                 result = filePath.toString(),
                                             )
                                         )
-                                        navBackStack.removeFirstOrNull()
+                                        navBackStack.removeLastOrNull()
                                     }
                                 }
                             },
@@ -248,11 +250,8 @@ fun FilePickerScreen(
             if (pickFolder) {
                 Button(
                     modifier = Modifier
-                        .padding(
-                            top = 12.dp,
-                            bottom = 12.dp + innerPadding.calculateBottomPadding(),
-                        )
-                        .padding(horizontal = 16.dp)
+                        .padding(vertical = 12.dp, horizontal = 16.dp)
+                        .padding(innerPadding.withoutTop())
                         .fillMaxWidth(),
                     onClick = {
                         resultStore.setResult(
@@ -265,7 +264,7 @@ fun FilePickerScreen(
                                 result = uiState.path,
                             )
                         )
-                        navBackStack.removeFirstOrNull()
+                        navBackStack.removeLastOrNull()
                     },
                 ) {
                     Text(text = stringResource(Res.string.file_picker_screen_pick))
@@ -283,7 +282,11 @@ fun FilePickerScreen(
 }
 
 @Composable
-private fun PathLevelIndication(path: String, onRouteTo: (String) -> Unit) {
+private fun PathLevelIndication(
+    path: String,
+    onRouteTo: (String) -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
+) {
     val scrollState = rememberScrollState()
     LaunchedEffect(scrollState.maxValue) {
         if (scrollState.canScrollForward) {
@@ -294,6 +297,7 @@ private fun PathLevelIndication(path: String, onRouteTo: (String) -> Unit) {
         modifier = Modifier
             .horizontalScroll(scrollState)
             .padding(horizontal = 12.dp)
+            .padding(contentPadding)
             .animateContentSize(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
