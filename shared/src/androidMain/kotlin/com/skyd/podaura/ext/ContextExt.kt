@@ -1,8 +1,6 @@
 package com.skyd.podaura.ext
 
-import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -10,40 +8,9 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.view.Window
 import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.StringResource
-
-val Context.activity: Activity
-    get() {
-        return tryActivity ?: error("Can't find activity: $this")
-    }
-
-@get:JvmName("tryActivity")
-val Context.tryActivity: Activity?
-    get() {
-        var ctx = this
-        while (ctx is ContextWrapper) {
-            if (ctx is Activity) {
-                return ctx
-            }
-            ctx = ctx.baseContext
-        }
-        return null
-    }
-
-val Context.tryWindow: Window?
-    get() {
-        var ctx = this
-        while (ctx is ContextWrapper) {
-            if (ctx is Activity) {
-                return ctx.window
-            }
-            ctx = ctx.baseContext
-        }
-        return null
-    }
 
 fun Context.getAppVersionName(): String {
     var appVersionName = ""

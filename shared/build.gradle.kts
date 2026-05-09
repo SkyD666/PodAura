@@ -208,18 +208,6 @@ kotlin {
     }
 }
 
-// https://github.com/coil-kt/coil/issues/3382
-// TODO Remove it after coil 3.5.0-beta01 released
-// w: Skiko dependencies' versions are incompatible.
-//    io.coil-kt.coil3:coil-core-jvm:3.4.0
-//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
-//
-//    io.coil-kt.coil3:coil-svg-jvm:3.4.0
-//    \--- org.jetbrains.skiko:skiko:0.9.22.2 -> 0.144.5
-configurations.all {
-    resolutionStrategy.force("org.jetbrains.skiko:skiko:0.144.5")
-}
-
 compose.resources {
     publicResClass = true
 }

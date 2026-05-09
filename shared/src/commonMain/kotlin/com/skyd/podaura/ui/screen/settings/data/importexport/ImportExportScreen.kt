@@ -136,7 +136,7 @@ fun ImportExportScreen(
                             val random = Random.nextInt(0, Int.MAX_VALUE)
                             opmlSaverLauncher.launch(
                                 suggestedName = "${appName}_${time}_${random}".validateFileName(),
-                                extension = "opml",
+                                defaultExtension = "opml"
                             )
                         }
                     )
@@ -161,7 +161,7 @@ fun ImportExportScreen(
                             val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
                             jsonPreferenceSaverLauncher.launch(
                                 suggestedName = "${appName}_${BuildKonfig.versionName}_preferences_${time}".validateFileName(),
-                                extension = "json"
+                                defaultExtension = "json"
                             )
                         }
                     )

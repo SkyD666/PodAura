@@ -1,13 +1,13 @@
 package com.skyd.podaura.ui.component.navigation.deeplink
 
 import androidx.navigation3.runtime.NavKey
-import com.skyd.podaura.util.from
 import io.ktor.http.Url
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -82,7 +82,7 @@ class DeepLinkPattern<T : NavKey>(
                 // finally, add the arg name and its respective type parser to the map
                 add(PathSegment(argName, true, getTypeParser(elementDescriptor.kind, typeParsers)))
             } else {
-                // if its not a path arg, then its just a static string path segment
+                // if it's not a path arg, then it's just a static string path segment
                 add(PathSegment(segment, false, getTypeParser(PrimitiveKind.STRING, typeParsers)))
             }
         }
@@ -131,9 +131,9 @@ private fun getTypeParser(kind: SerialKind, additional: Map<SerialKind, TypePars
         PrimitiveKind.FLOAT -> ::JsonPrimitive
         PrimitiveKind.LONG -> ::JsonPrimitive
         PrimitiveKind.SHORT -> ::JsonPrimitive
-        StructureKind.LIST -> { value: Any? ->
-            val list = value as? List<*> ?: throw IllegalArgumentException("Expected List")
-            JsonArray.from(list)
+        StructureKind.LIST -> { value: String ->
+            Json.parseToJsonElement(value) as? JsonArray
+                ?: throw IllegalArgumentException("Expected JSON array string, got: $value")
         }
 
         else -> throw IllegalArgumentException(

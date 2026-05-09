@@ -1,0 +1,11 @@
+# FFmpeg
+-dontwarn com.arthenica.smartexception.java.Exceptions
+
+# MPV
+-keep,allowoptimization class is.xyz.mpv.MPVLib { public *; }
+
+# Allow ProGuard to widen access modifiers
+-allowaccessmodification
+
+# Strip Kotlin null checks inserted by the compiler to reduce method count and overhead
+-processkotlinnullchecks remove

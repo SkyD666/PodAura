@@ -187,7 +187,7 @@ private fun List<HeaderValueParam>.suitableCharsetOrNull(): Charset? =
         if (Charsets.isSupported(charsetName)) {
             Charsets.forName(charsetName)
         } else {
-            LOGGER.warn("Unsupported charset '$charsetName' in content type'")
+            LOGGER.warn("Unsupported charset '$charsetName' in content type")
             null
         }
     }

@@ -43,7 +43,7 @@ import com.skyd.podaura.ui.component.EmptyPlaceholder
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
-import io.ktor.http.URLBuilder
+import io.ktor.http.Url
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -66,7 +66,7 @@ data class DownloadRoute(
 
         val deepLinkPattern = DeepLinkPattern(
             serializer(),
-            urlPattern = URLBuilder(BASE_PATH).build()
+            urlPattern = Url(BASE_PATH)
         )
 
         @Composable

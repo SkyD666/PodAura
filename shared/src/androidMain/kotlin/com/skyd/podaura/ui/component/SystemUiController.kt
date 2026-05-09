@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Build
 import android.view.View
 import android.view.Window
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
@@ -13,7 +14,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.skyd.podaura.ext.tryWindow
 
 @Stable
 interface SystemUiController {
@@ -88,7 +88,7 @@ interface SystemUiController {
  */
 @Composable
 fun rememberSystemUiController(
-    window: Window? = LocalView.current.tryWindow,
+    window: Window? = LocalActivity.current?.window,
 ): SystemUiController {
     val view = LocalView.current
     return remember(view, window) { AndroidSystemUiController(view, window) }

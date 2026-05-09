@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.player
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,7 +22,6 @@ import coil3.compose.rememberAsyncImagePainter
 import com.skyd.compone.ext.ratio
 import com.skyd.compone.ext.size
 import com.skyd.compone.ext.thenIfNotNull
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.OnLifecycleEvent
 import com.skyd.podaura.ui.component.rememberOrientationController
@@ -54,7 +53,6 @@ import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import io.github.vinceglb.filekit.PlatformFile
 
-
 @Composable
 fun PlayerViewRoute(
     service: PlayerCoordinator?,
@@ -72,7 +70,7 @@ fun PlayerView(
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
-    val context = LocalContext.current
+    val activity = LocalActivity.current
 
     val playerState by service.playerState.collectAsStateWithLifecycle()
     var playState by remember { mutableStateOf(PlayState.initial) }
@@ -140,7 +138,7 @@ fun PlayerView(
 
     val playerObserver = PlayerCoordinator.Observer { command ->
         when (command) {
-            is PlayerEvent.Shutdown -> context.activity.finish()
+            is PlayerEvent.Shutdown -> activity?.finish()
             PlayerEvent.Seek -> playState = playState.copy(isSeeking = false)
             else -> Unit
         }
@@ -223,7 +221,7 @@ fun PlayerView(
 
             Lifecycle.Event.ON_STOP -> {
                 if (inPipMode) {    // Close button in PIP window is clicked
-                    context.activity.finish()
+                    activity?.finish()
                 }
             }
 
@@ -250,7 +248,6 @@ private fun PipContent(
             onCommand = onCommand,
             modifier = Modifier
                 .pipParams(
-                    context = LocalContext.current,
                     autoEnterPipMode = autoEnterPipMode,
                     isVideo = true,
                     playState = playState,
@@ -265,7 +262,6 @@ private fun PipContent(
         val modifier = Modifier
             .fillMaxSize()
             .pipParams(
-                context = LocalContext.current,
                 autoEnterPipMode = autoEnterPipMode,
                 isVideo = false,
                 playState = playState,

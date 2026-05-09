@@ -98,8 +98,7 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
-import io.ktor.http.URLBuilder
-import io.ktor.http.appendPathSegments
+import io.ktor.http.Url
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -122,17 +121,14 @@ import podaura.shared.generated.resources.share
 @Serializable
 data class ReadRoute(@SerialName("articleId") val articleId: String) : NavKey {
 
-    fun toDeeplink(): String = "$DEEP_LINK/$articleId"
+    fun toDeeplink(): String = "$BASE_PATH/$articleId"
 
     companion object {
-        private const val DEEP_LINK = "podaura://read.screen"
-        const val BASE_PATH = DEEP_LINK
+        const val BASE_PATH = "podaura://read.screen"
 
         val deepLinkPattern = DeepLinkPattern(
             serializer(),
-            urlPattern = URLBuilder(BASE_PATH).apply {
-                appendPathSegments("{articleId}")
-            }.build()
+            urlPattern = Url("$BASE_PATH/{articleId}")
         )
 
         @Composable

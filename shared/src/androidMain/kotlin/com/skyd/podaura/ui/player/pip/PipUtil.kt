@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.os.Build
 import android.util.Rational
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,17 +28,15 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.toRect
 import androidx.core.util.Consumer
 import co.touchlab.kermit.Logger
-import com.skyd.podaura.ext.activity
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 
 @Composable
 /*internal*/ fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
     val currentShouldEnterPipMode by rememberUpdatedState(newValue = shouldEnterPipMode)
-    if (Build.VERSION.SDK_INT in Build.VERSION_CODES.O..<Build.VERSION_CODES.S) {
-        val context = LocalContext.current
-        DisposableEffect(context) {
-            val activity = context.activity as ComponentActivity
+    if (Build.VERSION.SDK_INT in Build.VERSION_CODES.O ..< Build.VERSION_CODES.S) {
+        val activity = LocalActivity.current as ComponentActivity
+        DisposableEffect(activity) {
             val onUserLeaveBehavior: () -> Unit = {
                 if (currentShouldEnterPipMode) {
                     val builder = PictureInPictureParams.Builder()
@@ -54,11 +53,13 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 
 @Composable
 /*internal*/ fun Modifier.pipParams(
-    context: Context,
     autoEnterPipMode: Boolean,
     isVideo: Boolean,
     playState: PlayState,
 ): Modifier = run {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+
     var builder by remember { mutableStateOf<PictureInPictureParams.Builder?>(null) }
     val currentPlayState by rememberUpdatedState(playState)
     val currentAutoEnterPipMode by rememberUpdatedState(autoEnterPipMode)
@@ -77,7 +78,7 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
                         builder.setSeamlessResizeEnabled(false)
                     }
                 }
-                context.activity.setPictureInPictureParams(builder.build())
+                activity?.setPictureInPictureParams(builder.build())
             }
         }
     }
@@ -92,7 +93,7 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
                 builder = b
                 val rect = layoutCoordinates.boundsInWindow()
                 b.setSourceRectHint(rect.toAndroidRectF().toRect())
-                if (!rect.isEmpty && rect.width / rect.height in 0.42..<2.4) {
+                if (!rect.isEmpty && rect.width / rect.height in 0.42 ..< 2.4) {
                     b.setAspectRatio(Rational(rect.width.toInt(), rect.height.toInt()))
                 }
                 setActionsAndApplyBuilder(b)
@@ -104,7 +105,7 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 @Composable
 /*internal*/ fun rememberIsInPipMode(): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val activity = LocalContext.current.activity as ComponentActivity
+        val activity = LocalActivity.current as ComponentActivity
         var pipMode by remember { mutableStateOf(activity.isInPictureInPictureMode) }
         DisposableEffect(activity) {
             val observer = Consumer<PictureInPictureModeChangedInfo> { info ->

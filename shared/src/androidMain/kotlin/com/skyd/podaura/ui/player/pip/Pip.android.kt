@@ -1,11 +1,10 @@
 package com.skyd.podaura.ui.player.pip
 
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import com.skyd.podaura.ext.activity
 
 /*internal*/ actual val supportPip: Boolean
     @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.O)
@@ -13,11 +12,12 @@ import com.skyd.podaura.ext.activity
 
 @Composable
 /*internal*/ actual fun rememberOnEnterPip(): OnEnterPip {
-    val context = LocalContext.current
+    val activity = LocalActivity.current
+
     return remember {
         object : OnEnterPip {
             override fun enter() {
-                context.activity.manualEnterPictureInPictureMode()
+                activity?.manualEnterPictureInPictureMode()
             }
         }
     }
