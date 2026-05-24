@@ -82,6 +82,7 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.navigation3)
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.jetbrains.navigation3.ui)
+            implementation(libs.jetbrains.navigationevent)
 
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.androidx.paging.common)
@@ -206,6 +207,16 @@ kotlin {
     sourceSets.commonMain.configure {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
     }
+}
+
+// w: Skiko dependencies' versions are incompatible.
+//    io.coil-kt.coil3:coil-core-jvm:3.5.0-beta01
+//    \--- org.jetbrains.skiko:skiko:0.144.5 -> 0.148.1
+//
+//    io.coil-kt.coil3:coil-svg-jvm:3.5.0-beta01
+//    \--- org.jetbrains.skiko:skiko:0.144.5 -> 0.148.1
+configurations.all {
+    resolutionStrategy.force("org.jetbrains.skiko:skiko:0.148.1")
 }
 
 compose.resources {

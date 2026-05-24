@@ -34,9 +34,7 @@
 -keep class com.skyd.fundation.jna.** { *; }
 
 # Compottie
--dontwarn io.github.alexzhirkevich.compottie.dynamic._DynamicDrawProviderKt
--dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientFillShape
--dontwarn io.github.alexzhirkevich.compottie.internal.shapes.GradientStrokeShape
+-dontwarn io.github.alexzhirkevich.compottie.internal.platform.PlatformShader_skikoKt
 
 # Windows Window Frame
 -keepnames class androidx.compose.foundation.HoverableNode
