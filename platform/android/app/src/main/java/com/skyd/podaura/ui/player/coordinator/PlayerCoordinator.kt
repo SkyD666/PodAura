@@ -1,12 +1,13 @@
 package com.skyd.podaura.ui.player.coordinator
 
 import android.app.Application
+import android.content.Context
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import com.skyd.fundation.di.get
 import com.skyd.fundation.di.inject
-import com.skyd.podaura.appContext
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
@@ -33,7 +34,7 @@ class PlayerCoordinator : LifecycleOwner {
     override val lifecycle = LifecycleRegistry(this)
     private val playerRepo: IPlayerRepository by inject()
     private val addToPlaylistRepo: IAddToPlaylistRepository by inject()
-    val player = MPVPlayer.getInstance(appContext as Application)
+    val player = MPVPlayer.getInstance(get<Context>() as Application)
     val model = PlayerModel()
     val playerState get() = model.playerState
     private var playlistId: String = ""

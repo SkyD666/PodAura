@@ -12,3 +12,8 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.buildkonfig) apply false
 }
+
+tasks.withType<UpdateDaemonJvm> {
+    languageVersion = JavaLanguageVersion.of(21)
+    vendor = JvmVendorSpec.ADOPTIUM
+}

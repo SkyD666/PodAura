@@ -1,9 +1,11 @@
 package com.skyd.htmlrender.core
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
 
+@Immutable
 data class StyleConfig(
     val textStyle: TextStyle,
     val linkStyles: TextLinkStyles,

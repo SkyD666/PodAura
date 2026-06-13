@@ -15,8 +15,8 @@ import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.skyd.fundation.di.get
 import com.skyd.podaura.BuildConfig
-import com.skyd.podaura.appContext
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +30,7 @@ class PlayerService : Service() {
     private val playerNotificationReceiver = PlayerNotificationReceiver()
     private val binder = PlayerServiceBinder()
     private val sessionManager = MediaSessionManager(
-        context = appContext,
+        context = get(),
         playerModel = playerCoordinator.model,
         callback = createMediaSessionCallback(),
     )
@@ -112,8 +112,8 @@ class PlayerService : Service() {
 
         override fun onCustomAction(action: String?, extras: Bundle?) {
             when (action) {
-                LOOP_ACTION -> sendBroadcastWithPackage(LOOP_ACTION)
-                CLOSE_ACTION -> sendBroadcastWithPackage(CLOSE_ACTION)
+                LOOP_ACTION -> sendBroadcastWithPackage(action)
+                CLOSE_ACTION -> sendBroadcastWithPackage(action)
             }
         }
     }

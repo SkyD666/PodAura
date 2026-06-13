@@ -19,7 +19,7 @@ actual fun String.asPlatformFile(): PlatformFile {
     else PlatformFile(this)
 }
 
-actual fun String.isNetworkUrl(): Boolean = URLUtil.isNetworkUrl(toString())
+actual fun String.isNetworkUrl(): Boolean = URLUtil.isNetworkUrl(this)
 
 fun isFdFileExists(fdPath: String): Boolean {
     var pfd: ParcelFileDescriptor? = null

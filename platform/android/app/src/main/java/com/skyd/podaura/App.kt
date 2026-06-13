@@ -1,7 +1,6 @@
 package com.skyd.podaura
 
 import android.app.Application
-import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import com.skyd.mvi.mviConfig
 import com.skyd.podaura.di.initKoin
@@ -19,12 +18,11 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.loadKoinModules
 
-
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        appContext = this
+
         initKoin {
             androidLogger()
             androidContext(this@App)
@@ -46,5 +44,3 @@ class App : Application() {
         onAppStart()
     }
 }
-
-lateinit var appContext: Context

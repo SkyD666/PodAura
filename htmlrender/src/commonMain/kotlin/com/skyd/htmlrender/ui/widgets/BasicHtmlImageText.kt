@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
@@ -31,7 +30,6 @@ fun BasicHtmlImageText(
     linkContent: @Composable (ColumnScope.(link: AnnotatedString) -> Unit),
     modifier: Modifier = Modifier,
     styleConfig: StyleConfig = StyleConfig.Default,
-    getClickUrlAction: (() -> (url: String) -> Unit)? = null,
     splitTags: List<String> = listOf(
         ImageAnnotatedStyler.TAG_NAME,
         OrderedListStyler.TAG_NAME,
@@ -56,11 +54,11 @@ fun BasicHtmlImageText(
         )
     ),
     renderDefault: @Composable ColumnScope.(AnnotatedString) -> Unit = { text ->
-        ClickableText(text, Modifier.fillMaxWidth(), styleConfig.textStyle) { index ->
-            text.getUrlAnnotations(index, index).firstOrNull()?.item?.url?.also { url ->
-                getClickUrlAction?.invoke()?.invoke(url)
-            }
-        }
+        BasicText(
+            text = text,
+            modifier = Modifier.fillMaxWidth(),
+            style = styleConfig.textStyle,
+        )
     },
     renderTag: @Composable ColumnScope.(annotation: AnnotatedString.Range<String>, AnnotatedString) -> Unit = { annotation, string ->
         defaultImageTextRenderTag(

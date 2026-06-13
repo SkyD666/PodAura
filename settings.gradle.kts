@@ -25,6 +25,7 @@ dependencyResolutionManagement {
         google()
 //        maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
+        maven(url = "https://central.sonatype.com/repository/maven-snapshots")
         maven(url = "https://jitpack.io")
     }
 }

@@ -171,8 +171,7 @@ kotlin {
 
     compilerOptions {
         freeCompilerArgs.addAll(
-            "-Xexpect-actual-classes",
-            "-Xexplicit-backing-fields"
+            "-Xexpect-actual-classes"
         )
         optIn.addAll(
             "org.jetbrains.compose.resources.ExperimentalResourceApi",
@@ -253,7 +252,8 @@ compose.desktop {
         }
 
         buildTypes.release.proguard {
-//            obfuscate = true
+            version = "7.9.1"
+            // obfuscate = true
             configurationFiles.from(project.file("compose-desktop.pro"))
         }
     }

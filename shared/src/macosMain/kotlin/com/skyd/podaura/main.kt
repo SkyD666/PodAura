@@ -11,6 +11,7 @@ import com.skyd.podaura.util.ResourceEnvironmentFix
 import platform.AppKit.NSApplication
 import platform.AppKit.NSApplicationActivationPolicy
 import platform.AppKit.NSApplicationDelegateProtocol
+import platform.Foundation.NSNotification
 import platform.darwin.NSObject
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
@@ -20,21 +21,23 @@ fun main() {
     nsApplication.setActivationPolicy(NSApplicationActivationPolicy.NSApplicationActivationPolicyRegular)
     nsApplication.delegate = object : NSObject(), NSApplicationDelegateProtocol {
         override fun applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication) = true
+        override fun applicationDidFinishLaunching(notification: NSNotification) {
+            Window(
+                title = blockString(Res.string.app_name),
+                size = DpSize(1200.dp, 800.dp)
+            ) {
+                ProvidePlatformWindowInsets(
+                    window = ::window,
+                    content = {
+                        ResourceEnvironmentFix {
+                            AppEntrance()
+                        }
+                    }
+                )
+            }
+        }
     }
     initKoin()
     onAppStart()
-    Window(
-        title = blockString(Res.string.app_name),
-        size = DpSize(1200.dp, 800.dp)
-    ) {
-        ProvidePlatformWindowInsets(
-            window = ::window,
-            content = {
-                ResourceEnvironmentFix {
-                    AppEntrance()
-                }
-            }
-        )
-    }
     nsApplication.run()
 }
