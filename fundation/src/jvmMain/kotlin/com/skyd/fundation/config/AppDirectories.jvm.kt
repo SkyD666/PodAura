@@ -14,10 +14,11 @@ interface AppDirectories {
 val appDirectories: AppDirectories
     get() = when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.iOS,
+        Platform.macOS_Native -> error("Not supported platform")
 
         Platform.Linux -> LinuxAppDirectories
-        Platform.MacOS -> MacAppDirectories
+        Platform.macOS_Jvm -> MacAppDirectories
         Platform.Windows -> WindowsAppDirectories
     }
 

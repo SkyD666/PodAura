@@ -29,6 +29,7 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
 import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.isJvm
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.LicenseBean
@@ -231,7 +232,7 @@ private fun getLicenseList(): List<LicenseBean> {
                 )
             )
         }
-        if (platform == Platform.Windows || platform == Platform.Linux || platform == Platform.MacOS) {
+        if (platform.isJvm) {
             add(
                 LicenseBean(
                     name = "Java Native Access (JNA)",

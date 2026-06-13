@@ -3,6 +3,8 @@ package com.skyd.podaura.ext
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.awt.Image
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.Transferable
@@ -10,7 +12,9 @@ import java.awt.datatransfer.UnsupportedFlavorException
 import javax.imageio.ImageIO
 
 actual suspend fun Clipboard.setImage(file: PlatformFile, mimeType: String) {
-    setClipEntry(ClipEntry(ImageTransferable(ImageIO.read(file.file))))
+    setClipEntry(ClipEntry(ImageTransferable(withContext(Dispatchers.IO) {
+        ImageIO.read(file.file)
+    })))
 }
 
 private class ImageTransferable(private val image: Image) : Transferable {

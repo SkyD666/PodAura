@@ -9,13 +9,14 @@ import com.skyd.fundation.util.platform
 actual fun Long.fileSize(): String {
     when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.iOS,
+        Platform.macOS_Native -> error("Not supported platform")
 
         Platform.Linux -> {
             TODO()
         }
 
-        Platform.MacOS -> {
+        Platform.macOS_Jvm -> {
             return NSByteCountFormatter.stringFromByteCount(
                 byteCount = this,
                 countStyle = NSByteCountFormatter.CountStyle.FILE,

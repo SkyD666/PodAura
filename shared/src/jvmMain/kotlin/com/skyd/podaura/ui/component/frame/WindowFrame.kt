@@ -15,7 +15,7 @@ fun FrameWindowScope.WindowFrame(
     content: @Composable () -> Unit
 ) {
     when (platform) {
-        Platform.MacOS -> {
+        Platform.macOS_Jvm -> {
             MacOSWindowFrame(content)
         }
 

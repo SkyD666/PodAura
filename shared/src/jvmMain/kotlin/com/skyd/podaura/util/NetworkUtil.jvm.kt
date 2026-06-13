@@ -6,10 +6,11 @@ import com.skyd.fundation.util.platform
 actual fun isFreeNetworkAvailable(): Boolean {
     return when (platform) {
         Platform.Android,
-        Platform.IOS -> error("Not supported platform")
+        Platform.iOS,
+        Platform.macOS_Native -> error("Not supported platform")
 
         Platform.Linux,
-        Platform.MacOS -> true
+        Platform.macOS_Jvm -> true
 
         Platform.Windows -> TODO()
     }

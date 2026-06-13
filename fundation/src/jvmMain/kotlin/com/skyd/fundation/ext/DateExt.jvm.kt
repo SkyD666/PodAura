@@ -22,7 +22,8 @@ import kotlin.time.Duration.Companion.days
 actual fun Long.toAbsoluteDateTimeString(): String {
     when (platform) {
         Platform.Android,
-        Platform.IOS -> notSupport("toAbsoluteDateTimeString")
+        Platform.iOS,
+        Platform.macOS_Native -> notSupport("toAbsoluteDateTimeString")
 
         Platform.Windows,
         Platform.Linux -> {
@@ -35,7 +36,7 @@ actual fun Long.toAbsoluteDateTimeString(): String {
             ).format(formatter)
         }
 
-        Platform.MacOS -> {
+        Platform.macOS_Jvm -> {
             val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
             val formatter = NSDateFormatter().apply {
                 setDateStyle(NSDateFormatter.Style.MEDIUM)
@@ -49,7 +50,8 @@ actual fun Long.toAbsoluteDateTimeString(): String {
 actual fun Long.toRelativeDateTimeString(): String {
     when (platform) {
         Platform.Android,
-        Platform.IOS -> notSupport("toRelativeDateTimeString")
+        Platform.iOS,
+        Platform.macOS_Native -> notSupport("toRelativeDateTimeString")
 
         Platform.Windows,
         Platform.Linux -> {
@@ -62,7 +64,7 @@ actual fun Long.toRelativeDateTimeString(): String {
             ).format(formatter)
         }
 
-        Platform.MacOS -> {
+        Platform.macOS_Jvm -> {
             val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
             val formatter = NSDateFormatter().apply {
                 setDateStyle(NSDateFormatter.Style.MEDIUM)
@@ -77,7 +79,8 @@ actual fun Long.toRelativeDateTimeString(): String {
 actual fun Long.formatElapsedTime(): String {
     return when (platform) {
         Platform.Android,
-        Platform.IOS -> notSupport("formatElapsedTime")
+        Platform.iOS,
+        Platform.macOS_Native -> notSupport("formatElapsedTime")
 
         Platform.Windows,
         Platform.Linux -> PrettyTime().format(
@@ -87,7 +90,7 @@ actual fun Long.formatElapsedTime(): String {
             )
         )
 
-        Platform.MacOS -> {
+        Platform.macOS_Jvm -> {
             val formatter = NSDateComponentsFormatter().apply {
                 setUnitsStyle(NSDateComponentsFormatter.UnitsStyle.POSITIONAL)
                 setAllowedUnits(

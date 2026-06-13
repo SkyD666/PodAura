@@ -2,26 +2,32 @@ package com.skyd.podaura.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.uikit.LocalUIViewController
+import kotlinx.cinterop.useContents
+import platform.CoreGraphics.CGRectMake
 import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIApplication
+import platform.UIKit.UIDevice
+import platform.UIKit.UIUserInterfaceIdiomPad
 import platform.UIKit.popoverPresentationController
-import platform.darwin.dispatch_async
-import platform.darwin.dispatch_get_main_queue
 
 @Composable
-actual fun rememberTextSharing(): TextSharing = remember {
-    object : TextSharing {
-        override fun share(text: String) {
-            val root = UIApplication.sharedApplication.keyWindow?.rootViewController ?: return
-            val activityVC = UIActivityViewController(listOf(text), null)
+actual fun rememberTextSharing(): TextSharing {
+    val viewController = LocalUIViewController.current
+    return remember(viewController) {
+        object : TextSharing {
+            override fun share(text: String) {
+                val activityVC = UIActivityViewController(listOf(text), null)
 
-            activityVC.popoverPresentationController?.apply {
-                sourceView = root.view
-                sourceRect = root.view.bounds
-            }
+                if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+                    // iPad need sourceView for show
+                    activityVC.popoverPresentationController?.apply {
+                        sourceView = viewController.view
+                        sourceRect = viewController.view.center.useContents { CGRectMake(x, y, 0.0, 0.0) }
+                        permittedArrowDirections = 0uL
+                    }
+                }
 
-            dispatch_async(dispatch_get_main_queue()) {
-                root.presentViewController(activityVC, true, null)
+                viewController.presentViewController(activityVC, true, null)
             }
         }
     }

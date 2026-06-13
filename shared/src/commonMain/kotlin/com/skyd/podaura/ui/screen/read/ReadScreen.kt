@@ -77,8 +77,7 @@ import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
 import com.skyd.fundation.ext.format
-import com.skyd.fundation.util.Platform
-import com.skyd.fundation.util.isPhone
+import com.skyd.fundation.util.isJvm
 import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
@@ -174,7 +173,7 @@ fun ReadScreen(
                     ),
                 ),
                 actions = {
-                    if (platform.isPhone) {
+                    if (!platform.isJvm) {
                         val textSharing = rememberTextSharing()
                         ComponeIconButton(
                             enabled = uiState.articleState is ArticleState.Success,
@@ -551,7 +550,7 @@ private fun ImageBottomSheet(
                     onDismissRequest()
                 }
             )
-            if (platform in arrayOf(Platform.Android, Platform.IOS)) {
+            if (!platform.isJvm) {
                 ImageBottomSheetItem(
                     icon = Icons.Outlined.Share,
                     title = stringResource(Res.string.share),

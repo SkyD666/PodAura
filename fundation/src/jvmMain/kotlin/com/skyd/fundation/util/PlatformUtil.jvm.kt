@@ -9,7 +9,7 @@ actual val platform: Platform
         return when {
             system.contains("win") -> Platform.Windows
             arrayOf("nix", "nux", "aix").any { system.contains(it) } -> Platform.Linux
-            system.contains("mac") -> Platform.MacOS
+            system.contains("mac") -> Platform.macOS_Jvm
             else -> Platform.Linux
         }
     }
