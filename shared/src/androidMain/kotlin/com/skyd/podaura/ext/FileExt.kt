@@ -5,8 +5,9 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import com.skyd.compone.component.blockString
 import com.skyd.fundation.config.Const
-import com.skyd.fundation.config.PODAURA_PICTURES_DIR
+import com.skyd.fundation.config.PICTURES_DIR
 import com.skyd.podaura.ext.content.saveToGallery
 import com.skyd.podaura.ui.component.showToast
 import io.github.vinceglb.filekit.AndroidFile
@@ -14,7 +15,6 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.name
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.save_picture_to_media_store_saved
 import java.io.File
@@ -52,11 +52,11 @@ fun PlatformFile.savePictureToMediaStore(
             is AndroidFile.FileWrapper -> file.file.inputStream()
             is AndroidFile.UriWrapper -> context.contentResolver.openInputStream(file.uri)
         }
-        File(Const.PODAURA_PICTURES_DIR, fileName).outputStream().use {
+        File(Const.PICTURES_DIR, fileName).outputStream().use {
             inputStream?.use { input -> input.copyTo(it) }
         }
     }
-    runBlocking { getString(Res.string.save_picture_to_media_store_saved) }.showToast()
+    blockString(Res.string.save_picture_to_media_store_saved).showToast()
     if (autoDelete) runBlocking {
         delete(mustExist = false)
     }

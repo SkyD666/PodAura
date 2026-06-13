@@ -23,11 +23,9 @@ actual val Const.TEMP_PICTURES_DIR: String
     get() = File(get<Context>().cacheDir.path, "Pictures")
         .apply { if (!exists()) mkdirs() }.path
 actual val Const.PICTURES_DIR: String
-    get() = get<Context>().getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!.path
-actual val Const.MPV_FONT_DIR: String
-    get() = File(MPV_CONFIG_DIR, "Font").apply { if (!exists()) mkdirs() }.path
-actual val Const.PODAURA_PICTURES_DIR: String
     get() = File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
         "PodAura"
     ).apply { if (!exists()) mkdirs() }.path
+actual val Const.MPV_FONT_DIR: String
+    get() = File(MPV_CONFIG_DIR, "Font").apply { if (!exists()) mkdirs() }.path

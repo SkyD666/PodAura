@@ -21,19 +21,15 @@ actual val Const.MPV_CONFIG_DIR: String
     get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Mpv", "Config")
         .ensureDirectoryExists()
 actual val Const.VIDEO_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Video")
-        .ensureDirectoryExists()
+    get() = Directories.documents
 actual val Const.DEFAULT_FILE_PICKER_PATH: String
     get() = Directories.documents
 actual val Const.TEMP_PICTURES_DIR: String
     get() = joinPath(Directories.caches, BuildKonfig.packageName, "Pictures")
         .ensureDirectoryExists()
 actual val Const.PICTURES_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures")
+    get() = joinPath(Directories.documents, "Pictures")
         .ensureDirectoryExists()
 actual val Const.MPV_FONT_DIR: String
     get() = joinPath(MPV_CONFIG_DIR, "Font")
-        .ensureDirectoryExists()
-actual val Const.PODAURA_PICTURES_DIR: String
-    get() = joinPath(Directories.documents, "Pictures")
         .ensureDirectoryExists()

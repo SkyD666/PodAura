@@ -29,11 +29,8 @@ actual val Const.TEMP_PICTURES_DIR: String
     get() = joinPath(Directories.caches, BuildKonfig.packageName, "Pictures")
         .ensureDirectoryExists()
 actual val Const.PICTURES_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures")
+    get() = joinPath(Directories.pictures, "PodAura")
         .ensureDirectoryExists()
 actual val Const.MPV_FONT_DIR: String
     get() = joinPath(MPV_CONFIG_DIR, "Font")
-        .ensureDirectoryExists()
-actual val Const.PODAURA_PICTURES_DIR: String
-    get() = joinPath(Directories.pictures, "PodAura")
         .ensureDirectoryExists()

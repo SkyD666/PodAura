@@ -24,12 +24,9 @@ actual val Const.TEMP_PICTURES_DIR: String
     get() = File(appDirectories.cacheDir, "Pictures")
         .apply { if (!exists()) mkdirs() }.path
 actual val Const.PICTURES_DIR: String
-    get() = File(appDirectories.dataDir, "Pictures")
-        .apply { if (!exists()) mkdirs() }.path
-actual val Const.MPV_FONT_DIR: String
-    get() = File(MPV_CONFIG_DIR, "Font").apply { if (!exists()) mkdirs() }.path
-actual val Const.PODAURA_PICTURES_DIR: String
     get() = File(
         appDirectories.homeDir + File.separator + "Pictures",
         "PodAura"
     ).apply { if (!exists()) mkdirs() }.path
+actual val Const.MPV_FONT_DIR: String
+    get() = File(MPV_CONFIG_DIR, "Font").apply { if (!exists()) mkdirs() }.path

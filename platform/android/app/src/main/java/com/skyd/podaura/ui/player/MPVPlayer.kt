@@ -10,7 +10,7 @@ import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_FONT_DIR
-import com.skyd.fundation.config.PICTURES_DIR
+import com.skyd.fundation.config.TEMP_PICTURES_DIR
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
@@ -147,7 +147,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
             dataStore.getOrDefault(PlayerMaxBackCacheSizePreference).toString(),
         )
 
-        MPVLib.setOptionString("screenshot-directory", Const.PICTURES_DIR)
+        MPVLib.setOptionString("screenshot-directory", Const.TEMP_PICTURES_DIR)
     }
 
     // Called when back button is pressed, or app is shutting down
@@ -629,7 +629,7 @@ class MPVPlayer(private val context: Application) : SurfaceHolder.Callback, Defa
         MPVLib.command(arrayOf("screenshot"))
 
         scope.launch {
-            val picture = PlatformFile(File(Const.PICTURES_DIR, "$filename.$format"))
+            val picture = PlatformFile(File(Const.TEMP_PICTURES_DIR, "$filename.$format"))
             try {
                 withTimeout(10000.milliseconds) {
                     while (!picture.exists()) delay(100.milliseconds)
