@@ -13,6 +13,7 @@ on:
 
 jobs:
   build:
+    if: ${{ !contains(github.event.head_commit.message, '[skip_ci]') }}
     name: Build for ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -139,13 +140,13 @@ jobs:
           compression-level: 9
 
       - name: Get File Path
-        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[skip_post]') == false
+        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]')
         run: |
           echo "PRE_RELEASE_APK_ARM64_V8=$(find platform/android/app/build/outputs/apk/GitHub/release -name '*arm64-v8a*.apk' -type f | head -1)" >> $GITHUB_ENV
 
       # Send to Telegram
       - name: Post to Telegram Channel
-        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[skip_post]') == false
+        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]')
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
