@@ -39,14 +39,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,7 +72,6 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
 import com.skyd.fundation.ext.format
 import com.skyd.fundation.util.isJvm
@@ -89,6 +86,7 @@ import com.skyd.podaura.model.bean.article.ArticleCategoryBean
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.rememberTextSharing
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
@@ -362,7 +360,7 @@ private fun Content(
     shareImage: (url: String) -> Unit,
 ) {
     val article = articleState.article.articleWithEnclosure
-    var openImageSheet by rememberSaveable { mutableStateOf<String?>(null) }
+    var openImageSheet: String? by rememberSaveable { mutableStateOf(null) }
     val playerJumper = rememberPlayerJumper()
 
     SelectionContainer {
@@ -430,9 +428,9 @@ private fun Content(
     )
     CategoryArea(article.categories)
 
-    if (openImageSheet != null) {
+    openImageSheet?.let {
         ImageBottomSheet(
-            imageUrl = openImageSheet!!,
+            imageUrl = it,
             onDismissRequest = { openImageSheet = null },
             shareImage = shareImage,
             copyImage = copyImage,
@@ -496,10 +494,8 @@ private fun ReadTextSizeSliderDialog(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
-        sheetState = rememberModalBottomSheetState()
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
     ) {
         Column(
             modifier = modifier.padding(bottom = 12.dp),
@@ -515,14 +511,13 @@ private fun ReadTextSizeSliderDialog(
             Spacer(modifier = Modifier.height(12.dp))
             Slider(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                valueRange = 12f..50f,
+                valueRange = 12f .. 50f,
                 value = textSize,
                 onValueChange = { ReadTextSizePreference.put(scope = scope, value = it) },
             )
         }
     }
 }
-
 
 @Composable
 private fun ImageBottomSheet(
@@ -533,10 +528,9 @@ private fun ImageBottomSheet(
     downloadImage: (url: String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
-    ) {
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
+    ) { animateToDismiss ->
         Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -547,7 +541,7 @@ private fun ImageBottomSheet(
                 title = stringResource(Res.string.read_screen_download_image),
                 onClick = {
                     downloadImage(imageUrl)
-                    onDismissRequest()
+                    animateToDismiss()
                 }
             )
             if (!platform.isJvm) {
@@ -556,7 +550,7 @@ private fun ImageBottomSheet(
                     title = stringResource(Res.string.share),
                     onClick = {
                         shareImage(imageUrl)
-                        onDismissRequest()
+                        animateToDismiss()
                     }
                 )
             }
@@ -565,7 +559,7 @@ private fun ImageBottomSheet(
                 title = stringResource(Res.string.copy),
                 onClick = {
                     copyImage(imageUrl)
-                    onDismissRequest()
+                    animateToDismiss()
                 }
             )
             ImageBottomSheetItem(
@@ -573,7 +567,7 @@ private fun ImageBottomSheet(
                 title = stringResource(Res.string.read_screen_open_image_in_browser),
                 onClick = {
                     uriHandler.safeOpenUri(imageUrl)
-                    onDismissRequest()
+                    animateToDismiss()
                 }
             )
         }

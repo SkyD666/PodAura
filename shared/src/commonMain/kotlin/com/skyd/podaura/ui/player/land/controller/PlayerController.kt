@@ -18,8 +18,6 @@ import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.FastRewind
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
@@ -48,6 +45,7 @@ import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPr
 import com.skyd.podaura.model.preference.player.PlayerShowProgressIndicatorPreference
 import com.skyd.podaura.model.preference.player.PlayerShowReplaySecondsButtonPreference
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.shape.ForwardRippleDirect
 import com.skyd.podaura.ui.component.tickVibrate
 import com.skyd.podaura.ui.player.component.state.PlayState
@@ -116,11 +114,11 @@ import kotlin.time.Duration.Companion.milliseconds
 
     var showBrightnessPreview by remember { mutableStateOf(false) }
     var brightnessValue by remember { mutableFloatStateOf(0f) }
-    var brightnessRange by remember { mutableStateOf(0f..0f) }
+    var brightnessRange by remember { mutableStateOf(0f .. 0f) }
 
     var showVolumePreview by remember { mutableStateOf(false) }
     var volumeValue by remember { mutableFloatStateOf(0f) }
-    var volumeRange by remember { mutableStateOf(0f..0f) }
+    var volumeRange by remember { mutableStateOf(0f .. 0f) }
 
     var showForwardRipple by remember { mutableStateOf(false) }
     var forwardRippleStartControllerOffset by remember { mutableStateOf(Offset.Zero) }
@@ -130,7 +128,6 @@ import kotlin.time.Duration.Companion.milliseconds
     var isLongPressing by remember { mutableStateOf(false) }
 
     var showPlaylistSheet by remember { mutableStateOf(false) }
-    val playlistSheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(dialogState.subtitleTrackDialogState()) {
         if (dialogState.subtitleTrackDialogState().show) cancelAutoHideController()
@@ -275,10 +272,8 @@ import kotlin.time.Duration.Companion.milliseconds
     }
 
     if (showPlaylistSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showPlaylistSheet = false },
-            modifier = Modifier.pointerOnBack(onBack = { showPlaylistSheet = false }),
-            sheetState = playlistSheetState
+        AnimatedDismissModalBottomSheet(
+            onDismissRequest = { showPlaylistSheet = false }
         ) {
             val playStateValue = playState()
             PlaylistMediaList(

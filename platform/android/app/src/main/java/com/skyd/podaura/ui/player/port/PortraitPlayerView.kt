@@ -24,11 +24,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +42,10 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.activity.MainActivity
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.isLandscape
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.component.state.PlayState
@@ -80,7 +78,6 @@ internal fun PortraitPlayerView(
     playerContent: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val playlistSheetState = rememberModalBottomSheetState()
     var showMenu by rememberSaveable { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
 
@@ -140,10 +137,8 @@ internal fun PortraitPlayerView(
         }
 
         if (showPlaylistSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showPlaylistSheet = false },
-                modifier = Modifier.pointerOnBack(onBack = { showPlaylistSheet = false }),
-                sheetState = playlistSheetState
+            AnimatedDismissModalBottomSheet(
+                onDismissRequest = { showPlaylistSheet = false }
             ) {
                 PlaylistMediaList(
                     currentPlaylistId = playState.playlistId,

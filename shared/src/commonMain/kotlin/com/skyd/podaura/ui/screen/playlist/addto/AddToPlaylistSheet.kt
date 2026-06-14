@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,11 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
@@ -45,9 +44,8 @@ fun AddToPlaylistSheet(
     )
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
     ) {
         Text(
             text = stringResource(Res.string.add_to_playlist),

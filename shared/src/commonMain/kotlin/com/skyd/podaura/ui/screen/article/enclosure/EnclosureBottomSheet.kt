@@ -22,10 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.getOrDefault
@@ -52,6 +48,7 @@ import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import kotlinx.coroutines.launch
@@ -76,7 +73,6 @@ fun getEnclosuresList(articleWithEnclosureBean: ArticleWithEnclosureBean): List<
 @Composable
 fun EnclosureBottomSheet(
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
     dataList: List<Any>,
     article: ArticleWithFeed,
 ) {
@@ -100,10 +96,8 @@ fun EnclosureBottomSheet(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
-        sheetState = sheetState
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),

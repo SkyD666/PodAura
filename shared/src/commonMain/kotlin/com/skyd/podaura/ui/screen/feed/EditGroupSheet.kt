@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -24,9 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.feed.sheet.GroupArea
@@ -57,11 +56,10 @@ fun EditGroupSheet(
     var openNameDialog by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable(group.name) { mutableStateOf(group.name) }
 
-    ModalBottomSheet(
+    AnimatedDismissModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
+    ) { animateToDismiss ->
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -107,7 +105,7 @@ fun EditGroupSheet(
                 groups = groups,
                 onGroupChange = {
                     onMoveTo(it)
-                    onDismissRequest()
+                    animateToDismiss()
                 },
                 openCreateGroupDialog = openCreateGroupDialog,
             )

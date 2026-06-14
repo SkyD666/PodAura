@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,11 +40,11 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.dialog.DeleteWarningDialog
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.bean.MediaGroupBean.Companion.isDefaultGroup
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.SheetChip
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.media.list.item.MediaCover
@@ -87,10 +86,9 @@ fun EditMediaSheet(
 ) {
     val scope = rememberCoroutineScope()
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
-    ) {
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
+    ) { animateToDismiss ->
         var openRenameInputDialog by rememberSaveable { mutableStateOf<String?>(null) }
         var openSetFileDisplayNameInputDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -120,23 +118,23 @@ fun EditMediaSheet(
                 onAddToPlaylistClicked = onAddToPlaylistClicked?.let {
                     {
                         it(mediaBean)
-                        onDismissRequest()
+                        animateToDismiss()
                     }
                 },
                 onDelete = {
                     onDelete(mediaBean)
-                    onDismissRequest()
+                    animateToDismiss()
                 },
                 onOpenFeed = onOpenFeed?.let {
                     {
                         it(mediaBean)
-                        onDismissRequest()
+                        animateToDismiss()
                     }
                 },
                 onOpenArticle = onOpenArticle?.let {
                     {
                         it(mediaBean)
-                        onDismissRequest()
+                        animateToDismiss()
                     }
                 },
             )
@@ -161,7 +159,7 @@ fun EditMediaSheet(
                 onConfirm = {
                     onRename(mediaBean, it.replace(Regex("[\\n\\r]"), ""))
                     openRenameInputDialog = null
-                    onDismissRequest()
+                    animateToDismiss()
                 },
                 imeAction = ImeAction.Done,
                 onDismissRequest = { openRenameInputDialog = null }
@@ -178,7 +176,7 @@ fun EditMediaSheet(
                 onConfirm = {
                     onSetFileDisplayName(mediaBean, it.replace(Regex("[\\n\\r]"), ""))
                     openSetFileDisplayNameInputDialog = null
-                    onDismissRequest()
+                    animateToDismiss()
                 },
                 imeAction = ImeAction.Done,
                 onDismissRequest = { openSetFileDisplayNameInputDialog = null }

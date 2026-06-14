@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,9 +21,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.bean.MediaGroupBean.Companion.isDefaultGroup
+import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.media.list.GroupArea
 import com.skyd.podaura.ui.screen.media.list.OptionArea
@@ -47,10 +46,9 @@ fun EditMediaGroupSheet(
     var openNameDialog by rememberSaveable { mutableStateOf(false) }
     var name by rememberSaveable(group.name) { mutableStateOf(group.name) }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
-        modifier = Modifier.pointerOnBack(onBack = onDismissRequest),
-    ) {
+    AnimatedDismissModalBottomSheet(
+        onDismissRequest = onDismissRequest
+    ) { animateToDismiss ->
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -77,7 +75,7 @@ fun EditMediaGroupSheet(
                 onDelete = if (group.isDefaultGroup()) null else {
                     {
                         onDelete(group)
-                        onDismissRequest()
+                        animateToDismiss()
                     }
                 },
             )
@@ -93,7 +91,7 @@ fun EditMediaGroupSheet(
                 },
                 onGroupChange = {
                     onMoveTo(it)
-                    onDismissRequest()
+                    animateToDismiss()
                 },
                 openCreateGroupDialog = openCreateGroupDialog,
             )
