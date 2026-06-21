@@ -405,12 +405,13 @@ fun SelectableMiniPalette(
     contentDescription: suspend () -> String,
     accents: List<TonalPalette>,
 ) {
+    val contentDescription = suspendString(contentDescription)
+
     TooltipBox(
-        modifier = Modifier,
         positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         tooltip = {
             PlainTooltip {
-                Text(suspendString { contentDescription() })
+                Text(text = contentDescription)
             }
         },
         state = rememberTooltipState()
