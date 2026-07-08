@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
@@ -9,7 +9,7 @@ import com.skyd.podaura.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.podaura.model.bean.group.GroupBean
 
 class Migration3To4 : Migration(3, 4) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
             """
                 CREATE TABLE `$GROUP_TABLE_NAME` (

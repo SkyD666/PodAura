@@ -1,10 +1,10 @@
 package com.skyd.podaura.model.db
 
-import androidx.room.ConstructedBy
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.ConstructedBy
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
+import androidx.room3.RoomDatabaseConstructor
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleCategoryBean
@@ -86,7 +86,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     version = 27,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
-@TypeConverters(
+@ColumnTypeConverters(
     value = [RequestHeadersConverter::class]
 )
 abstract class AppDatabase : RoomDatabase() {

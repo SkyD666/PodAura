@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.article.ARTICLE_CATEGORY_TABLE_NAME
@@ -12,7 +12,7 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 import kotlinx.serialization.json.Json
 
 class Migration20To21 : Migration(20, 21) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         // Create backup table
         connection.execSQL("PRAGMA foreign_keys = OFF")
         connection.execSQL(

@@ -1,7 +1,7 @@
 package com.skyd.downloader.db
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import com.skyd.downloader.Status
 import com.skyd.downloader.UserAction
 

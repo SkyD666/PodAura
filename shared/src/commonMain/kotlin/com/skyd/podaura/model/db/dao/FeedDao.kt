@@ -1,15 +1,17 @@
 package com.skyd.podaura.model.db.dao
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.RawQuery
-import androidx.room.RoomRawQuery
-import androidx.room.Transaction
-import androidx.room.Update
+import androidx.room3.Dao
+import androidx.room3.DaoReturnTypeConverters
+import androidx.room3.Delete
+import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
+import androidx.room3.RawQuery
+import androidx.room3.RoomRawQuery
+import androidx.room3.Transaction
+import androidx.room3.Update
+import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
@@ -22,6 +24,7 @@ import com.skyd.podaura.model.bean.group.GroupBean
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface FeedDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)

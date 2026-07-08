@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
@@ -11,7 +11,7 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 
 class Migration14To15 : Migration(14, 15) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("DROP VIEW IF EXISTS `$FEED_VIEW_NAME`")
         connection.execSQL(
             "CREATE VIEW IF NOT EXISTS `$FEED_VIEW_NAME` AS " +

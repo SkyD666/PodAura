@@ -2,7 +2,7 @@ package com.skyd.podaura.model.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import androidx.room.RoomRawQuery
+import androidx.room3.RoomRawQuery
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.history.MEDIA_PLAY_HISTORY_TABLE_NAME

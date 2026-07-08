@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.bean
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
 import kotlinx.serialization.Serializable
 
 const val SEARCH_DOMAIN_TABLE_NAME = "SearchDomain"
@@ -25,4 +25,3 @@ data class SearchDomainBean(
         const val SEARCH_COLUMN = "search"
     }
 }
-

@@ -88,7 +88,7 @@ If you are interested, please help us **translate**, thank you.
 - Kotlin **Coroutines and Flow**
 - **Material You**
 - **ViewModel**
-- **Room**
+- **Room 3**
 - **Paging 3**
 - **Ktor**
 - **Koin**

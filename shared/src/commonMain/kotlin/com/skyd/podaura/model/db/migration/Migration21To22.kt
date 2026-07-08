@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.ext.calculateHashMapInitialCapacity
@@ -40,7 +40,7 @@ class Migration21To22 : Migration(21, 22) {
         return result
     }
 
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         // Create backup table
         connection.execSQL("PRAGMA foreign_keys = OFF")
         connection.execSQL(

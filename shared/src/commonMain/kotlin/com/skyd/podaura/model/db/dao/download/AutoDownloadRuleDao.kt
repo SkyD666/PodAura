@@ -1,15 +1,18 @@
 package com.skyd.podaura.model.db.dao.download
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Query
-import androidx.room.Transaction
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.DaoReturnTypeConverters
+import androidx.room3.Query
+import androidx.room3.Transaction
+import androidx.room3.Upsert
+import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.skyd.podaura.model.bean.download.autorule.AUTO_DOWNLOAD_RULE_TABLE_NAME
 import com.skyd.podaura.model.bean.download.autorule.AutoDownloadRuleBean
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface AutoDownloadRuleDao {
     @Transaction
     @Upsert

@@ -1,19 +1,22 @@
 package com.skyd.podaura.model.db.dao.playlist
 
 import androidx.paging.PagingSource
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.RawQuery
-import androidx.room.RoomRawQuery
-import androidx.room.Transaction
+import androidx.room3.Dao
+import androidx.room3.DaoReturnTypeConverters
+import androidx.room3.Insert
+import androidx.room3.OnConflictStrategy
+import androidx.room3.Query
+import androidx.room3.RawQuery
+import androidx.room3.RoomRawQuery
+import androidx.room3.Transaction
+import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.skyd.podaura.model.bean.playlist.PLAYLIST_TABLE_NAME
 import com.skyd.podaura.model.bean.playlist.PLAYLIST_VIEW_NAME
 import com.skyd.podaura.model.bean.playlist.PlaylistBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
 
 @Dao
+@DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface PlaylistDao {
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)

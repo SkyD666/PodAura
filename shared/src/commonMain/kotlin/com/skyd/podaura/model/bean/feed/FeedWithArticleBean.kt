@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.bean.feed
 
-import androidx.room.Embedded
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Relation
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 
@@ -12,8 +12,8 @@ data class FeedWithArticleBean(
     @Embedded
     var feed: FeedBean,
     @Relation(
-        parentColumn = FeedBean.URL_COLUMN,
-        entityColumn = ArticleBean.FEED_URL_COLUMN,
+        parentColumns = [FeedBean.URL_COLUMN],
+        entityColumns = [ArticleBean.FEED_URL_COLUMN],
     )
     var articles: List<ArticleWithEnclosureBean>,
 )

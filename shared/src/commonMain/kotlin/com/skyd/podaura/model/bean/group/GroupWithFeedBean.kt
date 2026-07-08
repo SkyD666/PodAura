@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.bean.group
 
-import androidx.room.Embedded
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Relation
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 
@@ -12,8 +12,8 @@ data class GroupWithFeedBean(
     @Embedded
     var group: GroupBean,
     @Relation(
-        parentColumn = GroupBean.GROUP_ID_COLUMN,
-        entityColumn = FeedBean.GROUP_ID_COLUMN,
+        parentColumns = [GroupBean.GROUP_ID_COLUMN],
+        entityColumns = [FeedBean.GROUP_ID_COLUMN],
     )
     var feeds: List<FeedViewBean>,
 )

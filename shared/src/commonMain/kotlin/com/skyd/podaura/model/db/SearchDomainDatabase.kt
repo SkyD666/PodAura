@@ -1,10 +1,9 @@
 package com.skyd.podaura.model.db
 
-import androidx.room.ConstructedBy
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
+import androidx.room3.ConstructedBy
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
+import androidx.room3.RoomDatabaseConstructor
 import com.skyd.podaura.model.bean.SearchDomainBean
 import com.skyd.podaura.model.db.dao.SearchDomainDao
 
@@ -23,9 +22,6 @@ expect object SearchDomainDatabaseConstructor : RoomDatabaseConstructor<SearchDo
     version = 1
 )
 @ConstructedBy(SearchDomainDatabaseConstructor::class)
-@TypeConverters(
-    value = []
-)
 abstract class SearchDomainDatabase : RoomDatabase() {
 
     abstract fun searchDomainDao(): SearchDomainDao

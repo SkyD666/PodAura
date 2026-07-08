@@ -10,7 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.room)
+    alias(libs.plugins.room3)
     alias(libs.plugins.buildkonfig)
 }
 
@@ -85,8 +85,8 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.serialization.kotlinx.xml)
 
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.room.paging)
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.room3.paging)
 
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
@@ -124,7 +124,6 @@ kotlin {
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.media)
-            implementation(libs.androidx.room.ktx)
             implementation(libs.androidx.graphics.shapes)
 
             implementation(libs.accompanist.permissions)
@@ -255,7 +254,7 @@ tasks.withType<AbstractJPackageTask> {
 dependencies {
     listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64", "kspMacosArm64").forEach {
         add(it, projects.ksp.processor)
-        add(it, libs.androidx.room.compiler)
+        add(it, libs.androidx.room3.compiler)
     }
 }
 
@@ -286,6 +285,6 @@ buildkonfig {
     }
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }

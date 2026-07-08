@@ -113,11 +113,6 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://source.android.com/",
         ),
         LicenseBean(
-            name = "Material Components for Android",
-            license = "Apache-2.0",
-            link = "https://github.com/material-components/material-components-android",
-        ),
-        LicenseBean(
             name = "Koin",
             license = "Apache-2.0",
             link = "https://github.com/InsertKoinIO/koin",

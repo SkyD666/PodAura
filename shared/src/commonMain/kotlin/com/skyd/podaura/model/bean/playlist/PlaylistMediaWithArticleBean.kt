@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.bean.playlist
 
-import androidx.room.Embedded
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Relation
 import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.model.bean.BaseBean
@@ -18,8 +18,8 @@ data class PlaylistMediaWithArticleBean(
     val playlistMediaBean: PlaylistMediaBean,
     @Relation(
         entity = ArticleBean::class,
-        parentColumn = PlaylistMediaBean.ARTICLE_ID_COLUMN,
-        entityColumn = ArticleBean.ARTICLE_ID_COLUMN,
+        parentColumns = [PlaylistMediaBean.ARTICLE_ID_COLUMN],
+        entityColumns = [ArticleBean.ARTICLE_ID_COLUMN],
     )
     val article: ArticleWithFeed?,
 ) : BaseBean {

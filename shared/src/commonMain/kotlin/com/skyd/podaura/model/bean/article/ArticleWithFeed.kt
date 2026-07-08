@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.bean.article
 
-import androidx.room.Embedded
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Relation
 import com.skyd.podaura.model.bean.BaseBean
 import com.skyd.podaura.model.bean.feed.FeedBean
 import kotlinx.serialization.Serializable
@@ -13,7 +13,10 @@ import kotlinx.serialization.Serializable
 data class ArticleWithFeed(
     @Embedded
     var articleWithEnclosure: ArticleWithEnclosureBean,
-    @Relation(parentColumn = ArticleBean.FEED_URL_COLUMN, entityColumn = FeedBean.URL_COLUMN)
+    @Relation(
+        parentColumns = [ArticleBean.FEED_URL_COLUMN],
+        entityColumns = [FeedBean.URL_COLUMN]
+    )
     var feed: FeedBean,
 ) : BaseBean {
     fun getThumbnail(): String? {

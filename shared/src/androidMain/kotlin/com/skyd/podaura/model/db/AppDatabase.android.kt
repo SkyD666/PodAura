@@ -1,8 +1,8 @@
 package com.skyd.podaura.model.db
 
 import android.content.Context
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.skyd.fundation.di.get
 

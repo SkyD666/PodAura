@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
@@ -13,7 +13,7 @@ import com.skyd.podaura.model.bean.playlist.PlaylistBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 
 class Migration22To23 : Migration(22, 23) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
             "CREATE TABLE `${PLAYLIST_MEDIA_TABLE_NAME}_Backup` (" +
                     "${PlaylistMediaBean.PLAYLIST_ID_COLUMN} TEXT NOT NULL, " +

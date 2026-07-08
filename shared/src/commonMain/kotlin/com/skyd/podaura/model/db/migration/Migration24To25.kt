@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.download.autorule.AUTO_DOWNLOAD_RULE_TABLE_NAME
@@ -9,7 +9,7 @@ import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 
 class Migration24To25 : Migration(24, 25) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
             "CREATE TABLE `${AUTO_DOWNLOAD_RULE_TABLE_NAME}` (" +
                     "${AutoDownloadRuleBean.FEED_URL_COLUMN} TEXT PRIMARY KEY NOT NULL, " +

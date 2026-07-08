@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.history.MEDIA_PLAY_HISTORY_TABLE_NAME
@@ -13,7 +13,7 @@ import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
 
 class Migration19To20 : Migration(19, 20) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE `$MEDIA_PLAY_HISTORY_TABLE_NAME` ADD `${MediaPlayHistoryBean.DURATION_COLUMN}` INTEGER NOT NULL DEFAULT 0")
         connection.execSQL(
             "CREATE TABLE `$PLAYLIST_TABLE_NAME` (" +

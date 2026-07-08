@@ -1,8 +1,8 @@
 package com.skyd.podaura.model.bean.feed
 
-import androidx.room.ColumnInfo
-import androidx.room.DatabaseView
-import androidx.room.Embedded
+import androidx.room3.ColumnInfo
+import androidx.room3.DatabaseView
+import androidx.room3.Embedded
 import com.skyd.podaura.model.bean.BaseBean
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean

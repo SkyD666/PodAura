@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.db.migration
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
@@ -42,7 +42,7 @@ class Migration26To27 : Migration(26, 27) {
         }
     }
 
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL(
             "ALTER TABLE `$FEED_TABLE_NAME` " +
                     "ADD ${FeedBean.ORDER_POSITION_COLUMN} REAL NOT NULL DEFAULT 0"

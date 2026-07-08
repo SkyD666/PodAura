@@ -1,6 +1,6 @@
 package com.skyd.podaura.model.bean.group.groupfeed
 
-import androidx.room.ColumnInfo
+import androidx.room3.ColumnInfo
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupBean
 

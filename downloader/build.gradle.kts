@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.room)
+    alias(libs.plugins.room3)
 }
 
 kotlin {
@@ -38,7 +38,7 @@ kotlin {
             implementation(libs.kotlin.stdlib)
             implementation(libs.jetbrains.compose.runtime)
             implementation(libs.jetbrains.compose.components.resources)
-            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.room3.runtime)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.filekit.core)
@@ -53,7 +53,6 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.room.ktx)
             implementation(libs.androidx.work.runtime.ktx)
         }
     }
@@ -71,11 +70,11 @@ kotlin {
 
 dependencies {
     listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64", "kspMacosArm64").forEach {
-        add(it, libs.androidx.room.compiler)
+        add(it, libs.androidx.room3.compiler)
     }
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 
