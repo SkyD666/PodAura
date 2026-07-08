@@ -2,6 +2,7 @@ package com.skyd.podaura.model.repository.importexport
 
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.skyd.podaura.ext.get
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.preferences
 import com.skyd.podaura.model.repository.BaseRepository
@@ -47,30 +48,31 @@ class ImportExportRepository : BaseRepository() {
         val map: Map<String, JsonElement> = Json.decodeFromSource(source)
         dataStore.edit { dsPreferences ->
             preferences.forEach { (pref, kClazz) ->
-                val value: JsonElement = map[pref.key.name] ?: return@forEach
+                val key = pref.key ?: return@forEach
+                val value: JsonElement = map[key.name] ?: return@forEach
                 when (kClazz) {
-                    String::class -> dsPreferences[pref.key as Preferences.Key<String>] =
+                    String::class -> dsPreferences[key as Preferences.Key<String>] =
                         value.jsonPrimitive.content
 
-                    Int::class -> dsPreferences[pref.key as Preferences.Key<Int>] =
+                    Int::class -> dsPreferences[key as Preferences.Key<Int>] =
                         value.jsonPrimitive.content.toInt()
 
-                    Boolean::class -> dsPreferences[pref.key as Preferences.Key<Boolean>] =
+                    Boolean::class -> dsPreferences[key as Preferences.Key<Boolean>] =
                         value.jsonPrimitive.content.toBoolean()
 
-                    Float::class -> dsPreferences[pref.key as Preferences.Key<Float>] =
+                    Float::class -> dsPreferences[key as Preferences.Key<Float>] =
                         value.jsonPrimitive.content.toFloat()
 
-                    Double::class -> dsPreferences[pref.key as Preferences.Key<Double>] =
+                    Double::class -> dsPreferences[key as Preferences.Key<Double>] =
                         value.jsonPrimitive.content.toDouble()
 
-                    Long::class -> dsPreferences[pref.key as Preferences.Key<Long>] =
+                    Long::class -> dsPreferences[key as Preferences.Key<Long>] =
                         value.jsonPrimitive.content.toLong()
 
-                    ByteArray::class -> dsPreferences[pref.key as Preferences.Key<ByteArray>] =
+                    ByteArray::class -> dsPreferences[key as Preferences.Key<ByteArray>] =
                         value.jsonPrimitive.content.encodeToByteArray()
 
-                    Set::class -> dsPreferences[pref.key as Preferences.Key<Set<String>>] =
+                    Set::class -> dsPreferences[key as Preferences.Key<Set<String>>] =
                         value.jsonArray.map { it.jsonPrimitive.content }.toSet()
 
                     else -> return@forEach
@@ -86,8 +88,8 @@ class ImportExportRepository : BaseRepository() {
                 val dataStorePreferences = dataStore.data.first()
                 val json = buildJsonObject {
                     preferences.forEach { (pref, _) ->
-                        val k = pref.key.name
-                        when (val v = pref.fromPreferences(dataStorePreferences)) {
+                        val k = pref.key?.name ?: return@forEach
+                        when (val v = dataStorePreferences[pref]) {
                             is String -> put(k, v)
                             is Int -> put(k, v)
                             is Boolean -> put(k, v)

@@ -1,15 +1,19 @@
 package com.skyd.podaura.model.preference.data.medialib
 
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.Preferences
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.VIDEO_DIR
-import com.skyd.ksp.annotation.Preference
 import com.skyd.podaura.model.preference.BasePreference
 
-@Preference
-object MediaLibLocationPreference : BasePreference<String>() {
-    private const val MEDIA_LIB_LOCATION = "mediaLibLocation"
+abstract class BaseMediaLibLocationPreference : BasePreference<String>() {
+
+    companion object {
+        protected const val MEDIA_LIB_LOCATION = "mediaLibLocation"
+    }
 
     override val default: String = Const.VIDEO_DIR
-    override val key = stringPreferencesKey(MEDIA_LIB_LOCATION)
+}
+
+expect object MediaLibLocationPreference : BaseMediaLibLocationPreference {
+    override val key: Preferences.Key<String>?
 }

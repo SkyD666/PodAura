@@ -129,6 +129,7 @@ fun PlayerConfigAdvancedScreen(
                         icon = null,
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_config_dir),
                         descriptionText = configDir,
+                        enabled = MpvConfigDirPreference.key != null,
                         onClick = {
                             navBackStack.add(FilePickerRoute(path = configDir, id = "configDir"))
                         },
@@ -152,6 +153,7 @@ fun PlayerConfigAdvancedScreen(
                         icon = null,
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_cache_dir),
                         descriptionText = cacheDir,
+                        enabled = MpvCacheDirPreference.key != null,
                         onClick = {
                             navBackStack.add(FilePickerRoute(path = cacheDir, id = "cacheDir"))
                         },

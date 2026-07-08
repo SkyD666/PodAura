@@ -2,11 +2,10 @@ package com.skyd.podaura
 
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
 import com.skyd.compone.component.blockString
 import com.skyd.podaura.di.initKoin
+import com.skyd.podaura.ui.component.Window
 import com.skyd.podaura.ui.screen.AppEntrance
-import com.skyd.podaura.util.ProvidePlatformWindowInsets
 import com.skyd.podaura.util.ResourceEnvironmentFix
 import platform.AppKit.NSApplication
 import platform.AppKit.NSApplicationActivationPolicy
@@ -26,14 +25,9 @@ fun main() {
                 title = blockString(Res.string.app_name),
                 size = DpSize(1200.dp, 800.dp)
             ) {
-                ProvidePlatformWindowInsets(
-                    window = ::window,
-                    content = {
-                        ResourceEnvironmentFix {
-                            AppEntrance()
-                        }
-                    }
-                )
+                ResourceEnvironmentFix {
+                    AppEntrance()
+                }
             }
         }
     }

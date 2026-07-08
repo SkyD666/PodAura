@@ -13,7 +13,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
 abstract class BasePreference<T> {
-    abstract val key: Preferences.Key<T>
+    abstract val key: Preferences.Key<T>?
     abstract val default: T
     val local: ProvidableCompositionLocal<T> = compositionLocalOf { default }
 
@@ -22,15 +22,15 @@ abstract class BasePreference<T> {
         @Composable
         get() = local.current
 
-    fun provide(pref: Preferences?): ProvidedValue<T> {
-        return local provides (pref?.get(key) ?: default)
+    infix fun provide(pref: Preferences?): ProvidedValue<T> {
+        val value = key?.let { pref?.get(it) } ?: default
+        return local provides value
     }
 
     open fun put(scope: CoroutineScope, value: T) {
+        val key = key ?: return
         scope.launch(Dispatchers.IO) {
             dataStore.put(key, value)
         }
     }
-
-    open fun fromPreferences(preferences: Preferences): T = preferences[key] ?: default
 }

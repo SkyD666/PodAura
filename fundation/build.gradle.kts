@@ -1,5 +1,4 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlin.compose)
@@ -11,9 +10,6 @@ plugins {
 
 kotlin {
 
-    // Target declarations - add or remove as needed below. These define
-    // which platforms this KMP module supports.
-    // See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     android {
         namespace = "com.skyd.fundation"
         minSdk = 24
@@ -21,18 +17,8 @@ kotlin {
             version = release(37) { minorApiLevel = 0 }
         }
         buildToolsVersion = "37.0.0"
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-        }
     }
 
-    // For iOS targets, this is also where you should
-    // configure native binary output. For more information, see:
-    // https://kotlinlang.org/docs/multiplatform-build-native-binaries.html#build-xcframeworks
-
-    // A step-by-step guide on how to include this library in an XCode
-    // project can be found here:
-    // https://developer.android.com/kotlin/multiplatform/migrate
     listOf(
         iosArm64(),
         iosSimulatorArm64(),
@@ -46,11 +32,6 @@ kotlin {
 
     jvm()
 
-    // Source set declarations.
-    // Declaring a target automatically creates a source set with the same name. By default, the
-    // Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
-    // common to share sources between related targets.
-    // See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlin.stdlib)
@@ -85,7 +66,7 @@ buildkonfig {
 
     defaultConfigs {
         buildConfigField(FieldSpec.Type.STRING, "packageName", "com.skyd.podaura")
-        buildConfigField(FieldSpec.Type.STRING, "versionName", properties["versionName"]!!.toString())
-        buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
+        buildConfigField(FieldSpec.Type.STRING, "versionName", findProperty("versionName")!!.toString())
+        buildConfigField(FieldSpec.Type.INT, "versionCode", findProperty("versionCode")!!.toString())
     }
 }

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
@@ -20,9 +18,6 @@ kotlin {
         }
         buildToolsVersion = "37.0.0"
         androidResources.enable = true
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-        }
     }
 
     listOf(

@@ -3,7 +3,6 @@
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.getFilter
 import com.android.build.gradle.tasks.PackageAndroidArtifact
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -28,8 +27,8 @@ android {
         applicationId = "com.skyd.anivu"
         minSdk = 24
         targetSdk = 37
-        versionCode = properties["versionCode"]!!.toString().toInt()
-        versionName = properties["versionName"]!!.toString()
+        versionCode = findProperty("versionCode")!!.toString().toInt()
+        versionName = findProperty("versionName")!!.toString()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -96,8 +95,8 @@ android {
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     buildFeatures {
@@ -132,7 +131,7 @@ android {
 
 androidComponents.onVariants { variant ->
     variant.outputs.forEach { output ->
-        val versionName = properties["versionName"]
+        val versionName = findProperty("versionName")!!.toString()
         val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
         val buildType = variant.buildType
         val flavorName = variant.flavorName
@@ -150,7 +149,6 @@ kotlin {
         freeCompilerArgs.addAll(
             "-Xskip-prerelease-check",
         )
-        jvmTarget = JvmTarget.JVM_21
         optIn.addAll(
             "androidx.compose.material3.ExperimentalMaterial3Api",
             "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",

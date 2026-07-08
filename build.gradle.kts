@@ -14,6 +14,6 @@ plugins {
 }
 
 tasks.withType<UpdateDaemonJvm> {
-    languageVersion = JavaLanguageVersion.of(21)
-    vendor = JvmVendorSpec.ADOPTIUM
+    languageVersion = JavaLanguageVersion.of(25)
+    vendor = JvmVendorSpec.AZUL
 }

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.android.test)
 }
@@ -13,8 +11,8 @@ android {
     ndkVersion = "29.0.14206865"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     defaultConfig {
@@ -43,12 +41,6 @@ android {
 
     targetProjectPath = ":platform:android:app"
     experimentalProperties["android.experimental.self-instrumenting"] = true
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
-    }
 }
 
 dependencies {

@@ -4,10 +4,10 @@ import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.util.isFreeNetworkAvailable
-import com.skyd.podaura.util.ktor.ContentNegotiation
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging

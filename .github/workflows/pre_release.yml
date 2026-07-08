@@ -49,11 +49,6 @@ jobs:
             build-command: ./gradlew createReleaseDistributable
             artifact-path: [ shared/build/compose/binaries/main-release/app/ ]
             artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
-          - os: windows-11-arm
-            target-platform: Jvm Windows arm64
-            build-command: ./gradlew createReleaseDistributable
-            artifact-path: [ shared/build/compose/binaries/main-release/app/ ]
-            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
@@ -64,11 +59,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: Setup JDK 21
+      - name: Setup JDK 25
         uses: actions/setup-java@v5
         with:
-          distribution: temurin
-          java-version: 21
+          distribution: zulu
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6

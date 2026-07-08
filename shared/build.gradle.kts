@@ -1,7 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -17,9 +16,6 @@ plugins {
 
 kotlin {
 
-// Target declarations - add or remove as needed below. These define
-// which platforms this KMP module supports.
-// See: https://kotlinlang.org/docs/multiplatform-discover-project.html#targets
     android {
         namespace = "com.skyd.podaura.shared"
         minSdk = 24
@@ -28,20 +24,10 @@ kotlin {
         }
         buildToolsVersion = "37.0.0"
         androidResources.enable = true
-        compilerOptions {
-            jvmTarget = JvmTarget.JVM_21
-        }
     }
 
     jvm()
 
-// For iOS targets, this is also where you should
-// configure native binary output. For more information, see:
-// https://kotlinlang.org/docs/multiplatform-build-native-binaries.html#build-xcframeworks
-
-// A step-by-step guide on how to include this library in an XCode
-// project can be found here:
-// https://developer.android.com/kotlin/multiplatform/migrate
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -58,11 +44,6 @@ kotlin {
         }
     }
 
-// Source set declarations.
-// Declaring a target automatically creates a source set with the same name. By default, the
-// Kotlin Gradle Plugin creates additional source sets that depend on each other, since it is
-// common to share sources between related targets.
-// See: https://kotlinlang.org/docs/multiplatform-hierarchy.html
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlin.stdlib)
@@ -219,7 +200,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "PodAura"
-            packageVersion = properties["versionForDesktop"]!!.toString()
+            packageVersion = findProperty("versionForDesktop")!!.toString()
 
             macOS {
                 bundleID = "com.skyd.podaura"
@@ -252,7 +233,7 @@ compose.desktop {
         distributions {
             targetFormats(TargetFormat.Dmg)
             packageName = "PodAura"
-            packageVersion = properties["versionForDesktop"]!!.toString()
+            packageVersion = findProperty("versionForDesktop")!!.toString()
 
             macOS {
                 bundleID = "com.skyd.podaura"
@@ -282,17 +263,25 @@ buildkonfig {
     packageName = "com.skyd.podaura"
 
     defaultConfigs {
-        buildConfigField(FieldSpec.Type.STRING, "packageName", "com.skyd.podaura")
         buildConfigField(
-            FieldSpec.Type.STRING,
-            "versionName",
-            properties["versionName"]!!.toString()
+            type = FieldSpec.Type.STRING,
+            name = "packageName",
+            value = "com.skyd.podaura"
         )
-        buildConfigField(FieldSpec.Type.INT, "versionCode", properties["versionCode"]!!.toString())
         buildConfigField(
-            FieldSpec.Type.STRING,
-            "versionForDesktop",
-            properties["versionForDesktop"]!!.toString()
+            type = FieldSpec.Type.STRING,
+            name = "versionName",
+            value = findProperty("versionName")!!.toString()
+        )
+        buildConfigField(
+            type = FieldSpec.Type.INT,
+            name = "versionCode",
+            value = findProperty("versionCode")!!.toString()
+        )
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            name = "versionForDesktop",
+            value = findProperty("versionForDesktop")!!.toString()
         )
     }
 }

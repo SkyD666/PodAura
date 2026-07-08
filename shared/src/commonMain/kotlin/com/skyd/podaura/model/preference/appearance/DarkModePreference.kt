@@ -3,7 +3,6 @@ package com.skyd.podaura.model.preference.appearance
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.skyd.podaura.ext.put
 import com.skyd.podaura.model.preference.BasePreference
@@ -54,15 +53,6 @@ abstract class BaseDarkModePreference : BasePreference<Int>() {
                 onChangeNightMode(value)
             }
         }
-    }
-
-    override fun fromPreferences(preferences: Preferences): Int {
-        val scope = CoroutineScope(context = Dispatchers.Main)
-        val value = preferences[key] ?: DarkModePreference.default
-        scope.launch(Dispatchers.Main) {
-            onChangeNightMode(value)
-        }
-        return value
     }
 
     abstract fun onChangeNightMode(mode: Int)

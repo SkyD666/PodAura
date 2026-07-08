@@ -33,6 +33,9 @@
 -keep class com.sun.jna.** { *; }
 -keep class com.skyd.fundation.jna.** { *; }
 
+# Compose
+-keep, allowshrinking, allowobfuscation class androidx.compose.ui.text.ParagraphKt { <methods>; }
+
 # Windows Window Frame
 -keepnames class androidx.compose.foundation.HoverableNode
 -keepnames class androidx.compose.foundation.gestures.ScrollableNode

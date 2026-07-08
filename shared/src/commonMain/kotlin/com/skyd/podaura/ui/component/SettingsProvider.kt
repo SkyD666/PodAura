@@ -20,7 +20,7 @@ fun SettingsProvider(
         context = Dispatchers.Default
     )
     CompositionLocalProvider(
-        *preferences.map { it.first.provide(prefs) }.toTypedArray(),
+        *preferences.map { it.first provide prefs }.toTypedArray(),
         content = content
     )
 }

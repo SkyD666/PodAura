@@ -44,13 +44,11 @@ suspend fun <T> DataStore<Preferences>.getOrDefaultSuspend(pref: BasePreference<
     return data.catch { exception ->
         exception.printStackTrace()
         emit(emptyPreferences())
-    }.map {
-        pref.fromPreferences(it)
-    }.first()
+    }.map { it[pref] }.first()
 }
 
 operator fun <T> Preferences.get(pref: BasePreference<T>): T {
-    return get(pref.key) ?: pref.default
+    return pref.key?.let { get(it) } ?: pref.default
 }
 
 fun <T> DataStore<Preferences>.flowOf(pref: BasePreference<T>): Flow<T> =

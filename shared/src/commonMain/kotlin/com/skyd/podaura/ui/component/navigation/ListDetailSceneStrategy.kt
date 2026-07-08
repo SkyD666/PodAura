@@ -19,6 +19,7 @@ import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
+import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy.Companion.ListDetailRoleKey
 import androidx.compose.material3.adaptive.navigation3.MetadataBoundsAnimationSpecKey
 import androidx.compose.material3.adaptive.navigation3.MetadataEnterTransitionKey
 import androidx.compose.material3.adaptive.navigation3.MetadataExitTransitionKey
@@ -211,9 +212,6 @@ class ListDetailSceneStrategy<T : Any>(
     }
 
     companion object {
-        internal const val ListDetailRoleKey: String =
-            "androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole"
-
         /**
          * Constructs metadata to mark a [NavEntry] as belonging to a
          * [list pane][ListDetailPaneScaffoldRole.List] within a

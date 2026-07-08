@@ -135,6 +135,7 @@ fun DataScreen(
                         icon = rememberVectorPainter(Icons.Outlined.PermMedia),
                         text = stringResource(Res.string.data_screen_change_lib_location),
                         descriptionText = localMediaLibLocation,
+                        enabled = MediaLibLocationPreference.key != null,
                         onClick = { navBackStack.add(FilePickerRoute(path = localMediaLibLocation)) },
                     ) {
                         ComponeIconButton(
