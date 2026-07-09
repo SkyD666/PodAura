@@ -188,7 +188,6 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.media)
-    implementation(libs.androidx.compose.runtime.tracing)
 
     implementation(libs.jetbrains.compose.runtime)
     implementation(libs.jetbrains.compose.foundation)
@@ -233,6 +232,8 @@ dependencies {
     implementation(projects.fundation)
     implementation(projects.shared)
     implementation(projects.downloader)
+
+    "benchmarkImplementation"(libs.androidx.compose.runtime.tracing)
 
 //    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.13")
     testImplementation(libs.junit)
