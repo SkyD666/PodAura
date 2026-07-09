@@ -23,7 +23,7 @@ import com.skyd.podaura.ui.screen.settings.CrashScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
 
 /**
- * CrashActivity, do not extends BaseActivity
+ * CrashActivity, do not extend BaseActivity
  */
 class CrashActivity : ComponentActivity() {
     companion object {

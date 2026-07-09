@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 
 suspend fun <T> DataStore<Preferences>.put(key: Preferences.Key<T>, value: T) {
-    this.edit {
+    edit {
         withContext(Dispatchers.IO) {
             it[key] = value
         }
@@ -30,9 +30,7 @@ fun <T> DataStore<Preferences>.getOrNull(key: Preferences.Key<T>): T? {
         this@getOrNull.data.catch { exception ->
             exception.printStackTrace()
             emit(emptyPreferences())
-        }.map {
-            it[key]
-        }.first() as T
+        }.map { it[key] }.first() as T
     }
 }
 

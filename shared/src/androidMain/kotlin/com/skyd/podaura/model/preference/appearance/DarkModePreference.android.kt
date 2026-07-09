@@ -20,7 +20,7 @@ actual object DarkModePreference : BaseDarkModePreference() {
         MODE_NIGHT_NO
     }
 
-    private fun Int.toAndroidNightMode() = when (this) {
+    fun Int.toAndroidNightMode() = when (this) {
         MODE_NIGHT_NO -> AppCompatDelegate.MODE_NIGHT_NO
         MODE_NIGHT_YES -> AppCompatDelegate.MODE_NIGHT_YES
         MODE_NIGHT_FOLLOW_SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
