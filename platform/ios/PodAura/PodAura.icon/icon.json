@@ -1,14 +1,24 @@
 {
-  "fill" : {
-    "solid" : "extended-gray:1.00000,1.00000"
-  },
+  "fill" : "system-light",
   "groups" : [
     {
       "blur-material" : null,
       "layers" : [
         {
           "blend-mode" : "normal",
-          "fill" : "automatic",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "display-p3:0.00000,0.43137,0.74510,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "display-p3:0.00000,0.53405,0.92631,1.00000"
+              }
+            }
+          ],
           "glass" : true,
           "hidden" : false,
           "image-name" : "PodAura.svg",
@@ -22,12 +32,17 @@
           }
         }
       ],
+      "refractivity" : {
+        "depth" : 0,
+        "enabled" : false,
+        "strength" : 0.5
+      },
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.5
       },
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     }

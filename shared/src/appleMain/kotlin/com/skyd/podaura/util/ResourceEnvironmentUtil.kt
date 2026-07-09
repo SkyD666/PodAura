@@ -12,13 +12,8 @@ import org.jetbrains.compose.resources.RegionQualifier
 import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.getResourceEnvironment
 import org.jetbrains.compose.resources.getSystemEnvironment
-import platform.Foundation.NSLocale
-import platform.Foundation.NSLocaleScriptCode
-import platform.Foundation.currentLocale
-import platform.Foundation.preferredLanguages
 
 // From https://youtrack.jetbrains.com/issue/CMP-6614#focus=Comments-27-10849123.0-0
-
 @Composable
 fun ResourceEnvironmentFix(content: @Composable () -> Unit) {
 
@@ -48,24 +43,18 @@ private fun myResourceEnvironment(): ResourceEnvironment {
 }
 
 private fun mapEnvironment(environment: ResourceEnvironment): ResourceEnvironment {
-    val locale = NSLocale.preferredLanguages.firstOrNull()
-        ?.let { NSLocale(it as String) }
-        ?: NSLocale.currentLocale
-    val script = locale.objectForKey(NSLocaleScriptCode) as? String
-
     return ResourceEnvironment(
         language = environment.language,
+        script = environment.script,
         region = when (environment.language.language) {
-            "zh" -> when (script) {
+            "zh" -> when (environment.script.script) {
                 "Hans" -> RegionQualifier("CN")
                 "Hant" -> RegionQualifier("TW")
                 else -> environment.region
             }
 
             "ja" -> RegionQualifier("JP")
-
             "eo" -> RegionQualifier("UY")
-
             else -> environment.region
         },
         theme = environment.theme,
