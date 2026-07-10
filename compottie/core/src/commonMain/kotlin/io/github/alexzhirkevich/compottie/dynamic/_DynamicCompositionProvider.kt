@@ -44,7 +44,7 @@ internal class DynamicCompositionProvider : LottieDynamicProperties {
             .split(LayerPathSeparator)
             .filter(String::isNotEmpty)
 
-        return layersByPattern.fastFirstOrNull { (pattern, layer) ->
+        return layersByPattern.fastFirstOrNull { (pattern, _) ->
             pathMatches(path = pathParts, pattern = pattern)
         }?.second
     }

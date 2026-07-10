@@ -16,6 +16,6 @@ internal class DynamicEllipseProvider : DynamicShapeProvider(), DynamicEllipse {
     }
 
     override fun position(provider: PropertyProvider<Offset>) {
-        position = position
+        position = provider
     }
 }

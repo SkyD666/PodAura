@@ -106,7 +106,7 @@ internal data class PrecompositionLayer(
                 val ip = inPoint ?: return 0f
                 val op = outPoint ?: return 0f
 
-                return (op - ip).takeIf { it != 0f } ?: return 0f
+                return op - ip
             }
 
         override val layersByName: Map<String, Layer> by lazy {

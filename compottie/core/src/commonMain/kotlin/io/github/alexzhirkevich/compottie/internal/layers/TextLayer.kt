@@ -458,7 +458,7 @@ internal class TextLayer(
                 boxWidth = boxWidth,
                 tracking = tracking,
                 glyphs = glyphs
-            );
+            )
 
             lines.forEachIndexed { innerIndex, l ->
                 canvas.save()
@@ -484,7 +484,7 @@ internal class TextLayer(
                     )
                 }
 
-                canvas.restore();
+                canvas.restore()
             }
         }
     }
@@ -698,9 +698,9 @@ internal class TextLayer(
         fontScale: Float,
         document: TextDocument,
     ) {
-        matrix.fastReset();
+        matrix.fastReset()
         matrix.preTranslate(0f, -(document.baselineShift ?: 0f))
-        matrix.preScale(fontScale, fontScale);
+        matrix.preScale(fontScale, fontScale)
         character.data?.draw(drawScope, state, matrix, strokePaint, fillPaint)
     }
 

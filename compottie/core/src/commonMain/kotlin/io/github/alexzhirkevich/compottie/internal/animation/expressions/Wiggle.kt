@@ -80,7 +80,7 @@ private fun wiggle(
     lastChange: MutableMap<Int, Long>,
     wiggle: MutableMap<Int, Any>,
     prevWiggle: MutableMap<Int, Any>
-): Any? {
+): Any {
 
     var mValue = value
 
