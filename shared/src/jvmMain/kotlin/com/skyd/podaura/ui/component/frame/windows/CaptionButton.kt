@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.platform.FontLoadResult
 import androidx.compose.ui.text.style.TextAlign
@@ -173,7 +172,6 @@ private fun CaptionButton(
     }
 }
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
 private fun rememberFontIconFamily(): State<FontFamily?> {
     val fontFamily = remember { mutableStateOf<FontFamily?>(null) }

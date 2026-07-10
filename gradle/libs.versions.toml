@@ -5,7 +5,9 @@ kotlinx-datetime = "0.8.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 kotlinx-io = "0.9.1"
+kotlinx-atomicfu = "0.33.0"
 ksp = "2.3.9"
+skiko = "0.150.0"
 compose = "1.12.0-beta01"
 compose-material3 = "1.12.0-alpha03"
 compose-material3-adaptive = "1.3.0-beta02"
@@ -22,6 +24,8 @@ worker = "2.11.2"
 room3 = "3.0.0"
 filekit = "0.14.2"
 xmlutil = "0.91.3" # Wait ktor to support 1.0.0
+keight = "0.0.06"
+okio = "3.17.0"
 jna = "5.19.1"
 tracing-perfetto = "1.0.1"
 
@@ -36,6 +40,7 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version = "0.37.3" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 
+skiko = { module = "org.jetbrains.skiko:skiko", version.ref = "skiko" }
 jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
 jetbrains-compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose" }
 jetbrains-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose" }
@@ -63,6 +68,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-io-okio = { module = "org.jetbrains.kotlinx:kotlinx-io-okio", version.ref = "kotlinx-io" }
+kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
 ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 
 androidx-graphics-shapes = { module = "androidx.graphics:graphics-shapes", version = "1.1.0" }
@@ -116,7 +122,12 @@ coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha07" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.1.0" }
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.2.4-compose-1.12-SNAPSHOT" }
+
+# compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.2.4-compose-1.12-SNAPSHOT" }
+keight = { module = "io.github.alexzhirkevich:keight", version.ref = "keight" }
+keight-core = { module = "io.github.alexzhirkevich:keight-core", version.ref = "keight" }
+
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 java-jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 java-jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }

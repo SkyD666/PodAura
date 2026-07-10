@@ -99,7 +99,7 @@ kotlin {
             implementation(libs.filekit.core)
             implementation(libs.filekit.dialogs)
 
-            implementation(libs.compottie)
+            // implementation(libs.compottie)
             implementation(libs.kermit)
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
@@ -113,6 +113,7 @@ kotlin {
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
+            implementation(projects.compottie.main)
         }
 
         commonTest.dependencies {
@@ -165,6 +166,7 @@ kotlin {
             "androidx.compose.foundation.layout.ExperimentalLayoutApi",
             "androidx.compose.ui.ExperimentalComposeUiApi",
             "androidx.compose.ui.InternalComposeUiApi",
+            "androidx.compose.ui.text.ExperimentalTextApi",
             "kotlinx.coroutines.FlowPreview",
             "kotlinx.coroutines.ExperimentalCoroutinesApi",
             "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
