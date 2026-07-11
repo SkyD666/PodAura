@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.player.port
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,16 +34,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.podaura.ui.activity.MainActivity
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.isLandscape
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
@@ -55,9 +51,7 @@ import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.SmallController
-import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
-import com.skyd.podaura.ui.screen.read.ReadRoute
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.feed_screen_name
@@ -289,7 +283,7 @@ private fun Menu(
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     media: PlaylistMediaWithArticleBean?,
 ) {
-    val context = LocalContext.current
+//    val context = LocalContext.current
 
     DropdownMenuPopup(
         expanded = expanded,
@@ -330,23 +324,23 @@ private fun Menu(
             ),
             listOf(
                 {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
-                        context,
-                        MainActivity::class.java
-                    )
-                    context.startActivity(intent)
+//                    val intent = Intent(
+//                        Intent.ACTION_VIEW,
+//                        ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
+//                        context,
+//                        MainActivity::class.java
+//                    )
+//                    context.startActivity(intent)
                     onDismissRequest()
                 },
                 {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
-                        context,
-                        MainActivity::class.java
-                    )
-                    context.startActivity(intent)
+//                    val intent = Intent(
+//                        Intent.ACTION_VIEW,
+//                        ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
+//                        context,
+//                        MainActivity::class.java
+//                    )
+//                    context.startActivity(intent)
                     onDismissRequest()
                 },
             ),

@@ -31,6 +31,9 @@ import com.skyd.podaura.ui.activity.BaseComposeActivity
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerViewRoute
+import com.skyd.podaura.ui.player.PlayerViewModel
+import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.service.PlayerService
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.filter
@@ -101,7 +104,7 @@ class PlayActivity : BaseComposeActivity() {
         // Keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        viewModel.handleIntent(intent)
+        handleIntent(intent)
 
         ContextCompat.registerReceiver(
             this,
@@ -116,7 +119,7 @@ class PlayActivity : BaseComposeActivity() {
 
         setContentBase {
             DisposableEffect(Unit) {
-                val listener = Consumer<Intent> { newIntent -> viewModel.handleIntent(newIntent) }
+                val listener = Consumer<Intent> { newIntent -> handleIntent(newIntent) }
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
             }
@@ -141,6 +144,21 @@ class PlayActivity : BaseComposeActivity() {
         }
     }
 
+    private fun handleIntent(intent: Intent?) {
+        if (intent == null) return
+        val playDataMode = intent.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
+            PlayDataMode.decodeFromString(it)
+        }
+        if (playDataMode != null) {
+            viewModel.handlePlayDataMode(playDataMode)
+        } else {
+            val externalUri = intent.data
+            if (externalUri != null) {
+                viewModel.handlePlatformFile(PlatformFile(externalUri))
+            }
+        }
+    }
+
     private fun saveScreenshot() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             picture.savePictureToMediaStore(this)
@@ -151,7 +169,10 @@ class PlayActivity : BaseComposeActivity() {
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (serviceBound && service.playerCoordinator.player.onKey(event)) {
+        if (serviceBound && service.playerCoordinator.player.onKey(
+                androidx.compose.ui.input.key.KeyEvent(event)
+            )
+        ) {
             return true
         }
         return super.dispatchKeyEvent(event)

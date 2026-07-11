@@ -5,6 +5,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.skyd.podaura.R
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.toUri
@@ -178,7 +179,7 @@ class MediaSessionManager(
                         } else if (newState.mediaThumbnail != null) {
                             putBitmap(
                                 MediaMetadataCompat.METADATA_KEY_ART,
-                                newState.mediaThumbnail?.asAndroidBitmap(),
+                                newState.mediaThumbnail?.asImageBitmap()?.asAndroidBitmap(),
                             )
                         }
                     }

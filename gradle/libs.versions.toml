@@ -113,12 +113,15 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 
 mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.18.n" }
 ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.18" }
+mediamp = { module = "org.openani.mediamp:mediamp-mpv", version = "0.1.15" }
+mediamp-runtime = { module = "org.openani.mediamp:mediamp-mpv-runtime", version = "0.1.15" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.5.0" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha07" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.1.0" }

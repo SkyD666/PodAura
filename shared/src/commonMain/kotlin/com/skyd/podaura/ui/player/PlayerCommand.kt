@@ -1,15 +1,14 @@
 package com.skyd.podaura.ui.player
 
-import android.view.Surface
-import android.view.SurfaceHolder
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ImageBitmap
+import coil3.Bitmap
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
+import com.skyd.podaura.ui.PlatformSurfaceHolder
 import io.github.vinceglb.filekit.PlatformFile
 
 sealed interface PlayerCommand {
-    data class Attach(val surfaceHolder: SurfaceHolder) : PlayerCommand
-    data class Detach(val surface: Surface) : PlayerCommand
+    data class Attach(val surfaceHolder: PlatformSurfaceHolder) : PlayerCommand
+    data class Detach(val surfaceHolder: PlatformSurfaceHolder) : PlayerCommand
 
     data class LoadList(
         val playlist: List<PlaylistMediaWithArticleBean>,
@@ -78,5 +77,5 @@ sealed interface PlayerEvent {
     data class PlaylistPosition(val value: Int) : PlayerEvent
     data class Artist(val value: String) : PlayerEvent
     data class Album(val value: String) : PlayerEvent
-    data class MediaThumbnail(val value: ImageBitmap?) : PlayerEvent
+    data class MediaThumbnail(val value: Bitmap?) : PlayerEvent
 }

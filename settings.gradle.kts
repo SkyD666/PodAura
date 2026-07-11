@@ -7,6 +7,7 @@ enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 
 pluginManagement {
     repositories {
+        mavenLocal()
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
@@ -22,6 +23,7 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
+        mavenLocal()
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
