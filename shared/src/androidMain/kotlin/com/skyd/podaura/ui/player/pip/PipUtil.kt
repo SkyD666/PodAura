@@ -10,6 +10,7 @@ import android.os.Build
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.toAndroidRectF
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -34,21 +36,35 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 @Composable
 /*internal*/ fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
     val currentShouldEnterPipMode by rememberUpdatedState(newValue = shouldEnterPipMode)
-    if (Build.VERSION.SDK_INT in Build.VERSION_CODES.O ..< Build.VERSION_CODES.S) {
-        val activity = LocalActivity.current as ComponentActivity
+    // API 31+ enters PiP automatically via setAutoEnterEnabled, so this listener is only needed
+    // on O..R. Below O there is no PiP at all -- the old code logged "unsupported" for API 31+
+    // too, which was misleading.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+    ) {
+        // Safe cast: LocalActivity is null in previews and non-activity hosts.
+        val activity = LocalActivity.current as? ComponentActivity
         DisposableEffect(activity) {
+            if (activity == null) return@DisposableEffect onDispose { }
             val onUserLeaveBehavior: () -> Unit = {
                 if (currentShouldEnterPipMode) {
-                    val builder = PictureInPictureParams.Builder()
-                    activity.enterPictureInPictureMode(builder.build())
+                    activity.enterPictureInPictureMode(PictureInPictureParams.Builder().build())
                 }
             }
             activity.addOnUserLeaveHintListener(onUserLeaveBehavior)
             onDispose { activity.removeOnUserLeaveHintListener(onUserLeaveBehavior) }
         }
-    } else {
+    } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
         Logger.i(tag = "PIP_TAG") { "API does not support PiP" }
     }
+}
+
+// Android rejects PiP aspect ratios outside (1/2.39, 2.39); stay just inside those bounds.
+private const val MIN_PIP_ASPECT_RATIO = 1 / 2.39f
+private const val MAX_PIP_ASPECT_RATIO = 2.39f
+
+private class BoundsHolder {
+    var value: Rect? = null
 }
 
 @Composable
@@ -56,68 +72,83 @@ import com.skyd.podaura.ui.player.component.state.PlayStateCallback
     autoEnterPipMode: Boolean,
     isVideo: Boolean,
     playState: PlayState,
-): Modifier = run {
+): Modifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    pipParamsApi26(
+        autoEnterPipMode = autoEnterPipMode,
+        isVideo = isVideo,
+        playState = playState,
+    )
+} else this
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun Modifier.pipParamsApi26(
+    autoEnterPipMode: Boolean,
+    isVideo: Boolean,
+    playState: PlayState,
+): Modifier {
     val context = LocalContext.current
     val activity = LocalActivity.current
 
-    var builder by remember { mutableStateOf<PictureInPictureParams.Builder?>(null) }
+    val builder = remember { PictureInPictureParams.Builder() }
+    // Plain holder, not snapshot state: it is written during the layout pass, and writing state
+    // there would schedule another recomposition/layout on every frame.
+    val lastBounds = remember { BoundsHolder() }
     val currentPlayState by rememberUpdatedState(playState)
     val currentAutoEnterPipMode by rememberUpdatedState(autoEnterPipMode)
-    val setActionsAndApplyBuilder: (PictureInPictureParams.Builder) -> Unit = remember {
-        { builder ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                builder.setActions(
-                    listOfRemoteActions(
-                        playState = currentPlayState,
-                        context = context,
-                    ),
-                )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    builder.setAutoEnterEnabled(currentAutoEnterPipMode)
-                    if (!isVideo) {
-                        builder.setSeamlessResizeEnabled(false)
-                    }
-                }
-                activity?.setPictureInPictureParams(builder.build())
+    val currentIsVideo by rememberUpdatedState(isVideo)
+
+    val applyBuilder: () -> Unit = remember {
+        {
+            builder.setActions(
+                listOfRemoteActions(playState = currentPlayState, context = context),
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.setAutoEnterEnabled(currentAutoEnterPipMode)
+                builder.setSeamlessResizeEnabled(currentIsVideo)
             }
+            runCatching { activity?.setPictureInPictureParams(builder.build()) }
+                .onFailure { e ->
+                    Logger.w(throwable = e, tag = "PIP_TAG") { "setPictureInPictureParams failed" }
+                }
         }
     }
 
-    LaunchedEffect(playState.isPlaying) {
-        builder?.let { setActionsAndApplyBuilder(it) }
-    }
+    LaunchedEffect(playState.isPlaying, autoEnterPipMode, isVideo) { applyBuilder() }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        onGloballyPositioned { layoutCoordinates ->
-            (builder ?: PictureInPictureParams.Builder()).let { b ->
-                builder = b
-                val rect = layoutCoordinates.boundsInWindow()
-                b.setSourceRectHint(rect.toAndroidRectF().toRect())
-                if (!rect.isEmpty && rect.width / rect.height in 0.42 ..< 2.4) {
-                    b.setAspectRatio(Rational(rect.width.toInt(), rect.height.toInt()))
-                }
-                setActionsAndApplyBuilder(b)
-            }
+    return onGloballyPositioned { layoutCoordinates ->
+        val rect = layoutCoordinates.boundsInWindow()
+        // setPictureInPictureParams is a binder call and onGloballyPositioned fires on every
+        // layout pass, so skip it unless the bounds actually moved.
+        if (rect == lastBounds.value) return@onGloballyPositioned
+        lastBounds.value = rect
+
+        builder.setSourceRectHint(rect.toAndroidRectF().toRect())
+        val width = rect.width.toInt()
+        val height = rect.height.toInt()
+        // Rational(_, 0) throws, and an out-of-range ratio makes setAspectRatio throw too.
+        if (width > 0 && height > 0 &&
+            width.toFloat() / height in MIN_PIP_ASPECT_RATIO..MAX_PIP_ASPECT_RATIO
+        ) {
+            builder.setAspectRatio(Rational(width, height))
         }
-    } else this
+        applyBuilder()
+    }
 }
 
 @Composable
 /*internal*/ fun rememberIsInPipMode(): Boolean {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        val activity = LocalActivity.current as ComponentActivity
-        var pipMode by remember { mutableStateOf(activity.isInPictureInPictureMode) }
-        DisposableEffect(activity) {
-            val observer = Consumer<PictureInPictureModeChangedInfo> { info ->
-                pipMode = info.isInPictureInPictureMode
-            }
-            activity.addOnPictureInPictureModeChangedListener(observer)
-            onDispose { activity.removeOnPictureInPictureModeChangedListener(observer) }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+    val activity = LocalActivity.current as? ComponentActivity ?: return false
+    var pipMode by remember(activity) { mutableStateOf(activity.isInPictureInPictureMode) }
+    DisposableEffect(activity) {
+        val observer = Consumer<PictureInPictureModeChangedInfo> { info ->
+            pipMode = info.isInPictureInPictureMode
         }
-        return pipMode
-    } else {
-        return false
+        activity.addOnPictureInPictureModeChangedListener(observer)
+        onDispose { activity.removeOnPictureInPictureModeChangedListener(observer) }
     }
+    return pipMode
 }
 
 @Composable

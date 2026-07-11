@@ -91,6 +91,7 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
+//            implementation(libs.zoomimage)
 
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
@@ -133,6 +134,8 @@ kotlin {
 
             implementation(libs.coil.gif)
             implementation(libs.coil.video)
+
+            implementation(libs.mpv.lib)
         }
 
         appleMain.dependencies {
@@ -147,6 +150,9 @@ kotlin {
             implementation(libs.ktor.client.apache5)
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
+
+            implementation(libs.mediamp)
+            implementation(libs.mediamp.runtime)
         }
     }
 

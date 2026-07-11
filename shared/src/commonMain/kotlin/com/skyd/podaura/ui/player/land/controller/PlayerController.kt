@@ -5,6 +5,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -36,9 +39,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.node.Ref
 import androidx.compose.ui.unit.dp
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.skyd.podaura.ext.hideCursorIfSupported
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerShowForwardSecondsButtonPreference
@@ -91,16 +96,27 @@ import kotlin.time.Duration.Companion.milliseconds
     var controllerLayoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val scope = rememberCoroutineScope()
 
-    var autoHideControllerJob: Job? = null
+    val controllerHoverInteractionSource = remember { MutableInteractionSource() }
+    val controllerHovered by controllerHoverInteractionSource.collectIsHoveredAsState()
+
+    // A shared remembered holder, NOT snapshot state: long-lived pointerInput closures must
+    // all see the same slot (a plain local is reset on every recomposition), while
+    // restartAutoHideController also runs during composition on the !enabled() path — with
+    // snapshot state that read-then-write would be a backwards write recomposing every frame.
+    val autoHideControllerJob = remember { Ref<Job>() }
+    val mousePressed = remember { Ref<Boolean>() }
     fun cancelAutoHideController() {
-        autoHideControllerJob?.cancel()
+        autoHideControllerJob.value?.cancel()
+        autoHideControllerJob.value = null
     }
 
     fun restartAutoHideController() {
         cancelAutoHideController()
-        if (showController) {
-            autoHideControllerJob = scope.launch {
-                delay(5000.milliseconds)
+        if (showController && !controllerHovered && mousePressed.value != true &&
+            !dialogState.subtitleTrackDialogState().show
+        ) {
+            autoHideControllerJob.value = scope.launch {
+                delay(autoHideControllerDelay)
                 if (isActive) {
                     showController = false
                 }
@@ -108,6 +124,9 @@ import kotlin.time.Duration.Companion.milliseconds
         }
     }
     LaunchedEffect(showController) { restartAutoHideController() }
+    LaunchedEffect(controllerHovered) {
+        if (controllerHovered) cancelAutoHideController() else restartAutoHideController()
+    }
 
     var showSeekTimePreview by remember { mutableStateOf(false) }
     var seekTimePreview by remember { mutableLongStateOf(0L) }
@@ -142,6 +161,19 @@ import kotlin.time.Duration.Companion.milliseconds
                     controllerWidth = it.size.width
                     controllerHeight = it.size.height
                     controllerLayoutCoordinates = it
+                }
+                .hideCursorIfSupported(hide = !showController)
+                .detectMouseMoveGestures(
+                    // While a mouse button is held (e.g. dragging the seek slider with the
+                    // cursor drifting off the bar), the hide timer must not arm; re-arm on
+                    // release instead.
+                    onMousePressChanged = { pressed ->
+                        mousePressed.value = pressed
+                        if (!pressed) restartAutoHideController()
+                    },
+                ) {
+                    showController = true
+                    restartAutoHideController()
                 }
                 // detectControllerGestures should be called before detectPressGestures
                 // to avoid responding to swipes when long pressing
@@ -222,6 +254,7 @@ import kotlin.time.Duration.Companion.milliseconds
             AutoHiddenBox(
                 enabled = enabled,
                 show = { showController },
+                hoverInteractionSource = controllerHoverInteractionSource,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
@@ -304,6 +337,7 @@ import kotlin.time.Duration.Companion.milliseconds
 private fun AutoHiddenBox(
     enabled: () -> Boolean,
     show: () -> Boolean,
+    hoverInteractionSource: MutableInteractionSource,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -324,12 +358,16 @@ private fun AutoHiddenBox(
                 val (topBar, bottomBar, screenshot, replaySeconds, forwardSeconds, resetTransform) = createRefs()
 
                 TopBar(
-                    modifier = Modifier.constrainAs(topBar) { top.linkTo(parent.top) },
+                    modifier = Modifier
+                        .constrainAs(topBar) { top.linkTo(parent.top) }
+                        .hoverable(hoverInteractionSource),
                     title = playState().run { title.orEmpty().ifBlank { mediaTitle }.orEmpty() },
                     onExitFullscreen = onExitFullscreen,
                 )
                 BottomBar(
-                    modifier = Modifier.constrainAs(bottomBar) { bottom.linkTo(parent.bottom) },
+                    modifier = Modifier
+                        .constrainAs(bottomBar) { bottom.linkTo(parent.bottom) }
+                        .hoverable(hoverInteractionSource),
                     enabled = enabled,
                     playStateCallback = playStateCallback,
                     playState = playState,
@@ -347,7 +385,8 @@ private fun AutoHiddenBox(
                                 top.linkTo(parent.top)
                                 end.linkTo(parent.end)
                             }
-                            .padding(end = 20.dp),
+                            .padding(end = 20.dp)
+                            .hoverable(hoverInteractionSource),
                         onClick = onScreenshot,
                     )
                 }
@@ -362,7 +401,8 @@ private fun AutoHiddenBox(
                                 start.linkTo(parent.start)
                             }
                             .padding(start = 20.dp)
-                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start)),
+                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                            .hoverable(hoverInteractionSource),
                         seconds = replaySecond,
                         onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
                         onClick = {
@@ -381,7 +421,8 @@ private fun AutoHiddenBox(
                                 bottom.linkTo(bottomBar.top)
                                 end.linkTo(parent.end)
                             }
-                            .padding(end = 20.dp),
+                            .padding(end = 20.dp)
+                            .hoverable(hoverInteractionSource),
                         seconds = forwardSecond,
                         onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
                         onClick = {
@@ -397,13 +438,15 @@ private fun AutoHiddenBox(
                     }
                 ) {
                     ResetTransform(
-                        modifier = Modifier.constrainAs(resetTransform) {
-                            bottom.linkTo(bottomBar.top)
-                            top.linkTo(parent.top)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            verticalBias = 1f
-                        },
+                        modifier = Modifier
+                            .constrainAs(resetTransform) {
+                                bottom.linkTo(bottomBar.top)
+                                top.linkTo(parent.top)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                verticalBias = 1f
+                            }
+                            .hoverable(hoverInteractionSource),
                         enabled = enabled,
                         onClick = {
                             with(transformStateCallback) {

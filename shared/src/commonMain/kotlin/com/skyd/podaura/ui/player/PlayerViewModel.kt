@@ -1,6 +1,5 @@
-package com.skyd.podaura.ui.activity.player
+package com.skyd.podaura.ui.player
 
-import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skyd.podaura.ext.getOrDefaultSuspend
@@ -9,10 +8,10 @@ import com.skyd.podaura.model.preference.behavior.playlist.ReverseLoadArticlePla
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.player.PlayerRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistMediaRepository
-import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -27,13 +26,9 @@ class PlayerViewModel(
         replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    fun handleIntent(intent: Intent?) {
-        intent ?: return
-
+    fun handlePlayDataMode(playDataMode: PlayDataMode) {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val playDataMode = intent.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
-                PlayDataMode.decodeFromString(it)
-            }) {
+            when (playDataMode) {
                 is PlayDataMode.ArticleList -> mediaInfos.emit(
                     playDataMode.url to playerRepo.requestPlaylistByArticleId(
                         articleId = playDataMode.articleId,
@@ -53,17 +48,16 @@ class PlayerViewModel(
                         playDataMode.mediaUrl ?: playlist.firstOrNull()?.playlistMediaBean?.url
                     mediaInfos.emit(startUrl to playlist)
                 }
+            }
+        }
+    }
 
-                null -> {
-                    val externalUri = intent.data
-                    if (externalUri != null) {
-                        val playlist =
-                            playerRepo.requestPlaylistByPlatformFile(PlatformFile(externalUri))
-                        if (playlist != null) {
-                            mediaInfos.emit(playlist[0].playlistMediaBean.url to playlist)
-                        }
-                    }
-                }
+    fun handlePlatformFile(file: PlatformFile) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val playlist =
+                playerRepo.requestPlaylistByPlatformFile(file)
+            if (playlist != null) {
+                mediaInfos.emit(playlist[0].playlistMediaBean.url to playlist)
             }
         }
     }

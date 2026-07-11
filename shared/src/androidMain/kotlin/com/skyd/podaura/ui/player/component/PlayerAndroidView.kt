@@ -17,6 +17,6 @@ internal fun PlayerAndroidView(
         factory = { c ->
             SurfaceView(c, null).apply { onCommand(PlayerCommand.Attach(holder)) }
         },
-        onRelease = { onCommand(PlayerCommand.Detach(it.holder.surface)) }
+        onRelease = { onCommand(PlayerCommand.Detach(it.holder)) }
     )
 }

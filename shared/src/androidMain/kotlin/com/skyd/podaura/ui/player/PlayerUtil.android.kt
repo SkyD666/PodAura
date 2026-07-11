@@ -129,7 +129,7 @@ fun PlayerState.playbackState(): Int = when {
 }
 
 val PlayerState.isPlaying
-    get() = playbackState() != PlaybackStateCompat.STATE_PLAYING
+    get() = playbackState() == PlaybackStateCompat.STATE_PLAYING
 
 actual fun PlatformFile.resolveToPlayer(): String? {
     return when (val file = androidFile) {

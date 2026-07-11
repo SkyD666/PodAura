@@ -62,3 +62,5 @@ expect fun Modifier.onRightClickIfSupported(
     enabled: Boolean = true,
     onClick: () -> Unit
 ): Modifier
+
+expect fun Modifier.hideCursorIfSupported(hide: Boolean): Modifier

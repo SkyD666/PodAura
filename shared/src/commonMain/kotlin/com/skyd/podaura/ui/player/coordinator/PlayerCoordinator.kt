@@ -1,12 +1,8 @@
 package com.skyd.podaura.ui.player.coordinator
 
-import android.app.Application
-import android.content.Context
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import com.skyd.fundation.di.get
 import com.skyd.fundation.di.inject
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
@@ -17,16 +13,23 @@ import com.skyd.podaura.model.preference.player.PlayerLoopModePreference
 import com.skyd.podaura.model.repository.player.IPlayerRepository
 import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.ui.player.LoopMode
-import com.skyd.podaura.ui.player.MPVPlayer
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
-import `is`.xyz.mpv.MPVLib
+import com.skyd.podaura.ui.player.mpv.EventListener
+import com.skyd.podaura.ui.player.mpv.MPVEvent
+import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.update
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -34,16 +37,25 @@ class PlayerCoordinator : LifecycleOwner {
     override val lifecycle = LifecycleRegistry(this)
     private val playerRepo: IPlayerRepository by inject()
     private val addToPlaylistRepo: IAddToPlaylistRepository by inject()
-    val player = MPVPlayer.getInstance(get<Context>() as Application)
+    val player = MPVPlayer.instance
     val model = PlayerModel()
     val playerState get() = model.playerState
     private var playlistId: String = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
-    private val observers = mutableSetOf<Observer>()
 
-    private val mpvObserver = object : MPVLib.EventObserver {
-        override fun eventProperty(property: String) {
-            when (property) {
+    // Per-instance, not in the companion: a companion scope outlives every coordinator and can
+    // never be cancelled, so its jobs (and everything they capture) leak for the process lifetime.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val destroyed = AtomicBoolean(false)
+
+    // mpv dispatches events on its own thread while the UI thread adds/removes observers, so a
+    // plain MutableSet would throw ConcurrentModificationException from sendEvent().
+    // Copy-on-write: readers always iterate an immutable snapshot.
+    private val observers = AtomicReference<Set<Observer>>(emptySet())
+
+    private val mpvObserver = object : EventListener {
+        override fun onPropertyChange(name: String) {
+            when (name) {
                 "aid" -> sendEvent(PlayerEvent.AudioTrackChanged(player.aid))
                 "sid" -> sendEvent(PlayerEvent.SubtitleTrackChanged(player.sid))
                 "vid" -> sendEvent(PlayerEvent.VideoTrackChanged(player.vid))
@@ -84,8 +96,8 @@ class PlayerCoordinator : LifecycleOwner {
             }
         }
 
-        override fun eventProperty(property: String, value: Long) {
-            when (property) {
+        override fun onPropertyChange(name: String, value: Long) {
+            when (name) {
                 "aid" -> sendEvent(PlayerEvent.AudioTrackChanged(value.toInt()))
                 "sid" -> sendEvent(PlayerEvent.SubtitleTrackChanged(value.toInt()))
                 "time-pos" -> sendEvent(PlayerEvent.Position(value))
@@ -95,8 +107,8 @@ class PlayerCoordinator : LifecycleOwner {
             }
         }
 
-        override fun eventProperty(property: String, value: Boolean) {
-            when (property) {
+        override fun onPropertyChange(name: String, value: Boolean) {
+            when (name) {
                 "pause" -> sendEvent(PlayerEvent.Paused(value))
                 "paused-for-cache",
                 "core-idle",
@@ -107,21 +119,21 @@ class PlayerCoordinator : LifecycleOwner {
             }
         }
 
-        override fun eventProperty(property: String, value: String) {
-            when (property) {
+        override fun onPropertyChange(name: String, value: String) {
+            when (name) {
                 "media-title" -> sendEvent(PlayerEvent.MediaTitle(value))
             }
         }
 
-        override fun eventProperty(property: String, value: Double) {
-            when (property) {
+        override fun onPropertyChange(name: String, value: Double) {
+            when (name) {
                 "video-zoom" -> sendEvent(PlayerEvent.Zoom(2.0.pow(value).toFloat()))
                 "video-pan-x" -> sendEvent(
-                    PlayerEvent.VideoOffsetX((value * (player.videoDW ?: 0)).toFloat())
+                    PlayerEvent.VideoOffsetX((value * player.videoDW).toFloat())
                 )
 
                 "video-pan-y" -> sendEvent(
-                    PlayerEvent.VideoOffsetY((value * (player.videoDH ?: 0)).toFloat())
+                    PlayerEvent.VideoOffsetY((value * player.videoDH).toFloat())
                 )
 
                 "speed" -> sendEvent(PlayerEvent.Speed(value.toFloat()))
@@ -133,16 +145,16 @@ class PlayerCoordinator : LifecycleOwner {
 
         private var currentPath: String? = null
         private var currentPathPlayed: Boolean = false
-        override fun event(eventId: Int) {
-            when (eventId) {
-                MPVLib.mpvEventId.MPV_EVENT_SEEK -> sendEvent(PlayerEvent.Seek)
-                MPVLib.mpvEventId.MPV_EVENT_START_FILE -> {
+        override fun onEvent(event: Int) {
+            when (event) {
+                MPVEvent.SEEK -> sendEvent(PlayerEvent.Seek)
+                MPVEvent.START_FILE -> {
                     currentPath = player.path
                     sendEvent(PlayerEvent.StartFile(currentPath))
                     sendEvent(PlayerEvent.Loading(true))
                 }
 
-                MPVLib.mpvEventId.MPV_EVENT_END_FILE -> {
+                MPVEvent.END_FILE -> {
                     sendEvent(PlayerEvent.EndFile)
                     sendEvent(PlayerEvent.Loading(false))
                     if (currentPathPlayed) {
@@ -152,7 +164,7 @@ class PlayerCoordinator : LifecycleOwner {
                     currentPathPlayed = false
                 }
 
-                MPVLib.mpvEventId.MPV_EVENT_FILE_LOADED -> {
+                MPVEvent.FILE_LOADED -> {
                     currentPathPlayed = true
                     currentPath?.let { currentPath ->
                         scope.launch {
@@ -166,31 +178,32 @@ class PlayerCoordinator : LifecycleOwner {
                     sendEvent(PlayerEvent.Paused(player.paused))
                     sendEvent(PlayerEvent.Loading(player.loading()))
                     loadLastPosition(currentPath).invokeOnCompletion {
-                        sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail?.asImageBitmap()))
+                        sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
                     }
                 }
 
-                MPVLib.mpvEventId.MPV_EVENT_PLAYBACK_RESTART -> {
+                MPVEvent.PLAYBACK_RESTART -> {
                     sendEvent(PlayerEvent.PlaybackRestart)
                     sendEvent(PlayerEvent.Paused(player.paused))
                 }
 
-                MPVLib.mpvEventId.MPV_EVENT_SHUTDOWN -> {
+                MPVEvent.SHUTDOWN -> {
                     sendEvent(PlayerEvent.Shutdown)
                     destroy()
                     lifecycle.currentState = Lifecycle.State.DESTROYED
                 }
             }
         }
-
-        override fun efEvent(err: String?) {
-        }
     }
 
     private fun destroy() {
-        savePosition(player.path)
+        if (!destroyed.compareAndSet(expectedValue = false, newValue = true)) return
+        // Detach first: mpv keeps emitting events (SHUTDOWN, END_FILE...) while it tears down, and
+        // dispatching those into a half-destroyed coordinator re-entered destroy() before.
+        player.mpv.removeEventListener(mpvObserver)
+        // Let the final position write finish before killing the scope it runs in.
+        savePosition(player.path).invokeOnCompletion { scope.cancel() }
         player.destroy()
-        MPVLib.removeObserver(mpvObserver)
         removeAllObserver()
     }
 
@@ -202,17 +215,17 @@ class PlayerCoordinator : LifecycleOwner {
         fun onEvent(event: PlayerEvent)
     }
 
-    fun addObserver(observer: Observer) = observers.add(observer)
-    fun removeObserver(observer: Observer) = observers.remove(observer)
-    fun removeAllObserver() = observers.clear()
+    fun addObserver(observer: Observer) = observers.update { it + observer }
+    fun removeObserver(observer: Observer) = observers.update { it - observer }
+    fun removeAllObserver() = observers.store(emptySet())
     private fun sendEvent(event: PlayerEvent) {
-        observers.forEach { it.onEvent(event) }
+        observers.load().forEach { it.onEvent(event) }
     }
 
     fun onCommand(command: PlayerCommand) = player.apply {
         when (command) {
-            is PlayerCommand.Attach -> command.surfaceHolder.addCallback(this)
-            is PlayerCommand.Detach -> command.surface.release()
+            is PlayerCommand.Attach -> onAttach(command.surfaceHolder)
+            is PlayerCommand.Detach -> onDetach(command.surfaceHolder)
             is PlayerCommand.LoadList -> {
                 playlistId =
                     command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
@@ -260,7 +273,11 @@ class PlayerCoordinator : LifecycleOwner {
             PlayerCommand.PlayOrPause -> cyclePause()
             PlayerCommand.PreviousMedia -> playlistPrev()
             PlayerCommand.NextMedia -> playlistNext()
-            is PlayerCommand.SeekTo -> seek(command.position.coerceIn(0L..duration).toInt())
+            // coerceIn(0L..duration) throws when duration is negative (mpv returns garbage before
+            // a file is loaded), so clamp the upper bound first.
+            is PlayerCommand.SeekTo -> seek(
+                command.position.coerceIn(0L, duration.toLong().coerceAtLeast(0L)).toInt()
+            )
             is PlayerCommand.Rotate -> rotate(command.rotate)
             is PlayerCommand.Zoom -> zoom(command.zoom)
             is PlayerCommand.VideoOffset -> offset(
@@ -316,13 +333,14 @@ class PlayerCoordinator : LifecycleOwner {
 
     init {
         lifecycle.currentState = Lifecycle.State.CREATED
+        // A previous coordinator may have destroyed mpv (player window closed, service stopped).
+        // Bring it back up before wiring anything to it, otherwise this coordinator would be
+        // talking to a dead handle.
+        player.ensureInitialized()
         addObserver(model)
-        MPVLib.addObserver(mpvObserver)
+        player.mpv.addEventListener(mpvObserver)
         initPlayer()
         lifecycle.currentState = Lifecycle.State.RESUMED
     }
 
-    companion object {
-        private val scope = CoroutineScope(Dispatchers.IO)
-    }
 }

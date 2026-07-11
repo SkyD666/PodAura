@@ -25,3 +25,7 @@ actual fun Modifier.onRightClickIfSupported(
         onClick = onClick,
     )
 }
+
+// The native ComposeWindow's setPointerIcon coerces any non-MacosCursor icon
+// to NSCursor.arrowCursor, so hiding the cursor is not supported here.
+actual fun Modifier.hideCursorIfSupported(hide: Boolean): Modifier = this
