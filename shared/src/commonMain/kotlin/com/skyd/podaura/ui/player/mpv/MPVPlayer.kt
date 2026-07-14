@@ -76,6 +76,7 @@ class MPVPlayer : DefaultEventObserver() {
         copyAssetsForMpv(configDir)
 
         mpv = platformMPV()
+        mpv.initialize()
         mpv.option("config", "yes")
         mpv.option("config-dir", configDir)
         for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir")) {
@@ -87,7 +88,6 @@ class MPVPlayer : DefaultEventObserver() {
         mpv.option("save-position-on-quit", "no")
         // would crash before the surface is attached
         mpv.option("force-window", "no")
-        mpv.option("vo", "null")
         // "no" wouldn't work and "yes" is not intended by the UI
         mpv.option("idle", "yes")
         mpv.setPropertyString("sub-fonts-dir", fontDir)
@@ -116,7 +116,6 @@ class MPVPlayer : DefaultEventObserver() {
             "hwdec",
             if (dataStore.getOrDefault(HardwareDecodePreference)) "auto" else "no"
         )
-        mpv.option("ao", "audiotrack,opensles")
         mpv.option("input-default-bindings", "yes")
         // Limit demuxer cache since the defaults are too high for mobile devices
         mpv.option(

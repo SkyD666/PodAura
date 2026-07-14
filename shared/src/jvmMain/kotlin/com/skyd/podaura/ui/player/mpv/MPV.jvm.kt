@@ -3,6 +3,8 @@
 package com.skyd.podaura.ui.player.mpv
 
 import coil3.Bitmap
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import kotlinx.coroutines.Dispatchers
 import org.openani.mediamp.mpv.MPVHandle
@@ -52,6 +54,13 @@ actual class MPV {
     actual fun initialize() {
         mpvHandle.initialize()
         mpvHandle.setEventListener(defaultEventListener)
+        option("vo", "libmpv")
+
+        if (platform == Platform.macOS_Jvm) {
+            option("ao", "coreaudio")
+        } else if (platform == Platform.Windows) {
+            option("ao", "wasapi")
+        }
     }
 
     actual fun destroy() {

@@ -14,6 +14,9 @@ actual class MPV {
     actual fun initialize() {
         MPVLib.create(get(), dataStore.getOrDefault(MpvConfigDirPreference))
         MPVLib.init()
+        option("vo", "null")
+        option("ao", "audiotrack,opensles")
+        option("gpu-context", "android")
     }
 
     actual fun destroy() {

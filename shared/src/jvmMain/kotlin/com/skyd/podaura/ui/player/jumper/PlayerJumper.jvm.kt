@@ -1,12 +1,14 @@
 package com.skyd.podaura.ui.player.jumper
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.LocalWindow
 import androidx.compose.ui.window.Window
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.skyd.fundation.config.Const
@@ -43,13 +45,15 @@ actual fun rememberPlayerJumper(): PlayerJumper {
             onCloseRequest = { showWindow = false },
             title = "Player"
         ) {
-            PlayerViewRoute(
-                service = playerCoordinator,
-                onBack = { showWindow = false },
-                onSaveScreenshot = {
+            CompositionLocalProvider(LocalWindow provides window) {
+                PlayerViewRoute(
+                    service = playerCoordinator,
+                    onBack = { showWindow = false },
+                    onSaveScreenshot = {
 
-                },
-            )
+                    },
+                )
+            }
         }
     }
 
