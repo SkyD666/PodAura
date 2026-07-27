@@ -79,7 +79,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
-        /*internal*/ fun PlayerController(
+internal fun PlayerController(
     enabled: () -> Boolean,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
@@ -133,11 +133,11 @@ import kotlin.time.Duration.Companion.milliseconds
 
     var showBrightnessPreview by remember { mutableStateOf(false) }
     var brightnessValue by remember { mutableFloatStateOf(0f) }
-    var brightnessRange by remember { mutableStateOf(0f .. 0f) }
+    var brightnessRange by remember { mutableStateOf(0f..0f) }
 
     var showVolumePreview by remember { mutableStateOf(false) }
     var volumeValue by remember { mutableFloatStateOf(0f) }
-    var volumeRange by remember { mutableStateOf(0f .. 0f) }
+    var volumeRange by remember { mutableStateOf(0f..0f) }
 
     var showForwardRipple by remember { mutableStateOf(false) }
     var forwardRippleStartControllerOffset by remember { mutableStateOf(Offset.Zero) }
@@ -377,7 +377,9 @@ private fun AutoHiddenBox(
                     onExitFullscreen = onExitFullscreen,
                 )
 
-                if (PlayerShowScreenshotButtonPreference.current) {
+                if (platform == Platform.Android &&
+                    PlayerShowScreenshotButtonPreference.current
+                ) {
                     Screenshot(
                         modifier = Modifier
                             .constrainAs(screenshot) {

@@ -290,6 +290,11 @@ buildkonfig {
             name = "versionForDesktop",
             value = findProperty("versionForDesktop")!!.toString()
         )
+        buildConfigField(
+            type = FieldSpec.Type.STRING,
+            name = "mediampVersion",
+            value = libs.versions.mediamp.get()
+        )
     }
 }
 

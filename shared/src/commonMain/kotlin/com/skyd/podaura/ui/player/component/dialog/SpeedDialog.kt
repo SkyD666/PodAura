@@ -29,7 +29,7 @@ import podaura.shared.generated.resources.reset
 
 
 @Composable
-        /*internal*/ fun SpeedDialog(
+internal fun SpeedDialog(
     onDismissRequest: () -> Unit,
     playState: () -> PlayState,
     speedDialogState: () -> SpeedDialogState,

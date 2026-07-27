@@ -51,6 +51,8 @@ import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.compone.component.menu.CheckableListMenu
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
@@ -166,14 +168,16 @@ fun PlayerConfigScreen(
                         onClick = { expandDoubleTapMenu = true },
                     )
                 }
-                item {
-                    SwitchSettingsItem(
-                        imageVector = Icons.Outlined.PictureInPictureAlt,
-                        text = stringResource(Res.string.player_config_screen_auto_pip),
-                        description = stringResource(Res.string.player_config_screen_auto_pip_description),
-                        checked = PlayerAutoPipPreference.current,
-                        onCheckedChange = { PlayerAutoPipPreference.put(scope, it) }
-                    )
+                if (platform == Platform.Android) {
+                    item {
+                        SwitchSettingsItem(
+                            imageVector = Icons.Outlined.PictureInPictureAlt,
+                            text = stringResource(Res.string.player_config_screen_auto_pip),
+                            description = stringResource(Res.string.player_config_screen_auto_pip_description),
+                            checked = PlayerAutoPipPreference.current,
+                            onCheckedChange = { PlayerAutoPipPreference.put(scope, it) }
+                        )
+                    }
                 }
                 item {
                     BaseSettingsItem(
@@ -193,14 +197,16 @@ fun PlayerConfigScreen(
                 }
             }
             group(text = { getString(Res.string.player_config_screen_appearance_category) }) {
-                item {
-                    SwitchSettingsItem(
-                        imageVector = Icons.Outlined.PhotoCamera,
-                        text = stringResource(Res.string.player_config_screen_show_screenshot_button),
-                        description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
-                        checked = PlayerShowScreenshotButtonPreference.current,
-                        onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
-                    )
+                if (platform == Platform.Android) {
+                    item {
+                        SwitchSettingsItem(
+                            imageVector = Icons.Outlined.PhotoCamera,
+                            text = stringResource(Res.string.player_config_screen_show_screenshot_button),
+                            description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
+                            checked = PlayerShowScreenshotButtonPreference.current,
+                            onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
+                        )
+                    }
                 }
                 item {
                     SwitchSettingsItem(
@@ -338,7 +344,7 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 }
 
 @Composable
-        /*internal*/ fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
+internal fun ReplaySecondsDialog(visible: () -> Boolean, onDismissRequest: () -> Unit) {
     if (visible()) {
         val scope = rememberCoroutineScope()
         SecondsDialog(
@@ -355,7 +361,7 @@ private fun SeekOptionMenu(expanded: Boolean, onDismissRequest: () -> Unit) {
 
 
 @Composable
-        /*internal*/ fun ForwardSecondsDialog(
+internal fun ForwardSecondsDialog(
     visible: () -> Boolean,
     onDismissRequest: () -> Unit
 ) {

@@ -34,7 +34,7 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 
 @Composable
-/*internal*/ fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
+internal fun PipListenerPreAPI12(shouldEnterPipMode: Boolean) {
     val currentShouldEnterPipMode by rememberUpdatedState(newValue = shouldEnterPipMode)
     // API 31+ enters PiP automatically via setAutoEnterEnabled, so this listener is only needed
     // on O..R. Below O there is no PiP at all -- the old code logged "unsupported" for API 31+
@@ -68,7 +68,7 @@ private class BoundsHolder {
 }
 
 @Composable
-/*internal*/ fun Modifier.pipParams(
+internal fun Modifier.pipParams(
     autoEnterPipMode: Boolean,
     isVideo: Boolean,
     playState: PlayState,
@@ -137,7 +137,7 @@ private fun Modifier.pipParamsApi26(
 }
 
 @Composable
-/*internal*/ fun rememberIsInPipMode(): Boolean {
+internal fun rememberIsInPipMode(): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
     val activity = LocalActivity.current as? ComponentActivity ?: return false
     var pipMode by remember(activity) { mutableStateOf(activity.isInPictureInPictureMode) }

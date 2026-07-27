@@ -98,13 +98,15 @@ class MPVPlayer : DefaultEventObserver() {
         copyAssetsForMpv(configDir)
 
         mpv = platformMPV()
-        mpv.initialize()
         mpv.option("config", "yes")
         mpv.option("config-dir", configDir)
         for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir")) {
             mpv.option(opt, cacheDir)
         }
         initOptions(vo)
+        // Options above include initialization-only settings (notably config/config-dir).
+        // Keep native mpv initialization after them on every platform.
+        mpv.initialize()
         /* Hardcoded options: */
         // we need to call write-watch-later manually
         mpv.option("save-position-on-quit", "no")
@@ -133,7 +135,6 @@ class MPVPlayer : DefaultEventObserver() {
         mpv.initOptionsPlatform(logger)
         mpv.option("video-sync", "audio")
 
-        mpv.option("opengl-es", "yes")
         mpv.option(
             "hwdec",
             if (dataStore.getOrDefault(HardwareDecodePreference)) "auto" else "no"

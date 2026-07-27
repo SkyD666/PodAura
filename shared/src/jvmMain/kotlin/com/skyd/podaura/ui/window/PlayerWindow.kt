@@ -15,6 +15,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
+import com.skyd.podaura.BuildKonfig
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_CACHE_DIR
 import com.skyd.fundation.di.inject
@@ -33,6 +34,8 @@ import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import kotlinx.coroutines.flow.filter
 import org.openani.mediamp.mpv.MpvMediampPlayer
+import java.io.File
+import java.nio.file.Files
 
 // Nullable instead of `lateinit`: a composition could render the window before
 // openPlayerWindow() had ever constructed the coordinator, and every read here would
@@ -59,8 +62,15 @@ private val playerWindowSize = DpSize(400.dp, 780.dp)
 private var bringToFrontTick by mutableStateOf(0)
 
 internal fun openPlayerWindow(mode: PlayDataMode) {
+    // NativeRuntimeLoader treats an existing wrapper as a complete, valid runtime and does not
+    // overwrite the other libraries. Keep each mediamp version in its own directory so an
+    // upgrade cannot combine a new JVM/JNI layer with stale libmpv/FFmpeg binaries.
+    val runtimeRoot = File(Const.MPV_CACHE_DIR, "Runtime")
+    val runtimeDir = File(runtimeRoot, BuildKonfig.mediampVersion)
+    removeStaleMpvRuntimes(runtimeRoot, runtimeDir)
+    removeLegacyMpvRuntimeFiles(runtimeRoot.parentFile)
     MpvMediampPlayer.prepareLibraries(
-        path = Const.MPV_CACHE_DIR,
+        path = runtimeDir.path,
         extractRuntimeLibrary = true
     )
     if (playerCoordinator == null) {
@@ -69,6 +79,38 @@ internal fun openPlayerWindow(mode: PlayDataMode) {
     playerViewModel.handlePlayDataMode(mode)
     showPlayerWindow = true
     bringToFrontTick++
+}
+
+private fun removeStaleMpvRuntimes(runtimeRoot: File, currentRuntimeDir: File) {
+    runtimeRoot.listFiles()
+        ?.filter { it.name != currentRuntimeDir.name }
+        ?.forEach { staleRuntime ->
+            // Do not follow a symlink placed in the cache directory: delete the link itself,
+            // never files outside Runtime.
+            if (Files.isSymbolicLink(staleRuntime.toPath())) {
+                runCatching { Files.deleteIfExists(staleRuntime.toPath()) }
+            } else {
+                staleRuntime.deleteRecursively()
+            }
+        }
+}
+
+private fun removeLegacyMpvRuntimeFiles(cacheRoot: File) {
+    // Older PodAura versions extracted the runtime directly into Mpv/Cache. Remove only native
+    // library files at that level; shader/media caches and subdirectories are left untouched.
+    cacheRoot.listFiles()
+        ?.filter { it.isFile || Files.isSymbolicLink(it.toPath()) }
+        ?.filter {
+            val name = it.name.lowercase()
+            name.endsWith(".dylib") || name.endsWith(".dll") || ".so" in name
+        }
+        ?.forEach { legacyRuntime ->
+            if (Files.isSymbolicLink(legacyRuntime.toPath())) {
+                runCatching { Files.deleteIfExists(legacyRuntime.toPath()) }
+            } else {
+                legacyRuntime.delete()
+            }
+        }
 }
 
 @Composable

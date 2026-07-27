@@ -10,7 +10,7 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeIconToggleButton
 
 @Composable
-/*internal*/ fun ControllerIconButton(
+internal fun ControllerIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -27,7 +27,7 @@ import com.skyd.compone.component.ComponeIconToggleButton
 }
 
 @Composable
-/*internal*/ fun ControllerIconToggleButton(
+internal fun ControllerIconToggleButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     checked: Boolean,

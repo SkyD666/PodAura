@@ -43,6 +43,7 @@ actual fun MPV.initOptionsPlatform(logger: Logger) {
     logger.v("Display ${disp.displayId} reports FPS of $refreshRate")
     option("display-fps-override", refreshRate.toString())
     option("gpu-context", "android")
+    option("opengl-es", "yes")
 }
 
 actual fun copyAssetsForMpv(configDir: String) {

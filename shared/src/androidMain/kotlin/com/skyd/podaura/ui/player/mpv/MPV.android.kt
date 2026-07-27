@@ -3,9 +3,6 @@ package com.skyd.podaura.ui.player.mpv
 import co.touchlab.kermit.Logger
 import coil3.Bitmap
 import com.skyd.fundation.di.get
-import com.skyd.podaura.ext.getOrDefault
-import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import `is`.xyz.mpv.MPVLib
 import java.util.concurrent.ConcurrentHashMap
@@ -13,16 +10,21 @@ import java.util.concurrent.ConcurrentHashMap
 actual class MPV {
     private val logger = Logger.withTag("MPV")
 
+    init {
+        // MPVLib.create only allocates the native handle. The second argument is an mpv
+        // log level, not a config path; configuration is supplied through options before init().
+        MPVLib.create(get(), "v")
+    }
+
     // Listeners are registered/unregistered from the UI thread while mpv dispatches on its own
     // thread, so this map must be concurrent.
     private val eventListeners = ConcurrentHashMap<EventListener, MPVLib.EventObserver>()
 
     actual fun initialize() {
-        MPVLib.create(get(), dataStore.getOrDefault(MpvConfigDirPreference))
-        MPVLib.init()
         option("vo", "null")
         option("ao", "audiotrack,opensles")
         option("gpu-context", "android")
+        MPVLib.init()
     }
 
     actual fun destroy() {

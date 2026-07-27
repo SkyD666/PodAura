@@ -6,16 +6,16 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.mpv.MPVPlayer
+import com.skyd.podaura.ui.player.mpv.MPVSurface
 import com.skyd.podaura.ui.player.service.PlayerState
-import org.openani.mediamp.mpv.compose.MpvMediampPlayerSurface
 
 @Composable
 actual fun PlatformPlayerView(
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit
 ) {
-    MpvMediampPlayerSurface(
-        player = MPVPlayer.instance.mpv.player,
+    MPVSurface(
+        player = MPVPlayer.instance.mpv,
         modifier = modifier,
     )
 }

@@ -20,7 +20,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 
-/*internal*/ fun Uri.resolveUri(context: Context): String? {
+internal fun Uri.resolveUri(context: Context): String? {
     var filepath = when (scheme) {
         "file" -> path
         "content" -> openContentFd(context)
