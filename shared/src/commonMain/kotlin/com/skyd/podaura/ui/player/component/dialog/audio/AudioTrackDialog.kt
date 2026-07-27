@@ -36,7 +36,7 @@ import podaura.shared.generated.resources.settings
 
 
 @Composable
-/*internal*/ fun AudioTrackDialog(
+internal fun AudioTrackDialog(
     onDismissRequest: () -> Unit,
     playState: () -> PlayState,
     audioTrackDialogState: () -> AudioTrackDialogState,

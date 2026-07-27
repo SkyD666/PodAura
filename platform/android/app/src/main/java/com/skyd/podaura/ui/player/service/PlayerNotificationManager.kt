@@ -12,6 +12,7 @@ import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.PendingIntentCompat
@@ -299,10 +300,10 @@ class PlayerNotificationManager(
         if (thumbnailAny is String) {
             lastThumbnail = thumbnailAny
             withContext(Dispatchers.IO) { createThumbnail(thumbnailAny) }
-                ?: mediaThumbnail?.asAndroidBitmap()
+                ?: mediaThumbnail?.asImageBitmap()?.asAndroidBitmap()
         } else {
             lastThumbnail = thumbnailAny
-            mediaThumbnail?.asAndroidBitmap()
+            mediaThumbnail?.asImageBitmap()?.asAndroidBitmap()
         }
     }
 

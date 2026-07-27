@@ -18,6 +18,7 @@ import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.component.frame.WindowFrame
 import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.window.CrashWindow
+import com.skyd.podaura.ui.window.PlayerWindow
 import com.skyd.podaura.util.CrashHandler
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -59,6 +60,8 @@ fun main() {
                     )
                 }
             }
+
+            PlayerWindow(mainWindowState = windowState)
         } else {
             CrashWindow(
                 onCloseRequest = ::exitApplication,

@@ -36,7 +36,7 @@ import podaura.shared.generated.resources.settings
 
 
 @Composable
-/*internal*/ fun SubtitleTrackDialog(
+internal fun SubtitleTrackDialog(
     onDismissRequest: () -> Unit,
     playState: () -> PlayState,
     subtitleTrackDialogState: () -> SubtitleTrackDialogState,

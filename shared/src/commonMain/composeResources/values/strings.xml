@@ -498,6 +498,11 @@
     <string name="calendar_screen_name">Calendar</string>
     <string name="horizontal_scroll_control_scroll_forward">Scroll forward</string>
     <string name="horizontal_scroll_control_scroll_backward">Scroll backward</string>
+    <string name="pref_video_interpolation_sync_default" translatable="false">audio</string>
+    <string name="track_off">Off</string>
+    <string name="ui_track">#%d</string>
+    <string name="ui_track_text">#%1$d: %2$s</string>
+    <string name="ui_track_title_lang">#%1$d: %2$s (%3$s)</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>

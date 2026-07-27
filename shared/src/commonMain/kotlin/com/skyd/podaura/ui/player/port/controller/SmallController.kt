@@ -33,7 +33,7 @@ import podaura.shared.generated.resources.shuffle_playlist
 
 
 @Composable
-/*internal*/ fun SmallController(
+internal fun SmallController(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,

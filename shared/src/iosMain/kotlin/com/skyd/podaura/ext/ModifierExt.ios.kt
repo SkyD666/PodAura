@@ -8,3 +8,5 @@ actual fun Modifier.onRightClickIfSupported(
     enabled: Boolean,
     onClick: () -> Unit
 ): Modifier = this
+
+actual fun Modifier.hideCursorIfSupported(hide: Boolean): Modifier = this

@@ -11,7 +11,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.util.fastAll
+import com.skyd.fundation.util.isJvm
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.detectDoubleFingerTransformGestures
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
 import com.skyd.podaura.ui.component.rememberAudioController
@@ -94,8 +100,13 @@ internal fun Modifier.detectPressGestures(
                 }
             },
             onTap = {
-                cancelAutoHideController()
-                onShowControllerChanged(!showController())
+                if (platform.isJvm) {
+                    restartAutoHideController()
+                    playStateCallback.onPlayOrPause()
+                } else {
+                    cancelAutoHideController()
+                    onShowControllerChanged(!showController())
+                }
             }
         )
     }
@@ -241,5 +252,36 @@ internal fun Modifier.detectControllerGestures(
                 }
             }
         )
+    }
+}
+
+@Composable
+internal fun Modifier.detectMouseMoveGestures(
+    onMousePressChanged: (Boolean) -> Unit,
+    onMouseMove: () -> Unit,
+): Modifier {
+    if (!platform.isJvm) return this
+    val currentOnMousePressChanged by rememberUpdatedState(onMousePressChanged)
+    val currentOnMouseMove by rememberUpdatedState(onMouseMove)
+    return pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                // PointerEventPass.Initial: observe without consuming, so the
+                // tap/drag/transform detectors downstream are unaffected
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (!event.changes.fastAll { it.type == PointerType.Mouse }) continue
+                when (event.type) {
+                    PointerEventType.Press -> currentOnMousePressChanged(true)
+                    // Released only when no button is still held (multi-button chords)
+                    PointerEventType.Release ->
+                        if (event.changes.fastAll { !it.pressed }) {
+                            currentOnMousePressChanged(false)
+                        }
+                    // !pressed: moves during drags must not restart the auto-hide timer
+                    PointerEventType.Move, PointerEventType.Enter ->
+                        if (event.changes.fastAll { !it.pressed }) currentOnMouseMove()
+                }
+            }
+        }
     }
 }

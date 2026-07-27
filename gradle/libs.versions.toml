@@ -28,6 +28,7 @@ keight = "0.0.06"
 okio = "3.17.0"
 jna = "5.19.1"
 tracing-perfetto = "1.0.1"
+mediamp = "0.2.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
@@ -113,12 +114,15 @@ ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 
 mpv-lib = { module = "com.github.aniyomiorg:aniyomi-mpv-lib", version = "1.18.n" }
 ffmpeg-kit = { module = "com.github.jmir1:ffmpeg-kit", version = "1.18" }
+mediamp = { module = "org.openani.mediamp:mediamp-mpv", version.ref = "mediamp" }
+mediamp-runtime = { module = "org.openani.mediamp:mediamp-mpv-runtime", version.ref = "mediamp" }
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
+zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.5.0" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0-alpha07" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.1.0" }
