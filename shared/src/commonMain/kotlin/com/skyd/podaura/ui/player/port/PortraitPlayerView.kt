@@ -43,6 +43,7 @@ import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.isLandscape
+import com.skyd.podaura.ui.component.navigation.rememberMainPageOpener
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
@@ -51,7 +52,9 @@ import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.SmallController
+import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
+import com.skyd.podaura.ui.screen.read.ReadRoute
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.feed_screen_name
@@ -283,7 +286,7 @@ private fun Menu(
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     media: PlaylistMediaWithArticleBean?,
 ) {
-//    val context = LocalContext.current
+    val mainPageOpener = rememberMainPageOpener()
 
     DropdownMenuPopup(
         expanded = expanded,
@@ -324,23 +327,11 @@ private fun Menu(
             ),
             listOf(
                 {
-//                    val intent = Intent(
-//                        Intent.ACTION_VIEW,
-//                        ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink().toUri(),
-//                        context,
-//                        MainActivity::class.java
-//                    )
-//                    context.startActivity(intent)
+                    mainPageOpener.open(ArticleRoute(feedUrls = listOf(feedUrl!!)).toDeeplink())
                     onDismissRequest()
                 },
                 {
-//                    val intent = Intent(
-//                        Intent.ACTION_VIEW,
-//                        ReadRoute(articleId = articleId!!).toDeeplink().toUri(),
-//                        context,
-//                        MainActivity::class.java
-//                    )
-//                    context.startActivity(intent)
+                    mainPageOpener.open(ReadRoute(articleId = articleId!!).toDeeplink())
                     onDismissRequest()
                 },
             ),

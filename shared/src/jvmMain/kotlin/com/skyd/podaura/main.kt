@@ -1,6 +1,7 @@
 package com.skyd.podaura
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,8 @@ import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.component.frame.WindowFrame
+import com.skyd.podaura.ui.component.navigation.registerMainWindow
+import com.skyd.podaura.ui.component.navigation.unregisterMainWindow
 import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.ui.window.PlayerWindow
@@ -50,6 +53,10 @@ fun main() {
                 state = windowState,
                 title = stringResource(Res.string.app_name),
             ) {
+                DisposableEffect(window, windowState) {
+                    registerMainWindow(window, windowState)
+                    onDispose { unregisterMainWindow(window) }
+                }
                 CompositionLocalProvider(
                     LocalWindowController provides windowController,
                 ) {

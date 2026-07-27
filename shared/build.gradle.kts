@@ -200,6 +200,13 @@ compose.resources {
     publicResClass = true
 }
 
+// mediamp 0.2.1 accidentally publishes Compose's JUnit UI test stack as a runtime
+// dependency. Besides bloating distributions, Truth leaves optional ASM references
+// unresolved during desktop ProGuard.
+configurations.matching { it.name.startsWith("jvm", ignoreCase = true) }.configureEach {
+    exclude(group = "org.jetbrains.compose.ui", module = "ui-test-junit4")
+}
+
 compose.desktop {
     application {
         mainClass = "com.skyd.podaura.MainKt"
