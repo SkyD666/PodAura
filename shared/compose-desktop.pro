@@ -36,6 +36,36 @@
 # Compose
 -keep, allowshrinking, allowobfuscation class androidx.compose.ui.text.ParagraphKt { <methods>; }
 
+# Mediamp
+# Kotlin -> JNI: exported symbol names contain the facade and method names.
+-keepclasseswithmembernames,includedescriptorclasses class org.openani.mediamp.mpv.MPVHandleKt {
+    native <methods>;
+}
+-keepclasseswithmembernames,includedescriptorclasses class org.openani.mediamp.mpv.MPVHandleDesktop {
+    native <methods>;
+}
+# JNI -> Kotlin: native code resolves these classes, methods, and descriptors by name.
+-keep class org.openani.mediamp.mpv.EventListener {
+    void onPropertyChange(java.lang.String);
+    void onPropertyChange(java.lang.String, boolean);
+    void onPropertyChange(java.lang.String, long);
+    void onPropertyChange(java.lang.String, double);
+    void onPropertyChange(java.lang.String, java.lang.String);
+    void onEvent(int);
+    void onEndFile(int, int);
+}
+-keep class org.openani.mediamp.mpv.RenderUpdateListener {
+    void onRenderUpdate();
+}
+-keep class org.openani.mediamp.mpv.MPVLogKt {
+    static void onNativeLog(long, int, java.lang.String, java.lang.String);
+}
+-keep class org.openani.mediamp.io.SeekableInput {
+    int read(byte[], int, int);
+    void seekTo(long);
+    void close();
+}
+
 # Windows Window Frame
 -keepnames class androidx.compose.foundation.HoverableNode
 -keepnames class androidx.compose.foundation.gestures.ScrollableNode

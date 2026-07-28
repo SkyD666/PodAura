@@ -6,16 +6,16 @@ import coil3.Bitmap
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.PlatformSurfaceHolder
+import org.jetbrains.skia.DirectContext
+import org.jetbrains.skia.Image
+import org.jetbrains.skiko.SkiaLayer
 import org.openani.mediamp.mpv.MPVHandle
+import org.openani.mediamp.mpv.RenderUpdateListener
 import org.openani.mediamp.mpv.internal.MpvRenderContextHost
 import org.openani.mediamp.mpv.internal.MpvRenderContextLifecycle
 import org.openani.mediamp.mpv.internal.MpvSurfaceRing
 import org.openani.mediamp.mpv.internal.MpvSurfaceRingBackend
 import org.openani.mediamp.mpv.internal.currentSurfaceRingBackend
-import org.openani.mediamp.mpv.utils.SkiaRenderDeviceInterop
-import org.jetbrains.skia.DirectContext
-import org.jetbrains.skia.Image
-import org.jetbrains.skiko.SkiaLayer
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -82,12 +82,17 @@ actual class MPV {
         option("volume-max", "200")
         option("vd-lavc-film-grain", "cpu")
 
-        if (platform == Platform.macOS_Jvm) {
-            option("ao", "coreaudio")
-        } else if (platform == Platform.Windows) {
-            option("ao", "wasapi")
-        } else if (platform == Platform.Linux) {
-            option("ao", "pulse,alsa")
+        when (platform) {
+            Platform.macOS_Jvm -> {
+                option("ao", "coreaudio")
+            }
+            Platform.Windows -> {
+                option("ao", "wasapi")
+            }
+            Platform.Linux -> {
+                option("ao", "pulse,alsa")
+            }
+            else -> {}
         }
         // Match mediamp's initialization sequence: install its event bridge before
         // mpv_initialize(), then apply the post-init lifecycle options before creating the
@@ -229,12 +234,11 @@ actual class MPV {
 
     internal fun setRenderUpdateListener(listener: (() -> Unit)?): Boolean {
         if (closed.get()) return false
-        val nativeListener: org.openani.mediamp.mpv.RenderUpdateListener? =
-            listener?.let { callback ->
-                object : org.openani.mediamp.mpv.RenderUpdateListener {
-                    override fun onRenderUpdate() = callback()
-                }
+        val nativeListener: RenderUpdateListener? = listener?.let { callback ->
+            object : RenderUpdateListener {
+                override fun onRenderUpdate() = callback()
             }
+        }
         return mpvHandle.setRenderUpdateListener(nativeListener)
     }
 

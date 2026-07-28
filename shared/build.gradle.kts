@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 
@@ -152,7 +153,26 @@ kotlin {
             implementation(libs.java.jna.platform)
 
             implementation(libs.mediamp)
-            implementation(libs.mediamp.runtime)
+
+            val currentArch = DefaultNativePlatform.getCurrentArchitecture()
+            val currentOs = DefaultNativePlatform.getCurrentOperatingSystem()
+            when {
+                currentOs.isWindows && currentArch.isAmd64 -> {
+                    runtimeOnly(libs.mediamp.runtime.windows.x64)
+                }
+                currentOs.isWindows && currentArch.isArm64 -> {
+                    runtimeOnly(libs.mediamp.runtime.windows.arm64)
+                }
+                currentOs.isMacOsX && currentArch.isAmd64 -> {
+                    runtimeOnly(libs.mediamp.runtime.macos.x64)
+                }
+                currentOs.isMacOsX && currentArch.isArm64 -> {
+                    runtimeOnly(libs.mediamp.runtime.macos.arm64)
+                }
+                currentOs.isLinux && currentArch.isAmd64 -> {
+                    runtimeOnly(libs.mediamp.runtime.linux.x64)
+                }
+            }
         }
     }
 

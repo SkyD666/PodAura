@@ -35,7 +35,7 @@ internal fun JSTemporalWiggle(
                 wiggle = wiggle,
                 prevWiggle = prevWiggle
             )
-        }?.toJs(this)
+        }.toJs(this)
 
         onTime(time, property::raw).toJs(this)
     }
@@ -65,7 +65,7 @@ internal fun JSWiggle(
                 lastChange = lastChange,
                 wiggle = wiggle,
                 prevWiggle = prevWiggle
-            )?.toJs(this)
+            ).toJs(this)
         }
     }
 }
