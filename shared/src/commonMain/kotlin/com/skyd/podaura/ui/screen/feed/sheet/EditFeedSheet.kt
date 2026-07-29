@@ -47,6 +47,7 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.ToggleOff
 import androidx.compose.material.icons.outlined.Workspaces
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
@@ -97,6 +98,7 @@ import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
@@ -115,6 +117,7 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
+import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
@@ -151,6 +154,7 @@ import podaura.shared.generated.resources.feed_screen_sort_xml_articles_on_updat
 import podaura.shared.generated.resources.feed_screen_sort_xml_articles_on_update_tip
 import podaura.shared.generated.resources.feed_screen_unmute_all_feeds
 import podaura.shared.generated.resources.feed_screen_unmute_feed
+import podaura.shared.generated.resources.image_preview_description
 import podaura.shared.generated.resources.item_selected
 import podaura.shared.generated.resources.open_link_in_browser
 import podaura.shared.generated.resources.read_all
@@ -467,6 +471,7 @@ private fun InfoArea(
     onMessage: (String) -> Unit,
 ) {
     val feed = feedView.feed
+    val globalNavBackStack = LocalGlobalNavBackStack.current
     Row {
         val pickCustomIconLauncher = rememberFilePickerLauncher(
             type = FileKitType.Image
@@ -477,6 +482,7 @@ private fun InfoArea(
         }
         var openEditIconDialog by rememberSaveable { mutableStateOf(false) }
         var openNetworkIconDialog by rememberSaveable { mutableStateOf(false) }
+        val previewImage = feed.customIcon.orEmpty().ifBlank { feed.icon.orEmpty() }
 
         Box(
             modifier = Modifier
@@ -530,6 +536,12 @@ private fun InfoArea(
         if (openEditIconDialog) {
             EditIconDialog(
                 onDismissRequest = { openEditIconDialog = false },
+                onPreview = if (previewImage.isBlank()) null else {
+                    {
+                        openEditIconDialog = false
+                        globalNavBackStack.add(ImagePreviewRoute(image = previewImage))
+                    }
+                },
                 onLocal = {
                     pickCustomIconLauncher.launch()
                     openEditIconDialog = false
@@ -920,6 +932,7 @@ internal fun GroupArea(
 @Composable
 private fun EditIconDialog(
     onDismissRequest: () -> Unit,
+    onPreview: (() -> Unit)?,
     onLocal: () -> Unit,
     onNetwork: () -> Unit,
     onRemove: () -> Unit,
@@ -930,6 +943,19 @@ private fun EditIconDialog(
         title = { Text(text = stringResource(Res.string.feed_screen_rss_edit_icon)) },
         text = {
             Column {
+                if (onPreview != null) {
+                    ListItem(
+                        modifier = Modifier.clickable(onClick = onPreview),
+                        headlineContent = {
+                            Text(text = stringResource(Res.string.image_preview_description))
+                        },
+                        leadingContent = {
+                            Icon(imageVector = Icons.Outlined.ZoomIn, contentDescription = null)
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    )
+                    HorizontalDivider()
+                }
                 ListItem(
                     modifier = Modifier.clickable(onClick = onLocal),
                     headlineContent = { Text(text = stringResource(Res.string.feed_screen_rss_icon_source_local)) },

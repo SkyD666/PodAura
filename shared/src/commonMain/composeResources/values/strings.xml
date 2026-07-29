@@ -13,6 +13,9 @@
     <string name="info">Info</string>
     <string name="waiting">Waiting…</string>
     <string name="close">Close</string>
+    <string name="retry">Retry</string>
+    <string name="image_preview_description">Image preview</string>
+    <string name="image_preview_load_failed">Unable to load image</string>
     <string name="exit">Exit</string>
     <string name="remove">Remove</string>
     <string name="delete">Delete</string>
@@ -330,6 +333,7 @@
     <string name="player_seek_fast">Fast, but not precise</string>
     <string name="player_seek_exact">Precise, but slow</string>
     <string name="player_config_screen_seek_option">Seek option</string>
+    <string name="read_screen_preview_image">Preview image</string>
     <string name="read_screen_open_image_in_browser">Open image in browser</string>
     <string name="read_screen_download_image">Save to gallery</string>
     <string name="read_screen_download_image_success">Save success</string>

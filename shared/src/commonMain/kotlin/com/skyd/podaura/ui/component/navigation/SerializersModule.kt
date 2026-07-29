@@ -19,6 +19,7 @@ import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
 import com.skyd.podaura.ui.screen.history.search.HistorySearchRoute
+import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
 import com.skyd.podaura.ui.screen.media.MediaRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
@@ -73,6 +74,7 @@ val PodAuraSerializersModule = SerializersModule {
         subclass(BehaviorRoute::class, BehaviorRoute.serializer())
         subclass(AutoDeleteRoute::class, AutoDeleteRoute.serializer())
         subclass(HistoryRoute::class, HistoryRoute.serializer())
+        subclass(ImagePreviewRoute::class, ImagePreviewRoute.serializer())
         subclass(ImportOpmlRoute::class, ImportOpmlRoute.serializer())
         subclass(ImportOpmlDeepLinkRoute::class, ImportOpmlDeepLinkRoute.serializer())
         subclass(ImportExportRoute::class, ImportExportRoute.serializer())

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -71,6 +72,7 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.setText
 import com.skyd.fundation.ext.format
@@ -95,6 +97,7 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
+import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
 import io.ktor.http.Url
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -112,6 +115,7 @@ import podaura.shared.generated.resources.read_screen_download_image
 import podaura.shared.generated.resources.read_screen_name
 import podaura.shared.generated.resources.read_screen_open_article_screen
 import podaura.shared.generated.resources.read_screen_open_image_in_browser
+import podaura.shared.generated.resources.read_screen_preview_image
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
 
@@ -528,6 +532,7 @@ private fun ImageBottomSheet(
     downloadImage: (url: String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
+    val globalNavBackStack = LocalGlobalNavBackStack.current
     AnimatedDismissModalBottomSheet(
         onDismissRequest = onDismissRequest
     ) { animateToDismiss ->
@@ -536,6 +541,14 @@ private fun ImageBottomSheet(
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
         ) {
+            ImageBottomSheetItem(
+                icon = Icons.Outlined.ZoomIn,
+                title = stringResource(Res.string.read_screen_preview_image),
+                onClick = {
+                    onDismissRequest()
+                    globalNavBackStack.add(ImagePreviewRoute(image = imageUrl))
+                }
+            )
             ImageBottomSheetItem(
                 icon = Icons.Outlined.Download,
                 title = stringResource(Res.string.read_screen_download_image),

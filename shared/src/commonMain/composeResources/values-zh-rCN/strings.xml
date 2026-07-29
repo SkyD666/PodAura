@@ -14,6 +14,9 @@
     <string name="info">信息</string>
     <string name="waiting">请稍后…</string>
     <string name="close">关闭</string>
+    <string name="retry">重试</string>
+    <string name="image_preview_description">图片预览</string>
+    <string name="image_preview_load_failed">图片加载失败</string>
     <string name="exit">关闭</string>
     <string name="remove">删除</string>
     <string name="delete">删除</string>
@@ -323,6 +326,7 @@
     <string name="player_seek_fast">快，但不精确</string>
     <string name="player_seek_exact">精确，但慢</string>
     <string name="player_config_screen_seek_option">进度调整选项</string>
+    <string name="read_screen_preview_image">预览图片</string>
     <string name="read_screen_open_image_in_browser">在浏览器中打开图片</string>
     <string name="read_screen_download_image">保存到相册</string>
     <string name="read_screen_download_image_success">保存成功</string>

@@ -13,6 +13,9 @@
     <string name="info">資訊</string>
     <string name="waiting">請稍後…</string>
     <string name="close">關閉</string>
+    <string name="retry">重試</string>
+    <string name="image_preview_description">圖片預覽</string>
+    <string name="image_preview_load_failed">圖片載入失敗</string>
     <string name="exit">關閉</string>
     <string name="remove">刪除</string>
     <string name="delete">刪除</string>
@@ -21,6 +24,7 @@
     <string name="search_screen_hint">搜尋</string>
     <string name="back">返回</string>
     <string name="read_screen_name">詳情</string>
+    <string name="read_screen_preview_image">預覽圖片</string>
     <string name="bottom_sheet_enclosure_title">附件</string>
     <string name="download">下載</string>
     <string name="downloading">下載中…</string>

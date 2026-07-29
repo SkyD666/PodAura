@@ -13,6 +13,9 @@
     <string name="info">Bilgi</string>
     <string name="waiting">Bekleniyor…</string>
     <string name="close">Kapat</string>
+    <string name="retry">Yeniden dene</string>
+    <string name="image_preview_description">Görsel önizleme</string>
+    <string name="image_preview_load_failed">Görsel yüklenemedi</string>
     <string name="exit">Çıkış</string>
     <string name="remove">Kaldır</string>
     <string name="delete">Sil</string>
@@ -305,6 +308,7 @@
     <string name="player_seek_fast">Hızlı, ancak kesin değil</string>
     <string name="player_seek_exact">Kesin, ancak yavaş</string>
     <string name="player_config_screen_seek_option">Arama seçeneği</string>
+    <string name="read_screen_preview_image">Görseli önizle</string>
     <string name="read_screen_open_image_in_browser">Resmi tarayıcıda aç</string>
     <string name="read_screen_download_image">Galeriye kaydet</string>
     <string name="read_screen_download_image_success">Başarıyla kaydedildi</string>

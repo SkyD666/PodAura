@@ -81,6 +81,8 @@ import com.skyd.podaura.ui.screen.history.HistoryRoute
 import com.skyd.podaura.ui.screen.history.HistoryScreen
 import com.skyd.podaura.ui.screen.history.search.HistorySearchRoute
 import com.skyd.podaura.ui.screen.history.search.HistorySearchScreen
+import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
+import com.skyd.podaura.ui.screen.image.ImagePreviewRoute.Companion.ImagePreviewLauncher
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute.Companion.MediaSearchLauncher
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
@@ -255,6 +257,7 @@ private fun MainNavHost() {
             entry<MediaSearchRoute> { MediaSearchLauncher(it) }
             entry<SubMediaRoute> { SubMediaLauncher(it) }
             entry<HistorySearchRoute> { HistorySearchScreen() }
+            entry<ImagePreviewRoute> { ImagePreviewLauncher(it) }
         }
     )
 }

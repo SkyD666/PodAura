@@ -92,7 +92,7 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
-//            implementation(libs.zoomimage)
+            implementation(libs.zoomimage)
 
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)

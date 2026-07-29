@@ -15,6 +15,7 @@ import com.skyd.podaura.ui.screen.feed.sheet.FeedSheetViewModel
 import com.skyd.podaura.ui.screen.filepicker.FilePickerViewModel
 import com.skyd.podaura.ui.screen.history.HistoryViewModel
 import com.skyd.podaura.ui.screen.history.search.HistorySearchViewModel
+import com.skyd.podaura.ui.screen.image.ImagePreviewViewModel
 import com.skyd.podaura.ui.screen.media.MediaViewModel
 import com.skyd.podaura.ui.screen.media.list.MediaListViewModel
 import com.skyd.podaura.ui.screen.media.search.MediaSearchViewModel
@@ -47,6 +48,7 @@ val viewModelModule = module {
     viewModel { FeedSheetViewModel(get(), get()) }
     viewModel { HistoryViewModel(get()) }
     viewModel { HistorySearchViewModel(get()) }
+    viewModel { ImagePreviewViewModel() }
     viewModel { MediaViewModel(get()) }
     viewModel { MediaListViewModel(get()) }
     viewModel { MediaSearchViewModel(get()) }

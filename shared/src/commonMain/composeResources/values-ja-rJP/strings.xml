@@ -13,6 +13,9 @@
     <string name="info">情報</string>
     <string name="waiting">待機中…</string>
     <string name="close">閉じる</string>
+    <string name="retry">再試行</string>
+    <string name="image_preview_description">画像プレビュー</string>
+    <string name="image_preview_load_failed">画像を読み込めませんでした</string>
     <string name="exit">終了</string>
     <string name="remove">削除</string>
     <string name="delete">消去</string>
@@ -311,6 +314,7 @@
     <string name="player_seek_fast">高速 (不正確)</string>
     <string name="player_seek_exact">正確 (低速)</string>
     <string name="player_config_screen_seek_option">シークオプション</string>
+    <string name="read_screen_preview_image">画像をプレビュー</string>
     <string name="read_screen_open_image_in_browser">ブラウザで画像を開く</string>
     <string name="read_screen_download_image">ギャラリーに保存</string>
     <string name="read_screen_download_image_success">保存しました</string>
