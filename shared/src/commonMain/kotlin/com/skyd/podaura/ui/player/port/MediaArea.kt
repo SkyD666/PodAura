@@ -26,7 +26,6 @@ import coil3.request.ImageRequest
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.component.state.PlayState
-import com.skyd.podaura.util.coil.localmedia.LocalMediaFetcher
 
 @Composable
 internal fun MediaArea(
@@ -85,7 +84,6 @@ private fun Thumbnail(modifier: Modifier, thumbnail: Any?) {
                             imageLoadFailed = true
                         }
                     },
-                    components = { add(LocalMediaFetcher.Factory()) },
                 ),
                 contentScale = contentScale,
             )

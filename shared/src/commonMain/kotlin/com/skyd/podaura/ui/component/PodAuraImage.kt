@@ -19,13 +19,23 @@ import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import coil3.util.DebugLogger
 import com.skyd.fundation.di.get
+import com.skyd.podaura.util.coil.localmedia.LocalMedia
+import com.skyd.podaura.util.coil.localmedia.LocalMediaImageLogger
+import com.skyd.podaura.util.coil.localmedia.addLocalMediaComponents
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import org.koin.core.qualifier.named
 
 fun imageRequest(model: Any?, context: PlatformContext) = ImageRequest.Builder(context)
     .diskCachePolicy(CachePolicy.ENABLED)
     .memoryCachePolicy(CachePolicy.ENABLED)
     .data(model)
+    .apply {
+        if (model is LocalMedia) {
+            interceptorCoroutineContext(Dispatchers.IO)
+        }
+    }
     .crossfade(true)
     .build()
 
@@ -64,7 +74,7 @@ fun rememberPodAuraImageLoader(
     return remember {
         context.imageLoaderBuilder(components = components)
             .run { if (listener != null) eventListener(listener) else this }
-            .logger(DebugLogger())
+            .logger(LocalMediaImageLogger(DebugLogger()))
             .build()
     }
 }
@@ -77,5 +87,6 @@ fun PlatformContext.imageLoaderBuilder(
     platformComponents()
     add(SvgDecoder.Factory())
     add(KtorNetworkFetcherFactory(httpClient = get<HttpClient>(named("coil"))))
+    addLocalMediaComponents()
     components()
 }

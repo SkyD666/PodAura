@@ -51,7 +51,6 @@ import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
-import com.skyd.podaura.util.coil.localmedia.LocalMediaFetcher
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.history_screen_local_file
@@ -109,7 +108,6 @@ fun PlaylistMediaItem(
                                 imageLoadError = true
                             }
                         },
-                        components = { add(LocalMediaFetcher.Factory()) },
                     ),
                 )
             }

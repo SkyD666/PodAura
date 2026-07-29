@@ -92,6 +92,7 @@ kotlin {
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
+            implementation(libs.okio)
             implementation(libs.zoomimage)
 
             implementation(libs.xmlutil.core)
@@ -151,6 +152,7 @@ kotlin {
             implementation(libs.ktor.client.apache5)
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
+            implementation(libs.java.jaudiotagger)
 
             implementation(libs.mediamp)
 

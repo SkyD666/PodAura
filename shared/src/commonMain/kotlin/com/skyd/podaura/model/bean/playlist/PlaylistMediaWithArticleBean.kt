@@ -8,7 +8,6 @@ import com.skyd.podaura.model.bean.BaseBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.util.coil.localmedia.LocalMedia
-import kotlinx.io.files.Path
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
 
@@ -38,7 +37,7 @@ data class PlaylistMediaWithArticleBean(
 
     val thumbnailAny: Any?
         get() = article?.getThumbnail()
-            ?: if (playlistMediaBean.url.isLocalFile()) LocalMedia(Path(playlistMediaBean.url)) else null
+            ?: if (playlistMediaBean.url.isLocalFile()) LocalMedia(playlistMediaBean.url) else null
 
     val thumbnail: String?
         get() = article?.getThumbnail()

@@ -29,6 +29,7 @@ okio = "3.18.0"
 jna = "5.19.1"
 tracing-perfetto = "1.0.1"
 mediamp = "0.2.1"
+jaudiotagger = "3.0.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
@@ -139,6 +140,7 @@ okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 java-jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 java-jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
+java-jaudiotagger = { module = "net.jthink:jaudiotagger", version.ref = "jaudiotagger" }
 
 icu4j = { module = "com.ibm.icu:icu4j", version = "78.3" }
 ocpsoft-prettytime = { module = "org.ocpsoft.prettytime:prettytime", version = "5.0.9.Final" }
