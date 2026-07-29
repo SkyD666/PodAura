@@ -1,31 +1,23 @@
 package com.skyd.podaura
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
-import com.skyd.podaura.ui.component.frame.WindowFrame
-import com.skyd.podaura.ui.component.navigation.registerMainWindow
-import com.skyd.podaura.ui.component.navigation.unregisterMainWindow
-import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.window.CrashWindow
-import com.skyd.podaura.ui.window.PlayerWindow
+import com.skyd.podaura.ui.window.DesktopWindowHost
+import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
-import org.jetbrains.compose.resources.stringResource
-import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.app_name
 
 fun main() {
     var crashMessage by mutableStateOf("")
@@ -39,36 +31,32 @@ fun main() {
 
     application {
         if (crashMessage.isBlank()) {
+            val appState = rememberDesktopAppState()
             val windowController = remember {
                 WindowController(onClose = ::exitApplication)
             }
-
-            val windowState = rememberWindowState(
+            val mainWindowState = rememberWindowState(
                 position = WindowPosition.Aligned(alignment = Alignment.Center),
                 size = DpSize(1200.dp, 800.dp),
             )
 
-            Window(
-                onCloseRequest = ::exitApplication,
-                state = windowState,
-                title = stringResource(Res.string.app_name),
-            ) {
-                DisposableEffect(window, windowState) {
-                    registerMainWindow(window, windowState)
-                    onDispose { unregisterMainWindow(window) }
-                }
-                CompositionLocalProvider(
-                    LocalWindowController provides windowController,
-                ) {
-                    WindowFrame(
-                        onCloseRequest = ::exitApplication,
-                        state = windowState,
-                        content = ::AppEntrance
+            // The collector is tied to the normal application lifetime, not to whether the native
+            // player window currently exists. This avoids consuming mediaInfos replay on reopen.
+            LaunchedEffect(appState.playerWindowController) {
+                appState.playerWindowController.collectMediaInfos()
+            }
+
+            appState.windowManager.windows.forEach { entry ->
+                key(entry.id) {
+                    DesktopWindowHost(
+                        entry = entry,
+                        appState = appState,
+                        mainWindowState = mainWindowState,
+                        mainWindowController = windowController,
+                        onExitApplication = ::exitApplication,
                     )
                 }
             }
-
-            PlayerWindow(mainWindowState = windowState)
         } else {
             CrashWindow(
                 onCloseRequest = ::exitApplication,
