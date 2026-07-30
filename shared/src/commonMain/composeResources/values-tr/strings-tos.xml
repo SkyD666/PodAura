@@ -1,0 +1,38 @@
+<resources>
+    <string name="tos">
+1. Koşulların Kabulü
+Bu uygulamayı kullanarak bu koşullara uymayı kabul etmiş olursunuz. Kabul etmiyorsanız uygulamayı kullanmayı hemen bırakın.
+
+2. Açık Kaynak Lisansı
+Uygulamanın kaynak kodu GPL-3.0 lisansı altında yayımlanmıştır. Ayrıntılar için projenin kök dizinindeki LICENSE dosyasına bakın.
+
+3. Kullanıcının Yükümlülükleri
+3.1 Yasal Kullanım
+Bu uygulamayı, yasaklanmış podcast’lere abone olmak veya telif hakkını ihlal eden içerikleri dağıtmak dâhil ancak bunlarla sınırlı olmamak üzere, yasa dışı hiçbir faaliyette kullanamazsınız.
+3.2 İçerikten Doğan Sorumluluk
+Bu uygulama üzerinden abone olduğunuz veya paylaştığınız podcast içeriklerinin üçüncü tarafların haklarını ihlal etmemesini sağlamak sizin sorumluluğunuzdadır.
+3.3 Ağ ve Cihaz
+Uygulamanın kullanımından doğan veri ücretleri, cihaz yıpranması ve diğer tüm masraflar yalnızca size aittir.
+
+4. Sorumluluk Reddi
+4.1 İçerikle İlgili Riskler
+Bu uygulama yalnızca kullanıcıların podcast’lere abone olmasını ve bunları oynatmasını sağlayan işlevler sunar. Herhangi bir podcast verisi içermez ve kullanıcıların eriştiği içeriğin yasallığı veya doğruluğu konusunda sorumluluk kabul etmez.
+4.2 Teknik Sorunlar
+Geliştirici; ağ arızaları, cihaz uyumluluğu sorunları veya yazılım hatalarından kaynaklanan veri kaybı ya da işlev bozukluklarından sorumlu değildir.
+4.3 Üçüncü Taraf Hizmetleri
+Bu uygulama, podcast platformları dâhil ancak bunlarla sınırlı olmamak üzere, üçüncü taraf hizmetlerinden veri alabilir. Bu hizmetlerin içerikleri ve faaliyetleri uygulamadan bağımsızdır.
+
+5. Gizlilik ve Veriler
+5.1 Veri Toplama
+Bu uygulama hiçbir veri toplamaz; kullanıcı verilerinin tamamı cihazda yerel olarak saklanır.
+5.2 Kullanıcı İçeriği
+Podcast’ler ve medya kitaplığı içerikleri dâhil ancak bunlarla sınırlı olmamak üzere, yerel olarak önbelleğe alınan içerikleri yönetmekten ve korumaktan siz sorumlusunuz.
+
+6. Hizmette Değişiklik
+Geliştirici; bakım veya yasal gereklilikler dâhil olmak üzere herhangi bir nedenle, uygulamanın herhangi bir özelliğini dilediği zaman değiştirme, askıya alma ya da sonlandırma hakkını saklı tutar.
+
+7. Diğer Hükümler
+7.1 Koşullardaki Değişiklikler
+Bu koşullar güncellendikten sonra uygulamayı kullanmaya devam etmeniz, güncellenen koşulları kabul ettiğiniz anlamına gelir.
+</string>
+</resources>

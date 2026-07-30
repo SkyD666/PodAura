@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.LocalPlatformContext
-import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
@@ -54,7 +53,11 @@ data class ImagePreviewRoute(val image: String) : NavKey {
     companion object {
         @Composable
         fun ImagePreviewLauncher(route: ImagePreviewRoute) {
-            ImagePreviewScreen(image = route.image)
+            val navBackStack = LocalNavBackStack.current
+            ImagePreviewScreen(
+                image = route.image,
+                onBack = navBackStack::removeLastOrNull,
+            )
         }
     }
 }
@@ -62,10 +65,10 @@ data class ImagePreviewRoute(val image: String) : NavKey {
 @Composable
 fun ImagePreviewScreen(
     image: String,
+    onBack: () -> Unit,
     viewModel: ImagePreviewViewModel = koinViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val navBackStack = LocalNavBackStack.current
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(
         image,
@@ -89,7 +92,7 @@ fun ImagePreviewScreen(
                     scrollBehavior = scrollBehavior,
                     title = { },
                     navigationIcon = {
-                        BackIcon(onClick = navBackStack::removeLastOrNull)
+                        BackIcon(onClick = onBack)
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Black.copy(alpha = 0.45f),
@@ -104,7 +107,7 @@ fun ImagePreviewScreen(
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             key(image, uiState.retryVersion) {
-                CoilZoomAsyncImage(
+                ZoomableAsyncImage(
                     model = imageRequest,
                     contentDescription = stringResource(Res.string.image_preview_description),
                     imageLoader = imageLoader,
@@ -115,11 +118,10 @@ fun ImagePreviewScreen(
                     onSuccess = {
                         dispatch(ImagePreviewIntent.LoadSucceeded)
                     },
-                    onError = {
+                    onError = { throwable ->
                         dispatch(
                             ImagePreviewIntent.LoadFailed(
-                                it.result.throwable.message
-                                    ?: it.result.throwable.toString()
+                                throwable.message ?: throwable.toString()
                             )
                         )
                     },

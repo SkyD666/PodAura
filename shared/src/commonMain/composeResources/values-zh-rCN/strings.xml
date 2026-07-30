@@ -191,6 +191,7 @@
     <string name="appearance_screen_text_field_style">文本框样式</string>
     <string name="crash_screen_crash_log">日志</string>
     <string name="crash_screen_copy_crash_log">复制日志</string>
+    <string name="crash_window_title">崩溃日志</string>
     <string name="feed_screen_all_articles">所有文章</string>
     <string name="download_screen_add_download">新建下载</string>
     <string name="download_screen_add_download_hint">下载链接</string>
@@ -495,6 +496,10 @@
     <string name="calendar_screen_name">日历</string>
     <string name="horizontal_scroll_control_scroll_forward">向前滚动</string>
     <string name="horizontal_scroll_control_scroll_backward">向后滚动</string>
+    <string name="track_off">关闭</string>
+    <string name="ui_track">#%d</string>
+    <string name="ui_track_text">#%1$d: %2$s</string>
+    <string name="ui_track_title_lang">#%1$d: %2$s (%3$s)</string>
     <plurals name="playlist_screen_item_count">
         <item quantity="other">%1$d 项</item>
     </plurals>

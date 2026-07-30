@@ -24,7 +24,7 @@ internal fun DesktopWindowHost(
     mainWindowController: WindowController,
     onExitApplication: () -> Unit,
 ) {
-    when (entry.spec) {
+    when (val spec = entry.spec) {
         DesktopWindowSpec.Main -> MainWindow(
             entry = entry,
             appState = appState,
@@ -35,6 +35,13 @@ internal fun DesktopWindowHost(
 
         DesktopWindowSpec.Player -> PlayerWindow(
             entry = entry,
+            mainWindowState = mainWindowState,
+            appState = appState,
+        )
+
+        is DesktopWindowSpec.ImagePreview -> ImagePreviewWindow(
+            entry = entry,
+            spec = spec,
             mainWindowState = mainWindowState,
             appState = appState,
         )

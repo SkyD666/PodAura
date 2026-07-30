@@ -72,6 +72,64 @@ class DesktopWindowManagerTest {
     }
 
     @Test
+    fun openingSameImageTwiceKeepsOneWindowAndRequestsActivation() {
+        val manager = DesktopWindowManager()
+        val image = "https://example.com/image.png"
+
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(image))
+        val firstActivation = manager.windows
+            .single { it.id == DesktopWindowId.ImagePreview(image) }
+            .activationToken
+
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(image))
+        val imageEntries = manager.windows
+            .filter { it.id == DesktopWindowId.ImagePreview(image) }
+
+        assertEquals(1, imageEntries.size)
+        assertTrue(imageEntries.single().activationToken > firstActivation)
+    }
+
+    @Test
+    fun openingDifferentImagesKeepsBothWindows() {
+        val manager = DesktopWindowManager()
+        val firstImage = "https://example.com/first.png"
+        val secondImage = "https://example.com/second.png"
+
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(firstImage))
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(secondImage))
+
+        assertEquals(
+            listOf(
+                DesktopWindowId.Main,
+                DesktopWindowId.ImagePreview(firstImage),
+                DesktopWindowId.ImagePreview(secondImage),
+            ),
+            manager.windows.map { it.id },
+        )
+    }
+
+    @Test
+    fun closingOneImageWindowDoesNotAffectOtherWindows() {
+        val manager = DesktopWindowManager()
+        val firstImage = "https://example.com/first.png"
+        val secondImage = "https://example.com/second.png"
+        manager.openOrActivate(DesktopWindowSpec.Player)
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(firstImage))
+        manager.openOrActivate(DesktopWindowSpec.ImagePreview(secondImage))
+
+        manager.close(DesktopWindowId.ImagePreview(firstImage))
+
+        assertEquals(
+            listOf(
+                DesktopWindowId.Main,
+                DesktopWindowId.Player,
+                DesktopWindowId.ImagePreview(secondImage),
+            ),
+            manager.windows.map { it.id },
+        )
+    }
+
+    @Test
     fun mainWindowCannotBeRemovedFromManager() {
         val manager = DesktopWindowManager()
 

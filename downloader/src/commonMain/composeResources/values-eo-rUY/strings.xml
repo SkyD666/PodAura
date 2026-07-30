@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="downloading_title">Elŝutante %1$s</string>
+    <string name="download_successful">Elŝuto finiĝis (%1$s)</string>
+    <string name="download_failed">Elŝuto malsukcesis</string>
     <string name="download_paused">Paŭzigita</string>
+    <string name="download_cancelled">Elŝuto nuligita</string>
+    <string name="download_pause">Paŭzigi</string>
+    <string name="download_retry">Reprovi</string>
+    <string name="download_resume">Daŭrigi</string>
+    <string name="download_cancel">Nuligi</string>
 </resources>

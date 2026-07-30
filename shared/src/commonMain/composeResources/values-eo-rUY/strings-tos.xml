@@ -1,0 +1,38 @@
+<resources>
+    <string name="tos">
+1. Akcepto de la kondiĉoj
+Uzante ĉi tiun programon, vi konsentas observi ĉi tiujn kondiĉojn. Se vi ne konsentas, tuj ĉesu uzi ĝin.
+
+2. Malfermitkoda permesilo
+La fontkodo de la programo estas publikigita laŭ la permesilo GPL-3.0. Por detaloj vidu la dosieron LICENSE en la radika dosierujo de la projekto.
+
+3. Devoj de la uzanto
+3.1 Laŭleĝa uzo
+Vi ne rajtas uzi ĉi tiun programon por kontraŭleĝaj agoj, interalie por aboni malpermesitajn podkastojn aŭ disvastigi enhavon, kiu malobservas aliulajn rajtojn.
+3.2 Respondeco pri enhavo
+Podkasta enhavo, kiun vi abonas aŭ kunhavigas per ĉi tiu programo, ne rajtas malobservi la rajtojn de iu ajn alia.
+3.3 Retkonekto kaj aparato
+Vi sola respondecas pri ĉiuj datumkostoj, eluziĝo de la aparato kaj aliaj kostoj kaŭzitaj de la uzo de ĉi tiu programo.
+
+4. Malgarantio
+4.1 Riskoj de enhavo
+Ĉi tiu programo nur ebligas al uzantoj aboni kaj ludi podkastojn. Ĝi mem ne enhavas podkastajn datumojn kaj ne respondecas pri la laŭleĝeco aŭ ĝusteco de la enhavo alirata de uzantoj.
+4.2 Teknikaj problemoj
+La programisto ne respondecas pri datumperdo aŭ misfunkcioj kaŭzitaj de retaj paneoj, problemoj pri aparata kongrueco aŭ programaj eraroj.
+4.3 Eksteraj servoj
+Ĉi tiu programo povas preni datumojn de eksteraj servoj, interalie de podkastaj platformoj. La enhavo kaj agoj de tiuj servoj estas sendependaj de ĉi tiu programo.
+
+5. Privateco kaj datumoj
+5.1 Kolektado de datumoj
+Ĉi tiu programo kolektas neniujn datumojn; ĉiuj datumoj de la uzanto estas konservataj loke.
+5.2 Enhavo de la uzanto
+Vi respondecas pri la administrado kaj sekurigo de loke kaŝmemorigita enhavo, interalie podkastoj kaj la enhavo de la aŭdvida biblioteko.
+
+6. Ŝanĝoj de la servo
+La programisto rezervas la rajton iam ajn ŝanĝi, paŭzigi aŭ ĉesigi ajnan funkcion de la programo, ekzemple pro prizorgado aŭ laŭleĝaj postuloj.
+
+7. Diversaj dispozicioj
+7.1 Ŝanĝoj de la kondiĉoj
+Se vi daŭre uzas la programon post ĝisdatigo de ĉi tiuj kondiĉoj, tio signifas, ke vi akceptas la novajn kondiĉojn.
+</string>
+</resources>

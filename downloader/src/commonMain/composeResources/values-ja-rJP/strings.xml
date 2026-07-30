@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="downloading_title">%1$s をダウンロード中</string>
+    <string name="download_successful">ダウンロード完了（%1$s）</string>
+    <string name="download_failed">ダウンロードに失敗しました</string>
+    <string name="download_cancelled">ダウンロードをキャンセルしました</string>
+    <string name="download_pause">一時停止</string>
     <string name="download_retry">再試行</string>
     <string name="download_resume">再開</string>
     <string name="download_cancel">キャンセル</string>

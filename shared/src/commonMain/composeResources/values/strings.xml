@@ -198,6 +198,7 @@
     <string name="appearance_screen_text_field_style">Text field style</string>
     <string name="crash_screen_crash_log">Log</string>
     <string name="crash_screen_copy_crash_log">Copy log</string>
+    <string name="crash_window_title">Crash log</string>
     <string name="feed_screen_all_articles">All articles</string>
     <string name="download_screen_add_download">Add</string>
     <string name="download_screen_add_download_hint">Download link</string>

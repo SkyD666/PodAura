@@ -72,7 +72,6 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.setText
 import com.skyd.fundation.ext.format
@@ -97,7 +96,7 @@ import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
-import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
+import com.skyd.podaura.ui.screen.image.rememberImagePreviewOpener
 import io.ktor.http.Url
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -532,7 +531,7 @@ private fun ImageBottomSheet(
     downloadImage: (url: String) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
-    val globalNavBackStack = LocalGlobalNavBackStack.current
+    val imagePreviewOpener = rememberImagePreviewOpener()
     AnimatedDismissModalBottomSheet(
         onDismissRequest = onDismissRequest
     ) { animateToDismiss ->
@@ -546,7 +545,7 @@ private fun ImageBottomSheet(
                 title = stringResource(Res.string.read_screen_preview_image),
                 onClick = {
                     onDismissRequest()
-                    globalNavBackStack.add(ImagePreviewRoute(image = imageUrl))
+                    imagePreviewOpener.open(imageUrl)
                 }
             )
             ImageBottomSheetItem(

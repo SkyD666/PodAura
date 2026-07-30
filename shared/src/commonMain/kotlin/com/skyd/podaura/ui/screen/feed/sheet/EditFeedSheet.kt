@@ -98,7 +98,6 @@ import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
@@ -117,7 +116,7 @@ import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
-import com.skyd.podaura.ui.screen.image.ImagePreviewRoute
+import com.skyd.podaura.ui.screen.image.rememberImagePreviewOpener
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
@@ -471,7 +470,7 @@ private fun InfoArea(
     onMessage: (String) -> Unit,
 ) {
     val feed = feedView.feed
-    val globalNavBackStack = LocalGlobalNavBackStack.current
+    val imagePreviewOpener = rememberImagePreviewOpener()
     Row {
         val pickCustomIconLauncher = rememberFilePickerLauncher(
             type = FileKitType.Image
@@ -539,7 +538,7 @@ private fun InfoArea(
                 onPreview = if (previewImage.isBlank()) null else {
                     {
                         openEditIconDialog = false
-                        globalNavBackStack.add(ImagePreviewRoute(image = previewImage))
+                        imagePreviewOpener.open(previewImage)
                     }
                 },
                 onLocal = {

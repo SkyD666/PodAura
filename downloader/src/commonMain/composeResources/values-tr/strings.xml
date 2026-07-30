@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="downloading_title">%1$s indiriliyor</string>
+    <string name="download_successful">İndirme tamamlandı (%1$s)</string>
+    <string name="download_failed">İndirme başarısız</string>
     <string name="download_paused">Duraklatıldı</string>
+    <string name="download_cancelled">İndirme iptal edildi</string>
+    <string name="download_pause">Duraklat</string>
     <string name="download_retry">Yeniden Dene</string>
+    <string name="download_resume">Devam et</string>
+    <string name="download_cancel">İptal et</string>
 </resources>

@@ -15,6 +15,7 @@ import com.skyd.podaura.ui.player.jumper.PlayDataMode
 internal sealed interface DesktopWindowId {
     data object Main : DesktopWindowId
     data object Player : DesktopWindowId
+    data class ImagePreview(val image: String) : DesktopWindowId
 }
 
 internal sealed interface DesktopWindowSpec {
@@ -26,6 +27,10 @@ internal sealed interface DesktopWindowSpec {
 
     data object Player : DesktopWindowSpec {
         override val id: DesktopWindowId = DesktopWindowId.Player
+    }
+
+    data class ImagePreview(val image: String) : DesktopWindowSpec {
+        override val id: DesktopWindowId = DesktopWindowId.ImagePreview(image)
     }
 }
 
@@ -109,6 +114,14 @@ internal class DesktopAppState(
     fun closePlayer() {
         windowManager.close(DesktopWindowId.Player)
         playerWindowController.close()
+    }
+
+    fun openImagePreview(image: String) {
+        windowManager.openOrActivate(DesktopWindowSpec.ImagePreview(image))
+    }
+
+    fun closeImagePreview(image: String) {
+        windowManager.close(DesktopWindowId.ImagePreview(image))
     }
 
     fun openMainPage(deeplink: String) {

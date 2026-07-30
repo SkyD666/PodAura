@@ -93,7 +93,6 @@ kotlin {
             implementation(libs.coil.network.ktor3)
             implementation(libs.coil.svg)
             implementation(libs.okio)
-            implementation(libs.zoomimage)
 
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
@@ -136,12 +135,17 @@ kotlin {
 
             implementation(libs.coil.gif)
             implementation(libs.coil.video)
+            implementation(libs.zoomimage)
 
             implementation(libs.mpv.lib)
         }
 
         appleMain.dependencies {
             implementation(libs.ktor.client.darwin)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.zoomimage)
         }
 
         jvmMain.dependencies {
@@ -153,6 +157,7 @@ kotlin {
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
             implementation(libs.java.jaudiotagger)
+            implementation(libs.zoomimage)
 
             implementation(libs.mediamp)
 

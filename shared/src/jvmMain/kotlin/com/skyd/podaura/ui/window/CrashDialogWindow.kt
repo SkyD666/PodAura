@@ -23,6 +23,9 @@ import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.CrashScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.crash_window_title
 
 @Composable
 fun CrashWindow(onCloseRequest: () -> Unit, crashInfo: String) {
@@ -39,6 +42,7 @@ fun CrashWindow(onCloseRequest: () -> Unit, crashInfo: String) {
     }
     Window(
         onCloseRequest = onCloseRequest,
+        title = stringResource(Res.string.crash_window_title),
         state = rememberWindowState(position = WindowPosition.Aligned(alignment = Alignment.Center)),
     ) {
         CompositionLocalProvider(LocalWindowSizeClass provides calculateWindowSizeClass()) {
