@@ -140,7 +140,7 @@ androidComponents.onVariants { variant ->
 }
 
 // https://stackoverflow.com/a/77745844
-tasks.withType<PackageAndroidArtifact> {
+tasks.withType<PackageAndroidArtifact>().configureEach {
     doFirst { appMetadata.asFile.orNull?.writeText("") }
 }
 

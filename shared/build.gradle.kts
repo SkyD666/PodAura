@@ -2,6 +2,7 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
+import org.jetbrains.compose.desktop.application.tasks.AbstractNativeMacApplicationPackageAppDirTask
 
 plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -25,6 +26,7 @@ kotlin {
         }
         buildToolsVersion = "37.0.0"
         androidResources.enable = true
+        withHostTest {}
     }
 
     jvm()
@@ -286,8 +288,13 @@ compose.desktop {
     }
 }
 
+// Compose does not propagate nativeApplication.macOS.bundleID to the generated task.
+tasks.withType<AbstractNativeMacApplicationPackageAppDirTask>().configureEach {
+    bundleID = "com.skyd.podaura"
+}
+
 // Distribution's icon
-tasks.withType<AbstractJPackageTask> {
+tasks.withType<AbstractJPackageTask>().configureEach {
     if (targetFormat == TargetFormat.Dmg) {
         freeArgs.addAll("--icon", "icons/icon_512x512.icns")
     }

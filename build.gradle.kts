@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.buildkonfig) apply false
 }
 
-tasks.withType<UpdateDaemonJvm> {
+tasks.withType<UpdateDaemonJvm>().configureEach {
     languageVersion = JavaLanguageVersion.of(25)
     vendor = JvmVendorSpec.AZUL
 }
