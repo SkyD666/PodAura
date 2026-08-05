@@ -50,21 +50,6 @@ class ReadViewModel(
                 is ReadPartialStateChange.ReadArticle.Failed ->
                     ReadEvent.FavoriteArticleResultEvent.Failed(change.msg)
 
-                is ReadPartialStateChange.ShareImage.Failed ->
-                    ReadEvent.ShareImageResultEvent.Failed(change.msg)
-
-                is ReadPartialStateChange.CopyImage.Success ->
-                    ReadEvent.CopyImageResultEvent.Success(change.url)
-
-                is ReadPartialStateChange.CopyImage.Failed ->
-                    ReadEvent.CopyImageResultEvent.Failed(change.msg)
-
-                is ReadPartialStateChange.DownloadImage.Success ->
-                    ReadEvent.DownloadImageResultEvent.Success(change.url)
-
-                is ReadPartialStateChange.DownloadImage.Failed ->
-                    ReadEvent.DownloadImageResultEvent.Failed(change.msg)
-
                 else -> return@onEach
             }
             sendEvent(event)
@@ -98,27 +83,6 @@ class ReadViewModel(
                     ReadPartialStateChange.ReadArticle.Success
                 }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
                     ReadPartialStateChange.ReadArticle.Failed(it.message.toString())
-                }
-            },
-            filterIsInstance<ReadIntent.ShareImage>().flatMapConcat { intent ->
-                readRepo.shareImage(intent.url).map {
-                    ReadPartialStateChange.ShareImage.Success
-                }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
-                    ReadPartialStateChange.ShareImage.Failed(it.message.toString())
-                }
-            },
-            filterIsInstance<ReadIntent.CopyImage>().flatMapConcat { intent ->
-                readRepo.copyImage(intent.url, intent.clipboard).map {
-                    ReadPartialStateChange.CopyImage.Success(intent.url)
-                }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
-                    ReadPartialStateChange.CopyImage.Failed(it.message.toString())
-                }
-            },
-            filterIsInstance<ReadIntent.DownloadImage>().flatMapConcat { intent ->
-                readRepo.downloadImage(intent.url, intent.title).map {
-                    ReadPartialStateChange.DownloadImage.Success(intent.url)
-                }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
-                    ReadPartialStateChange.DownloadImage.Failed(it.message.toString())
                 }
             },
         )

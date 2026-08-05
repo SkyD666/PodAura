@@ -33,4 +33,15 @@ internal sealed interface ImagePreviewPartialStateChange {
             retryVersion = oldState.retryVersion + 1,
         )
     }
+
+    data object ImageOperationStarted : ImagePreviewPartialStateChange {
+        override fun reduce(oldState: ImagePreviewState) = oldState.copy(loadingDialog = true)
+    }
+
+    sealed interface ImageOperationFinished : ImagePreviewPartialStateChange {
+        override fun reduce(oldState: ImagePreviewState) = oldState.copy(loadingDialog = false)
+
+        data object Success : ImageOperationFinished
+        data class Failed(val message: String) : ImageOperationFinished
+    }
 }

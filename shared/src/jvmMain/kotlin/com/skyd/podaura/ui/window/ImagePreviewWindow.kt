@@ -55,6 +55,7 @@ internal fun ImagePreviewWindow(
             SettingsProvider {
                 ImagePreviewScreen(
                     image = spec.image,
+                    title = spec.title,
                     onBack = closeImagePreview,
                 )
             }

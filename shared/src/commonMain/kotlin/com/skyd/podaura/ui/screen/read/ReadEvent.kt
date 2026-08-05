@@ -11,17 +11,4 @@ sealed interface ReadEvent : MviSingleEvent {
         data class Failed(val msg: String) : ReadArticleResultEvent
     }
 
-    sealed interface ShareImageResultEvent : ReadEvent {
-        data class Failed(val msg: String) : ShareImageResultEvent
-    }
-
-    sealed interface CopyImageResultEvent : ReadEvent {
-        data class Success(val url: String) : CopyImageResultEvent
-        data class Failed(val msg: String) : CopyImageResultEvent
-    }
-
-    sealed interface DownloadImageResultEvent : ReadEvent {
-        data class Success(val url: String) : ReadArticleResultEvent
-        data class Failed(val msg: String) : ReadArticleResultEvent
-    }
 }

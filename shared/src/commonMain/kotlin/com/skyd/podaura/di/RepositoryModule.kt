@@ -3,6 +3,7 @@ package com.skyd.podaura.di
 import com.skyd.podaura.model.repository.DataRepository
 import com.skyd.podaura.model.repository.FilePickerRepository
 import com.skyd.podaura.model.repository.HistoryRepository
+import com.skyd.podaura.model.repository.ImageRepository
 import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.UpdateNotificationRepository
@@ -48,6 +49,7 @@ val repositoryModule = module {
     factory { ReorderFeedRepository(get(), get()) }
     factory { DataRepository(get(), get(), get()) }
     factory { HistoryRepository(get(), get(), get()) }
+    factory { ImageRepository() }
     factory { ReadRepository(get(), get()) }
     factory { SearchRepository(get(), get(), get(), get()) }
     factory { UpdateNotificationRepository(get()) }

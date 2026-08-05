@@ -29,7 +29,7 @@ internal sealed interface DesktopWindowSpec {
         override val id: DesktopWindowId = DesktopWindowId.Player
     }
 
-    data class ImagePreview(val image: String) : DesktopWindowSpec {
+    data class ImagePreview(val image: String, val title: String? = null) : DesktopWindowSpec {
         override val id: DesktopWindowId = DesktopWindowId.ImagePreview(image)
     }
 }
@@ -116,8 +116,8 @@ internal class DesktopAppState(
         playerWindowController.close()
     }
 
-    fun openImagePreview(image: String) {
-        windowManager.openOrActivate(DesktopWindowSpec.ImagePreview(image))
+    fun openImagePreview(image: String, title: String? = null) {
+        windowManager.openOrActivate(DesktopWindowSpec.ImagePreview(image = image, title = title))
     }
 
     fun closeImagePreview(image: String) {

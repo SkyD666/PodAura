@@ -9,8 +9,8 @@ internal actual fun rememberImagePreviewOpener(): ImagePreviewOpener {
     val navBackStack = LocalGlobalNavBackStack.current
     return remember(navBackStack) {
         object : ImagePreviewOpener {
-            override fun open(image: String) {
-                navBackStack.add(ImagePreviewRoute(image))
+            override fun open(image: String, title: String?) {
+                navBackStack.add(ImagePreviewRoute(image = image, title = title))
             }
         }
     }

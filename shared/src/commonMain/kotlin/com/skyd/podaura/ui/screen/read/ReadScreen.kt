@@ -22,17 +22,13 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AttachFile
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.ZoomIn
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -57,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalUriHandler
@@ -107,14 +102,10 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_favorite
 import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.bottom_sheet_enclosure_title
-import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.open_link_in_browser
-import podaura.shared.generated.resources.read_screen_download_image
 import podaura.shared.generated.resources.read_screen_name
 import podaura.shared.generated.resources.read_screen_open_article_screen
-import podaura.shared.generated.resources.read_screen_open_image_in_browser
-import podaura.shared.generated.resources.read_screen_preview_image
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
 
@@ -283,21 +274,8 @@ fun ReadScreen(
                 ArticleState.Loading -> Unit
 
                 is ArticleState.Success -> {
-                    val clipboard = LocalClipboard.current
                     Content(
                         articleState = articleState,
-                        shareImage = { dispatcher(ReadIntent.ShareImage(url = it)) },
-                        copyImage = {
-                            dispatcher(ReadIntent.CopyImage(url = it, clipboard = clipboard))
-                        },
-                        downloadImage = {
-                            dispatcher(
-                                ReadIntent.DownloadImage(
-                                    url = it,
-                                    title = articleState.article.articleWithEnclosure.article.title,
-                                )
-                            )
-                        },
                     )
                     if (openEnclosureBottomSheet) {
                         EnclosureBottomSheet(
@@ -318,11 +296,6 @@ fun ReadScreen(
                     snackbarHostState.showSnackbar(event.msg)
 
                 is ReadEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
-                is ReadEvent.ShareImageResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
-                is ReadEvent.CopyImageResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
-                is ReadEvent.DownloadImageResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
-                is ReadEvent.CopyImageResultEvent.Success,
-                is ReadEvent.DownloadImageResultEvent.Success -> Unit
             }
         }
 
@@ -358,13 +331,10 @@ private fun CategoryArea(categories: List<ArticleCategoryBean>) {
 @Composable
 private fun Content(
     articleState: ArticleState.Success,
-    downloadImage: (url: String) -> Unit,
-    copyImage: (url: String) -> Unit,
-    shareImage: (url: String) -> Unit,
 ) {
     val article = articleState.article.articleWithEnclosure
-    var openImageSheet: String? by rememberSaveable { mutableStateOf(null) }
     val playerJumper = rememberPlayerJumper()
+    val imagePreviewOpener = rememberImagePreviewOpener()
 
     SelectionContainer {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -427,19 +397,11 @@ private fun Content(
         },
         refererDomain = article.article.link?.httpDomain(),
         horizontalPadding = 16f,
-        onImageClick = { imageUrl, _ -> openImageSheet = imageUrl },
+        onImageClick = { imageUrl, _ ->
+            imagePreviewOpener.open(image = imageUrl, title = article.article.title)
+        },
     )
     CategoryArea(article.categories)
-
-    openImageSheet?.let {
-        ImageBottomSheet(
-            imageUrl = it,
-            onDismissRequest = { openImageSheet = null },
-            shareImage = shareImage,
-            copyImage = copyImage,
-            downloadImage = downloadImage,
-        )
-    }
 }
 
 @Composable
@@ -519,88 +481,5 @@ private fun ReadTextSizeSliderDialog(
                 onValueChange = { ReadTextSizePreference.put(scope = scope, value = it) },
             )
         }
-    }
-}
-
-@Composable
-private fun ImageBottomSheet(
-    imageUrl: String,
-    onDismissRequest: () -> Unit,
-    shareImage: (url: String) -> Unit,
-    copyImage: (url: String) -> Unit,
-    downloadImage: (url: String) -> Unit,
-) {
-    val uriHandler = LocalUriHandler.current
-    val imagePreviewOpener = rememberImagePreviewOpener()
-    AnimatedDismissModalBottomSheet(
-        onDismissRequest = onDismissRequest
-    ) { animateToDismiss ->
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-        ) {
-            ImageBottomSheetItem(
-                icon = Icons.Outlined.ZoomIn,
-                title = stringResource(Res.string.read_screen_preview_image),
-                onClick = {
-                    onDismissRequest()
-                    imagePreviewOpener.open(imageUrl)
-                }
-            )
-            ImageBottomSheetItem(
-                icon = Icons.Outlined.Download,
-                title = stringResource(Res.string.read_screen_download_image),
-                onClick = {
-                    downloadImage(imageUrl)
-                    animateToDismiss()
-                }
-            )
-            if (!platform.isJvm) {
-                ImageBottomSheetItem(
-                    icon = Icons.Outlined.Share,
-                    title = stringResource(Res.string.share),
-                    onClick = {
-                        shareImage(imageUrl)
-                        animateToDismiss()
-                    }
-                )
-            }
-            ImageBottomSheetItem(
-                icon = Icons.Outlined.ContentCopy,
-                title = stringResource(Res.string.copy),
-                onClick = {
-                    copyImage(imageUrl)
-                    animateToDismiss()
-                }
-            )
-            ImageBottomSheetItem(
-                icon = Icons.Outlined.Public,
-                title = stringResource(Res.string.read_screen_open_image_in_browser),
-                onClick = {
-                    uriHandler.safeOpenUri(imageUrl)
-                    animateToDismiss()
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ImageBottomSheetItem(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-    ) {
-        Icon(imageVector = icon, contentDescription = null)
-        Spacer(modifier = Modifier.width(20.dp))
-        Text(text = title)
     }
 }

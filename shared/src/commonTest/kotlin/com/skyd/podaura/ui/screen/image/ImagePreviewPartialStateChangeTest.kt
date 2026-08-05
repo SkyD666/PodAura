@@ -13,6 +13,7 @@ class ImagePreviewPartialStateChangeTest {
         assertEquals(true, state.showWidgets)
         assertEquals(ImagePreviewLoadState.Loading, state.loadState)
         assertEquals(0, state.retryVersion)
+        assertEquals(false, state.loadingDialog)
     }
 
     @Test
@@ -56,5 +57,22 @@ class ImagePreviewPartialStateChangeTest {
         assertEquals(ImagePreviewLoadState.Loading, retrying.loadState)
         assertEquals(4, retrying.retryVersion)
         assertEquals(failed.showWidgets, retrying.showWidgets)
+    }
+
+    @Test
+    fun imageOperationsToggleLoadingDialog() {
+        val initial = ImagePreviewState.initial()
+
+        val loading = ImagePreviewPartialStateChange.ImageOperationStarted.reduce(initial)
+        val succeeded =
+            ImagePreviewPartialStateChange.ImageOperationFinished.Success.reduce(loading)
+        val failed = ImagePreviewPartialStateChange.ImageOperationFinished.Failed("error")
+            .reduce(loading)
+
+        assertEquals(true, loading.loadingDialog)
+        assertEquals(false, succeeded.loadingDialog)
+        assertEquals(false, failed.loadingDialog)
+        assertEquals(initial.loadState, failed.loadState)
+        assertEquals(initial.showWidgets, failed.showWidgets)
     }
 }

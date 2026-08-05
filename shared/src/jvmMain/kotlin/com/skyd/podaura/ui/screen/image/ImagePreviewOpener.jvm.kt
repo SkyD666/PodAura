@@ -9,8 +9,8 @@ internal actual fun rememberImagePreviewOpener(): ImagePreviewOpener {
     val appState = LocalDesktopAppState.current
     return remember(appState) {
         object : ImagePreviewOpener {
-            override fun open(image: String) {
-                appState.openImagePreview(image)
+            override fun open(image: String, title: String?) {
+                appState.openImagePreview(image = image, title = title)
             }
         }
     }

@@ -6,12 +6,14 @@ data class ImagePreviewState(
     val showWidgets: Boolean,
     val loadState: ImagePreviewLoadState,
     val retryVersion: Int,
+    val loadingDialog: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = ImagePreviewState(
             showWidgets = true,
             loadState = ImagePreviewLoadState.Loading,
             retryVersion = 0,
+            loadingDialog = false,
         )
     }
 }

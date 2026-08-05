@@ -48,7 +48,7 @@ val viewModelModule = module {
     viewModel { FeedSheetViewModel(get(), get()) }
     viewModel { HistoryViewModel(get()) }
     viewModel { HistorySearchViewModel(get()) }
-    viewModel { ImagePreviewViewModel() }
+    viewModel { ImagePreviewViewModel(get()) }
     viewModel { MediaViewModel(get()) }
     viewModel { MediaListViewModel(get()) }
     viewModel { MediaSearchViewModel(get()) }

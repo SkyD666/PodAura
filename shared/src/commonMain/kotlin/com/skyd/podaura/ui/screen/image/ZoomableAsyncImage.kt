@@ -15,4 +15,5 @@ internal expect fun ZoomableAsyncImage(
     onSuccess: () -> Unit,
     onError: (Throwable) -> Unit,
     onTap: () -> Unit,
+    onLongPress: () -> Unit,
 )

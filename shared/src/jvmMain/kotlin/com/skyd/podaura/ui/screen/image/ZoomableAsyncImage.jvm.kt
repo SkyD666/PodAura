@@ -16,6 +16,7 @@ internal actual fun ZoomableAsyncImage(
     onSuccess: () -> Unit,
     onError: (Throwable) -> Unit,
     onTap: () -> Unit,
+    onLongPress: () -> Unit,
 ) {
     CoilZoomAsyncImage(
         model = model,
@@ -26,5 +27,6 @@ internal actual fun ZoomableAsyncImage(
         onSuccess = { onSuccess() },
         onError = { onError(it.result.throwable) },
         onTap = { onTap() },
+        onLongPress = { onLongPress() },
     )
 }

@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.image
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
@@ -35,6 +35,7 @@ internal actual fun ZoomableAsyncImage(
     onSuccess: () -> Unit,
     onError: (Throwable) -> Unit,
     onTap: () -> Unit,
+    onLongPress: () -> Unit,
 ) {
     var scale by remember(model) { mutableFloatStateOf(MinImageScale) }
     var offset by remember(model) { mutableStateOf(Offset.Zero) }
@@ -67,7 +68,7 @@ internal actual fun ZoomableAsyncImage(
                 offset = constrainedOffset(offset, scale)
             }
             .transformable(transformState)
-            .clickable(onClick = onTap),
+            .combinedClickable(onClick = onTap, onLongClick = onLongPress),
     ) {
         AsyncImage(
             model = model,
