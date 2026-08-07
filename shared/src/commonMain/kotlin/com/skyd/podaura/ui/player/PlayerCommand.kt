@@ -13,6 +13,8 @@ sealed interface PlayerCommand {
     data class LoadList(
         val playlist: List<PlaylistMediaWithArticleBean>,
         val startPath: String? = null,
+        val startPositionSeconds: Long? = null,
+        val requestId: String? = null,
     ) : PlayerCommand
 
     data class RemoveMediaFromPlaylist(

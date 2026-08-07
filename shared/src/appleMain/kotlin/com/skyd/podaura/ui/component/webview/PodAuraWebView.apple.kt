@@ -17,7 +17,8 @@ actual fun PodAuraWebView(
     content: String,
     refererDomain: String?,
     horizontalPadding: Float,
-    onImageClick: ((imageUrl: String, alt: String) -> Unit)?
+    onImageClick: ((imageUrl: String, alt: String) -> Unit)?,
+    onTimestampClick: ((positionSeconds: Long) -> Unit)?,
 ) {
     SelectionContainer(modifier) {
         val fontSize = ReadTextSizePreference.current.sp
@@ -32,6 +33,7 @@ actual fun PodAuraWebView(
             },
             modifier = Modifier.padding(horizontal = horizontalPadding.dp),
             onImageClick = onImageClick,
+            onTimestampClick = onTimestampClick,
         )
     }
 }

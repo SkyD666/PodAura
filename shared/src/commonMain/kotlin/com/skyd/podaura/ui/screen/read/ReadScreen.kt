@@ -75,7 +75,6 @@ import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.httpDomain
-import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.article.ArticleCategoryBean
@@ -103,6 +102,7 @@ import podaura.shared.generated.resources.article_screen_favorite
 import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.bottom_sheet_enclosure_title
 import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.media_not_exists
 import podaura.shared.generated.resources.open_link_in_browser
 import podaura.shared.generated.resources.read_screen_name
 import podaura.shared.generated.resources.read_screen_open_article_screen
@@ -138,6 +138,9 @@ fun ReadScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
+    val playerJumper = rememberPlayerJumper()
+    val mediaNotExistsMessage = stringResource(Res.string.media_not_exists)
+
 
     val snackbarHostState = remember { SnackbarHostState() }
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
@@ -276,6 +279,15 @@ fun ReadScreen(
                 is ArticleState.Success -> {
                     Content(
                         articleState = articleState,
+                        onTimestampClick = { mediaUrl, positionSeconds ->
+                            dispatcher(
+                                ReadIntent.PlayTimestamp(
+                                    articleId = articleId,
+                                    mediaUrl = mediaUrl,
+                                    positionSeconds = positionSeconds,
+                                )
+                            )
+                        },
                     )
                     if (openEnclosureBottomSheet) {
                         EnclosureBottomSheet(
@@ -296,6 +308,17 @@ fun ReadScreen(
                     snackbarHostState.showSnackbar(event.msg)
 
                 is ReadEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+
+                is ReadEvent.PlayTimestampResultEvent.OpenPlayer -> playerJumper.jump(
+                    PlayDataMode.ArticleList(
+                        articleId = event.articleId,
+                        url = event.mediaUrl,
+                        startPositionSeconds = event.positionSeconds,
+                    )
+                )
+
+                ReadEvent.PlayTimestampResultEvent.MediaNotExists ->
+                    snackbarHostState.showSnackbar(mediaNotExistsMessage)
             }
         }
 
@@ -331,10 +354,14 @@ private fun CategoryArea(categories: List<ArticleCategoryBean>) {
 @Composable
 private fun Content(
     articleState: ArticleState.Success,
+    onTimestampClick: (mediaUrl: String?, positionSeconds: Long) -> Unit,
 ) {
     val article = articleState.article.articleWithEnclosure
     val playerJumper = rememberPlayerJumper()
     val imagePreviewOpener = rememberImagePreviewOpener()
+    val firstMediaUrl = remember(article) {
+        article.enclosures.firstOrNull { it.isMedia }?.url
+    }
 
     SelectionContainer {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -392,13 +419,14 @@ private fun Content(
     })
     PodAuraWebView(
         modifier = Modifier.fillMaxWidth(),
-        content = article.article.content.ifNullOfBlank {
-            article.article.description.orEmpty()
-        },
+        content = articleState.linkedContent,
         refererDomain = article.article.link?.httpDomain(),
         horizontalPadding = 16f,
         onImageClick = { imageUrl, _ ->
             imagePreviewOpener.open(image = imageUrl, title = article.article.title)
+        },
+        onTimestampClick = { positionSeconds ->
+            onTimestampClick(firstMediaUrl, positionSeconds)
         },
     )
     CategoryArea(article.categories)

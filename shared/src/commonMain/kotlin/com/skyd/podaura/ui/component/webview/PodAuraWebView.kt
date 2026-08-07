@@ -10,4 +10,5 @@ expect fun PodAuraWebView(
     refererDomain: String? = null,
     horizontalPadding: Float = 0f,
     onImageClick: ((imageUrl: String, alt: String) -> Unit)? = null,
+    onTimestampClick: ((positionSeconds: Long) -> Unit)? = null,
 )

@@ -42,6 +42,8 @@ class PlayerCoordinator : LifecycleOwner {
     val playerState get() = model.playerState
     private var playlistId: String = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
+    private var pendingStartPosition: PendingStartPosition? = null
+    private var lastStartPositionRequestId: String? = null
 
     // Per-instance, not in the companion: a companion scope outlives every coordinator and can
     // never be cancelled, so its jobs (and everything they capture) leak for the process lifetime.
@@ -177,7 +179,16 @@ class PlayerCoordinator : LifecycleOwner {
                     }
                     sendEvent(PlayerEvent.Paused(player.paused))
                     sendEvent(PlayerEvent.Loading(player.loading()))
-                    loadLastPosition(currentPath).invokeOnCompletion {
+                    val startPosition = pendingStartPosition
+                        .also { pendingStartPosition = null }
+                        ?.takeIf { it.path == currentPath }
+                    val loadPositionJob = if (startPosition != null) {
+                        seekAndPlay(startPosition.positionSeconds)
+                        Job().apply { complete() }
+                    } else {
+                        loadLastPosition(currentPath)
+                    }
+                    loadPositionJob.invokeOnCompletion {
                         sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
                     }
                 }
@@ -227,14 +238,43 @@ class PlayerCoordinator : LifecycleOwner {
             is PlayerCommand.Attach -> onAttach(command.surfaceHolder)
             is PlayerCommand.Detach -> onDetach(command.surfaceHolder)
             is PlayerCommand.LoadList -> {
+                val files = command.playlist.map { it.playlistMediaBean.url }
+                val startPositionSeconds = command.startPositionSeconds?.takeIf {
+                    shouldConsumeStartPosition(
+                        requestId = command.requestId,
+                        lastRequestId = lastStartPositionRequestId,
+                    )
+                }
+                if (startPositionSeconds != null && command.requestId != null) {
+                    lastStartPositionRequestId = command.requestId
+                }
+                val seekCurrentMedia = shouldSeekCurrentMedia(
+                    startPositionSeconds = startPositionSeconds,
+                    startPath = command.startPath,
+                    currentPath = path,
+                    currentPlaylist = loadPlaylist(),
+                    requestedPlaylist = files,
+                )
+                val replayedStartPosition = command.startPositionSeconds != null &&
+                        startPositionSeconds == null
+                if (!replayedStartPosition) {
+                    pendingStartPosition = startPositionSeconds
+                        ?.takeUnless { seekCurrentMedia }
+                        ?.let { positionSeconds ->
+                            command.startPath?.let { path ->
+                                PendingStartPosition(path = path, positionSeconds = positionSeconds)
+                            }
+                        }
+                }
                 playlistId =
                     command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
                 cachedPlaylistMap.clear()
                 cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
                 loadList(
-                    files = command.playlist.map { it.playlistMediaBean.url },
+                    files = files,
                     startFile = command.startPath
                 )
+                startPositionSeconds?.takeIf { seekCurrentMedia }?.let { seekAndPlay(it) }
             }
 
             is PlayerCommand.RemoveMediaFromPlaylist -> {
@@ -311,6 +351,13 @@ class PlayerCoordinator : LifecycleOwner {
         }
     }
 
+    private fun seekAndPlay(positionSeconds: Long) {
+        player.seek(
+            positionSeconds.coerceIn(0L, player.duration.toLong().coerceAtLeast(0L)).toInt()
+        )
+        player.paused = false
+    }
+
     private fun loadLastPosition(path: String?) = if (path != null) {
         scope.launch {
             val lastPos = playerRepo.requestLastPlayPosition(path).first()
@@ -331,6 +378,11 @@ class PlayerCoordinator : LifecycleOwner {
         }
     } else Job().apply { complete() }
 
+    private data class PendingStartPosition(
+        val path: String,
+        val positionSeconds: Long,
+    )
+
     init {
         lifecycle.currentState = Lifecycle.State.CREATED
         // A previous coordinator may have destroyed mpv (player window closed, service stopped).
@@ -344,3 +396,15 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
 }
+
+internal fun shouldSeekCurrentMedia(
+    startPositionSeconds: Long?,
+    startPath: String?,
+    currentPath: String?,
+    currentPlaylist: List<String>,
+    requestedPlaylist: List<String>,
+): Boolean = startPositionSeconds != null &&
+        startPath == currentPath && currentPlaylist == requestedPlaylist
+
+internal fun shouldConsumeStartPosition(requestId: String?, lastRequestId: String?): Boolean =
+    requestId == null || requestId != lastRequestId

@@ -16,7 +16,10 @@ data class ReadState(
 }
 
 sealed interface ArticleState {
-    data class Success(val article: ArticleWithFeed) : ArticleState
+    data class Success(
+        val article: ArticleWithFeed,
+        val linkedContent: String,
+    ) : ArticleState
     data object Init : ArticleState
     data object Loading : ArticleState
     data class Failed(val msg: String) : ArticleState

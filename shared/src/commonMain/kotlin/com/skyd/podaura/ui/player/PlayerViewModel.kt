@@ -16,29 +16,41 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlin.uuid.Uuid
 
 class PlayerViewModel(
     private val playerRepo: PlayerRepository,
     private val playlistMediaRepo: IPlaylistMediaRepository,
 ) : ViewModel() {
     // Do not store data
-    val mediaInfos = MutableSharedFlow<Pair<String?, List<PlaylistMediaWithArticleBean>>>(
+    val mediaInfos = MutableSharedFlow<PlayerLaunchData>(
         replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    fun handlePlayDataMode(playDataMode: PlayDataMode) {
+    fun handlePlayDataMode(
+        playDataMode: PlayDataMode,
+        requestId: String = Uuid.random().toString(),
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             when (playDataMode) {
                 is PlayDataMode.ArticleList -> mediaInfos.emit(
-                    playDataMode.url to playerRepo.requestPlaylistByArticleId(
-                        articleId = playDataMode.articleId,
-                        reverse = dataStore.getOrDefaultSuspend(ReverseLoadArticlePlaylistPreference),
+                    PlayerLaunchData(
+                        startPath = playDataMode.url,
+                        playlist = playerRepo.requestPlaylistByArticleId(
+                            articleId = playDataMode.articleId,
+                            reverse = dataStore.getOrDefaultSuspend(ReverseLoadArticlePlaylistPreference),
+                        ),
+                        startPositionSeconds = playDataMode.startPositionSeconds,
+                        requestId = requestId,
                     )
                 )
 
                 is PlayDataMode.MediaLibraryList -> mediaInfos.emit(
-                    playDataMode.startMediaPath to
-                            playerRepo.requestPlaylistByMediaLibraryList(playDataMode.mediaList)
+                    PlayerLaunchData(
+                        startPath = playDataMode.startMediaPath,
+                        playlist = playerRepo.requestPlaylistByMediaLibraryList(playDataMode.mediaList),
+                        requestId = requestId,
+                    )
                 )
 
                 is PlayDataMode.Playlist -> {
@@ -46,19 +58,41 @@ class PlayerViewModel(
                         playlistMediaRepo.requestPlaylistMediaList(playDataMode.playlistId).first()
                     val startUrl =
                         playDataMode.mediaUrl ?: playlist.firstOrNull()?.playlistMediaBean?.url
-                    mediaInfos.emit(startUrl to playlist)
+                    mediaInfos.emit(
+                        PlayerLaunchData(
+                            startPath = startUrl,
+                            playlist = playlist,
+                            requestId = requestId,
+                        )
+                    )
                 }
             }
         }
     }
 
-    fun handlePlatformFile(file: PlatformFile) {
+    fun handlePlatformFile(
+        file: PlatformFile,
+        requestId: String = Uuid.random().toString(),
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val playlist =
                 playerRepo.requestPlaylistByPlatformFile(file)
             if (playlist != null) {
-                mediaInfos.emit(playlist[0].playlistMediaBean.url to playlist)
+                mediaInfos.emit(
+                    PlayerLaunchData(
+                        startPath = playlist[0].playlistMediaBean.url,
+                        playlist = playlist,
+                        requestId = requestId,
+                    )
+                )
             }
         }
     }
 }
+
+data class PlayerLaunchData(
+    val startPath: String?,
+    val playlist: List<PlaylistMediaWithArticleBean>,
+    val startPositionSeconds: Long? = null,
+    val requestId: String,
+)

@@ -17,6 +17,7 @@ import java.net.URI
 class WebViewClient(
     private val refererDomain: String?,
     private val onOpenLink: (url: String) -> Unit,
+    private val onTimestampClick: ((positionSeconds: Long) -> Unit)? = null,
 ) : WebViewClient() {
     private val log = Logger.withTag("WebViewClient")
 
@@ -62,6 +63,10 @@ class WebViewClient(
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         if (null == request?.url) return false
         val url = request.url.toString()
+        timestampSecondsFromUri(url)?.let { seconds ->
+            onTimestampClick?.invoke(seconds)
+            return true
+        }
         if (url.isNotEmpty()) onOpenLink(url)
         return true
     }

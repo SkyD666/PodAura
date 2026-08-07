@@ -2,9 +2,12 @@ package com.skyd.podaura.ui.screen.read
 
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
+import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
+import com.skyd.podaura.ui.component.webview.linkifyTimestamps
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.read_screen_article_id_illegal
@@ -50,6 +54,16 @@ class ReadViewModel(
                 is ReadPartialStateChange.ReadArticle.Failed ->
                     ReadEvent.FavoriteArticleResultEvent.Failed(change.msg)
 
+                is ReadPartialStateChange.PlayTimestamp.OpenPlayer ->
+                    ReadEvent.PlayTimestampResultEvent.OpenPlayer(
+                        articleId = change.articleId,
+                        mediaUrl = change.mediaUrl,
+                        positionSeconds = change.positionSeconds,
+                    )
+
+                ReadPartialStateChange.PlayTimestamp.MediaNotExists ->
+                    ReadEvent.PlayTimestampResultEvent.MediaNotExists
+
                 else -> return@onEach
             }
             sendEvent(event)
@@ -67,7 +81,16 @@ class ReadViewModel(
                             getString(Res.string.read_screen_article_id_illegal)
                         )
                     } else {
-                        ReadPartialStateChange.ArticleResult.Success(article = it)
+                        val article = it.articleWithEnclosure.article
+                        val linkedContent = withContext(Dispatchers.Default) {
+                            linkifyTimestamps(
+                                article.content.ifNullOfBlank { article.description.orEmpty() }
+                            )
+                        }
+                        ReadPartialStateChange.ArticleResult.Success(
+                            article = it,
+                            linkedContent = linkedContent,
+                        )
                     }
                 }.startWith(ReadPartialStateChange.ArticleResult.Loading)
             },
@@ -84,6 +107,15 @@ class ReadViewModel(
                 }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
                     ReadPartialStateChange.ReadArticle.Failed(it.message.toString())
                 }
+            },
+            filterIsInstance<ReadIntent.PlayTimestamp>().map { intent ->
+                intent.mediaUrl?.let { mediaUrl ->
+                    ReadPartialStateChange.PlayTimestamp.OpenPlayer(
+                        articleId = intent.articleId,
+                        mediaUrl = mediaUrl,
+                        positionSeconds = intent.positionSeconds,
+                    )
+                } ?: ReadPartialStateChange.PlayTimestamp.MediaNotExists
             },
         )
     }

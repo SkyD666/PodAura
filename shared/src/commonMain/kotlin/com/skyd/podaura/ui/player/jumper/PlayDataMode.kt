@@ -23,6 +23,7 @@ sealed interface PlayDataMode {
     data class ArticleList(
         val articleId: String,
         val url: String,
+        val startPositionSeconds: Long? = null,
     ) : PlayDataMode
 
     @Serializable

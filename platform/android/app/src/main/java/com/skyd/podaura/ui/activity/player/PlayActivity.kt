@@ -41,10 +41,12 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.player_no_permission_cannot_save_screenshot
+import java.util.UUID
 
 
 class PlayActivity : BaseComposeActivity() {
     private val viewModel: PlayerViewModel by viewModel()
+    private var launchRequestId: String = ""
     private lateinit var picture: PlatformFile
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -70,11 +72,13 @@ class PlayActivity : BaseComposeActivity() {
             }
             this@PlayActivity.service = binder.getService()
             lifecycleScope.launch {
-                viewModel.mediaInfos.filter { it.first != null }.collect { (path, playlist) ->
+                viewModel.mediaInfos.filter { it.startPath != null }.collect { launchData ->
                     this@PlayActivity.service.playerCoordinator.onCommand(
                         PlayerCommand.LoadList(
-                            playlist = playlist,
-                            startPath = path,
+                            playlist = launchData.playlist,
+                            startPath = launchData.startPath,
+                            startPositionSeconds = launchData.startPositionSeconds,
+                            requestId = launchData.requestId,
                         )
                     )
                 }
@@ -101,10 +105,13 @@ class PlayActivity : BaseComposeActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        launchRequestId = savedInstanceState?.getString(LAUNCH_REQUEST_ID_KEY)
+            ?: UUID.randomUUID().toString()
+
         // Keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        handleIntent(intent)
+        handleIntent(intent, launchRequestId)
 
         ContextCompat.registerReceiver(
             this,
@@ -119,7 +126,10 @@ class PlayActivity : BaseComposeActivity() {
 
         setContentBase {
             DisposableEffect(Unit) {
-                val listener = Consumer<Intent> { newIntent -> handleIntent(newIntent) }
+                val listener = Consumer<Intent> { newIntent ->
+                    launchRequestId = UUID.randomUUID().toString()
+                    handleIntent(newIntent, launchRequestId)
+                }
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
             }
@@ -144,17 +154,22 @@ class PlayActivity : BaseComposeActivity() {
         }
     }
 
-    private fun handleIntent(intent: Intent?) {
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(LAUNCH_REQUEST_ID_KEY, launchRequestId)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun handleIntent(intent: Intent?, requestId: String) {
         if (intent == null) return
         val playDataMode = intent.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
             PlayDataMode.decodeFromString(it)
         }
         if (playDataMode != null) {
-            viewModel.handlePlayDataMode(playDataMode)
+            viewModel.handlePlayDataMode(playDataMode, requestId)
         } else {
             val externalUri = intent.data
             if (externalUri != null) {
-                viewModel.handlePlatformFile(PlatformFile(externalUri))
+                viewModel.handlePlatformFile(PlatformFile(externalUri), requestId)
             }
         }
     }
@@ -176,5 +191,9 @@ class PlayActivity : BaseComposeActivity() {
             return true
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    private companion object {
+        const val LAUNCH_REQUEST_ID_KEY = "launchRequestId"
     }
 }

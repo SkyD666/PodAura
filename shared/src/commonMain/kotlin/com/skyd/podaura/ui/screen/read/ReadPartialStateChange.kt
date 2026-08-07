@@ -16,7 +16,10 @@ internal sealed interface ReadPartialStateChange {
         override fun reduce(oldState: ReadState): ReadState {
             return when (this) {
                 is Success -> oldState.copy(
-                    articleState = ArticleState.Success(article = article),
+                    articleState = ArticleState.Success(
+                        article = article,
+                        linkedContent = linkedContent,
+                    ),
                     loadingDialog = false,
                 )
 
@@ -32,7 +35,10 @@ internal sealed interface ReadPartialStateChange {
             }
         }
 
-        data class Success(val article: ArticleWithFeed) : ArticleResult
+        data class Success(
+            val article: ArticleWithFeed,
+            val linkedContent: String,
+        ) : ArticleResult
         data class Failed(val msg: String) : ArticleResult
         data object Loading : ArticleResult
     }
@@ -63,6 +69,18 @@ internal sealed interface ReadPartialStateChange {
 
         data object Success : ReadArticle
         data class Failed(val msg: String) : ReadArticle
+    }
+
+    sealed interface PlayTimestamp : ReadPartialStateChange {
+        override fun reduce(oldState: ReadState): ReadState = oldState
+
+        data class OpenPlayer(
+            val articleId: String,
+            val mediaUrl: String,
+            val positionSeconds: Long,
+        ) : PlayTimestamp
+
+        data object MediaNotExists : PlayTimestamp
     }
 
 }

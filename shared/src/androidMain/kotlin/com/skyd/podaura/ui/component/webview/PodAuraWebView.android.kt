@@ -37,6 +37,7 @@ actual fun PodAuraWebView(
     refererDomain: String?,
     horizontalPadding: Float,
     onImageClick: ((imageUrl: String, alt: String) -> Unit)?,
+    onTimestampClick: ((positionSeconds: Long) -> Unit)?,
 ) {
     val context = LocalContext.current
     val textStyle = LocalTextStyle.current
@@ -79,10 +80,11 @@ actual fun PodAuraWebView(
     } else {
         remember(holderKey) { PodAuraWebViewHolder(context) }
     }
-    val webViewClient = remember(refererDomain, uriHandler) {
+    val webViewClient = remember(refererDomain, uriHandler, onTimestampClick) {
         WebViewClient(
             refererDomain = refererDomain,
-            onOpenLink = { url -> uriHandler.safeOpenUri(url) }
+            onOpenLink = { url -> uriHandler.safeOpenUri(url) },
+            onTimestampClick = onTimestampClick,
         )
     }
     val javaScriptInterface = remember(onImageClick) {

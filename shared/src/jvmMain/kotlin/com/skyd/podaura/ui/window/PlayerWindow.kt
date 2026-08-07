@@ -79,11 +79,13 @@ internal class PlayerWindowController(
      * mediaInfos has replay = 1, so resubscribing on every reopen would restart the previous list.
      */
     suspend fun collectMediaInfos() {
-        playerViewModel.mediaInfos.filter { it.first != null }.collect { (path, playlist) ->
+        playerViewModel.mediaInfos.filter { it.startPath != null }.collect { launchData ->
             coordinator?.onCommand(
                 PlayerCommand.LoadList(
-                    playlist = playlist,
-                    startPath = path,
+                    playlist = launchData.playlist,
+                    startPath = launchData.startPath,
+                    startPositionSeconds = launchData.startPositionSeconds,
+                    requestId = launchData.requestId,
                 )
             )
         }
