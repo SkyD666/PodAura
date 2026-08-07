@@ -56,8 +56,8 @@ val ioModule = module {
                     onRequest { request, _ ->
                         val loadNetImageOnWifiOnly =
                             dataStore.getOrDefault(LoadNetImageOnWifiOnlyPreference)
-                        if (loadNetImageOnWifiOnly && isFreeNetworkAvailable()) {
-                            throw IOException("Not on Wi-Fi; network load denied.")
+                        if (loadNetImageOnWifiOnly && !isFreeNetworkAvailable()) {
+                            throw IOException("Unmetered network unavailable; network load denied.")
                         }
                         request.headers.append("Cache-Control", "max-age=31536000,public")
                     }

@@ -12,6 +12,6 @@ actual fun isFreeNetworkAvailable(): Boolean {
         Platform.Linux,
         Platform.macOS_Jvm -> true
 
-        Platform.Windows -> TODO()
+        Platform.Windows -> runCatching { isWindowsFreeNetworkAvailable() }.getOrDefault(false)
     }
 }
