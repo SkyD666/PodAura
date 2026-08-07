@@ -128,6 +128,11 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/coil-kt/coil",
         ),
         LicenseBean(
+            name = "Compose ConstraintLayout",
+            license = "Apache-2.0",
+            link = "https://github.com/lavmee/constraintlayout-compose-multiplatform",
+        ),
+        LicenseBean(
             name = "kotlinx.coroutines",
             license = "Apache-2.0",
             link = "https://github.com/Kotlin/kotlinx.coroutines",
@@ -217,7 +222,43 @@ private fun getLicenseList(): List<LicenseBean> {
             license = "Apache-2.0",
             link = "https://github.com/RavenLiao/HtmlAnnotator",
         ),
+        LicenseBean(
+            name = "ZoomImage",
+            license = "Apache-2.0",
+            link = "https://github.com/panpf/zoomimage",
+        ),
+        LicenseBean(
+            name = "Settings",
+            license = "Apache-2.0",
+            link = "https://github.com/SkyD666/Settings",
+        ),
+        LicenseBean(
+            name = "Compone",
+            license = "Apache-2.0",
+            link = "https://github.com/SkyD666/Compone",
+        ),
+        LicenseBean(
+            name = "MVIKit",
+            license = "Apache-2.0",
+            link = "https://github.com/SkyD666/MVIKit",
+        ),
     ).apply {
+        if (platform == Platform.Android) {
+            add(
+                LicenseBean(
+                    name = "Accompanist Permissions",
+                    license = "Apache-2.0",
+                    link = "https://github.com/google/accompanist",
+                )
+            )
+            add(
+                LicenseBean(
+                    name = "FFmpegKit",
+                    license = "LGPL-3.0",
+                    link = "https://github.com/arthenica/ffmpeg-kit",
+                )
+            )
+        }
         if (platform == Platform.Windows || platform == Platform.Linux) {
             add(
                 LicenseBean(
@@ -240,6 +281,13 @@ private fun getLicenseList(): List<LicenseBean> {
                     name = "ICU4J",
                     license = "Others",
                     link = "https://github.com/unicode-org/icu/tree/main/icu4j",
+                ),
+            )
+            add(
+                LicenseBean(
+                    name = "MediaMP",
+                    license = "Apache-2.0",
+                    link = "https://github.com/open-ani/mediamp",
                 ),
             )
         }

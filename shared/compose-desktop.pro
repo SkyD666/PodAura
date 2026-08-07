@@ -10,6 +10,9 @@
 -keep enum com.ibm.icu.text.DateTimePatternGenerator$DTPGflags { *; } # ClassCastException
 -keep enum com.ibm.icu.text.DateFormat$BooleanAttribute { *; } # ClassCastException
 
+# PrettyTime loads locale bundles dynamically through ResourceBundle.
+-keep class org.ocpsoft.prettytime.i18n.** { *; }
+
 # Database
 -keep class com.skyd.podaura.model.db.AppDatabase_Impl # ClassNotFoundError
 -keep class com.skyd.downloader.db.DownloadDatabase_Impl # ClassNotFoundError
