@@ -1,5 +1,13 @@
 package com.skyd.podaura.ui.component.webview
 
+import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.TextStyle
+import com.skyd.htmlrender.core.HtmlAnnotator
+import com.skyd.htmlrender.core.StyleConfig
+import com.skyd.htmlrender.ui.RawHtmlData
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -47,6 +55,17 @@ class TimestampLinkTest {
     }
 
     @Test
+    fun convertsTimestampsInBlankLinks() {
+        val result = linkifyTimestamps(
+            "<p><a href=\"\">1:23</a><a>2:34</a><a href=\"\">not a timestamp</a></p>"
+        )
+
+        assertTrue(result.contains("href=\"${TIMESTAMP_LINK_PREFIX}83\""))
+        assertTrue(result.contains("href=\"${TIMESTAMP_LINK_PREFIX}154\""))
+        assertEquals(2, result.countOccurrences(TIMESTAMP_LINK_PREFIX))
+    }
+
+    @Test
     fun preservesEscapedTextAroundTimestamp() {
         val result = linkifyTimestamps("<p>a &lt; b &amp; c 1:23</p>")
 
@@ -71,6 +90,27 @@ class TimestampLinkTest {
         assertEquals(83, timestampSecondsFromUri("${TIMESTAMP_LINK_PREFIX}83"))
         assertEquals(null, timestampSecondsFromUri("https://example.com/83"))
         assertEquals(null, timestampSecondsFromUri("${TIMESTAMP_LINK_PREFIX}-1"))
+    }
+
+    @Test
+    fun htmlAnnotatorPreservesTimestampUri() = runBlocking {
+        val html = linkifyTimestamps("<p>1:23</p>")
+        val result = HtmlAnnotator().from(
+            RawHtmlData(
+                srcHtml = html,
+                styleConfig = StyleConfig(
+                    textStyle = TextStyle.Default,
+                    linkStyles = TextLinkStyles(),
+                    uriHandler = object : UriHandler {
+                        override fun openUri(uri: String) = Unit
+                    },
+                ),
+            )
+        )
+
+        val link = result.getLinkAnnotations(0, result.length).single().item
+        assertTrue(link is LinkAnnotation.Clickable)
+        assertEquals("${TIMESTAMP_LINK_PREFIX}83", link.tag)
     }
 
     private fun String.countOccurrences(value: String): Int =

@@ -10,19 +10,21 @@ class LinkAnnotatedStyler(private val url: String) : IUrlAnnotationStyler {
     override fun getUrlAnnotation(
         linkStyles: TextLinkStyles,
         uriHandler: UriHandler?
-    ): LinkAnnotation = LinkAnnotation.Url(
-        url = url,
-        styles = linkStyles,
-        linkInteractionListener = uriHandler?.let {
-            {
+    ): LinkAnnotation = if (uriHandler == null) {
+        LinkAnnotation.Url(url = url, styles = linkStyles)
+    } else {
+        LinkAnnotation.Clickable(
+            tag = url,
+            styles = linkStyles,
+            linkInteractionListener = {
                 try {
                     uriHandler.openUri(url)
                 } catch (e: Exception) {
                     Logger.e(throwable = e, tag = TAG) { "Failed to open url: $url" }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 
     companion object {
         const val TAG = "LinkAnnotatedStyler"

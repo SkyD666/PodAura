@@ -87,7 +87,7 @@ private fun rememberTimestampUriHandler(
             override fun openUri(uri: String) {
                 val seconds = timestampSecondsFromUri(uri)
                 if (seconds != null) currentOnTimestampClick?.invoke(seconds)
-                else delegate.openUri(uri)
+                else if (uri.isNotBlank()) delegate.openUri(uri)
             }
         }
     }

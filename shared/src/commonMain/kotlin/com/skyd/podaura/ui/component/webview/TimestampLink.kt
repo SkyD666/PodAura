@@ -18,6 +18,12 @@ internal fun timestampSecondsFromUri(uri: String): Long? {
 
 internal fun linkifyTimestamps(html: String): String {
     val document = Ksoup.parse(html)
+    document.select("a").forEach { element ->
+        if (element.attr("href").isNotBlank()) return@forEach
+        val seconds = timestampRegex.matchEntire(element.text().trim())
+            ?.toTimestampSeconds() ?: return@forEach
+        element.attr("href", "$TIMESTAMP_LINK_PREFIX$seconds")
+    }
     val ignoredTags = setOf("a", "code", "pre", "script", "style")
     val textNodes = document.body().getAllElements()
         .filterNot { element -> element.tagName().lowercase() in ignoredTags }

@@ -40,6 +40,10 @@
 -keep, allowshrinking, allowobfuscation class androidx.compose.ui.text.ParagraphKt { <methods>; }
 
 # Mediamp
+# JNA resolves native symbols from interface method names and descriptors at runtime. ProGuard
+# must not rename or optimize this interface (for example SetDllDirectoryW -> SetDllDirectoryW$...).
+-keep interface org.openani.mediamp.nativeloader.WindowsDllKernel32 { *; }
+
 # Kotlin -> JNI: exported symbol names contain the facade and method names.
 -keepclasseswithmembernames,includedescriptorclasses class org.openani.mediamp.mpv.MPVHandleKt {
     native <methods>;
