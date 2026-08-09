@@ -7,7 +7,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.LocalWindow
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
@@ -37,7 +36,7 @@ internal fun ImagePreviewWindow(
         } ?: WindowPosition.Aligned(alignment = Alignment.Center),
     )
 
-    Window(
+    BaseWindow(
         onCloseRequest = closeImagePreview,
         state = imagePreviewWindowState,
         title = stringResource(Res.string.image_preview_description),

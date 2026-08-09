@@ -3,7 +3,6 @@ package com.skyd.podaura.ui.window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
@@ -56,7 +55,7 @@ private fun MainWindow(
     windowController: WindowController,
     onCloseRequest: () -> Unit,
 ) {
-    Window(
+    BaseWindow(
         onCloseRequest = onCloseRequest,
         state = windowState,
         title = stringResource(Res.string.app_name),

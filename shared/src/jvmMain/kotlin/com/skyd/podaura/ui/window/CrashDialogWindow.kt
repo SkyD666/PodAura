@@ -11,7 +11,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import com.skyd.fundation.config.Const
@@ -40,7 +39,7 @@ fun CrashWindow(onCloseRequest: () -> Unit, crashInfo: String) {
             append(crashInfo)
         }
     }
-    Window(
+    BaseWindow(
         onCloseRequest = onCloseRequest,
         title = stringResource(Res.string.crash_window_title),
         state = rememberWindowState(position = WindowPosition.Aligned(alignment = Alignment.Center)),

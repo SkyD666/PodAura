@@ -1,6 +1,5 @@
 package com.skyd.podaura
 
-import androidx.compose.foundation.ComposeFoundationFlags
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -17,10 +16,13 @@ import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.ui.window.DesktopWindowHost
+import com.skyd.podaura.ui.window.initWindowsAppIdentity
 import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
 
 fun main() {
+    initWindowsAppIdentity()
+
     var crashMessage by mutableStateOf("")
     CrashHandler.init(onCrash = { crashMessage = it })
 

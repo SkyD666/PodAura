@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.compose.desktop.application.tasks.AbstractNativeMacApplicationPackageAppDirTask
@@ -223,6 +224,12 @@ kotlin {
     // KSP Common sourceSet
     sourceSets.commonMain.configure {
         kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+    }
+}
+
+tasks.withType<ProcessResources>().configureEach {
+    if (name == "jvmProcessResources") {
+        from(project.file("icons/PodAura.ico"))
     }
 }
 
