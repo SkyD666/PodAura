@@ -525,4 +525,7 @@
         <item quantity="one">Antaŭ %1$d tago</item>
         <item quantity="other">Antaŭ %1$d tagoj</item>
     </plurals>
+    <string name="read_screen_get_full_content">Akiri plenan artikolon</string>
+    <string name="read_screen_show_feed_content">Montri fluofontan enhavon</string>
+    <string name="read_screen_full_content_failed">Ne eblis akiri la plenan artikolon</string>
 </resources>

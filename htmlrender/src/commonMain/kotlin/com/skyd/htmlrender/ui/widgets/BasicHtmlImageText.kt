@@ -53,6 +53,7 @@ fun BasicHtmlImageText(
             ),
         )
     ),
+    baseUri: String = "",
     renderDefault: @Composable ColumnScope.(AnnotatedString) -> Unit = { text ->
         BasicText(
             text = text,
@@ -72,6 +73,7 @@ fun BasicHtmlImageText(
     }
 ) = BasicHtmlContent(
     html = html,
+    baseUri = baseUri,
     state = state,
     styleConfig = styleConfig,
     renderTag = renderTag,

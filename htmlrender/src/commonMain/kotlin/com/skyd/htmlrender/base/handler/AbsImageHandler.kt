@@ -15,7 +15,7 @@ abstract class AbsImageHandler : TagHandler() {
     ) {
         list.add(
             getImageStyler(
-                node.attr("src"),
+                node.absUrl("src").ifBlank { node.attr("src") },
                 cssDeclarations
             )
         )

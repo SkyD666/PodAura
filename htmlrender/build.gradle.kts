@@ -41,6 +41,9 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.runtime.compose)
             implementation(libs.kermit)
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
     }
 
     compilerOptions {

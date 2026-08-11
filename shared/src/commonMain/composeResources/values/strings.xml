@@ -532,4 +532,7 @@
         <item quantity="one">%1$d day ago</item>
         <item quantity="other">%1$d days ago</item>
     </plurals>
+    <string name="read_screen_get_full_content">Get full article</string>
+    <string name="read_screen_show_feed_content">Show feed content</string>
+    <string name="read_screen_full_content_failed">Unable to get the full article</string>
 </resources>

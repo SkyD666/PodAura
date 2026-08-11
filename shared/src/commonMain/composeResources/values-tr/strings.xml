@@ -525,4 +525,7 @@
         <item quantity="one">%1$d gün önce</item>
         <item quantity="other">%1$d gün önce</item>
     </plurals>
+    <string name="read_screen_get_full_content">Tam metni getir</string>
+    <string name="read_screen_show_feed_content">Akış içeriğini göster</string>
+    <string name="read_screen_full_content_failed">Tam metin alınamadı</string>
 </resources>

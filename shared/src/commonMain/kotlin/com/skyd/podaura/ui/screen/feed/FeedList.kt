@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.screen.feed
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +46,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
@@ -61,6 +65,8 @@ import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
+import com.skyd.fundation.util.isJvm
+import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.lastIndex
@@ -129,11 +135,37 @@ internal fun FeedList(
     var createGroupDialogGroup by rememberSaveable { mutableStateOf("") }
 
     var fabHeight by remember { mutableStateOf(0.dp) }
+    val initialPaneFocusRequester = remember { FocusRequester() }
+    val initialItemFocusRequester = remember { FocusRequester() }
+    var initialPaneFocused by remember { mutableStateOf(false) }
+    var initialFocusHandled by rememberSaveable { mutableStateOf(false) }
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = FeedIntent.Init)
 
+    if (platform.isJvm && !initialFocusHandled) {
+        LaunchedEffect(initialPaneFocusRequester) {
+            initialPaneFocusRequester.requestFocus()
+        }
+    }
+
     Scaffold(
+        // Keep startup focus in the list pane while its Paging data is still loading. The
+        // temporary focus target is removed after focus has moved to the first real item.
+        modifier = if (platform.isJvm && !initialFocusHandled) {
+            Modifier
+                .onFocusChanged { focusState ->
+                    val wasFocused = initialPaneFocused
+                    initialPaneFocused = focusState.isFocused
+                    if (wasFocused && !focusState.isFocused) {
+                        initialFocusHandled = true
+                    }
+                }
+                .focusRequester(initialPaneFocusRequester)
+                .focusable()
+        } else {
+            Modifier
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -212,21 +244,45 @@ internal fun FeedList(
         }
         when (val listState = uiState.listState) {
             is ListState.Failed, ListState.Init, ListState.Loading -> {}
-            is ListState.Success -> FeedList(
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-                lazyPagingItems = listState.dataPagingDataFlow.collectAsLazyPagingItems(),
-                contentPadding = innerPadding,
-                fabPadding = fabHeight + 16.dp,
-                selectedFeedUrls = listPaneSelectedFeedUrls,
-                selectedGroupIds = listPaneSelectedGroupIds,
-                onShowArticleListByFeedUrls = onShowArticleListByFeedUrls,
-                onShowArticleListByGroupId = onShowArticleListByGroupId,
-                onExpandChanged = { group, expanded ->
-                    dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
-                },
-                onEditFeed = { feed -> dispatch(FeedIntent.OnEditFeedDialog(feed.feed.url)) },
-                onEditGroup = { group -> dispatch(FeedIntent.OnEditGroupDialog(group)) },
-            )
+            is ListState.Success -> {
+                val lazyPagingItems = listState.dataPagingDataFlow.collectAsLazyPagingItems()
+                val itemSnapshotList = lazyPagingItems.itemSnapshotList
+                if (platform.isJvm && initialPaneFocused && !initialFocusHandled &&
+                    itemSnapshotList.items.isNotEmpty()
+                ) {
+                    LaunchedEffect(itemSnapshotList) {
+                        if (initialPaneFocused && !initialFocusHandled &&
+                            initialItemFocusRequester.requestFocus()
+                        ) {
+                            initialFocusHandled = true
+                        }
+                    }
+                }
+
+                FeedList(
+                    modifier = Modifier
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .then(
+                            if (platform.isJvm && !initialFocusHandled) {
+                                Modifier.focusRequester(initialItemFocusRequester)
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    lazyPagingItems = lazyPagingItems,
+                    contentPadding = innerPadding,
+                    fabPadding = fabHeight + 16.dp,
+                    selectedFeedUrls = listPaneSelectedFeedUrls,
+                    selectedGroupIds = listPaneSelectedGroupIds,
+                    onShowArticleListByFeedUrls = onShowArticleListByFeedUrls,
+                    onShowArticleListByGroupId = onShowArticleListByGroupId,
+                    onExpandChanged = { group, expanded ->
+                        dispatch(FeedIntent.ChangeGroupExpanded(group, expanded))
+                    },
+                    onEditFeed = { feed -> dispatch(FeedIntent.OnEditFeedDialog(feed.feed.url)) },
+                    onEditGroup = { group -> dispatch(FeedIntent.OnEditGroupDialog(group)) },
+                )
+            }
         }
 
         MviEventListener(viewModel.singleEvent) { event ->

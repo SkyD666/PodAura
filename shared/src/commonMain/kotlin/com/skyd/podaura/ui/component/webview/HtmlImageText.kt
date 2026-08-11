@@ -27,6 +27,7 @@ import com.skyd.podaura.ui.component.PodAuraImage
 @Composable
 fun HtmlImageText(
     html: String,
+    baseUri: String = "",
     textStyle: TextStyle = LocalTextStyle.current,
     modifier: Modifier = Modifier,
     onImageClick: ((imageUrl: String, alt: String) -> Unit)?,
@@ -38,6 +39,7 @@ fun HtmlImageText(
     )
     BasicHtmlImageText(
         html = html,
+        baseUri = baseUri,
         styleConfig = StyleConfig(
             textStyle = textStyle,
             linkStyles = TextLinkStyles(

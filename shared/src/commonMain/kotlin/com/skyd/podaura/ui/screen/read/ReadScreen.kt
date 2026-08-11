@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
 import androidx.compose.material.icons.outlined.AttachFile
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -44,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +77,7 @@ import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.httpDomain
+import com.skyd.podaura.ext.isHttpOrHttps
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.article.ArticleCategoryBean
@@ -85,6 +88,7 @@ import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.rememberTextSharing
 import com.skyd.podaura.ui.component.webview.PodAuraWebView
+import com.skyd.podaura.ui.component.webview.HtmlStyleMode
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
@@ -105,6 +109,8 @@ import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.media_not_exists
 import podaura.shared.generated.resources.open_link_in_browser
 import podaura.shared.generated.resources.read_screen_name
+import podaura.shared.generated.resources.read_screen_get_full_content
+import podaura.shared.generated.resources.read_screen_show_feed_content
 import podaura.shared.generated.resources.read_screen_open_article_screen
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
@@ -217,11 +223,30 @@ fun ReadScreen(
                     )
                     val articleLink = (uiState.articleState as? ArticleState.Success)
                         ?.article?.articleWithEnclosure?.article?.link
+                    val successState = uiState.articleState as? ArticleState.Success
                     MoreMenu(
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
                         onOpenInBrowserClick = articleLink?.let { { uriHandler.safeOpenUri(it) } },
                         onReadTextSizeClick = { openReadTextSizeSliderDialog = true },
+                        contentSource = successState?.contentSource ?: ReadContentSource.Feed,
+                        fullContentActionEnabled = !uiState.fullContentLoading && (
+                            successState?.contentSource == ReadContentSource.FullText ||
+                                successState?.fullContent != null ||
+                                articleLink?.isHttpOrHttps() == true
+                            ),
+                        onFullContentClick = {
+                            when {
+                                successState?.contentSource == ReadContentSource.FullText ->
+                                    dispatcher(ReadIntent.SelectContentSource(ReadContentSource.Feed))
+
+                                successState?.fullContent != null ->
+                                    dispatcher(ReadIntent.SelectContentSource(ReadContentSource.FullText))
+
+                                articleLink?.isHttpOrHttps() == true ->
+                                    dispatcher(ReadIntent.FetchFullContent(articleLink))
+                            }
+                        },
                         onOpenArticleScreen = {
                             val articleState = uiState.articleState
                             if (articleState is ArticleState.Success) {
@@ -254,6 +279,17 @@ fun ReadScreen(
         ),
     ) { innerPadding ->
         val scrollState = rememberScrollState()
+        val contentSource = (uiState.articleState as? ArticleState.Success)?.contentSource
+        // Deliberately not saveable: after recreation the tracker starts at the restored source,
+        // so the first effect cannot overwrite rememberScrollState's restored offset.
+        val contentSourceTransitionTracker = remember(articleId) {
+            ReadContentSourceTransitionTracker(contentSource)
+        }
+        LaunchedEffect(contentSource) {
+            if (contentSourceTransitionTracker.shouldResetScroll(contentSource)) {
+                scrollState.scrollTo(0)
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -309,6 +345,8 @@ fun ReadScreen(
 
                 is ReadEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
 
+                is ReadEvent.FullContentResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+
                 is ReadEvent.PlayTimestampResultEvent.OpenPlayer -> playerJumper.jump(
                     PlayDataMode.ArticleList(
                         articleId = event.articleId,
@@ -322,13 +360,26 @@ fun ReadScreen(
             }
         }
 
-        WaitingDialog(visible = uiState.loadingDialog)
+        WaitingDialog(visible = uiState.loadingDialog || uiState.fullContentLoading)
 
         if (openReadTextSizeSliderDialog) {
             ReadTextSizeSliderDialog(
                 onDismissRequest = { openReadTextSizeSliderDialog = false },
             )
         }
+    }
+}
+
+internal class ReadContentSourceTransitionTracker(
+    initialSource: ReadContentSource?,
+) {
+    private var previousSource = initialSource
+
+    fun shouldResetScroll(currentSource: ReadContentSource?): Boolean {
+        if (currentSource == null) return false
+        val shouldReset = previousSource != null && previousSource != currentSource
+        previousSource = currentSource
+        return shouldReset
     }
 }
 
@@ -419,8 +470,14 @@ private fun Content(
     })
     PodAuraWebView(
         modifier = Modifier.fillMaxWidth(),
-        content = articleState.linkedContent,
-        refererDomain = article.article.link?.httpDomain(),
+        content = articleState.displayedContent,
+        baseUrl = articleState.displayedSourceUrl,
+        refererDomain = articleState.displayedSourceUrl?.httpDomain(),
+        styleMode = if (articleState.contentSource == ReadContentSource.FullText) {
+            HtmlStyleMode.HarmonizedSource
+        } else {
+            HtmlStyleMode.ReaderTheme
+        },
         horizontalPadding = 16f,
         onImageClick = { imageUrl, _ ->
             imagePreviewOpener.open(image = imageUrl, title = article.article.title)
@@ -438,16 +495,31 @@ private fun MoreMenu(
     onDismissRequest: () -> Unit,
     onOpenInBrowserClick: (() -> Unit)?,
     onReadTextSizeClick: () -> Unit,
+    contentSource: ReadContentSource,
+    fullContentActionEnabled: Boolean,
+    onFullContentClick: () -> Unit,
     onOpenArticleScreen: () -> Unit,
 ) {
     DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
         val texts = listOf(
             stringResource(Res.string.open_link_in_browser),
+            stringResource(
+                if (contentSource == ReadContentSource.FullText) {
+                    Res.string.read_screen_show_feed_content
+                } else {
+                    Res.string.read_screen_get_full_content
+                }
+            ),
             stringResource(Res.string.read_screen_text_size),
             stringResource(Res.string.read_screen_open_article_screen),
         )
         val leadingIcons = listOf(
             Icons.Outlined.OpenInBrowser,
+            if (contentSource == ReadContentSource.FullText) {
+                Icons.Outlined.RssFeed
+            } else {
+                Icons.AutoMirrored.Outlined.ChromeReaderMode
+            },
             Icons.Outlined.FormatSize,
             Icons.Outlined.RssFeed,
         )
@@ -458,6 +530,10 @@ private fun MoreMenu(
             },
             {
                 onDismissRequest()
+                onFullContentClick()
+            },
+            {
+                onDismissRequest()
                 onReadTextSizeClick()
             },
             {
@@ -465,7 +541,12 @@ private fun MoreMenu(
                 onOpenArticleScreen()
             },
         )
-        val enables = listOf(onOpenInBrowserClick != null, true, true)
+        val enables = listOf(
+            onOpenInBrowserClick != null,
+            fullContentActionEnabled,
+            true,
+            true,
+        )
         DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
             texts.forEachIndexed { index, text ->
                 DropdownMenuItem(

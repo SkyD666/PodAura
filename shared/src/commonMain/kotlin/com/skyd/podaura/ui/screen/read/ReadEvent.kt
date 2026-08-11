@@ -11,6 +11,10 @@ sealed interface ReadEvent : MviSingleEvent {
         data class Failed(val msg: String) : ReadArticleResultEvent
     }
 
+    sealed interface FullContentResultEvent : ReadEvent {
+        data class Failed(val msg: String) : FullContentResultEvent
+    }
+
     sealed interface PlayTimestampResultEvent : ReadEvent {
         data class OpenPlayer(
             val articleId: String,

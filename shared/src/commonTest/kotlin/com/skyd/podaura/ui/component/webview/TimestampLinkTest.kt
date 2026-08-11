@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TimestampLinkTest {
@@ -111,6 +112,21 @@ class TimestampLinkTest {
         val link = result.getLinkAnnotations(0, result.length).single().item
         assertTrue(link is LinkAnnotation.Clickable)
         assertEquals("${TIMESTAMP_LINK_PREFIX}83", link.tag)
+    }
+
+    @Test
+    fun htmlAnnotatorResolvesRelativeLinksAndImages() = runBlocking {
+        val result = HtmlAnnotator().from(
+            RawHtmlData(
+                srcHtml = "<p><a href=\"../story\">Story</a><img src=\"images/photo.jpg\"></p>",
+                baseUri = "https://example.com/news/today/",
+            )
+        )
+
+        val link = result.getLinkAnnotations(0, result.length).single().item
+        assertEquals("https://example.com/news/story", assertIs<LinkAnnotation.Url>(link).url)
+        val image = result.getStringAnnotations("img", 0, result.length).single()
+        assertEquals("https://example.com/news/today/images/photo.jpg", image.item)
     }
 
     private fun String.countOccurrences(value: String): Int =

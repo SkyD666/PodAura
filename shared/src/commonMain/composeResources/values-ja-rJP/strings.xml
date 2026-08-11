@@ -518,4 +518,7 @@
     <plurals name="before_day">
         <item quantity="other">%1$d 日前</item>
     </plurals>
+    <string name="read_screen_get_full_content">全文を取得</string>
+    <string name="read_screen_show_feed_content">フィードの内容を表示</string>
+    <string name="read_screen_full_content_failed">全文を取得できませんでした</string>
 </resources>

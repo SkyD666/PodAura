@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.sp
 import com.fleeksoft.ksoup.Ksoup
@@ -21,12 +22,17 @@ import com.skyd.htmlrender.base.toHtmlNode
 import com.skyd.htmlrender.core.css.BackgroundColorCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.CSSAnnotatedHandler
 import com.skyd.htmlrender.core.css.ColorCssAnnotatedHandler
+import com.skyd.htmlrender.core.css.DirectionCssAnnotatedHandler
+import com.skyd.htmlrender.core.css.FontFamilyCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.FontSizeCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.FontStyleCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.FontWeightCssAnnotatedHandler
+import com.skyd.htmlrender.core.css.LetterSpacingCssAnnotatedHandler
+import com.skyd.htmlrender.core.css.LineHeightCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.TextAlignCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.TextDecorationCssAnnotatedHandler
 import com.skyd.htmlrender.core.css.TextIndentCssAnnotatedHandler
+import com.skyd.htmlrender.core.css.VerticalAlignCssAnnotatedHandler
 import com.skyd.htmlrender.core.handler.AppendLinesHandler
 import com.skyd.htmlrender.core.handler.ImageAnnotatedHandler
 import com.skyd.htmlrender.core.handler.LinkAnnotatedHandler
@@ -84,7 +90,7 @@ class HtmlAnnotator(
 
     suspend fun from(
         rawHtmlData: RawHtmlData,
-        baseUri: String = "",
+        baseUri: String = rawHtmlData.baseUri,
         getExternalCSS: (suspend (link: String) -> String)? = null
     ): AnnotatedString = from(
         doc = Ksoup.parse(rawHtmlData.srcHtml, baseUri),
@@ -235,6 +241,23 @@ class HtmlAnnotator(
         registerHandlerIfAbsent("b") { boldHandler }
         registerHandlerIfAbsent("strong") { boldHandler }
 
+        val underlineHandler by lazy {
+            SpanStyleHandler(false) { styleConfig ->
+                styleConfig.textStyle.toSpanStyle().copy(textDecoration = TextDecoration.Underline)
+            }
+        }
+        registerHandlerIfAbsent("ins") { underlineHandler }
+        registerHandlerIfAbsent("u") { underlineHandler }
+
+        val lineThroughHandler by lazy {
+            SpanStyleHandler(false) { styleConfig ->
+                styleConfig.textStyle.toSpanStyle().copy(textDecoration = TextDecoration.LineThrough)
+            }
+        }
+        registerHandlerIfAbsent("del") { lineThroughHandler }
+        registerHandlerIfAbsent("s") { lineThroughHandler }
+        registerHandlerIfAbsent("strike") { lineThroughHandler }
+
         val marginHandler by lazy {
             ParagraphStyleHandler { styleConfig ->
                 styleConfig.textStyle.toParagraphStyle().copy(textIndent = TextIndent(4.sp, 4.sp))
@@ -294,6 +317,14 @@ class HtmlAnnotator(
             }
         }
 
+        listOf("code", "kbd", "samp", "var").forEach { tag ->
+            registerHandlerIfAbsent(tag) {
+                SpanStyleHandler(false) { styleConfig ->
+                    styleConfig.textStyle.toSpanStyle().copy(fontFamily = FontFamily.Monospace)
+                }
+            }
+        }
+
         registerHandlerIfAbsent("pre") { PreAnnotatedHandler() }
 
         registerHandlerIfAbsent("big") {
@@ -338,6 +369,19 @@ class HtmlAnnotator(
         registerHandlerIfAbsent("img") { ImageAnnotatedHandler() }
 
         registerHandlerIfAbsent("span") { TagHandler() }
+        listOf(
+            "article", "section", "main", "header", "figure", "figcaption", "details",
+            "summary", "dl", "dt", "dd", "caption", "tr",
+        ).forEach { tag ->
+            registerHandlerIfAbsent(tag) { ParagraphHandler(false) }
+        }
+        listOf(
+            "mark", "time", "ruby", "rt", "rp", "table", "thead", "tbody",
+            "tfoot", "th", "td", "picture", "source", "font",
+        ).forEach { tag ->
+            registerHandlerIfAbsent(tag) { TagHandler() }
+        }
+        registerHandlerIfAbsent("hr") { AppendLinesHandler(1) }
     }
 
     private fun registerBuiltInCssHandlers(pre: Map<String, CSSAnnotatedHandler>?) {
@@ -353,12 +397,17 @@ class HtmlAnnotator(
 
         registerHandlerIfAbsent("text-align") { TextAlignCssAnnotatedHandler() }
         registerHandlerIfAbsent("font-size") { FontSizeCssAnnotatedHandler() }
+        registerHandlerIfAbsent("font-family") { FontFamilyCssAnnotatedHandler() }
         registerHandlerIfAbsent("font-weight") { FontWeightCssAnnotatedHandler() }
         registerHandlerIfAbsent("font-style") { FontStyleCssAnnotatedHandler() }
         registerHandlerIfAbsent("color") { ColorCssAnnotatedHandler() }
         registerHandlerIfAbsent("background-color") { BackgroundColorCssAnnotatedHandler() }
         registerHandlerIfAbsent("text-indent") { TextIndentCssAnnotatedHandler() }
         registerHandlerIfAbsent("text-decoration") { TextDecorationCssAnnotatedHandler() }
+        registerHandlerIfAbsent("line-height") { LineHeightCssAnnotatedHandler() }
+        registerHandlerIfAbsent("letter-spacing") { LetterSpacingCssAnnotatedHandler() }
+        registerHandlerIfAbsent("vertical-align") { VerticalAlignCssAnnotatedHandler() }
+        registerHandlerIfAbsent("direction") { DirectionCssAnnotatedHandler() }
 
     }
 

@@ -6,26 +6,31 @@ import com.skyd.podaura.ext.ifNullOfBlank
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.ReadRepository
 import com.skyd.podaura.model.repository.article.IArticleRepository
+import com.skyd.podaura.model.repository.fullcontent.IFullContentRepository
 import com.skyd.podaura.ui.component.webview.linkifyTimestamps
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.read_screen_article_id_illegal
+import podaura.shared.generated.resources.read_screen_full_content_failed
 
 class ReadViewModel(
     private val readRepo: ReadRepository,
     private val articleRepo: IArticleRepository,
+    private val fullContentRepo: IFullContentRepository,
 ) : AbstractMviViewModel<ReadIntent, ReadState, ReadEvent>() {
 
     override val viewState: StateFlow<ReadState>
@@ -52,7 +57,10 @@ class ReadViewModel(
                     ReadEvent.FavoriteArticleResultEvent.Failed(change.msg)
 
                 is ReadPartialStateChange.ReadArticle.Failed ->
-                    ReadEvent.FavoriteArticleResultEvent.Failed(change.msg)
+                    ReadEvent.ReadArticleResultEvent.Failed(change.msg)
+
+                is ReadPartialStateChange.FullContentResult.Failed ->
+                    ReadEvent.FullContentResultEvent.Failed(change.msg)
 
                 is ReadPartialStateChange.PlayTimestamp.OpenPlayer ->
                     ReadEvent.PlayTimestampResultEvent.OpenPlayer(
@@ -82,14 +90,14 @@ class ReadViewModel(
                         )
                     } else {
                         val article = it.articleWithEnclosure.article
-                        val linkedContent = withContext(Dispatchers.Default) {
+                        val feedContent = withContext(Dispatchers.Default) {
                             linkifyTimestamps(
                                 article.content.ifNullOfBlank { article.description.orEmpty() }
                             )
                         }
                         ReadPartialStateChange.ArticleResult.Success(
                             article = it,
-                            linkedContent = linkedContent,
+                            feedContent = feedContent,
                         )
                     }
                 }.startWith(ReadPartialStateChange.ArticleResult.Loading)
@@ -107,6 +115,25 @@ class ReadViewModel(
                 }.startWith(ReadPartialStateChange.LoadingDialog.Show).catchMap {
                     ReadPartialStateChange.ReadArticle.Failed(it.message.toString())
                 }
+            },
+            filterIsInstance<ReadIntent.FetchFullContent>().flatMapConcat { intent ->
+                flow { emit(fullContentRepo.fetch(intent.url)) }.map { content ->
+                    val linkedHtml = withContext(Dispatchers.Default) {
+                        linkifyTimestamps(content.html)
+                    }
+                    ReadPartialStateChange.FullContentResult.Success(
+                        content.copy(html = linkedHtml)
+                    )
+                }.startWith(ReadPartialStateChange.FullContentResult.Loading).catch {
+                    emit(
+                        ReadPartialStateChange.FullContentResult.Failed(
+                            getString(Res.string.read_screen_full_content_failed)
+                        )
+                    )
+                }
+            },
+            filterIsInstance<ReadIntent.SelectContentSource>().map { intent ->
+                ReadPartialStateChange.ContentSourceChanged(intent.source)
             },
             filterIsInstance<ReadIntent.PlayTimestamp>().map { intent ->
                 intent.mediaUrl?.let { mediaUrl ->

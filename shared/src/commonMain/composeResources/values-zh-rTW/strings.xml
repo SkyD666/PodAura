@@ -518,4 +518,7 @@
     <plurals name="before_day">
         <item quantity="other">%1$d 天之前</item>
     </plurals>
+    <string name="read_screen_get_full_content">取得全文</string>
+    <string name="read_screen_show_feed_content">顯示訂閱內容</string>
+    <string name="read_screen_full_content_failed">無法取得全文</string>
 </resources>

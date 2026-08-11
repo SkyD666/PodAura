@@ -34,7 +34,9 @@ import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 actual fun PodAuraWebView(
     modifier: Modifier,
     content: String,
+    baseUrl: String?,
     refererDomain: String?,
+    styleMode: HtmlStyleMode,
     horizontalPadding: Float,
     onImageClick: ((imageUrl: String, alt: String) -> Unit)?,
     onTimestampClick: ((positionSeconds: Long) -> Unit)?,
@@ -61,6 +63,14 @@ actual fun PodAuraWebView(
     val codeBgColor =
         MaterialTheme.colorScheme.surfaceColorAtElevation((tonalElevation + 6).dp).toArgb()
     val bionicReading = false
+    val palette = currentHtmlRenderPalette()
+    val renderedContent = remember(content, palette, styleMode) {
+        if (styleMode == HtmlStyleMode.HarmonizedSource) {
+            content.resolveThemeColorTokens(palette)
+        } else {
+            content
+        }
+    }
 
     val uriHandler = LocalUriHandler.current
 
@@ -110,9 +120,10 @@ actual fun PodAuraWebView(
             tablePadding = horizontalPadding,
             selectionTextColor = selectionTextColor,
             selectionBgColor = selectionBgColor,
+            harmonizedSource = styleMode == HtmlStyleMode.HarmonizedSource,
         ),
-        holder.baseUrl,
-        content,
+        baseUrl.orEmpty().escapeHtmlAttribute(),
+        renderedContent,
         WebViewScript.get(bionicReading),
     )
     AndroidView(
@@ -130,6 +141,8 @@ actual fun PodAuraWebView(
                 settings.defaultFontSize = fontSize.toInt()
                 if (holder.loadedHtml != html) {
                     holder.loadedHtml = html
+                    // Keep untrusted article HTML on an opaque origin. The escaped <base> in
+                    // WebViewHtml remains responsible for resolving relative links and images.
                     loadDataWithBaseURL(null, html, "text/HTML", "UTF-8", null)
                 }
             }
@@ -140,6 +153,12 @@ actual fun PodAuraWebView(
     )
 }
 
+private fun String.escapeHtmlAttribute(): String =
+    replace("&", "&amp;")
+        .replace("\"", "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+
 private class PodAuraWebViewHolder(context: Context) : ViewModel() {
     private val applicationContext = context.applicationContext
     private val contextWrapper = MutableContextWrapper(context)
@@ -149,7 +168,6 @@ private class PodAuraWebViewHolder(context: Context) : ViewModel() {
         context = contextWrapper,
         webViewClient = WebViewClient(refererDomain = null, onOpenLink = {}),
     )
-    val baseUrl: String? = webView.url
     var loadedHtml: String? = null
 
     fun attach(context: Context) {

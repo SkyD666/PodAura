@@ -158,6 +158,11 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/fleeksoft/ksoup",
         ),
         LicenseBean(
+            name = "Kotlin Readability",
+            license = "Apache-2.0",
+            link = "https://github.com/Tlaster/readability",
+        ),
+        LicenseBean(
             name = "mpv-android",
             license = "MIT",
             link = "https://github.com/mpv-android/mpv-android",

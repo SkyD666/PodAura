@@ -108,6 +108,7 @@ kotlin {
             implementation(libs.kermit)
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
+            implementation(libs.readability)
             implementation(libs.material.kolor)
             implementation(libs.reorderable)
             implementation(libs.skyd666.settings)
@@ -123,6 +124,8 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
 
         androidMain.dependencies {
@@ -132,6 +135,7 @@ kotlin {
             implementation(libs.androidx.work.runtime.ktx)
             implementation(libs.androidx.media)
             implementation(libs.androidx.graphics.shapes)
+            implementation(libs.androidx.webkit)
 
             implementation(libs.accompanist.permissions)
 

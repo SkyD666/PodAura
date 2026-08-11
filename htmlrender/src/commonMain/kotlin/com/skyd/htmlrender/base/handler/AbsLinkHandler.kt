@@ -13,9 +13,10 @@ abstract class AbsLinkHandler : TagHandler() {
         cssDeclarations: List<CSSDeclaration>?,
         styleConfig: StyleConfig
     ) {
+        val attribute = if (node.hasAttr("href")) "href" else "src"
         list.add(
             getUrlStyler(
-                node.attr("href").ifBlank { node.attr("src") },
+                node.absUrl(attribute).ifBlank { node.attr(attribute) },
                 cssDeclarations
             )
         )

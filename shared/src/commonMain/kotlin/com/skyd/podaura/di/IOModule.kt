@@ -6,6 +6,7 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.util.isFreeNetworkAvailable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
@@ -41,7 +42,9 @@ val ioModule = module {
             install(
                 createClientPlugin("AcceptHeader") {
                     onRequest { request, _ ->
-                        request.headers["Accept"] = "*/*"
+                        if (request.headers[HttpHeaders.Accept] == null) {
+                            request.headers.append(HttpHeaders.Accept, "*/*")
+                        }
                     }
                 }
             )
@@ -63,6 +66,18 @@ val ioModule = module {
                     }
                 }
             )
+        }
+    }
+    single(named("fullContent")) {
+        HttpClient {
+            get<HttpClientConfig<*>.() -> Unit>()
+            // FullContentRepository follows redirects manually so every target can be validated.
+            followRedirects = false
+            install(HttpTimeout) {
+                requestTimeoutMillis = 20_000
+                connectTimeoutMillis = 20_000
+                socketTimeoutMillis = 20_000
+            }
         }
     }
 }

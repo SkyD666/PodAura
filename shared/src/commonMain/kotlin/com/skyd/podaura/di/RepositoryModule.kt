@@ -23,6 +23,8 @@ import com.skyd.podaura.model.repository.feed.RequestHeadersRepository
 import com.skyd.podaura.model.repository.feed.RssHelper
 import com.skyd.podaura.model.repository.feed.sheet.FeedSheetRepository
 import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
+import com.skyd.podaura.model.repository.fullcontent.FullContentRepository
+import com.skyd.podaura.model.repository.fullcontent.IFullContentRepository
 import com.skyd.podaura.model.repository.importexport.ImportExportRepository
 import com.skyd.podaura.model.repository.importexport.opml.IExportOpmlRepository
 import com.skyd.podaura.model.repository.importexport.opml.IImportOpmlRepository
@@ -41,6 +43,7 @@ import com.skyd.podaura.util.favicon.FaviconExtractor
 import com.skyd.podaura.util.favicon.extractor.BaseUrlIconTagExtractor
 import com.skyd.podaura.util.favicon.extractor.HardCodedExtractor
 import com.skyd.podaura.util.favicon.extractor.IconTagExtractor
+import org.koin.core.qualifier.named
 import org.koin.dsl.binds
 import org.koin.dsl.module
 
@@ -51,6 +54,9 @@ val repositoryModule = module {
     factory { HistoryRepository(get(), get(), get()) }
     factory { ImageRepository() }
     factory { ReadRepository(get(), get()) }
+    factory {
+        FullContentRepository(get(named("fullContent")), get(), get())
+    } binds arrayOf(IFullContentRepository::class)
     factory { SearchRepository(get(), get(), get(), get()) }
     factory { UpdateNotificationRepository(get()) }
     factory { RequestHeadersRepository(get()) }

@@ -20,11 +20,12 @@ fun BasicHtmlContent(
     styleConfig: StyleConfig = StyleConfig.Default,
     renderTag: @Composable ColumnScope.(annotation: AnnotatedString.Range<String>, AnnotatedString) -> Unit,
     modifier: Modifier = Modifier,
+    baseUri: String = "",
     renderDefault: @Composable ColumnScope.(AnnotatedString) -> Unit = { text ->
         BasicText(text, Modifier.fillMaxWidth(), styleConfig.textStyle)
     }
 ): Unit = with(state) {
-    rawHtmlData = html?.let { RawHtmlData(it, styleConfig) }
+    rawHtmlData = html?.let { RawHtmlData(it, styleConfig, baseUri) }
     resultHtml?.let { result ->
         BasicHtmlContentUI(
             resultHtml = result,

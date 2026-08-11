@@ -2,6 +2,9 @@ package com.skyd.podaura.ui.component.webview
 
 object WebViewStyle {
 
+    private fun readerPriority(harmonizedSource: Boolean): String =
+        if (harmonizedSource) "" else "!important"
+
     private fun argbToCssColor(argb: Int): String = "#${(0xFFFFFF and argb).toString(16).uppercase().padStart(6, '0')}"
 
     private fun applyFontFace(
@@ -39,6 +42,7 @@ object WebViewStyle {
         tablePadding: Float,
         selectionTextColor: Int,
         selectionBgColor: Int,
+        harmonizedSource: Boolean = false,
     ): String = """
 ${applyFontFace(fontPath)}
 :root {
@@ -87,12 +91,12 @@ article {
     margin: 0;
     margin-left: var(--text-margin) !important;
     margin-right: var(--text-margin) !important;
-    font-family: var(--font-family) !important;
-    font-size: var(--font-size) !important;
-    font-weight: var(--text-bold) !important;
-    color: var(--text-color) !important;
-    word-wrap: break-all !important;
-    overflow-wrap: break-word !important;
+    font-family: var(--font-family) ${readerPriority(harmonizedSource)};
+    font-size: var(--font-size) ${readerPriority(harmonizedSource)};
+    font-weight: var(--text-bold) ${readerPriority(harmonizedSource)};
+    color: var(--text-color) ${readerPriority(harmonizedSource)};
+    word-wrap: break-all ${readerPriority(harmonizedSource)};
+    overflow-wrap: break-word ${readerPriority(harmonizedSource)};
 }
 
 /* Page  */
@@ -113,34 +117,34 @@ h3,
 h4,
 h5,
 h6 {
-    font-weight: var(--subhead-bold) !important;
+    font-weight: var(--subhead-bold) ${readerPriority(harmonizedSource)};
     text-transform: var(--subhead-upper-case) !important;
-    line-height: calc(min(1.2, var(--line-height))) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    color: var(--bold-text-color) !important;
-    text-align: var(--text-align) !important;
+    line-height: calc(min(1.2, var(--line-height))) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    color: var(--bold-text-color) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 /* Paragraph */
 p {
     max-width: 100% !important;
-    word-wrap: break-all !important;
-    overflow-wrap: break-word !important;
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
+    word-wrap: break-all ${readerPriority(harmonizedSource)};
+    overflow-wrap: break-word ${readerPriority(harmonizedSource)};
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 span {
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 /* Strong  */
 strong,
 b {
-    color: var(--bold-text-color) !important;
+    color: var(--bold-text-color) ${readerPriority(harmonizedSource)};
 }
 
 /* Link */
@@ -148,7 +152,7 @@ a,
 a > strong {
     word-break: break-all;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    color: var(--link-text-color) !important;
+    color: var(--link-text-color) ${readerPriority(harmonizedSource)};
 }
 div > a {
     display: block;
@@ -170,7 +174,7 @@ img {
     margin-left: calc(0px - var(--text-margin) + var(--img-margin)) !important;
     margin-right: calc(0px - var(--text-margin) + var(--img-margin)) !important;
     max-width: calc(100% + 2 * var(--text-margin) - 2 * var(--img-margin)) !important;
-    border-radius: var(--img-border-radius) !important;
+    border-radius: var(--img-border-radius) ${readerPriority(harmonizedSource)};
 }
 
 img {
@@ -200,7 +204,7 @@ p > img {
     margin-right: calc(0px - var(--text-margin) + var(--img-margin)) !important;
     max-width: calc(100% + 2 * var(--text-margin) - 2 * var(--img-margin)) !important;
     height: auto !important;
-    border-radius: var(--img-border-radius) !important;
+    border-radius: var(--img-border-radius) ${readerPriority(harmonizedSource)};
 }
 
 img + small {
@@ -214,32 +218,32 @@ img + small {
 /* List */
 ul,
 ol {
-    padding-left: 0 !important;
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
+    padding-left: 0 ${readerPriority(harmonizedSource)};
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 li {
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    margin-left: 1.5em !important;
-    text-align: var(--text-align) !important;
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    margin-left: 1.5em ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 /* Quote  */
 blockquote {
-    margin-left: 0.5em !important;
-    padding-left: calc(0.9em) !important;
-    background-color: var(--blockquote-bg-color) !important;
-    border-left: var(--blockquote-border-width) solid var(--blockquote-border-color) !important;
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
+    margin-left: 0.5em ${readerPriority(harmonizedSource)};
+    padding-left: calc(0.9em) ${readerPriority(harmonizedSource)};
+    background-color: var(--blockquote-bg-color) ${readerPriority(harmonizedSource)};
+    border-left: var(--blockquote-border-width) solid var(--blockquote-border-color) ${readerPriority(harmonizedSource)};
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 blockquote blockquote {
-    margin-right: 0 !important;
+    margin-right: 0 ${readerPriority(harmonizedSource)};
 }
 
 blockquote img {
@@ -249,29 +253,29 @@ blockquote img {
 
 /* Table  */
 table {
-    display: block;
+    display: ${if (harmonizedSource) "table" else "block"};
     max-width: var(--content-width) !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
-    margin-left: var(--table-margin) !important;
-    margin-right: var(--table-margin) !important;
+    width: 100% ${readerPriority(harmonizedSource)};
+    border-collapse: collapse ${readerPriority(harmonizedSource)};
+    margin-left: var(--table-margin) ${readerPriority(harmonizedSource)};
+    margin-right: var(--table-margin) ${readerPriority(harmonizedSource)};
 }
 
 table th,
 table td {
-    border: var(--table-border-width) solid var(--table-border-color) !important;
-    padding: var(--table-cell-padding) !important;
-    line-height: var(--line-height) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
+    border: var(--table-border-width) solid var(--table-border-color) ${readerPriority(harmonizedSource)};
+    padding: var(--table-cell-padding) ${readerPriority(harmonizedSource)};
+    line-height: var(--line-height) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
 table tr {
-    display: block;
+    display: ${if (harmonizedSource) "table-row" else "block"};
 }
 
 table tr table tr td {
-    display: inline-block;
+    display: ${if (harmonizedSource) "table-cell" else "inline-block"};
 }
 
 table tr:nth-child(even) {
@@ -325,21 +329,21 @@ pre::-webkit-scrollbar-thumb {
 
 /* MISC */
 figure {
-    line-height: calc(min(1.5, var(--line-height))) !important;
-    letter-spacing: var(--letter-spacing) !important;
-    text-align: var(--text-align) !important;
-    margin: 0 !important;
-    font-size: 12px !important;
+    line-height: calc(min(1.5, var(--line-height))) ${readerPriority(harmonizedSource)};
+    letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
+    text-align: var(--text-align) ${readerPriority(harmonizedSource)};
+    margin: 0 ${readerPriority(harmonizedSource)};
+    font-size: 12px ${readerPriority(harmonizedSource)};
 }
 
 figure * {
-    font-size: 1em !important;
+    font-size: 1em ${readerPriority(harmonizedSource)};
 }
 
 figure p,
 caption,
 figcaption {
-    font-size: 12px !important;
+    font-size: 12px ${readerPriority(harmonizedSource)};
 }
 
 hr {
