@@ -24,6 +24,8 @@ interface IStringAnnotationStyler : AnnotatedStyler {
     fun getAnnotation(): String
 }
 
+interface IListItemStyler : IStringAnnotationStyler
+
 
 interface IUrlAnnotationStyler : AnnotatedStyler {
     fun getUrlAnnotation(linkStyles: TextLinkStyles, uriHandler: UriHandler?): LinkAnnotation

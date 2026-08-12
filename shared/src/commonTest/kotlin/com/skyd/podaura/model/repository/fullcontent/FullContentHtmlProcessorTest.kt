@@ -9,13 +9,19 @@ import kotlin.test.assertTrue
 class FullContentHtmlProcessorTest {
 
     @Test
-    fun preservesSafeStylesAndMapsSourceColorsToThemeTokens() {
+    fun preservesSemanticStylesButDropsPageSpecificTypographyAndLayout() {
         val html = """
             <html>
               <head>
                 <title>Styled article</title>
                 <style>
-                  .lead { color: blue; font-size: 1.25em; line-height: 1.6; }
+                  .lead {
+                    color: blue;
+                    font-size: 28px;
+                    line-height: 50px;
+                    width: 920px;
+                    margin-left: 240px;
+                  }
                   .note {
                     color: #ff0000;
                     background-color: rgb(255, 240, 200);
@@ -37,7 +43,6 @@ class FullContentHtmlProcessorTest {
 
         val result = FullContentHtmlProcessor.process(html, "https://example.com/news/article")
 
-        assertContains(result, "font-size: 1.25em")
         assertContains(result, "font-weight: 700")
         assertContains(result, "var(--podaura-primary)")
         assertContains(result, "var(--podaura-secondary-container)")
@@ -45,6 +50,10 @@ class FullContentHtmlProcessorTest {
         assertContains(result, "border-left: 3px solid var(--podaura-outline-variant)")
         assertFalse(result.contains("color: blue", ignoreCase = true))
         assertFalse(result.contains("#ff0000", ignoreCase = true))
+        assertFalse(result.contains("font-size", ignoreCase = true))
+        assertFalse(result.contains("line-height", ignoreCase = true))
+        assertFalse(result.contains("width: 920px", ignoreCase = true))
+        assertFalse(result.contains("margin-left", ignoreCase = true))
     }
 
     @Test
@@ -154,7 +163,24 @@ class FullContentHtmlProcessorTest {
     }
 
     @Test
-    fun retainsSafeLegacyPresentationAttributes() {
+    fun doesNotMapTransparentComputedBackgroundsToVisibleContainers() {
+        val result = FullContentHtmlProcessor.process(
+            html = """
+                <html><body><article>
+                <div style="background-color: rgba(0, 0, 0, 0)">
+                  <p>Transparent source layout remains transparent in reading mode.</p>
+                </div>
+                </article></body></html>
+            """.trimIndent(),
+            baseUrl = "https://example.com/transparent",
+        )
+
+        assertFalse(result.contains("background-color"))
+        assertFalse(result.contains("surface-variant"))
+    }
+
+    @Test
+    fun retainsSafeLegacyColorsWithoutImportingSourceTypography() {
         val result = FullContentHtmlProcessor.process(
             html = """
                 <html><head><title>Legacy style</title></head><body><article>
@@ -165,7 +191,79 @@ class FullContentHtmlProcessorTest {
         )
 
         assertContains(result, "color: var(--podaura-primary)")
-        assertContains(result, "font-family: serif")
-        assertContains(result, "font-size: 1.5em")
+        assertFalse(result.contains("font-family", ignoreCase = true))
+        assertFalse(result.contains("font-size", ignoreCase = true))
+    }
+
+    @Test
+    fun providesACompleteSemanticContainerCandidate() {
+        val candidates = FullContentHtmlProcessor.processPageCandidates(
+            html = """
+                <html><body><main itemprop="articleBody">
+                  <section><p>The opening section of the article.</p></section>
+                  <section><p>The middle section must remain in the extracted article.</p></section>
+                  <section><p>The final section must not be dropped.</p></section>
+                  <aside><p>A promotional sidebar must not become article content.</p></aside>
+                  <section id="comments"><p>A reader discussion must not become article content.</p></section>
+                </main></body></html>
+            """.trimIndent(),
+            baseUrl = "https://example.com/split-article",
+        )
+
+        val semanticCandidate = candidates.first { it.fromSemanticContainer }
+        assertContains(semanticCandidate.html, "opening section")
+        assertContains(semanticCandidate.html, "middle section")
+        assertContains(semanticCandidate.html, "final section")
+        assertFalse(semanticCandidate.html.contains("promotional sidebar"))
+        assertFalse(semanticCandidate.html.contains("reader discussion"))
+    }
+
+    @Test
+    fun restoresLazyImagesAndKeepsNativeMedia() {
+        val result = FullContentHtmlProcessor.processArticleFragment(
+            html = """
+                <article>
+                  <p>An article with lazy media.</p>
+                  <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                       data-src="/images/full.jpg" data-srcset="/images/full.jpg 1x, /images/full@2x.jpg 2x">
+                  <audio controls src="/audio/episode.mp3"></audio>
+                  <video controls poster="/images/poster.jpg" src="/video/clip.mp4"></video>
+                </article>
+            """.trimIndent(),
+            baseUrl = "https://example.com/posts/one",
+        )
+
+        assertContains(result, "https://example.com/images/full.jpg")
+        assertContains(result, "https://example.com/images/full@2x.jpg 2x")
+        assertContains(result, "https://example.com/audio/episode.mp3")
+        assertContains(result, "https://example.com/video/clip.mp4")
+        assertContains(result, "https://example.com/images/poster.jpg")
+    }
+
+    @Test
+    fun dropsSourceListResetsWhenPseudoElementMarkersCannotBeSnapshotted() {
+        val result = FullContentHtmlProcessor.processArticleFragment(
+            html = """
+                <article class="sn-content">
+                  <p>Episode show notes.</p>
+                  <ul style="list-style-type: none; list-style-position: outside">
+                    <li style="list-style-type: none; list-style-position: outside">
+                      <p>Other podcasts from this producer.</p>
+                    </li>
+                    <li style="list-style-type: none; list-style-position: outside">
+                      <p>Recommend this episode to friends.</p>
+                    </li>
+                    <li style="list-style-type: none; list-style-position: outside">
+                      <p>Copyright notice.</p>
+                    </li>
+                  </ul>
+                </article>
+            """.trimIndent(),
+            baseUrl = "https://www.xiaoyuzhoufm.com/episode/example",
+        )
+
+        assertContains(result, "<ul>")
+        assertContains(result, "<li>")
+        assertFalse(result.contains("list-style", ignoreCase = true))
     }
 }

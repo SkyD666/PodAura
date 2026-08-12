@@ -57,6 +57,7 @@ internal class AndroidRenderedPageProvider(
                     WebViewCompat.setProfile(webView, profileName)
                     configure(webView)
                     awaitPageLoad(webView, url)
+                    primeLazyContent(webView)
                     val observerKey = "__podaura_${Uuid.random().toHexString()}"
                     awaitDomStability(webView, observerKey)
                     val snapshotPayload = evaluate(webView, RenderedPageSnapshotScript.snapshot)
@@ -181,6 +182,16 @@ internal class AndroidRenderedPageProvider(
         }
     }
 
+    private suspend fun primeLazyContent(webView: WebView) {
+        repeat(MAX_LAZY_LOAD_STEPS) {
+            if (evaluate(webView, RenderedPageSnapshotScript.lazyLoadStep) == "done") {
+                return
+            }
+            delay(LAZY_LOAD_STEP_DELAY_MILLIS)
+        }
+        evaluate(webView, "window.scrollTo(0, 0); 'done'")
+    }
+
     private suspend fun evaluate(webView: WebView, script: String): String =
         suspendCancellableCoroutine { continuation ->
             webView.evaluateJavascript(script) { encodedResult ->
@@ -220,5 +231,7 @@ private const val MINIMUM_RENDER_DELAY_MILLIS = 300L
 private const val DOM_STABILITY_TIMEOUT_MILLIS = 8_000L
 private const val DOM_QUIET_MILLIS = 800L
 private const val DOM_POLL_MILLIS = 250L
+private const val MAX_LAZY_LOAD_STEPS = 24
+private const val LAZY_LOAD_STEP_DELAY_MILLIS = 100L
 private const val RENDER_VIEWPORT_WIDTH = 1080
 private const val RENDER_VIEWPORT_HEIGHT = 1920

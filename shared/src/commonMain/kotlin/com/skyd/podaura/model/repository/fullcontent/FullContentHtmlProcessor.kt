@@ -16,16 +16,10 @@ internal object FullContentHtmlProcessor {
 
     private val inheritableProperties = setOf(
         "color",
-        "font-family",
-        "font-size",
         "font-style",
         "font-weight",
-        "letter-spacing",
-        "line-height",
         "text-align",
         "text-decoration",
-        "text-indent",
-        "white-space",
         "direction",
     )
 
@@ -54,44 +48,85 @@ internal object FullContentHtmlProcessor {
         "border-left-width",
         "border-collapse",
         "caption-side",
-        "margin",
-        "margin-top",
-        "margin-right",
-        "margin-bottom",
-        "margin-left",
-        "padding",
-        "padding-top",
-        "padding-right",
-        "padding-bottom",
-        "padding-left",
-        "aspect-ratio",
-        "list-style-type",
-        "list-style-position",
-        "max-width",
-        "width",
-        "height",
-        "object-fit",
-        "opacity",
-        "overflow-wrap",
         "table-layout",
         "text-transform",
         "vertical-align",
-        "word-break",
-        "word-wrap",
     )
 
-    fun process(html: String, baseUrl: String): String {
-        val preparedHtml = materializeStyles(html = html, baseUrl = baseUrl)
-        val article = Readability(
-            html = preparedHtml,
-            url = baseUrl,
-            options = ReadabilityOptions(
-                maxElemsToParse = MAX_DOCUMENT_ELEMENTS,
-                keepClasses = true,
-            ),
-        ).parse() ?: throw FullContentException("No readable article content")
+    private val semanticContainerSelector = listOf(
+        "article",
+        "main",
+        "[role=main]",
+        "[itemprop=articleBody]",
+        ".article-content",
+        ".article-body",
+        ".post-content",
+        ".post-body",
+        ".entry-content",
+        ".story-body",
+        "#article-content",
+        "#article-body",
+    ).joinToString(",")
+    private val specificSemanticContainerSelector = listOf(
+        "article",
+        "[itemprop=articleBody]",
+        ".article-content",
+        ".article-body",
+        ".post-content",
+        ".post-body",
+        ".entry-content",
+        ".story-body",
+        "#article-content",
+        "#article-body",
+    ).joinToString(",")
 
-        return cleanExtractedHtml(article.content, baseUrl)
+    fun process(html: String, baseUrl: String): String {
+        val candidates = processPageCandidates(html = html, baseUrl = baseUrl)
+        return candidates.firstOrNull { !it.fromSemanticContainer }
+            ?.html
+            ?: candidates.firstOrNull()
+            ?.html
+            ?: throw FullContentException("No readable article content")
+    }
+
+    /**
+     * Produces both Readability's result and standards/convention based content containers. Some
+     * pages split an article into sibling sections that Readability scores independently; keeping a
+     * direct semantic candidate lets the repository compare the complete container as well.
+     */
+    fun processPageCandidates(html: String, baseUrl: String): List<ProcessedPageCandidate> {
+        val preparedHtml = materializeStyles(html = html, baseUrl = baseUrl)
+        val candidates = buildList {
+            runCatching {
+                Readability(
+                    html = preparedHtml,
+                    url = baseUrl,
+                    options = ReadabilityOptions(
+                        maxElemsToParse = MAX_DOCUMENT_ELEMENTS,
+                        keepClasses = true,
+                    ),
+                ).parse()?.content?.let { cleanExtractedHtml(it, baseUrl) }
+            }.getOrNull()?.let { html ->
+                add(ProcessedPageCandidate(html = html, fromSemanticContainer = false))
+            }
+
+            val document = Ksoup.parse(preparedHtml, baseUrl)
+            document.select(semanticContainerSelector).forEach { container ->
+                val isGenericMain = container.tagName().equals("main", ignoreCase = true) ||
+                    container.attr("role").equals("main", ignoreCase = true)
+                val hasSpecificDescendant = container.select(specificSemanticContainerSelector)
+                    .any { it !== container }
+                if (isGenericMain && hasSpecificDescendant) {
+                    return@forEach
+                }
+                runCatching { cleanExtractedHtml(container.outerHtml(), baseUrl) }
+                    .getOrNull()
+                    ?.let { html ->
+                        add(ProcessedPageCandidate(html = html, fromSemanticContainer = true))
+                    }
+            }
+        }
+        return candidates.distinctBy { it.html }
     }
 
     /**
@@ -106,6 +141,13 @@ internal object FullContentHtmlProcessor {
 
     private fun cleanExtractedHtml(html: String, baseUrl: String): String {
         val extracted = Ksoup.parseBodyFragment(html, baseUrl)
+        extracted.select(
+            "script,style,noscript,form,input,button,textarea,select,option," +
+                "nav,footer,aside,[role=navigation],[role=contentinfo],[role=complementary]," +
+                "#comments,.comments,.comment-list,.related-posts,.recommended-content," +
+                "[hidden],[aria-hidden=true]"
+        ).forEach { it.remove() }
+        normalizeLazyMedia(extracted)
         val generatedStyleElements = extracted.select("[$STYLE_SNAPSHOT_ATTRIBUTE]").toList()
         // Readability may carry source styles through. Strip all of them before restoring only
         // declarations that materializeStyles validated and generated itself.
@@ -123,11 +165,39 @@ internal object FullContentHtmlProcessor {
             baseUri = baseUrl,
         ).trim()
         val cleanedDocument = Ksoup.parseBodyFragment(cleaned, baseUrl)
-        val hasRenderableMedia = cleanedDocument.select("img,table,hr").isNotEmpty()
+        val hasRenderableMedia = cleanedDocument.select("img,picture,table,audio,video,hr").isNotEmpty()
         if (cleanedDocument.body().text().isBlank() && !hasRenderableMedia) {
             throw FullContentException("No readable article content")
         }
         return cleaned
+    }
+
+    private fun normalizeLazyMedia(document: Document) {
+        document.select("img,source,audio,video").forEach { element ->
+            val currentSource = element.attr("src")
+            val lazySource = listOf("data-src", "data-original", "data-lazy-src", "data-url")
+                .firstNotNullOfOrNull { attribute ->
+                    element.attr(attribute).takeIf { it.isUsableMediaUrl() }
+                }
+            if (!currentSource.isUsableMediaUrl() && lazySource != null) {
+                element.attr("src", lazySource)
+            }
+            if (element.attr("srcset").isBlank()) {
+                listOf("data-srcset", "data-lazy-srcset")
+                    .firstNotNullOfOrNull { attribute ->
+                        element.attr(attribute).takeIf { it.isNotBlank() }
+                    }
+                    ?.let { element.attr("srcset", it) }
+            }
+        }
+    }
+
+    private fun String.isUsableMediaUrl(): Boolean {
+        val value = trim()
+        return value.isNotBlank() &&
+            !value.startsWith("data:image/gif", ignoreCase = true) &&
+            !value.startsWith("data:image/svg+xml", ignoreCase = true) &&
+            !value.equals("about:blank", ignoreCase = true)
     }
 
     private fun materializeStyles(html: String, baseUrl: String): String {
@@ -146,7 +216,7 @@ internal object FullContentHtmlProcessor {
         var remainingStyleChars = MAX_EMBEDDED_STYLE_CHARS
         var remainingRules = MAX_CSS_RULES
 
-        document.select("[color], [bgcolor], [align], [valign], [width], [height], font[face], font[size]")
+        document.select("[color], [bgcolor], [align], [valign]")
             .forEach { element ->
                 val presentationStyles = buildMap {
                     element.attr("color").takeIf { it.isNotBlank() }?.let { put("color", it) }
@@ -158,13 +228,6 @@ internal object FullContentHtmlProcessor {
                     element.attr("valign").trim().lowercase()
                         .takeIf { it in setOf("top", "middle", "bottom", "baseline") }
                         ?.let { put("vertical-align", it) }
-                    element.attr("width").toCssDimension()?.let { put("width", it) }
-                    element.attr("height").toCssDimension()?.let { put("height", it) }
-                    if (element.tagName().equals("font", ignoreCase = true)) {
-                        element.attr("face").takeIf { it.isNotBlank() }
-                            ?.let { put("font-family", it) }
-                        htmlFontSize(element.attr("size"))?.let { put("font-size", it) }
-                    }
                 }
                 presentationStyles.forEach { (property, value) ->
                     if (isSafeValue(value)) {
@@ -295,7 +358,9 @@ internal object FullContentHtmlProcessor {
     ): String? {
         val normalizedValue = when (property) {
             "color" -> colorMapper.foreground(element, value, visualBackground)
-            "background-color" -> ownBackground?.value
+            "background-color" -> ownBackground
+                ?.takeUnless { it.value == "transparent" }
+                ?.value
             "border", "border-top", "border-right", "border-bottom", "border-left" ->
                 normalizeBorder(value)
 
@@ -318,22 +383,6 @@ internal object FullContentHtmlProcessor {
         ).find(normalized)?.groupValues?.getOrNull(1)
         if (width == null && style == null) return null
         return listOfNotNull(width, style, "var(--podaura-outline-variant)").joinToString(" ")
-    }
-
-    private fun String.toCssDimension(): String? {
-        val value = trim().takeIf { it.isNotBlank() } ?: return null
-        return if (value.toDoubleOrNull() != null && value != "0") "${value}px" else value
-    }
-
-    private fun htmlFontSize(value: String): String? = when (value.trim().toIntOrNull()) {
-        1 -> "0.67em"
-        2 -> "0.83em"
-        3 -> "1em"
-        4 -> "1.17em"
-        5 -> "1.5em"
-        6 -> "2em"
-        7 -> "3em"
-        else -> null
     }
 
     private fun putStyle(
@@ -501,17 +550,22 @@ internal object FullContentHtmlProcessor {
         .addTags(
             "article", "section", "main", "header", "figure", "figcaption", "picture",
             "source", "mark", "details", "summary", "ruby", "rt", "rp", "kbd", "samp",
-            "var", "time", "del", "ins", "font", "center",
+            "var", "time", "del", "ins", "font", "center", "audio", "video",
         )
         .addAttributes(":all", "class", "id", "style", "dir", "lang", "title")
         .addAttributes("a", "href", "name", "rel")
         .addAttributes("img", "src", "srcset", "sizes", "alt", "width", "height", "loading")
         .addAttributes("source", "src", "srcset", "sizes", "type", "media")
+        .addAttributes("audio", "src", "controls", "preload")
+        .addAttributes("video", "src", "poster", "controls", "preload", "playsinline")
         .addAttributes("td", "colspan", "rowspan", "headers")
         .addAttributes("th", "colspan", "rowspan", "headers", "scope")
         .addProtocols("a", "href", "http", "https", "mailto", "tel")
         .addProtocols("img", "src", "http", "https")
         .addProtocols("source", "src", "http", "https")
+        .addProtocols("audio", "src", "http", "https")
+        .addProtocols("video", "src", "http", "https")
+        .addProtocols("video", "poster", "http", "https")
 
     private data class CssRule(val selector: String, val declarations: String)
     private data class CssDeclaration(val property: String, val value: String, val important: Boolean)
@@ -538,7 +592,7 @@ internal object FullContentHtmlProcessor {
         ): String {
             val tag = element.tagName().lowercase()
             return when {
-                sourceColor.equals("transparent", ignoreCase = true) -> "transparent"
+                isTransparent(sourceColor) -> "transparent"
                 sourceColor.isGlobalCssKeyword() -> sourceColor.trim().lowercase()
                 background?.onColor != null -> background.onColor
                 tag == "a" -> "var(--podaura-primary)"
@@ -552,8 +606,8 @@ internal object FullContentHtmlProcessor {
         fun background(sourceColor: String): MappedBackground {
             val normalized = sourceColor.trim().lowercase()
             return when {
-                normalized == "transparent" || normalized.isGlobalCssKeyword() ->
-                    MappedBackground(value = normalized, onColor = null)
+                isTransparent(normalized) -> MappedBackground(value = "transparent", onColor = null)
+                normalized.isGlobalCssKeyword() -> MappedBackground(value = normalized, onColor = null)
 
                 isNeutral(sourceColor) -> MappedBackground(
                     value = "var(--podaura-surface-variant)",
@@ -618,5 +672,25 @@ internal object FullContentHtmlProcessor {
             return false
         }
 
+        private fun isTransparent(value: String): Boolean {
+            val color = value.trim().lowercase().replace(" ", "")
+            if (color == "transparent") return true
+            if (color.startsWith('#')) {
+                val hex = color.removePrefix("#")
+                if (hex.length == 4 && hex.last() == '0') return true
+                if (hex.length == 8 && hex.endsWith("00")) return true
+            }
+            if (color.startsWith("rgba(") || color.startsWith("hsla(")) {
+                val alpha = color.substringAfterLast(',').substringBefore(')').toDoubleOrNull()
+                if (alpha == 0.0) return true
+            }
+            return false
+        }
+
     }
 }
+
+internal data class ProcessedPageCandidate(
+    val html: String,
+    val fromSemanticContainer: Boolean,
+)

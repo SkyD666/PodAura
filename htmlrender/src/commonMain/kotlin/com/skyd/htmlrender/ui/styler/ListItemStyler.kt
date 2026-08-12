@@ -1,9 +1,9 @@
 package com.skyd.htmlrender.ui.styler
 
-import com.skyd.htmlrender.core.styler.IStringAnnotationStyler
+import com.skyd.htmlrender.core.styler.IListItemStyler
 
 
-class UnorderedListStyler : IStringAnnotationStyler {
+class UnorderedListStyler : IListItemStyler {
     override fun getTag(): String = TAG_NAME
 
     override fun getAnnotation(): String = "•"
@@ -13,7 +13,7 @@ class UnorderedListStyler : IStringAnnotationStyler {
     }
 }
 
-class OrderedListStyler(private val index: Int) : IStringAnnotationStyler {
+class OrderedListStyler(private val index: Int) : IListItemStyler {
     override fun getTag(): String = TAG_NAME
 
     override fun getAnnotation(): String = "$index."

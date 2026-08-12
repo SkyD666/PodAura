@@ -57,7 +57,10 @@ class FullContentRepository internal constructor(
             sourceUrl = source.sourceUrl,
             rendered = false,
         )
-        if (staticCandidate != null && staticCandidate.source != ExtractionSource.STRUCTURED_SUMMARY) {
+        if (staticCandidate != null &&
+            staticCandidate.source != ExtractionSource.STRUCTURED_SUMMARY &&
+            !source.html.needsRenderedComparison()
+        ) {
             return FullContent(html = staticCandidate.html, sourceUrl = staticCandidate.sourceUrl)
         }
 
@@ -88,15 +91,18 @@ class FullContentRepository internal constructor(
     ): ExtractionCandidate? = withContext(Dispatchers.Default) {
         buildList {
             runCatching {
-                FullContentHtmlProcessor.process(html = html, baseUrl = sourceUrl)
-            }.getOrNull()?.let { processed ->
+                FullContentHtmlProcessor.processPageCandidates(html = html, baseUrl = sourceUrl)
+            }.getOrDefault(emptyList())
+                .forEach { processed ->
                 add(
-                    processed.toCandidate(
+                    processed.html.toCandidate(
                         sourceUrl = sourceUrl,
-                        source = if (rendered) {
-                            ExtractionSource.RENDERED_READABILITY
-                        } else {
-                            ExtractionSource.READABILITY
+                        source = when {
+                            rendered && processed.fromSemanticContainer ->
+                                ExtractionSource.RENDERED_SEMANTIC_CONTAINER
+                            rendered -> ExtractionSource.RENDERED_READABILITY
+                            processed.fromSemanticContainer -> ExtractionSource.SEMANTIC_CONTAINER
+                            else -> ExtractionSource.READABILITY
                         },
                     )
                 )
@@ -180,9 +186,11 @@ private sealed interface FetchStep {
 
 private enum class ExtractionSource {
     READABILITY,
+    SEMANTIC_CONTAINER,
     STRUCTURED_DATA,
     STRUCTURED_SUMMARY,
     RENDERED_READABILITY,
+    RENDERED_SEMANTIC_CONTAINER,
 }
 
 private data class ExtractionCandidate(
@@ -195,6 +203,24 @@ private data class ExtractionCandidate(
 private val candidateComparator = compareBy<ExtractionCandidate> {
     it.source != ExtractionSource.STRUCTURED_SUMMARY
 }.thenBy { it.diagnostics.score }
+    .thenBy { it.diagnostics.paragraphCount }
+    .thenBy { it.diagnostics.textLength }
+    .thenBy { it.diagnostics.mediaCount }
+
+/**
+ * A short server-rendered preview inside a hydrated application often passes Readability even
+ * though the browser later adds the real body. Pages that advertise a client application require
+ * a rendered comparison; ordinary server-rendered articles stay on the inexpensive static path.
+ */
+private fun String.needsRenderedComparison(): Boolean {
+    val document = runCatching { com.fleeksoft.ksoup.Ksoup.parse(this) }.getOrNull() ?: return false
+    val clientApplicationMarkers = document.select(
+        "script#__NEXT_DATA__, script#__NUXT_DATA__, script[data-nuxt-data], " +
+            "[data-reactroot], [data-react-root], [data-v-app], [ng-version], " +
+            "#root, #app, #__next, #__nuxt"
+    ).isNotEmpty()
+    return clientApplicationMarkers
+}
 
 private fun String.toCandidate(
     sourceUrl: String,

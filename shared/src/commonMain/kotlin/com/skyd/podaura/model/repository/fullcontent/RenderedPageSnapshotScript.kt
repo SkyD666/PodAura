@@ -25,23 +25,33 @@ internal object RenderedPageSnapshotScript {
         })()
     """.trimIndent()
 
+    val lazyLoadStep: String = """
+        (() => {
+          const root = document.scrollingElement || document.documentElement;
+          if (!root) return "done";
+          const viewport = Math.max(window.innerHeight || 0, 600);
+          const bottom = root.scrollTop + viewport;
+          if (bottom >= root.scrollHeight - 2) {
+            window.scrollTo(0, 0);
+            return "done";
+          }
+          window.scrollTo(0, Math.min(root.scrollHeight, root.scrollTop + Math.max(viewport * 2, 1600)));
+          return "more";
+        })()
+    """.trimIndent()
+
     val snapshot: String = """
         (() => {
           if (!document.documentElement) return JSON.stringify({ html: "", url: location.href });
           const safeProperties = [
-            "color", "font-family", "font-size", "font-style", "font-weight",
-            "letter-spacing", "line-height", "text-align", "text-decoration",
-            "text-indent", "white-space", "direction", "background-color",
+            "color", "font-style", "font-weight", "text-align", "text-decoration",
+            "direction", "background-color",
             "border-top-color", "border-right-color", "border-bottom-color",
             "border-left-color", "border-top-style", "border-right-style",
             "border-bottom-style", "border-left-style", "border-top-width",
             "border-right-width", "border-bottom-width", "border-left-width",
-            "border-radius", "border-collapse", "caption-side", "margin-top",
-            "margin-right", "margin-bottom", "margin-left", "padding-top",
-            "padding-right", "padding-bottom", "padding-left", "aspect-ratio",
-            "list-style-type", "list-style-position", "max-width", "width",
-            "height", "object-fit", "opacity", "overflow-wrap", "table-layout",
-            "text-transform", "vertical-align", "word-break", "word-wrap"
+            "border-radius", "border-collapse", "caption-side", "table-layout",
+            "text-transform", "vertical-align"
           ];
           const original = document.documentElement;
           const clone = original.cloneNode(true);
@@ -63,6 +73,10 @@ internal object RenderedPageSnapshotScript {
             for (const property of safeProperties) {
               const value = style.getPropertyValue(property).trim();
               if (!value || value.length > 256 || /url\s*\(|expression\s*\(|behavior\s*:/i.test(value)) continue;
+              if (property === "background-color" && /^(transparent|rgba\([^)]*,\s*0(?:\.0+)?\))$/i.test(value)) continue;
+              if (/^border-.*-style$/.test(property) && value === "none") continue;
+              if (/^border-.*-width$/.test(property) && value === "0px") continue;
+              if (/^border-.*-color$/.test(property) && /^(transparent|rgba\([^)]*,\s*0(?:\.0+)?\))$/i.test(value)) continue;
               declarations.push(property + ": " + value);
             }
             if (declarations.length) target.setAttribute("style", declarations.join("; "));

@@ -4,6 +4,7 @@ import com.skyd.htmlrender.base.model.HtmlNode
 import com.skyd.htmlrender.base.model.NodeProcessor
 import com.skyd.htmlrender.base.model.StringNode
 import com.skyd.htmlrender.base.model.StyleNode
+import com.skyd.htmlrender.core.styler.IListItemStyler
 import com.skyd.htmlrender.core.styler.IParagraphStyleStyler
 import com.skyd.htmlrender.core.styler.ParagraphEndStyler
 import com.skyd.htmlrender.core.styler.ParagraphStartStyler
@@ -24,6 +25,7 @@ object ParagraphNodeProcessor : NodeProcessor {
                 if (children.isNullOrEmpty()) {
                     return
                 }
+                val isListItem = node.stylers?.any { it is IListItemStyler } == true
 
                 for (i in children.indices) {
                     val currentNode = children[i]
@@ -41,6 +43,15 @@ object ParagraphNodeProcessor : NodeProcessor {
 
                     val isPreviousNodeHadEndWithExtraLine = isPreviousNodeHadEnd(true) == true
                     val isPreviousNodeHadEndNoExtraLine = isPreviousNodeHadEnd(false) == true
+
+                    // Each list item is rendered as its own Compose row. Keep paragraph breaks
+                    // inside the item, but remove breaks outside its first and last block child.
+                    if (isListItem && i == 0) {
+                        currentStylers.removeAll { it is ParagraphStartStyler }
+                    }
+                    if (isListItem && i == children.lastIndex) {
+                        currentStylers.removeAll { it is ParagraphEndStyler }
+                    }
 
                     if (isPreviousNodeHadEndWithExtraLine
                         || isPreviousNodeHadEndNoExtraLine && currentStylers.any { it is ParagraphStartStyler && !it.extraLine }

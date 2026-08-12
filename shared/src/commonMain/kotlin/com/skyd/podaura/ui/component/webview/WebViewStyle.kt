@@ -89,20 +89,23 @@ ${applyFontFace(fontPath)}
 article {
     padding: 0;
     margin: 0;
-    margin-left: var(--text-margin) !important;
-    margin-right: var(--text-margin) !important;
     font-family: var(--font-family) ${readerPriority(harmonizedSource)};
     font-size: var(--font-size) ${readerPriority(harmonizedSource)};
     font-weight: var(--text-bold) ${readerPriority(harmonizedSource)};
     color: var(--text-color) ${readerPriority(harmonizedSource)};
-    word-wrap: break-all ${readerPriority(harmonizedSource)};
+    word-wrap: break-word ${readerPriority(harmonizedSource)};
     overflow-wrap: break-word ${readerPriority(harmonizedSource)};
+}
+
+body > main > article {
+    margin-left: var(--text-margin) !important;
+    margin-right: var(--text-margin) !important;
 }
 
 /* Page  */
 body {
     margin: 0;
-    padding 0;
+    padding: 0;
 }
 
 ::selection {
@@ -128,7 +131,7 @@ h6 {
 /* Paragraph */
 p {
     max-width: 100% !important;
-    word-wrap: break-all ${readerPriority(harmonizedSource)};
+    word-wrap: break-word ${readerPriority(harmonizedSource)};
     overflow-wrap: break-word ${readerPriority(harmonizedSource)};
     line-height: var(--line-height) ${readerPriority(harmonizedSource)};
     letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
@@ -150,13 +153,13 @@ b {
 /* Link */
 a,
 a > strong {
-    word-break: break-all;
+    overflow-wrap: anywhere;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     color: var(--link-text-color) ${readerPriority(harmonizedSource)};
 }
 div > a {
     display: block;
-    word-break: break-all;
+    overflow-wrap: anywhere;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     color: var(--link-text-color);
     line-height: var(--line-height);
@@ -218,16 +221,48 @@ img + small {
 /* List */
 ul,
 ol {
-    padding-left: 0 ${readerPriority(harmonizedSource)};
+    padding-left: 1.5em !important;
+    padding-inline-start: 1.5em !important;
+    padding-inline-end: 0 !important;
     line-height: var(--line-height) ${readerPriority(harmonizedSource)};
     letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
     text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
+ul {
+    list-style-type: disc !important;
+    list-style-position: outside !important;
+}
+
+ul > li {
+    display: list-item !important;
+    list-style-type: disc !important;
+    list-style-position: outside !important;
+}
+
+ul ul > li {
+    list-style-type: circle !important;
+}
+
+ul ul ul > li {
+    list-style-type: square !important;
+}
+
+ol {
+    list-style-type: decimal !important;
+    list-style-position: outside !important;
+}
+
+ol > li {
+    display: list-item !important;
+    list-style-type: decimal !important;
+    list-style-position: outside !important;
+}
+
 li {
     line-height: var(--line-height) ${readerPriority(harmonizedSource)};
     letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
-    margin-left: 1.5em ${readerPriority(harmonizedSource)};
+    margin-inline-start: 0 !important;
     text-align: var(--text-align) ${readerPriority(harmonizedSource)};
 }
 
@@ -247,18 +282,19 @@ blockquote blockquote {
 }
 
 blockquote img {
-    max-width 100% !important;
+    max-width: 100% !important;
     left: 0 !important;
 }
 
 /* Table  */
 table {
-    display: ${if (harmonizedSource) "table" else "block"};
-    max-width: var(--content-width) !important;
+    display: block;
+    max-width: 100% !important;
     width: 100% ${readerPriority(harmonizedSource)};
+    overflow-x: auto;
     border-collapse: collapse ${readerPriority(harmonizedSource)};
-    margin-left: var(--table-margin) ${readerPriority(harmonizedSource)};
-    margin-right: var(--table-margin) ${readerPriority(harmonizedSource)};
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 table th,
@@ -333,7 +369,7 @@ figure {
     letter-spacing: var(--letter-spacing) ${readerPriority(harmonizedSource)};
     text-align: var(--text-align) ${readerPriority(harmonizedSource)};
     margin: 0 ${readerPriority(harmonizedSource)};
-    font-size: 12px ${readerPriority(harmonizedSource)};
+    font-size: inherit ${readerPriority(harmonizedSource)};
 }
 
 figure * {
@@ -343,7 +379,7 @@ figure * {
 figure p,
 caption,
 figcaption {
-    font-size: 12px ${readerPriority(harmonizedSource)};
+    font-size: 0.85em ${readerPriority(harmonizedSource)};
 }
 
 hr {

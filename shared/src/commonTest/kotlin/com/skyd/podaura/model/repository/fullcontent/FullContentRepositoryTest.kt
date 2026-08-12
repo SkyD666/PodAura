@@ -127,7 +127,7 @@ class FullContentRepositoryTest {
         assertEquals(sourceUrl, result.sourceUrl)
         assertContains(result.html, "Actual dynamically rendered episode description")
         assertContains(result.html, "color: var(--podaura-primary)")
-        assertContains(result.html, "font-size: 16px")
+        assertFalse(result.html.contains("font-size: 16px"))
         assertContains(result.html, "https://cdn.example.com/episode.jpg")
         assertFalse(result.html.contains("Copyright"))
         client.close()
@@ -203,6 +203,44 @@ class FullContentRepositoryTest {
 
         assertContains(result.html, "actual rendered article")
         assertFalse(result.html.contains("short SEO summary"))
+        client.close()
+    }
+
+    @Test
+    fun comparesRenderedContentWhenClientAppStaticHtmlContainsOnlyAPreview() = runTest {
+        val client = HttpClient(MockEngine {
+            respond(
+                content = """
+                    <html><body><div id="app"><article>
+                      <p>This static preview is readable but incomplete.</p>
+                    </article></div></body></html>
+                """.trimIndent(),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "text/html; charset=utf-8"),
+            )
+        })
+        var rendered = false
+        val provider = object : RenderedPageProvider {
+            override suspend fun render(url: String): RenderedPageSnapshot {
+                rendered = true
+                return RenderedPageSnapshot(
+                    html = """
+                        <html><body><div id="app"><article>
+                          <p>This static preview is readable but incomplete.</p>
+                          <p>The dynamically rendered middle section contains important details.</p>
+                          <p>The dynamically rendered final section completes the article.</p>
+                        </article></div></body></html>
+                    """.trimIndent(),
+                    finalUrl = url,
+                )
+            }
+        }
+
+        val result = repository(client, provider).fetch("https://example.com/client-article")
+
+        assertTrue(rendered)
+        assertContains(result.html, "middle section")
+        assertContains(result.html, "final section")
         client.close()
     }
 

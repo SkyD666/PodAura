@@ -103,7 +103,13 @@ If you are interested, please help us **translate**, thank you.
 
 ## ✨ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SkyD666/PodAura&type=Date)](https://star-history.com/?repos=SkyD666/PodAura#SkyD666/PodAura&Date)
+<a href="https://www.star-history.com/?repos=SkyD666%2FPodAura&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=SkyD666/PodAura&type=date&theme=dark&legend=top-left&sealed_token=IHvGHaiHoGSUHYja9XSCs2WoP4QLqPF0-KmLMIHIBThhck30mWEuZyJmGWVM2ZyqY1iJ5ajrG7mgGUuT6DUi5q7SMmrSWFv2Sm8XBoy6UqfwsB267F2BBO3Cr8TQ_W0BT-8BKi1GY54sCiPo0sVTLw52_uwhi76unYaBBLRHCcYzEmwaAd8ey0dd7d0l" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=SkyD666/PodAura&type=date&legend=top-left&sealed_token=IHvGHaiHoGSUHYja9XSCs2WoP4QLqPF0-KmLMIHIBThhck30mWEuZyJmGWVM2ZyqY1iJ5ajrG7mgGUuT6DUi5q7SMmrSWFv2Sm8XBoy6UqfwsB267F2BBO3Cr8TQ_W0BT-8BKi1GY54sCiPo0sVTLw52_uwhi76unYaBBLRHCcYzEmwaAd8ey0dd7d0l" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=SkyD666/PodAura&type=date&legend=top-left&sealed_token=IHvGHaiHoGSUHYja9XSCs2WoP4QLqPF0-KmLMIHIBThhck30mWEuZyJmGWVM2ZyqY1iJ5ajrG7mgGUuT6DUi5q7SMmrSWFv2Sm8XBoy6UqfwsB267F2BBO3Cr8TQ_W0BT-8BKi1GY54sCiPo0sVTLw52_uwhi76unYaBBLRHCcYzEmwaAd8ey0dd7d0l" />
+ </picture>
+</a>
 
 ## 🎈 Other works
 
