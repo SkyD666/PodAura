@@ -241,6 +241,44 @@ class FullContentHtmlProcessorTest {
     }
 
     @Test
+    fun preservesSafeInlineLazyImages() {
+        val inlinePng =
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        val result = FullContentHtmlProcessor.processArticleFragment(
+            html = """
+                <article>
+                  <p>An article with an inline lazy image.</p>
+                  <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                       data-src="$inlinePng" alt="Inline image">
+                </article>
+            """.trimIndent(),
+            baseUrl = "https://example.com/posts/inline-image",
+        )
+
+        assertContains(result, "src=\"$inlinePng\"")
+    }
+
+    @Test
+    fun rejectsActiveOrUnsupportedInlineImageData() {
+        val result = FullContentHtmlProcessor.processArticleFragment(
+            html = """
+                <article>
+                  <p>An article with unsafe inline image data.</p>
+                  <img src="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+PC9zdmc+"
+                       alt="Unsafe inline image">
+                  <img data-src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
+                       alt="HTML data">
+                </article>
+            """.trimIndent(),
+            baseUrl = "https://example.com/posts/unsafe-inline-image",
+        )
+
+        assertFalse(result.contains("data:image/svg+xml", ignoreCase = true))
+        assertFalse(result.contains("data:text/html", ignoreCase = true))
+        assertFalse(result.contains(" src=", ignoreCase = true))
+    }
+
+    @Test
     fun dropsSourceListResetsWhenPseudoElementMarkersCannotBeSnapshotted() {
         val result = FullContentHtmlProcessor.processArticleFragment(
             html = """

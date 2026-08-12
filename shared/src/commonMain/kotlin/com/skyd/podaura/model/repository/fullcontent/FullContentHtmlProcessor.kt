@@ -13,6 +13,12 @@ internal object FullContentHtmlProcessor {
     private const val MAX_DOCUMENT_ELEMENTS = 50_000
     private const val MAX_EMBEDDED_STYLE_CHARS = 512 * 1024
     private const val MAX_CSS_RULES = 5_000
+    private val urlSchemePattern = Regex("^[A-Za-z][A-Za-z0-9+.-]*:")
+    private val safeInlineImagePattern = Regex(
+        "^data:image/(?:png|jpe?g|webp|avif|bmp|x-icon|vnd\\.microsoft\\.icon);base64," +
+            "[A-Za-z0-9+/]+={0,2}$",
+        RegexOption.IGNORE_CASE,
+    )
 
     private val inheritableProperties = setOf(
         "color",
@@ -175,12 +181,19 @@ internal object FullContentHtmlProcessor {
     private fun normalizeLazyMedia(document: Document) {
         document.select("img,source,audio,video").forEach { element ->
             val currentSource = element.attr("src")
+            val allowInlineImage = element.tagName().equals("img", ignoreCase = true)
             val lazySource = listOf("data-src", "data-original", "data-lazy-src", "data-url")
                 .firstNotNullOfOrNull { attribute ->
-                    element.attr(attribute).takeIf { it.isUsableMediaUrl() }
+                    element.attr(attribute).takeIf {
+                        it.isUsableMediaUrl(allowInlineImage = allowInlineImage)
+                    }
                 }
-            if (!currentSource.isUsableMediaUrl() && lazySource != null) {
-                element.attr("src", lazySource)
+            if (!currentSource.isUsableMediaUrl(allowInlineImage = allowInlineImage)) {
+                if (lazySource != null) {
+                    element.attr("src", lazySource)
+                } else {
+                    element.removeAttr("src")
+                }
             }
             if (element.attr("srcset").isBlank()) {
                 listOf("data-srcset", "data-lazy-srcset")
@@ -192,12 +205,14 @@ internal object FullContentHtmlProcessor {
         }
     }
 
-    private fun String.isUsableMediaUrl(): Boolean {
+    private fun String.isUsableMediaUrl(allowInlineImage: Boolean): Boolean {
         val value = trim()
-        return value.isNotBlank() &&
-            !value.startsWith("data:image/gif", ignoreCase = true) &&
-            !value.startsWith("data:image/svg+xml", ignoreCase = true) &&
-            !value.equals("about:blank", ignoreCase = true)
+        if (value.isBlank() || value.equals("about:blank", ignoreCase = true)) return false
+        if (value.startsWith("data:", ignoreCase = true)) {
+            return allowInlineImage && safeInlineImagePattern.matches(value)
+        }
+        val scheme = urlSchemePattern.find(value)?.value?.dropLast(1)?.lowercase()
+        return scheme == null || scheme == "http" || scheme == "https"
     }
 
     private fun materializeStyles(html: String, baseUrl: String): String {
@@ -561,7 +576,7 @@ internal object FullContentHtmlProcessor {
         .addAttributes("td", "colspan", "rowspan", "headers")
         .addAttributes("th", "colspan", "rowspan", "headers", "scope")
         .addProtocols("a", "href", "http", "https", "mailto", "tel")
-        .addProtocols("img", "src", "http", "https")
+        .addProtocols("img", "src", "http", "https", "data")
         .addProtocols("source", "src", "http", "https")
         .addProtocols("audio", "src", "http", "https")
         .addProtocols("video", "src", "http", "https")
