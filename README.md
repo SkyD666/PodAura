@@ -18,10 +18,13 @@
             <img src="https://img.shields.io/github/downloads/SkyD666/PodAura/total?style=for-the-badge" alt="GitHub all downloads"/>
         </a>
         <a href="https://www.android.com/versions/nougat-7-0" style="text-decoration:none" >
-            <img src="https://img.shields.io/badge/Android 7.0+-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Support platform"/>
+            <img src="https://img.shields.io/badge/Android 7.0+-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
         </a>
         <a href="https://www.apple.com/os/macos/" style="text-decoration:none" >
-            <img src="https://img.shields.io/badge/macOS%20(beta)-black?style=for-the-badge&logo=apple&logoColor=white" alt="Support platform"/>
+            <img src="https://img.shields.io/badge/macOS-black?style=for-the-badge&logo=apple&logoColor=white" alt="macOS"/>
+        </a>
+        <a href="https://www.microsoft.com/windows/" style="text-decoration:none" >
+            <img src="https://img.shields.io/badge/Windows-0078D4?style=for-the-badge" alt="Windows"/>
         </a>
         <a href="https://github.com/SkyD666/PodAura/blob/master/LICENSE" style="text-decoration:none" >
             <img src="https://img.shields.io/github/license/SkyD666/PodAura?style=for-the-badge" alt="GitHub license"/>

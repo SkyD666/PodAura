@@ -12,6 +12,7 @@ import com.skyd.htmlrender.base.css.model.CSSRuleSet
 import com.skyd.htmlrender.base.css.model.StyleOrigin
 import com.skyd.htmlrender.base.css.parseCssDeclarations
 import com.skyd.htmlrender.base.css.parseCssRuleBlock
+import com.skyd.htmlrender.base.handler.AbsImageHandler
 import com.skyd.htmlrender.base.handler.TagHandler
 import com.skyd.htmlrender.base.model.HtmlNode
 import com.skyd.htmlrender.base.model.StringNode
@@ -67,14 +68,20 @@ suspend fun toHtmlNode(
         null
     }
 
-    fun handleNode(node: Node): HtmlNode {
+    val textFlow = TextFlowState()
+
+    fun handleNode(node: Node): HtmlNode? {
         ensureActive()
         if (node is TextNode) {
-            return StringNode(node.text())
+            return textFlow.normalize(node.text())?.let(::StringNode)
         }
 
         val name = node.nodeName()
         val handler = tagHandles[name]
+        val isTextBoundary = node is Element && (!node.tag().isInline() || node.nameIs("br"))
+        if (isTextBoundary) {
+            textFlow.reset()
+        }
         if (handler == null && name != "body" && name != "#comment") {
             Logger.w(tag = TAG) { "unsupported node:${node.nodeName()}" }
         }
@@ -99,22 +106,62 @@ suspend fun toHtmlNode(
                     handle(node, cssDeclarations)
                 } else {
                     for (childNode in node.childNodes()) {
-                        if (childNode is TextNode) {
-                            childNode.text().trim().ifBlank {
-                                null
-                            }?.let(::StringNode)?.also(::add)
+                        val childHandler = tagHandles[childNode.nodeName()]
+                        if (childNode is Element && childHandler is AbsImageHandler) {
+                            textFlow.consumeWhitespace()?.let { add(StringNode(it)) }
+                            handleNode(childNode)?.also(::add)
+                            textFlow.markContent()
                         } else {
-                            add(handleNode(childNode))
+                            handleNode(childNode)?.also(::add)
                         }
                     }
                 }
             }
         }
 
-        return StyleNode(stylers, children)
+        return StyleNode(stylers, children).also {
+            if (isTextBoundary) {
+                textFlow.reset()
+            }
+        }
     }
 
-    handleNode(body)
+    requireNotNull(handleNode(body))
+}
+
+private class TextFlowState {
+    private var hasContent = false
+    private var whitespacePending = false
+
+    fun normalize(text: String): String? {
+        val content = text.trim(' ')
+        if (content.isEmpty()) {
+            if (hasContent && text.isNotEmpty()) {
+                whitespacePending = true
+            }
+            return null
+        }
+
+        val needsLeadingSpace = hasContent && (whitespacePending || text.startsWith(' '))
+        hasContent = true
+        whitespacePending = text.endsWith(' ')
+        return if (needsLeadingSpace) " $content" else content
+    }
+
+    fun consumeWhitespace(): String? {
+        if (!hasContent || !whitespacePending) return null
+        whitespacePending = false
+        return " "
+    }
+
+    fun markContent() {
+        hasContent = true
+    }
+
+    fun reset() {
+        hasContent = false
+        whitespacePending = false
+    }
 }
 
 private suspend fun buildExternalCSSBlock(
@@ -172,4 +219,3 @@ private fun buildFinalCSS(
     }
     return finalCssMap.values.toList()
 }
-
