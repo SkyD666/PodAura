@@ -9,19 +9,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.LocalWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
-import com.skyd.podaura.BuildKonfig
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_CACHE_DIR
+import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
+import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
@@ -37,6 +48,53 @@ import java.io.File
 import java.nio.file.Files
 
 private val playerWindowSize = DpSize(400.dp, 780.dp)
+
+internal enum class PlayerKeyboardAction {
+    SeekBackward,
+    SeekForward,
+    ConsumeSpaceKeyDown,
+    TogglePlayPause,
+}
+
+internal fun playerKeyboardActionForKeyEvent(
+    event: KeyEvent,
+): PlayerKeyboardAction? {
+    if (event.isCtrlPressed || event.isAltPressed ||
+        event.isMetaPressed || event.isShiftPressed
+    ) {
+        return null
+    }
+
+    return when (event.key) {
+        Key.DirectionLeft -> if (event.type == KeyEventType.KeyDown) {
+            PlayerKeyboardAction.SeekBackward
+        } else {
+            null
+        }
+
+        Key.DirectionRight -> if (event.type == KeyEventType.KeyDown) {
+            PlayerKeyboardAction.SeekForward
+        } else {
+            null
+        }
+
+        Key.Spacebar -> when (event.type) {
+            KeyEventType.KeyDown -> PlayerKeyboardAction.ConsumeSpaceKeyDown
+            KeyEventType.KeyUp -> PlayerKeyboardAction.TogglePlayPause
+            else -> null
+        }
+
+        else -> null
+    }
+}
+
+internal fun PlayerKeyboardAction.isAvailable(mediaStarted: Boolean): Boolean = when (this) {
+    PlayerKeyboardAction.SeekBackward,
+    PlayerKeyboardAction.SeekForward -> mediaStarted
+
+    PlayerKeyboardAction.ConsumeSpaceKeyDown,
+    PlayerKeyboardAction.TogglePlayPause -> true
+}
 
 /**
  * Owns player state whose lifetime is longer than the native player window.
@@ -153,7 +211,43 @@ internal fun PlayerWindow(
     BaseWindow(
         onCloseRequest = closePlayer,
         state = playerWindowState,
-        title = windowTitle
+        title = windowTitle,
+        // Compose focus navigation consumes arrow keys before the bubbling onKeyEvent callback.
+        onPreviewKeyEvent = { event ->
+            val action = playerKeyboardActionForKeyEvent(event)
+            if (playerCoordinator == null ||
+                action == null ||
+                !action.isAvailable(mediaStarted = playerState?.mediaStarted == true)
+            ) {
+                false
+            } else {
+                when (action) {
+                    PlayerKeyboardAction.SeekBackward,
+                    PlayerKeyboardAction.SeekForward -> {
+                        val positionDelta = when (action) {
+                            PlayerKeyboardAction.SeekBackward ->
+                                dataStore.getOrDefault(PlayerReplaySecondsPreference)
+
+                            PlayerKeyboardAction.SeekForward ->
+                                dataStore.getOrDefault(PlayerForwardSecondsPreference)
+                        }
+                        playerCoordinator.onCommand(
+                            PlayerCommand.SeekTo(
+                                playerCoordinator.player.timePos.toLong() + positionDelta
+                            )
+                        )
+                        true
+                    }
+
+                    PlayerKeyboardAction.ConsumeSpaceKeyDown -> true
+
+                    PlayerKeyboardAction.TogglePlayPause -> {
+                        playerCoordinator.onCommand(PlayerCommand.PlayOrPause)
+                        true
+                    }
+                }
+            }
+        },
     ) {
         LaunchedEffect(entry.activationToken) {
             playerWindowState.isMinimized = false

@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.window
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
@@ -28,6 +30,9 @@ internal fun BaseWindow(
     onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable FrameWindowScope.() -> Unit,
 ) {
+    // SwingWindow installs these listeners only when its native window is created.
+    val currentOnPreviewKeyEvent by rememberUpdatedState(onPreviewKeyEvent)
+    val currentOnKeyEvent by rememberUpdatedState(onKeyEvent)
     Window(
         onCloseRequest = onCloseRequest,
         state = state,
@@ -39,8 +44,8 @@ internal fun BaseWindow(
         enabled = enabled,
         focusable = focusable,
         alwaysOnTop = alwaysOnTop,
-        onPreviewKeyEvent = onPreviewKeyEvent,
-        onKeyEvent = onKeyEvent,
+        onPreviewKeyEvent = { currentOnPreviewKeyEvent(it) },
+        onKeyEvent = { currentOnKeyEvent(it) },
     ) {
         ApplyPodAuraWindowIcon()
         content()
