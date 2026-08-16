@@ -48,6 +48,7 @@ import com.skyd.podaura.ui.screen.settings.playerconfig.advanced.PlayerConfigAdv
 import com.skyd.podaura.ui.screen.settings.rssconfig.RssConfigRoute
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsRoute
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
@@ -101,5 +102,6 @@ val PodAuraSerializersModule = SerializersModule {
         subclass(SubMediaRoute::class, SubMediaRoute.serializer())
         subclass(HistorySearchRoute::class, HistorySearchRoute.serializer())
         subclass(SettingsListRoute::class, SettingsListRoute.serializer())
+        subclass(TranslationSettingsRoute::class, TranslationSettingsRoute.serializer())
     }
 }

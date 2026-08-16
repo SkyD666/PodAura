@@ -29,6 +29,7 @@ import com.skyd.podaura.ui.screen.settings.data.DataViewModel
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportViewModel
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlViewModel
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationViewModel
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -40,6 +41,7 @@ val viewModelModule = module {
     viewModel { ImportExportViewModel(get(), get()) }
     viewModel { ImportOpmlViewModel(get()) }
     viewModel { UpdateNotificationViewModel(get()) }
+    viewModel { TranslationSettingsViewModel(get()) }
     viewModel { FilePickerViewModel(get()) }
     viewModel { ReorderGroupViewModel(get()) }
     viewModel { ReorderFeedViewModel(get()) }
@@ -56,9 +58,9 @@ val viewModelModule = module {
     viewModel { AddToPlaylistViewModel(get(), get()) }
     viewModel { PlaylistMediaListViewModel(get(), get(), get()) }
     viewModel { ListViewModel() }
-    viewModel { ReadViewModel(get(), get(), get()) }
+    viewModel { ReadViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { DataViewModel(get()) }
+    viewModel { DataViewModel(get(), get()) }
     viewModel { DownloadViewModel(get()) }
     viewModel { DayListViewModel(get()) }
     viewModel { PlayerViewModel(get(), get()) }

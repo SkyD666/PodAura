@@ -12,6 +12,7 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
         ioModule,
         databaseModule,
         dataStoreModule,
+        credentialStoreModule,
         fullContentPlatformModule,
         pagingModule,
         repositoryModule,
@@ -22,4 +23,5 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
 }
 
 expect val dataStoreModule: Module
+expect val credentialStoreModule: Module
 expect val fullContentPlatformModule: Module

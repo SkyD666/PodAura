@@ -48,6 +48,8 @@ import com.skyd.podaura.ui.screen.settings.rssconfig.RssConfigRoute
 import com.skyd.podaura.ui.screen.settings.rssconfig.RssConfigScreen
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationRoute
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsRoute
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsScreen
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionScreen
 
@@ -136,6 +138,9 @@ internal fun SettingsDetailPaneNavDisplay(
             }
             entry<DeleteConstraintRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
                 DeleteConstraintScreen(windowInsets = detailWindowInsets)
+            }
+            entry<TranslationSettingsRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
+                TranslationSettingsScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
             }
             entry<FilePickerRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
                 FilePickerLauncher(route = it, windowInsets = detailWindowInsets)

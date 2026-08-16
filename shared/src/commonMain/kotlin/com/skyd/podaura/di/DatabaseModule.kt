@@ -20,6 +20,7 @@ val databaseModule = module {
     single { get<AppDatabase>().articleNotificationRuleDao() }
     single { get<AppDatabase>().playlistDao() }
     single { get<AppDatabase>().playlistItemDao() }
+    single { get<AppDatabase>().translationProfileDao() }
     single { get<AppDatabase>().playlistDao() }
     single { get<AppDatabase>().playlistDao() }
 

@@ -29,6 +29,7 @@ import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
 import com.skyd.podaura.model.db.dao.ReadHistoryDao
 import com.skyd.podaura.model.db.dao.RssModuleDao
+import com.skyd.podaura.model.db.dao.TranslationProfileDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
@@ -50,6 +51,7 @@ import com.skyd.podaura.model.db.migration.Migration23To24
 import com.skyd.podaura.model.db.migration.Migration24To25
 import com.skyd.podaura.model.db.migration.Migration25To26
 import com.skyd.podaura.model.db.migration.Migration26To27
+import com.skyd.podaura.model.db.migration.Migration27To28
 import com.skyd.podaura.model.db.migration.Migration2To3
 import com.skyd.podaura.model.db.migration.Migration3To4
 import com.skyd.podaura.model.db.migration.Migration4To5
@@ -58,6 +60,7 @@ import com.skyd.podaura.model.db.migration.Migration6To7
 import com.skyd.podaura.model.db.migration.Migration7To8
 import com.skyd.podaura.model.db.migration.Migration8To9
 import com.skyd.podaura.model.db.migration.Migration9To10
+import com.skyd.podaura.model.db.entity.TranslationProfileEntity
 
 const val APP_DATA_BASE_FILE_NAME = "app.db"
 
@@ -81,9 +84,10 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         RssMediaBean::class,
         PlaylistBean::class,
         PlaylistMediaBean::class,
+        TranslationProfileEntity::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 27,
+    version = 28,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 @ColumnTypeConverters(
@@ -102,6 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun articleNotificationRuleDao(): ArticleNotificationRuleDao
     abstract fun playlistDao(): PlaylistDao
     abstract fun playlistItemDao(): PlaylistMediaDao
+    abstract fun translationProfileDao(): TranslationProfileDao
 
     companion object
 }
@@ -118,7 +123,7 @@ fun AppDatabase.Companion.instance(
         Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
         Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
         Migration21To22(), Migration22To23(), Migration23To24(), Migration24To25(),
-        Migration25To26(), Migration26To27(),
+        Migration25To26(), Migration26To27(), Migration27To28(),
     )
 
     return builder

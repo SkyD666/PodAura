@@ -80,4 +80,17 @@ val ioModule = module {
             }
         }
     }
+    single(named("translation")) {
+        HttpClient {
+            followRedirects = false
+            install(ContentNegotiation) {
+                json(get())
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 60_000
+                connectTimeoutMillis = 20_000
+                socketTimeoutMillis = 60_000
+            }
+        }
+    }
 }

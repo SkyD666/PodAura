@@ -132,6 +132,8 @@ import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNo
 import com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification.UpdateNotificationScreen
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionRoute
 import com.skyd.podaura.ui.screen.settings.transmission.TransmissionScreen
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsRoute
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -241,6 +243,9 @@ private fun MainNavHost() {
             entry<PlayerConfigRoute> { PlayerConfigScreen() }
             entry<PlayerConfigAdvancedRoute> { PlayerConfigAdvancedScreen() }
             entry<RssConfigRoute> { RssConfigScreen() }
+            entry<TranslationSettingsRoute> {
+                TranslationSettingsScreen(onBack = BackInvoker())
+            }
             entry<TransmissionRoute> { TransmissionScreen() }
             entry<UpdateNotificationRoute> { UpdateNotificationScreen() }
             entry<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }

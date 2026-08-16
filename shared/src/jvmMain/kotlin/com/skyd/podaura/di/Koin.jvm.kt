@@ -6,6 +6,8 @@ import com.skyd.podaura.model.preference.createDataStore
 import com.skyd.podaura.model.preference.dataStoreFileName
 import com.skyd.podaura.model.repository.fullcontent.RenderedPageException
 import com.skyd.podaura.model.repository.fullcontent.RenderedPageProvider
+import com.skyd.podaura.model.repository.translation.CredentialStore
+import com.skyd.podaura.model.repository.translation.DesktopCredentialStore
 import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -19,6 +21,9 @@ actual val dataStoreModule: Module
             )
         }
     }
+
+actual val credentialStoreModule: Module
+    get() = module { single<CredentialStore> { DesktopCredentialStore() } }
 
 actual val fullContentPlatformModule: Module
     get() = module {

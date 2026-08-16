@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.screen.read
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -15,28 +16,45 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.AttachFile
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.RssFeed
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -69,6 +87,7 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.setText
 import com.skyd.fundation.ext.format
@@ -81,20 +100,26 @@ import com.skyd.podaura.ext.isHttpOrHttps
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.article.ArticleCategoryBean
+import com.skyd.podaura.model.bean.translation.TranslationProfile
 import com.skyd.podaura.model.preference.appearance.read.ReadContentTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTextSizePreference
 import com.skyd.podaura.model.preference.appearance.read.ReadTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.rememberTextSharing
-import com.skyd.podaura.ui.component.webview.PodAuraWebView
 import com.skyd.podaura.ui.component.webview.HtmlStyleMode
+import com.skyd.podaura.ui.component.webview.PodAuraWebView
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.podaura.ui.screen.image.rememberImagePreviewOpener
+import com.skyd.podaura.ui.screen.settings.translation.TargetLanguagePicker
+import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsRoute
+import com.skyd.podaura.ui.screen.settings.translation.translationMaxTextRequestBytes
+import com.skyd.podaura.ui.screen.settings.translation.translationTargetLanguages
+import com.skyd.podaura.ui.screen.translation.translationErrorText
 import io.ktor.http.Url
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
@@ -105,15 +130,28 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_favorite
 import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.bottom_sheet_enclosure_title
-import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.media_not_exists
+import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.open_link_in_browser
-import podaura.shared.generated.resources.read_screen_name
 import podaura.shared.generated.resources.read_screen_get_full_content
-import podaura.shared.generated.resources.read_screen_show_feed_content
+import podaura.shared.generated.resources.read_screen_name
 import podaura.shared.generated.resources.read_screen_open_article_screen
+import podaura.shared.generated.resources.read_screen_show_feed_content
 import podaura.shared.generated.resources.read_screen_text_size
 import podaura.shared.generated.resources.share
+import podaura.shared.generated.resources.translate_article
+import podaura.shared.generated.resources.translation_configure
+import podaura.shared.generated.resources.translation_confirm
+import podaura.shared.generated.resources.translation_error_content_too_large
+import podaura.shared.generated.resources.translation_estimated_size
+import podaura.shared.generated.resources.translation_is_default
+import podaura.shared.generated.resources.translation_no_enabled_profile
+import podaura.shared.generated.resources.translation_original
+import podaura.shared.generated.resources.translation_profile
+import podaura.shared.generated.resources.translation_request_limit
+import podaura.shared.generated.resources.translation_translated
+import podaura.shared.generated.resources.translation_translating
 
 @Serializable
 data class ReadRoute(@SerialName("articleId") val articleId: String) : NavKey {
@@ -143,6 +181,7 @@ fun ReadScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
+    val globalNavBackStack = LocalGlobalNavBackStack.current
     val uriHandler = LocalUriHandler.current
     val playerJumper = rememberPlayerJumper()
     val mediaNotExistsMessage = stringResource(Res.string.media_not_exists)
@@ -152,6 +191,7 @@ fun ReadScreen(
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
     var openEnclosureBottomSheet by rememberSaveable { mutableStateOf(false) }
     var openReadTextSizeSliderDialog by rememberSaveable { mutableStateOf(false) }
+    var openTranslationBottomSheet by rememberSaveable { mutableStateOf(false) }
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatcher = viewModel.getDispatcher(startWith = ReadIntent.Init(articleId))
@@ -229,12 +269,13 @@ fun ReadScreen(
                         onDismissRequest = { openMoreMenu = false },
                         onOpenInBrowserClick = articleLink?.let { { uriHandler.safeOpenUri(it) } },
                         onReadTextSizeClick = { openReadTextSizeSliderDialog = true },
+                        onTranslateClick = { openTranslationBottomSheet = true },
                         contentSource = successState?.contentSource ?: ReadContentSource.Feed,
                         fullContentActionEnabled = !uiState.fullContentLoading && (
-                            successState?.contentSource == ReadContentSource.FullText ||
-                                successState?.fullContent != null ||
-                                articleLink?.isHttpOrHttps() == true
-                            ),
+                                successState?.contentSource == ReadContentSource.FullText ||
+                                        successState?.fullContent != null ||
+                                        articleLink?.isHttpOrHttps() == true
+                                ),
                         onFullContentClick = {
                             when {
                                 successState?.contentSource == ReadContentSource.FullText ->
@@ -315,6 +356,13 @@ fun ReadScreen(
                 is ArticleState.Success -> {
                     Content(
                         articleState = articleState,
+                        translationState = uiState.translationState,
+                        onTranslationDisplayModeChange = {
+                            dispatcher(ReadIntent.SelectTranslationDisplayMode(it))
+                        },
+                        onCancelTranslation = {
+                            dispatcher(ReadIntent.CancelTranslation)
+                        },
                         onTimestampClick = { mediaUrl, positionSeconds ->
                             dispatcher(
                                 ReadIntent.PlayTimestamp(
@@ -367,6 +415,30 @@ fun ReadScreen(
                 onDismissRequest = { openReadTextSizeSliderDialog = false },
             )
         }
+
+        if (openTranslationBottomSheet) {
+            val article = uiState.articleState as? ArticleState.Success
+            TranslationBottomSheet(
+                profiles = uiState.translationProfiles,
+                articleText = article?.let {
+                    buildString {
+                        append(it.article.articleWithEnclosure.article.title.orEmpty())
+                        append(it.displayedContent)
+                    }
+                }.orEmpty(),
+                initialProfileId = uiState.translationState.profileId,
+                initialTargetLanguage = uiState.translationState.targetLanguage,
+                onDismissRequest = { openTranslationBottomSheet = false },
+                onConfigureProfiles = {
+                    openTranslationBottomSheet = false
+                    globalNavBackStack.add(TranslationSettingsRoute)
+                },
+                onTranslate = { profileId, targetLanguage ->
+                    dispatcher(ReadIntent.Translate(profileId, targetLanguage))
+                    openTranslationBottomSheet = false
+                },
+            )
+        }
     }
 }
 
@@ -405,6 +477,9 @@ private fun CategoryArea(categories: List<ArticleCategoryBean>) {
 @Composable
 private fun Content(
     articleState: ArticleState.Success,
+    translationState: TranslationState,
+    onTranslationDisplayModeChange: (TranslationDisplayMode) -> Unit,
+    onCancelTranslation: () -> Unit,
     onTimestampClick: (mediaUrl: String?, positionSeconds: Long) -> Unit,
 ) {
     val article = articleState.article.articleWithEnclosure
@@ -413,11 +488,104 @@ private fun Content(
     val firstMediaUrl = remember(article) {
         article.enclosures.firstOrNull { it.isMedia }?.url
     }
+    val hasTranslation = translationState.status is TranslationStatus.Success &&
+            translationState.contentSource == articleState.contentSource
+    val showTranslation = hasTranslation &&
+            translationState.displayMode == TranslationDisplayMode.Translated
+    val displayedTitle = if (showTranslation) {
+        translationState.translatedTitle
+    } else {
+        article.article.title
+    }
+    val displayedHtml = if (showTranslation) {
+        translationState.translatedHtml ?: articleState.displayedContent
+    } else {
+        articleState.displayedContent
+    }
+
+    val showTranslationControls = hasTranslation ||
+            translationState.status is TranslationStatus.Loading ||
+            translationState.status is TranslationStatus.Failed
+    if (showTranslationControls) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (hasTranslation) {
+                SingleChoiceSegmentedButtonRow(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .widthIn(min = 220.dp, max = 320.dp),
+                ) {
+                    TranslationDisplayMode.entries.forEachIndexed { index, mode ->
+                        SegmentedButton(
+                            selected = translationState.displayMode == mode,
+                            onClick = { onTranslationDisplayModeChange(mode) },
+                            shape = SegmentedButtonDefaults.itemShape(
+                                index = index,
+                                count = TranslationDisplayMode.entries.size,
+                            ),
+                            label = {
+                                Text(
+                                    stringResource(
+                                        if (mode == TranslationDisplayMode.Original) {
+                                            Res.string.translation_original
+                                        } else {
+                                            Res.string.translation_translated
+                                        }
+                                    )
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+            when (val status = translationState.status) {
+                TranslationStatus.Loading -> Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(Res.string.translation_translating),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(onClick = onCancelTranslation) {
+                        Icon(Icons.Outlined.Close, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(Res.string.cancel))
+                    }
+                }
+
+                is TranslationStatus.Failed -> Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Outlined.ErrorOutline,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        text = translationErrorText(status.error),
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
+                TranslationStatus.Idle,
+                TranslationStatus.Success -> Unit
+            }
+        }
+    }
 
     SelectionContainer {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             var expandTitle by rememberSaveable { mutableStateOf(false) }
-            article.article.title?.let { title ->
+            displayedTitle?.let { title ->
                 Text(
                     modifier = Modifier
                         .padding(top = 12.dp)
@@ -470,7 +638,7 @@ private fun Content(
     })
     PodAuraWebView(
         modifier = Modifier.fillMaxWidth(),
-        content = articleState.displayedContent,
+        content = displayedHtml,
         baseUrl = articleState.displayedSourceUrl,
         refererDomain = articleState.displayedSourceUrl?.httpDomain(),
         styleMode = if (articleState.contentSource == ReadContentSource.FullText) {
@@ -480,7 +648,7 @@ private fun Content(
         },
         horizontalPadding = 16f,
         onImageClick = { imageUrl, _ ->
-            imagePreviewOpener.open(image = imageUrl, title = article.article.title)
+            imagePreviewOpener.open(image = imageUrl, title = displayedTitle)
         },
         onTimestampClick = { positionSeconds ->
             onTimestampClick(firstMediaUrl, positionSeconds)
@@ -495,6 +663,7 @@ private fun MoreMenu(
     onDismissRequest: () -> Unit,
     onOpenInBrowserClick: (() -> Unit)?,
     onReadTextSizeClick: () -> Unit,
+    onTranslateClick: () -> Unit,
     contentSource: ReadContentSource,
     fullContentActionEnabled: Boolean,
     onFullContentClick: () -> Unit,
@@ -511,6 +680,7 @@ private fun MoreMenu(
                 }
             ),
             stringResource(Res.string.read_screen_text_size),
+            stringResource(Res.string.translate_article),
             stringResource(Res.string.read_screen_open_article_screen),
         )
         val leadingIcons = listOf(
@@ -521,6 +691,7 @@ private fun MoreMenu(
                 Icons.AutoMirrored.Outlined.ChromeReaderMode
             },
             Icons.Outlined.FormatSize,
+            Icons.Outlined.Translate,
             Icons.Outlined.RssFeed,
         )
         val onClicks = listOf<() -> Unit>(
@@ -538,12 +709,17 @@ private fun MoreMenu(
             },
             {
                 onDismissRequest()
+                onTranslateClick()
+            },
+            {
+                onDismissRequest()
                 onOpenArticleScreen()
             },
         )
         val enables = listOf(
             onOpenInBrowserClick != null,
             fullContentActionEnabled,
+            true,
             true,
             true,
         )
@@ -557,6 +733,194 @@ private fun MoreMenu(
                     },
                     onClick = onClicks[index],
                     enabled = enables[index],
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TranslationBottomSheet(
+    profiles: List<TranslationProfile>,
+    articleText: String,
+    initialProfileId: String?,
+    initialTargetLanguage: String?,
+    onDismissRequest: () -> Unit,
+    onConfigureProfiles: () -> Unit,
+    onTranslate: (profileId: String, targetLanguage: String) -> Unit,
+) {
+    val defaultProfile = profiles.firstOrNull { it.id == initialProfileId }
+        ?: profiles.firstOrNull { it.isDefault }
+        ?: profiles.firstOrNull()
+    var selectedProfileId by remember(profiles, initialProfileId) {
+        mutableStateOf(defaultProfile?.id)
+    }
+    val selectedProfile = profiles.firstOrNull { it.id == selectedProfileId }
+    var targetLanguage by remember(profiles, initialTargetLanguage) {
+        mutableStateOf(initialTargetLanguage ?: defaultProfile?.targetLanguage ?: "EN")
+    }
+    val targetLanguages = selectedProfile?.let {
+        translationTargetLanguages(it.providerType)
+    }.orEmpty()
+    LaunchedEffect(selectedProfile?.id, targetLanguages) {
+        if (selectedProfile != null && targetLanguage !in targetLanguages) {
+            targetLanguage = selectedProfile.targetLanguage.takeIf { it in targetLanguages }
+                ?: targetLanguages.firstOrNull()
+                        ?: "EN"
+        }
+    }
+    val sourceBytes = articleText.encodeToByteArray().size.toLong()
+    val requestLimit = selectedProfile?.let {
+        translationMaxTextRequestBytes(it.providerType)
+    } ?: Long.MAX_VALUE
+    val exceedsRequestLimit = sourceBytes > requestLimit
+    val capacityFraction = if (requestLimit == Long.MAX_VALUE) {
+        0f
+    } else {
+        (sourceBytes.toFloat() / requestLimit.toFloat()).coerceIn(0f, 1f)
+    }
+
+    AnimatedDismissModalBottomSheet(onDismissRequest = onDismissRequest) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.translate_article),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            if (profiles.isEmpty()) {
+                Text(
+                    text = stringResource(Res.string.translation_no_enabled_profile),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onConfigureProfiles,
+                ) {
+                    Icon(Icons.Outlined.Settings, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.translation_configure))
+                }
+            } else {
+                TranslationProfilePicker(
+                    profiles = profiles,
+                    selectedProfileId = selectedProfileId,
+                    onProfileSelected = { profile ->
+                        selectedProfileId = profile.id
+                        targetLanguage = profile.targetLanguage
+                    },
+                )
+                TargetLanguagePicker(
+                    value = targetLanguage,
+                    onValueChange = { targetLanguage = it },
+                    options = targetLanguages,
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = stringResource(
+                            Res.string.translation_estimated_size,
+                            articleText.length,
+                            sourceBytes,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    LinearProgressIndicator(
+                        progress = { capacityFraction },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (exceedsRequestLimit) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                    )
+                    Text(
+                        text = stringResource(
+                            Res.string.translation_request_limit,
+                            requestLimit,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (exceedsRequestLimit) {
+                        Text(
+                            text = stringResource(
+                                Res.string.translation_error_content_too_large
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = selectedProfile != null && !exceedsRequestLimit,
+                    onClick = {
+                        selectedProfileId?.let { onTranslate(it, targetLanguage) }
+                    },
+                ) {
+                    Icon(Icons.Outlined.Translate, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.translation_confirm))
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun TranslationProfilePicker(
+    profiles: List<TranslationProfile>,
+    selectedProfileId: String?,
+    onProfileSelected: (TranslationProfile) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = profiles.firstOrNull { it.id == selectedProfileId }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        ListItem(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true },
+            leadingContent = { Icon(Icons.Outlined.Translate, contentDescription = null) },
+            headlineContent = { Text(stringResource(Res.string.translation_profile)) },
+            supportingContent = { Text(selected?.name.orEmpty()) },
+            trailingContent = {
+                Icon(Icons.Outlined.ArrowDropDown, contentDescription = null)
+            },
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            profiles.forEach { profile ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(profile.name)
+                            Text(
+                                text = listOfNotNull(
+                                    profile.targetLanguage,
+                                    stringResource(Res.string.translation_is_default)
+                                        .takeIf { profile.isDefault },
+                                ).joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                    trailingIcon = if (profile.id == selectedProfileId) {
+                        { Icon(Icons.Outlined.Check, contentDescription = null) }
+                    } else {
+                        null
+                    },
+                    onClick = {
+                        onProfileSelected(profile)
+                        expanded = false
+                    },
                 )
             }
         }
@@ -585,7 +949,7 @@ private fun ReadTextSizeSliderDialog(
             Spacer(modifier = Modifier.height(12.dp))
             Slider(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                valueRange = 12f .. 50f,
+                valueRange = 12f..50f,
                 value = textSize,
                 onValueChange = { ReadTextSizePreference.put(scope = scope, value = it) },
             )

@@ -8,6 +8,10 @@ sealed interface ReadIntent : MviIntent {
     data class Read(val articleId: String, val read: Boolean) : ReadIntent
     data class FetchFullContent(val url: String) : ReadIntent
     data class SelectContentSource(val source: ReadContentSource) : ReadIntent
+    data class Translate(val profileId: String, val targetLanguage: String) : ReadIntent
+    data class SelectTranslationDisplayMode(val mode: TranslationDisplayMode) : ReadIntent
+    data object CancelTranslation : ReadIntent
+    data object RemoveTranslationCache : ReadIntent
     data class PlayTimestamp(
         val articleId: String,
         val mediaUrl: String?,

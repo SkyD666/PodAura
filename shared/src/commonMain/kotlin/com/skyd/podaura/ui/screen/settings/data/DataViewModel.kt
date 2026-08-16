@@ -5,6 +5,7 @@ import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.repository.DataRepository
+import com.skyd.podaura.model.repository.translation.TranslationRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -22,7 +23,8 @@ import podaura.shared.generated.resources.data_screen_data_cleared_size
 import podaura.shared.generated.resources.data_screen_deleted_count
 
 class DataViewModel(
-    private val dataRepo: DataRepository
+    private val dataRepo: DataRepository,
+    private val translationRepo: TranslationRepository,
 ) : AbstractMviViewModel<DataIntent, DataState, DataEvent>() {
 
     override val viewState: StateFlow<DataState>
@@ -92,6 +94,7 @@ class DataViewModel(
 
             filterIsInstance<DataIntent.ClearCache>().flatMapConcat {
                 dataRepo.requestClearCache().map {
+                    translationRepo.clearCache()
                     DataPartialStateChange.ClearCacheResult.Success(deletedSize = it)
                 }.startWith(DataPartialStateChange.LoadingDialog.Show)
                     .catchMap { DataPartialStateChange.ClearCacheResult.Failed(it.message.toString()) }

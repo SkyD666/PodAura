@@ -39,6 +39,13 @@ import com.skyd.podaura.model.repository.playlist.IPlaylistMediaRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistRepository
 import com.skyd.podaura.model.repository.playlist.PlaylistMediaRepository
 import com.skyd.podaura.model.repository.playlist.PlaylistRepository
+import com.skyd.podaura.model.repository.translation.DeepLTranslationProvider
+import com.skyd.podaura.model.repository.translation.GoogleTranslationProvider
+import com.skyd.podaura.model.repository.translation.InMemoryTranslationCache
+import com.skyd.podaura.model.repository.translation.TranslationDocumentBuilder
+import com.skyd.podaura.model.repository.translation.TranslationHtmlValidator
+import com.skyd.podaura.model.repository.translation.TranslationProfileRepository
+import com.skyd.podaura.model.repository.translation.TranslationRepository
 import com.skyd.podaura.util.favicon.FaviconExtractor
 import com.skyd.podaura.util.favicon.extractor.BaseUrlIconTagExtractor
 import com.skyd.podaura.util.favicon.extractor.HardCodedExtractor
@@ -48,6 +55,36 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val repositoryModule = module {
+    single { InMemoryTranslationCache() }
+    single { TranslationDocumentBuilder() }
+    single { TranslationHtmlValidator() }
+    single { DeepLTranslationProvider(get(named("translation")), get()) }
+    single { GoogleTranslationProvider(get(named("translation")), get()) }
+    single {
+        TranslationProfileRepository(
+            dao = get(),
+            credentialStore = get(),
+            providers = listOf(
+                get<DeepLTranslationProvider>(),
+                get<GoogleTranslationProvider>(),
+            ),
+            cache = get(),
+            json = get(),
+        )
+    }
+    single {
+        TranslationRepository(
+            profileRepository = get(),
+            providers = listOf(
+                get<DeepLTranslationProvider>(),
+                get<GoogleTranslationProvider>(),
+            ),
+            documentBuilder = get(),
+            validator = get(),
+            cache = get(),
+            json = get(),
+        )
+    }
     factory { ReorderGroupRepository(get(), get()) }
     factory { ReorderFeedRepository(get(), get()) }
     factory { DataRepository(get(), get(), get()) }
