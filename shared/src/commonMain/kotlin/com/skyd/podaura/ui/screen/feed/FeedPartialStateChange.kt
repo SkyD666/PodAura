@@ -85,6 +85,16 @@ internal sealed interface FeedPartialStateChange {
         data class Failed(val msg: String) : RefreshFeed
     }
 
+    sealed interface RefreshAllFeeds : FeedPartialStateChange {
+        override fun reduce(oldState: FeedState): FeedState {
+            return oldState.copy(refreshAllFeedsInProgress = this is Started)
+        }
+
+        data object Started : RefreshAllFeeds
+        data object Success : RefreshAllFeeds
+        data class Failed(val msg: String) : RefreshAllFeeds
+    }
+
     sealed interface CreateGroup : FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {

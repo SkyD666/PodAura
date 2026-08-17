@@ -455,6 +455,7 @@
     <string name="checked">選択済み</string>
     <string name="import_export_screen_feed_category">フィード</string>
     <string name="import_export_screen_prefer_category">設定</string>
+    <string name="file_saver_unavailable">システムのファイル保存画面を開けません。</string>
     <string name="import_opml_screen_import_prefer">設定をインポート</string>
     <string name="import_opml_screen_export_prefer">設定をエクスポート</string>
     <string name="import_opml_screen_import_prefer_description">JSON ファイルからインポートします。現在の設定は上書きされます</string>

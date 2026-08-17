@@ -41,23 +41,16 @@ interface FeedDao {
         } else {
             updateFeed(feedWithArticleBean.feed)
         }
-        val feedUrl = feedWithArticleBean.feed.url
-        get<ArticleDao>().insertListIfNotExist(
-            feedWithArticleBean.articles.map { articleWithEnclosure ->
-                val articleId = articleWithEnclosure.article.articleId
+        get<ArticleDao>().insertListIfNotExist(feedWithArticleBean.normalizedArticles())
+    }
 
-                // Add ArticleWithEnclosure
-                return@map if (articleWithEnclosure.article.feedUrl != feedUrl) {
-                    articleWithEnclosure.copy(
-                        article = articleWithEnclosure.article.copy(feedUrl = feedUrl),
-                        enclosures = articleWithEnclosure.enclosures.map {
-                            if (it.articleId != articleId) it.copy(articleId = articleId)
-                            else it
-                        }
-                    )
-                } else articleWithEnclosure
-            }
-        )
+    @Transaction
+    suspend fun updateFeedWithArticleIfExists(feedWithArticleBean: FeedWithArticleBean): Boolean {
+        if (getFeed(feedWithArticleBean.feed.url) == null) return false
+
+        updateFeed(feedWithArticleBean.feed)
+        get<ArticleDao>().insertListIfNotExist(feedWithArticleBean.normalizedArticles())
+        return true
     }
 
     @Transaction
@@ -303,5 +296,20 @@ interface FeedDao {
     companion object {
         const val ORDER_DELTA = 10.0
         const val ORDER_MIN_DELTA = 1E-5
+    }
+}
+
+private fun FeedWithArticleBean.normalizedArticles() = articles.map { articleWithEnclosure ->
+    val feedUrl = feed.url
+    val articleId = articleWithEnclosure.article.articleId
+    if (articleWithEnclosure.article.feedUrl != feedUrl) {
+        articleWithEnclosure.copy(
+            article = articleWithEnclosure.article.copy(feedUrl = feedUrl),
+            enclosures = articleWithEnclosure.enclosures.map {
+                if (it.articleId != articleId) it.copy(articleId = articleId) else it
+            }
+        )
+    } else {
+        articleWithEnclosure
     }
 }

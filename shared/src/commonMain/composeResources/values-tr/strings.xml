@@ -456,6 +456,7 @@
     <string name="checked">Seçili</string>
     <string name="import_export_screen_feed_category">Akışlar</string>
     <string name="import_export_screen_prefer_category">Ayarlar</string>
+    <string name="file_saver_unavailable">Sistem dosya kaydedicisi açılamıyor.</string>
     <string name="import_opml_screen_import_prefer">Ayarları içe aktar</string>
     <string name="import_opml_screen_export_prefer">Ayarları dışa aktar</string>
     <string name="import_opml_screen_import_prefer_description">JSON dosyasından içe aktarır; mevcut ayarların üzerine yazılır</string>

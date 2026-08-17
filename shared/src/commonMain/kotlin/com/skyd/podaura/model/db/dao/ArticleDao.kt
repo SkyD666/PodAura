@@ -325,6 +325,12 @@ interface ArticleDao {
     fun getArticleWithFeed(articleId: String): Flow<ArticleWithFeed?>
 
     @Query(
+        "SELECT ${ArticleBean.IS_FAVORITE_COLUMN} FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId"
+    )
+    fun observeArticleFavorite(articleId: String): Flow<Boolean?>
+
+    @Query(
         "SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.FEED_URL_COLUMN} = :feedUrl " +
                 "ORDER BY `${ArticleBean.DATE_COLUMN}` DESC LIMIT 1"

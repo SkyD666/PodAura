@@ -33,7 +33,9 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
@@ -137,34 +139,29 @@ class ArticleRepository(
         coroutineScope {
             val requests = mutableListOf<Deferred<Unit>>()
             val failMsg = mutableListOf<Pair<String, String>>()
+            val failMsgMutex = Mutex()
             val semaphore = Semaphore(5)
             feedUrls.forEach { feedUrl ->
                 requests += async {
                     semaphore.withPermit {
-                        val articleBeanList = runCatching {
+                        runCatching {
+                            val feed = feedDao.getFeed(feedUrl) ?: return@async
                             rssHelper.queryRssXml(
-                                feed = feedDao.getFeedView(feedUrl).feed,
+                                feed = feed,
                                 full = full,
                                 latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
-                            )?.also { feedWithArticle ->
-                                feedDao.updateFeed(feedWithArticle.feed)
-                            }?.articles
+                            )?.let { feedWithArticle ->
+                                feedDao.updateFeedWithArticleIfExists(feedWithArticle)
+                            }
                         }.onFailure { e ->
                             if (e !is CancellationException) {
                                 e.printStackTrace()
-                                failMsg += (feedUrl to e.message.orEmpty())
+                                failMsgMutex.withLock {
+                                    failMsg += (feedUrl to e.message.orEmpty())
+                                }
                             }
-                        }.getOrNull()
-
-                        if (articleBeanList.isNullOrEmpty()) return@async
-
-                        articleDao.insertListIfNotExist(articleBeanList.map { articleWithEnclosure ->
-                            if (articleWithEnclosure.article.feedUrl != feedUrl) {
-                                articleWithEnclosure.copy(
-                                    article = articleWithEnclosure.article.copy(feedUrl = feedUrl)
-                                )
-                            } else articleWithEnclosure
-                        })
+                        }
+                        Unit
                     }
                 }
             }
@@ -188,6 +185,9 @@ class ArticleRepository(
     override fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> = flow {
         emit(articleDao.favoriteArticle(articleId, favorite))
     }.flowOn(Dispatchers.IO)
+
+    override fun observeArticleFavorite(articleId: String): Flow<Boolean?> =
+        articleDao.observeArticleFavorite(articleId).flowOn(Dispatchers.IO)
 
     override fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
         emit(articleDao.readArticle(articleId, read))

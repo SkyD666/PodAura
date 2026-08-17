@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">Feed</string>
+    <string name="feed_screen_refresh_all_subscriptions">Refresh all subscriptions</string>
+    <string name="feed_screen_refreshing_subscriptions_in_background">Updating subscriptions in the background</string>
     <string name="media_screen_name">Media</string>
     <string name="more_screen_name">More</string>
     <string name="add">Add</string>
@@ -462,6 +464,7 @@
     <string name="checked">Checked</string>
     <string name="import_export_screen_feed_category">Feed</string>
     <string name="import_export_screen_prefer_category">Preference</string>
+    <string name="file_saver_unavailable">Unable to open the system file saver.</string>
     <string name="import_opml_screen_import_prefer">Import preferences</string>
     <string name="import_opml_screen_export_prefer">Export preferences</string>
     <string name="import_opml_screen_import_prefer_description">Import via JSON file, current preferences will be overwritten</string>

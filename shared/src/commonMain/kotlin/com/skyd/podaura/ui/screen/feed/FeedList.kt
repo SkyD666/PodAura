@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.UnfoldLess
@@ -99,6 +100,8 @@ import podaura.shared.generated.resources.collapse_all_groups
 import podaura.shared.generated.resources.expand_all_groups
 import podaura.shared.generated.resources.feed_screen_all_articles
 import podaura.shared.generated.resources.feed_screen_name
+import podaura.shared.generated.resources.feed_screen_refresh_all_subscriptions
+import podaura.shared.generated.resources.feed_screen_refreshing_subscriptions_in_background
 import podaura.shared.generated.resources.feed_screen_rss_url
 import podaura.shared.generated.resources.feed_screen_search_feed
 import podaura.shared.generated.resources.feed_style_screen_name
@@ -142,6 +145,9 @@ internal fun FeedList(
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = FeedIntent.Init)
+    val refreshingSubscriptionsMessage = stringResource(
+        Res.string.feed_screen_refreshing_subscriptions_in_background
+    )
 
     if (platform.isJvm && !initialFocusHandled) {
         LaunchedEffect(initialPaneFocusRequester) {
@@ -194,6 +200,8 @@ internal fun FeedList(
                     MoreMenu(
                         expanded = openMoreMenu,
                         allGroupCollapsed = uiState.allGroupCollapsed,
+                        refreshAllFeedsInProgress = uiState.refreshAllFeedsInProgress,
+                        onRefreshAllFeeds = { dispatch(FeedIntent.RefreshAllFeeds) },
                         onShowAllArticles = { onShowArticleListByFeedUrls(emptyList()) },
                         onCollapseAllGroup = { dispatch(FeedIntent.CollapseAllGroup(it)) },
                         onDismissRequest = { openMoreMenu = false },
@@ -297,6 +305,12 @@ internal fun FeedList(
                     currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.RefreshFeedResultEvent.Failed ->
+                    currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.RefreshAllFeedsResultEvent.Started ->
+                    currentSnackbarHostState.showSnackbar(refreshingSubscriptionsMessage)
+
+                is FeedEvent.RefreshAllFeedsResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
 
                 is FeedEvent.CreateGroupResultEvent.Failed ->
@@ -482,6 +496,8 @@ private fun FeedList(
 private fun MoreMenu(
     expanded: Boolean,
     allGroupCollapsed: Boolean,
+    refreshAllFeedsInProgress: Boolean,
+    onRefreshAllFeeds: () -> Unit,
     onShowAllArticles: () -> Unit,
     onCollapseAllGroup: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
@@ -490,6 +506,7 @@ private fun MoreMenu(
     DropdownMenuPopup(expanded = expanded, onDismissRequest = onDismissRequest) {
         val texts = listOf(
             listOf(
+                stringResource(Res.string.feed_screen_refresh_all_subscriptions),
                 stringResource(Res.string.feed_screen_all_articles),
             ),
             listOf(
@@ -503,7 +520,10 @@ private fun MoreMenu(
             )
         )
         val leadingIcons = listOf(
-            listOf(Icons.AutoMirrored.Outlined.Article),
+            listOf(
+                Icons.Outlined.Refresh,
+                Icons.AutoMirrored.Outlined.Article,
+            ),
             listOf(
                 if (allGroupCollapsed) Icons.Outlined.UnfoldMore else Icons.Outlined.UnfoldLess,
                 Icons.AutoMirrored.Outlined.Sort,
@@ -513,6 +533,10 @@ private fun MoreMenu(
         )
         val onClicks = listOf<List<() -> Unit>>(
             listOf(
+                {
+                    onDismissRequest()
+                    onRefreshAllFeeds()
+                },
                 {
                     onDismissRequest()
                     onShowAllArticles()
@@ -537,6 +561,10 @@ private fun MoreMenu(
                 },
             )
         )
+        val enabledItems = listOf(
+            listOf(!refreshAllFeedsInProgress, true),
+            listOf(true, true, true, true),
+        )
 
         texts.forEachIndexed { groupIndex, subTexts ->
             DropdownMenuGroup(shapes = MenuDefaults.groupShape(groupIndex, texts.size)) {
@@ -549,6 +577,7 @@ private fun MoreMenu(
                                 Icon(imageVector = icon, contentDescription = null)
                             }
                         },
+                        enabled = enabledItems[groupIndex][index],
                         onClick = onClicks[groupIndex][index],
                     )
                 }

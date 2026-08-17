@@ -14,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.ClosedCaption
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
@@ -24,6 +26,8 @@ import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -45,6 +49,7 @@ import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.isLandscape
 import com.skyd.podaura.ui.component.navigation.rememberMainPageOpener
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.PlayerArticleContextState
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
@@ -57,6 +62,8 @@ import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_screen_favorite
+import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.player_audio_track
@@ -68,17 +75,21 @@ import podaura.shared.generated.resources.read_screen_name
 @Composable
 internal fun PortraitPlayerView(
     playState: PlayState,
+    articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onBack: () -> Unit,
     onEnterFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
+    onSetArticleFavorite: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var showMenu by rememberSaveable { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.Small,
@@ -86,6 +97,22 @@ internal fun PortraitPlayerView(
                 title = { },
                 navigationIcon = { BackIcon(onClick = onBack) },
                 actions = {
+                    val isFavorite = articleContextState.isFavorite
+                    if (isFavorite != null) {
+                        ComponeIconButton(
+                            enabled = !articleContextState.isFavoriteUpdating,
+                            onClick = { onSetArticleFavorite(!isFavorite) },
+                            imageVector = if (isFavorite) {
+                                Icons.Outlined.Favorite
+                            } else {
+                                Icons.Outlined.FavoriteBorder
+                            },
+                            contentDescription = stringResource(
+                                if (isFavorite) Res.string.article_screen_unfavorite
+                                else Res.string.article_screen_favorite
+                            ),
+                        )
+                    }
                     if (supportPip) {
                         val onEnterPip = rememberOnEnterPip()
                         ComponeIconButton(

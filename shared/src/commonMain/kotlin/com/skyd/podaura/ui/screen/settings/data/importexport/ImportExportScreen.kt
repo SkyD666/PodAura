@@ -15,6 +15,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -31,10 +32,12 @@ import com.skyd.fundation.ext.toAbsoluteDateTimeString
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.BuildKonfig
+import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.ext.validateFileName
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -47,6 +50,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_name
 import podaura.shared.generated.resources.export_opml_screen_name
+import podaura.shared.generated.resources.file_saver_unavailable
 import podaura.shared.generated.resources.import_export_screen_feed_category
 import podaura.shared.generated.resources.import_export_screen_name
 import podaura.shared.generated.resources.import_export_screen_prefer_category
@@ -71,11 +75,19 @@ fun ImportExportScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = ImportExportIntent.Init)
+    val onFileSaverError: (FileKitDialogException) -> Unit = {
+        snackbarHostState.showSnackbar(
+            scope = scope,
+            message = Res.string.file_saver_unavailable,
+        )
+    }
 
     val opmlSaverLauncher = rememberFileSaverLauncher(
-        dialogSettings = FileKitDialogSettings.createDefault()
+        dialogSettings = FileKitDialogSettings.createDefault(),
+        onError = onFileSaverError,
     ) { file ->
         if (file != null) {
             dispatch(ImportExportIntent.ExportOpml(file))
@@ -91,7 +103,8 @@ fun ImportExportScreen(
         }
     }
     val jsonPreferenceSaverLauncher = rememberFileSaverLauncher(
-        dialogSettings = FileKitDialogSettings.createDefault()
+        dialogSettings = FileKitDialogSettings.createDefault(),
+        onError = onFileSaverError,
     ) { file ->
         if (file != null) {
             dispatch(ImportExportIntent.ExportPrefer(file))

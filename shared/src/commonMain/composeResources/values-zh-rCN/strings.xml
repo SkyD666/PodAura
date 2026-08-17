@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">PodAura</string>
     <string name="feed_screen_name">订阅</string>
+    <string name="feed_screen_refresh_all_subscriptions">刷新所有订阅</string>
+    <string name="feed_screen_refreshing_subscriptions_in_background">正在后台更新</string>
     <string name="media_screen_name">媒体库</string>
     <string name="more_screen_name">更多</string>
     <string name="add">添加</string>
@@ -455,6 +457,7 @@
     <string name="checked">已选中</string>
     <string name="import_export_screen_feed_category">订阅</string>
     <string name="import_export_screen_prefer_category">设置</string>
+    <string name="file_saver_unavailable">无法打开系统文件保存器。</string>
     <string name="import_opml_screen_import_prefer">导入设置</string>
     <string name="import_opml_screen_export_prefer">导出设置</string>
     <string name="import_opml_screen_import_prefer_description">通过 JSON 文件导入，当前的设置将被覆盖</string>

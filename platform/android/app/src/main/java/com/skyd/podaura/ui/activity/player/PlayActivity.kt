@@ -29,6 +29,7 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.activity.BaseComposeActivity
 import com.skyd.podaura.ui.component.showToast
+import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.PlayerViewModel
@@ -46,6 +47,7 @@ import java.util.UUID
 
 class PlayActivity : BaseComposeActivity() {
     private val viewModel: PlayerViewModel by viewModel()
+    private val articleContextViewModel: PlayerArticleContextViewModel by viewModel()
     private var launchRequestId: String = ""
     private lateinit var picture: PlatformFile
     private val requestPermissionLauncher = registerForActivityResult(
@@ -135,6 +137,7 @@ class PlayActivity : BaseComposeActivity() {
             }
             PlayerViewRoute(
                 service = if (serviceBound) service.playerCoordinator else null,
+                articleContextViewModel = articleContextViewModel,
                 onBack = { finish() },
                 onSaveScreenshot = {
                     picture = it

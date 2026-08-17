@@ -266,6 +266,7 @@ internal fun PlayerWindow(
                 PodAuraTheme(darkTheme = DarkModePreference.current) {
                     PlayerViewRoute(
                         service = playerCoordinator,
+                        articleContextViewModel = appState.playerArticleContextViewModel,
                         onBack = closePlayer,
                         onSaveScreenshot = {
 

@@ -1,7 +1,9 @@
 package com.skyd.podaura.ui.player
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,22 +42,46 @@ import io.github.vinceglb.filekit.PlatformFile
 @Composable
 fun PlayerViewRoute(
     service: PlayerCoordinator?,
+    articleContextViewModel: PlayerArticleContextViewModel,
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
     if (service != null) {
-        PlayerView(service, onBack, onSaveScreenshot)
+        PlayerView(service, articleContextViewModel, onBack, onSaveScreenshot)
     }
 }
 
 @Composable
 fun PlayerView(
     service: PlayerCoordinator,
+    articleContextViewModel: PlayerArticleContextViewModel,
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
     val playerState by service.playerState.collectAsStateWithLifecycle()
+    val articleContextState by articleContextViewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
     var playState by remember { mutableStateOf(PlayState.initial) }
+
+    val currentArticle = playerState.currentMedia?.article?.articleWithEnclosure?.article
+    val currentArticleId = currentArticle?.articleId
+    LaunchedEffect(currentArticleId) {
+        articleContextViewModel.bindArticle(
+            articleId = currentArticleId,
+            initialFavorite = currentArticle?.isFavorite,
+        )
+    }
+    DisposableEffect(articleContextViewModel) {
+        onDispose { articleContextViewModel.bindArticle(null, null) }
+    }
+    LaunchedEffect(articleContextViewModel, snackbarHostState) {
+        articleContextViewModel.events.collect { event ->
+            when (event) {
+                is PlayerArticleContextEvent.FavoriteFailed ->
+                    snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     var subtitleTrackDialogState by remember { mutableStateOf(SubtitleTrackDialogState.initial) }
     var audioTrackDialogState by remember { mutableStateOf(AudioTrackDialogState.initial) }
@@ -164,12 +190,17 @@ fun PlayerView(
                 )
             },
             playState = playState,
+            articleContextState = articleContextState.takeIf {
+                it.articleId == currentArticleId
+            } ?: PlayerArticleContextState(),
             playStateCallback = playStateCallback,
             dialogState = dialogState,
             dialogCallback = dialogCallback,
             onBack = onBack,
             onSaveScreenshot = onSaveScreenshot,
             onCommand = { service.onCommand(it) },
+            onSetArticleFavorite = articleContextViewModel::setFavorite,
+            snackbarHostState = snackbarHostState,
         )
     }
 
@@ -188,6 +219,7 @@ fun PlayerView(
 @Composable
 private fun Content(
     playState: PlayState,
+    articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
     dialogState: DialogState,
     dialogCallback: DialogCallback,
@@ -195,6 +227,8 @@ private fun Content(
     onSaveScreenshot: (PlatformFile) -> Unit,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onCommand: (PlayerCommand) -> Unit,
+    onSetArticleFavorite: (Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState,
 ) {
     val player = @Composable {
         PlatformPlayerView(
@@ -222,6 +256,7 @@ private fun Content(
     } else {
         PortraitPlayerView(
             playState = playState,
+            articleContextState = articleContextState,
             playStateCallback = playStateCallback,
             onDialogVisibilityChanged = onDialogVisibilityChanged,
             onBack = onBack,
@@ -230,6 +265,8 @@ private fun Content(
                 fullscreen = true
             },
             playerContent = player,
+            onSetArticleFavorite = onSetArticleFavorite,
+            snackbarHostState = snackbarHostState,
         )
     }
 
@@ -280,4 +317,3 @@ expect fun PlatformContent(
     playStateCallback: PlayStateCallback,
     commonContent: @Composable () -> Unit,
 )
-

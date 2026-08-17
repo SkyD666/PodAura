@@ -19,6 +19,11 @@ sealed interface FeedEvent : MviSingleEvent {
         data class Failed(val msg: String) : RefreshFeedResultEvent
     }
 
+    sealed interface RefreshAllFeedsResultEvent : FeedEvent {
+        data object Started : RefreshAllFeedsResultEvent
+        data class Failed(val msg: String) : RefreshAllFeedsResultEvent
+    }
+
     sealed interface CreateGroupResultEvent : FeedEvent {
         data class Failed(val msg: String) : CreateGroupResultEvent
     }

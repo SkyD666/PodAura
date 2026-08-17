@@ -13,6 +13,7 @@ data class FeedState(
     val editFeedUrl: String?,
     val editGroupDialogBean: GroupVo?,
     val loadingDialog: Boolean,
+    val refreshAllFeedsInProgress: Boolean,
 ) : MviViewState {
     companion object {
         fun initial() = FeedState(
@@ -22,6 +23,7 @@ data class FeedState(
             editFeedUrl = null,
             editGroupDialogBean = null,
             loadingDialog = false,
+            refreshAllFeedsInProgress = false,
         )
     }
 }

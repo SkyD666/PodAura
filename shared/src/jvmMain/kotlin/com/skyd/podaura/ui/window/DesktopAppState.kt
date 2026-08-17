@@ -9,6 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.skyd.fundation.di.get
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler.UrlData
+import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 
@@ -105,6 +106,7 @@ internal class DesktopWindowManager {
 internal class DesktopAppState(
     val windowManager: DesktopWindowManager,
     val playerWindowController: PlayerWindowController,
+    val playerArticleContextViewModel: PlayerArticleContextViewModel,
 ) {
     fun openPlayer(mode: PlayDataMode) {
         playerWindowController.open(mode)
@@ -139,10 +141,12 @@ internal fun rememberDesktopAppState(): DesktopAppState {
     // Resolve one instance for the whole desktop application. The emitter and app-lifetime
     // mediaInfos collector must share it, so this intentionally does not use a nav entry owner.
     val playerViewModel = remember { get<PlayerViewModel>() }
-    return remember(playerViewModel) {
+    val playerArticleContextViewModel = remember { get<PlayerArticleContextViewModel>() }
+    return remember(playerViewModel, playerArticleContextViewModel) {
         DesktopAppState(
             windowManager = DesktopWindowManager(),
             playerWindowController = PlayerWindowController(playerViewModel),
+            playerArticleContextViewModel = playerArticleContextViewModel,
         )
     }
 }

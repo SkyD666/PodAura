@@ -15,6 +15,8 @@ interface IArticleRepository {
 
     fun readArticle(articleId: String, read: Boolean): Flow<Unit>
 
+    fun observeArticleFavorite(articleId: String): Flow<Boolean?>
+
     fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit>
 
     fun deleteArticle(articleId: String): Flow<Int>

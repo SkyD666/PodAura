@@ -4,7 +4,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
+import com.skyd.podaura.ext.flatMapFirst
 import com.skyd.podaura.ext.startWith
+import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.feed.FeedRepository
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +58,12 @@ class FeedViewModel(
 
                 is FeedPartialStateChange.RefreshFeed.Failed ->
                     FeedEvent.RefreshFeedResultEvent.Failed(change.msg)
+
+                is FeedPartialStateChange.RefreshAllFeeds.Started ->
+                    FeedEvent.RefreshAllFeedsResultEvent.Started
+
+                is FeedPartialStateChange.RefreshAllFeeds.Failed ->
+                    FeedEvent.RefreshAllFeedsResultEvent.Failed(change.msg)
 
                 is FeedPartialStateChange.FeedList.Failed ->
                     FeedEvent.InitFeetListResultEvent.Failed(change.msg)
@@ -144,6 +152,18 @@ class FeedViewModel(
                     .startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.RefreshFeed.Failed(it.message.toString()) }
             },
+            filterIsInstance<FeedIntent.RefreshAllFeeds>().flatMapFirst {
+                feedRepo.requestAllFeedList().take(1).flatMapConcat { feeds ->
+                    articleRepo.refreshArticleList(
+                        feedUrls = feeds.unmutedFeedUrls(),
+                        full = false,
+                    )
+                }.map { FeedPartialStateChange.RefreshAllFeeds.Success }
+                    .startWith(FeedPartialStateChange.RefreshAllFeeds.Started)
+                    .catchMap {
+                        FeedPartialStateChange.RefreshAllFeeds.Failed(it.message.toString())
+                    }
+            },
             filterIsInstance<FeedIntent.CreateGroup>().flatMapConcat { intent ->
                 feedRepo.createGroup(intent.group).map {
                     FeedPartialStateChange.CreateGroup.Success
@@ -196,3 +216,6 @@ class FeedViewModel(
         )
     }
 }
+
+internal fun List<FeedBean>.unmutedFeedUrls(): List<String> =
+    filterNot { it.mute }.map { it.url }

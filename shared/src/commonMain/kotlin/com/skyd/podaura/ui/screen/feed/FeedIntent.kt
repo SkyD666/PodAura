@@ -15,6 +15,7 @@ sealed interface FeedIntent : MviIntent {
     data class OnEditGroupDialog(val group: GroupVo?) : FeedIntent
     data class ReadAllInGroup(val groupId: String?) : FeedIntent
     data class RefreshGroupFeed(val groupId: String?, val full: Boolean) : FeedIntent
+    data object RefreshAllFeeds : FeedIntent
     data class CreateGroup(val group: GroupVo) : FeedIntent
     data class ChangeGroupExpanded(val group: GroupVo, val expanded: Boolean) : FeedIntent
     data class ClearGroupArticles(val groupId: String) : FeedIntent

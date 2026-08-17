@@ -1,5 +1,6 @@
 package com.skyd.podaura.di
 
+import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.screen.about.update.UpdateViewModel
 import com.skyd.podaura.ui.screen.article.ArticleViewModel
@@ -64,4 +65,5 @@ val viewModelModule = module {
     viewModel { DownloadViewModel(get()) }
     viewModel { DayListViewModel(get()) }
     viewModel { PlayerViewModel(get(), get()) }
+    viewModel { PlayerArticleContextViewModel(get()) }
 }

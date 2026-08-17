@@ -456,6 +456,7 @@
     <string name="checked">Markita</string>
     <string name="import_export_screen_feed_category">Abonfluoj</string>
     <string name="import_export_screen_prefer_category">Agordoj</string>
+    <string name="file_saver_unavailable">Ne eblas malfermi la sisteman dosierkonservilon.</string>
     <string name="import_opml_screen_import_prefer">Importi agordojn</string>
     <string name="import_opml_screen_export_prefer">Eksporti agordojn</string>
     <string name="import_opml_screen_import_prefer_description">Importi el JSON-dosiero; la nunaj agordoj estos anstataŭigitaj</string>
