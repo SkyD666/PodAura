@@ -39,11 +39,14 @@
 # Compose
 -keep, allowshrinking, allowobfuscation class androidx.compose.ui.text.ParagraphKt { <methods>; }
 
+# FileKit
+# Remove when FileKit upgrades to use skiko 0.150.1 (or newer)
+-dontwarn io.github.vinceglb.filekit.dialogs.compose.util.ImageBitmapExt_nonAndroidKt$encodeToByteArray$2
+
 # Mediamp
 # JNA resolves native symbols from interface method names and descriptors at runtime. ProGuard
 # must not rename or optimize this interface (for example SetDllDirectoryW -> SetDllDirectoryW$...).
 -keep interface org.openani.mediamp.nativeloader.WindowsDllKernel32 { *; }
-
 # Kotlin -> JNI: exported symbol names contain the facade and method names.
 -keepclasseswithmembernames,includedescriptorclasses class org.openani.mediamp.mpv.MPVHandleKt {
     native <methods>;
@@ -52,15 +55,7 @@
     native <methods>;
 }
 # JNI -> Kotlin: native code resolves these classes, methods, and descriptors by name.
--keep class org.openani.mediamp.mpv.EventListener {
-    void onPropertyChange(java.lang.String);
-    void onPropertyChange(java.lang.String, boolean);
-    void onPropertyChange(java.lang.String, long);
-    void onPropertyChange(java.lang.String, double);
-    void onPropertyChange(java.lang.String, java.lang.String);
-    void onEvent(int);
-    void onEndFile(int, int);
-}
+-keep class org.openani.mediamp.mpv.EventListener { <methods>; }
 -keep class org.openani.mediamp.mpv.RenderUpdateListener {
     void onRenderUpdate();
 }
@@ -72,6 +67,9 @@
     void seekTo(long);
     void close();
 }
+# LocalWindow has been renamed LocalAwtWindow in newer Compose versions
+# We don't use MpvMediampPlayerSurfaceRing so we can safely ignore this warning.
+-dontwarn org.openani.mediamp.mpv.compose.MpvMediampPlayerSurface_desktopKt
 
 # Windows Window Frame
 -keepnames class androidx.compose.foundation.HoverableNode

@@ -13,20 +13,20 @@ import org.openani.mediamp.mpv.MPVHandle
 import org.openani.mediamp.mpv.RenderUpdateListener
 import org.openani.mediamp.mpv.internal.MpvRenderContextHost
 import org.openani.mediamp.mpv.internal.MpvRenderContextLifecycle
-import org.openani.mediamp.mpv.internal.MpvSurfaceRing
-import org.openani.mediamp.mpv.internal.MpvSurfaceRingBackend
-import org.openani.mediamp.mpv.internal.currentSurfaceRingBackend
+import org.openani.mediamp.mpv.internal.MpvSurfaceBackend
+import org.openani.mediamp.mpv.internal.MpvSurfaceConsumer
+import org.openani.mediamp.mpv.internal.currentSurfaceBackend
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
+import org.openani.mediamp.mpv.EventListener as MediampEventListener
 
 actual class MPV {
     // MPVHandle's constructor only creates mpv. Unlike MpvMediampPlayer's constructor it
     // deliberately does not call mpv_initialize(), allowing common configuration to be applied
     // first.
     private val mpvHandle = MPVHandle(Any())
-    private val ringBackend: MpvSurfaceRingBackend? = currentSurfaceRingBackend()
-    private val surfaceRing: MpvSurfaceRing? =
-        ringBackend?.let { MpvSurfaceRing(mpvHandle.ptr, it) }
+    private val ringBackend: MpvSurfaceBackend? = currentSurfaceBackend()
+    private val surfaceRing: MpvSurfaceConsumer? = ringBackend?.createSurfaceConsumer(mpvHandle.ptr)
     private val pendingCommandsLock = Any()
     private val pendingCommands = mutableListOf<Array<out String>>()
     private val closed = AtomicBoolean(false)
@@ -49,7 +49,7 @@ actual class MPV {
     // the UI thread adds/removes listeners.
     private val eventListeners = CopyOnWriteArraySet<EventListener>()
 
-    private val fanOutEventListener = object : org.openani.mediamp.mpv.EventListener {
+    private val fanOutEventListener = object : MediampEventListener {
         override fun onPropertyChange(name: String) =
             eventListeners.forEach { it.onPropertyChange(name) }
 
@@ -65,7 +65,10 @@ actual class MPV {
         override fun onPropertyChange(name: String, value: String) =
             eventListeners.forEach { it.onPropertyChange(name, value) }
 
-        override fun onEndFile(reason: Int, mpvError: Int) {
+        override fun onStartFile(playlistEntryId: Long) {
+        }
+
+        override fun onEndFile(reason: Int, mpvError: Int, playlistEntryId: Long) {
             // Intentionally not forwarded: mediamp also raises MPVEvent.END_FILE through
             // onEvent(), and bridging here as well would deliver it twice (double savePosition).
         }

@@ -131,7 +131,6 @@ import podaura.shared.generated.resources.translation_provider
 import podaura.shared.generated.resources.translation_screen_name
 import podaura.shared.generated.resources.translation_target_language
 import podaura.shared.generated.resources.translation_timeout
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @Serializable
@@ -363,7 +362,6 @@ private fun SettingsBaseItemScope.TranslationProfileItem(
     )
 }
 
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 private fun TranslationProfileEditor(
     profile: TranslationProfile?,
@@ -414,7 +412,7 @@ private fun TranslationProfileEditor(
     val hasCredential = apiKey.isNotBlank() ||
             (profile?.providerType == providerType && profile.credentialId != null)
     val valid = name.isNotBlank() && hasCredential &&
-            timeout != null && timeout in 5L..120L && providerConfig != null
+            timeout != null && timeout in 5L .. 120L && providerConfig != null
     val draftProfile = timeout?.takeIf { valid }?.let { validTimeout ->
         TranslationProfile(
             id = draftId,

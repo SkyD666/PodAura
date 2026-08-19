@@ -1,11 +1,5 @@
-@file:OptIn(
-    kotlinx.cinterop.BetaInteropApi::class,
-    kotlinx.cinterop.ExperimentalForeignApi::class,
-)
-
 package com.skyd.podaura.model.repository.translation
 
-import cnames.structs.__CFDictionary
 import kotlinx.cinterop.COpaquePointerVar
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
@@ -42,6 +36,7 @@ import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
 
 class AppleCredentialStore : CredentialStore {
+
     override suspend fun put(id: String, secret: String) {
         if (secret.isBlank()) throw CredentialStorageException()
         val bytes = secret.encodeToByteArray()
@@ -60,6 +55,7 @@ class AppleCredentialStore : CredentialStore {
         val status = SecItemAdd(
             attributes.asCFDictionary(),
             null,
+
         )
         if (status != errSecSuccess && status != errSecDuplicateItem) {
             throw CredentialStorageException()
@@ -118,8 +114,7 @@ class AppleCredentialStore : CredentialStore {
     }
 
     private fun NSMutableDictionary.asCFDictionary(): CFDictionaryRef =
-        interpretCPointer<__CFDictionary>(objcPtr())
-            ?: throw CredentialStorageException()
+        interpretCPointer(objcPtr()) ?: throw CredentialStorageException()
 
     private companion object {
         const val SERVICE = "com.skyd.podaura.translation"

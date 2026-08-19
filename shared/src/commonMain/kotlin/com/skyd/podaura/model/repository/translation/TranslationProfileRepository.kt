@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 class TranslationProfileRepository(
@@ -35,7 +34,6 @@ class TranslationProfileRepository(
 
     suspend fun findDefault(): TranslationProfile? = dao.findDefault()?.let(::decode)
 
-    @OptIn(ExperimentalUuidApi::class)
     suspend fun save(profile: TranslationProfile, credential: String?): TranslationProfile {
         val normalizedProfile = if (!profile.enabled && profile.isDefault) {
             profile.copy(isDefault = false)

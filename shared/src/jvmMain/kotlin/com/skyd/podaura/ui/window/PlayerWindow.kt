@@ -20,7 +20,6 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.LocalWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
@@ -256,7 +255,6 @@ internal fun PlayerWindow(
         }
         CompositionLocalProvider(
             LocalDesktopAppState provides appState,
-            LocalWindow provides window,
             // Computed inside this window so it tracks this window's own size.
             LocalWindowSizeClass provides calculateWindowSizeClass(),
         ) {

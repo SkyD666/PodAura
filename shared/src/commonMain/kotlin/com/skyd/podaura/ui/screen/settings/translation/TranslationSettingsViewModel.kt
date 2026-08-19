@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 data class TranslationSettingsState(
@@ -55,7 +54,6 @@ class TranslationSettingsViewModel(
         TranslationSettingsNotice.Saved
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun copy(profile: TranslationProfile, newName: String) = runOperation {
         repository.copy(
             sourceId = profile.id,

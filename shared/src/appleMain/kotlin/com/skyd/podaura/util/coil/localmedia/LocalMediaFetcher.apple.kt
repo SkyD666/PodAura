@@ -1,6 +1,5 @@
 package com.skyd.podaura.util.coil.localmedia
 
-import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.AVFoundation.AVMetadataCommonIdentifierArtwork
@@ -8,18 +7,16 @@ import platform.AVFoundation.AVMetadataItem
 import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.commonMetadata
 import platform.AVFoundation.metadataItemsFromArray
-import platform.Foundation.NSDate
 import platform.Foundation.NSData
+import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 import platform.Foundation.getBytes
-import platform.Foundation.longLongValue
 import platform.Foundation.timeIntervalSince1970
 
-@OptIn(ExperimentalForeignApi::class)
 actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     val fileUrl = filePath.toLocalMediaUrl() ?: return null
     val asset = AVURLAsset(
@@ -34,7 +31,6 @@ actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     return data.toByteArray().takeIf { it.isNotEmpty() }
 }
 
-@OptIn(ExperimentalForeignApi::class)
 actual fun getLocalMediaFileRevision(filePath: String): String? {
     val path = filePath.toLocalMediaUrl()?.path ?: return null
     val attributes = NSFileManager.defaultManager
@@ -57,7 +53,6 @@ private fun String.toLocalMediaUrl(): NSURL? {
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {
     require(length <= Int.MAX_VALUE.toULong()) {
         "Embedded artwork is too large: $length bytes"

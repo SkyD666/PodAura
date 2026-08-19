@@ -1,5 +1,3 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
-
 package com.skyd.podaura.model.repository.fullcontent
 
 import kotlinx.cinterop.CPointerVar
@@ -28,7 +26,7 @@ import platform.posix.sockaddr_in
 import platform.posix.sockaddr_in6
 
 internal actual object PlatformHostAddressResolver : HostAddressResolver {
-    override suspend fun resolve(host: String): List<ByteArray> =
+    actual override suspend fun resolve(host: String): List<ByteArray> =
         withContext(Dispatchers.Default) { resolveBlocking(host) }
 
     private fun resolveBlocking(host: String): List<ByteArray> = memScoped {

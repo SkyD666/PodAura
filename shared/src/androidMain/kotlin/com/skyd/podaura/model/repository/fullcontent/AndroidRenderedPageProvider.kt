@@ -22,10 +22,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -33,7 +33,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.longOrNull
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.uuid.ExperimentalUuidApi
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 internal class AndroidRenderedPageProvider(
@@ -43,11 +43,10 @@ internal class AndroidRenderedPageProvider(
     private val applicationContext = context.applicationContext
     private val renderMutex = Mutex()
 
-    @OptIn(ExperimentalUuidApi::class)
     @SuppressLint("SetJavaScriptEnabled")
     override suspend fun render(url: String): RenderedPageSnapshot = renderMutex.withLock {
         withContext(Dispatchers.Main) {
-            withTimeout(RENDER_TIMEOUT_MILLIS) {
+            withTimeout(RENDER_TIMEOUT_MILLIS.milliseconds) {
                 if (!WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)) {
                     throw RenderedPageException("Isolated WebView profiles are unavailable")
                 }
@@ -85,6 +84,7 @@ internal class AndroidRenderedPageProvider(
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun configure(webView: WebView) {
         webView.settings.apply {
             javaScriptEnabled = true
@@ -166,7 +166,7 @@ internal class AndroidRenderedPageProvider(
 
     private suspend fun awaitDomStability(webView: WebView, observerKey: String) {
         val startedAt = SystemClock.elapsedRealtime()
-        delay(MINIMUM_RENDER_DELAY_MILLIS)
+        delay(MINIMUM_RENDER_DELAY_MILLIS.milliseconds)
         while (SystemClock.elapsedRealtime() - startedAt < DOM_STABILITY_TIMEOUT_MILLIS) {
             val payload = evaluate(
                 webView,
@@ -178,7 +178,7 @@ internal class AndroidRenderedPageProvider(
             val ready = (state?.get("ready") as? JsonPrimitive)?.contentOrNull
             val quietMillis = (state?.get("quietMillis") as? JsonPrimitive)?.longOrNull ?: 0L
             if (ready == "complete" && quietMillis >= DOM_QUIET_MILLIS) return
-            delay(DOM_POLL_MILLIS)
+            delay(DOM_POLL_MILLIS.milliseconds)
         }
     }
 
@@ -187,7 +187,7 @@ internal class AndroidRenderedPageProvider(
             if (evaluate(webView, RenderedPageSnapshotScript.lazyLoadStep) == "done") {
                 return
             }
-            delay(LAZY_LOAD_STEP_DELAY_MILLIS)
+            delay(LAZY_LOAD_STEP_DELAY_MILLIS.milliseconds)
         }
         evaluate(webView, "window.scrollTo(0, 0); 'done'")
     }

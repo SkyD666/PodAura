@@ -6,7 +6,9 @@ internal fun interface HostAddressResolver {
     suspend fun resolve(host: String): List<ByteArray>
 }
 
-internal expect object PlatformHostAddressResolver : HostAddressResolver
+internal expect object PlatformHostAddressResolver : HostAddressResolver {
+    override suspend fun resolve(host: String): List<ByteArray>
+}
 
 internal class PublicAddressValidator(
     private val resolver: HostAddressResolver = PlatformHostAddressResolver,

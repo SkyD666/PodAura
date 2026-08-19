@@ -8,7 +8,7 @@ kotlin {
         namespace = "com.skyd.ksp.annotation"
         minSdk = 24
         compileSdk {
-            version = release(37) { minorApiLevel = 0 }
+            version = release(37) { minorApiLevel = 1 }
         }
         buildToolsVersion = "37.0.0"
     }

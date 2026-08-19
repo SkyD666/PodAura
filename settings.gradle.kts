@@ -7,7 +7,6 @@ enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 
 pluginManagement {
     repositories {
-        mavenLocal()
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
@@ -23,11 +22,10 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
-        mavenLocal()
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
-        // maven(url = "https://central.sonatype.com/repository/maven-snapshots")
+        maven(url = "https://central.sonatype.com/repository/maven-snapshots")
         maven(url = "https://jitpack.io")
     }
 }
@@ -41,6 +39,4 @@ include(
     ":ksp:annotation",
     ":platform:android:app",
     ":platform:android:benchmark",
-    ":compottie:core",
-    ":compottie:main"
 )

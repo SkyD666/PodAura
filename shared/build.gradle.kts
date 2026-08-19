@@ -23,7 +23,7 @@ kotlin {
         namespace = "com.skyd.podaura.shared"
         minSdk = 24
         compileSdk {
-            version = release(37) { minorApiLevel = 0 }
+            version = release(37) { minorApiLevel = 1 }
         }
         buildToolsVersion = "37.0.0"
         androidResources.enable = true
@@ -104,7 +104,7 @@ kotlin {
             implementation(libs.filekit.core)
             implementation(libs.filekit.dialogs)
 
-            // implementation(libs.compottie)
+            implementation(libs.compottie)
             implementation(libs.kermit)
             implementation(libs.codepoints.deluxe)
             implementation(libs.ksoup)
@@ -119,7 +119,6 @@ kotlin {
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
             implementation(projects.htmlrender)
-            implementation(projects.compottie.main)
         }
 
         commonTest.dependencies {
@@ -213,6 +212,7 @@ kotlin {
             "kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi",
             "kotlinx.serialization.ExperimentalSerializationApi",
             "kotlinx.cinterop.ExperimentalForeignApi",
+            "kotlinx.cinterop.BetaInteropApi",
             "kotlin.concurrent.atomics.ExperimentalAtomicApi",
             "kotlin.contracts.ExperimentalContracts",
             "kotlin.uuid.ExperimentalUuidApi",

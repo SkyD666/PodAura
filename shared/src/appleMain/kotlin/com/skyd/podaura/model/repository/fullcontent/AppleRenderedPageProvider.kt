@@ -4,10 +4,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -21,8 +21,8 @@ import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKWebsiteDataStore
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 internal class AppleRenderedPageProvider(
@@ -30,10 +30,9 @@ internal class AppleRenderedPageProvider(
 ) : RenderedPageProvider {
     private val renderMutex = Mutex()
 
-    @OptIn(ExperimentalUuidApi::class)
     override suspend fun render(url: String): RenderedPageSnapshot = renderMutex.withLock {
         withContext(Dispatchers.Main) {
-            withTimeout(RENDER_TIMEOUT_MILLIS) {
+            withTimeout(RENDER_TIMEOUT_MILLIS.milliseconds) {
                 val configuration = WKWebViewConfiguration().apply {
                     websiteDataStore = WKWebsiteDataStore.nonPersistentDataStore()
                     preferences.javaScriptCanOpenWindowsAutomatically = false
@@ -75,7 +74,7 @@ internal class AppleRenderedPageProvider(
         webView.loadRequest(NSURLRequest.requestWithURL(nsUrl))
         val startedAt = TimeSource.Monotonic.markNow()
         do {
-            delay(PAGE_LOAD_POLL_MILLIS)
+            delay(PAGE_LOAD_POLL_MILLIS.milliseconds)
             if (startedAt.elapsedNow().inWholeMilliseconds >= PAGE_LOAD_TIMEOUT_MILLIS) {
                 throw RenderedPageException("Page load timed out")
             }
@@ -89,7 +88,7 @@ internal class AppleRenderedPageProvider(
 
     private suspend fun awaitDomStability(webView: WKWebView, observerKey: String) {
         val startedAt = TimeSource.Monotonic.markNow()
-        delay(MINIMUM_RENDER_DELAY_MILLIS)
+        delay(MINIMUM_RENDER_DELAY_MILLIS.milliseconds)
         while (startedAt.elapsedNow().inWholeMilliseconds < DOM_STABILITY_TIMEOUT_MILLIS) {
             val payload = evaluate(
                 webView,
@@ -101,7 +100,7 @@ internal class AppleRenderedPageProvider(
             val ready = (state?.get("ready") as? JsonPrimitive)?.contentOrNull
             val quietMillis = (state?.get("quietMillis") as? JsonPrimitive)?.longOrNull ?: 0L
             if (ready == "complete" && quietMillis >= DOM_QUIET_MILLIS) return
-            delay(DOM_POLL_MILLIS)
+            delay(DOM_POLL_MILLIS.milliseconds)
         }
     }
 
@@ -110,7 +109,7 @@ internal class AppleRenderedPageProvider(
             if (evaluate(webView, RenderedPageSnapshotScript.lazyLoadStep) == "done") {
                 return
             }
-            delay(LAZY_LOAD_STEP_DELAY_MILLIS)
+            delay(LAZY_LOAD_STEP_DELAY_MILLIS.milliseconds)
         }
         evaluate(webView, "window.scrollTo(0, 0); 'done'")
     }
