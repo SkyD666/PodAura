@@ -22,7 +22,9 @@ actual class DownloadManager : BaseDownloadManager() {
         var oldDownloadEntity = downloadDao.find(downloadRequest.id)
         // Checks if download id already present in database
         if (oldDownloadEntity != null) {
-            oldDownloadEntity = oldDownloadEntity.copy(userAction = UserAction.Start.toString())
+            oldDownloadEntity = oldDownloadEntity
+                .copy(userAction = UserAction.Start.toString())
+                .withMetadataFrom(downloadRequest)
             downloadDao.update(oldDownloadEntity)
 
             // In case new download request is generated for already existing id in database
@@ -43,6 +45,7 @@ actual class DownloadManager : BaseDownloadManager() {
                     timeQueued = System.currentTimeMillis(),
                     status = Status.Queued.toString(),
                     userAction = UserAction.Start.toString(),
+                    metadata = downloadRequest.metadata,
                 )
             )
 

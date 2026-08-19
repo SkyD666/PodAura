@@ -22,12 +22,15 @@ class Downloader private constructor() {
      * @param url Download url of the content
      * @param path Download path to store the downloaded file
      * @param fileName Name of the file to be downloaded
+     * @param metadata Optional opaque metadata owned by the caller. A non-null value replaces
+     * existing task metadata; null leaves existing metadata unchanged.
      * @return Unique Download ID associated with current download
      */
     fun download(
         url: String,
         path: String,
         fileName: String = FileUtil.getFileNameFromUrl(url),
+        metadata: String? = null,
     ): Int {
         require(url.isNotEmpty() && path.isNotEmpty() && fileName.isNotEmpty()) {
             "Missing ${if (url.isEmpty()) "url" else if (path.isEmpty()) "path" else "fileName"}"
@@ -36,6 +39,7 @@ class Downloader private constructor() {
             url = url,
             path = path,
             fileName = fileName,
+            metadata = metadata,
         )
         downloadManager.downloadAsync(downloadRequest)
         return downloadRequest.id

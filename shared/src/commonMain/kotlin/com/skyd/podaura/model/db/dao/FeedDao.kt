@@ -142,6 +142,9 @@ interface FeedDao {
     @Query("SELECT * FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} = :feedUrl")
     suspend fun getFeed(feedUrl: String): FeedBean?
 
+    @Query("SELECT * FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} IN (:feedUrls)")
+    fun observeFeeds(feedUrls: List<String>): Flow<List<FeedBean>>
+
     @Transaction
     @Query("SELECT * FROM $FEED_VIEW_NAME WHERE ${FeedBean.URL_COLUMN} IN (:feedUrls)")
     suspend fun getFeedsIn(feedUrls: List<String>): List<FeedViewBean>

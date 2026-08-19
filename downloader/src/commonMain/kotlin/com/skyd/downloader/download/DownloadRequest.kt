@@ -8,6 +8,7 @@ data class DownloadRequest(
     val url: String,
     val path: String,
     val fileName: String,
+    val metadata: String? = null,
     val id: Int = getUniqueId(url, path, fileName),
 ) {
     companion object {
@@ -15,7 +16,11 @@ data class DownloadRequest(
             url = url,
             path = path,
             fileName = fileName,
+            metadata = metadata,
             id = id,
         )
     }
 }
+
+internal fun DownloadEntity.withMetadataFrom(downloadRequest: DownloadRequest): DownloadEntity =
+    downloadRequest.metadata?.let { copy(metadata = it) } ?: this

@@ -8,13 +8,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.ui.component.showToast
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.download_no_notification_permission_tip
 
 class AndroidDownloadStarter(private val context: Context) : DownloadStarter() {
-    override suspend fun download(url: String, type: String?) {
+    override suspend fun download(
+        url: String,
+        type: String?,
+        articleDownloadSource: ArticleDownloadSource?,
+    ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val granted = ContextCompat.checkSelfPermission(
                 context, Manifest.permission.POST_NOTIFICATIONS
@@ -24,7 +29,7 @@ class AndroidDownloadStarter(private val context: Context) : DownloadStarter() {
                 return
             }
         }
-        super.download(url, type)
+        super.download(url, type, articleDownloadSource)
     }
 }
 

@@ -145,7 +145,7 @@ val repositoryModule = module {
         ArticleRepository(get(), get(), get(), get())
     } binds arrayOf(IArticleRepository::class)
 
-    factory { DownloadRepository() }
+    factory { DownloadRepository(get(), get()) }
 
     factory { DownloadManager.instance } binds arrayOf(IDownloadManager::class)
 }

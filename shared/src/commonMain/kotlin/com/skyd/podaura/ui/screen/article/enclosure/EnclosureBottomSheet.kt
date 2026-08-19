@@ -45,6 +45,7 @@ import com.skyd.podaura.model.bean.LinkEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.article.EnclosureBean
+import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
@@ -78,7 +79,7 @@ fun EnclosureBottomSheet(
 ) {
     val scope = rememberCoroutineScope()
     val downloadStarter = rememberDownloadStarter()
-    val onDownload: (Any) -> Unit = remember {
+    val onDownload: (Any) -> Unit = remember(article, downloadStarter, scope) {
         {
             val url = when (it) {
                 is EnclosureBean -> it.url
@@ -90,6 +91,10 @@ fun EnclosureBottomSheet(
                     downloadStarter.download(
                         url = url,
                         type = (it as? EnclosureBean)?.type,
+                        articleDownloadSource = ArticleDownloadSource(
+                            articleId = article.articleWithEnclosure.article.articleId,
+                            feedUrl = article.feed.url,
+                        ),
                     )
                 }
             }

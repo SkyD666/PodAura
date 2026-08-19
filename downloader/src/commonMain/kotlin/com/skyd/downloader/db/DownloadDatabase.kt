@@ -18,7 +18,7 @@ expect object DownloadDatabaseConstructor : RoomDatabaseConstructor<DownloadData
 expect fun DownloadDatabase.Companion.builder(): RoomDatabase.Builder<DownloadDatabase>
 
 @ConstructedBy(DownloadDatabaseConstructor::class)
-@Database(entities = [DownloadEntity::class], version = 1)
+@Database(entities = [DownloadEntity::class], version = 2)
 abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
 
@@ -28,7 +28,7 @@ abstract class DownloadDatabase : RoomDatabase() {
 fun DownloadDatabase.Companion.instance(
     builder: RoomDatabase.Builder<DownloadDatabase>
 ): DownloadDatabase {
-    val migrations = arrayOf<Migration>()
+    val migrations = arrayOf<Migration>(Migration1To2())
 
     return builder
         .addMigrations(*migrations)

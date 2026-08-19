@@ -257,6 +257,13 @@ interface ArticleDao {
         "SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
     )
+    fun observeArticleWithFeedListByIds(articleIds: List<String>): Flow<List<ArticleWithFeed>>
+
+    @Transaction
+    @Query(
+        "SELECT * FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
     suspend fun getArticleWithEnclosureListByIds(articleIds: List<String>): List<ArticleWithEnclosureBean>
 
     @Transaction

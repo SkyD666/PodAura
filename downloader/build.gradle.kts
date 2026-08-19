@@ -51,6 +51,11 @@ kotlin {
             implementation(projects.fundation)
         }
 
+        jvmTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.work.runtime.ktx)

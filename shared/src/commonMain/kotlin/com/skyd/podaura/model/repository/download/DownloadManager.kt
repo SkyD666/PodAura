@@ -8,7 +8,10 @@ import com.skyd.fundation.di.get
 import com.skyd.fundation.di.inject
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
+import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.model.download.DownloadInfoBean
+import com.skyd.podaura.model.download.decodeArticleDownloadSource
+import com.skyd.podaura.model.download.encode
 import com.skyd.podaura.model.repository.media.MediaRepository
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.CoroutineScope
@@ -30,11 +33,21 @@ class DownloadManager private constructor() : IDownloadManager, KoinComponent {
         url: String,
         path: String,
         fileName: String?,
-    ): Any {
+        articleDownloadSource: ArticleDownloadSource?,
+    ): Int {
         return if (fileName == null) {
-            downloader.download(url = url, path = path)
+            downloader.download(
+                url = url,
+                path = path,
+                metadata = articleDownloadSource?.encode(),
+            )
         } else {
-            downloader.download(url = url, fileName = fileName, path = path)
+            downloader.download(
+                url = url,
+                fileName = fileName,
+                path = path,
+                metadata = articleDownloadSource?.encode(),
+            )
         }
     }
 
@@ -61,6 +74,7 @@ class DownloadManager private constructor() : IDownloadManager, KoinComponent {
         speedInBytePerMs = speedInBytePerMs,
         createTime = createTime,
         failureReason = failureReason,
+        articleDownloadSource = metadata.decodeArticleDownloadSource(),
     )
 
     companion object {

@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Pause
@@ -19,19 +22,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.EventListener
+import coil3.request.ErrorResult
+import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.downloader.Status
 import com.skyd.podaura.ext.fileSize
+import com.skyd.podaura.model.download.ArticleDownloadInfoBean
 import com.skyd.podaura.model.download.DownloadInfoBean
+import com.skyd.podaura.ui.component.PodAuraImage
+import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
+import com.skyd.podaura.ui.screen.feed.FeedIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.downloader.generated.resources.download_paused
@@ -104,91 +118,143 @@ fun DownloadItem(
         }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = data.fileName,
-            style = MaterialTheme.typography.bodyMedium,
-            maxLines = 4,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
+    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+        data.articleDownloadInfo?.let { articleDownloadInfo ->
+            ArticleDownloadArtwork(info = articleDownloadInfo)
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = data.displayTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = if (data.articleDownloadInfo == null) 4 else 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            data.secondaryFileName?.let { fileName ->
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    modifier = Modifier.padding(end = 12.dp),
-                    text = description,
+                    text = fileName,
                     style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row {
-                    Text(
-                        modifier = Modifier.alignByBaseline(),
-                        text = "${if (data.totalBytes == 0L) 0 else (data.downloadedBytes * 100 / data.totalBytes)}%",
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .alignByBaseline(),
-                        text = stringResource(
-                            Res.string.download_download_payload_rate,
-                            (data.speedInBytePerMs * 1000).toLong().fileSize() + "/s"
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
-            ComponeIconButton(
-                enabled = pauseButtonEnabled,
-                onClick = {
-                    when (data.status) {
-                        Status.Downloading -> {
-                            onPause(data)
-                            pauseButtonEnabled = false
-                        }
-
-                        Status.Paused -> {
-                            onResume(data)
-                            pauseButtonEnabled = false
-                        }
-
-                        Status.Failed -> {
-                            onRetry(data)
-                            pauseButtonEnabled = false
-                        }
-
-                        Status.Started,
-                        Status.Init,
-                        Status.Queued,
-                        Status.Success -> Unit
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        modifier = Modifier.padding(end = 12.dp),
+                        text = description,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row {
+                        Text(
+                            modifier = Modifier.alignByBaseline(),
+                            text = "${if (data.totalBytes == 0L) 0 else (data.downloadedBytes * 100 / data.totalBytes)}%",
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            modifier = Modifier
+                                .padding(start = 12.dp)
+                                .alignByBaseline(),
+                            text = stringResource(
+                                Res.string.download_download_payload_rate,
+                                (data.speedInBytePerMs * 1000).toLong().fileSize() + "/s"
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
-                },
-                imageVector = pauseButtonIcon,
-                contentDescription = pauseButtonContentDescription,
-            )
-            ComponeIconButton(
-                enabled = cancelButtonEnabled,
-                onClick = {
-                    onDelete(data)
-                    pauseButtonEnabled = false
-                    cancelButtonEnabled = false
-                },
-                imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(Res.string.delete)
+                }
+                ComponeIconButton(
+                    enabled = pauseButtonEnabled,
+                    onClick = {
+                        when (data.status) {
+                            Status.Downloading -> {
+                                onPause(data)
+                                pauseButtonEnabled = false
+                            }
+
+                            Status.Paused -> {
+                                onResume(data)
+                                pauseButtonEnabled = false
+                            }
+
+                            Status.Failed -> {
+                                onRetry(data)
+                                pauseButtonEnabled = false
+                            }
+
+                            Status.Started,
+                            Status.Init,
+                            Status.Queued,
+                            Status.Success -> Unit
+                        }
+                    },
+                    imageVector = pauseButtonIcon,
+                    contentDescription = pauseButtonContentDescription,
+                )
+                ComponeIconButton(
+                    enabled = cancelButtonEnabled,
+                    onClick = {
+                        onDelete(data)
+                        pauseButtonEnabled = false
+                        cancelButtonEnabled = false
+                    },
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(Res.string.delete)
+                )
+            }
+            ProgressIndicator(
+                modifier = Modifier
+                    .padding(top = 6.dp)
+                    .fillMaxWidth(),
+                data = data,
             )
         }
-        ProgressIndicator(
-            modifier = Modifier
-                .padding(top = 6.dp)
-                .fillMaxWidth(),
-            data = data,
+    }
+}
+
+@Composable
+private fun ArticleDownloadArtwork(info: ArticleDownloadInfoBean) {
+    val imageCandidates = remember(info.episodeImage, info.articleImage) {
+        info.imageCandidates
+    }
+    var imageIndex by remember(imageCandidates) { mutableIntStateOf(0) }
+    val image = imageCandidates.getOrNull(imageIndex)
+    val shape = RoundedCornerShape(6.dp)
+
+    if (image == null) {
+        FeedIcon(
+            data = info.feed,
+            size = 50.dp,
+            shape = shape,
         )
+    } else {
+        key(image) {
+            PodAuraImage(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(shape),
+                model = image,
+                imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
+                    override fun onError(request: ImageRequest, result: ErrorResult) {
+                        imageIndex++
+                    }
+                }),
+                contentScale = ContentScale.Crop,
+            )
+        }
     }
 }
 

@@ -10,8 +10,10 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ArticleBean
+import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
+import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.model.repository.download.AndroidDownloadStarter
 import com.skyd.podaura.model.repository.download.AutoDownloadStarter
 import kotlinx.coroutines.flow.first
@@ -24,9 +26,15 @@ class AutoDownloadWorker(context: Context, parameters: WorkerParameters) :
         val enclosureDao = get<EnclosureDao>()
         val enclosure = enclosureDao.getEnclosureList(articleId).first().firstOrNull()
             ?: return Result.success()
+        val article = get<ArticleDao>().getArticleWithFeed(articleId).first()
+            ?: return Result.success()
         AndroidDownloadStarter(applicationContext).download(
             url = enclosure.url,
             type = enclosure.type,
+            articleDownloadSource = ArticleDownloadSource(
+                articleId = articleId,
+                feedUrl = article.feed.url,
+            ),
         )
         return Result.success()
     }

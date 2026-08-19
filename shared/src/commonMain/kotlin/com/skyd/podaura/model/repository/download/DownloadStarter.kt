@@ -5,7 +5,9 @@ import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
+import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
+import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.media.MediaRepository
@@ -17,17 +19,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 abstract class DownloadStarter {
-    open suspend fun download(url: String, type: String? = null) {
+    open suspend fun download(
+        url: String,
+        type: String? = null,
+        articleDownloadSource: ArticleDownloadSource? = null,
+    ) {
         withContext(Dispatchers.IO) {
-            val articleId = get<EnclosureDao>().getMediaArticleId(url)
+            val articleId = articleDownloadSource?.articleId
+                ?: get<EnclosureDao>().getMediaArticleId(url)
             val article =
                 articleId?.let { get<ArticleDao>().getArticleWithFeed(it).first() }
-            val group = article?.feed?.groupId?.let { get<GroupDao>().getGroupById(it) }
+            val feed = article?.feed
+                ?: articleDownloadSource?.feedUrl?.let { get<FeedDao>().getFeed(it) }
+            val group = feed?.groupId?.let { get<GroupDao>().getGroupById(it) }
             val saveDir = get<MediaRepository>().getFolder(
                 parentFile = PlatformFile(dataStore.getOrDefault(MediaLibLocationPreference)),
                 groupName = group?.name,
-                feedUrl = article?.feed?.url,
-                displayName = article?.feed?.title,
+                feedUrl = feed?.url,
+                displayName = feed?.title,
             ).first().path
             if (url.startsWith("magnet:")) {
                 // todo open link
@@ -35,6 +44,7 @@ abstract class DownloadStarter {
                 get<IDownloadManager>().download(
                     url = url,
                     path = saveDir,
+                    articleDownloadSource = articleDownloadSource,
                 )
             }
         }
