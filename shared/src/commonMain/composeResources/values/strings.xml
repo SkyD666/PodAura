@@ -306,6 +306,7 @@
     <string name="file_picker_screen_open_folder">Open a folder</string>
     <string name="file_picker_screen_pick">Pick this folder</string>
     <string name="file_picker_screen_internal_storage">Internal storage</string>
+    <string name="media_library_location_error">The selected folder cannot be used. Choose a readable and writable folder.</string>
     <string name="media_screen_delete_file_warning">Delete this file?</string>
     <string name="media_screen_delete_directory_warning">Delete this directory with its contents?</string>
     <string name="media_options">Options</string>
@@ -595,4 +596,9 @@
     <string name="translation_configure">Open translation settings</string>
     <string name="translation_estimated_size">Estimated source: %1$d characters, %2$d bytes</string>
     <string name="translation_request_limit">Provider text request limit: %1$d bytes</string>
+    <string name="mpv_cache_internal_storage">Internal app storage</string>
+    <string name="mpv_cache_external_storage">External app storage</string>
+    <string name="mpv_cache_external_storage_named">External app storage (%1$s)</string>
+    <string name="mpv_config_sync">Sync configuration</string>
+    <string name="mpv_storage_error">Could not access this directory</string>
 </resources>

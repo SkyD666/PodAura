@@ -3,7 +3,8 @@ package com.skyd.podaura.ui.screen.media.list
 import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
-import kotlinx.io.files.Path
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 
 
 internal sealed interface MediaListPartialStateChange {
@@ -57,7 +58,7 @@ internal sealed interface MediaListPartialStateChange {
                     oldState.copy(
                         listState = if (listState is ListState.Success) {
                             ListState.Success(listState.list.toMutableList().apply {
-                                fastFirstOrNull { it.filePath == file.toString() }?.let { remove(it) }
+                                fastFirstOrNull { it.filePath == media.filePath }?.let { remove(it) }
                             })
                         } else {
                             listState
@@ -72,7 +73,7 @@ internal sealed interface MediaListPartialStateChange {
             }
         }
 
-        data class Success(val file: Path) : DeleteFileResult
+        data class Success(val media: MediaBean) : DeleteFileResult
         data class Failed(val msg: String) : DeleteFileResult
     }
 
@@ -97,11 +98,11 @@ internal sealed interface MediaListPartialStateChange {
                     oldState.copy(
                         listState = if (listState is ListState.Success) {
                             ListState.Success(listState.list.toMutableList().apply {
-                                val oldIndex = indexOfFirst { it.filePath == oldFile.toString() }
+                                val oldIndex = indexOfFirst { it.filePath == oldMedia.filePath }
                                 if (oldIndex in indices) {
                                     val old = get(oldIndex)
                                     removeAt(oldIndex)
-                                    add(oldIndex, old.copy(filePath = newFile.toString()))
+                                    add(oldIndex, old.copy(filePath = newFile.path))
                                 }
                             })
                         } else {
@@ -117,7 +118,7 @@ internal sealed interface MediaListPartialStateChange {
             }
         }
 
-        data class Success(val oldFile: Path, val newFile: Path) : RenameFileResult
+        data class Success(val oldMedia: MediaBean, val newFile: PlatformFile) : RenameFileResult
         data class Failed(val msg: String) : RenameFileResult
     }
 

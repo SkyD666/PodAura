@@ -194,10 +194,10 @@ fun MediaSearchScreen(
                 },
                 onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
                 onRename = { oldMedia, newName ->
-                    dispatch(MediaSearchIntent.RenameFile(oldMedia.path, newName))
+                    dispatch(MediaSearchIntent.RenameFile(oldMedia, newName))
                 },
                 onSetFileDisplayName = { media, displayName -> },
-                onRemove = { dispatch(MediaSearchIntent.DeleteFile(it.path)) },
+                onRemove = { dispatch(MediaSearchIntent.DeleteFile(it)) },
                 contentPadding = innerPaddings + PaddingValues(bottom = fabHeight),
             )
         }

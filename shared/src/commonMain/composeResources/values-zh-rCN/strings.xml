@@ -299,6 +299,7 @@
     <string name="file_picker_screen_open_folder">打开文件夹</string>
     <string name="file_picker_screen_pick">选择此文件夹</string>
     <string name="file_picker_screen_internal_storage">内部存储</string>
+    <string name="media_library_location_error">无法使用所选目录，请选择可长期读写的目录。</string>
     <string name="media_screen_delete_file_warning">删除此文件？</string>
     <string name="media_screen_delete_directory_warning">删除此文件夹及其内容？</string>
     <string name="media_options">选项</string>
@@ -581,4 +582,9 @@
     <string name="translation_configure">打开翻译设置</string>
     <string name="translation_estimated_size">预计提交：%1$d 个字符，%2$d 字节</string>
     <string name="translation_request_limit">服务商文本请求上限：%1$d 字节</string>
+    <string name="mpv_cache_internal_storage">应用内部存储</string>
+    <string name="mpv_cache_external_storage">应用专属外部存储</string>
+    <string name="mpv_cache_external_storage_named">应用专属外部存储（%1$s）</string>
+    <string name="mpv_config_sync">同步配置</string>
+    <string name="mpv_storage_error">无法访问该目录</string>
 </resources>

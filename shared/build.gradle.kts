@@ -139,8 +139,6 @@ kotlin {
             implementation(libs.androidx.graphics.shapes)
             implementation(libs.androidx.webkit)
 
-            implementation(libs.accompanist.permissions)
-
             implementation(libs.ktor.client.okhttp)
 
             implementation(libs.coil.gif)
@@ -216,7 +214,6 @@ kotlin {
             "kotlin.time.ExperimentalTime",
             "kotlin.experimental.ExperimentalNativeApi",
             "kotlin.ExperimentalStdlibApi",
-            "com.google.accompanist.permissions.ExperimentalPermissionsApi",
             "io.ktor.utils.io.InternalAPI",
             "coil3.annotation.ExperimentalCoilApi"
         )

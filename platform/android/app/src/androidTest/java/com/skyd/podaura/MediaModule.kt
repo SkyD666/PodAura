@@ -1,11 +1,8 @@
 package com.skyd.podaura
 
-import android.Manifest
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.rule.GrantPermissionRule
-import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.bean.MediaGroupBean.Companion.isDefaultGroup
 import com.skyd.podaura.model.db.AppDatabase
@@ -20,7 +17,6 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.FixMethodOrder
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.MethodSorters
@@ -36,27 +32,19 @@ class MediaModule {
         explicitNulls = false
     }
 
-    private val permissions = arrayOf(
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-    )
-
-    @get:Rule
-    val runtimePermissionRule = GrantPermissionRule.grant(*permissions)
-
     private lateinit var context: Context
 
     private lateinit var db: AppDatabase
     private lateinit var mediaRepository: MediaRepository
     private lateinit var filePickerRepository: FilePickerRepository
 
-    private val path = "/storage/emulated/0/TestMediaLib"
+    private lateinit var path: String
 
-    val file1 = File(path, "File1")
-    val file2 = File(path, "File2")
-    val file3 = File(path, "File3")
-    val file4 = File(path, "File4")
-    val file5 = File(path, "File5")
+    private val file1 get() = File(path, "File1")
+    private val file2 get() = File(path, "File2")
+    private val file3 get() = File(path, "File3")
+    private val file4 get() = File(path, "File4")
+    private val file5 get() = File(path, "File5")
 
     private fun initLib() {
         File(path).apply {
@@ -442,6 +430,7 @@ class MediaModule {
     @Before
     fun init() {
         context = ApplicationProvider.getApplicationContext()
+        path = File(context.cacheDir, "TestMediaLib").path
 
         db = AppDatabase.instance(AppDatabase.builder())
         db.clearAllTables()
@@ -453,6 +442,7 @@ class MediaModule {
     @After
     @Throws(IOException::class)
     fun destroy() {
+        File(path).deleteRecursively()
 //        db.close()
     }
 }

@@ -1,7 +1,6 @@
 package com.skyd.downloader.download
 
 import com.skyd.downloader.util.FileUtil
-import com.skyd.downloader.util.FileUtil.tempFile
 import com.skyd.fundation.ext.currentTimeMillis
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.atomicMove
@@ -48,8 +47,9 @@ internal class DownloadTask(
         onProgress: suspend (Long, Long, Float) -> Unit
     ): Long {
         var rangeStart = 0L
-        val file = PlatformFile(path) / fileName
-        val tempFile = file.tempFile
+        val parent = PlatformFile(path)
+        val file = parent / fileName
+        val tempFile = FileUtil.tempFile(parent, fileName)
 
         if (tempFile.exists()) {
             rangeStart = tempFile.size()

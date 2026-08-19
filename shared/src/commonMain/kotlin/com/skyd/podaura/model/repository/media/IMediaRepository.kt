@@ -2,8 +2,8 @@ package com.skyd.podaura.model.repository.media
 
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.bean.MediaGroupBean
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.Flow
-import kotlinx.io.files.Path
 
 interface IMediaRepository {
     fun requestGroups(path: String): Flow<List<MediaGroupBean>>
@@ -22,23 +22,24 @@ interface IMediaRepository {
         recursive: Boolean = false,
     ): Flow<List<MediaBean>>
 
-    fun deleteFile(file: Path): Flow<Boolean>
+    fun deleteFile(media: MediaBean): Flow<Boolean>
 
-    fun renameFile(file: Path, newName: String): Flow<Path?>
+    fun renameFile(media: MediaBean, newName: String): Flow<PlatformFile?>
 
     fun setDisplayName(mediaBean: MediaBean, displayName: String?): Flow<MediaBean>
 
     fun addNewFile(
-        file: Path,
+        file: PlatformFile,
+        parent: PlatformFile,
         groupName: String?,
         articleId: String?,
         displayName: String?,
     ): Flow<Boolean>
 
     fun getFolder(
-        parentFile: Path,
+        parentFile: PlatformFile,
         groupName: String?,
         feedUrl: String?,
         displayName: String?,
-    ): Flow<Path>
+    ): Flow<PlatformFile>
 }

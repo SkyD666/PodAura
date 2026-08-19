@@ -1,7 +1,7 @@
 package com.skyd.podaura.ui.screen.media.search
 
 import com.skyd.podaura.model.bean.MediaBean
-import kotlinx.io.files.Path
+import io.github.vinceglb.filekit.PlatformFile
 
 
 internal sealed interface MediaSearchPartialStateChange {
@@ -45,7 +45,7 @@ internal sealed interface MediaSearchPartialStateChange {
             }
         }
 
-        data class Success(val file: Path) : DeleteFileResult
+        data class Success(val media: MediaBean) : DeleteFileResult
         data class Failed(val msg: String) : DeleteFileResult
     }
 
@@ -59,7 +59,7 @@ internal sealed interface MediaSearchPartialStateChange {
             }
         }
 
-        data class Success(val oldFile: Path, val newFile: Path) : RenameFileResult
+        data class Success(val oldMedia: MediaBean, val newFile: PlatformFile) : RenameFileResult
         data class Failed(val msg: String) : RenameFileResult
     }
 

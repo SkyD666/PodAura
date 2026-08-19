@@ -32,7 +32,6 @@ class StartupBenchmark {
         iterations = 5,
         startupMode = StartupMode.COLD,
         setupBlock = {
-            allowManageFiles()
             pressHome()
         },
     ) {
@@ -46,7 +45,6 @@ class StartupBenchmark {
         iterations = 5,
         startupMode = StartupMode.HOT,
         setupBlock = {
-            allowManageFiles()
             pressHome()
         },
     ) {

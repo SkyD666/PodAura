@@ -10,6 +10,7 @@ import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.media.MediaRepository
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -18,7 +19,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.io.files.Path
 import org.koin.core.component.KoinComponent
 
 class DownloadManager private constructor() : IDownloadManager, KoinComponent {
@@ -73,8 +73,10 @@ class DownloadManager private constructor() : IDownloadManager, KoinComponent {
                         val articleId = get<EnclosureDao>().getMediaArticleId(event.entity.url)
                         if (articleId != null) {
                             val article = get<ArticleDao>().getArticleWithFeed(articleId).first()
+                            val parent = PlatformFile(event.entity.path)
                             get<MediaRepository>().addNewFile(
-                                file = Path(event.entity.path, event.entity.fileName),
+                                file = PlatformFile(parent, event.entity.fileName),
+                                parent = parent,
                                 groupName = null,
                                 articleId = articleId,
                                 displayName = article?.articleWithEnclosure?.article?.title

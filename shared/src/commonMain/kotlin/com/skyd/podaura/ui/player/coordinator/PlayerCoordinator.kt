@@ -160,7 +160,7 @@ class PlayerCoordinator : LifecycleOwner {
                     sendEvent(PlayerEvent.EndFile)
                     sendEvent(PlayerEvent.Loading(false))
                     if (currentPathPlayed) {
-                        savePosition(currentPath)
+                        savePosition(currentPath?.toStableMediaUrl())
                     }
                     currentPath = null
                     currentPathPlayed = false
@@ -171,7 +171,7 @@ class PlayerCoordinator : LifecycleOwner {
                     currentPath?.let { currentPath ->
                         scope.launch {
                             playerRepo.insertPlayHistory(
-                                path = currentPath,
+                                path = currentPath.toStableMediaUrl(),
                                 duration = player.duration.toLong(),
                                 articleId = cachedPlaylistMap[currentPath]?.articleId
                             ).collect()
@@ -186,7 +186,7 @@ class PlayerCoordinator : LifecycleOwner {
                         seekAndPlay(startPosition.positionSeconds)
                         Job().apply { complete() }
                     } else {
-                        loadLastPosition(currentPath)
+                        loadLastPosition(currentPath?.toStableMediaUrl())
                     }
                     loadPositionJob.invokeOnCompletion {
                         sendEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
@@ -213,7 +213,7 @@ class PlayerCoordinator : LifecycleOwner {
         // dispatching those into a half-destroyed coordinator re-entered destroy() before.
         player.mpv.removeEventListener(mpvObserver)
         // Let the final position write finish before killing the scope it runs in.
-        savePosition(player.path).invokeOnCompletion { scope.cancel() }
+        savePosition(player.path?.toStableMediaUrl()).invokeOnCompletion { scope.cancel() }
         player.destroy()
         removeAllObserver()
     }
@@ -394,6 +394,9 @@ class PlayerCoordinator : LifecycleOwner {
         initPlayer()
         lifecycle.currentState = Lifecycle.State.RESUMED
     }
+
+    private fun String.toStableMediaUrl(): String =
+        cachedPlaylistMap[this]?.playlistMediaBean?.stableUrl ?: this
 
 }
 

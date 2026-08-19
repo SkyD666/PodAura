@@ -42,6 +42,9 @@ class MediaViewModel(
     private fun Flow<MediaPartialStateChange>.sendSingleEvent(): Flow<MediaPartialStateChange> {
         return onEach { change ->
             val event = when (change) {
+                is MediaPartialStateChange.GroupsResult.Failed ->
+                    MediaEvent.LoadLibraryFailed
+
                 is MediaPartialStateChange.DeleteGroup.Failed ->
                     MediaEvent.DeleteGroupResultEvent.Failed(change.msg)
 

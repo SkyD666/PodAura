@@ -124,7 +124,7 @@ internal fun MediaList(
                         },
                         onOpenDir = { navBackStack.add(SubMediaRoute(media = it)) },
                         onRename = { oldMedia, newName ->
-                            dispatch(MediaListIntent.RenameFile(oldMedia.path, newName))
+                            dispatch(MediaListIntent.RenameFile(oldMedia, newName))
                         },
                         onSetFileDisplayName = { media, displayName ->
                             dispatch(
@@ -134,7 +134,7 @@ internal fun MediaList(
                                 )
                             )
                         },
-                        onRemove = { dispatch(MediaListIntent.DeleteFile(it.path)) },
+                        onRemove = { dispatch(MediaListIntent.DeleteFile(it)) },
                         contentPadding = contentPadding,
                     )
                 }

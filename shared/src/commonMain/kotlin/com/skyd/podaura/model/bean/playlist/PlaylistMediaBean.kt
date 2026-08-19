@@ -67,6 +67,14 @@ data class PlaylistMediaBean(
     @Ignore
     var thumbnail: String? = null
 
+    @Ignore
+    @kotlinx.serialization.Transient
+    var sourceUrl: String? = null
+
+    @get:Ignore
+    val stableUrl: String
+        get() = sourceUrl ?: url
+
     companion object {
         const val PLAYLIST_ID_COLUMN = "playlistId"
         const val URL_COLUMN = "url"

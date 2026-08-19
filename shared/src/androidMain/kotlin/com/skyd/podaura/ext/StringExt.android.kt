@@ -4,6 +4,7 @@ import android.os.ParcelFileDescriptor
 import android.webkit.URLUtil
 import androidx.core.net.toUri
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.exists
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -40,5 +41,9 @@ fun isFdFileExists(fdPath: String): Boolean {
 
 actual fun String.isLocalFileExists(): Boolean {
     if (!isLocalFile()) return false
-    return startsWith("fd://") && isFdFileExists(this) || File(this).exists()
+    return when {
+        startsWith("fd://") -> isFdFileExists(this)
+        startsWith("content://") -> runCatching { asPlatformFile().exists() }.getOrDefault(false)
+        else -> File(this).exists()
+    }
 }

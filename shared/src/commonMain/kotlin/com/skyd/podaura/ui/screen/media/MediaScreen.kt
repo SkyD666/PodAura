@@ -64,21 +64,20 @@ import com.skyd.podaura.model.preference.appearance.media.MediaShowGroupTabPrefe
 import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaListSortAscPreference
 import com.skyd.podaura.model.preference.behavior.media.MediaListSortByPreference
-import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.podaura.model.preference.data.medialib.persistMediaLibraryLocation
 import com.skyd.podaura.ui.component.LongClickListener
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
-import com.skyd.podaura.ui.player.resolveToPlayer
-import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
-import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
 import com.skyd.podaura.ui.screen.media.list.GroupInfo
 import com.skyd.podaura.ui.screen.media.list.MediaList
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.media.MediaStyleRoute
-import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -86,6 +85,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.data_screen_change_lib_location
 import podaura.shared.generated.resources.media_group
+import podaura.shared.generated.resources.media_library_location_error
 import podaura.shared.generated.resources.media_screen_add_group
 import podaura.shared.generated.resources.media_screen_name
 import podaura.shared.generated.resources.media_screen_refresh_group
@@ -115,29 +115,37 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     var openMoreMenu by rememberSaveable { mutableStateOf(false) }
     var showSortMediaDialog by rememberSaveable { mutableStateOf(false) }
     val playerJumper = rememberPlayerJumper()
+    val locationError = stringResource(Res.string.media_library_location_error)
 
-    ListenToFilePicker { result ->
-        if (result.pickFolder) {
-            MediaLibLocationPreference.put(this, result.result)
-        } else {
-            val url = PlatformFile(result.result).resolveToPlayer()
-            if (url != null) {
-                playerJumper.jump(
-                    PlayDataMode.MediaLibraryList(
-                        startMediaPath = url,
-                        mediaList = listOf(
-                            PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                                path = url,
-                                articleId = null,
-                                title = null,
-                                thumbnail = null,
-                            )
-                        ),
-                    )
-                )
+    val directoryPicker = rememberDirectoryPickerLauncher(
+        onError = { scope.launch { snackbarHostState.showSnackbar(locationError) } },
+        onResult = { directory ->
+            directory ?: return@rememberDirectoryPickerLauncher
+            scope.launch {
+                runCatching { persistMediaLibraryLocation(directory) }
+                    .onFailure { snackbarHostState.showSnackbar(locationError) }
             }
+        },
+    )
+    val filePicker = rememberFilePickerLauncher(
+        onError = { scope.launch { snackbarHostState.showSnackbar(locationError) } },
+        onResult = { file ->
+            val url = file?.path ?: return@rememberFilePickerLauncher
+            playerJumper.jump(
+                PlayDataMode.MediaLibraryList(
+                    startMediaPath = url,
+                    mediaList = listOf(
+                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                            path = url,
+                            articleId = null,
+                            title = null,
+                            thumbnail = null,
+                        )
+                    ),
+                )
+            )
         }
-    }
+    )
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -188,14 +196,14 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                         expanded = openMoreMenu,
                         onDismissRequest = { openMoreMenu = false },
                         onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
-                        onChangeLibLocation = { navBackStack.add(FilePickerRoute(path = path)) }
+                        onChangeLibLocation = directoryPicker::launch,
                     )
                 }
             )
         },
         floatingActionButton = {
             ComponeFloatingActionButton(
-                onClick = { navBackStack.add(FilePickerRoute(path = path, pickFolder = false)) },
+                onClick = filePicker::launch,
                 contentDescription = stringResource(Res.string.open_file),
             ) {
                 Icon(imageVector = Icons.Outlined.FileOpen, contentDescription = null)
@@ -298,6 +306,9 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
 
         MviEventListener(viewModel.singleEvent) { event ->
             when (event) {
+                MediaEvent.LoadLibraryFailed ->
+                    snackbarHostState.showSnackbar(locationError)
+
                 is MediaEvent.CreateGroupResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
 

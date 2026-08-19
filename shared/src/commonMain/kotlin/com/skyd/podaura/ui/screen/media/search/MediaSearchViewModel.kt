@@ -67,15 +67,15 @@ class MediaSearchViewModel(
                     .catchMap { MediaSearchPartialStateChange.SearchResult.Failed(it.message.toString()) }
             },
             filterIsInstance<MediaSearchIntent.DeleteFile>().flatMapConcat { intent ->
-                mediaRepo.deleteFile(intent.file).map {
-                    MediaSearchPartialStateChange.DeleteFileResult.Success(file = intent.file)
+                mediaRepo.deleteFile(intent.media).map {
+                    MediaSearchPartialStateChange.DeleteFileResult.Success(media = intent.media)
                 }.startWith(MediaSearchPartialStateChange.LoadingDialog.Show)
                     .catchMap { MediaSearchPartialStateChange.DeleteFileResult.Failed(it.message.toString()) }
             },
             filterIsInstance<MediaSearchIntent.RenameFile>().flatMapConcat { intent ->
-                mediaRepo.renameFile(intent.file, intent.newName).map { newFile ->
+                mediaRepo.renameFile(intent.media, intent.newName).map { newFile ->
                     MediaSearchPartialStateChange.RenameFileResult.Success(
-                        oldFile = intent.file, newFile = newFile!!
+                        oldMedia = intent.media, newFile = newFile!!
                     )
                 }.startWith(MediaSearchPartialStateChange.LoadingDialog.Show)
                     .catchMap { MediaSearchPartialStateChange.RenameFileResult.Failed(it.message.toString()) }

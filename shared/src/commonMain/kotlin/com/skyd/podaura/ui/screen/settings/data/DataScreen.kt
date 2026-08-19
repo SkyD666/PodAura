@@ -47,13 +47,16 @@ import com.skyd.compone.component.pointerOnBack
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
-import com.skyd.podaura.ui.screen.filepicker.FilePickerRoute
-import com.skyd.podaura.ui.screen.filepicker.ListenToFilePicker
+import com.skyd.podaura.model.preference.data.medialib.mediaLibraryLocationDisplayName
+import com.skyd.podaura.model.preference.data.medialib.persistMediaLibraryLocation
+import com.skyd.podaura.model.preference.data.medialib.resetMediaLibraryLocation
 import com.skyd.podaura.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.podaura.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
+import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -81,6 +84,7 @@ import podaura.shared.generated.resources.delete_constraint_screen_name
 import podaura.shared.generated.resources.delete_constraint_screen_name_description
 import podaura.shared.generated.resources.import_export_screen_description
 import podaura.shared.generated.resources.import_export_screen_name
+import podaura.shared.generated.resources.media_library_location_error
 
 
 @Serializable
@@ -99,10 +103,18 @@ fun DataScreen(
 
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val dispatch = viewModel.getDispatcher(startWith = DataIntent.Init)
+    val locationError = stringResource(Res.string.media_library_location_error)
 
-    ListenToFilePicker { result ->
-        MediaLibLocationPreference.put(this, result.result)
-    }
+    val directoryPicker = rememberDirectoryPickerLauncher(
+        onError = { scope.launch { snackbarHostState.showSnackbar(locationError) } },
+        onResult = { directory ->
+            directory ?: return@rememberDirectoryPickerLauncher
+            scope.launch {
+                runCatching { persistMediaLibraryLocation(directory) }
+                    .onFailure { snackbarHostState.showSnackbar(locationError) }
+            }
+        },
+    )
 
     ComponeScaffold(
         modifier = Modifier.pointerOnBack(onBack = onBack),
@@ -134,16 +146,16 @@ fun DataScreen(
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.PermMedia),
                         text = stringResource(Res.string.data_screen_change_lib_location),
-                        descriptionText = localMediaLibLocation,
+                        descriptionText = mediaLibraryLocationDisplayName(localMediaLibLocation),
                         enabled = MediaLibLocationPreference.key != null,
-                        onClick = { navBackStack.add(FilePickerRoute(path = localMediaLibLocation)) },
+                        onClick = directoryPicker::launch,
                     ) {
                         ComponeIconButton(
                             onClick = {
-                                MediaLibLocationPreference.put(
-                                    scope,
-                                    MediaLibLocationPreference.default
-                                )
+                                scope.launch {
+                                    runCatching { resetMediaLibraryLocation() }
+                                        .onFailure { snackbarHostState.showSnackbar(locationError) }
+                                }
                             },
                             imageVector = Icons.Outlined.Replay,
                         )

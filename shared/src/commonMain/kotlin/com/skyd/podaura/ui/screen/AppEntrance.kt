@@ -1,20 +1,5 @@
 package com.skyd.podaura.ui.screen
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Storage
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -22,10 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -135,12 +116,6 @@ import com.skyd.podaura.ui.screen.settings.transmission.TransmissionScreen
 import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsRoute
 import com.skyd.podaura.ui.screen.settings.translation.TranslationSettingsScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
-import org.jetbrains.compose.resources.stringResource
-import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.storage_permission_request_screen_first_tip
-import podaura.shared.generated.resources.storage_permission_request_screen_rationale
-import podaura.shared.generated.resources.storage_permission_request_screen_request_permission
-import podaura.shared.generated.resources.storage_permission_request_screen_title
 
 
 internal val deepLinkPatterns: List<DeepLinkPattern<out NavKey>> = buildList {
@@ -155,39 +130,40 @@ internal val deepLinkPatterns: List<DeepLinkPattern<out NavKey>> = buildList {
 fun AppEntrance() {
     SettingsProvider {
         if (AcceptTermsPreference.current) {
-            PermissionChecker(
-                onMainContent = {
-                    val resultStore = rememberResultStore()
-                    val navBackStack = newNavBackStack(
-                        base = rememberNavBackStack(
-                            configuration = SavedStateConfiguration {
-                                serializersModule = PodAuraSerializersModule
-                            },
-                            initialNavKey() ?: MainRoute
-                        ),
-                        parent = null,
-                    )
-                    CompositionLocalProvider(
-                        LocalNavBackStack provides navBackStack,
-                        LocalGlobalNavBackStack provides navBackStack,
-                        LocalResultStore provides resultStore,
-                    ) {
-                        ExternalUrlListener(navBackStack = navBackStack)
-                        MainNavHost()
-                    }
-                    var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
-                    if (openUpdateDialog) {
-                        UpdateDialog(
-                            silence = true,
-                            onClosed = { openUpdateDialog = false },
-                            onError = { openUpdateDialog = false },
-                        )
-                    }
-                }
-            )
+            MainContent()
         } else {
             TermsOfServiceScreen(onAgree = {})
         }
+    }
+}
+
+@Composable
+private fun MainContent() {
+    val resultStore = rememberResultStore()
+    val navBackStack = newNavBackStack(
+        base = rememberNavBackStack(
+            configuration = SavedStateConfiguration {
+                serializersModule = PodAuraSerializersModule
+            },
+            initialNavKey() ?: MainRoute
+        ),
+        parent = null,
+    )
+    CompositionLocalProvider(
+        LocalNavBackStack provides navBackStack,
+        LocalGlobalNavBackStack provides navBackStack,
+        LocalResultStore provides resultStore,
+    ) {
+        ExternalUrlListener(navBackStack = navBackStack)
+        MainNavHost()
+    }
+    var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
+    if (openUpdateDialog) {
+        UpdateDialog(
+            silence = true,
+            onClosed = { openUpdateDialog = false },
+            onError = { openUpdateDialog = false },
+        )
     }
 }
 
@@ -265,69 +241,4 @@ private fun MainNavHost() {
             entry<ImagePreviewRoute> { ImagePreviewLauncher(it) }
         }
     )
-}
-
-@Composable
-internal expect fun PermissionChecker(onMainContent: @Composable () -> Unit)
-
-@Composable
-fun RequestStoragePermissionScreen(
-    shouldShowRationale: Boolean,
-    onPermissionRequest: () -> Unit
-) {
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(50.dp))
-
-            Text(
-                text = stringResource(Res.string.storage_permission_request_screen_title),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-            )
-
-            Icon(
-                modifier = Modifier
-                    .padding(30.dp)
-                    .size(110.dp),
-                imageVector = Icons.Rounded.Storage,
-                contentDescription = null,
-            )
-
-            val textToShow = if (shouldShowRationale) {
-                // If the user has denied the permission but the rationale can be shown,
-                // then gently explain why the app requires this permission
-                stringResource(Res.string.storage_permission_request_screen_rationale)
-            } else {
-                // If it's the first time the user lands on this feature, or the user
-                // doesn't want to be asked again for this permission, explain that the
-                // permission is required
-                stringResource(Res.string.storage_permission_request_screen_first_tip)
-            }
-            Text(
-                text = textToShow,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 20.dp)
-            )
-
-            Button(
-                modifier = Modifier.padding(vertical = 30.dp),
-                onClick = onPermissionRequest,
-            ) {
-                Text(stringResource(Res.string.storage_permission_request_screen_request_permission))
-            }
-        }
-    }
 }

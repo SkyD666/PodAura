@@ -45,13 +45,19 @@ class PlayerViewModel(
                     )
                 )
 
-                is PlayDataMode.MediaLibraryList -> mediaInfos.emit(
-                    PlayerLaunchData(
-                        startPath = playDataMode.startMediaPath,
-                        playlist = playerRepo.requestPlaylistByMediaLibraryList(playDataMode.mediaList),
-                        requestId = requestId,
+                is PlayDataMode.MediaLibraryList -> {
+                    val playlist = playerRepo.requestPlaylistByMediaLibraryList(playDataMode.mediaList)
+                    val startPath = playlist.firstOrNull {
+                        it.playlistMediaBean.stableUrl == playDataMode.startMediaPath
+                    }?.playlistMediaBean?.url
+                    mediaInfos.emit(
+                        PlayerLaunchData(
+                            startPath = startPath,
+                            playlist = playlist,
+                            requestId = requestId,
+                        )
                     )
-                )
+                }
 
                 is PlayDataMode.Playlist -> {
                     val playlist =

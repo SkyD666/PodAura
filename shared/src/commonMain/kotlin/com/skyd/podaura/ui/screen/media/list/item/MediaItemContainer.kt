@@ -316,7 +316,7 @@ private fun Menu(
                 onDismissRequest()
             },
             {
-                scope.launch { PlatformFile(data.path).share() }
+                scope.launch { data.path.share() }
                 onDismissRequest()
             },
             {

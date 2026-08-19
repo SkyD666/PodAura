@@ -9,11 +9,12 @@ import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.media.MediaRepository
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.io.files.Path
 
 abstract class DownloadStarter {
     open suspend fun download(url: String, type: String? = null) {
@@ -23,11 +24,11 @@ abstract class DownloadStarter {
                 articleId?.let { get<ArticleDao>().getArticleWithFeed(it).first() }
             val group = article?.feed?.groupId?.let { get<GroupDao>().getGroupById(it) }
             val saveDir = get<MediaRepository>().getFolder(
-                parentFile = Path(dataStore.getOrDefault(MediaLibLocationPreference)),
+                parentFile = PlatformFile(dataStore.getOrDefault(MediaLibLocationPreference)),
                 groupName = group?.name,
                 feedUrl = article?.feed?.url,
                 displayName = article?.feed?.title,
-            ).first().toString()
+            ).first().path
             if (url.startsWith("magnet:")) {
                 // todo open link
             } else {

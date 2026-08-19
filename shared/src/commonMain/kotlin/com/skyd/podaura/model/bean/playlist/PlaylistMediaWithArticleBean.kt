@@ -25,7 +25,7 @@ data class PlaylistMediaWithArticleBean(
     val title: String
         get() = article?.articleWithEnclosure?.article?.title
             ?: playlistMediaBean.title
-            ?: playlistMediaBean.url.substringAfterLast("/")
+            ?: playlistMediaBean.stableUrl.substringAfterLast("/")
 
     val duration: Long?
         get() = article?.articleWithEnclosure?.media?.duration
@@ -37,7 +37,7 @@ data class PlaylistMediaWithArticleBean(
 
     val thumbnailAny: Any?
         get() = article?.getThumbnail()
-            ?: if (playlistMediaBean.url.isLocalFile()) LocalMedia(playlistMediaBean.url) else null
+            ?: playlistMediaBean.stableUrl.takeIf { it.isLocalFile() }?.let(::LocalMedia)
 
     val thumbnail: String?
         get() = article?.getThumbnail()

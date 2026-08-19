@@ -11,11 +11,10 @@ import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
-import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
-import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
+import com.skyd.podaura.model.preference.player.prepareMpvRuntimeDirectories
 import com.skyd.podaura.ui.player.DefaultEventObserver
 import com.skyd.podaura.ui.player.Track
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
@@ -30,6 +29,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.track_off
@@ -64,11 +64,15 @@ class MPVPlayer : DefaultEventObserver() {
      * Starts mpv with the configured directories if it is not currently running. No-op while the
      * player is alive, so it is cheap to call from every entry point.
      */
-    fun ensureInitialized() = initialize(
-        configDir = dataStore.getOrDefault(MpvConfigDirPreference),
-        cacheDir = dataStore.getOrDefault(MpvCacheDirPreference),
-        fontDir = Const.MPV_FONT_DIR,
-    )
+    fun ensureInitialized() {
+        if (Companion.initialized.load()) return
+        val directories = runBlocking(Dispatchers.IO) { prepareMpvRuntimeDirectories() }
+        initialize(
+            configDir = directories.configDirectory,
+            cacheDir = directories.cacheDirectory,
+            fontDir = Const.MPV_FONT_DIR,
+        )
+    }
 
     private val logger = Logger.withTag(TAG)
     lateinit var mpv: MPV

@@ -1,6 +1,9 @@
 package com.skyd.podaura.util.fileicon
 
 import com.skyd.fundation.ext.isDirectory
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.isDirectory
+import io.github.vinceglb.filekit.mimeType
 import kotlinx.io.files.Path
 import org.jetbrains.compose.resources.DrawableResource
 import podaura.shared.generated.resources.Res
@@ -75,6 +78,11 @@ fun Path.fileIcon(): MimeTypeIcon {
             ?: suffixToIconMap[mimetype.substringAfterLast("*")]
             ?: MimeTypeIcon.GENERIC
     }
+}
+
+fun PlatformFile.fileIcon(): MimeTypeIcon {
+    if (isDirectory()) return MimeTypeIcon.DIRECTORY
+    return getFileIcon(mimeType()?.toString() ?: "*/*")
 }
 
 // See also https://mimesniff.spec.whatwg.org/#mime-type-groups

@@ -4,6 +4,8 @@ import com.skyd.mvi.MviSingleEvent
 import com.skyd.podaura.model.bean.MediaGroupBean
 
 sealed interface MediaEvent : MviSingleEvent {
+    data object LoadLibraryFailed : MediaEvent
+
     sealed interface DeleteGroupResultEvent : MediaEvent {
         data class Success(val timestamp: Long) : DeleteGroupResultEvent
         data class Failed(val msg: String) : DeleteGroupResultEvent

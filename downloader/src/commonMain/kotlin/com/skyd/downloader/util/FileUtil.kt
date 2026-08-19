@@ -1,17 +1,16 @@
 package com.skyd.downloader.util
 
-import com.skyd.fundation.ext.deleteRecursively
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.path
-import io.github.vinceglb.filekit.toKotlinxIoPath
 import org.kotlincrypto.hash.md.MD5
 import kotlin.experimental.and
 
 internal object FileUtil {
 
-    internal val PlatformFile.tempFile
-        get() = PlatformFile("$path.temp")
+    internal fun tempFile(parent: PlatformFile, fileName: String): PlatformFile =
+        parent / "$fileName.temp"
 
     fun getFileNameFromUrl(url: String): String {
         val cleanUrl = url.substringBefore('?').substringBefore('#')
@@ -41,9 +40,9 @@ internal object FileUtil {
         return (url.hashCode() * 31 + dirPath.hashCode()) * 31 + fileName.hashCode()
     }
 
-    fun deleteDownloadFileIfExists(path: String, name: String) {
-        val file = PlatformFile(path) / name
-        file.toKotlinxIoPath().deleteRecursively(mustExist = false)
-        file.tempFile.toKotlinxIoPath().deleteRecursively(mustExist = false)
+    suspend fun deleteDownloadFileIfExists(path: String, name: String) {
+        val parent = PlatformFile(path)
+        (parent / name).delete(mustExist = false)
+        tempFile(parent, name).delete(mustExist = false)
     }
 }

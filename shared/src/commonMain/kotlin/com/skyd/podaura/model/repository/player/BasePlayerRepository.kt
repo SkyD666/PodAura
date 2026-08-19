@@ -3,6 +3,8 @@ package com.skyd.podaura.model.repository.player
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
+import com.skyd.podaura.ext.asPlatformFile
+import com.skyd.podaura.ui.player.resolveToPlayer
 import com.skyd.podaura.model.bean.playlist.updateLocalMediaMetadata
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.EnclosureDao
@@ -80,15 +82,20 @@ abstract class BasePlayerRepository(
         val articleMap =
             articleDao.getArticleWithFeedListByIds(files.mapNotNull { it.articleId })
                 .associateBy { it.articleWithEnclosure.article.articleId }
-        return files.mapIndexed { index, playMediaListItem ->
+        return files.mapIndexedNotNull { index, playMediaListItem ->
+            val playbackUrl = playMediaListItem.path.asPlatformFile().resolveToPlayer()
+                ?: return@mapIndexedNotNull null
             PlaylistMediaWithArticleBean(
                 playlistMediaBean = PlaylistMediaBean(
                     playlistId = "",
-                    url = playMediaListItem.path,
+                    url = playbackUrl,
                     articleId = articleMap[playMediaListItem.articleId]?.articleWithEnclosure?.article?.articleId,
                     orderPosition = index.toDouble(),
                     createTime = Clock.System.now().toEpochMilliseconds(),
-                ).apply { updateLocalMediaMetadata() },
+                ).apply {
+                    sourceUrl = playMediaListItem.path
+                    updateLocalMediaMetadata()
+                },
                 article = articleMap[playMediaListItem.articleId],
             )
         }

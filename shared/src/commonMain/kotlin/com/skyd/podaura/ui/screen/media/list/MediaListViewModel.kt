@@ -73,15 +73,15 @@ class MediaListViewModel(
                     .catchMap { MediaListPartialStateChange.RefreshFilesResult.Failed(it.message.toString()) }
             },
             filterIsInstance<MediaListIntent.DeleteFile>().flatMapConcat { intent ->
-                mediaRepo.deleteFile(intent.file).map {
-                    MediaListPartialStateChange.DeleteFileResult.Success(file = intent.file)
+                mediaRepo.deleteFile(intent.media).map {
+                    MediaListPartialStateChange.DeleteFileResult.Success(media = intent.media)
                 }.startWith(MediaListPartialStateChange.LoadingDialog.Show)
                     .catchMap { MediaListPartialStateChange.DeleteFileResult.Failed(it.message.toString()) }
             },
             filterIsInstance<MediaListIntent.RenameFile>().flatMapConcat { intent ->
-                mediaRepo.renameFile(intent.file, intent.newName).map { newFile ->
+                mediaRepo.renameFile(intent.media, intent.newName).map { newFile ->
                     MediaListPartialStateChange.RenameFileResult.Success(
-                        oldFile = intent.file, newFile = newFile!!
+                        oldMedia = intent.media, newFile = newFile!!
                     )
                 }.startWith(MediaListPartialStateChange.LoadingDialog.Show)
                     .catchMap { MediaListPartialStateChange.RenameFileResult.Failed(it.message.toString()) }
