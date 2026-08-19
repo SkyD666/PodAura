@@ -51,6 +51,9 @@ class DownloadManager private constructor() : IDownloadManager, KoinComponent {
         }
     }
 
+    override suspend fun getAllDownloadTasks(): List<DownloadInfoBean> =
+        downloader.getAllDownloads().map { it.toDownloadInfoBean() }
+
     fun pause(id: Int) = downloader.pause(id)
     fun resume(id: Int) = downloader.resume(id)
     fun retry(id: Int) = downloader.retry(id)

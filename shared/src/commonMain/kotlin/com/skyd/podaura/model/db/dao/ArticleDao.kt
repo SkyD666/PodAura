@@ -12,6 +12,7 @@ import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
 import com.skyd.podaura.model.bean.article.ArticleBean
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.article.ENCLOSURE_TABLE_NAME
@@ -22,6 +23,8 @@ import com.skyd.podaura.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.ui.notification.ArticleUpdatedManager
 import kotlinx.coroutines.flow.Flow
+
+private const val ARTICLE_DELETE_BIND_CHUNK_SIZE = 900
 
 @Dao
 @DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
@@ -112,24 +115,40 @@ interface ArticleDao {
         ArticleUpdatedManager.send(updatedArticleIds)
     }
 
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.FEED_URL_COLUMN} LIKE :feedUrl AND " +
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.FEED_URL_COLUMN} LIKE :feedUrl AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
                 "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
+    suspend fun getArticleIdsToDeleteInFeed(
+        feedUrl: String,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): List<String>
+
+    @Transaction
     suspend fun deleteArticleInFeed(
         feedUrl: String,
         keepPlaylistArticles: Boolean,
         keepUnread: Boolean,
         keepFavorite: Boolean,
-    ): Int
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val candidateArticleIds = getArticleIdsToDeleteInFeed(
+            feedUrl = feedUrl,
+            keepPlaylistArticles = keepPlaylistArticles,
+            keepUnread = keepUnread,
+            keepFavorite = keepFavorite,
+        )
+        return deleteCandidateArticles(candidateArticleIds, downloadProtectedArticleIds)
+    }
 
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE " +
                 "${ArticleBean.FEED_URL_COLUMN} IN (" +
                 "    SELECT ${FeedBean.URL_COLUMN} FROM $FEED_TABLE_NAME " +
                 "    WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL AND :groupId IS NULL OR " +
@@ -139,16 +158,32 @@ interface ArticleDao {
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
+    suspend fun getArticleIdsToDeleteInGroup(
+        groupId: String?,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): List<String>
+
+    @Transaction
     suspend fun deleteArticlesInGroup(
         groupId: String?,
         keepPlaylistArticles: Boolean,
         keepUnread: Boolean,
         keepFavorite: Boolean,
-    ): Int
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val candidateArticleIds = getArticleIdsToDeleteInGroup(
+            groupId = groupId,
+            keepPlaylistArticles = keepPlaylistArticles,
+            keepUnread = keepUnread,
+            keepFavorite = keepFavorite,
+        )
+        return deleteCandidateArticles(candidateArticleIds, downloadProtectedArticleIds)
+    }
 
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE " +
                 "(${ArticleBean.UPDATE_AT_COLUMN} IS NULL OR " +
                 "${ArticleBean.UPDATE_AT_COLUMN} <= :timestamp) AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
@@ -156,16 +191,32 @@ interface ArticleDao {
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
+    suspend fun getArticleIdsToDeleteBefore(
+        timestamp: Long,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): List<String>
+
+    @Transaction
     suspend fun deleteArticleBefore(
         timestamp: Long,
         keepPlaylistArticles: Boolean,
         keepUnread: Boolean,
         keepFavorite: Boolean,
-    ): Int
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val candidateArticleIds = getArticleIdsToDeleteBefore(
+            timestamp = timestamp,
+            keepPlaylistArticles = keepPlaylistArticles,
+            keepUnread = keepUnread,
+            keepFavorite = keepFavorite,
+        )
+        return deleteCandidateArticles(candidateArticleIds, downloadProtectedArticleIds)
+    }
 
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
                 "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
@@ -180,28 +231,83 @@ interface ArticleDao {
                 "  ) >= :count" +
                 ")"
     )
+    suspend fun getArticleIdsToDeleteExceed(
+        count: Int,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): List<String>
+
+    @Transaction
     suspend fun deleteArticleExceed(
         count: Int,
         keepPlaylistArticles: Boolean,
         keepUnread: Boolean,
         keepFavorite: Boolean,
-    ): Int
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val candidateArticleIds = getArticleIdsToDeleteExceed(
+            count = count,
+            keepPlaylistArticles = keepPlaylistArticles,
+            keepUnread = keepUnread,
+            keepFavorite = keepFavorite,
+        )
+        return deleteCandidateArticles(candidateArticleIds, downloadProtectedArticleIds)
+    }
 
-    @Transaction
     @Query(
-        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME WHERE " +
                 "${ArticleBean.ARTICLE_ID_COLUMN} = :articleId AND " +
                 "NOT (:keepPlaylistArticles AND EXISTS(SELECT 1 FROM $PLAYLIST_MEDIA_TABLE_NAME pl " +
                 "    WHERE pl.${PlaylistMediaBean.ARTICLE_ID_COLUMN} = `$ARTICLE_TABLE_NAME`.${ArticleBean.ARTICLE_ID_COLUMN})) AND " +
                 "(:keepUnread = 0 OR ${ArticleBean.IS_READ_COLUMN} = 1) AND " +
                 "(:keepFavorite = 0 OR ${ArticleBean.IS_FAVORITE_COLUMN} = 0)"
     )
+    suspend fun getArticleIdsToDelete(
+        articleId: String,
+        keepPlaylistArticles: Boolean,
+        keepUnread: Boolean,
+        keepFavorite: Boolean,
+    ): List<String>
+
+    @Transaction
     suspend fun deleteArticle(
         articleId: String,
         keepPlaylistArticles: Boolean,
         keepUnread: Boolean,
         keepFavorite: Boolean,
-    ): Int
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val candidateArticleIds = getArticleIdsToDelete(
+            articleId = articleId,
+            keepPlaylistArticles = keepPlaylistArticles,
+            keepUnread = keepUnread,
+            keepFavorite = keepFavorite,
+        )
+        return deleteCandidateArticles(candidateArticleIds, downloadProtectedArticleIds)
+    }
+
+    @Query(
+        "DELETE FROM $ARTICLE_TABLE_NAME WHERE " +
+                "${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun innerDeleteArticlesByIds(articleIds: List<String>): Int
+
+    suspend fun deleteCandidateArticles(
+        candidateArticleIds: List<String>,
+        downloadProtectedArticleIds: List<String>,
+    ): ArticleDeleteResult {
+        val protectedArticleIds = downloadProtectedArticleIds.toHashSet()
+        val articleIdsToDelete = candidateArticleIds.filterNot { it in protectedArticleIds }
+        var deletedCount = 0
+        for (articleIds in articleIdsToDelete.chunked(ARTICLE_DELETE_BIND_CHUNK_SIZE)) {
+            deletedCount += innerDeleteArticlesByIds(articleIds)
+        }
+        return ArticleDeleteResult(
+            deletedCount = deletedCount,
+            downloadProtectedCount = candidateArticleIds.count { it in protectedArticleIds },
+        )
+    }
 
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class, EnclosureBean::class])

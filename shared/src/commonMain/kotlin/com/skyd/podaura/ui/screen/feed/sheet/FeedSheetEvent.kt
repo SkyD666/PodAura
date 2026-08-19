@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.feed.sheet
 
 import com.skyd.mvi.MviSingleEvent
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 
 sealed interface FeedSheetEvent : MviSingleEvent {
@@ -14,7 +15,10 @@ sealed interface FeedSheetEvent : MviSingleEvent {
     }
 
     sealed interface ClearFeedArticlesResultEvent : FeedSheetEvent {
-        data class Success(val feed: FeedViewBean) : ClearFeedArticlesResultEvent
+        data class Success(
+            val feed: FeedViewBean,
+            val result: ArticleDeleteResult,
+        ) : ClearFeedArticlesResultEvent
         data class Failed(val msg: String) : ClearFeedArticlesResultEvent
     }
 

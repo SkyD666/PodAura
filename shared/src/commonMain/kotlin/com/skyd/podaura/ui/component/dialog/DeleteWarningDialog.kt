@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
@@ -28,6 +29,7 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.delete
+import podaura.shared.generated.resources.delete_constraint_screen_keep_download_task_articles
 import podaura.shared.generated.resources.delete_constraint_screen_keep_favorite_articles
 import podaura.shared.generated.resources.delete_constraint_screen_keep_playlist_articles
 import podaura.shared.generated.resources.delete_constraint_screen_keep_unread_articles
@@ -64,6 +66,10 @@ fun DeleteArticleWarningDialog(
                     stringResource(Res.string.delete_constraint_screen_keep_playlist_articles),
                     KeepPlaylistArticlesPreference.current
                 ) { KeepPlaylistArticlesPreference.put(scope, it) },
+                Triple(
+                    stringResource(Res.string.delete_constraint_screen_keep_download_task_articles),
+                    KeepArticlesWithDownloadTasksPreference.current
+                ) { KeepArticlesWithDownloadTasksPreference.put(scope, it) },
             )
             Column {
                 if (text != null) {

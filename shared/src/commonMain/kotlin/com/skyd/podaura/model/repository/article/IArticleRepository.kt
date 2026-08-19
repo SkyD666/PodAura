@@ -1,5 +1,6 @@
 package com.skyd.podaura.model.repository.article
 
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import kotlinx.coroutines.flow.Flow
 
 interface IArticleRepository {
@@ -19,5 +20,5 @@ interface IArticleRepository {
 
     fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit>
 
-    fun deleteArticle(articleId: String): Flow<Int>
+    fun deleteArticle(articleId: String): Flow<ArticleDeleteResult>
 }

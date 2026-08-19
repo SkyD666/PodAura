@@ -1,5 +1,7 @@
 package com.skyd.podaura.ui.screen.settings.data
 
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
+
 
 // TODO internal: wait cmp
 sealed interface DataPartialStateChange {
@@ -53,7 +55,7 @@ sealed interface DataPartialStateChange {
             }
         }
 
-        data class Success(val count: Int) : DeleteArticleBeforeResult
+        data class Success(val result: ArticleDeleteResult) : DeleteArticleBeforeResult
         data class Failed(val msg: String) : DeleteArticleBeforeResult
     }
 }

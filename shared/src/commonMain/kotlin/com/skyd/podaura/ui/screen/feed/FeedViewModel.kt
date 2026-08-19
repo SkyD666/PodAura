@@ -74,6 +74,9 @@ class FeedViewModel(
                 is FeedPartialStateChange.ClearGroupArticles.Failed ->
                     FeedEvent.ClearGroupArticlesResultEvent.Failed(change.msg)
 
+                is FeedPartialStateChange.ClearGroupArticles.Success ->
+                    FeedEvent.ClearGroupArticlesResultEvent.Success(change.result)
+
                 is FeedPartialStateChange.DeleteGroup.Failed ->
                     FeedEvent.DeleteGroupResultEvent.Failed(change.msg)
 
@@ -179,7 +182,7 @@ class FeedViewModel(
             },
             filterIsInstance<FeedIntent.ClearGroupArticles>().flatMapConcat { intent ->
                 feedRepo.clearGroupArticles(intent.groupId).map {
-                    FeedPartialStateChange.ClearGroupArticles.Success
+                    FeedPartialStateChange.ClearGroupArticles.Success(result = it)
                 }.startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.ClearGroupArticles.Failed(it.message.toString()) }
             },

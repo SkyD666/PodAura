@@ -9,6 +9,7 @@ import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.isHttpOrHttps
 import com.skyd.podaura.ext.put
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
@@ -20,11 +21,13 @@ import com.skyd.podaura.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideEmptyDefaultPreference
 import com.skyd.podaura.model.preference.behavior.feed.HideMutedFeedPreference
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
+import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
 import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -43,6 +46,7 @@ class FeedRepository(
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
     private val feedSheetRepository: IFeedSheetRepository,
+    private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
 ) : BaseRepository(), IFeedRepository, IFeedSheetRepository by feedSheetRepository {
     fun allGroupCollapsed(): Flow<Boolean> = combine(
         groupDao.existsExpandedGroup(),
@@ -98,17 +102,22 @@ class FeedRepository(
         .map { list -> list.sortedBy { it.title } }
         .flowOn(Dispatchers.IO)
 
-    fun clearGroupArticles(groupId: String): Flow<Int> = flow {
+    fun clearGroupArticles(groupId: String): Flow<ArticleDeleteResult> = flow {
         val realGroupId = if (groupId == GroupVo.DEFAULT_GROUP_ID) null else groupId
-        val count = with(dataStore) {
+        val result = with(dataStore) {
+            val downloadProtectedArticleIds =
+                downloadArticleProtectionResolver.getProtectedArticleIds(
+                    enabled = getOrDefault(KeepArticlesWithDownloadTasksPreference),
+                )
             articleDao.deleteArticlesInGroup(
                 groupId = realGroupId,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
                 keepUnread = getOrDefault(KeepUnreadArticlesPreference),
                 keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
+                downloadProtectedArticleIds = downloadProtectedArticleIds,
             )
         }
-        emit(count)
+        emit(result)
     }
 
     fun deleteGroup(groupId: String): Flow<Int> = flow {

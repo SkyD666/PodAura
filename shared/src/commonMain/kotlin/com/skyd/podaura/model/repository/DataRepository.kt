@@ -5,13 +5,16 @@ import com.skyd.fundation.config.FEED_ICON_DIR
 import com.skyd.fundation.ext.deleteRecursively
 import com.skyd.fundation.ext.walk
 import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.MediaPlayHistoryDao
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +26,7 @@ class DataRepository(
     private val feedDao: FeedDao,
     private val articleDao: ArticleDao,
     private val mediaPlayHistoryDao: MediaPlayHistoryDao,
+    private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
 ) : BaseRepository() {
     fun requestClearCache(): Flow<Long> = flow {
         var size: Long = 0
@@ -41,15 +45,20 @@ class DataRepository(
         emit(mediaPlayHistoryDao.deleteAllMediaPlayHistory())
     }.flowOn(Dispatchers.IO)
 
-    fun requestDeleteArticleBefore(timestamp: Long): Flow<Int> = flow {
-        val count = with(dataStore) {
+    fun requestDeleteArticleBefore(timestamp: Long): Flow<ArticleDeleteResult> = flow {
+        val result = with(dataStore) {
+            val downloadProtectedArticleIds =
+                downloadArticleProtectionResolver.getProtectedArticleIds(
+                    enabled = getOrDefault(KeepArticlesWithDownloadTasksPreference),
+                )
             articleDao.deleteArticleBefore(
                 timestamp = timestamp,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
                 keepUnread = getOrDefault(KeepUnreadArticlesPreference),
                 keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
+                downloadProtectedArticleIds = downloadProtectedArticleIds,
             )
         }
-        emit(count)
+        emit(result)
     }.flowOn(Dispatchers.IO)
 }

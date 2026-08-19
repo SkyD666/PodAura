@@ -1,6 +1,7 @@
 package com.skyd.podaura.model.repository.feed.sheet
 
 import androidx.paging.PagingData
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,7 @@ interface IFeedSheetRepository {
 
     fun removeFeed(url: String): Flow<Int>
 
-    fun clearFeedArticles(url: String): Flow<Int>
+    fun clearFeedArticles(url: String): Flow<ArticleDeleteResult>
 
     fun readAllInFeed(feedUrl: String): Flow<Int>
 

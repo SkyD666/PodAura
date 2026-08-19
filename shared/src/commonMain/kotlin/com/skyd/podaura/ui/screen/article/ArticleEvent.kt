@@ -20,6 +20,7 @@ sealed interface ArticleEvent : MviSingleEvent {
     }
 
     sealed interface DeleteArticleResultEvent : ArticleEvent {
+        data object ProtectedByDownload : DeleteArticleResultEvent
         data class Failed(val msg: String) : DeleteArticleResultEvent
     }
 }

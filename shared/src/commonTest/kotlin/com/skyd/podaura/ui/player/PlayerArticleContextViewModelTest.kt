@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.player
 
 import com.skyd.podaura.model.repository.article.IArticleRepository
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -169,6 +170,7 @@ class PlayerArticleContextViewModelTest {
 
         override fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flowOf(Unit)
 
-        override fun deleteArticle(articleId: String): Flow<Int> = flowOf(0)
+        override fun deleteArticle(articleId: String): Flow<ArticleDeleteResult> =
+            flowOf(ArticleDeleteResult(deletedCount = 0, downloadProtectedCount = 0))
     }
 }

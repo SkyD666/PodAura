@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.feed
 
 import androidx.paging.PagingData
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import kotlinx.coroutines.flow.Flow
@@ -132,7 +133,7 @@ internal sealed interface FeedPartialStateChange {
             }
         }
 
-        data object Success : ClearGroupArticles
+        data class Success(val result: ArticleDeleteResult) : ClearGroupArticles
         data class Failed(val msg: String) : ClearGroupArticles
     }
 

@@ -57,6 +57,11 @@ class SearchViewModel(
                 is SearchPartialStateChange.DeleteArticle.Failed ->
                     SearchEvent.DeleteArticleResultEvent.Failed(change.msg)
 
+                is SearchPartialStateChange.DeleteArticle.Success -> {
+                    if (change.result.downloadProtectedCount == 0) return@onEach
+                    SearchEvent.DeleteArticleResultEvent.ProtectedByDownload
+                }
+
                 else -> return@onEach
             }
             sendEvent(event)
@@ -107,7 +112,7 @@ class SearchViewModel(
             },
             filterIsInstance<SearchIntent.Delete>().flatMapConcat { intent ->
                 articleRepo.deleteArticle(intent.articleId).map {
-                    SearchPartialStateChange.DeleteArticle.Success
+                    SearchPartialStateChange.DeleteArticle.Success(result = it)
                 }.startWith(SearchPartialStateChange.LoadingDialog.Show)
                     .catchMap { SearchPartialStateChange.DeleteArticle.Failed(it.message.toString()) }
             },

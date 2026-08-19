@@ -9,6 +9,7 @@ import com.skyd.podaura.model.repository.SearchRepository
 import com.skyd.podaura.model.repository.UpdateNotificationRepository
 import com.skyd.podaura.model.repository.UpdateRepository
 import com.skyd.podaura.model.repository.article.ArticleRepository
+import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.calendar.CalendarRepository
 import com.skyd.podaura.model.repository.download.AutoDownloadRuleRepository
@@ -55,6 +56,7 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val repositoryModule = module {
+    single { DownloadArticleProtectionResolver(get(), get()) }
     single { InMemoryTranslationCache() }
     single { TranslationDocumentBuilder() }
     single { TranslationHtmlValidator() }
@@ -87,7 +89,7 @@ val repositoryModule = module {
     }
     factory { ReorderGroupRepository(get(), get()) }
     factory { ReorderFeedRepository(get(), get()) }
-    factory { DataRepository(get(), get(), get()) }
+    factory { DataRepository(get(), get(), get(), get()) }
     factory { HistoryRepository(get(), get(), get()) }
     factory { ImageRepository() }
     factory { ReadRepository(get(), get()) }
@@ -134,15 +136,15 @@ val repositoryModule = module {
     factory { RssHelper(get()) }
 
     factory {
-        FeedSheetRepository(get(), get(), get(), get(), get())
+        FeedSheetRepository(get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedSheetRepository::class)
 
     factory {
-        FeedRepository(get(), get(), get(), get(), get(), get())
+        FeedRepository(get(), get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedRepository::class)
 
     factory {
-        ArticleRepository(get(), get(), get(), get())
+        ArticleRepository(get(), get(), get(), get(), get())
     } binds arrayOf(IArticleRepository::class)
 
     factory { DownloadRepository(get(), get()) }

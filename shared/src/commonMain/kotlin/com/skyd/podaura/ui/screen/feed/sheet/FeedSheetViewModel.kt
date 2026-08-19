@@ -52,7 +52,10 @@ class FeedSheetViewModel(
                     FeedSheetEvent.EditFeedResultEvent.Failed(change.msg)
 
                 is FeedSheetPartialStateChange.ClearFeedArticles.Success ->
-                    FeedSheetEvent.ClearFeedArticlesResultEvent.Success(change.feed)
+                    FeedSheetEvent.ClearFeedArticlesResultEvent.Success(
+                        feed = change.feed,
+                        result = change.result,
+                    )
 
                 is FeedSheetPartialStateChange.ClearFeedArticles.Failed ->
                     FeedSheetEvent.ClearFeedArticlesResultEvent.Failed(change.msg)
@@ -137,10 +140,13 @@ class FeedSheetViewModel(
                     .catchMap { FeedSheetPartialStateChange.EditFeed.Failed(it.message.toString()) }
             },
             filterIsInstance<FeedSheetIntent.ClearFeedArticles>().flatMapConcat { intent ->
-                feedSheetRepo.clearFeedArticles(intent.url).flatMapConcat {
-                    feedSheetRepo.getFeedViewsByUrls(listOf(intent.url))
-                }.map {
-                    FeedSheetPartialStateChange.ClearFeedArticles.Success(it.first())
+                feedSheetRepo.clearFeedArticles(intent.url).flatMapConcat { result ->
+                    feedSheetRepo.getFeedViewsByUrls(listOf(intent.url)).map { feeds ->
+                        FeedSheetPartialStateChange.ClearFeedArticles.Success(
+                            feed = feeds.first(),
+                            result = result,
+                        )
+                    }
                 }.startWith(FeedSheetPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedSheetPartialStateChange.ClearFeedArticles.Failed(it.message.toString()) }
             },

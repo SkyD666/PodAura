@@ -91,9 +91,11 @@ import com.skyd.podaura.ui.screen.search.SearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_delete_batch_result
 import podaura.shared.generated.resources.add
 import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.collapse_all_groups
@@ -330,6 +332,18 @@ internal fun FeedList(
 
                 is FeedEvent.ClearGroupArticlesResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
+
+                is FeedEvent.ClearGroupArticlesResultEvent.Success -> {
+                    if (event.result.downloadProtectedCount > 0) {
+                        currentSnackbarHostState.showSnackbar(
+                            getString(
+                                Res.string.article_delete_batch_result,
+                                event.result.deletedCount,
+                                event.result.downloadProtectedCount,
+                            )
+                        )
+                    }
+                }
 
                 is FeedEvent.MuteFeedsInGroupResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)

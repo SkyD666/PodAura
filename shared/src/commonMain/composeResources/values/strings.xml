@@ -364,9 +364,11 @@
     <string name="auto_delete_article_screen_keep_unread">Keep unread</string>
     <string name="auto_delete_article_screen_keep_favorite">Keep favorite</string>
     <string name="auto_delete_article_screen_keep_playlist">Keep in playlist</string>
+    <string name="auto_delete_article_screen_keep_download_tasks">Keep articles with download tasks</string>
     <string name="auto_delete_article_screen_keep_unread_description">Unread articles won\'t be deleted</string>
     <string name="auto_delete_article_screen_keep_favorite_description">Favorite articles won\'t be deleted</string>
     <string name="auto_delete_article_screen_keep_playlist_description">Articles in playlists won\'t be deleted</string>
+    <string name="auto_delete_article_screen_keep_download_tasks_description">Don\'t delete an article until its download task is removed</string>
     <string name="appearance_screen_amoled_dark">Amoled dark</string>
     <string name="article_notification_new_articles">New articles</string>
     <string name="article_notification_content_text">Your concerns %1$s have been updated!</string>
@@ -448,6 +450,8 @@
     <string name="delete_constraint_screen_name">Delete constraint</string>
     <string name="delete_constraint_screen_keep_playlist_articles">Keep playlist articles</string>
     <string name="delete_constraint_screen_keep_playlist_articles_description">Don\'t delete articles in playlist</string>
+    <string name="delete_constraint_screen_keep_download_task_articles">Keep articles with download tasks</string>
+    <string name="delete_constraint_screen_keep_download_task_articles_description">Don\'t delete an article until its download task is removed</string>
     <string name="delete_constraint_screen_name_description">Configure the constraints required to delete articles</string>
     <string name="enclosure_item_link_tag">link tag</string>
     <string name="collapse_all_groups">Collapse all groups</string>
@@ -457,6 +461,8 @@
     <string name="auto_delete_article_screen_options_tip">These options are only valid for the auto delete feature</string>
     <string name="delete_constraint_screen_options_tip">These options do NOT valid for the auto delete feature</string>
     <string name="article_item_delete_warning">Sure to delete this article?</string>
+    <string name="article_delete_protected_by_download">Article wasn\'t deleted because it has a download task</string>
+    <string name="article_delete_batch_result">Deleted %1$d articles; kept %2$d with download tasks</string>
     <string name="article_screen_no_link_tip">This article does not contain a link</string>
     <string name="feed_screen_full_refresh">Full refresh</string>
     <string name="feed_screen_full_refresh_description">Full refresh updates local data with all the fetched articles instead of just adding new ones. \n\nNote that if the feed does not provide the article\'s GUID or LINK tag, duplicate articles may occur.</string>

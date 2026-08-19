@@ -72,9 +72,11 @@ import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_delete_protected_by_download
 import podaura.shared.generated.resources.clear_input_text
 import podaura.shared.generated.resources.search_screen_hint
 import podaura.shared.generated.resources.to_top
@@ -240,6 +242,11 @@ fun SearchScreen(
 
                 is SearchEvent.DeleteArticleResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
+
+                is SearchEvent.DeleteArticleResultEvent.ProtectedByDownload ->
+                    snackbarHostState.showSnackbar(
+                        getString(Res.string.article_delete_protected_by_download)
+                    )
             }
         }
     }

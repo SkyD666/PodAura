@@ -357,9 +357,11 @@
     <string name="auto_delete_article_screen_keep_unread">保留未读</string>
     <string name="auto_delete_article_screen_keep_favorite">保留收藏</string>
     <string name="auto_delete_article_screen_keep_playlist">保留在播放列表中的</string>
+    <string name="auto_delete_article_screen_keep_download_tasks">保留有下载任务的文章</string>
     <string name="auto_delete_article_screen_keep_unread_description">不会删除未读的文章</string>
     <string name="auto_delete_article_screen_keep_favorite_description">不会删除收藏的文章</string>
     <string name="auto_delete_article_screen_keep_playlist_description">不会删除在播放列表中的文章</string>
+    <string name="auto_delete_article_screen_keep_download_tasks_description">下载任务删除前，不删除对应文章</string>
     <string name="appearance_screen_amoled_dark">Amoled 深色</string>
     <string name="article_notification_new_articles">新文章</string>
     <string name="article_notification_content_text">你关注的 %1$s 更新了！</string>
@@ -441,6 +443,8 @@
     <string name="delete_constraint_screen_name">删除约束</string>
     <string name="delete_constraint_screen_keep_playlist_articles">保留播放列表文章</string>
     <string name="delete_constraint_screen_keep_playlist_articles_description">不要删除播放列表中的文章</string>
+    <string name="delete_constraint_screen_keep_download_task_articles">保留有下载任务的文章</string>
+    <string name="delete_constraint_screen_keep_download_task_articles_description">下载任务删除前，不删除对应文章</string>
     <string name="delete_constraint_screen_name_description">配置删除文章所需的约束</string>
     <string name="enclosure_item_link_tag">link 标签</string>
     <string name="collapse_all_groups">收起所有分组</string>
@@ -450,6 +454,8 @@
     <string name="auto_delete_article_screen_options_tip">这些选项仅对自动删除功能有效</string>
     <string name="delete_constraint_screen_options_tip">这些选项对自动删除功能无效</string>
     <string name="article_item_delete_warning">确定删除这篇文章？</string>
+    <string name="article_delete_protected_by_download">文章存在下载任务，未删除</string>
+    <string name="article_delete_batch_result">已删除 %1$d 篇文章；因存在下载任务保留 %2$d 篇</string>
     <string name="article_screen_no_link_tip">此文章不含链接</string>
     <string name="feed_screen_full_refresh">全量刷新</string>
     <string name="feed_screen_full_refresh_description">全量刷新使用请求到的所有文章来更新本地数据，而不是仅仅添加新文章。\n\n如果订阅源未提供文章的 GUID 或 LINK 标签，文章可能会出现重复。</string>

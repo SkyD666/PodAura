@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.article
 
 import androidx.paging.PagingData
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import kotlinx.coroutines.flow.Flow
 
@@ -128,7 +129,7 @@ internal sealed interface ArticlePartialStateChange {
             }
         }
 
-        data object Success : DeleteArticle
+        data class Success(val result: ArticleDeleteResult) : DeleteArticle
         data class Failed(val msg: String) : DeleteArticle
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material3.SnackbarHost
@@ -22,6 +23,7 @@ import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
@@ -31,6 +33,8 @@ import com.skyd.settings.TipSettingsItem
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.delete_constraint_screen_keep_download_task_articles
+import podaura.shared.generated.resources.delete_constraint_screen_keep_download_task_articles_description
 import podaura.shared.generated.resources.delete_constraint_screen_keep_favorite_articles
 import podaura.shared.generated.resources.delete_constraint_screen_keep_playlist_articles
 import podaura.shared.generated.resources.delete_constraint_screen_keep_playlist_articles_description
@@ -92,6 +96,17 @@ fun DeleteConstraintScreen(
                         text = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles),
                         description = stringResource(Res.string.delete_constraint_screen_keep_playlist_articles_description),
                         onCheckedChange = { KeepPlaylistArticlesPreference.put(scope, it) },
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        checked = KeepArticlesWithDownloadTasksPreference.current,
+                        imageVector = Icons.Outlined.Download,
+                        text = stringResource(Res.string.delete_constraint_screen_keep_download_task_articles),
+                        description = stringResource(Res.string.delete_constraint_screen_keep_download_task_articles_description),
+                        onCheckedChange = {
+                            KeepArticlesWithDownloadTasksPreference.put(scope, it)
+                        },
                     )
                 }
                 otherItem {

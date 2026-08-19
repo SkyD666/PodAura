@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.take
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_delete_batch_result
 import podaura.shared.generated.resources.data_screen_data_cleared_size
 import podaura.shared.generated.resources.data_screen_deleted_count
 
@@ -70,11 +71,19 @@ class DataViewModel(
 
                 is DataPartialStateChange.DeleteArticleBeforeResult.Success -> {
                     DataEvent.DeleteArticleBeforeResultEvent.Success(
-                        getPluralString(
-                            Res.plurals.data_screen_deleted_count,
-                            change.count,
-                            change.count,
-                        )
+                        if (change.result.downloadProtectedCount > 0) {
+                            getString(
+                                Res.string.article_delete_batch_result,
+                                change.result.deletedCount,
+                                change.result.downloadProtectedCount,
+                            )
+                        } else {
+                            getPluralString(
+                                Res.plurals.data_screen_deleted_count,
+                                change.result.deletedCount,
+                                change.result.deletedCount,
+                            )
+                        }
                     )
                 }
 
@@ -107,7 +116,7 @@ class DataViewModel(
             },
             filterIsInstance<DataIntent.DeleteArticleBefore>().flatMapConcat { intent ->
                 dataRepo.requestDeleteArticleBefore(intent.timestamp).map {
-                    DataPartialStateChange.DeleteArticleBeforeResult.Success(count = it)
+                    DataPartialStateChange.DeleteArticleBeforeResult.Success(result = it)
                 }.startWith(DataPartialStateChange.LoadingDialog.Show)
                     .catchMap { DataPartialStateChange.DeleteArticleBeforeResult.Failed(it.message.toString()) }
             },

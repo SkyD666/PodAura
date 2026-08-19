@@ -56,4 +56,10 @@ interface EnclosureDao {
                 "WHERE ${EnclosureBean.URL_COLUMN} = :path"
     )
     suspend fun getMediaArticleId(path: String): String?
+
+    @Query(
+        "SELECT ${EnclosureBean.ARTICLE_ID_COLUMN} FROM $ENCLOSURE_TABLE_NAME " +
+                "WHERE ${EnclosureBean.URL_COLUMN} IN (:urls)"
+    )
+    suspend fun getArticleIdsByUrls(urls: List<String>): List<String>
 }

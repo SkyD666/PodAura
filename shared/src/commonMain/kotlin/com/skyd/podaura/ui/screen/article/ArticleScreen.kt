@@ -102,6 +102,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_delete_protected_by_download
 import podaura.shared.generated.resources.article_screen_name
 import podaura.shared.generated.resources.article_screen_search_article
 import podaura.shared.generated.resources.copy
@@ -369,6 +370,11 @@ fun ArticleScreen(
 
                 is ArticleEvent.DeleteArticleResultEvent.Failed ->
                     snackbarHostState.showSnackbar(event.msg)
+
+                is ArticleEvent.DeleteArticleResultEvent.ProtectedByDownload ->
+                    snackbarHostState.showSnackbar(
+                        getString(Res.string.article_delete_protected_by_download)
+                    )
             }
         }
     }

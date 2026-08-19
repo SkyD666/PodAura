@@ -356,9 +356,11 @@
     <string name="auto_delete_article_screen_keep_unread">保留未讀文章</string>
     <string name="auto_delete_article_screen_keep_favorite">保留已收藏文章</string>
     <string name="auto_delete_article_screen_keep_playlist">保留播放清單中的文章</string>
+    <string name="auto_delete_article_screen_keep_download_tasks">保留有下載任務的文章</string>
     <string name="auto_delete_article_screen_keep_unread_description">未讀文章不會被刪除</string>
     <string name="auto_delete_article_screen_keep_favorite_description">已收藏的文章不會被刪除</string>
     <string name="auto_delete_article_screen_keep_playlist_description">播放清單中的文章不會被刪除</string>
+    <string name="auto_delete_article_screen_keep_download_tasks_description">下載任務刪除前，不刪除對應文章</string>
     <string name="appearance_screen_amoled_dark">AMOLED 純黑模式</string>
     <string name="article_notification_new_articles">新文章</string>
     <string name="article_notification_content_text">您關注的「%1$s」有更新！</string>
@@ -440,6 +442,8 @@
     <string name="delete_constraint_screen_name">刪除保護</string>
     <string name="delete_constraint_screen_keep_playlist_articles">保留播放清單中的文章</string>
     <string name="delete_constraint_screen_keep_playlist_articles_description">不要刪除播放清單中的文章</string>
+    <string name="delete_constraint_screen_keep_download_task_articles">保留有下載任務的文章</string>
+    <string name="delete_constraint_screen_keep_download_task_articles_description">下載任務刪除前，不刪除對應文章</string>
     <string name="delete_constraint_screen_name_description">設定刪除文章時要保留的項目</string>
     <string name="enclosure_item_link_tag">link 標籤</string>
     <string name="collapse_all_groups">收合所有群組</string>
@@ -449,6 +453,8 @@
     <string name="auto_delete_article_screen_options_tip">這些選項僅適用於自動刪除功能</string>
     <string name="delete_constraint_screen_options_tip">這些設定不適用於自動刪除功能</string>
     <string name="article_item_delete_warning">要刪除這篇文章嗎？</string>
+    <string name="article_delete_protected_by_download">文章有下載任務，因此未刪除</string>
+    <string name="article_delete_batch_result">已刪除 %1$d 篇文章；因有下載任務而保留 %2$d 篇</string>
     <string name="article_screen_no_link_tip">這篇文章不含連結</string>
     <string name="feed_screen_full_refresh">完整重新整理</string>
     <string name="feed_screen_full_refresh_description">完整重新整理會使用取得的所有文章更新本機資料，而不只是加入新文章。\n\n如果訂閱來源未提供文章的 GUID 或 LINK 標籤，可能會出現重複文章。</string>

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.outlined.AutoDelete
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.outlined.Timer
@@ -47,6 +48,7 @@ import com.skyd.compone.component.dialog.SliderDialog
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleFrequencyPreference
+import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepUnreadPreference
@@ -71,6 +73,8 @@ import podaura.shared.generated.resources.auto_delete_article_screen_delete_befo
 import podaura.shared.generated.resources.auto_delete_article_screen_delete_frequency
 import podaura.shared.generated.resources.auto_delete_article_screen_delete_max_count
 import podaura.shared.generated.resources.auto_delete_article_screen_delete_max_count_description
+import podaura.shared.generated.resources.auto_delete_article_screen_keep_download_tasks
+import podaura.shared.generated.resources.auto_delete_article_screen_keep_download_tasks_description
 import podaura.shared.generated.resources.auto_delete_article_screen_keep_favorite
 import podaura.shared.generated.resources.auto_delete_article_screen_keep_favorite_description
 import podaura.shared.generated.resources.auto_delete_article_screen_keep_playlist
@@ -228,6 +232,17 @@ fun AutoDeleteScreen(
                         description = stringResource(Res.string.auto_delete_article_screen_keep_playlist_description),
                         checked = AutoDeleteArticleKeepPlaylistPreference.current,
                         onCheckedChange = { AutoDeleteArticleKeepPlaylistPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.Download,
+                        text = stringResource(Res.string.auto_delete_article_screen_keep_download_tasks),
+                        description = stringResource(Res.string.auto_delete_article_screen_keep_download_tasks_description),
+                        checked = AutoDeleteArticleKeepDownloadTasksPreference.current,
+                        onCheckedChange = {
+                            AutoDeleteArticleKeepDownloadTasksPreference.put(scope, it)
+                        },
                     )
                 }
                 otherItem {

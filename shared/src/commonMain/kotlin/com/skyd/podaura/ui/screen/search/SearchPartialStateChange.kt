@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.search
 
 import androidx.paging.PagingData
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import kotlinx.coroutines.flow.Flow
 
 
@@ -73,7 +74,7 @@ internal sealed interface SearchPartialStateChange {
             }
         }
 
-        data object Success : DeleteArticle
+        data class Success(val result: ArticleDeleteResult) : DeleteArticle
         data class Failed(val msg: String) : DeleteArticle
     }
 

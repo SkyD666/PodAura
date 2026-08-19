@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.room3.RoomRawQuery
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
@@ -13,6 +14,7 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
@@ -48,6 +50,7 @@ class ArticleRepository(
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
+    private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
 ) : BaseRepository(), IArticleRepository {
     private val filterMask: MutableStateFlow<Int> = MutableStateFlow(0)
 
@@ -193,14 +196,19 @@ class ArticleRepository(
         emit(articleDao.readArticle(articleId, read))
     }.flowOn(Dispatchers.IO)
 
-    override fun deleteArticle(articleId: String): Flow<Int> = flow {
+    override fun deleteArticle(articleId: String): Flow<ArticleDeleteResult> = flow {
         with(dataStore) {
+            val downloadProtectedArticleIds =
+                downloadArticleProtectionResolver.getProtectedArticleIds(
+                    enabled = getOrDefault(KeepArticlesWithDownloadTasksPreference),
+                )
             emit(
                 articleDao.deleteArticle(
                     articleId,
                     keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
                     keepUnread = getOrDefault(KeepUnreadArticlesPreference),
                     keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
+                    downloadProtectedArticleIds = downloadProtectedArticleIds,
                 )
             )
         }

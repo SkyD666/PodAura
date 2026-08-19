@@ -120,9 +120,11 @@ import com.skyd.podaura.ui.screen.image.rememberImagePreviewOpener
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.article_delete_batch_result
 import podaura.shared.generated.resources.auto_download_rule_screen_name
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.clear
@@ -217,6 +219,18 @@ fun EditFeedSheet(
 
             is FeedSheetEvent.ClearFeedArticlesResultEvent.Failed ->
                 currentSnackbarHostState?.showSnackbar(event.msg)
+
+            is FeedSheetEvent.ClearFeedArticlesResultEvent.Success -> {
+                if (event.result.downloadProtectedCount > 0) {
+                    currentSnackbarHostState?.showSnackbar(
+                        getString(
+                            Res.string.article_delete_batch_result,
+                            event.result.deletedCount,
+                            event.result.downloadProtectedCount,
+                        )
+                    )
+                }
+            }
 
             is FeedSheetEvent.MuteFeedResultEvent.Failed ->
                 currentSnackbarHostState?.showSnackbar(event.msg)

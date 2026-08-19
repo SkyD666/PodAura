@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.feed
 
 import com.skyd.mvi.MviSingleEvent
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 
@@ -33,6 +34,7 @@ sealed interface FeedEvent : MviSingleEvent {
     }
 
     sealed interface ClearGroupArticlesResultEvent : FeedEvent {
+        data class Success(val result: ArticleDeleteResult) : ClearGroupArticlesResultEvent
         data class Failed(val msg: String) : ClearGroupArticlesResultEvent
     }
 

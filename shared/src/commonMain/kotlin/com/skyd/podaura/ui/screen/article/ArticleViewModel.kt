@@ -58,6 +58,11 @@ class ArticleViewModel(
                 is ArticlePartialStateChange.DeleteArticle.Failed ->
                     ArticleEvent.DeleteArticleResultEvent.Failed(change.msg)
 
+                is ArticlePartialStateChange.DeleteArticle.Success -> {
+                    if (change.result.downloadProtectedCount == 0) return@onEach
+                    ArticleEvent.DeleteArticleResultEvent.ProtectedByDownload
+                }
+
                 else -> return@onEach
             }
             sendEvent(event)
@@ -125,7 +130,7 @@ class ArticleViewModel(
             },
             filterIsInstance<ArticleIntent.Delete>().flatMapConcat { intent ->
                 articleRepo.deleteArticle(intent.articleId).map {
-                    ArticlePartialStateChange.DeleteArticle.Success
+                    ArticlePartialStateChange.DeleteArticle.Success(result = it)
                 }.startWith(ArticlePartialStateChange.LoadingDialog.Show).catchMap {
                     ArticlePartialStateChange.DeleteArticle.Failed(it.message.toString())
                 }

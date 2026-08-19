@@ -10,16 +10,19 @@ import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.isLocalFile
 import com.skyd.podaura.ext.isNetworkUrl
+import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
+import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.KeepFavoriteArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPreference
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
 import com.skyd.podaura.model.repository.feed.RssHelper
 import com.skyd.podaura.model.repository.feed.tryDeleteFeedIconFile
 import io.github.vinceglb.filekit.PlatformFile
@@ -40,6 +43,7 @@ class FeedSheetRepository(
     private val articleDao: ArticleDao,
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
+    private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
 ) : IFeedSheetRepository {
     override fun getFeed(feedUrl: String): Flow<FeedViewBean> = flow {
         emit(feedDao.getFeedView(feedUrl))
@@ -137,16 +141,21 @@ class FeedSheetRepository(
         emit(feedDao.removeFeed(url))
     }.flowOn(Dispatchers.IO)
 
-    override fun clearFeedArticles(url: String): Flow<Int> = flow {
-        val count = with(dataStore) {
+    override fun clearFeedArticles(url: String): Flow<ArticleDeleteResult> = flow {
+        val result = with(dataStore) {
+            val downloadProtectedArticleIds =
+                downloadArticleProtectionResolver.getProtectedArticleIds(
+                    enabled = getOrDefault(KeepArticlesWithDownloadTasksPreference),
+                )
             articleDao.deleteArticleInFeed(
                 feedUrl = url,
                 keepPlaylistArticles = getOrDefault(KeepPlaylistArticlesPreference),
                 keepUnread = getOrDefault(KeepUnreadArticlesPreference),
                 keepFavorite = getOrDefault(KeepFavoriteArticlesPreference),
+                downloadProtectedArticleIds = downloadProtectedArticleIds,
             )
         }
-        emit(count)
+        emit(result)
     }.flowOn(Dispatchers.IO)
 
     override fun readAllInFeed(feedUrl: String): Flow<Int> = flow {

@@ -6,6 +6,7 @@ import androidx.work.WorkerParameters
 import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getOrDefaultSuspend
 import com.skyd.podaura.model.db.dao.ArticleDao
+import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepDownloadTasksPreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleBeforePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepFavoritePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleKeepPlaylistPreference
@@ -14,6 +15,7 @@ import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticl
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleUseBeforePreference
 import com.skyd.podaura.model.preference.data.delete.autodelete.AutoDeleteArticleUseMaxCountPreference
 import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
 
 class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
@@ -26,6 +28,12 @@ class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
             val keepUnread = dataStore.getOrDefaultSuspend(AutoDeleteArticleKeepUnreadPreference)
             val keepFavorite =
                 dataStore.getOrDefaultSuspend(AutoDeleteArticleKeepFavoritePreference)
+            val downloadProtectedArticleIds =
+                get<DownloadArticleProtectionResolver>().getProtectedArticleIds(
+                    enabled = dataStore.getOrDefaultSuspend(
+                        AutoDeleteArticleKeepDownloadTasksPreference
+                    ),
+                )
             val useBefore = dataStore.getOrDefaultSuspend(AutoDeleteArticleUseBeforePreference)
             if (useBefore) {
                 articleDao.deleteArticleBefore(
@@ -35,6 +43,7 @@ class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
                     keepPlaylistArticles = keepPlaylistArticles,
                     keepUnread = keepUnread,
                     keepFavorite = keepFavorite,
+                    downloadProtectedArticleIds = downloadProtectedArticleIds,
                 )
             }
             val useMaxCount = dataStore.getOrDefaultSuspend(AutoDeleteArticleUseMaxCountPreference)
@@ -45,6 +54,7 @@ class DeleteArticleWorker(context: Context, parameters: WorkerParameters) :
                     keepPlaylistArticles = keepPlaylistArticles,
                     keepUnread = keepUnread,
                     keepFavorite = keepFavorite,
+                    downloadProtectedArticleIds = downloadProtectedArticleIds,
                 )
             }
         }.onFailure { return Result.failure() }
