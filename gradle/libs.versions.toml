@@ -127,7 +127,8 @@ coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
-zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.6.0" }
+
+zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.7.0-alpha01" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.0" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.1.0" }

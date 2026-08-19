@@ -32,8 +32,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.LocalPlatformContext
+import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
@@ -70,14 +71,13 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.image_preview_description
 import podaura.shared.generated.resources.image_preview_load_failed
-import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.read_screen_download_image
 import podaura.shared.generated.resources.read_screen_open_image_in_browser
 import podaura.shared.generated.resources.retry
 import podaura.shared.generated.resources.share
-
 
 @Serializable
 data class ImagePreviewRoute(val image: String, val title: String? = null) : NavKey {
@@ -144,7 +144,7 @@ fun ImagePreviewScreen(
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             key(image, uiState.retryVersion) {
-                ZoomableAsyncImage(
+                CoilZoomAsyncImage(
                     model = imageRequest,
                     contentDescription = stringResource(Res.string.image_preview_description),
                     imageLoader = imageLoader,
@@ -157,7 +157,8 @@ fun ImagePreviewScreen(
                     onSuccess = {
                         dispatch(ImagePreviewIntent.LoadSucceeded)
                     },
-                    onError = { throwable ->
+                    onError = { error ->
+                        val throwable = error.result.throwable
                         dispatch(
                             ImagePreviewIntent.LoadFailed(
                                 throwable.message ?: throwable.toString()
