@@ -65,6 +65,7 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.StartFile -> old.copy(mediaStarted = true, path = path)
         is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
         is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
+        is PlayerEvent.Shutdown -> initialPlayerState
 
         else -> old
     }

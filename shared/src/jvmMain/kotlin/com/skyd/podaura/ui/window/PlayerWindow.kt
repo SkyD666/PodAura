@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_CACHE_DIR
 import com.skyd.podaura.BuildKonfig
@@ -45,6 +47,7 @@ import kotlinx.coroutines.flow.filter
 import org.openani.mediamp.mpv.MpvMediampPlayer
 import java.io.File
 import java.nio.file.Files
+import javax.swing.SwingUtilities
 
 private val playerWindowSize = DpSize(400.dp, 780.dp)
 
@@ -118,16 +121,36 @@ internal class PlayerWindowController(
             extractRuntimeLibrary = true
         )
         if (coordinator == null) {
-            coordinator = PlayerCoordinator()
+            coordinator = createCoordinator()
         }
         playerViewModel.handlePlayDataMode(mode)
     }
 
+    private fun createCoordinator(): PlayerCoordinator = PlayerCoordinator().also { created ->
+        created.lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                val clearDestroyedCoordinator = {
+                    if (coordinator === created) coordinator = null
+                }
+                if (SwingUtilities.isEventDispatchThread()) {
+                    clearDestroyedCoordinator()
+                } else {
+                    SwingUtilities.invokeLater(clearDestroyedCoordinator)
+                }
+            }
+        })
+    }
+
     fun close() {
         if (!dataStore.getOrDefault(BackgroundPlayPreference)) {
-            coordinator?.onCommand(PlayerCommand.Destroy)
-            coordinator = null
+            destroy()
         }
+    }
+
+    fun destroy() {
+        val currentCoordinator = coordinator ?: return
+        coordinator = null
+        currentCoordinator.onCommand(PlayerCommand.Destroy)
     }
 
     /**

@@ -208,14 +208,14 @@ class PlayerNotificationManager(
         )
         val playPendingIntent = if (playerState.isPlaying) {
             buildNotificationAction(
-                icon = R.drawable.ic_play_arrow_24,
-                title = context.getString(Res.string.play),
+                icon = R.drawable.ic_pause_24,
+                title = context.getString(Res.string.pause),
                 intentAction = PlayerService.PLAY_ACTION
             )
         } else {
             buildNotificationAction(
-                icon = R.drawable.ic_pause_24,
-                title = context.getString(Res.string.pause),
+                icon = R.drawable.ic_play_arrow_24,
+                title = context.getString(Res.string.play),
                 intentAction = PlayerService.PLAY_ACTION
             )
         }

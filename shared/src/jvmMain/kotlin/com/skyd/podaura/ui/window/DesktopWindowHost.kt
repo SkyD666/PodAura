@@ -7,6 +7,7 @@ import androidx.compose.ui.window.WindowState
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.ui.component.frame.WindowFrame
+import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.screen.AppEntrance
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -67,6 +68,7 @@ private fun MainWindow(
         }
         CompositionLocalProvider(
             LocalDesktopAppState provides appState,
+            LocalPlayerSession provides appState,
             LocalWindowController provides windowController,
         ) {
             WindowFrame(

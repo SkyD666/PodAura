@@ -199,23 +199,27 @@ class PlayerCoordinator : LifecycleOwner {
                 }
 
                 MPVEvent.SHUTDOWN -> {
-                    sendEvent(PlayerEvent.Shutdown)
-                    destroy()
-                    lifecycle.currentState = Lifecycle.State.DESTROYED
+                    if (destroy()) {
+                        lifecycle.currentState = Lifecycle.State.DESTROYED
+                    }
                 }
             }
         }
     }
 
-    private fun destroy() {
-        if (!destroyed.compareAndSet(expectedValue = false, newValue = true)) return
+    private fun destroy(): Boolean {
+        if (!destroyed.compareAndSet(expectedValue = false, newValue = true)) return false
         // Detach first: mpv keeps emitting events (SHUTDOWN, END_FILE...) while it tears down, and
         // dispatching those into a half-destroyed coordinator re-entered destroy() before.
         player.mpv.removeEventListener(mpvObserver)
+        // Capture the final position before Shutdown resets PlayerModel.
+        val savePositionJob = savePosition(player.path?.toStableMediaUrl())
+        sendEvent(PlayerEvent.Shutdown)
         // Let the final position write finish before killing the scope it runs in.
-        savePosition(player.path?.toStableMediaUrl()).invokeOnCompletion { scope.cancel() }
+        savePositionJob.invokeOnCompletion { scope.cancel() }
         player.destroy()
         removeAllObserver()
+        return true
     }
 
     private fun initPlayer() {
@@ -294,8 +298,9 @@ class PlayerCoordinator : LifecycleOwner {
             }
 
             PlayerCommand.Destroy -> {
-                destroy()
-                lifecycle.currentState = Lifecycle.State.DESTROYED
+                if (this@PlayerCoordinator.destroy()) {
+                    lifecycle.currentState = Lifecycle.State.DESTROYED
+                }
             }
 
             is PlayerCommand.Paused -> {

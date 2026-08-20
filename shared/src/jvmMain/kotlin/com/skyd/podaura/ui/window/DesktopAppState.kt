@@ -10,7 +10,9 @@ import com.skyd.fundation.di.get
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler.UrlData
 import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
+import com.skyd.podaura.ui.player.PlayerSession
 import com.skyd.podaura.ui.player.PlayerViewModel
+import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 
 internal sealed interface DesktopWindowId {
@@ -107,15 +109,32 @@ internal class DesktopAppState(
     val windowManager: DesktopWindowManager,
     val playerWindowController: PlayerWindowController,
     val playerArticleContextViewModel: PlayerArticleContextViewModel,
-) {
+) : PlayerSession {
+    override val coordinator: PlayerCoordinator?
+        get() = playerWindowController.coordinator
+
+    override val isFullPlayerVisible: Boolean
+        get() = windowManager.windows.any { it.id == DesktopWindowId.Player }
+
     fun openPlayer(mode: PlayDataMode) {
         playerWindowController.open(mode)
         windowManager.openOrActivate(DesktopWindowSpec.Player)
     }
 
+    override fun openFullPlayer() {
+        if (coordinator != null) {
+            windowManager.openOrActivate(DesktopWindowSpec.Player)
+        }
+    }
+
     fun closePlayer() {
         windowManager.close(DesktopWindowId.Player)
         playerWindowController.close()
+    }
+
+    override fun destroySession() {
+        windowManager.close(DesktopWindowId.Player)
+        playerWindowController.destroy()
     }
 
     fun openImagePreview(image: String, title: String? = null) {

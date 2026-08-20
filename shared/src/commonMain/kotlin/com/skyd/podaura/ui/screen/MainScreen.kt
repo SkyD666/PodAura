@@ -4,6 +4,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
@@ -45,6 +48,8 @@ import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
 import com.skyd.podaura.ui.component.navigation.PodAuraSerializersModule
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.LocalPlayerSession
+import com.skyd.podaura.ui.player.mini.MiniPlayer
 import com.skyd.podaura.ui.screen.feed.FeedRoute
 import com.skyd.podaura.ui.screen.feed.FeedScreen
 import com.skyd.podaura.ui.screen.media.MediaRoute
@@ -68,6 +73,7 @@ data object MainRoute : NavKey
 @Composable
 fun MainScreen() {
     val windowSizeClass = LocalWindowSizeClass.current
+    val playerSession = LocalPlayerSession.current
     val routes = listOf(FeedRoute, PlaylistRoute, MediaRoute, MoreRoute)
     val navigationState = rememberNavigationState(
         startRoute = FeedRoute,
@@ -83,11 +89,21 @@ fun MainScreen() {
             onSelectedChanged = { navigator.navigate(it) },
         )
     }
+    val miniPlayer: @Composable () -> Unit = {
+        MiniPlayer(
+            coordinator = playerSession?.coordinator,
+            onOpenPlayer = { playerSession?.openFullPlayer() },
+            onClosePlayer = { playerSession?.destroySession() },
+        )
+    }
 
     Scaffold(
         bottomBar = {
             if (windowSizeClass.isCompact) {
-                navigationBarOrRail()
+                Column {
+                    miniPlayer()
+                    navigationBarOrRail()
+                }
             }
         },
         contentWindowInsets = WindowInsets()
@@ -101,22 +117,35 @@ fun MainScreen() {
                 navigationBarOrRail()
             }
 
-            val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
-                    fadeOut(animationSpec = tween(170))
-            val entryProvider: (NavKey) -> NavEntry<NavKey> = entryProvider {
-                entry<FeedRoute> { FeedScreen() }
-                entry<PlaylistRoute> { PlaylistScreen() }
-                entry<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
-                entry<MoreRoute> { MoreScreen() }
+            Column(modifier = Modifier.weight(1f)) {
+                val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
+                        fadeOut(animationSpec = tween(170))
+                val entryProvider: (NavKey) -> NavEntry<NavKey> = entryProvider {
+                    entry<FeedRoute> { FeedScreen() }
+                    entry<PlaylistRoute> { PlaylistScreen() }
+                    entry<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
+                    entry<MoreRoute> { MoreScreen() }
+                }
+                NavDisplay(
+                    entries = navigationState.toDecoratedEntries(entryProvider),
+                    modifier = Modifier.weight(1f),
+                    transitionSpec = { contentTransform },
+                    popTransitionSpec = { contentTransform },
+                    predictivePopTransitionSpec = { contentTransform },
+                    onBack = { navigator.goBack() },
+                )
+                if (!windowSizeClass.isCompact) {
+                    Box(
+                        modifier = Modifier.windowInsetsPadding(
+                            WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
+                                WindowInsetsSides.Bottom + WindowInsetsSides.End
+                            )
+                        )
+                    ) {
+                        miniPlayer()
+                    }
+                }
             }
-            NavDisplay(
-                entries = navigationState.toDecoratedEntries(entryProvider),
-                modifier = Modifier.weight(1f),
-                transitionSpec = { contentTransform },
-                popTransitionSpec = { contentTransform },
-                predictivePopTransitionSpec = { contentTransform },
-                onBack = { navigator.goBack() },
-            )
         }
     }
 }
