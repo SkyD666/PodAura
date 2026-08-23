@@ -116,6 +116,7 @@ class PlayerCoordinator : LifecycleOwner {
                 "core-idle",
                 "demuxer-cache-idle" -> sendEvent(PlayerEvent.Loading(player.loading()))
 
+                "seekable" -> sendEvent(PlayerEvent.Seekable(value))
                 "shuffle" -> sendEvent(PlayerEvent.Shuffle(value))
                 "idle-active" -> sendEvent(PlayerEvent.Idling(value))
             }

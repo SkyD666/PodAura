@@ -189,6 +189,7 @@ class MPVPlayer : DefaultEventObserver() {
             Property("core-idle", MPVFormat.MPV_FORMAT_FLAG),
             Property("demuxer-cache-idle", MPVFormat.MPV_FORMAT_FLAG),
             Property("seeking", MPVFormat.MPV_FORMAT_FLAG),
+            Property("seekable", MPVFormat.MPV_FORMAT_FLAG),
             Property("pause", MPVFormat.MPV_FORMAT_FLAG),
             Property("eof-reached", MPVFormat.MPV_FORMAT_FLAG),
             Property("idle-active", MPVFormat.MPV_FORMAT_FLAG),

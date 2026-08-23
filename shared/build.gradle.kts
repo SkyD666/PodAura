@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.Sync
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
@@ -15,6 +16,84 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room3)
     alias(libs.plugins.buildkonfig)
+}
+
+val buildJvmArch = System.getProperty("os.arch").lowercase()
+val buildOperatingSystem = System.getProperty("os.name").lowercase()
+val macMediaShimTarget = if (buildOperatingSystem.startsWith("mac")) {
+    when (buildJvmArch) {
+        "aarch64", "arm64" -> "arm64" to "darwin-aarch64"
+        "amd64", "x86_64" -> "x86_64" to "darwin-x86-64"
+        else -> error("Unsupported macOS JVM architecture for the media shim: $buildJvmArch")
+    }
+} else {
+    null
+}
+val macMediaShimSourceDirectory = rootProject.file(
+    "fundation/src/jvmMain/objectiveC/macMediaPlayer"
+)
+val macMediaShimSource = macMediaShimSourceDirectory.resolve("PodAuraMediaPlayer.m")
+val macMediaShimBinary = layout.buildDirectory.file(
+    "generated/macMediaPlayer/native/libpodaura_media_player.dylib"
+)
+val macMediaShimJvmResources = layout.buildDirectory.dir(
+    "generated/macMediaPlayer/jvmResources"
+)
+val macMediaShimAppResources = layout.buildDirectory.dir(
+    "generated/macMediaPlayer/appResources"
+)
+
+val compileMacMediaPlayerShim = macMediaShimTarget?.let { (nativeArchitecture, _) ->
+    tasks.register<Exec>("compileMacMediaPlayerShim") {
+        inputs.files(
+            macMediaShimSourceDirectory.resolve("PodAuraMediaPlayer.h"),
+            macMediaShimSource,
+        )
+        outputs.file(macMediaShimBinary)
+
+        doFirst {
+            val outputDirectory = outputs.files.singleFile.parentFile
+            check(outputDirectory.mkdirs() || outputDirectory.isDirectory)
+        }
+        commandLine(
+            "xcrun",
+            "--sdk", "macosx",
+            "clang",
+            "-arch", nativeArchitecture,
+            "-dynamiclib",
+            "-fobjc-arc",
+            "-fblocks",
+            "-fvisibility=hidden",
+            "-mmacosx-version-min=11.0",
+            "-Wall",
+            "-Wextra",
+            "-Wl,-install_name,@rpath/libpodaura_media_player.dylib",
+            "-I", macMediaShimSourceDirectory.absolutePath,
+            macMediaShimSource.absolutePath,
+            "-framework", "Foundation",
+            "-framework", "AppKit",
+            "-framework", "MediaPlayer",
+            "-o", macMediaShimBinary.get().asFile.absolutePath,
+        )
+    }
+}
+
+val prepareMacMediaPlayerJvmResources = macMediaShimTarget?.let { (_, resourcePrefix) ->
+    val compileTask = requireNotNull(compileMacMediaPlayerShim)
+    tasks.register<Sync>("prepareMacMediaPlayerJvmResources") {
+        dependsOn(compileTask)
+        from(macMediaShimBinary)
+        into(macMediaShimJvmResources.map { it.dir(resourcePrefix) })
+    }
+}
+
+val prepareMacMediaPlayerAppResources = macMediaShimTarget?.let {
+    val compileTask = requireNotNull(compileMacMediaPlayerShim)
+    tasks.register<Sync>("prepareMacMediaPlayerAppResources") {
+        dependsOn(compileTask)
+        from(macMediaShimBinary)
+        into(macMediaShimAppResources.map { it.dir("macos") })
+    }
 }
 
 kotlin {
@@ -163,22 +242,27 @@ kotlin {
 
             implementation(libs.mediamp)
 
-            val currentArch = DefaultNativePlatform.getCurrentArchitecture()
-            val currentOs = DefaultNativePlatform.getCurrentOperatingSystem()
+            // DefaultNativePlatform reports the physical CPU under Rosetta. Packaging must follow
+            // the JVM that runs Gradle so an x64 JDK produces an entirely x64 distribution.
             when {
-                currentOs.isWindows && currentArch.isAmd64 -> {
+                buildOperatingSystem.startsWith("windows") &&
+                        buildJvmArch in setOf("amd64", "x86_64") -> {
                     runtimeOnly(libs.mediamp.runtime.windows.x64)
                 }
-                currentOs.isWindows && currentArch.isArm64 -> {
+                buildOperatingSystem.startsWith("windows") &&
+                        buildJvmArch in setOf("aarch64", "arm64") -> {
                     runtimeOnly(libs.mediamp.runtime.windows.arm64)
                 }
-                currentOs.isMacOsX && currentArch.isAmd64 -> {
+                buildOperatingSystem.startsWith("mac") &&
+                        buildJvmArch in setOf("amd64", "x86_64") -> {
                     runtimeOnly(libs.mediamp.runtime.macos.x64)
                 }
-                currentOs.isMacOsX && currentArch.isArm64 -> {
+                buildOperatingSystem.startsWith("mac") &&
+                        buildJvmArch in setOf("aarch64", "arm64") -> {
                     runtimeOnly(libs.mediamp.runtime.macos.arm64)
                 }
-                currentOs.isLinux && currentArch.isAmd64 -> {
+                buildOperatingSystem.startsWith("linux") &&
+                        buildJvmArch in setOf("amd64", "x86_64") -> {
                     runtimeOnly(libs.mediamp.runtime.linux.x64)
                 }
             }
@@ -227,6 +311,10 @@ kotlin {
 
 tasks.withType<ProcessResources>().configureEach {
     if (name == "jvmProcessResources") {
+        prepareMacMediaPlayerJvmResources?.let { prepareResources ->
+            dependsOn(prepareResources)
+            from(macMediaShimJvmResources)
+        }
         from(project.file("icons/PodAura.ico"))
     }
 }
@@ -250,10 +338,12 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "PodAura"
             packageVersion = findProperty("versionForDesktop")!!.toString()
+            appResourcesRootDir.set(macMediaShimAppResources)
 
             macOS {
                 bundleID = "com.skyd.podaura"
                 iconFile = project.file("icons/icon_512x512.icns")
+                minimumSystemVersion = "11.0"
             }
             windows {
                 iconFile = project.file("icons/PodAura.ico")
@@ -290,6 +380,14 @@ compose.desktop {
                 // The icon file in Contents/Resources has been hardcoded to "$packageName.icns".
                 iconFile = project.file("icons/PodAura.icns")
             }
+        }
+    }
+}
+
+prepareMacMediaPlayerAppResources?.let { prepareResources ->
+    tasks.configureEach {
+        if (name == "prepareAppResources") {
+            dependsOn(prepareResources)
         }
     }
 }

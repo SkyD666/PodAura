@@ -45,6 +45,7 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.Duration -> old.copy(duration = value)
         is PlayerEvent.Idling -> old.copy(idling = value)
         is PlayerEvent.Paused -> old.copy(paused = value)
+        is PlayerEvent.Seekable -> old.copy(seekable = value)
         is PlayerEvent.Loading -> old.copy(loading = value)
         is PlayerEvent.PlaylistPosition -> old.copy(playlistPosition = value)
         is PlayerEvent.Position -> old.copy(position = value)
@@ -62,7 +63,26 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.AudioDelay -> old.copy(audioDelay = value)
         is PlayerEvent.SubtitleDelay -> old.copy(subTitleDelay = value)
         is PlayerEvent.PlaybackRestart -> old.copy(mediaStarted = true)
-        is PlayerEvent.StartFile -> old.copy(mediaStarted = true, path = path)
+        is PlayerEvent.StartFile -> old.copy(
+            mediaStarted = true,
+            seekable = false,
+            path = path,
+            audioTrackId = 0,
+            subtitleTrackId = 0,
+            videoTrackId = 0,
+            videoTracks = emptyList(),
+            audioTracks = emptyList(),
+            subtitleTracks = emptyList(),
+            buffer = 0,
+            artist = null,
+            album = null,
+            position = 0L,
+            duration = 0L,
+            loading = true,
+            idling = false,
+            mediaTitle = null,
+            mediaThumbnail = null,
+        )
         is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
         is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
         is PlayerEvent.Shutdown -> initialPlayerState

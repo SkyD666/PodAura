@@ -22,7 +22,6 @@ internal fun DesktopWindowHost(
     appState: DesktopAppState,
     mainWindowState: WindowState,
     mainWindowController: WindowController,
-    onExitApplication: () -> Unit,
 ) {
     when (val spec = entry.spec) {
         DesktopWindowSpec.Main -> MainWindow(
@@ -30,7 +29,6 @@ internal fun DesktopWindowHost(
             appState = appState,
             windowState = mainWindowState,
             windowController = mainWindowController,
-            onCloseRequest = onExitApplication,
         )
 
         DesktopWindowSpec.Player -> PlayerWindow(
@@ -54,10 +52,9 @@ private fun MainWindow(
     appState: DesktopAppState,
     windowState: WindowState,
     windowController: WindowController,
-    onCloseRequest: () -> Unit,
 ) {
     BaseWindow(
-        onCloseRequest = onCloseRequest,
+        onCloseRequest = windowController.onClose,
         state = windowState,
         title = stringResource(Res.string.app_name),
     ) {
@@ -72,7 +69,7 @@ private fun MainWindow(
             LocalWindowController provides windowController,
         ) {
             WindowFrame(
-                onCloseRequest = onCloseRequest,
+                onCloseRequest = windowController.onClose,
                 state = windowState,
                 content = ::AppEntrance
             )

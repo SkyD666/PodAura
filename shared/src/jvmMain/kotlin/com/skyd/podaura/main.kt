@@ -35,8 +35,12 @@ fun main() {
     application {
         if (crashMessage.isBlank()) {
             val appState = rememberDesktopAppState()
-            val windowController = remember {
-                WindowController(onClose = ::exitApplication)
+            val exitPodAura = {
+                appState.destroySession()
+                exitApplication()
+            }
+            val windowController = remember(appState) {
+                WindowController(onClose = exitPodAura)
             }
             val mainWindowState = rememberWindowState(
                 position = WindowPosition.Aligned(alignment = Alignment.Center),
@@ -56,7 +60,6 @@ fun main() {
                         appState = appState,
                         mainWindowState = mainWindowState,
                         mainWindowController = windowController,
-                        onExitApplication = ::exitApplication,
                     )
                 }
             }

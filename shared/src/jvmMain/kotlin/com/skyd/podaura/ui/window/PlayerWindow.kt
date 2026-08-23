@@ -42,6 +42,7 @@ import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import kotlinx.coroutines.flow.filter
 import org.openani.mediamp.mpv.MpvMediampPlayer
@@ -104,9 +105,12 @@ internal fun PlayerKeyboardAction.isAvailable(mediaStarted: Boolean): Boolean = 
 @Stable
 internal class PlayerWindowController(
     private val playerViewModel: PlayerViewModel,
+    private val mediaSessionFactory: (PlayerCoordinator) -> AutoCloseable? =
+        ::createDesktopMediaSessionManager,
 ) {
     var coordinator by mutableStateOf<PlayerCoordinator?>(null)
         private set
+    private var mediaSession: AutoCloseable? = null
 
     fun open(mode: PlayDataMode) {
         // NativeRuntimeLoader treats an existing wrapper as a complete, valid runtime and does not
@@ -127,9 +131,15 @@ internal class PlayerWindowController(
     }
 
     private fun createCoordinator(): PlayerCoordinator = PlayerCoordinator().also { created ->
+        val createdMediaSession = mediaSessionFactory(created)
+        mediaSession = createdMediaSession
         created.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 val clearDestroyedCoordinator = {
+                    if (mediaSession === createdMediaSession) {
+                        mediaSession = null
+                        createdMediaSession?.close()
+                    }
                     if (coordinator === created) coordinator = null
                 }
                 if (SwingUtilities.isEventDispatchThread()) {
@@ -150,6 +160,8 @@ internal class PlayerWindowController(
     fun destroy() {
         val currentCoordinator = coordinator ?: return
         coordinator = null
+        mediaSession?.close()
+        mediaSession = null
         currentCoordinator.onCommand(PlayerCommand.Destroy)
     }
 

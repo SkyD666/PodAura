@@ -9,6 +9,7 @@ data class PlayerState(
     val playlistId: String = "",
     val playlist: LinkedHashMap<String, PlaylistMediaWithArticleBean> = linkedMapOf(),
     val mediaStarted: Boolean = false,
+    val seekable: Boolean = false,
     val path: String? = null,
     val audioTrackId: Int = 0,
     val subtitleTrackId: Int = 0,
