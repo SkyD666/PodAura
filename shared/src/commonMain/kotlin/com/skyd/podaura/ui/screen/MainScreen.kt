@@ -4,7 +4,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
@@ -89,11 +87,12 @@ fun MainScreen() {
             onSelectedChanged = { navigator.navigate(it) },
         )
     }
-    val miniPlayer: @Composable () -> Unit = {
+    val miniPlayer: @Composable (WindowInsets) -> Unit = { windowInsets ->
         MiniPlayer(
             coordinator = playerSession?.coordinator,
             onOpenPlayer = { playerSession?.openFullPlayer() },
             onClosePlayer = { playerSession?.destroySession() },
+            windowInsets = windowInsets,
         )
     }
 
@@ -101,7 +100,10 @@ fun MainScreen() {
         bottomBar = {
             if (windowSizeClass.isCompact) {
                 Column {
-                    miniPlayer()
+                    miniPlayer(
+                        WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                            .only(WindowInsetsSides.Horizontal)
+                    )
                     navigationBarOrRail()
                 }
             }
@@ -135,15 +137,10 @@ fun MainScreen() {
                     onBack = { navigator.goBack() },
                 )
                 if (!windowSizeClass.isCompact) {
-                    Box(
-                        modifier = Modifier.windowInsetsPadding(
-                            WindowInsets.systemBars.union(WindowInsets.displayCutout).only(
-                                WindowInsetsSides.Bottom + WindowInsetsSides.End
-                            )
-                        )
-                    ) {
-                        miniPlayer()
-                    }
+                    miniPlayer(
+                        WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                            .only(WindowInsetsSides.Bottom + WindowInsetsSides.End)
+                    )
                 }
             }
         }

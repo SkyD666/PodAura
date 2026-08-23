@@ -24,7 +24,6 @@ import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
-import com.skyd.podaura.ui.component.PodAuraNavDisplay
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
 import com.skyd.podaura.ui.component.navigation.ExternalUrlListener
@@ -33,6 +32,8 @@ import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.navigation.initialNavKey
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.LocalPlayerSession
+import com.skyd.podaura.ui.player.mini.MiniPlayerNavDisplay
+import com.skyd.podaura.ui.player.mini.miniPlayerEntry
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.about.AboutScreen
 import com.skyd.podaura.ui.screen.about.TermsOfServiceRoute
@@ -205,11 +206,11 @@ fun SettingsProvider(content: @Composable () -> Unit) {
 private fun MainNavHost() {
     val navBackStack = LocalNavBackStack.current
 
-    PodAuraNavDisplay(
+    MiniPlayerNavDisplay(
         backStack = navBackStack,
         entryProvider = entryProvider {
             entry<MainRoute> { MainScreen() }
-            entry<ArticleRoute> { ArticleLauncher(it) }
+            miniPlayerEntry<ArticleRoute> { ArticleLauncher(it) }
             entry<LicenseRoute> { LicenseScreen() }
             entry<AboutRoute> { AboutScreen() }
             entry<TermsOfServiceRoute> { TermsOfServiceScreen(onAgree = BackInvoker()) }
@@ -222,10 +223,10 @@ private fun MainNavHost() {
             entry<ReorderGroupRoute> { ReorderGroupScreen() }
             entry<ReorderFeedRoute> { ReorderFeedLauncher(it) }
             entry<SearchStyleRoute> { SearchStyleScreen() }
-            entry<CalendarRoute> { CalendarScreen() }
+            miniPlayerEntry<CalendarRoute> { CalendarScreen() }
             entry<BehaviorRoute> { BehaviorScreen() }
             entry<AutoDeleteRoute> { AutoDeleteScreen() }
-            entry<HistoryRoute> { HistoryScreen() }
+            miniPlayerEntry<HistoryRoute> { HistoryScreen() }
             entry<ImportOpmlRoute> { ImportOpmlLauncher(it) }
             entry<ImportOpmlDeepLinkRoute> { ImportOpmlDeepLinkLauncher(it) }
             entry<ImportExportRoute> { ImportExportScreen() }
@@ -241,17 +242,17 @@ private fun MainNavHost() {
             entry<AutoDownloadRuleRoute> { AutoDownloadRuleLauncher(it) }
             entry<MuteFeedRoute> { MuteFeedScreen() }
             entry<DeleteConstraintRoute> { DeleteConstraintScreen() }
-            entry<PlaylistMediaListRoute> { PlaylistMediaListLauncher(it) }
+            miniPlayerEntry<PlaylistMediaListRoute> { PlaylistMediaListLauncher(it) }
             entry<RequestHeadersRoute> { RequestHeadersLauncher(it) }
             entry<FilePickerRoute> { FilePickerLauncher(it) }
-            entry<DownloadRoute> { DownloadLauncher(it) }
-            entry<DownloadDeepLinkRoute> { DownloadDeepLinkLauncher(it) }
-            entry<ReadRoute> { ReadLauncher(it) }
-            entry<SearchRoute.Feed> { SearchFeedLauncher(it) }
-            entry<SearchRoute.Article> { SearchArticleLauncher(it) }
-            entry<MediaSearchRoute> { MediaSearchLauncher(it) }
-            entry<SubMediaRoute> { SubMediaLauncher(it) }
-            entry<HistorySearchRoute> { HistorySearchScreen() }
+            miniPlayerEntry<DownloadRoute> { DownloadLauncher(it) }
+            miniPlayerEntry<DownloadDeepLinkRoute> { DownloadDeepLinkLauncher(it) }
+            miniPlayerEntry<ReadRoute> { ReadLauncher(it) }
+            miniPlayerEntry<SearchRoute.Feed> { SearchFeedLauncher(it) }
+            miniPlayerEntry<SearchRoute.Article> { SearchArticleLauncher(it) }
+            miniPlayerEntry<MediaSearchRoute> { MediaSearchLauncher(it) }
+            miniPlayerEntry<SubMediaRoute> { SubMediaLauncher(it) }
+            miniPlayerEntry<HistorySearchRoute> { HistorySearchScreen() }
             entry<ImagePreviewRoute> { ImagePreviewLauncher(it) }
         }
     )

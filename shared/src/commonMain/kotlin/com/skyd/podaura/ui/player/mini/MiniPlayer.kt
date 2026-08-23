@@ -10,12 +10,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -66,13 +68,19 @@ fun MiniPlayer(
     onOpenPlayer: () -> Unit,
     onClosePlayer: () -> Unit,
     modifier: Modifier = Modifier,
+    visible: Boolean = true,
+    windowInsets: WindowInsets = WindowInsets(),
 ) {
     var retainedState by remember { mutableStateOf<PlayerState?>(null) }
     val liveState = coordinator?.playerState?.collectAsStateWithLifecycle()?.value
-    val sessionVisible = liveState?.currentMedia != null
+    val sessionAvailable = liveState?.currentMedia != null
+    val sessionVisible = isMiniPlayerVisible(
+        sessionAvailable = sessionAvailable,
+        hostVisible = visible,
+    )
 
     SideEffect {
-        if (sessionVisible) {
+        if (sessionAvailable) {
             retainedState = liveState
         }
     }
@@ -106,7 +114,7 @@ fun MiniPlayer(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 3.dp,
         ) {
-            Column {
+            Column(modifier = Modifier.windowInsetsPadding(windowInsets)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -217,3 +225,6 @@ internal fun miniPlayerProgress(position: Long, duration: Long): Float {
     if (duration <= 0L) return 0f
     return (position.toDouble() / duration).toFloat().coerceIn(0f, 1f)
 }
+
+internal fun isMiniPlayerVisible(sessionAvailable: Boolean, hostVisible: Boolean): Boolean =
+    sessionAvailable && hostVisible

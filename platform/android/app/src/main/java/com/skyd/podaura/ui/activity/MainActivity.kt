@@ -69,6 +69,16 @@ class MainActivity : BaseComposeActivity(), PlayerSession {
 
     override fun onStart() {
         super.onStart()
+        bindPlayerServiceIfRunning()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // A quickly finished PlayActivity may only pause MainActivity, so onStart is not repeated.
+        bindPlayerServiceIfRunning()
+    }
+
+    private fun bindPlayerServiceIfRunning() {
         if (!bindingRequested) {
             bindingRequested = bindService(
                 Intent(this, PlayerService::class.java),
