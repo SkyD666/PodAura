@@ -52,12 +52,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import coil3.compose.LocalPlatformContext
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
+import com.github.panpf.zoomimage.rememberCoilZoomState
+import com.github.panpf.zoomimage.zoom.GestureType
 import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.fundation.util.isJvm
+import com.skyd.fundation.util.isPhone
 import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
@@ -144,12 +147,27 @@ fun ImagePreviewScreen(
     ) { _ ->
         Box(modifier = Modifier.fillMaxSize()) {
             key(image, uiState.retryVersion) {
+                val zoomState = rememberCoilZoomState()
+                if (!platform.isPhone) {
+                    zoomState.zoomable.setDisabledGestureTypes(
+                        zoomState.zoomable.disabledGestureTypes or
+                                GestureType.MOUSE_WHEEL_SCALE or
+                                GestureType.DOUBLE_TAP_SCALE
+                    )
+                }
+                val desktopGestureState = remember(zoomState.zoomable) {
+                    DesktopImageGestureState(zoomState.zoomable)
+                }
+                DesktopMagnificationEffect(desktopGestureState)
+
                 CoilZoomAsyncImage(
                     model = imageRequest,
                     contentDescription = stringResource(Res.string.image_preview_description),
                     imageLoader = imageLoader,
+                    zoomState = zoomState,
                     modifier = Modifier
                         .fillMaxSize()
+                        .desktopImageGestures(desktopGestureState, platform)
                         .onRightClickIfSupported { showImageActions = true },
                     onLoading = {
                         dispatch(ImagePreviewIntent.LoadStarted)

@@ -28,6 +28,7 @@ import androidx.compose.ui.input.pointer.MacosCursor
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.PointerKeyboardModifiers
 import androidx.compose.ui.platform.DefaultArchitectureComponentsOwner
 import androidx.compose.ui.platform.FrameRecomposer
 import androidx.compose.ui.platform.LocalPlatformWindowInsets
@@ -56,6 +57,16 @@ import org.jetbrains.skiko.SkikoRenderDelegate
 import platform.AppKit.NSBackingStoreBuffered
 import platform.AppKit.NSCursor
 import platform.AppKit.NSEvent
+import platform.AppKit.NSEventModifierFlagCapsLock
+import platform.AppKit.NSEventModifierFlagCommand
+import platform.AppKit.NSEventModifierFlagControl
+import platform.AppKit.NSEventModifierFlagFunction
+import platform.AppKit.NSEventModifierFlagOption
+import platform.AppKit.NSEventModifierFlagShift
+import platform.AppKit.NSEventPhaseBegan
+import platform.AppKit.NSEventPhaseCancelled
+import platform.AppKit.NSEventPhaseEnded
+import platform.AppKit.NSEventPhaseNone
 import platform.AppKit.NSTrackingActiveAlways
 import platform.AppKit.NSTrackingActiveInKeyWindow
 import platform.AppKit.NSTrackingArea
@@ -234,6 +245,10 @@ private class ComposeWindow(
             onMouseEvent(event, PointerEventType.Scroll)
         }
 
+        override fun magnifyWithEvent(event: NSEvent) {
+            onMagnificationEvent(event)
+        }
+
         override fun keyDown(event: NSEvent) {
             val consumed = onKeyboardEvent(event.toComposeEvent())
             if (!consumed) {
@@ -309,10 +324,80 @@ private class ComposeWindow(
             eventType = eventType,
             position = event.offset.toOffset(scene.density),
             scrollDelta = Offset(x = event.deltaX.toFloat(), y = event.deltaY.toFloat()),
+            keyboardModifiers = event.pointerKeyboardModifiers,
             nativeEvent = event,
             button = button,
         )
     }
+
+    private var lastMagnificationPosition: Offset? = null
+
+    private fun onMagnificationEvent(event: NSEvent) {
+        if (isDisposed) return
+        val position = event.offset.toOffset(scene.density)
+        val began = event.phase and NSEventPhaseBegan != 0uL
+        val ended = event.phase and (NSEventPhaseEnded or NSEventPhaseCancelled) != 0uL
+        val unphased = event.phase == NSEventPhaseNone
+
+        if (began || lastMagnificationPosition == null) {
+            lastMagnificationPosition = position
+            sendMagnificationEvent(
+                event = event,
+                eventType = PointerEventType.ScaleStart,
+                position = position,
+            )
+        }
+
+        val previousPosition = lastMagnificationPosition ?: position
+        val panGestureOffset = previousPosition - position
+        val scaleFactor = (1f + event.magnification.toFloat()).coerceAtLeast(0.01f)
+        if (scaleFactor != 1f || panGestureOffset != Offset.Zero) {
+            sendMagnificationEvent(
+                event = event,
+                eventType = PointerEventType.ScaleChange,
+                position = position,
+                scaleGestureFactor = scaleFactor,
+                panGestureOffset = panGestureOffset,
+            )
+        }
+        lastMagnificationPosition = position
+
+        if (ended || unphased) {
+            sendMagnificationEvent(
+                event = event,
+                eventType = PointerEventType.ScaleEnd,
+                position = position,
+            )
+            lastMagnificationPosition = null
+        }
+    }
+
+    private fun sendMagnificationEvent(
+        event: NSEvent,
+        eventType: PointerEventType,
+        position: Offset,
+        scaleGestureFactor: Float = 1f,
+        panGestureOffset: Offset = Offset.Zero,
+    ) {
+        scene.sendPointerEvent(
+            eventType = eventType,
+            position = position,
+            keyboardModifiers = event.pointerKeyboardModifiers,
+            nativeEvent = event,
+            scaleGestureFactor = scaleGestureFactor,
+            panGestureOffset = panGestureOffset,
+        )
+    }
+
+    private val NSEvent.pointerKeyboardModifiers: PointerKeyboardModifiers
+        get() = PointerKeyboardModifiers(
+            isCtrlPressed = modifierFlags and NSEventModifierFlagControl != 0uL,
+            isMetaPressed = modifierFlags and NSEventModifierFlagCommand != 0uL,
+            isAltPressed = modifierFlags and NSEventModifierFlagOption != 0uL,
+            isShiftPressed = modifierFlags and NSEventModifierFlagShift != 0uL,
+            isFunctionPressed = modifierFlags and NSEventModifierFlagFunction != 0uL,
+            isCapsLockOn = modifierFlags and NSEventModifierFlagCapsLock != 0uL,
+        )
 
     private val NSEvent.offset: DpOffset
         get() {

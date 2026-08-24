@@ -1,6 +1,8 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.testing.Test
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
@@ -20,6 +22,8 @@ plugins {
 
 val buildJvmArch = System.getProperty("os.arch").lowercase()
 val buildOperatingSystem = System.getProperty("os.name").lowercase()
+val macGestureModuleExport =
+    "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
 val macMediaShimTarget = if (buildOperatingSystem.startsWith("mac")) {
     when (buildJvmArch) {
         "aarch64", "arm64" -> "arm64" to "darwin-aarch64"
@@ -333,6 +337,9 @@ configurations.matching { it.name.startsWith("jvm", ignoreCase = true) }.configu
 compose.desktop {
     application {
         mainClass = "com.skyd.podaura.MainKt"
+        if (buildOperatingSystem.startsWith("mac")) {
+            jvmArgs += macGestureModuleExport
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
@@ -381,6 +388,15 @@ compose.desktop {
                 iconFile = project.file("icons/PodAura.icns")
             }
         }
+    }
+}
+
+if (buildOperatingSystem.startsWith("mac")) {
+    tasks.withType<JavaExec>().configureEach {
+        jvmArgs(macGestureModuleExport)
+    }
+    tasks.withType<Test>().configureEach {
+        jvmArgs(macGestureModuleExport)
     }
 }
 

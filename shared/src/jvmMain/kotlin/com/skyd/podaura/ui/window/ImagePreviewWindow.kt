@@ -2,7 +2,9 @@ package com.skyd.podaura.ui.window
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -11,6 +13,10 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
 import com.skyd.podaura.ui.screen.SettingsProvider
 import com.skyd.podaura.ui.screen.image.ImagePreviewScreen
+import com.skyd.podaura.ui.screen.image.LocalDesktopMagnificationFactors
+import com.skyd.podaura.ui.screen.image.installJvmMagnificationListener
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.image_preview_description
@@ -41,6 +47,19 @@ internal fun ImagePreviewWindow(
         title = stringResource(Res.string.image_preview_description),
         resizable = true,
     ) {
+        val magnificationFactors = remember {
+            MutableSharedFlow<Float>(
+                extraBufferCapacity = 64,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            )
+        }
+        DisposableEffect(window, magnificationFactors) {
+            val registration = installJvmMagnificationListener(window.rootPane) {
+                magnificationFactors.tryEmit(it)
+            }
+            onDispose { registration.close() }
+        }
+
         LaunchedEffect(entry.activationToken) {
             imagePreviewWindowState.isMinimized = false
             window.toFront()
@@ -48,6 +67,7 @@ internal fun ImagePreviewWindow(
         }
         CompositionLocalProvider(
             LocalDesktopAppState provides appState,
+            LocalDesktopMagnificationFactors provides magnificationFactors,
         ) {
             SettingsProvider {
                 ImagePreviewScreen(
