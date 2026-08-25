@@ -1,7 +1,20 @@
 package com.skyd.podaura.ui.player
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -11,7 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.podaura.ui.component.rememberOrientationController
@@ -32,36 +49,76 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogS
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import io.github.vinceglb.filekit.PlatformFile
+import kotlinx.coroutines.flow.StateFlow
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.close
+import podaura.shared.generated.resources.retry
 
 @Composable
 fun PlayerViewRoute(
-    service: PlayerCoordinator?,
+    coordinator: PlayerCoordinator?,
     articleContextViewModel: PlayerArticleContextViewModel,
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
-    if (service != null) {
-        PlayerView(service, articleContextViewModel, onBack, onSaveScreenshot)
-    }
+    if (coordinator == null) PlayerEngineScreen(
+        engineState = PlayerEngineState.Initializing,
+        onBack = onBack,
+    )
+    else PlayerView(coordinator, articleContextViewModel, onBack, onSaveScreenshot)
 }
 
 @Composable
 fun PlayerView(
-    service: PlayerCoordinator,
+    coordinator: PlayerCoordinator,
     articleContextViewModel: PlayerArticleContextViewModel,
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
-    val playerState by service.playerState.collectAsStateWithLifecycle()
+    val engineState by coordinator.engineState.collectAsStateWithLifecycle()
+    if (!engineState.isReady) {
+        PlayerEngineScreen(
+            engineState = engineState,
+            onBack = {
+                coordinator.onCommand(PlayerCommand.Destroy)
+                onBack()
+            },
+            onRetry = { coordinator.onCommand(PlayerCommand.RetryInitialize) },
+        )
+        return
+    }
+    val stablePlayerState = remember(coordinator.playerState) {
+        coordinator.playerState.withoutHotPlayerValues()
+    }
+    val playerState by stablePlayerState.collectAsStateWithLifecycle(
+        initialValue = coordinator.playerState.value.copy(
+            position = 0L,
+            buffer = 0,
+            zoom = 1f,
+            offsetX = 0f,
+            offsetY = 0f,
+            rotate = 0f,
+        )
+    )
     val articleContextState by articleContextViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var playState by remember { mutableStateOf(PlayState.initial) }
+    var isSeeking by remember { mutableStateOf(false) }
+    val playState = remember(playerState, isSeeking) {
+        PlayState(
+            isPlaying = !playerState.paused && playerState.mediaStarted,
+            isSeeking = isSeeking,
+            state = playerState,
+        )
+    }
 
     val currentArticle = playerState.currentMedia?.article?.articleWithEnclosure?.article
     val currentArticleId = currentArticle?.articleId
@@ -103,44 +160,46 @@ fun PlayerView(
 
     val playStateCallback = remember {
         PlayStateCallback(
-            onPlayStateChanged = { service.onCommand(PlayerCommand.Paused(playState.isPlaying)) },
-            onPlayOrPause = { service.onCommand(PlayerCommand.PlayOrPause) },
-            onSeekTo = {
-                playState = playState.copy(isSeeking = true)
-                service.onCommand(PlayerCommand.SeekTo(it))
+            onPlayStateChanged = {
+                val state = coordinator.playerState.value
+                coordinator.onCommand(PlayerCommand.Paused(!state.paused && state.mediaStarted))
             },
-            onSpeedChanged = { service.onCommand(PlayerCommand.SetSpeed(it)) },
-            onPreviousMedia = { service.onCommand(PlayerCommand.PreviousMedia) },
-            onNextMedia = { service.onCommand(PlayerCommand.NextMedia) },
-            onCycleLoop = { service.onCommand(PlayerCommand.CycleLoop) },
-            onShuffle = { service.onCommand(PlayerCommand.Shuffle(it)) },
-            onPlayFileInPlaylist = { service.onCommand(PlayerCommand.PlayFileInPlaylist(it)) },
-            onRemoveFromPlaylist = { service.onCommand(PlayerCommand.RemoveMediaFromPlaylist(it)) }
+            onPlayOrPause = { coordinator.onCommand(PlayerCommand.PlayOrPause) },
+            onSeekTo = {
+                isSeeking = true
+                coordinator.onCommand(PlayerCommand.SeekTo(it))
+            },
+            onSeekBy = {
+                isSeeking = true
+                coordinator.onCommand(
+                    PlayerCommand.SeekTo(coordinator.playerState.value.position + it)
+                )
+            },
+            onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
+            onPreviousMedia = { coordinator.onCommand(PlayerCommand.PreviousMedia) },
+            onNextMedia = { coordinator.onCommand(PlayerCommand.NextMedia) },
+            onCycleLoop = { coordinator.onCommand(PlayerCommand.CycleLoop) },
+            onShuffle = { coordinator.onCommand(PlayerCommand.Shuffle(it)) },
+            onPlayFileInPlaylist = { coordinator.onCommand(PlayerCommand.PlayFileInPlaylist(it)) },
+            onRemoveFromPlaylist = { coordinator.onCommand(PlayerCommand.RemoveMediaFromPlaylist(it)) }
         )
     }
 
     val dialogCallback = remember {
         DialogCallback(
             speedDialogCallback = SpeedDialogCallback(
-                onSpeedChanged = { service.onCommand(PlayerCommand.SetSpeed(it)) },
+                onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
             ),
             audioTrackDialogCallback = AudioTrackDialogCallback(
-                onAudioTrackChanged = { service.onCommand(PlayerCommand.SetAudioTrack(it.trackId)) },
-                onAddAudioTrack = { service.onCommand(PlayerCommand.AddAudio(it)) },
-                onAudioDelayChanged = { service.onCommand(PlayerCommand.AudioDelay(it)) },
+                onAudioTrackChanged = { coordinator.onCommand(PlayerCommand.SetAudioTrack(it.trackId)) },
+                onAddAudioTrack = { coordinator.onCommand(PlayerCommand.AddAudio(it)) },
+                onAudioDelayChanged = { coordinator.onCommand(PlayerCommand.AudioDelay(it)) },
             ),
             subtitleTrackDialogCallback = SubtitleTrackDialogCallback(
-                onSubtitleTrackChanged = { service.onCommand(PlayerCommand.SetSubtitleTrack(it.trackId)) },
-                onAddSubtitle = { service.onCommand(PlayerCommand.AddSubtitle(it)) },
-                onSubtitleDelayChanged = { service.onCommand(PlayerCommand.SubtitleDelay(it)) },
+                onSubtitleTrackChanged = { coordinator.onCommand(PlayerCommand.SetSubtitleTrack(it.trackId)) },
+                onAddSubtitle = { coordinator.onCommand(PlayerCommand.AddSubtitle(it)) },
+                onSubtitleDelayChanged = { coordinator.onCommand(PlayerCommand.SubtitleDelay(it)) },
             ),
-        )
-    }
-
-    LaunchedEffect(playerState) {
-        playState = playState.copy(
-            isPlaying = !playerState.paused && playerState.mediaStarted,
-            state = playerState,
         )
     }
 
@@ -151,21 +210,23 @@ fun PlayerView(
         PlayerCoordinator.Observer { command ->
             when (command) {
                 is PlayerEvent.Shutdown -> currentOnBack()
-                PlayerEvent.Seek -> playState = playState.copy(isSeeking = false)
+                PlayerEvent.Seek -> isSeeking = false
                 else -> Unit
             }
         }
     }
 
     LifecycleStartEffect(Unit) {
-        service.addObserver(playerObserver)
+        coordinator.addObserver(playerObserver)
         onStopOrDispose {
-            service.removeObserver(playerObserver)
+            coordinator.removeObserver(playerObserver)
         }
     }
 
     val commonContent = @Composable {
         Content(
+            coordinator = coordinator,
+            playerStateFlow = coordinator.playerState,
             onDialogVisibilityChanged = remember {
                 OnDialogVisibilityChanged(
                     onSpeedDialog = { speedDialogState = speedDialogState.copy(show = it) },
@@ -198,7 +259,7 @@ fun PlayerView(
             dialogCallback = dialogCallback,
             onBack = onBack,
             onSaveScreenshot = onSaveScreenshot,
-            onCommand = { service.onCommand(it) },
+            onCommand = { coordinator.onCommand(it) },
             onSetArticleFavorite = articleContextViewModel::setFavorite,
             snackbarHostState = snackbarHostState,
         )
@@ -207,7 +268,7 @@ fun PlayerView(
     PlatformContent(
         modifier = Modifier.fillMaxSize(),
         onBack = onBack,
-        service = service,
+        coordinator = coordinator,
         playerObserver = playerObserver,
         playerState = playerState,
         playState = playState,
@@ -217,7 +278,62 @@ fun PlayerView(
 }
 
 @Composable
+private fun PlayerEngineScreen(
+    engineState: PlayerEngineState,
+    onBack: () -> Unit,
+    onRetry: () -> Unit = {},
+) {
+    Box(
+        modifier = Modifier.fillMaxSize().semantics {
+            contentDescription = when (engineState) {
+                PlayerEngineState.Initializing -> PLAYER_ENGINE_INITIALIZING_SEMANTICS
+                PlayerEngineState.AwaitingMedia -> PLAYER_ENGINE_AWAITING_MEDIA_SEMANTICS
+                PlayerEngineState.LoadingMedia -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
+                is PlayerEngineState.Failed -> PLAYER_ENGINE_FAILED_SEMANTICS
+                PlayerEngineState.Ready,
+                PlayerEngineState.Destroyed -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
+            }
+        }
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = stringResource(Res.string.close),
+            )
+        }
+        Column(
+            modifier = Modifier.align(Alignment.Center).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (engineState is PlayerEngineState.Failed) {
+                Text(
+                    text = engineState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(Modifier.height(16.dp))
+                Button(onClick = onRetry) {
+                    Text(stringResource(Res.string.retry))
+                }
+            } else {
+                CircularProgressIndicator()
+            }
+        }
+    }
+}
+
+private const val PLAYER_ENGINE_INITIALIZING_SEMANTICS = "podaura_player_engine_initializing"
+private const val PLAYER_ENGINE_AWAITING_MEDIA_SEMANTICS = "podaura_player_engine_awaiting_media"
+private const val PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS = "podaura_player_engine_loading_media"
+private const val PLAYER_ENGINE_FAILED_SEMANTICS = "podaura_player_engine_failed"
+
+@Composable
 private fun Content(
+    coordinator: PlayerCoordinator,
+    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
@@ -232,6 +348,7 @@ private fun Content(
 ) {
     val player = @Composable {
         PlatformPlayerView(
+            coordinator = coordinator,
             onCommand = onCommand,
             modifier = Modifier.fillMaxSize()
         )
@@ -241,6 +358,7 @@ private fun Content(
 
     if (fullscreen) {
         FullscreenPlayerView(
+            playerStateFlow = playerStateFlow,
             playState = playState,
             playStateCallback = playStateCallback,
             dialogState = dialogState,
@@ -255,6 +373,7 @@ private fun Content(
         )
     } else {
         PortraitPlayerView(
+            playerStateFlow = playerStateFlow,
             playState = playState,
             articleContextState = articleContextState,
             playStateCallback = playStateCallback,
@@ -302,6 +421,7 @@ private fun Content(
 
 @Composable
 expect fun PlatformPlayerView(
+    coordinator: PlayerCoordinator,
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit,
 )
@@ -310,7 +430,7 @@ expect fun PlatformPlayerView(
 expect fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
-    service: PlayerCoordinator,
+    coordinator: PlayerCoordinator,
     playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,

@@ -69,9 +69,11 @@ import com.skyd.podaura.ui.player.land.controller.preview.VolumePreview
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
 import com.skyd.podaura.ui.player.land.rememberSystemBarsVisibilityController
+import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tech.annexflow.constraintlayout.compose.ConstraintLayout
@@ -80,6 +82,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun PlayerController(
+    playerStateFlow: StateFlow<PlayerState>,
     enabled: () -> Boolean,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
@@ -187,8 +190,8 @@ internal fun PlayerController(
                     onShowVolume = { showVolumePreview = it },
                     onVolumeRangeChanged = { volumeRange = it },
                     onVolumeChanged = { volumeValue = it },
-                    playState = playState,
                     playStateCallback = playStateCallback,
+                    currentPosition = { playerStateFlow.value.position },
                     onShowSeekTimePreview = { showSeekTimePreview = it },
                     onTimePreviewChanged = { seekTimePreview = it },
                     transformState = transformState,
@@ -252,6 +255,7 @@ internal fun PlayerController(
             }
             // Auto hide box
             AutoHiddenBox(
+                playerStateFlow = playerStateFlow,
                 enabled = enabled,
                 show = { showController },
                 hoverInteractionSource = controllerHoverInteractionSource,
@@ -272,8 +276,8 @@ internal fun PlayerController(
 
             if (PlayerShowProgressIndicatorPreference.current && !showController) {
                 ProgressIndicator(
+                    playerStateFlow = playerStateFlow,
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    playState = playState,
                 )
             }
 
@@ -335,6 +339,7 @@ internal fun PlayerController(
 
 @Composable
 private fun AutoHiddenBox(
+    playerStateFlow: StateFlow<PlayerState>,
     enabled: () -> Boolean,
     show: () -> Boolean,
     hoverInteractionSource: MutableInteractionSource,
@@ -365,6 +370,7 @@ private fun AutoHiddenBox(
                     onExitFullscreen = onExitFullscreen,
                 )
                 BottomBar(
+                    playerStateFlow = playerStateFlow,
                     modifier = Modifier
                         .constrainAs(bottomBar) { bottom.linkTo(parent.bottom) }
                         .hoverable(hoverInteractionSource),
@@ -408,7 +414,7 @@ private fun AutoHiddenBox(
                         seconds = replaySecond,
                         onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
                         onClick = {
-                            with(playState()) { playStateCallback.onSeekTo(position + replaySecond) }
+                            playStateCallback.onSeekBy(replaySecond.toLong())
                             onRestartAutoHideController()
                         },
                     )
@@ -428,7 +434,7 @@ private fun AutoHiddenBox(
                         seconds = forwardSecond,
                         onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
                         onClick = {
-                            with(playState()) { playStateCallback.onSeekTo(position + forwardSecond) }
+                            playStateCallback.onSeekBy(forwardSecond.toLong())
                             onRestartAutoHideController()
                         },
                     )

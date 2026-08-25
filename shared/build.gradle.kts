@@ -271,6 +271,11 @@ kotlin {
                 }
             }
         }
+
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.jetbrains.compose.ui.test.junit4)
+        }
     }
 
     compilerOptions {
@@ -327,10 +332,15 @@ compose.resources {
     publicResClass = true
 }
 
+composeCompiler {
+    reportsDestination = layout.buildDirectory.dir("compose_compiler/reports")
+    metricsDestination = layout.buildDirectory.dir("compose_compiler/metrics")
+}
+
 // mediamp 0.2.1 accidentally publishes Compose's JUnit UI test stack as a runtime
 // dependency. Besides bloating distributions, Truth leaves optional ASM references
 // unresolved during desktop ProGuard.
-configurations.matching { it.name.startsWith("jvm", ignoreCase = true) }.configureEach {
+configurations.matching { it.name == "jvmRuntimeClasspath" }.configureEach {
     exclude(group = "org.jetbrains.compose.ui", module = "ui-test-junit4")
 }
 

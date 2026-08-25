@@ -50,19 +50,19 @@ internal fun Modifier.detectPressGestures(
 
     val onDoubleTapBackwardForward: PlayState.(Offset) -> Unit = { offset ->
         if (offset.x < controllerWidth() / 2f) {
-            playStateCallback.onSeekTo(position - 10) // -10s.
+            playStateCallback.onSeekBy(-10)
             onShowBackwardRipple(offset)
         } else {
-            playStateCallback.onSeekTo(position + 10) // +10s.
+            playStateCallback.onSeekBy(10)
             onShowForwardRipple(offset)
         }
     }
     val onDoubleTapBackwardPausePlayForward: PlayState.(Offset) -> Unit = { offset ->
         if (offset.x <= controllerWidth() * 0.25f) {
-            playStateCallback.onSeekTo(position - 10) // -10s.
+            playStateCallback.onSeekBy(-10)
             onShowBackwardRipple(offset)
         } else if (offset.x >= controllerWidth() * 0.75f) {
-            playStateCallback.onSeekTo(position + 10) // +10s.
+            playStateCallback.onSeekBy(10)
             onShowForwardRipple(offset)
         } else {
             onDoubleTapPausePlay()
@@ -123,8 +123,8 @@ internal fun Modifier.detectControllerGestures(
     onShowVolume: (Boolean) -> Unit,
     onVolumeRangeChanged: (ClosedFloatingPointRange<Float>) -> Unit,
     onVolumeChanged: (Float) -> Unit,
-    playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
+    currentPosition: () -> Long,
     onShowSeekTimePreview: (Boolean) -> Unit,
     onTimePreviewChanged: (Long) -> Unit,
     transformState: () -> TransformState,
@@ -139,8 +139,6 @@ internal fun Modifier.detectControllerGestures(
         restartAutoHideController()
         return this
     }
-
-    val currentPlayState by rememberUpdatedState(newValue = playState)
 
     var pointerStartX by rememberSaveable { mutableFloatStateOf(0f) }
     var pointerStartY by rememberSaveable { mutableFloatStateOf(0f) }
@@ -220,7 +218,7 @@ internal fun Modifier.detectControllerGestures(
                 if (systemBarAreaDetector.inSystemBarArea(it.x, it.y)) {
                     return@onHorizontalDragStart
                 }
-                seekTimePreviewStartPosition = currentPlayState().position
+                seekTimePreviewStartPosition = currentPosition()
                 seekTimePreviewPositionDelta = 0
                 onShowSeekTimePreview(true)
             },

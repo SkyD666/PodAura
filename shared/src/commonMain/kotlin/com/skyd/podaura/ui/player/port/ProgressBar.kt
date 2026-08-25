@@ -18,23 +18,28 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.skyd.podaura.ui.player.collectPlayerProgress
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
+import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.flow.StateFlow
 
 
 @Composable
 internal fun ProgressBar(
+    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     modifier: Modifier = Modifier,
 ) {
+    val progress by collectPlayerProgress(playerStateFlow)
     var sliderValue by rememberSaveable {
-        mutableFloatStateOf(playState.position.toFloat())
+        mutableFloatStateOf(progress.position.toFloat())
     }
     var valueIsChanging by rememberSaveable { mutableStateOf(false) }
-    if (!valueIsChanging && !playState.isSeeking && sliderValue != playState.position.toFloat()) {
-        sliderValue = playState.position.toFloat()
+    if (!valueIsChanging && !playState.isSeeking && sliderValue != progress.position.toFloat()) {
+        sliderValue = progress.position.toFloat()
     }
     Column(modifier = modifier) {
         Slider(
@@ -49,17 +54,17 @@ internal fun ProgressBar(
                 valueIsChanging = false
             },
             colors = SliderDefaults.colors(),
-            valueRange = 0f..playState.duration.toFloat(),
+            valueRange = 0f..progress.duration.toFloat().coerceAtLeast(0f),
         )
         Spacer(modifier = Modifier.height(3.dp))
         Row(modifier = Modifier.padding(horizontal = 3.dp)) {
             Text(
-                text = playState.position.toDurationString(),
+                text = progress.position.toDurationString(),
                 style = MaterialTheme.typography.labelLarge,
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = playState.duration.toDurationString(),
+                text = progress.duration.toDurationString(),
                 style = MaterialTheme.typography.labelLarge,
             )
         }

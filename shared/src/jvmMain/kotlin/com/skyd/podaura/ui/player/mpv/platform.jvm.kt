@@ -9,6 +9,4 @@ actual fun MPV.initOptionsPlatform(logger: Logger) {
 actual fun copyAssetsForMpv(configDir: String) {
 }
 
-actual fun MPV.onKey(event: KeyEvent, logger: Logger): Boolean {
-    return false
-}
+internal actual fun mapPlayerKeyEvent(event: KeyEvent, logger: Logger): PlayerKeyInput? = null

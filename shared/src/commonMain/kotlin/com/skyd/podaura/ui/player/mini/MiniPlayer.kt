@@ -51,6 +51,7 @@ import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.PlayerCommand
+import com.skyd.podaura.ui.player.withoutHotPlayerValues
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.service.PlayerState
 import org.jetbrains.compose.resources.stringResource
@@ -72,7 +73,20 @@ fun MiniPlayer(
     windowInsets: WindowInsets = WindowInsets(),
 ) {
     var retainedState by remember { mutableStateOf<PlayerState?>(null) }
-    val liveState = coordinator?.playerState?.collectAsStateWithLifecycle()?.value
+    val liveState = coordinator?.playerState?.let { source ->
+        remember(source) {
+            source.withoutHotPlayerValues()
+        }.collectAsStateWithLifecycle(
+            initialValue = source.value.copy(
+                position = 0L,
+                buffer = 0,
+                zoom = 1f,
+                offsetX = 0f,
+                offsetY = 0f,
+                rotate = 0f,
+            )
+        ).value
+    }
     val sessionAvailable = liveState?.currentMedia != null
     val sessionVisible = isMiniPlayerVisible(
         sessionAvailable = sessionAvailable,
@@ -206,19 +220,28 @@ fun MiniPlayer(
                     }
                 }
 
-                val progress by animateFloatAsState(
-                    targetValue = miniPlayerProgress(state.position, state.duration),
-                    label = "miniPlayerProgress",
-                )
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp),
-                )
+                MiniPlayerProgressIndicator(coordinator = coordinator, fallbackState = state)
             }
         }
     }
+}
+
+@Composable
+private fun MiniPlayerProgressIndicator(
+    coordinator: PlayerCoordinator?,
+    fallbackState: PlayerState,
+) {
+    val liveState = coordinator?.playerState?.collectAsStateWithLifecycle()?.value
+    val position = liveState?.position ?: fallbackState.position
+    val duration = liveState?.duration ?: fallbackState.duration
+    val progress by animateFloatAsState(
+        targetValue = miniPlayerProgress(position, duration),
+        label = "miniPlayerProgress",
+    )
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = Modifier.fillMaxWidth().height(3.dp),
+    )
 }
 
 internal fun miniPlayerProgress(position: Long, duration: Long): Float {

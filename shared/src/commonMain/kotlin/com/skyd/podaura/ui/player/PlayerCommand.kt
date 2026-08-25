@@ -22,6 +22,7 @@ sealed interface PlayerCommand {
     ) : PlayerCommand
 
     data object Destroy : PlayerCommand
+    data object RetryInitialize : PlayerCommand
     data class Paused(val paused: Boolean) : PlayerCommand
     data object PlayOrPause : PlayerCommand
     data object PreviousMedia : PlayerCommand
@@ -39,6 +40,7 @@ sealed interface PlayerCommand {
     data class AddSubtitle(val filePath: String) : PlayerCommand
     data class AddAudio(val filePath: String) : PlayerCommand
     data class Shuffle(val shuffle: Boolean) : PlayerCommand
+    data class SetLoopMode(val mode: LoopMode) : PlayerCommand
     data class PlayFileInPlaylist(val path: String) : PlayerCommand
     data object CycleLoop : PlayerCommand
 }

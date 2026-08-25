@@ -136,7 +136,7 @@ class PlayActivity : BaseComposeActivity() {
                 onDispose { removeOnNewIntentListener(listener) }
             }
             PlayerViewRoute(
-                service = if (serviceBound) service.playerCoordinator else null,
+                coordinator = if (serviceBound) service.playerCoordinator else null,
                 articleContextViewModel = articleContextViewModel,
                 onBack = { finish() },
                 onSaveScreenshot = {
@@ -187,7 +187,7 @@ class PlayActivity : BaseComposeActivity() {
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (serviceBound && service.playerCoordinator.player.onKey(
+        if (serviceBound && service.playerCoordinator.onKey(
                 androidx.compose.ui.input.key.KeyEvent(event)
             )
         ) {

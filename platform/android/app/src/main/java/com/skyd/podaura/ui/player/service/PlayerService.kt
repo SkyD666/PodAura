@@ -17,6 +17,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.skyd.fundation.di.get
 import com.skyd.podaura.BuildConfig
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import kotlinx.coroutines.CoroutineScope
@@ -83,31 +84,35 @@ class PlayerService : Service() {
         }
 
         override fun onPause() {
-            playerCoordinator.player.paused = true
+            playerCoordinator.onCommand(PlayerCommand.Paused(true))
         }
 
         override fun onPlay() {
-            playerCoordinator.player.paused = false
+            playerCoordinator.onCommand(PlayerCommand.Paused(false))
         }
 
         override fun onSeekTo(pos: Long) {
-            playerCoordinator.player.timePos = (pos / 1000).toInt()
+            playerCoordinator.onCommand(PlayerCommand.SeekTo(pos / 1000))
         }
 
         override fun onSkipToNext() = sendBroadcastWithPackage(NEXT_ACTION)
         override fun onSkipToPrevious() = sendBroadcastWithPackage(PREVIOUS_ACTION)
         override fun onSetRepeatMode(repeatMode: Int) {
             when (repeatMode) {
-                PlaybackStateCompat.REPEAT_MODE_ALL -> playerCoordinator.player.loopPlaylist()
-                PlaybackStateCompat.REPEAT_MODE_ONE -> playerCoordinator.player.loopFile()
+                PlaybackStateCompat.REPEAT_MODE_ALL -> LoopMode.LoopPlaylist
+                PlaybackStateCompat.REPEAT_MODE_ONE -> LoopMode.LoopFile
                 PlaybackStateCompat.REPEAT_MODE_INVALID,
                 PlaybackStateCompat.REPEAT_MODE_GROUP,
-                PlaybackStateCompat.REPEAT_MODE_NONE -> playerCoordinator.player.loopNo()
-            }
+                PlaybackStateCompat.REPEAT_MODE_NONE -> LoopMode.None
+
+                else -> LoopMode.None
+            }.let { playerCoordinator.onCommand(PlayerCommand.SetLoopMode(it)) }
         }
 
         override fun onSetShuffleMode(shuffleMode: Int) {
-            playerCoordinator.player.shuffle(shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
+            playerCoordinator.onCommand(
+                PlayerCommand.Shuffle(shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL)
+            )
         }
 
         override fun onCustomAction(action: String?, extras: Bundle?) {

@@ -57,9 +57,11 @@ import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.SmallController
+import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import com.skyd.podaura.ui.screen.read.ReadRoute
+import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_favorite
@@ -74,6 +76,7 @@ import podaura.shared.generated.resources.read_screen_name
 
 @Composable
 internal fun PortraitPlayerView(
+    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
@@ -140,6 +143,7 @@ internal fun PortraitPlayerView(
         val windowSizeClass = LocalWindowSizeClass.current
         if (windowSizeClass.isExpanded || isLandscape()) {
             ExpandedContent(
+                playerStateFlow = playerStateFlow,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
@@ -150,6 +154,7 @@ internal fun PortraitPlayerView(
             )
         } else {
             CompactContent(
+                playerStateFlow = playerStateFlow,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
@@ -178,6 +183,7 @@ internal fun PortraitPlayerView(
 
 @Composable
 private fun CompactContent(
+    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -200,6 +206,7 @@ private fun CompactContent(
             modifier = Modifier.padding(horizontal = 30.dp),
         )
         ControllerArea(
+            playerStateFlow = playerStateFlow,
             isExpanded = false,
             playState = playState,
             playStateCallback = playStateCallback,
@@ -213,6 +220,7 @@ private fun CompactContent(
 
 @Composable
 private fun ExpandedContent(
+    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -245,6 +253,7 @@ private fun ExpandedContent(
                 modifier = Modifier.padding(horizontal = 30.dp),
             )
             ControllerArea(
+                playerStateFlow = playerStateFlow,
                 isExpanded = true,
                 playState = playState,
                 playStateCallback = playStateCallback,
@@ -259,6 +268,7 @@ private fun ExpandedContent(
 
 @Composable
 private fun ControllerArea(
+    playerStateFlow: StateFlow<PlayerState>,
     isExpanded: Boolean,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
@@ -280,6 +290,7 @@ private fun ControllerArea(
             )
         }
         ProgressBar(
+            playerStateFlow = playerStateFlow,
             playState = playState,
             playStateCallback = playStateCallback,
             modifier = Modifier.padding(horizontal = 30.dp),

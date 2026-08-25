@@ -62,6 +62,7 @@ data class PlayStateCallback(
     val onPlayStateChanged: () -> Unit,
     val onPlayOrPause: () -> Unit,
     val onSeekTo: (position: Long) -> Unit,
+    val onSeekBy: (seconds: Long) -> Unit,
     val onSpeedChanged: (Float) -> Unit,
     val onPreviousMedia: () -> Unit,
     val onNextMedia: () -> Unit,

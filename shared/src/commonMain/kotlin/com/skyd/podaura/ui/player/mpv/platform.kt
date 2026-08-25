@@ -5,4 +5,6 @@ import co.touchlab.kermit.Logger
 
 expect fun MPV.initOptionsPlatform(logger: Logger)
 expect fun copyAssetsForMpv(configDir: String)
-expect fun MPV.onKey(event: KeyEvent, logger: Logger): Boolean
+internal data class PlayerKeyInput(val action: String?, val key: String?)
+
+internal expect fun mapPlayerKeyEvent(event: KeyEvent, logger: Logger): PlayerKeyInput?

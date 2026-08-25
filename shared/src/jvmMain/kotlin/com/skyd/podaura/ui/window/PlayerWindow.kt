@@ -267,7 +267,7 @@ internal fun PlayerWindow(
                         }
                         playerCoordinator.onCommand(
                             PlayerCommand.SeekTo(
-                                playerCoordinator.player.timePos.toLong() + positionDelta
+                                playerCoordinator.playerState.value.position + positionDelta
                             )
                         )
                         true
@@ -298,7 +298,7 @@ internal fun PlayerWindow(
             SettingsProvider(dataStore) {
                 PodAuraTheme(darkTheme = DarkModePreference.current) {
                     PlayerViewRoute(
-                        service = playerCoordinator,
+                        coordinator = playerCoordinator,
                         articleContextViewModel = appState.playerArticleContextViewModel,
                         onBack = closePlayer,
                         onSaveScreenshot = {

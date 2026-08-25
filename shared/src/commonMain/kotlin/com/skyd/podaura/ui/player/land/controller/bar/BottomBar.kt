@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.skyd.fundation.ext.format
 import com.skyd.podaura.ext.format
 import com.skyd.podaura.ui.player.LoopMode
+import com.skyd.podaura.ui.player.collectPlayerProgress
 import com.skyd.podaura.ui.player.component.ControllerBarGray
 import com.skyd.podaura.ui.player.component.ControllerIconButton
 import com.skyd.podaura.ui.player.component.ControllerIconToggleButton
@@ -59,6 +60,8 @@ import com.skyd.podaura.ui.player.component.ControllerTextButton
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
+import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.exit_fullscreen
@@ -76,6 +79,7 @@ import kotlin.math.abs
 
 @Composable
 internal fun BottomBar(
+    playerStateFlow: StateFlow<PlayerState>,
     modifier: Modifier = Modifier,
     enabled: () -> Boolean,
     playState: () -> PlayState,
@@ -86,6 +90,7 @@ internal fun BottomBar(
     onExitFullscreen: () -> Unit,
 ) {
     val playStateValue = playState()
+    val progress by collectPlayerProgress(playerStateFlow)
 
     Column(
         modifier = modifier
@@ -109,16 +114,16 @@ internal fun BottomBar(
         ) {
             val sliderInteractionSource = remember { MutableInteractionSource() }
             var sliderValue by rememberSaveable {
-                mutableFloatStateOf(playStateValue.position.toFloat())
+                mutableFloatStateOf(progress.position.toFloat())
             }
             var valueIsChanging by rememberSaveable { mutableStateOf(false) }
             if (!valueIsChanging && !playStateValue.isSeeking &&
-                sliderValue != playStateValue.position.toFloat()
+                sliderValue != progress.position.toFloat()
             ) {
-                sliderValue = playStateValue.position.toFloat()
+                sliderValue = progress.position.toFloat()
             }
             Text(
-                text = playStateValue.position.toDurationString(),
+                text = progress.position.toDurationString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White,
             )
@@ -151,13 +156,13 @@ internal fun BottomBar(
                 track = { sliderState ->
                     Track(
                         sliderState = sliderState,
-                        bufferDurationValue = playStateValue.buffer.toFloat()
+                        bufferDurationValue = progress.buffer.toFloat()
                     )
                 },
-                valueRange = 0f..playStateValue.duration.toFloat(),
+                valueRange = 0f..progress.duration.toFloat().coerceAtLeast(0f),
             )
             Text(
-                text = playStateValue.duration.toDurationString(),
+                text = progress.duration.toDurationString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White,
             )

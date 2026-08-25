@@ -93,7 +93,6 @@ internal fun Controller(
             seconds = PlayerReplaySecondsPreference.current,
             contentDescription = stringResource(Res.string.player_replay_seconds_content_description),
             enabled = playState.mediaLoaded,
-            playState = playState,
             playStateCallback = playStateCallback,
             onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
         )
@@ -130,7 +129,6 @@ internal fun Controller(
             seconds = PlayerForwardSecondsPreference.current,
             contentDescription = stringResource(Res.string.player_forward_seconds_content_description),
             enabled = playState.mediaLoaded,
-            playState = playState,
             playStateCallback = playStateCallback,
             onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
         )
@@ -148,7 +146,6 @@ private fun ForwardOrReplayButton(
     seconds: Int,
     contentDescription: String?,
     enabled: Boolean,
-    playState: PlayState,
     playStateCallback: PlayStateCallback,
     onLongClick: () -> Unit,
 ) {
@@ -159,7 +156,7 @@ private fun ForwardOrReplayButton(
             mirrorIcon = seconds >= 0,
             enabled = enabled,
             onLongClick = onLongClick,
-            onClick = { playStateCallback.onSeekTo(playState.position + seconds) },
+            onClick = { playStateCallback.onSeekBy(seconds.toLong()) },
         )
         Text(
             text = abs(seconds).toString(),

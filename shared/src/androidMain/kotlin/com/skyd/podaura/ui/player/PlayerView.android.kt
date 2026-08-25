@@ -34,6 +34,7 @@ import com.skyd.podaura.ui.player.service.PlayerState
 
 @Composable
 actual fun PlatformPlayerView(
+    coordinator: PlayerCoordinator,
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit
 ) {
@@ -47,7 +48,7 @@ actual fun PlatformPlayerView(
 actual fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
-    service: PlayerCoordinator,
+    coordinator: PlayerCoordinator,
     playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,
@@ -63,7 +64,7 @@ actual fun PlatformContent(
         PipContent(
             playState = playState,
             autoEnterPipMode = shouldEnterPipMode,
-            onCommand = { service.onCommand(it) },
+            onCommand = { coordinator.onCommand(it) },
         )
     } else {
         commonContent()
@@ -78,7 +79,7 @@ actual fun PlatformContent(
             Lifecycle.Event.ON_RESUME -> {
                 if (needPlayWhenResume) {
                     needPlayWhenResume = false
-                    service.onCommand(PlayerCommand.Paused(false))
+                    coordinator.onCommand(PlayerCommand.Paused(false))
                 }
             }
 
@@ -86,7 +87,7 @@ actual fun PlatformContent(
                 val shouldPause = playState.isPlaying && !backgroundPlay
                 needPlayWhenResume = shouldPause
                 if (shouldPause) {
-                    service.onCommand(PlayerCommand.Paused(true))
+                    coordinator.onCommand(PlayerCommand.Paused(true))
                 }
             }
 
@@ -98,8 +99,8 @@ actual fun PlatformContent(
 
             Lifecycle.Event.ON_DESTROY -> {
                 if (!backgroundPlay) {
-                    service.onCommand(PlayerCommand.Destroy)
-                    service.removeObserver(playerObserver)
+                    coordinator.onCommand(PlayerCommand.Destroy)
+                    coordinator.removeObserver(playerObserver)
                 }
             }
 

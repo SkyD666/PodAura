@@ -9,6 +9,7 @@ import com.skyd.podaura.ui.player.service.PlayerState
 
 @Composable
 actual fun PlatformPlayerView(
+    coordinator: PlayerCoordinator,
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit
 ) {
@@ -18,7 +19,7 @@ actual fun PlatformPlayerView(
 actual fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
-    service: PlayerCoordinator,
+    coordinator: PlayerCoordinator,
     playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,

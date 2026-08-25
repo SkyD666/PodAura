@@ -2,34 +2,19 @@ package com.skyd.podaura.ui.player.coordinator
 
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.service.PlayerState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.consumeAsFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
 
 class PlayerModel : PlayerCoordinator.Observer {
-    private val eventFlow = Channel<PlayerEvent>(Channel.UNLIMITED)
-    private val scope = CoroutineScope(Dispatchers.Main.immediate)
     private val initialPlayerState = PlayerState()
-    val playerState = eventFlow
-        .consumeAsFlow()
-        .scan(initialPlayerState) { old, event ->
-            val newState = event.reduce(old)
-            _newStateByEvent.emit(newState to event)
-            return@scan newState
-        }
-        .distinctUntilChanged()
-        .stateIn(scope, SharingStarted.Eagerly, initialPlayerState)
+    private val _playerState = MutableStateFlow(initialPlayerState)
+    val playerState = _playerState.asStateFlow()
 
     private val _newStateByEvent = MutableSharedFlow<Pair<PlayerState, PlayerEvent>>(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     val newStateByEvent = _newStateByEvent.asSharedFlow()
@@ -83,14 +68,17 @@ class PlayerModel : PlayerCoordinator.Observer {
             mediaTitle = null,
             mediaThumbnail = null,
         )
+
         is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
         is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
         is PlayerEvent.Shutdown -> initialPlayerState
-
         else -> old
     }
 
     override fun onEvent(event: PlayerEvent) {
-        eventFlow.trySend(event)
+        val oldState = _playerState.value
+        val newState = event.reduce(oldState)
+        if (newState != oldState) _playerState.value = newState
+        _newStateByEvent.tryEmit(newState to event)
     }
 }

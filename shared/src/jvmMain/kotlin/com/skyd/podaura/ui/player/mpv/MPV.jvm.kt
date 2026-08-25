@@ -148,7 +148,8 @@ actual class MPV {
                 pendingCommands += command
                 return
             }
-            if (command.firstOrNull() == "loadfile" &&
+            val commandName = command.firstOrNull()
+            if ((commandName == "loadfile" || commandName == "loadlist") &&
                 renderContextLifecycle?.ensureReadyForLoad() == false
             ) {
                 pendingCommands += command
@@ -172,7 +173,7 @@ actual class MPV {
 
     private fun updatePlaybackSession(command: Array<out String>) {
         when (command.firstOrNull()) {
-            "loadfile" -> playbackSessionActive.set(true)
+            "loadfile", "loadlist" -> playbackSessionActive.set(true)
             "stop" -> playbackSessionActive.set(false)
         }
     }

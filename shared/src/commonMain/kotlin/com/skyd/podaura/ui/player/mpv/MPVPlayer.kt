@@ -1,6 +1,5 @@
 package com.skyd.podaura.ui.player.mpv
 
-import androidx.compose.ui.input.key.KeyEvent
 import co.touchlab.kermit.Logger
 import coil3.Bitmap
 import com.skyd.compone.component.blockString
@@ -15,11 +14,14 @@ import com.skyd.podaura.model.preference.player.PlayerMaxBackCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerMaxCacheSizePreference
 import com.skyd.podaura.model.preference.player.PlayerSeekOptionPreference
 import com.skyd.podaura.model.preference.player.prepareMpvRuntimeDirectories
-import com.skyd.podaura.ui.player.DefaultEventObserver
 import com.skyd.podaura.ui.player.Track
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
+import com.skyd.podaura.ui.player.playerTrace
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -29,7 +31,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.track_off
@@ -42,9 +45,10 @@ import kotlin.random.Random
 import kotlin.reflect.KProperty
 import kotlin.time.Duration.Companion.milliseconds
 
-class MPVPlayer : DefaultEventObserver() {
+class MPVPlayer {
     companion object {
         private const val TAG = "MPVPlayer"
+        private val TRACK_TYPES = arrayOf("sub", "audio", "video")
 
         // resolution (px) of the thumbnail
         private const val THUMB_SIZE = 512
@@ -64,20 +68,25 @@ class MPVPlayer : DefaultEventObserver() {
      * Starts mpv with the configured directories if it is not currently running. No-op while the
      * player is alive, so it is cheap to call from every entry point.
      */
-    fun ensureInitialized() {
+    suspend fun ensureInitialized() {
         if (Companion.initialized.load()) return
-        val directories = runBlocking(Dispatchers.IO) { prepareMpvRuntimeDirectories() }
-        initialize(
-            configDir = directories.configDirectory,
-            cacheDir = directories.cacheDirectory,
-            fontDir = Const.MPV_FONT_DIR,
-        )
+        val directories = prepareMpvRuntimeDirectories()
+        playerTrace("Player/MpvInitialize") {
+            initialize(
+                configDir = directories.configDirectory,
+                cacheDir = directories.cacheDirectory,
+                fontDir = Const.MPV_FONT_DIR,
+            )
+        }
     }
 
     private val logger = Logger.withTag(TAG)
+    private val ownershipMutex = Mutex()
+    private var nextGeneration = 0L
     lateinit var mpv: MPV
         private set
     private var scope = newScope()
+    private var runtimeCacheDir: String = ""
 
     private fun newScope() = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -89,41 +98,52 @@ class MPVPlayer : DefaultEventObserver() {
     val initialized: Boolean
         get() = Companion.initialized.load()
 
-    fun initialize(
+    suspend fun <T> withOwnership(block: suspend (generation: Long) -> T): T =
+        ownershipMutex.withLock {
+            block(++nextGeneration)
+        }
+
+    private fun initialize(
         configDir: String,
         cacheDir: String,
         fontDir: String,
         vo: String = "gpu",
     ) {
-        if (!Companion.initialized.compareAndSet(expectedValue = false, newValue = true)) {
-            return
-        }
+        if (Companion.initialized.load()) return
         if (!scope.isActive) scope = newScope()
-        copyAssetsForMpv(configDir)
+        runtimeCacheDir = cacheDir
 
-        mpv = platformMPV()
-        mpv.option("config", "yes")
-        mpv.option("config-dir", configDir)
-        for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir")) {
-            mpv.option(opt, cacheDir)
+        val newMpv = platformMPV()
+        mpv = newMpv
+        try {
+            copyAssetsForMpv(configDir)
+
+            newMpv.option("config", "yes")
+            newMpv.option("config-dir", configDir)
+            for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir")) {
+                newMpv.option(opt, cacheDir)
+            }
+            initOptions(vo)
+            // Options above include initialization-only settings (notably config/config-dir).
+            // Keep native mpv initialization after them on every platform.
+            newMpv.initialize()
+            /* Hardcoded options: */
+            // we need to call write-watch-later manually
+            newMpv.option("save-position-on-quit", "no")
+            // would crash before the surface is attached
+            newMpv.option("force-window", "no")
+            // "no" wouldn't work and "yes" is not intended by the UI
+            newMpv.option("idle", "yes")
+            newMpv.setPropertyString("sub-fonts-dir", fontDir)
+            newMpv.setPropertyString("osd-fonts-dir", fontDir)
+
+            observeProperties()
+            Companion.initialized.store(true)
+        } catch (error: Throwable) {
+            runCatching { newMpv.destroy() }
+            Companion.initialized.store(false)
+            throw error
         }
-        initOptions(vo)
-        // Options above include initialization-only settings (notably config/config-dir).
-        // Keep native mpv initialization after them on every platform.
-        mpv.initialize()
-        /* Hardcoded options: */
-        // we need to call write-watch-later manually
-        mpv.option("save-position-on-quit", "no")
-        // would crash before the surface is attached
-        mpv.option("force-window", "no")
-        // "no" wouldn't work and "yes" is not intended by the UI
-        mpv.option("idle", "yes")
-        mpv.setPropertyString("sub-fonts-dir", fontDir)
-        mpv.setPropertyString("osd-fonts-dir", fontDir)
-
-        observeProperties()
-
-        mpv.addEventListener(this)
     }
 
     var voInUse: String = ""
@@ -162,7 +182,6 @@ class MPVPlayer : DefaultEventObserver() {
         if (Companion.initialized.compareAndSet(expectedValue = true, newValue = false)) {
             // Detach listeners *before* tearing mpv down, otherwise events emitted during
             // shutdown are still dispatched into an already-destroyed player.
-            mpv.removeEventListener(this)
             // Stop playback explicitly instead of relying on the handle teardown to do it: the
             // desktop/mediamp backend keeps the audio running until the file is unloaded.
             runCatching { mpv.command("stop") }
@@ -172,8 +191,10 @@ class MPVPlayer : DefaultEventObserver() {
         }
     }
 
-    fun onKey(event: KeyEvent): Boolean {
-        return mpv.onKey(event, logger)
+    internal fun dispatchKey(input: PlayerKeyInput) {
+        val action = input.action ?: return
+        val key = input.key ?: return
+        mpv.command(action, key)
     }
 
     private fun observeProperties() {
@@ -183,21 +204,18 @@ class MPVPlayer : DefaultEventObserver() {
         val p = arrayOf(
             Property("time-pos", MPVFormat.MPV_FORMAT_INT64),
             Property("duration", MPVFormat.MPV_FORMAT_INT64),
-            Property("demuxer-cache-time", MPVFormat.MPV_FORMAT_INT64),
             Property("video-rotate", MPVFormat.MPV_FORMAT_INT64),
             Property("paused-for-cache", MPVFormat.MPV_FORMAT_FLAG),
             Property("core-idle", MPVFormat.MPV_FORMAT_FLAG),
             Property("demuxer-cache-idle", MPVFormat.MPV_FORMAT_FLAG),
-            Property("seeking", MPVFormat.MPV_FORMAT_FLAG),
             Property("seekable", MPVFormat.MPV_FORMAT_FLAG),
             Property("pause", MPVFormat.MPV_FORMAT_FLAG),
-            Property("eof-reached", MPVFormat.MPV_FORMAT_FLAG),
             Property("idle-active", MPVFormat.MPV_FORMAT_FLAG),
             Property("aid", MPVFormat.MPV_FORMAT_INT64),
             Property("sid", MPVFormat.MPV_FORMAT_INT64),
+            Property("vid", MPVFormat.MPV_FORMAT_INT64),
             Property("track-list"),
             Property("video-zoom", MPVFormat.MPV_FORMAT_DOUBLE),
-            Property("video-params/aspect", MPVFormat.MPV_FORMAT_DOUBLE),
             Property("video-pan-x", MPVFormat.MPV_FORMAT_DOUBLE),
             Property("video-pan-y", MPVFormat.MPV_FORMAT_DOUBLE),
             Property("audio-delay", MPVFormat.MPV_FORMAT_DOUBLE),
@@ -206,14 +224,11 @@ class MPVPlayer : DefaultEventObserver() {
             Property("demuxer-cache-duration", MPVFormat.MPV_FORMAT_DOUBLE),
             Property("playlist"),
             Property("playlist-pos", MPVFormat.MPV_FORMAT_INT64),
-            Property("playlist-count", MPVFormat.MPV_FORMAT_INT64),
-            Property("video-format"),
             Property("media-title", MPVFormat.MPV_FORMAT_STRING),
             Property("metadata"),
             Property("loop-playlist"),
             Property("loop-file"),
             Property("shuffle", MPVFormat.MPV_FORMAT_FLAG),
-            Property("hwdec-current")
         )
 
         for ((name, format) in p) {
@@ -247,9 +262,29 @@ class MPVPlayer : DefaultEventObserver() {
     }
 
     fun loadTracks() {
-        loadTrack("sub")
-        loadTrack("audio")
-        loadTrack("video")
+        val results = TRACK_TYPES.associateWithTo(mutableMapOf()) {
+            mutableListOf(
+                Track(
+                    trackId = -1,
+                    name = blockString(Res.string.track_off),
+                    isAlbumArt = false,
+                )
+            )
+        }
+        val count = mpv.getPropertyInt("track-list/count")
+        for (index in 0 until count) {
+            val type = mpv.getPropertyString("track-list/$index/type") ?: continue
+            val result = results[type] ?: continue
+            val mpvId = mpv.getPropertyInt("track-list/$index/id")
+            val lang = mpv.getPropertyString("track-list/$index/lang")
+            val title = mpv.getPropertyString("track-list/$index/title")
+            result += Track(
+                trackId = mpvId,
+                name = getTrackDisplayName(mpvId, lang, title),
+                isAlbumArt = mpv.getPropertyBoolean("track-list/$index/albumart"),
+            )
+        }
+        results.forEach { (type, result) -> tracks[type] = result }
     }
 
     fun loadSubtitleTrack() = loadTrack("sub")
@@ -484,26 +519,60 @@ class MPVPlayer : DefaultEventObserver() {
         paused = false
     }
 
-    fun loadList(files: List<String>, startFile: String?) {
+    suspend fun loadList(files: List<String>, startFile: String?) {
         val realFiles = files.filter { it.isNotBlank() }
         if (realFiles.isNotEmpty()) {
-            val index = if (startFile == null) 0
-            else realFiles.indexOf(startFile).takeIf { it >= 0 } ?: 0
             val currentPlaylist = loadPlaylist()
             if (currentPlaylist != realFiles) {
                 paused = true
                 mpv.command("stop")
-                realFiles.forEachIndexed { i, path ->
-                    val mode = if (i == 0) "replace" else "append"
-                    mpv.command("loadfile", path, mode)
-                }
+                if (realFiles.all(::canUseSafePlaylistFile)) loadPlaylistFile(realFiles)
+                else playerTrace("Player/LoadList") { loadFilesIndividually(realFiles) }
+                val loadedPlaylist = loadPlaylist()
+                val index = startFile?.let(loadedPlaylist::indexOf)
+                    ?.takeIf { it >= 0 } ?: 0
                 mpv.command("playlist-play-index", index.toString())
                 paused = false
             } else if (path != startFile && playlistCount > 0) {
+                val index = startFile?.let(realFiles::indexOf)?.takeIf { it >= 0 } ?: 0
                 mpv.command("playlist-play-index", index.toString())
                 paused = false
             }
         }
+    }
+
+    private fun loadFilesIndividually(files: List<String>) {
+        files.forEachIndexed { index, path ->
+            mpv.command("loadfile", path, if (index == 0) "replace" else "append")
+        }
+    }
+
+    private suspend fun loadPlaylistFile(files: List<String>) {
+        val playlistFile = PlatformFile(
+            PlatformFile(runtimeCacheDir),
+            "podaura-playlist-${Random.nextInt()}.m3u8",
+        )
+        val shuffleEnabled = shuffle
+        try {
+            playlistFile.writeString("#EXTM3U\n${files.joinToString("\n")}\n")
+            // Loading a playlist file applies mpv's startup shuffle option. The old per-file path
+            // did not, so suppress it while parsing and restore the stored UI mode afterwards.
+            if (shuffleEnabled) mpv.setPropertyBoolean("shuffle", false)
+            playerTrace("Player/LoadList") {
+                mpv.command("loadlist", playlistFile.path, "replace")
+            }
+        } finally {
+            if (shuffleEnabled) mpv.setPropertyBoolean("shuffle", true)
+            runCatching { playlistFile.delete(mustExist = false) }
+        }
+    }
+
+    private fun canUseSafePlaylistFile(path: String): Boolean {
+        if (path.isBlank() || path != path.trim() || '\n' in path || '\r' in path) return false
+        if (path.startsWith("http://") || path.startsWith("https://")) return true
+        if (path.startsWith("/") || path.startsWith("\\\\")) return true
+        return path.length >= 3 && path[0].isLetter() && path[1] == ':' &&
+                (path[2] == '/' || path[2] == '\\')
     }
 
     fun removeFromList(files: List<String>) {
@@ -627,11 +696,4 @@ class MPVPlayer : DefaultEventObserver() {
         loadAudioTrack()
     }
 
-    override fun onPropertyChange(name: String) {
-        when (name) {
-            "track-list" -> {
-                loadTracks()
-            }
-        }
-    }
 }

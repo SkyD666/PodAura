@@ -5,17 +5,17 @@ import androidx.compose.ui.Modifier
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
-import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.mpv.MPVSurface
 import com.skyd.podaura.ui.player.service.PlayerState
 
 @Composable
 actual fun PlatformPlayerView(
+    coordinator: PlayerCoordinator,
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit
 ) {
     MPVSurface(
-        player = MPVPlayer.instance.mpv,
+        player = coordinator.renderPlayer,
         modifier = modifier,
     )
 }
@@ -24,7 +24,7 @@ actual fun PlatformPlayerView(
 actual fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
-    service: PlayerCoordinator,
+    coordinator: PlayerCoordinator,
     playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,
