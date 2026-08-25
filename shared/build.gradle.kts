@@ -1,9 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
-import org.gradle.api.tasks.Exec
-import org.gradle.api.tasks.JavaExec
-import org.gradle.api.tasks.Sync
-import org.gradle.api.tasks.testing.Test
-import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.nativeplatform.platform.internal.Architectures
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+import org.jetbrains.compose.desktop.application.dsl.AotMode
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.compose.desktop.application.tasks.AbstractNativeMacApplicationPackageAppDirTask
@@ -24,6 +22,7 @@ val buildJvmArch = System.getProperty("os.arch").lowercase()
 val buildOperatingSystem = System.getProperty("os.name").lowercase()
 val macGestureModuleExport =
     "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
+
 val macMediaShimTarget = if (buildOperatingSystem.startsWith("mac")) {
     when (buildJvmArch) {
         "aarch64", "arm64" -> "arm64" to "darwin-aarch64"
@@ -113,7 +112,19 @@ kotlin {
         withHostTest {}
     }
 
-    jvm()
+    jvm {
+        // skiko runtime is platform-specific, so we need to set the target architecture explicitly.
+        attributes {
+            attribute(
+                MachineArchitecture.ARCHITECTURE_ATTRIBUTE,
+                objects.named(Architectures.forInput(System.getProperty("os.arch")).name)
+            )
+            attribute(
+                OperatingSystemFamily.OPERATING_SYSTEM_ATTRIBUTE,
+                objects.named(DefaultNativePlatform.getCurrentOperatingSystem().toFamilyName())
+            )
+        }
+    }
 
     listOf(
         iosArm64(),
@@ -235,9 +246,11 @@ kotlin {
         }
 
         jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
+            // Add skiko runtime dependency manually since we excluded `org.jetbrains.compose.desktop:desktop-jvm-*`
+            // dependencies in the root build.gradle.kts because we want to use the newer Compose plugin.
+            runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime")
+
             implementation(libs.kotlinx.coroutines.swing)
-            implementation(libs.jetbrains.compose.desktop.common)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.ktor.client.apache5)
             implementation(libs.java.jna)
@@ -247,26 +260,24 @@ kotlin {
             implementation(libs.mediamp)
 
             // DefaultNativePlatform reports the physical CPU under Rosetta. Packaging must follow
-            // the JVM that runs Gradle so an x64 JDK produces an entirely x64 distribution.
+            // the JVM that runs Gradle so a x64 JDK produces an entirely x64 distribution.
+            val currentArch = Architectures.forInput(System.getProperty("os.arch"))
+            val currentOs = DefaultNativePlatform.getCurrentOperatingSystem()
+
             when {
-                buildOperatingSystem.startsWith("windows") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isWindows && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.x64)
                 }
-                buildOperatingSystem.startsWith("windows") &&
-                        buildJvmArch in setOf("aarch64", "arm64") -> {
+                currentOs.isWindows && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.arm64)
                 }
-                buildOperatingSystem.startsWith("mac") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isMacOsX && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.x64)
                 }
-                buildOperatingSystem.startsWith("mac") &&
-                        buildJvmArch in setOf("aarch64", "arm64") -> {
+                currentOs.isMacOsX && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.arm64)
                 }
-                buildOperatingSystem.startsWith("linux") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isLinux && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.linux.x64)
                 }
             }
@@ -325,6 +336,9 @@ tasks.withType<ProcessResources>().configureEach {
 
 compose.resources {
     publicResClass = true
+
+    // TODO: Remove once AppCDS and AOT support ships in a stable org.jetbrains.compose release.
+    generateResClass = always
 }
 
 // mediamp 0.2.1 accidentally publishes Compose's JUnit UI test stack as a runtime
@@ -368,10 +382,15 @@ compose.desktop {
             )
         }
 
-        buildTypes.release.proguard {
-            version = "7.9.1"
-            // obfuscate = true
-            configurationFiles.from(project.file("compose-desktop.pro"))
+        buildTypes.release {
+            proguard {
+                version = "7.10.0"
+                // obfuscate = true
+                configurationFiles.from(project.file("compose-desktop.pro"))
+            }
+            aot {
+                mode = AotMode.AotPrebuild
+            }
         }
     }
     nativeApplication {

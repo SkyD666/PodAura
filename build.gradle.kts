@@ -14,6 +14,21 @@ plugins {
     alias(libs.plugins.buildkonfig) apply false
 }
 
+subprojects {
+    configurations.configureEach {
+        setOf(
+            "desktop-jvm-linux-x64",
+            "desktop-jvm-linux-arm64",
+            "desktop-jvm-windows-x64",
+            "desktop-jvm-windows-arm64",
+            "desktop-jvm-macos-x64",
+            "desktop-jvm-macos-arm64",
+        ).forEach { module ->
+            exclude(group = "org.jetbrains.compose.desktop", module = module)
+        }
+    }
+}
+
 tasks.withType<UpdateDaemonJvm>().configureEach {
     languageVersion = JavaLanguageVersion.of(25)
     vendor = JvmVendorSpec.AZUL

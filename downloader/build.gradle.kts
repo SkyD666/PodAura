@@ -85,4 +85,7 @@ room3 {
 
 compose.resources {
     publicResClass = true
+
+    // TODO: Remove once AppCDS and AOT support ships in a stable org.jetbrains.compose release.
+    generateResClass = always
 }

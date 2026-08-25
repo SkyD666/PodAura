@@ -10,8 +10,9 @@ pluginManagement {
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")
         mavenCentral()
-        maven(url = "https://jitpack.io")
         gradlePluginPortal()
+        maven(url = "https://jitpack.io")
+        maven(url = "https://redirector.kotlinlang.org/maven/compose-dev")
     }
 }
 
@@ -27,6 +28,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven(url = "https://central.sonatype.com/repository/maven-snapshots")
         maven(url = "https://jitpack.io")
+        maven(url = "https://redirector.kotlinlang.org/maven/compose-dev")
     }
 }
 

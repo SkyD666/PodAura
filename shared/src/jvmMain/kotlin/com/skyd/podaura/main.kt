@@ -19,6 +19,8 @@ import com.skyd.podaura.ui.window.DesktopWindowHost
 import com.skyd.podaura.ui.window.initWindowsAppIdentity
 import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.seconds
 
 fun main() {
     initWindowsAppIdentity()
@@ -33,12 +35,21 @@ fun main() {
     onAppStart()
 
     application {
-        if (crashMessage.isBlank()) {
-            val appState = rememberDesktopAppState()
-            val exitPodAura = {
-                appState.destroySession()
-                exitApplication()
+        val appState = rememberDesktopAppState()
+        val exitPodAura = {
+            appState.destroySession()
+            exitApplication()
+        }
+
+        // For Compose AOT training run.
+        if (System.getProperty("compose.aot.training-run") == "true") {
+            LaunchedEffect(Unit) {
+                delay(10.seconds)
+                exitPodAura()
             }
+        }
+
+        if (crashMessage.isBlank()) {
             val windowController = remember(appState) {
                 WindowController(onClose = exitPodAura)
             }
