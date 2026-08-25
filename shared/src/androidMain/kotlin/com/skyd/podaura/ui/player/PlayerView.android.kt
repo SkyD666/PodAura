@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,6 +16,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.asImage
 import coil3.compose.AsyncImage
 import coil3.compose.rememberAsyncImagePainter
@@ -26,11 +28,15 @@ import com.skyd.podaura.ui.player.component.PlayerAndroidView
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.pip.PipBroadcastReceiver
 import com.skyd.podaura.ui.player.pip.PipListenerPreAPI12
 import com.skyd.podaura.ui.player.pip.pipParams
 import com.skyd.podaura.ui.player.pip.rememberIsInPipMode
 import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 
 @Composable
 actual fun PlatformPlayerView(
@@ -45,11 +51,68 @@ actual fun PlatformPlayerView(
 }
 
 @Composable
+actual fun PlatformPlayerLifecycleEffect(
+    coordinator: PlayerCoordinator,
+) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val backgroundPlay = BackgroundPlayPreference.current
+    var lifecycleResumed by remember(coordinator, lifecycleOwner) {
+        mutableStateOf(
+            lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+        )
+    }
+    var resumeWhenLifecycleResumes by remember(coordinator) { mutableStateOf(false) }
+
+    LaunchedEffect(coordinator, backgroundPlay, lifecycleResumed) {
+        if (backgroundPlay) {
+            if (resumeWhenLifecycleResumes) {
+                resumeWhenLifecycleResumes = false
+                coordinator.onCommand(PlayerCommand.Paused(false))
+            }
+            return@LaunchedEffect
+        }
+        if (lifecycleResumed) return@LaunchedEffect
+
+        coordinator.engineState
+            .combine(coordinator.playerState) { engineState, playerState ->
+                engineState.isReady && playerState.mediaStarted && !playerState.paused
+            }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect {
+                if (!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    resumeWhenLifecycleResumes = true
+                    coordinator.onCommand(PlayerCommand.Paused(true))
+                }
+            }
+    }
+
+    OnLifecycleEvent { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                lifecycleResumed = true
+                if (resumeWhenLifecycleResumes) {
+                    resumeWhenLifecycleResumes = false
+                    coordinator.onCommand(PlayerCommand.Paused(false))
+                }
+            }
+
+            Lifecycle.Event.ON_PAUSE -> lifecycleResumed = false
+
+            Lifecycle.Event.ON_DESTROY -> {
+                if (!backgroundPlay) coordinator.onCommand(PlayerCommand.Destroy)
+            }
+
+            else -> Unit
+        }
+    }
+}
+
+@Composable
 actual fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
     coordinator: PlayerCoordinator,
-    playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
@@ -72,39 +135,10 @@ actual fun PlatformContent(
 
     PipBroadcastReceiver(playStateCallback = playStateCallback)
 
-    var needPlayWhenResume by rememberSaveable { mutableStateOf(false) }
-
     OnLifecycleEvent { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                if (needPlayWhenResume) {
-                    needPlayWhenResume = false
-                    coordinator.onCommand(PlayerCommand.Paused(false))
-                }
-            }
-
-            Lifecycle.Event.ON_PAUSE -> {
-                val shouldPause = playState.isPlaying && !backgroundPlay
-                needPlayWhenResume = shouldPause
-                if (shouldPause) {
-                    coordinator.onCommand(PlayerCommand.Paused(true))
-                }
-            }
-
-            Lifecycle.Event.ON_STOP -> {
-                if (inPipMode) {    // Close button in PIP window is clicked
-                    onBack()
-                }
-            }
-
-            Lifecycle.Event.ON_DESTROY -> {
-                if (!backgroundPlay) {
-                    coordinator.onCommand(PlayerCommand.Destroy)
-                    coordinator.removeObserver(playerObserver)
-                }
-            }
-
-            else -> Unit
+        if (event == Lifecycle.Event.ON_STOP && inPipMode) {
+            // Close button in PIP window is clicked.
+            onBack()
         }
     }
 }

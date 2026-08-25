@@ -21,11 +21,13 @@ actual fun PlatformPlayerView(
 }
 
 @Composable
+actual fun PlatformPlayerLifecycleEffect(coordinator: PlayerCoordinator) = Unit
+
+@Composable
 actual fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
     coordinator: PlayerCoordinator,
-    playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,
     playStateCallback: PlayStateCallback,

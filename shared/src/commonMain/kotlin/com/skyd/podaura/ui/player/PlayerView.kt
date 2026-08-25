@@ -85,6 +85,7 @@ fun PlayerView(
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
     val engineState by coordinator.engineState.collectAsStateWithLifecycle()
+    PlatformPlayerLifecycleEffect(coordinator = coordinator)
     if (!engineState.isReady) {
         PlayerEngineScreen(
             engineState = engineState,
@@ -203,8 +204,7 @@ fun PlayerView(
         )
     }
 
-    // Must be remembered: a fresh lambda on every recomposition means the instance handed to
-    // PlatformContent is not the one that was registered, so removeObserver() silently no-ops.
+    // Keep the observer identity stable for lifecycle registration and removal.
     val currentOnBack by rememberUpdatedState(onBack)
     val playerObserver = remember {
         PlayerCoordinator.Observer { command ->
@@ -269,7 +269,6 @@ fun PlayerView(
         modifier = Modifier.fillMaxSize(),
         onBack = onBack,
         coordinator = coordinator,
-        playerObserver = playerObserver,
         playerState = playerState,
         playState = playState,
         playStateCallback = playStateCallback,
@@ -427,11 +426,15 @@ expect fun PlatformPlayerView(
 )
 
 @Composable
+expect fun PlatformPlayerLifecycleEffect(
+    coordinator: PlayerCoordinator,
+)
+
+@Composable
 expect fun PlatformContent(
     modifier: Modifier,
     onBack: () -> Unit,
     coordinator: PlayerCoordinator,
-    playerObserver: PlayerCoordinator.Observer,
     playerState: PlayerState,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
