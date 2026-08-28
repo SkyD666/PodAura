@@ -1,4 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
+import de.stefan_oltmann.msix.CreateAppxManifestTask
+import de.stefan_oltmann.msix.CreateMsixIconsTask
+import de.stefan_oltmann.msix.CreateMsixTask
 import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.Sync
@@ -18,6 +21,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room3)
     alias(libs.plugins.buildkonfig)
+    alias(libs.plugins.gradle.msix)
 }
 
 val buildJvmArch = System.getProperty("os.arch").lowercase()
@@ -399,6 +403,40 @@ compose.desktop {
             }
         }
     }
+}
+
+msix {
+    svgIcon.set(rootProject.layout.projectDirectory.file("doc/image/PodAura.svg"))
+
+    manifest {
+        appId.set("PodAura")
+        displayName.set("PodAura")
+        description.set(
+            "An all-in-one Podcast app for RSS subscriptions, updates, media downloads and playback."
+        )
+        identityName.set("SkyD666.PodAura")
+        publisher.set("CN=A899BB3F-B2EE-4733-BFE7-45715FA85273")
+        publisherDisplayName.set("SkyD666")
+        version.set("${findProperty("versionForDesktop")}.0")
+        processorArchitecture.set("x64")
+        appExecutable.set("PodAura.exe")
+        targetDeviceFamilyMinVersion.set("10.0.17763.0")
+    }
+}
+
+// gradle-msix-plugin 0.2.1 cannot discover the package name from Compose 1.12.
+val msixApplicationDirectory =
+    layout.buildDirectory.dir("compose/binaries/main-release/app/PodAura")
+
+tasks.named<CreateMsixIconsTask>("createMsixIcons") {
+    outputDir.set(msixApplicationDirectory.map { it.dir("resources") })
+}
+tasks.named<CreateAppxManifestTask>("createAppxManifest") {
+    outputFile.set(msixApplicationDirectory.map { it.file("AppxManifest.xml") })
+}
+tasks.named<CreateMsixTask>("createMsix") {
+    appDirectory.set(msixApplicationDirectory)
+    msixOutputFile.set(layout.buildDirectory.file("PodAura.msix"))
 }
 
 if (buildOperatingSystem.startsWith("mac")) {

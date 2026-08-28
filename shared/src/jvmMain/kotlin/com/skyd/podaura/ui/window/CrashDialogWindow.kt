@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberWindowState
 import com.skyd.fundation.config.Const
-import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
@@ -22,6 +21,7 @@ import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.CrashScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
+import com.skyd.podaura.util.appVersion
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.crash_window_title
@@ -31,7 +31,7 @@ fun CrashWindow(onCloseRequest: () -> Unit, crashInfo: String) {
     var message by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(crashInfo) {
         message = buildString {
-            append("Version: ").append(BuildKonfig.versionForDesktop).append("\n")
+            append("Version: ").append(appVersion.name).append("\n")
             append("OS: ").append(System.getProperty("os.name")).append("\n")
             append("OS Version: ").append(System.getProperty("os.version")).append("\n")
             append("OS Architecture: ").append(System.getProperty("os.arch")).append("\n")

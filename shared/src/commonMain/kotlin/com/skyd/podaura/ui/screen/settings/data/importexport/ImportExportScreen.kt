@@ -31,10 +31,10 @@ import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.fundation.ext.toAbsoluteDateTimeString
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.ext.validateFileName
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
+import com.skyd.podaura.util.appVersion
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
@@ -173,7 +173,7 @@ fun ImportExportScreen(
                             val appName = blockString(Res.string.app_name)
                             val time = Clock.currentTimeMillis().toAbsoluteDateTimeString()
                             jsonPreferenceSaverLauncher.launch(
-                                suggestedName = "${appName}_${BuildKonfig.versionName}_preferences_${time}".validateFileName(),
+                                suggestedName = "${appName}_${appVersion.name}_preferences_${time}".validateFileName(),
                                 defaultExtension = "json"
                             )
                         }

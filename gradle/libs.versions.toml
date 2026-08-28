@@ -28,6 +28,7 @@ jna = "5.19.1"
 tracing-perfetto = "1.0.1"
 mediamp = "0.3.1"
 jaudiotagger = "3.0.1"
+gradle-msix = "0.2.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
@@ -179,3 +180,4 @@ compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose" 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room3 = { id = "androidx.room3", version.ref = "room3" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version = "0.22.0" }
+gradle-msix = { id = "de.stefan-oltmann.gradle-msix-plugin", version.ref = "gradle-msix" }

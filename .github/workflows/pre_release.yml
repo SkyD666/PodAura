@@ -46,9 +46,9 @@ jobs:
             artifact-name: [ Pre-Release macOS DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: windows-latest
             target-platform: Jvm Windows x64
-            build-command: ./gradlew createReleaseDistributable
-            artifact-path: [ shared/build/compose/binaries/main-release/app/ ]
-            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            build-command: ./gradlew :shared:createMsix
+            artifact-path: [ shared/build/compose/binaries/main-release/app/, shared/build/PodAura.msix ]
+            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Pre-Release Windows Store MSIX (Jvm x64), Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64

@@ -1,7 +1,7 @@
 package com.skyd.podaura.model.repository.fullcontent
 
 import com.skyd.fundation.config.Const
-import com.skyd.podaura.BuildKonfig
+import com.skyd.podaura.util.appVersion
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
@@ -236,7 +236,7 @@ private fun HttpRequestBuilder.fullContentHeaders(accept: String) {
     header(HttpHeaders.Accept, accept)
     header(
         HttpHeaders.UserAgent,
-        "PodAura/${BuildKonfig.versionName} (+${Const.GITHUB_REPO})",
+        "PodAura/${appVersion.name} (+${Const.GITHUB_REPO})",
     )
 }
 

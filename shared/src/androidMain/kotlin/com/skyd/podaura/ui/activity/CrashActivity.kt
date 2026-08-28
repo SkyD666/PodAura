@@ -12,8 +12,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
 import com.skyd.fundation.config.Const
-import com.skyd.podaura.ext.getAppVersionCode
-import com.skyd.podaura.ext.getAppVersionName
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
@@ -21,6 +19,7 @@ import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.settings.CrashScreen
 import com.skyd.podaura.ui.theme.PodAuraTheme
+import com.skyd.podaura.util.appVersion
 
 /**
  * CrashActivity, do not extend BaseActivity
@@ -43,8 +42,8 @@ class CrashActivity : ComponentActivity() {
 
         val crashInfo = intent.getStringExtra(CRASH_INFO)
         val message = buildString {
-            append("VersionName: ").append(getAppVersionName()).append("\n")
-            append("VersionCode: ").append(getAppVersionCode()).append("\n")
+            append("VersionName: ").append(appVersion.name).append("\n")
+            append("VersionCode: ").append(appVersion.code).append("\n")
             append("Brand: ").append(Build.BRAND).append("\n")
             append("Model: ").append(Build.MODEL).append("\n")
             append("SDK Version: ").append(Build.VERSION.SDK_INT).append("\n")

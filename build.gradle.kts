@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room3) apply false
     alias(libs.plugins.buildkonfig) apply false
+    alias(libs.plugins.gradle.msix) apply false
 }
 
 tasks.withType<UpdateDaemonJvm>().configureEach {

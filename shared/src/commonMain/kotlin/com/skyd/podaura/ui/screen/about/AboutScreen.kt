@@ -75,13 +75,13 @@ import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
 import com.skyd.fundation.config.Const
-import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.license.LicenseRoute
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
+import com.skyd.podaura.util.appVersion
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
@@ -290,7 +290,7 @@ private fun TextArea(modifier: Modifier = Modifier) {
         BadgedBox(
             badge = {
                 Badge {
-                    val badgeNumber = BuildKonfig.versionName
+                    val badgeNumber = appVersion.name
                     Text(
                         text = badgeNumber,
                         modifier = Modifier.semantics { contentDescription = badgeNumber }
