@@ -26,6 +26,18 @@ class NSDateFormatter {
         formatter("setTimeStyle:", style)
     }
 
+    fun setLocale(localeIdentifier: String) {
+        val identifier = ObjCRuntime.objc_getClass("NSString")(
+            "stringWithUTF8String:",
+            localeIdentifier,
+        )
+        val locale = ObjCRuntime.objc_getClass("NSLocale")(
+            "localeWithLocaleIdentifier:",
+            identifier,
+        )
+        formatter("setLocale:", locale)
+    }
+
     fun stringFromDate(nsDate: Pointer): String {
         return formatter("stringFromDate:", nsDate).getUtf8String(0)
     }

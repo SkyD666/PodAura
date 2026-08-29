@@ -522,4 +522,9 @@
     <string name="read_screen_get_full_content">全文を取得</string>
     <string name="read_screen_show_feed_content">フィードの内容を表示</string>
     <string name="read_screen_full_content_failed">全文を取得できませんでした</string>
+    <string name="translation_screen_name">言語と翻訳</string>
+    <string name="translation_screen_description">アプリの言語とコンテンツ翻訳サービスを設定</string>
+    <string name="app_language_category">言語</string>
+    <string name="app_language_screen_name">アプリの言語</string>
+    <string name="app_language_follow_system">システム設定に従う</string>
 </resources>

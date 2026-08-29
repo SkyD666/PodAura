@@ -78,13 +78,17 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.DefaultBackClick
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.bean.translation.TranslationProfile
 import com.skyd.podaura.model.bean.translation.TranslationProviderConfig
 import com.skyd.podaura.model.bean.translation.TranslationProviderType
+import com.skyd.podaura.model.preference.language.AppLanguage
+import com.skyd.podaura.model.preference.language.AppLanguagePreference
 import com.skyd.podaura.model.repository.translation.DeepLTranslationProvider
 import com.skyd.podaura.model.repository.translation.GoogleTranslationProvider
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
+import com.skyd.podaura.ui.screen.settings.language.AppLanguageRoute
 import com.skyd.podaura.ui.screen.translation.translationErrorText
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
@@ -96,6 +100,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.app_language_category
+import podaura.shared.generated.resources.app_language_follow_system
+import podaura.shared.generated.resources.app_language_screen_name
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.delete
@@ -143,6 +150,7 @@ fun TranslationSettingsScreen(
     windowInsets: WindowInsets = WindowInsets.safeDrawing,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     var editedProfileId by remember { mutableStateOf<String?>(null) }
@@ -205,6 +213,23 @@ fun TranslationSettingsScreen(
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = innerPadding,
         ) {
+            group(text = { getString(Res.string.app_language_category) }) {
+                item {
+                    val selectedLanguage = AppLanguage.fromPreferenceValue(
+                        AppLanguagePreference.current
+                    )
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Language),
+                        text = stringResource(Res.string.app_language_screen_name),
+                        descriptionText = if (selectedLanguage == AppLanguage.System) {
+                            stringResource(Res.string.app_language_follow_system)
+                        } else {
+                            checkNotNull(selectedLanguage.nativeDisplayName)
+                        },
+                        onClick = { navBackStack.add(AppLanguageRoute) },
+                    )
+                }
+            }
             group(text = { getString(Res.string.translation_profiles_category) }) {
                 if (state.profiles.isEmpty()) {
                     item {

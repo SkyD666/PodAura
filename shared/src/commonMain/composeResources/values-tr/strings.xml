@@ -529,4 +529,9 @@
     <string name="read_screen_get_full_content">Tam metni getir</string>
     <string name="read_screen_show_feed_content">Akış içeriğini göster</string>
     <string name="read_screen_full_content_failed">Tam metin alınamadı</string>
+    <string name="translation_screen_name">Dil ve çeviri</string>
+    <string name="translation_screen_description">Uygulama dilini ve içerik çeviri hizmetlerini ayarla</string>
+    <string name="app_language_category">Dil</string>
+    <string name="app_language_screen_name">Uygulama dili</string>
+    <string name="app_language_follow_system">Sistemi takip et</string>
 </resources>

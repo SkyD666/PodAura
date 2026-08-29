@@ -545,8 +545,11 @@
     <string name="read_screen_get_full_content">Get full article</string>
     <string name="read_screen_show_feed_content">Show feed content</string>
     <string name="read_screen_full_content_failed">Unable to get the full article</string>
-    <string name="translation_screen_name">Translation</string>
-    <string name="translation_screen_description">Manage translation profiles and in-memory translation cache</string>
+    <string name="translation_screen_name">Language &amp; Translation</string>
+    <string name="translation_screen_description">Set the app language and content translation services</string>
+    <string name="app_language_category">Language</string>
+    <string name="app_language_screen_name">App language</string>
+    <string name="app_language_follow_system">Follow system</string>
     <string name="translation_profiles_category">Profiles</string>
     <string name="translation_empty_profiles">No translation profile configured</string>
     <string name="translation_empty_profiles_description">Add a translation profile to translate articles</string>

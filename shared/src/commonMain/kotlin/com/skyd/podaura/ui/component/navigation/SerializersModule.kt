@@ -37,6 +37,7 @@ import com.skyd.podaura.ui.screen.settings.appearance.media.MediaStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.read.ReadStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
+import com.skyd.podaura.ui.screen.settings.language.AppLanguageRoute
 import com.skyd.podaura.ui.screen.settings.data.DataRoute
 import com.skyd.podaura.ui.screen.settings.data.autodelete.AutoDeleteRoute
 import com.skyd.podaura.ui.screen.settings.data.deleteconstraint.DeleteConstraintRoute
@@ -103,5 +104,6 @@ val PodAuraSerializersModule = SerializersModule {
         subclass(HistorySearchRoute::class, HistorySearchRoute.serializer())
         subclass(SettingsListRoute::class, SettingsListRoute.serializer())
         subclass(TranslationSettingsRoute::class, TranslationSettingsRoute.serializer())
+        subclass(AppLanguageRoute::class, AppLanguageRoute.serializer())
     }
 }

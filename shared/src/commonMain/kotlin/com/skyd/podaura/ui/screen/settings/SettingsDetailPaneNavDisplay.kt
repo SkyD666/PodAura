@@ -30,6 +30,8 @@ import com.skyd.podaura.ui.screen.settings.appearance.search.SearchStyleRoute
 import com.skyd.podaura.ui.screen.settings.appearance.search.SearchStyleScreen
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorRoute
 import com.skyd.podaura.ui.screen.settings.behavior.BehaviorScreen
+import com.skyd.podaura.ui.screen.settings.language.AppLanguageRoute
+import com.skyd.podaura.ui.screen.settings.language.AppLanguageScreen
 import com.skyd.podaura.ui.screen.settings.data.DataRoute
 import com.skyd.podaura.ui.screen.settings.data.DataScreen
 import com.skyd.podaura.ui.screen.settings.data.autodelete.AutoDeleteRoute
@@ -141,6 +143,9 @@ internal fun SettingsDetailPaneNavDisplay(
             }
             entry<TranslationSettingsRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
                 TranslationSettingsScreen(onBack = onPaneBack, windowInsets = detailWindowInsets)
+            }
+            entry<AppLanguageRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
+                AppLanguageScreen(windowInsets = detailWindowInsets)
             }
             entry<FilePickerRoute>(metadata = ListDetailSceneStrategy.detailPane()) {
                 FilePickerLauncher(route = it, windowInsets = detailWindowInsets)

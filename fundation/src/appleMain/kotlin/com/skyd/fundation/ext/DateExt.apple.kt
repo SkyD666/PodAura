@@ -1,5 +1,6 @@
 package com.skyd.fundation.ext
 
+import com.skyd.fundation.locale.currentFormattingLocale
 import platform.Foundation.NSCalendarUnitHour
 import platform.Foundation.NSCalendarUnitMinute
 import platform.Foundation.NSCalendarUnitSecond
@@ -20,6 +21,7 @@ import kotlin.time.Duration.Companion.days
 actual fun Long.toAbsoluteDateTimeString(): String {
     val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
     val formatter = NSDateFormatter().apply {
+        locale = currentFormattingLocale()
         dateStyle = NSDateFormatterMediumStyle
         timeStyle = NSDateFormatterNoStyle
     }
@@ -29,6 +31,7 @@ actual fun Long.toAbsoluteDateTimeString(): String {
 actual fun Long.toRelativeDateTimeString(): String {
     val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
     val formatter = NSDateFormatter().apply {
+        locale = currentFormattingLocale()
         dateStyle = NSDateFormatterMediumStyle
         timeStyle = NSDateFormatterNoStyle
         doesRelativeDateFormatting = true
@@ -39,6 +42,7 @@ actual fun Long.toRelativeDateTimeString(): String {
 actual fun Long.toShortDateString(): String {
     val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
     val formatter = NSDateFormatter().apply {
+        locale = currentFormattingLocale()
         setLocalizedDateFormatFromTemplate("Md")
     }
     return formatter.stringFromDate(date)
@@ -47,6 +51,7 @@ actual fun Long.toShortDateString(): String {
 actual fun Long.toTimeString(): String {
     val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
     val formatter = NSDateFormatter().apply {
+        locale = currentFormattingLocale()
         dateStyle = NSDateFormatterNoStyle
         timeStyle = NSDateFormatterShortStyle
     }
@@ -61,6 +66,7 @@ actual fun Long.toWeekdayString(): String {
     } else {
         val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
         val formatter = NSDateFormatter().apply {
+            locale = currentFormattingLocale()
             setLocalizedDateFormatFromTemplate("EEE")
         }
         formatter.stringFromDate(date)

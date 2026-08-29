@@ -5,6 +5,7 @@ import com.skyd.fundation.jna.mac.NSCalendar
 import com.skyd.fundation.jna.mac.NSDate
 import com.skyd.fundation.jna.mac.NSDateComponentsFormatter
 import com.skyd.fundation.jna.mac.NSDateFormatter
+import com.skyd.fundation.locale.currentFormattingLocale
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.notSupport
 import com.skyd.fundation.util.platform
@@ -29,7 +30,7 @@ actual fun Long.toAbsoluteDateTimeString(): String {
         Platform.Linux -> {
             val formatter = DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
-                .withLocale(Locale.getDefault())
+                .withLocale(currentFormattingLocale())
             return LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(this),
                 TimeZone.getDefault().toZoneId()
@@ -39,6 +40,7 @@ actual fun Long.toAbsoluteDateTimeString(): String {
         Platform.macOS_Jvm -> {
             val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
             val formatter = NSDateFormatter().apply {
+                setLocale(currentFormattingLocale().toLanguageTag())
                 setDateStyle(NSDateFormatter.Style.MEDIUM)
                 setTimeStyle(NSDateFormatter.Style.NO)
             }
@@ -57,7 +59,7 @@ actual fun Long.toRelativeDateTimeString(): String {
         Platform.Linux -> {
             val formatter = DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
-                .withLocale(Locale.getDefault())
+                .withLocale(currentFormattingLocale())
             return LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(this),
                 TimeZone.getDefault().toZoneId()
@@ -67,6 +69,7 @@ actual fun Long.toRelativeDateTimeString(): String {
         Platform.macOS_Jvm -> {
             val date = NSDate.dateWithTimeIntervalSince1970(this / 1000.0)
             val formatter = NSDateFormatter().apply {
+                setLocale(currentFormattingLocale().toLanguageTag())
                 setDateStyle(NSDateFormatter.Style.MEDIUM)
                 setTimeStyle(NSDateFormatter.Style.NO)
                 setDoesRelativeDateFormatting(true)
@@ -83,7 +86,7 @@ actual fun Long.formatElapsedTime(): String {
         Platform.macOS_Native -> notSupport("formatElapsedTime")
 
         Platform.Windows,
-        Platform.Linux -> PrettyTime().format(
+        Platform.Linux -> PrettyTime(currentFormattingLocale()).format(
             LocalDateTime.ofInstant(
                 Instant.ofEpochMilli(this),
                 TimeZone.getDefault().toZoneId()
@@ -105,12 +108,18 @@ actual fun Long.formatElapsedTime(): String {
 }
 
 actual fun Long.toShortDateString(): String {
-    val formatter = DateFormat.getPatternInstance(DateFormat.NUM_MONTH_DAY, Locale.getDefault())
+    val formatter = DateFormat.getPatternInstance(
+        DateFormat.NUM_MONTH_DAY,
+        currentFormattingLocale(),
+    )
     return formatter.format(this)
 }
 
 actual fun Long.toTimeString(): String {
-    val formatter = DateFormat.getPatternInstance(DateFormat.HOUR_MINUTE, Locale.getDefault())
+    val formatter = DateFormat.getPatternInstance(
+        DateFormat.HOUR_MINUTE,
+        currentFormattingLocale(),
+    )
     return formatter.format(this)
 }
 
@@ -120,7 +129,7 @@ actual fun Long.toWeekdayString(): String {
     return if (delta < 3.days.inWholeMilliseconds) {
         toRelativeDateTimeString()
     } else {
-        val formatter = SimpleDateFormat("EEE", Locale.getDefault())
+        val formatter = SimpleDateFormat("EEE", currentFormattingLocale())
         formatter.format(this)
     }
 }

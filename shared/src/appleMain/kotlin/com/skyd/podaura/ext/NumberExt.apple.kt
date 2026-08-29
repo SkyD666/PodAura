@@ -1,9 +1,8 @@
 package com.skyd.podaura.ext
 
+import com.skyd.fundation.ext.format
 import platform.Foundation.NSByteCountFormatter
 import platform.Foundation.NSByteCountFormatterCountStyleFile
-import platform.Foundation.NSString
-import platform.Foundation.stringWithFormat
 
 actual fun Long.fileSize(): String = NSByteCountFormatter.stringFromByteCount(
     byteCount = this,
@@ -12,5 +11,5 @@ actual fun Long.fileSize(): String = NSByteCountFormatter.stringFromByteCount(
 
 actual fun Float.toPercentage(point: Int): String {
     require(point >= 0) { "Float.toPercentage error, point should be positive" }
-    return NSString.stringWithFormat("%.${point}f%%", this * 100)
+    return (this * 100).format(point) + "%"
 }

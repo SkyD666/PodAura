@@ -529,4 +529,9 @@
     <string name="read_screen_get_full_content">Akiri plenan artikolon</string>
     <string name="read_screen_show_feed_content">Montri fluofontan enhavon</string>
     <string name="read_screen_full_content_failed">Ne eblis akiri la plenan artikolon</string>
+    <string name="translation_screen_name">Lingvo kaj tradukado</string>
+    <string name="translation_screen_description">Agordi la lingvon de la programo kaj tradukservojn por enhavo</string>
+    <string name="app_language_category">Lingvo</string>
+    <string name="app_language_screen_name">Lingvo de la programo</string>
+    <string name="app_language_follow_system">Laŭ la sistemo</string>
 </resources>

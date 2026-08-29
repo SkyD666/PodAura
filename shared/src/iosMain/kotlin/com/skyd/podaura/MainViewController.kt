@@ -3,7 +3,6 @@ package com.skyd.podaura
 import androidx.compose.ui.window.ComposeUIViewController
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.screen.AppEntrance
-import com.skyd.podaura.util.ResourceEnvironmentFix
 import platform.UIKit.UIViewController
 
 @Suppress("FunctionName", "unused")
@@ -11,8 +10,6 @@ fun MainViewController(): UIViewController {
     initKoin()
     onAppStart()
     return ComposeUIViewController {
-        ResourceEnvironmentFix {
-            AppEntrance()
-        }
+        AppEntrance()
     }
 }

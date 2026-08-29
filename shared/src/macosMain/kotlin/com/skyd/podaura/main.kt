@@ -6,7 +6,6 @@ import com.skyd.compone.component.blockString
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.component.Window
 import com.skyd.podaura.ui.screen.AppEntrance
-import com.skyd.podaura.util.ResourceEnvironmentFix
 import platform.AppKit.NSApplication
 import platform.AppKit.NSApplicationActivationPolicy
 import platform.AppKit.NSApplicationDelegateProtocol
@@ -25,9 +24,7 @@ fun main() {
                 title = blockString(Res.string.app_name),
                 size = DpSize(1200.dp, 800.dp)
             ) {
-                ResourceEnvironmentFix {
-                    AppEntrance()
-                }
+                AppEntrance()
             }
         }
     }

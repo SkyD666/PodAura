@@ -530,8 +530,11 @@
     <string name="read_screen_get_full_content">取得全文</string>
     <string name="read_screen_show_feed_content">顯示訂閱內容</string>
     <string name="read_screen_full_content_failed">無法取得全文</string>
-    <string name="translation_screen_name">翻譯服務</string>
-    <string name="translation_screen_description">管理翻譯設定檔和記憶體翻譯快取</string>
+    <string name="translation_screen_name">語言和翻譯</string>
+    <string name="translation_screen_description">設定應用程式語言與內容翻譯服務</string>
+    <string name="app_language_category">語言</string>
+    <string name="app_language_screen_name">應用程式語言</string>
+    <string name="app_language_follow_system">跟隨系統</string>
     <string name="translation_profiles_category">翻譯設定檔</string>
     <string name="translation_empty_profiles">尚未設定翻譯服務</string>
     <string name="translation_empty_profiles_description">新增翻譯設定檔後即可翻譯文章</string>
