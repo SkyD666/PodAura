@@ -75,7 +75,15 @@ actual class MPV {
             }
 
             override fun event(p0: Int) = guarded {
-                listener.onEvent(p0)
+                if (p0 == MPVEvent.END_FILE) {
+                    listener.onEndFile(
+                        reason = UNKNOWN_END_REASON,
+                        mpvError = 0,
+                        playlistEntryId = UNKNOWN_PLAYLIST_ENTRY_ID,
+                    )
+                } else {
+                    listener.onEvent(p0)
+                }
             }
 
             override fun efEvent(p0: String) {
@@ -138,3 +146,6 @@ actual class MPV {
 }
 
 actual fun platformMPV(): MPV = MPV()
+
+private const val UNKNOWN_END_REASON = -1
+private const val UNKNOWN_PLAYLIST_ENTRY_ID = -1L

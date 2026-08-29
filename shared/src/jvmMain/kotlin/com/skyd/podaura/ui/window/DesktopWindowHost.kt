@@ -68,6 +68,10 @@ private fun MainWindow(
             LocalPlayerSession provides appState,
             LocalWindowController provides windowController,
         ) {
+            WindowsMediaControlsEffect(
+                controller = appState.playerWindowController,
+                isMainWindow = true,
+            )
             WindowFrame(
                 onCloseRequest = windowController.onClose,
                 state = windowState,

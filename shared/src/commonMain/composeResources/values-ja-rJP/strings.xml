@@ -14,6 +14,7 @@
     <string name="waiting">待機中…</string>
     <string name="close">閉じる</string>
     <string name="retry">再試行</string>
+    <string name="playback_failed">再生に失敗しました</string>
     <string name="image_preview_description">画像プレビュー</string>
     <string name="image_preview_load_failed">画像を読み込めませんでした</string>
     <string name="exit">終了</string>

@@ -47,7 +47,11 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.Zoom -> old.copy(zoom = value)
         is PlayerEvent.AudioDelay -> old.copy(audioDelay = value)
         is PlayerEvent.SubtitleDelay -> old.copy(subTitleDelay = value)
-        is PlayerEvent.PlaybackRestart -> old.copy(mediaStarted = true)
+        is PlayerEvent.PlaybackRestart -> old.copy(
+            mediaStarted = true,
+            lastPlaybackEnd = null,
+        )
+
         is PlayerEvent.StartFile -> old.copy(
             mediaStarted = true,
             seekable = false,
@@ -67,9 +71,16 @@ class PlayerModel : PlayerCoordinator.Observer {
             idling = false,
             mediaTitle = null,
             mediaThumbnail = null,
+            lastPlaybackEnd = null,
         )
 
-        is PlayerEvent.EndFile -> old.copy(paused = true, mediaStarted = false)
+        is PlayerEvent.EndFile -> old.copy(
+            paused = true,
+            mediaStarted = false,
+            lastPlaybackEnd = end,
+        )
+
+        PlayerEvent.ClearPlaybackEnd -> old.copy(lastPlaybackEnd = null)
         is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
         is PlayerEvent.Shutdown -> initialPlayerState
         else -> old

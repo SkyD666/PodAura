@@ -4,6 +4,8 @@ import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
+import com.skyd.podaura.ui.player.PlaybackEnd
+import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -149,7 +151,7 @@ class DesktopMediaSessionControllerTest {
     }
 
     @Test
-    fun normalPositionTicksAreNotRepublishedButSeekCompletionIs() = runTest {
+    fun everyPositionTickIsPublishedToTheSystemTimeline() = runTest {
         val adapter = RecordingAdapter()
         val controller = controller(adapter)
         val initial = playerState(
@@ -162,12 +164,38 @@ class DesktopMediaSessionControllerTest {
 
         controller.update(initial, PlayerEvent.Duration(120L))
         controller.update(initial.copy(position = 11L), PlayerEvent.Position(11L))
-        assertEquals(1, adapter.updates.size)
+        assertEquals(2, adapter.updates.size)
 
         controller.update(initial.copy(position = 11L), PlayerEvent.Seek)
         controller.update(initial.copy(position = 70L), PlayerEvent.Position(70L))
-        assertEquals(2, adapter.updates.size)
+        assertEquals(3, adapter.updates.size)
         assertEquals(70.0, adapter.updates.last().positionSeconds)
+        controller.close()
+    }
+
+    @Test
+    fun playbackErrorPublishesStoppedStateAndKeepsRetryAvailable() = runTest {
+        val adapter = RecordingAdapter()
+        val controller = controller(adapter)
+
+        controller.update(
+            playerState(
+                paths = listOf("https://example.com/episode.mp3"),
+                index = 0,
+                playbackEnd = PlaybackEnd(
+                    reason = PlaybackEndReason.Error,
+                    errorCode = -13,
+                    playlistEntryId = 42L,
+                    path = "https://example.com/episode.mp3",
+                ),
+            )
+        )
+
+        val snapshot = adapter.updates.single()
+        assertEquals(DesktopPlaybackState.Stopped, snapshot.playbackState)
+        assertTrue(snapshot.canPlay)
+        assertFalse(snapshot.canPause)
+        assertFalse(snapshot.canChangePlaybackPosition)
         controller.close()
     }
 
@@ -304,6 +332,7 @@ class DesktopMediaSessionControllerTest {
         speed: Float = 1f,
         album: String? = null,
         playlistPosition: Int = index,
+        playbackEnd: PlaybackEnd? = null,
     ): PlayerState {
         val playlist = LinkedHashMap<String, PlaylistMediaWithArticleBean>()
         paths.forEachIndexed { itemIndex, path ->
@@ -332,6 +361,7 @@ class DesktopMediaSessionControllerTest {
             playlistPosition = playlistPosition,
             paused = paused,
             idling = false,
+            lastPlaybackEnd = playbackEnd,
         )
     }
 

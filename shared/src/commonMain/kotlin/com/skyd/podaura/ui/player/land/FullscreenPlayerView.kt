@@ -1,11 +1,17 @@
 package com.skyd.podaura.ui.player.land
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.skyd.podaura.ui.player.PlayerCommand
@@ -30,6 +36,7 @@ internal fun FullscreenPlayerView(
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onSaveScreenshot: (PlatformFile) -> Unit,
     onCommand: (PlayerCommand) -> Unit,
+    snackbarHostState: SnackbarHostState,
     onExitFullscreen: () -> Unit,
     playerContent: @Composable () -> Unit,
 ) {
@@ -51,19 +58,25 @@ internal fun FullscreenPlayerView(
         )
     }
 
-    playerContent()
-    PlayerController(
-        playerStateFlow = playerStateFlow,
-        enabled = { playState.mediaLoaded },
-        playState = { playState },
-        playStateCallback = playStateCallback,
-        dialogState = dialogState,
-        onDialogVisibilityChanged = onDialogVisibilityChanged,
-        transformState = { transformState },
-        transformStateCallback = transformStateCallback,
-        onScreenshot = { onCommand(PlayerCommand.Screenshot(onSaveScreenshot)) },
-        onExitFullscreen = onExitFullscreen,
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        playerContent()
+        PlayerController(
+            playerStateFlow = playerStateFlow,
+            enabled = { playState.mediaLoaded },
+            playState = { playState },
+            playStateCallback = playStateCallback,
+            dialogState = dialogState,
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+            transformState = { transformState },
+            transformStateCallback = transformStateCallback,
+            onScreenshot = { onCommand(PlayerCommand.Screenshot(onSaveScreenshot)) },
+            onExitFullscreen = onExitFullscreen,
+        )
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
 
     val systemBarsVisibilityController = rememberSystemBarsVisibilityController()
     LifecycleResumeEffect(Unit) {

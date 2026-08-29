@@ -3,24 +3,84 @@ package com.skyd.podaura.ui.window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.window.WindowScope
+import com.skyd.fundation.jna.windows.WindowsMediaPlayer
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.Pointer
 import com.sun.jna.WString
+import com.sun.jna.platform.win32.Advapi32Util
 import com.sun.jna.platform.win32.Shell32
+import com.sun.jna.platform.win32.WinReg
+import com.sun.jna.ptr.IntByReference
 import java.awt.Taskbar
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/** Gives Gradle/JVM launches their own taskbar identity instead of java.exe's identity. */
+private const val WINDOWS_APP_USER_MODEL_ID = "com.skyd.podaura"
+private const val WINDOWS_DISPLAY_NAME = "PodAura"
+private const val APPMODEL_ERROR_NO_PACKAGE = 15700
+private const val APP_USER_MODEL_REGISTRY_KEY =
+    "Software\\Classes\\AppUserModelId\\$WINDOWS_APP_USER_MODEL_ID"
+
+/** Gives unpackaged JVM launches their own Shell/SMTC identity instead of java.exe's identity. */
 internal fun initWindowsAppIdentity() {
     if (platform != Platform.Windows) return
 
-    Shell32.INSTANCE.SetCurrentProcessExplicitAppUserModelID(WString("com.skyd.podaura"))
+    // MSIX already supplies a package AUMID. Windows does not allow packaged apps to replace it
+    // with an application-defined value.
+    if (!WindowsPackageIdentity.hasPackageIdentity()) {
+        registerUnpackagedAppIdentity()
+        Shell32.INSTANCE.SetCurrentProcessExplicitAppUserModelID(
+            WString(WINDOWS_APP_USER_MODEL_ID)
+        )
+        runCatching { WindowsMediaPlayer.ensureAppIdentity() }
+    }
     runCatching {
         val taskbar = Taskbar.getTaskbar()
         if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
             taskbar.iconImage = PodAuraIcons.images.last()
+        }
+    }
+}
+
+private fun registerUnpackagedAppIdentity() {
+    runCatching {
+        Advapi32Util.registryCreateKey(
+            WinReg.HKEY_CURRENT_USER,
+            APP_USER_MODEL_REGISTRY_KEY,
+        )
+        Advapi32Util.registrySetExpandableStringValue(
+            WinReg.HKEY_CURRENT_USER,
+            APP_USER_MODEL_REGISTRY_KEY,
+            "DisplayName",
+            WINDOWS_DISPLAY_NAME,
+        )
+    }
+}
+
+private object WindowsPackageIdentity {
+    fun hasPackageIdentity(): Boolean = runCatching {
+        val packageNameLength = IntByReference()
+        KernelAppModelApi.instance.GetCurrentPackageFullName(
+            packageNameLength,
+            null,
+        ) != APPMODEL_ERROR_NO_PACKAGE
+    }.getOrDefault(false)
+
+    private interface KernelAppModelApi : Library {
+        fun GetCurrentPackageFullName(
+            packageFullNameLength: IntByReference,
+            packageFullName: Pointer?,
+        ): Int
+
+        companion object {
+            val instance: KernelAppModelApi = Native.load(
+                "kernel32",
+                KernelAppModelApi::class.java,
+            )
         }
     }
 }

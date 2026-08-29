@@ -45,6 +45,33 @@ sealed interface PlayerCommand {
     data object CycleLoop : PlayerCommand
 }
 
+enum class PlaybackEndReason {
+    Eof,
+    Stop,
+    Quit,
+    Error,
+    Redirect,
+    Unknown;
+
+    companion object {
+        fun fromMpv(value: Int): PlaybackEndReason = when (value) {
+            0 -> Eof
+            2 -> Stop
+            3 -> Quit
+            4 -> Error
+            5 -> Redirect
+            else -> Unknown
+        }
+    }
+}
+
+data class PlaybackEnd(
+    val reason: PlaybackEndReason,
+    val errorCode: Int? = null,
+    val playlistEntryId: Long? = null,
+    val path: String? = null,
+)
+
 sealed interface PlayerEvent {
     data object Shutdown : PlayerEvent
     data class Idling(val value: Boolean) : PlayerEvent
@@ -60,7 +87,8 @@ sealed interface PlayerEvent {
     data class Seekable(val value: Boolean) : PlayerEvent
     data class Loading(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent
-    data object EndFile : PlayerEvent
+    data class EndFile(val end: PlaybackEnd) : PlayerEvent
+    data object ClearPlaybackEnd : PlayerEvent
     data class StartFile(val path: String?) : PlayerEvent
     data object PlaybackRestart : PlayerEvent
     data class Zoom(val value: Float) : PlayerEvent

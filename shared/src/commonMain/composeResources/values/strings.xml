@@ -16,6 +16,7 @@
     <string name="waiting">Waiting…</string>
     <string name="close">Close</string>
     <string name="retry">Retry</string>
+    <string name="playback_failed">Playback failed</string>
     <string name="image_preview_description">Image preview</string>
     <string name="image_preview_load_failed">Unable to load image</string>
     <string name="exit">Exit</string>

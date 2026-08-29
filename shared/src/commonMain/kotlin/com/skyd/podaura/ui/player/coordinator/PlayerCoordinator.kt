@@ -17,6 +17,8 @@ import com.skyd.podaura.model.repository.player.IPlayerRepository
 import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import com.skyd.podaura.ui.player.LoopMode
+import com.skyd.podaura.ui.player.PlaybackEnd
+import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.mpv.EventListener
@@ -233,6 +235,12 @@ class PlayerCoordinator : LifecycleOwner {
         when (message) {
             is ActorMessage.Command -> executeCommand(message.command)
             is ActorMessage.Key -> player.dispatchKey(message.input)
+            is ActorMessage.EndFile -> handleEndFile(
+                reason = message.reason,
+                mpvError = message.mpvError,
+                playlistEntryId = message.playlistEntryId,
+            )
+
             is ActorMessage.NativeEvent -> return handleNativeEvent(message.event)
             is ActorMessage.Property -> handleProperty(message)
             is ActorMessage.Surface -> handleSurface(message.event)
@@ -246,6 +254,7 @@ class PlayerCoordinator : LifecycleOwner {
         when (command) {
             is PlayerCommand.RemoveMediaFromPlaylist -> removeMedia(command)
             is PlayerCommand.Paused -> {
+                if (!command.paused && handleFailedPlaybackRetry()) return
                 if (!command.paused) {
                     if (player.keepOpen && player.eofReached) player.seek(0)
                     else if (player.isIdling && player.playlistCount > 0) {
@@ -255,7 +264,10 @@ class PlayerCoordinator : LifecycleOwner {
                 player.paused = command.paused
             }
 
-            PlayerCommand.PlayOrPause -> player.cyclePause()
+            PlayerCommand.PlayOrPause -> {
+                if (!handleFailedPlaybackRetry()) player.cyclePause()
+            }
+
             PlayerCommand.PreviousMedia -> player.playlistPrev()
             PlayerCommand.NextMedia -> player.playlistNext()
             is PlayerCommand.SeekTo -> player.seek(
@@ -290,6 +302,20 @@ class PlayerCoordinator : LifecycleOwner {
             is PlayerCommand.Zoom,
             is PlayerCommand.VideoOffset -> Unit
         }
+    }
+
+    private fun handleFailedPlaybackRetry(): Boolean {
+        val end = playerState.value.lastPlaybackEnd
+            ?.takeIf { it.reason == PlaybackEndReason.Error }
+            ?: return false
+        if (!player.retryPlaylistEntry(end.playlistEntryId, end.path)) {
+            logger.w {
+                "Failed playlist entry is no longer available; clearing playback error " +
+                        "(entryId=${end.playlistEntryId}, path=${end.path})"
+            }
+            emitEvent(PlayerEvent.ClearPlaybackEnd)
+        }
+        return true
     }
 
     private fun removeMedia(command: PlayerCommand.RemoveMediaFromPlaylist) {
@@ -382,6 +408,12 @@ class PlayerCoordinator : LifecycleOwner {
             }
         }
 
+        override fun onEndFile(reason: Int, mpvError: Int, playlistEntryId: Long) {
+            if (isCurrent()) {
+                commands.trySend(ActorMessage.EndFile(reason, mpvError, playlistEntryId))
+            }
+        }
+
         override fun onEvent(event: Int) {
             if (isCurrent()) commands.trySend(ActorMessage.NativeEvent(event))
         }
@@ -401,11 +433,11 @@ class PlayerCoordinator : LifecycleOwner {
             }
 
             MPVEvent.END_FILE -> {
-                emitEvent(PlayerEvent.EndFile)
-                emitEvent(PlayerEvent.Loading(false))
-                if (currentPathPlayed) savePosition(currentPath?.toStableMediaUrl())
-                currentPath = null
-                currentPathPlayed = false
+                handleEndFile(
+                    reason = UNKNOWN_END_REASON,
+                    mpvError = 0,
+                    playlistEntryId = UNKNOWN_PLAYLIST_ENTRY_ID,
+                )
             }
 
             MPVEvent.FILE_LOADED -> onFileLoaded()
@@ -417,6 +449,31 @@ class PlayerCoordinator : LifecycleOwner {
             MPVEvent.SHUTDOWN -> return false
         }
         return true
+    }
+
+    private suspend fun handleEndFile(
+        reason: Int,
+        mpvError: Int,
+        playlistEntryId: Long,
+    ) {
+        val mappedReason = PlaybackEndReason.fromMpv(reason)
+        val end = PlaybackEnd(
+            reason = mappedReason,
+            errorCode = mpvError.takeIf { mappedReason == PlaybackEndReason.Error },
+            playlistEntryId = playlistEntryId.takeIf { it >= 0L },
+            path = currentPath,
+        )
+        if (mappedReason == PlaybackEndReason.Error) {
+            logger.e {
+                "Playback failed (error=$mpvError, entryId=$playlistEntryId, " +
+                        "path=${currentPath})"
+            }
+        }
+        emitEvent(PlayerEvent.EndFile(end))
+        emitEvent(PlayerEvent.Loading(false))
+        if (currentPathPlayed) savePosition(currentPath?.toStableMediaUrl())
+        currentPath = null
+        currentPathPlayed = false
     }
 
     private fun onFileLoaded() {
@@ -675,6 +732,12 @@ class PlayerCoordinator : LifecycleOwner {
     private sealed interface ActorMessage {
         data class Command(val command: PlayerCommand) : ActorMessage
         data class Key(val input: PlayerKeyInput) : ActorMessage
+        data class EndFile(
+            val reason: Int,
+            val mpvError: Int,
+            val playlistEntryId: Long,
+        ) : ActorMessage
+
         data class NativeEvent(val event: Int) : ActorMessage
         data class Property(
             val name: String,
@@ -712,6 +775,8 @@ class PlayerCoordinator : LifecycleOwner {
     )
 
     private companion object {
+        const val UNKNOWN_END_REASON = -1
+        const val UNKNOWN_PLAYLIST_ENTRY_ID = -1L
         const val TRANSFORM_FRAME_MILLIS = 16L
         val LOADING_PROPERTIES = setOf("paused-for-cache", "core-idle", "demuxer-cache-idle")
     }

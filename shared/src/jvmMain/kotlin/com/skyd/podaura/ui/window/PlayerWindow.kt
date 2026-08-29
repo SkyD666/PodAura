@@ -42,6 +42,9 @@ import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.media.DesktopMediaSessionManager
+import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
+import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import kotlinx.coroutines.flow.filter
@@ -156,6 +159,17 @@ internal class PlayerWindowController(
             destroy()
         }
     }
+
+    fun attachDesktopMediaWindow(
+        windowHandle: Long,
+        isMainWindow: Boolean,
+        tooltips: DesktopMediaWindowTooltips,
+    ): DesktopMediaWindowRegistration? =
+        (mediaSession as? DesktopMediaSessionManager)?.attachWindow(
+            windowHandle = windowHandle,
+            isMainWindow = isMainWindow,
+            tooltips = tooltips,
+        )
 
     fun destroy() {
         val currentCoordinator = coordinator ?: return
@@ -297,6 +311,10 @@ internal fun PlayerWindow(
             // preference and theme environment.
             SettingsProvider(dataStore) {
                 PodAuraTheme(darkTheme = DarkModePreference.current) {
+                    WindowsMediaControlsEffect(
+                        controller = playerWindowController,
+                        isMainWindow = false,
+                    )
                     PlayerViewRoute(
                         coordinator = playerCoordinator,
                         articleContextViewModel = appState.playerArticleContextViewModel,

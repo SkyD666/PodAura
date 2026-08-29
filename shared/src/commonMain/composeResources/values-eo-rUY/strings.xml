@@ -26,6 +26,7 @@
     <string name="info">Informoj</string>
     <string name="waiting">Atendante…</string>
     <string name="retry">Reprovi</string>
+    <string name="playback_failed">La ludado malsukcesis</string>
     <string name="image_preview_description">Antaŭrigardo de bildo</string>
     <string name="image_preview_load_failed">Ne eblas ŝargi la bildon</string>
     <string name="delete">Forigi</string>

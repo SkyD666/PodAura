@@ -69,11 +69,14 @@ actual class MPV {
         }
 
         override fun onEndFile(reason: Int, mpvError: Int, playlistEntryId: Long) {
-            // Intentionally not forwarded: mediamp also raises MPVEvent.END_FILE through
-            // onEvent(), and bridging here as well would deliver it twice (double savePosition).
+            eventListeners.forEach { it.onEndFile(reason, mpvError, playlistEntryId) }
         }
 
-        override fun onEvent(event: Int) = eventListeners.forEach { it.onEvent(event) }
+        override fun onEvent(event: Int) {
+            // mediamp sends both callbacks for END_FILE. The rich callback above is the canonical
+            // one so saving playback position and state reduction happen exactly once.
+            if (event != MPVEvent.END_FILE) eventListeners.forEach { it.onEvent(event) }
+        }
     }
 
     actual fun initialize() {

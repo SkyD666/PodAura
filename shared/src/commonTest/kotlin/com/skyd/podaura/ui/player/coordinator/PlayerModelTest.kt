@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.player.coordinator
 
 import com.skyd.podaura.ui.player.PlayerEvent
+import com.skyd.podaura.ui.player.PlaybackEnd
+import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -12,6 +14,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertNotNull
 
 class PlayerModelTest {
     @Test
@@ -61,5 +64,26 @@ class PlayerModelTest {
         } finally {
             Dispatchers.resetMain()
         }
+    }
+
+    @Test
+    fun playbackErrorIsRetainedUntilAFileStartsOrItIsExplicitlyCleared() = runTest {
+        val model = PlayerModel()
+        val playbackEnd = PlaybackEnd(
+            reason = PlaybackEndReason.Error,
+            errorCode = -13,
+            playlistEntryId = 84L,
+            path = "failed.mp3",
+        )
+
+        model.onEvent(PlayerEvent.EndFile(playbackEnd))
+        assertEquals(playbackEnd, assertNotNull(model.playerState.value.lastPlaybackEnd))
+
+        model.onEvent(PlayerEvent.ClearPlaybackEnd)
+        assertNull(model.playerState.value.lastPlaybackEnd)
+
+        model.onEvent(PlayerEvent.EndFile(playbackEnd))
+        model.onEvent(PlayerEvent.StartFile("next.mp3"))
+        assertNull(model.playerState.value.lastPlaybackEnd)
     }
 }

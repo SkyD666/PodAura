@@ -21,5 +21,6 @@ interface EventListener {
      * Notify a property change with type MPV_FORMAT_STRING.
      */
     fun onPropertyChange(name: String, value: String)
+    fun onEndFile(reason: Int, mpvError: Int, playlistEntryId: Long) = Unit
     fun onEvent(event: Int)
 }

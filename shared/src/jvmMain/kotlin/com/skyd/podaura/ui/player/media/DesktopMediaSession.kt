@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.player.media
 import co.touchlab.kermit.Logger
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
@@ -85,6 +86,25 @@ internal interface DesktopMediaSessionAdapter : AutoCloseable {
     fun clear()
 }
 
+internal data class DesktopMediaWindowTooltips(
+    val previous: String,
+    val play: String,
+    val pause: String,
+    val next: String,
+)
+
+internal interface DesktopMediaWindowRegistration : AutoCloseable {
+    fun updateTooltips(tooltips: DesktopMediaWindowTooltips)
+}
+
+internal interface DesktopMediaWindowHost {
+    fun attachWindow(
+        windowHandle: Long,
+        isMainWindow: Boolean,
+        tooltips: DesktopMediaWindowTooltips,
+    ): DesktopMediaWindowRegistration
+}
+
 internal fun interface DesktopArtworkLoader {
     suspend fun load(source: Any): DesktopArtworkData?
 }
@@ -104,7 +124,6 @@ internal class DesktopMediaSessionController(
     private var artworkJob: Job? = null
     private var latestSnapshot: DesktopMediaSnapshot? = null
     private var lastPublishedSnapshot: DesktopMediaSnapshot? = null
-    private var pendingPositionSync = false
 
     init {
         adapter.setCommandListener(::onRemoteCommand)
@@ -117,7 +136,6 @@ internal class DesktopMediaSessionController(
             resetArtwork()
             latestSnapshot = null
             lastPublishedSnapshot = null
-            pendingPositionSync = false
             safeClear()
             return
         }
@@ -134,14 +152,6 @@ internal class DesktopMediaSessionController(
 
         val snapshot = descriptor.snapshot.copy(artwork = currentArtwork)
         latestSnapshot = snapshot
-        when (event) {
-            PlayerEvent.Seek,
-            PlayerEvent.PlaybackRestart,
-            is PlayerEvent.StartFile -> pendingPositionSync = true
-
-            else -> Unit
-        }
-
         if (sourceChanged || shouldPublish(snapshot, event)) {
             safePublish(snapshot)
         }
@@ -170,11 +180,6 @@ internal class DesktopMediaSessionController(
         event: PlayerEvent?,
     ): Boolean {
         val previous = lastPublishedSnapshot ?: return true
-        if (event is PlayerEvent.Position && snapshot.sameExceptPosition(previous)) {
-            if (!pendingPositionSync) return false
-            pendingPositionSync = false
-        }
-        if (event == PlayerEvent.Seek && snapshot.sameExceptPosition(previous)) return false
         return snapshot != previous
     }
 
@@ -203,9 +208,6 @@ internal class DesktopMediaSessionController(
     private fun onRemoteCommand(command: DesktopMediaCommand) {
         scope.launch {
             if (closed || disabled) return@launch
-            if (command is DesktopMediaCommand.ChangePlaybackPosition) {
-                pendingPositionSync = true
-            }
             val playerCommand = when (command) {
                 DesktopMediaCommand.Play -> PlayerCommand.Paused(paused = false)
                 DesktopMediaCommand.Pause -> PlayerCommand.Paused(paused = true)
@@ -259,7 +261,7 @@ internal class DesktopMediaSessionController(
 
 internal class DesktopMediaSessionManager(
     coordinator: PlayerCoordinator,
-    adapter: DesktopMediaSessionAdapter,
+    private val adapter: DesktopMediaSessionAdapter,
     artworkLoader: DesktopArtworkLoader,
     private val scope: CoroutineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Main.immediate
@@ -282,6 +284,16 @@ internal class DesktopMediaSessionManager(
         }
     }
 
+    fun attachWindow(
+        windowHandle: Long,
+        isMainWindow: Boolean,
+        tooltips: DesktopMediaWindowTooltips,
+    ): DesktopMediaWindowRegistration? = (adapter as? DesktopMediaWindowHost)?.attachWindow(
+        windowHandle = windowHandle,
+        isMainWindow = isMainWindow,
+        tooltips = tooltips,
+    )
+
     override fun close() {
         stateJob.cancel()
         controller.close()
@@ -292,16 +304,20 @@ internal class DesktopMediaSessionManager(
 internal fun createDesktopMediaSessionManager(
     coordinator: PlayerCoordinator,
 ): AutoCloseable? {
-    if (platform != Platform.macOS_Jvm) return null
+    if (platform !in setOf(Platform.macOS_Jvm, Platform.Windows)) return null
     return runCatching {
         DesktopMediaSessionManager(
             coordinator = coordinator,
-            adapter = MacOSDesktopMediaSessionAdapter(),
+            adapter = when (platform) {
+                Platform.macOS_Jvm -> MacOSDesktopMediaSessionAdapter()
+                Platform.Windows -> WindowsDesktopMediaSessionAdapter()
+                else -> error("Unsupported desktop media session platform: $platform")
+            },
             artworkLoader = CoilDesktopArtworkLoader,
         )
     }.onFailure { throwable ->
         Logger.withTag("DesktopMediaSession").e(throwable = throwable) {
-            "Could not initialize macOS system media controls"
+            "Could not initialize desktop system media controls on $platform"
         }
     }.getOrNull()
 }
@@ -325,6 +341,7 @@ private fun PlayerState.toDesktopMediaDescriptor(
     val duration = duration.takeIf { it > 0L }?.toDouble()
     val position = duration?.let { position.coerceIn(0L, it.toLong()).toDouble() }
     val playing = mediaStarted && !paused
+    val playbackFailed = lastPlaybackEnd?.reason == PlaybackEndReason.Error
     val effectiveRate = speed.toDouble().takeIf { it.isFinite() && it > 0.0 } ?: 1.0
     val showTitle = currentMedia.title.nonBlankOrNull() ?: mediaTitle.nonBlankOrNull()
     val showArtist = currentMedia.artist.nonBlankOrNull() ?: artist.nonBlankOrNull()
@@ -344,23 +361,21 @@ private fun PlayerState.toDesktopMediaDescriptor(
             queueCount = entries.size,
             isVideo = isVideo,
             playbackState = when {
+                playbackFailed -> DesktopPlaybackState.Stopped
                 playing -> DesktopPlaybackState.Playing
                 mediaStarted || playlist.isNotEmpty() -> DesktopPlaybackState.Paused
                 else -> DesktopPlaybackState.Stopped
             },
-            canPlay = !playing,
-            canPause = playing,
+            canPlay = playbackFailed || !playing,
+            canPause = !playbackFailed && playing,
             canTogglePlayPause = true,
             canGoPrevious = currentIndex > 0,
             canGoNext = currentIndex < entries.lastIndex,
-            canChangePlaybackPosition = mediaStarted && seekable && duration != null,
+            canChangePlaybackPosition = !playbackFailed && mediaStarted && seekable && duration != null,
             artwork = artwork,
         ),
         artworkSource = currentMedia.thumbnailAny,
     )
 }
-
-private fun DesktopMediaSnapshot.sameExceptPosition(other: DesktopMediaSnapshot): Boolean =
-    copy(positionSeconds = other.positionSeconds) == other
 
 private fun String?.nonBlankOrNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)

@@ -607,6 +607,23 @@ class MPVPlayer {
         }
     }
 
+    fun retryPlaylistEntry(playlistEntryId: Long?, path: String?): Boolean {
+        val count = mpv.getPropertyInt("playlist-count")
+        val indexById = playlistEntryId?.let { expectedId ->
+            (0 until count).firstOrNull { index ->
+                mpv.getPropertyString("playlist/$index/id")?.toLongOrNull() == expectedId
+            }
+        }
+        val targetIndex = indexById ?: path?.let { expectedPath ->
+            (0 until count).filter { index ->
+                mpv.getPropertyString("playlist/$index/filename") == expectedPath
+            }.singleOrNull()
+        } ?: return false
+
+        playMediaAtIndex(targetIndex)
+        return true
+    }
+
     fun stop() {
         mpv.command("stop")
     }

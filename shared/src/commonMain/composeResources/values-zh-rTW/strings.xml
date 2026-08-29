@@ -16,6 +16,7 @@
     <string name="waiting">請稍後…</string>
     <string name="close">關閉</string>
     <string name="retry">重試</string>
+    <string name="playback_failed">播放失敗</string>
     <string name="image_preview_description">圖片預覽</string>
     <string name="image_preview_load_failed">圖片載入失敗</string>
     <string name="exit">關閉</string>
