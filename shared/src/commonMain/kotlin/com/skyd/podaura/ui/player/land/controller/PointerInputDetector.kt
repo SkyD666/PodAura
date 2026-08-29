@@ -159,7 +159,7 @@ internal fun Modifier.detectControllerGestures(
                 cancelAutoHideController()
                 pointerStartX = it.x
                 pointerStartY = it.y
-                if (systemBarAreaDetector.inSystemBarArea(it.x, it.y)) {
+                if (platform.isJvm || systemBarAreaDetector.inSystemBarArea(it.x, it.y)) {
                     return@onVerticalDragStart
                 }
                 when (pointerStartX) {
@@ -190,7 +190,8 @@ internal fun Modifier.detectControllerGestures(
             },
             onVerticalDrag = onVerticalDrag@{ change, _ ->
                 val deltaY = change.position.y - pointerStartY
-                if (systemBarAreaDetector.inSystemBarArea(pointerStartX, pointerStartY) ||
+                if (platform.isJvm ||
+                    systemBarAreaDetector.inSystemBarArea(pointerStartX, pointerStartY) ||
                     abs(deltaY) < 50
                 ) {
                     return@onVerticalDrag
