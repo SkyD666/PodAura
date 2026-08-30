@@ -138,7 +138,7 @@ val compileWindowsMediaPlayerShim = if (windowsMediaShimTarget) {
         "/LD",
         "/MD",
         "/EHsc",
-        "/std:c++17",
+        "/std:c++20",
         "/permissive-",
         "/W4",
         "/DUNICODE",
