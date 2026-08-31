@@ -46,8 +46,12 @@ jobs:
             artifact-name: [ Pre-Release macOS DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: windows-latest
             target-platform: Jvm Windows x64
-            build-command: ./gradlew :shared:createMsix
-            artifact-path: [ shared/build/compose/binaries/main-release/app/, shared/build/PodAura.msix ]
+            build-command: |
+              ./gradlew :shared:createReleaseDistributable -PmicrosoftStore=false
+              New-Item -ItemType Directory -Force shared/build/windows-portable | Out-Null
+              Copy-Item shared/build/compose/binaries/main-release/app/PodAura shared/build/windows-portable/PodAura -Recurse
+              ./gradlew :shared:createMsix -PmicrosoftStore=true
+            artifact-path: [ shared/build/windows-portable/PodAura/, shared/build/PodAura.msix ]
             artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Pre-Release Windows Store MSIX (Jvm x64), Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64

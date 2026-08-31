@@ -18,6 +18,7 @@ import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.navigation.LocalResultStore
 import com.skyd.compone.component.navigation.newNavBackStack
 import com.skyd.compone.component.navigation.rememberResultStore
+import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.AcceptTermsPreference
@@ -174,13 +175,15 @@ private fun MainContent() {
         ExternalUrlListener(navBackStack = navBackStack)
         MainNavHost()
     }
-    var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
-    if (openUpdateDialog) {
-        UpdateDialog(
-            silence = true,
-            onClosed = { openUpdateDialog = false },
-            onError = { openUpdateDialog = false },
-        )
+    if (!BuildKonfig.isMicrosoftStore) {
+        var openUpdateDialog by rememberSaveable { mutableStateOf(true) }
+        if (openUpdateDialog) {
+            UpdateDialog(
+                silence = true,
+                onClosed = { openUpdateDialog = false },
+                onError = { openUpdateDialog = false },
+            )
+        }
     }
 }
 

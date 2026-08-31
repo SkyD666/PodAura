@@ -65,6 +65,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeIconButton
@@ -75,6 +76,7 @@ import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.plus
 import com.skyd.fundation.config.Const
+import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.safeOpenUri
 import com.skyd.podaura.model.bean.OtherWorksBean
@@ -132,6 +134,7 @@ data object AboutRoute : NavKey
 
 @Composable
 fun AboutScreen() {
+    val isMicrosoftStore = BuildKonfig.isMicrosoftStore
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
@@ -157,18 +160,24 @@ fun AboutScreen() {
                         contentDescription = stringResource(Res.string.license_screen_name),
                         onClick = { navBackStack.add(LicenseRoute) }
                     )
-                    ComponeIconButton(
-                        onClick = { openUpdateDialog = true },
-                        imageVector = Icons.Outlined.Update,
-                        contentDescription = stringResource(Res.string.update_check)
-                    )
+                    if (!isMicrosoftStore) {
+                        ComponeIconButton(
+                            onClick = { openUpdateDialog = true },
+                            imageVector = Icons.Outlined.Update,
+                            contentDescription = stringResource(Res.string.update_check)
+                        )
+                    }
                 },
             )
         },
         contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
         val windowSizeClass = LocalWindowSizeClass.current
-        val otherWorksList = rememberOtherWorksList()
+        val otherWorksList = if (isMicrosoftStore) {
+            emptyList()
+        } else {
+            rememberOtherWorksList()
+        }
         val uriHandler = LocalUriHandler.current
 
         LazyColumn(
@@ -176,6 +185,11 @@ fun AboutScreen() {
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = innerPadding + PaddingValues(16.dp),
+            verticalArrangement = if (isMicrosoftStore) {
+                Arrangement.Center
+            } else {
+                Arrangement.Top
+            },
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (windowSizeClass.isCompact) {
@@ -191,42 +205,31 @@ fun AboutScreen() {
                 }
             } else {
                 item {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.weight(0.95f),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            IconArea()
-                            ButtonArea()
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            TextArea()
-                            HelpArea(
-                                openSponsorDialog = openSponsorDialog,
-                                onTranslateClick = { uriHandler.safeOpenUri(Const.TRANSLATION_URL) },
-                                onSponsorDialogVisibleChange = { openSponsorDialog = it }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    WideContent(
+                        isMicrosoftStore = isMicrosoftStore,
+                        openSponsorDialog = openSponsorDialog,
+                        onTranslateClick = { uriHandler.safeOpenUri(Const.TRANSLATION_URL) },
+                        onSponsorDialogVisibleChange = { openSponsorDialog = it },
+                    )
                 }
             }
 
-            item {
-                Text(
-                    text = stringResource(Res.string.about_screen_other_works),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            itemsIndexed(items = otherWorksList) { _, item ->
-                OtherWorksItem(data = item)
+            if (!isMicrosoftStore) {
+                item {
+                    Text(
+                        text = stringResource(Res.string.about_screen_other_works),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+                itemsIndexed(items = otherWorksList) { _, item ->
+                    OtherWorksItem(data = item)
+                }
             }
         }
 
         var isRetry by rememberSaveable { mutableStateOf(false) }
 
-        if (openUpdateDialog) {
+        if (!isMicrosoftStore && openUpdateDialog) {
             UpdateDialog(
                 isRetry = isRetry,
                 onClosed = { openUpdateDialog = false },
@@ -247,11 +250,49 @@ fun AboutScreen() {
 }
 
 @Composable
-private fun IconArea() {
+private fun WideContent(
+    isMicrosoftStore: Boolean,
+    openSponsorDialog: Boolean,
+    onTranslateClick: () -> Unit,
+    onSponsorDialogVisibleChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = if (isMicrosoftStore) Alignment.CenterVertically else Alignment.Top,
+    ) {
+        Box(
+            modifier = Modifier.weight(if (isMicrosoftStore) 0.85f else 0.95f),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconArea(size = if (isMicrosoftStore) 240.dp else 120.dp)
+                ButtonArea()
+            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(
+            modifier = Modifier.weight(if (isMicrosoftStore) 1.15f else 1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            TextArea()
+            HelpArea(
+                openSponsorDialog = openSponsorDialog,
+                onTranslateClick = onTranslateClick,
+                onSponsorDialogVisibleChange = onSponsorDialogVisibleChange,
+            )
+        }
+    }
+    if (!isMicrosoftStore) {
+        Spacer(modifier = Modifier.height(10.dp))
+    }
+}
+
+@Composable
+private fun IconArea(size: Dp = 120.dp) {
     Box(
         modifier = Modifier
             .padding(16.dp)
-            .size(120.dp)
+            .size(size)
     ) {
         Image(
             modifier = Modifier.aspectRatio(1f),
@@ -433,19 +474,21 @@ private fun ButtonArea() {
         horizontalArrangement = Arrangement.Center
     ) {
         val boxModifier = Modifier.padding(vertical = 16.dp, horizontal = 6.dp)
-        Box(
-            modifier = boxModifier.background(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = MaterialShapes.Cookie9Sided.toShape(),
-            ),
-            contentAlignment = Alignment.Center
-        ) {
-            ComponeIconButton(
-                painter = painterResource(Res.drawable.ic_github_24),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                contentDescription = stringResource(Res.string.about_screen_visit_github),
-                onClick = { uriHandler.safeOpenUri(Const.GITHUB_REPO) }
-            )
+        if (!BuildKonfig.isMicrosoftStore) {
+            Box(
+                modifier = boxModifier.background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialShapes.Cookie9Sided.toShape(),
+                ),
+                contentAlignment = Alignment.Center
+            ) {
+                ComponeIconButton(
+                    painter = painterResource(Res.drawable.ic_github_24),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    contentDescription = stringResource(Res.string.about_screen_visit_github),
+                    onClick = { uriHandler.safeOpenUri(Const.GITHUB_REPO) }
+                )
+            }
         }
         Box(
             modifier = boxModifier.background(

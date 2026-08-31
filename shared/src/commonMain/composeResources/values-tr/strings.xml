@@ -320,7 +320,7 @@
     <string name="data_screen_clear_play_history_success">%1$d öğe silindi</string>
     <string name="folder">Klasör</string>
     <string name="copy">Kopyala</string>
-    <string name="app_short_description">RSS takibi, medya indirme ve oynatma özelliklerini bir araya getiren Android podcast uygulaması.</string>
+    <string name="app_short_description">RSS takibi, medya indirme ve oynatma özelliklerini bir araya getiren podcast uygulaması.</string>
     <string name="open_link_in_browser">Bağlantıyı aç</string>
     <string name="transmission_screen_config_category">Yapılandırma</string>
     <string name="player_forward_seconds_content_description">%1$d saniye ileri sar</string>

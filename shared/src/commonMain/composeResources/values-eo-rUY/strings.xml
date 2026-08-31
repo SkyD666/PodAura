@@ -47,7 +47,7 @@
     <string name="player_reset_zoom">Restarigi</string>
     <string name="player_long_press_playback_speed">Rapide antaŭen…</string>
     <string name="about_screen_name">Pri la programo</string>
-    <string name="app_short_description">Plurfunkcia Androida podkasta programo por RSS-abonoj, elŝutado kaj ludado de aŭdvidaĵoj.</string>
+    <string name="app_short_description">Plurfunkcia podkasta programo por RSS-abonoj, elŝutado kaj ludado de aŭdvidaĵoj.</string>
     <string name="app_tech_stack_description">PodAura uzas la arkitekturon MVI kaj plene sekvas la dezajnostilon Material You. Ĉiuj ekranoj estas konstruitaj per Compose Multiplatform.</string>
     <string name="about_screen_visit_github">GitHub-deponejo</string>
     <string name="about_screen_join_telegram">Telegram-grupo</string>

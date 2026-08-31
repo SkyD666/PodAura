@@ -25,6 +25,9 @@ plugins {
 
 val buildJvmArch = System.getProperty("os.arch").lowercase()
 val buildOperatingSystem = System.getProperty("os.name").lowercase()
+val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
+    .map { it.toBooleanStrict() }
+    .getOrElse(false)
 val macGestureModuleExport =
     "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
 val desktopMediaShimAppResources = layout.buildDirectory.dir(
@@ -418,6 +421,11 @@ buildkonfig {
             type = FieldSpec.Type.STRING,
             name = "mediampVersion",
             value = libs.versions.mediamp.get()
+        )
+        buildConfigField(
+            type = FieldSpec.Type.BOOLEAN,
+            name = "isMicrosoftStore",
+            value = isMicrosoftStoreBuild.toString()
         )
     }
 }

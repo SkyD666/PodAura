@@ -293,7 +293,7 @@
     <string name="min_width_dp">最小寬度 (dp)</string>
     <string name="search_style_screen_search_item_category">搜尋項</string>
     <string name="copy">複製</string>
-    <string name="app_short_description">整合 RSS 訂閱、媒體下載與播放功能的 Android Podcast 應用程式。</string>
+    <string name="app_short_description">整合 RSS 訂閱、媒體下載與播放功能的 Podcast 應用程式。</string>
     <string name="theme_red">喜多</string>
     <string name="theme_mahiro">真尋</string>
     <string name="player_forward_seconds_content_description">快轉 %1$d 秒</string>

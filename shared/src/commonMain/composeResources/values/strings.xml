@@ -49,7 +49,7 @@
     <string name="player_reset_zoom">Reset</string>
     <string name="player_long_press_playback_speed">Fast forwarding…</string>
     <string name="about_screen_name">About</string>
-    <string name="app_short_description">All-in-one Android podcast app for RSS, media dl &amp; play.</string>
+    <string name="app_short_description">All-in-one podcast app for RSS, media dl &amp; play.</string>
     <string name="app_tech_stack_description">PodAura utilizes the MVI architecture and fully adopts the Material You design style. All pages are developed using Compose Multiplatform.</string>
     <string name="about_screen_visit_github">GitHub repository</string>
     <string name="about_screen_join_telegram">Telegram group</string>
