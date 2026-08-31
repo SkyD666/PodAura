@@ -41,7 +41,6 @@
     <string name="player_reset_zoom">リセット</string>
     <string name="player_long_press_playback_speed">早送り…</string>
     <string name="about_screen_name">アプリについて</string>
-    <string name="app_short_description">オールインワンな Android ポッドキャストアプリ。</string>
     <string name="app_tech_stack_description">PodAura は MVI アーキテクチャを活用、Material You デザインスタイルを完全に採用しています。すべてのページは Android View と Compose を使用して開発されています。</string>
     <string name="about_screen_visit_github">GitHub リポジトリ</string>
     <string name="about_screen_join_telegram">Telegram グループ</string>
