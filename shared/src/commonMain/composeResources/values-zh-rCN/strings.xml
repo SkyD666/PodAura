@@ -42,7 +42,6 @@
     <string name="player_reset_zoom">还原屏幕</string>
     <string name="player_long_press_playback_speed">倍速播放中…</string>
     <string name="about_screen_name">关于</string>
-    <string name="app_short_description">一个集 RSS 订阅与更新、媒体下载与播放为一体的播客应用。</string>
     <string name="app_tech_stack_description">PodAura 使用 MVI 架构，完全采用 Material You 设计风格。使用 Compose Multiplatform 开发。</string>
     <string name="about_screen_visit_github">访问 GitHub 仓库</string>
     <string name="about_screen_join_telegram">加入 Telegram 群组</string>
