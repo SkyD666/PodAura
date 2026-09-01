@@ -4,7 +4,6 @@ import androidx.room3.ConstructedBy
 import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
-import androidx.room3.migration.Migration
 
 
 const val DOWNLOAD_FILE_NAME = "Downloader"
@@ -18,7 +17,7 @@ expect object DownloadDatabaseConstructor : RoomDatabaseConstructor<DownloadData
 expect fun DownloadDatabase.Companion.builder(): RoomDatabase.Builder<DownloadDatabase>
 
 @ConstructedBy(DownloadDatabaseConstructor::class)
-@Database(entities = [DownloadEntity::class], version = 2)
+@Database(entities = [DownloadEntity::class], version = 3, exportSchema = true)
 abstract class DownloadDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
 
@@ -28,7 +27,7 @@ abstract class DownloadDatabase : RoomDatabase() {
 fun DownloadDatabase.Companion.instance(
     builder: RoomDatabase.Builder<DownloadDatabase>
 ): DownloadDatabase {
-    val migrations = arrayOf<Migration>(Migration1To2())
+    val migrations = arrayOf(Migration1To2(), Migration2To3())
 
     return builder
         .addMigrations(*migrations)

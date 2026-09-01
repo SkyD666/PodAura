@@ -149,6 +149,7 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
             implementation(libs.androidx.work.runtime.ktx)

@@ -350,7 +350,8 @@
     <string name="request_headers_screen_value">值</string>
     <string name="player_config_screen_show_progress_indicator">進度指示器</string>
     <string name="read_screen_text_size">文字大小</string>
-    <string name="download_no_notification_permission_tip">尚未授予通知權限，因此無法下載</string>
+    <string name="download_without_notifications_tip">下載已開始，但不會顯示通知</string>
+    <string name="open_notification_settings">設定</string>
     <string name="read_style_screen_name">閱讀頁面樣式</string>
     <string name="read_style_screen_top_bar_category">頂端列</string>
     <string name="read_style_screen_content_category">文章內容</string>

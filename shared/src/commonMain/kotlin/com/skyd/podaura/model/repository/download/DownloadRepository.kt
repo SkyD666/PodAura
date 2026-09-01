@@ -62,13 +62,13 @@ class DownloadRepository(
 }
 
 internal data class ArticleDownloadSourceEntry(
-    val downloadId: Int,
+    val downloadId: String,
     val source: ArticleDownloadSource,
 )
 
 private data class ArticleDownloadSnapshot(
     val sources: List<ArticleDownloadSourceEntry>,
-    val infoByDownloadId: Map<Int, ArticleDownloadInfoBean>,
+    val infoByDownloadId: Map<String, ArticleDownloadInfoBean>,
 )
 
 internal fun List<DownloadInfoBean>.articleDownloadSources(): List<ArticleDownloadSourceEntry> =
@@ -82,7 +82,7 @@ internal fun resolveArticleDownloadInfo(
     sources: List<ArticleDownloadSourceEntry>,
     articles: List<ArticleWithFeed>,
     feeds: List<FeedBean>,
-): Map<Int, ArticleDownloadInfoBean> {
+): Map<String, ArticleDownloadInfoBean> {
     val articleById = articles.associateBy {
         it.articleWithEnclosure.article.articleId
     }

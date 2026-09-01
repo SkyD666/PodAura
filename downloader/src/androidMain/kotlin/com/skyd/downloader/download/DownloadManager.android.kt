@@ -1,95 +1,68 @@
 package com.skyd.downloader.download
 
 import android.content.Context
-import androidx.work.Data
+import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.skyd.downloader.Status
-import com.skyd.downloader.UserAction
+import com.skyd.downloader.db.DownloadDao
 import com.skyd.downloader.db.DownloadEntity
-import com.skyd.downloader.notification.NotificationConfig
-import com.skyd.downloader.util.FileUtil.deleteDownloadFileIfExists
 import com.skyd.downloader.util.NotificationUtil.removeNotification
-import com.skyd.fundation.di.get
-import kotlinx.serialization.json.Json
+import com.skyd.fundation.di.inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-actual class DownloadManager : BaseDownloadManager(), KoinComponent {
+internal actual class DownloadManager actual constructor() : KoinComponent {
     private val context by inject<Context>()
+    private val downloadDao by inject<DownloadDao>()
     private val workManager by lazy { WorkManager.getInstance(context) }
 
-    actual override suspend fun download(downloadRequest: DownloadRequest) {
-        val downloadWorkRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
-            .setInputData(
-                Data.Builder()
-                    .putInt(DownloadWorker.INPUT_DATA_ID_KEY, downloadRequest.id)
-                    .putString(
-                        DownloadWorker.INPUT_DATA_NOTIFICATION_CONFIG_KEY,
-                        Json.encodeToString(get<NotificationConfig>())
-                    )
-                    .build()
-            )
-            .build()
-        var oldDownloadEntity = downloadDao.find(downloadRequest.id)
-        // Checks if download id already present in database
-        if (oldDownloadEntity != null) {
-            oldDownloadEntity = oldDownloadEntity
-                .copy(userAction = UserAction.Start.toString())
-                .withMetadataFrom(downloadRequest)
-            downloadDao.update(oldDownloadEntity)
+    actual suspend fun schedule(entity: DownloadEntity) {
+        removeNotification(context, entity.id)
+        enqueue(entity, ExistingWorkPolicy.REPLACE)
+    }
 
-            // In case new download request is generated for already existing id in database
-            // and work is not in progress, replace the uuid in database
-            if (oldDownloadEntity.workerUuid != downloadWorkRequest.id.toString() &&
-                oldDownloadEntity.status != Status.Queued.toString() &&
-                oldDownloadEntity.status != Status.Downloading.toString() &&
-                oldDownloadEntity.status != Status.Started.toString()
-            ) {
-                downloadDao.update(
-                    oldDownloadEntity.copy(
-                        workerUuid = downloadWorkRequest.id.toString(),
-                        status = Status.Queued.toString(),
-                    )
-                )
-            }
-        } else {
-            downloadDao.insert(
-                DownloadEntity(
-                    url = downloadRequest.url,
-                    path = downloadRequest.path,
-                    fileName = downloadRequest.fileName,
-                    id = downloadRequest.id,
-                    timeQueued = System.currentTimeMillis(),
-                    status = Status.Queued.toString(),
-                    workerUuid = downloadWorkRequest.id.toString(),
-                    userAction = UserAction.Start.toString(),
-                    metadata = downloadRequest.metadata,
-                )
-            )
-
-            deleteDownloadFileIfExists(downloadRequest.path, downloadRequest.fileName)
+    actual suspend fun cancel(id: String) {
+        withContext(Dispatchers.IO) {
+            workManager.cancelUniqueWork(workName(id)).result.get()
         }
-
-        workManager.enqueueUniqueWork(
-            downloadRequest.id.toString(),
-            ExistingWorkPolicy.KEEP,
-            downloadWorkRequest
-        )
-    }
-
-    actual override suspend fun onPause(id: Int) {
-        workManager.cancelUniqueWork(id.toString())
-    }
-
-    actual override suspend fun onClearDbAsync(id: Int) {
-        workManager.cancelUniqueWork(id.toString())
         removeNotification(context, id)
     }
 
-    override suspend fun onClearDbAsyncEach(id: Int) {
-        workManager.cancelUniqueWork(id.toString())
-        removeNotification(context, id)
+    actual suspend fun reconcile() {
+        downloadDao.findAllInStatuses(listOf(Status.Queued.name)).forEach { entity ->
+            if (entity.attemptId.isNotBlank()) enqueue(entity, ExistingWorkPolicy.KEEP)
+        }
+    }
+
+    private fun enqueue(entity: DownloadEntity, policy: ExistingWorkPolicy) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(
+                if (entity.requireUnmetered) NetworkType.UNMETERED else NetworkType.CONNECTED
+            )
+            .setRequiresCharging(entity.requiresCharging)
+            .setRequiresBatteryNotLow(entity.requiresBatteryNotLow)
+            .build()
+        val request = OneTimeWorkRequestBuilder<DownloadWorker>()
+            .setConstraints(constraints)
+            .setInputData(
+                workDataOf(
+                    DownloadWorker.INPUT_DATA_ID_KEY to entity.id,
+                    DownloadWorker.INPUT_DATA_ATTEMPT_ID_KEY to entity.attemptId,
+                )
+            )
+            .addTag(DOWNLOAD_WORK_TAG)
+            .build()
+        workManager.enqueueUniqueWork(workName(entity.id), policy, request)
+    }
+
+    private fun workName(id: String): String = "download:$id"
+
+    companion object {
+        private const val DOWNLOAD_WORK_TAG = "podaura-download"
     }
 }

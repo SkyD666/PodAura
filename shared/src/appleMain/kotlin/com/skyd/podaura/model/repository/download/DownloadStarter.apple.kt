@@ -6,6 +6,8 @@ import androidx.compose.runtime.remember
 class DarwinDownloadStarter : DownloadStarter()
 
 @Composable
-actual fun rememberDownloadStarter(): DownloadStarter {
+actual fun rememberDownloadStarter(
+    onNotificationPermissionDenied: () -> Unit,
+): DownloadStarter {
     return remember { DarwinDownloadStarter() }
 }

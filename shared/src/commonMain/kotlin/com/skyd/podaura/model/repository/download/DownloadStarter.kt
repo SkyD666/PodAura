@@ -1,6 +1,7 @@
 package com.skyd.podaura.model.repository.download
 
 import androidx.compose.runtime.Composable
+import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.db.dao.ArticleDao
@@ -23,6 +24,8 @@ abstract class DownloadStarter {
         url: String,
         type: String? = null,
         articleDownloadSource: ArticleDownloadSource? = null,
+        automatic: Boolean = false,
+        constraints: DownloadConstraints = DownloadConstraints(),
     ) {
         withContext(Dispatchers.IO) {
             val articleId = articleDownloadSource?.articleId
@@ -45,11 +48,16 @@ abstract class DownloadStarter {
                     url = url,
                     path = saveDir,
                     articleDownloadSource = articleDownloadSource,
+                    constraints = constraints,
                 )
             }
         }
     }
+
+    open fun openNotificationSettings() = Unit
 }
 
 @Composable
-expect fun rememberDownloadStarter(): DownloadStarter
+expect fun rememberDownloadStarter(
+    onNotificationPermissionDenied: () -> Unit = {},
+): DownloadStarter

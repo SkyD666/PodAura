@@ -358,7 +358,8 @@
     <string name="request_headers_screen_value">Value</string>
     <string name="player_config_screen_show_progress_indicator">Progress indicator</string>
     <string name="read_screen_text_size">Text size</string>
-    <string name="download_no_notification_permission_tip">Notification permission has not been granted so the download cannot work</string>
+    <string name="download_without_notifications_tip">Download started without notifications</string>
+    <string name="open_notification_settings">Settings</string>
     <string name="read_style_screen_name">Read screen style</string>
     <string name="read_style_screen_top_bar_category">Top bar</string>
     <string name="read_style_screen_content_category">Content</string>

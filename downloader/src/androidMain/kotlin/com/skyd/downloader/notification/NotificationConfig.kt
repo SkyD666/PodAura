@@ -1,8 +1,5 @@
 package com.skyd.downloader.notification
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class NotificationConfig(
     val enabled: Boolean = true,
     val channelName: String,

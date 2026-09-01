@@ -13,10 +13,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +39,7 @@ import com.skyd.compone.ext.plus
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.download.DownloadManager
+import com.skyd.podaura.model.repository.download.DownloadStarter
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.EmptyPlaceholder
@@ -54,6 +57,8 @@ import podaura.shared.generated.resources.download
 import podaura.shared.generated.resources.download_screen_add_download
 import podaura.shared.generated.resources.download_screen_add_download_hint
 import podaura.shared.generated.resources.download_screen_name
+import podaura.shared.generated.resources.download_without_notifications_tip
+import podaura.shared.generated.resources.open_notification_settings
 
 
 @Serializable
@@ -149,7 +154,21 @@ fun DownloadScreen(
         }
     }
 
-    val downloadStarter = rememberDownloadStarter()
+    val silentDownloadMessage = stringResource(Res.string.download_without_notifications_tip)
+    val settingsAction = stringResource(Res.string.open_notification_settings)
+    val starterHolder = remember { mutableStateOf<DownloadStarter?>(null) }
+    val downloadStarter = rememberDownloadStarter {
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = silentDownloadMessage,
+                actionLabel = settingsAction,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                starterHolder.value?.openNotificationSettings()
+            }
+        }
+    }
+    SideEffect { starterHolder.value = downloadStarter }
     TextFieldDialog(
         visible = openLinkDialog != null,
         icon = { Icon(imageVector = Icons.Outlined.Download, contentDescription = null) },
@@ -171,6 +190,7 @@ private fun DownloadList(
     nestedScrollConnection: NestedScrollConnection,
     contentPadding: PaddingValues,
 ) {
+    val scope = rememberCoroutineScope()
     if (downloadInfoBeanList.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier
@@ -186,10 +206,10 @@ private fun DownloadList(
                 if (index > 0) HorizontalDivider()
                 DownloadItem(
                     data = item,
-                    onPause = { downloadManager.pause(item.id) },
-                    onResume = { downloadManager.resume(item.id) },
-                    onRetry = { downloadManager.retry(item.id) },
-                    onDelete = { downloadManager.delete(item.id) },
+                    onPause = { scope.launch { downloadManager.pause(item.id) } },
+                    onResume = { scope.launch { downloadManager.resume(item.id) } },
+                    onRetry = { scope.launch { downloadManager.retry(item.id) } },
+                    onDelete = { scope.launch { downloadManager.delete(item.id) } },
                 )
             }
         }

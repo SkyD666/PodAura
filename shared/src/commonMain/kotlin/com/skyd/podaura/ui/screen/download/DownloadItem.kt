@@ -48,6 +48,7 @@ import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import podaura.downloader.generated.resources.download_cancelled
 import podaura.downloader.generated.resources.download_paused
 import podaura.downloader.generated.resources.download_retry
 import podaura.shared.generated.resources.Res
@@ -89,6 +90,15 @@ fun DownloadItem(
                 pauseButtonContentDescription =
                     getString(podaura.downloader.generated.resources.Res.string.download_retry)
                 description = getString(Res.string.download_error_paused)
+            }
+
+            Status.Cancelled -> {
+                pauseButtonEnabled = true
+                pauseButtonIcon = Icons.Outlined.Refresh
+                pauseButtonContentDescription =
+                    getString(podaura.downloader.generated.resources.Res.string.download_retry)
+                description =
+                    getString(podaura.downloader.generated.resources.Res.string.download_cancelled)
             }
 
             Status.Paused -> {
@@ -157,7 +167,11 @@ fun DownloadItem(
                     Row {
                         Text(
                             modifier = Modifier.alignByBaseline(),
-                            text = "${if (data.totalBytes == 0L) 0 else (data.downloadedBytes * 100 / data.totalBytes)}%",
+                            text = if (data.totalBytes == 0L) {
+                                data.downloadedBytes.fileSize()
+                            } else {
+                                "${data.downloadedBytes * 100 / data.totalBytes}%"
+                            },
                             style = MaterialTheme.typography.labelMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -191,6 +205,11 @@ fun DownloadItem(
                             }
 
                             Status.Failed -> {
+                                onRetry(data)
+                                pauseButtonEnabled = false
+                            }
+
+                            Status.Cancelled -> {
                                 onRetry(data)
                                 pauseButtonEnabled = false
                             }
@@ -267,7 +286,12 @@ private fun ProgressIndicator(
         Status.Init,
         Status.Downloading,
         Status.Paused,
-        Status.Failed -> {
+        Status.Failed,
+        Status.Cancelled -> {
+            if (data.status == Status.Downloading && data.totalBytes == 0L) {
+                LinearProgressIndicator(modifier = modifier)
+                return
+            }
             val animatedProgress by animateFloatAsState(
                 targetValue = if (data.totalBytes == 0L) 0f else data.downloadedBytes.toFloat() / data.totalBytes,
                 animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,

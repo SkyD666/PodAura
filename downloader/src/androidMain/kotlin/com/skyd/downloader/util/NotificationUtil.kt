@@ -2,12 +2,13 @@ package com.skyd.downloader.util
 
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
+import com.skyd.downloader.notification.DownloadNotificationManager
 
 internal object NotificationUtil {
-    fun removeNotification(context: Context, notificationId: Int) {
-        // Downloading, Paused notification
-        NotificationManagerCompat.from(context).cancel(notificationId)
-        // Cancelled, Failed, Success notification
-        NotificationManagerCompat.from(context).cancel(notificationId + 1)
+    fun removeNotification(context: Context, taskId: String) {
+        NotificationManagerCompat.from(context).run {
+            cancel(DownloadNotificationManager.notificationId(taskId))
+            cancel(DownloadNotificationManager.terminalNotificationId(taskId))
+        }
     }
 }

@@ -349,7 +349,6 @@
     <string name="request_headers_screen_value">Değer</string>
     <string name="player_config_screen_show_progress_indicator">İlerleme göstergesi</string>
     <string name="read_screen_text_size">Metin boyutu</string>
-    <string name="download_no_notification_permission_tip">Bildirim izni verilmediği için indirme başlatılamıyor</string>
     <string name="read_style_screen_name">Okuma ekranı stili</string>
     <string name="read_style_screen_top_bar_category">Üst çubuk</string>
     <string name="read_style_screen_content_category">İçerik</string>

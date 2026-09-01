@@ -8,6 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.fundation.di.get
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.db.dao.ArticleDao
@@ -35,6 +36,12 @@ class AutoDownloadWorker(context: Context, parameters: WorkerParameters) :
                 articleId = articleId,
                 feedUrl = article.feed.url,
             ),
+            automatic = true,
+            constraints = DownloadConstraints(
+                requireUnmetered = inputData.getBoolean(KEY_REQUIRE_UNMETERED, false),
+                requiresCharging = inputData.getBoolean(KEY_REQUIRES_CHARGING, false),
+                requiresBatteryNotLow = inputData.getBoolean(KEY_REQUIRES_BATTERY_NOT_LOW, false),
+            ),
         )
         return Result.success()
     }
@@ -53,7 +60,14 @@ class AutoDownloadStarterImpl : AutoDownloadStarter {
             v.map { article ->
                 OneTimeWorkRequestBuilder<AutoDownloadWorker>()
                     .setConstraints(constraints)
-                    .setInputData(workDataOf("articleId" to article.articleId))
+                    .setInputData(
+                        workDataOf(
+                            "articleId" to article.articleId,
+                            KEY_REQUIRE_UNMETERED to rule.requireWifi,
+                            KEY_REQUIRES_CHARGING to rule.requireCharging,
+                            KEY_REQUIRES_BATTERY_NOT_LOW to rule.requireBatteryNotLow,
+                        )
+                    )
                     .build()
             }
         }.flatten()
@@ -62,3 +76,7 @@ class AutoDownloadStarterImpl : AutoDownloadStarter {
         }
     }
 }
+
+private const val KEY_REQUIRE_UNMETERED = "requireUnmetered"
+private const val KEY_REQUIRES_CHARGING = "requiresCharging"
+private const val KEY_REQUIRES_BATTERY_NOT_LOW = "requiresBatteryNotLow"

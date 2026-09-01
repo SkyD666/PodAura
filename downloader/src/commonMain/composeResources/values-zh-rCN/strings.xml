@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="downloading_count">正在下载 %1$d 个文件</string>
     <string name="downloading_title">下载中 %1$s</string>
     <string name="download_successful">下载成功（%1$s）</string>
     <string name="download_failed">下载失败</string>

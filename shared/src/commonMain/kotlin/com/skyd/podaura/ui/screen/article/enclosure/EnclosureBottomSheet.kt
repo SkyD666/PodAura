@@ -22,12 +22,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +53,7 @@ import com.skyd.podaura.model.download.ArticleDownloadSource
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.rss.ParseLinkTagAsEnclosurePreference
 import com.skyd.podaura.model.repository.download.rememberDownloadStarter
+import com.skyd.podaura.model.repository.download.DownloadStarter
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
@@ -60,6 +65,8 @@ import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.download
 import podaura.shared.generated.resources.enclosure_item_link_tag
 import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.download_without_notifications_tip
+import podaura.shared.generated.resources.open_notification_settings
 
 fun getEnclosuresList(articleWithEnclosureBean: ArticleWithEnclosureBean): List<Any> {
     val dataList: MutableList<Any> = articleWithEnclosureBean.enclosures.toMutableList()
@@ -78,7 +85,22 @@ fun EnclosureBottomSheet(
     article: ArticleWithFeed,
 ) {
     val scope = rememberCoroutineScope()
-    val downloadStarter = rememberDownloadStarter()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val silentDownloadMessage = stringResource(Res.string.download_without_notifications_tip)
+    val settingsAction = stringResource(Res.string.open_notification_settings)
+    val starterHolder = remember { mutableStateOf<DownloadStarter?>(null) }
+    val downloadStarter = rememberDownloadStarter {
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = silentDownloadMessage,
+                actionLabel = settingsAction,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                starterHolder.value?.openNotificationSettings()
+            }
+        }
+    }
+    SideEffect { starterHolder.value = downloadStarter }
     val onDownload: (Any) -> Unit = remember(article, downloadStarter, scope) {
         {
             val url = when (it) {
@@ -104,35 +126,41 @@ fun EnclosureBottomSheet(
     AnimatedDismissModalBottomSheet(
         onDismissRequest = onDismissRequest
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = stringResource(Res.string.bottom_sheet_enclosure_title),
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            LazyColumn {
-                itemsIndexed(dataList) { index, item ->
-                    if (index > 0) {
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    }
-                    if (item is EnclosureBean) {
-                        EnclosureItem(
-                            enclosure = item,
-                            article = article,
-                            onDownload = onDownload,
-                        )
-                    } else if (item is LinkEnclosureBean) {
-                        LinkEnclosureItem(
-                            enclosure = item,
-                            article = article,
-                            onDownload = onDownload,
-                        )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(Res.string.bottom_sheet_enclosure_title),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyColumn {
+                    itemsIndexed(dataList) { index, item ->
+                        if (index > 0) {
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                        }
+                        if (item is EnclosureBean) {
+                            EnclosureItem(
+                                enclosure = item,
+                                article = article,
+                                onDownload = onDownload,
+                            )
+                        } else if (item is LinkEnclosureBean) {
+                            LinkEnclosureItem(
+                                enclosure = item,
+                                article = article,
+                                onDownload = onDownload,
+                            )
+                        }
                     }
                 }
             }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 }

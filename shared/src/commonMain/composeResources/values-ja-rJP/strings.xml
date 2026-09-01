@@ -336,7 +336,6 @@
     <string name="request_headers_screen_value">値</string>
     <string name="player_config_screen_show_progress_indicator">進捗インジケーター</string>
     <string name="read_screen_text_size">テキストサイズ</string>
-    <string name="download_no_notification_permission_tip">通知の権限が許可されていないため、ダウンロードできません。</string>
     <string name="read_style_screen_name">閲覧画面のスタイル</string>
     <string name="read_style_screen_top_bar_category">上部バー</string>
     <string name="read_style_screen_content_category">コンテンツ</string>

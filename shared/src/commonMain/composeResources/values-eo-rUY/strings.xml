@@ -349,7 +349,6 @@
     <string name="request_headers_screen_value">Valoro</string>
     <string name="player_config_screen_show_progress_indicator">Progresindikilo</string>
     <string name="read_screen_text_size">Tekstogrando</string>
-    <string name="download_no_notification_permission_tip">Elŝutado ne povas funkcii, ĉar la permeso por sciigoj ne estas donita</string>
     <string name="read_style_screen_name">Stilo de la lega ekrano</string>
     <string name="read_style_screen_top_bar_category">Supra breto</string>
     <string name="read_style_screen_content_category">Enhavo</string>

@@ -5,7 +5,7 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 
 
 data class DownloadInfoBean(
-    val id: Int,
+    val id: String,
     val url: String,
     val path: String,
     val fileName: String,

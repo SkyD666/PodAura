@@ -2,175 +2,177 @@ package com.skyd.downloader
 
 import com.skyd.downloader.db.DownloadDao
 import com.skyd.downloader.db.DownloadEntity
-import com.skyd.downloader.download.DownloadEvent
+import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.downloader.download.DownloadManager
-import com.skyd.downloader.download.DownloadRequest
 import com.skyd.downloader.util.FileUtil
-import com.skyd.fundation.di.get
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import io.ktor.http.URLProtocol
+import io.ktor.http.Url
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
+import kotlin.uuid.Uuid
 
-class Downloader private constructor() {
-    private val downloadManager = DownloadManager()
+class Downloader internal constructor(
+    private val downloadDao: DownloadDao,
+    private val downloadManager: DownloadManager,
+) {
+    private val commandMutex = Mutex()
 
-    /**
-     * Download the content
-     *
-     * @param url Download url of the content
-     * @param path Download path to store the downloaded file
-     * @param fileName Name of the file to be downloaded
-     * @param metadata Optional opaque metadata owned by the caller. A non-null value replaces
-     * existing task metadata; null leaves existing metadata unchanged.
-     * @return Unique Download ID associated with current download
-     */
-    fun download(
+    suspend fun download(
         url: String,
         path: String,
-        fileName: String = FileUtil.getFileNameFromUrl(url),
+        fileName: String? = null,
         metadata: String? = null,
-    ): Int {
-        require(url.isNotEmpty() && path.isNotEmpty() && fileName.isNotEmpty()) {
-            "Missing ${if (url.isEmpty()) "url" else if (path.isEmpty()) "path" else "fileName"}"
+        constraints: DownloadConstraints = DownloadConstraints(),
+    ): String = commandMutex.withLock {
+        val parsedUrl = runCatching { Url(url) }.getOrElse {
+            throw IllegalArgumentException("Invalid download URL")
         }
-        val downloadRequest = DownloadRequest(
+        require(parsedUrl.protocol == URLProtocol.HTTP || parsedUrl.protocol == URLProtocol.HTTPS) {
+            "Only HTTP and HTTPS downloads are supported"
+        }
+        val explicitFileName = fileName?.let(FileUtil::sanitizeFileName)
+        val resolvedFileName = explicitFileName ?: FileUtil.getFileNameFromUrl(url)
+        val requestedFileName = explicitFileName.orEmpty()
+        FileUtil.validateTarget(path, resolvedFileName)
+
+        val sourceTask = downloadDao.findBySourceAndTarget(
             url = url,
             path = path,
-            fileName = fileName,
-            metadata = metadata,
+            requestedFileName = requestedFileName,
         )
-        downloadManager.downloadAsync(downloadRequest)
-        return downloadRequest.id
-    }
-
-    /**
-     * Observe all downloads
-     *
-     * @return [kotlinx.coroutines.flow.Flow] of List of [com.skyd.downloader.db.DownloadEntity]
-     */
-    fun observeDownloads(): Flow<List<DownloadEntity>> {
-        return downloadManager.observeAllDownloads()
-    }
-
-    /**
-     * Observe download with given [id]
-     *
-     * @param id Unique Download ID of the download
-     * @return [kotlinx.coroutines.flow.Flow] of List of [com.skyd.downloader.db.DownloadEntity]
-     */
-    fun observeDownloadById(id: Int): Flow<DownloadEntity> {
-        return downloadManager.observeDownloadById(id)
-    }
-
-    /**
-     * Pause download with given [id]
-     *
-     * @param id Unique Download ID of the download
-     */
-    fun pause(id: Int) {
-        downloadManager.pauseAsync(id)
-    }
-
-    /**
-     * Pause all the downloads
-     *
-     */
-    fun pauseAll() {
-        downloadManager.pauseAllAsync()
-    }
-
-    /**
-     * Resume download with given [id]
-     *
-     * @param id Unique Download ID of the download
-     */
-    fun resume(id: Int) {
-        downloadManager.resumeAsync(id)
-    }
-
-    /**
-     * Resume all the downloads
-     *
-     */
-    fun resumeAll() {
-        downloadManager.resumeAllAsync()
-    }
-
-    /**
-     * Retry download with given [id]
-     *
-     * @param id Unique Download ID of the download
-     */
-    fun retry(id: Int) {
-        downloadManager.retryAsync(id)
-    }
-
-    /**
-     * Retry all the downloads
-     *
-     */
-    fun retryAll() {
-        downloadManager.retryAllAsync()
-    }
-
-    /**
-     * Clear all entries from database and delete all the files
-     *
-     * @param deleteFile delete the actual file from the system
-     */
-    fun clearAllDb(deleteFile: Boolean = true) {
-        downloadManager.clearAllDbAsync(deleteFile)
-    }
-
-    /**
-     * Clear entries from database and delete files on or before [timeInMillis]
-     *
-     * @param timeInMillis timestamp in millisecond
-     * @param deleteFile delete the actual file from the system
-     */
-    fun clearDb(timeInMillis: Long, deleteFile: Boolean = true) {
-        downloadManager.clearDbAsync(timeInMillis, deleteFile)
-    }
-
-    /**
-     * Clear entry from database and delete file with given [id]
-     *
-     * @param id Unique Download ID of the download
-     * @param deleteFile delete the actual file from the system
-     */
-    fun clearDb(id: Int, deleteFile: Boolean = true) {
-        downloadManager.clearDbAsync(id, deleteFile)
-    }
-
-    fun find(id: Int, onResult: (DownloadEntity?) -> Unit) = downloadManager.findAsync(id, onResult)
-
-    /**
-     * Suspend function to get list of all Downloads
-     *
-     * @return List of [com.skyd.downloader.db.DownloadEntity]
-     */
-    suspend fun getAllDownloads() = downloadManager.getAllDownloads()
-
-    companion object {
-        fun observeEvent() = DownloadEvent.eventFlow
-
-        private val scope = CoroutineScope(Dispatchers.IO)
-
-        init {
-            // todo needs to refactor to better implementation
-            scope.launch {
-                val downloadDao = get<DownloadDao>()
-                val downloadEntities = downloadDao.findAllInStatuses(
-                    listOf(Status.Started, Status.Downloading).map { it.toString() }
-                )
-                downloadEntities.forEach { entity ->
-                    downloadDao.update(entity.copy(status = Status.Paused.toString()))
-                }
+        val existing = if (sourceTask != null) {
+            sourceTask
+        } else {
+            val destinationOwner = downloadDao.findByDestination(path, resolvedFileName)
+            if (destinationOwner != null && destinationOwner.url != url) {
+                throw IllegalStateException("Another download already owns the target file")
             }
+            destinationOwner
+        }
+        if (existing != null && existing.status.isActiveDownloadStatus()) return@withLock existing.id
+        if (existing != null && existing.status == Status.Success.name &&
+            FileUtil.finalFileExists(existing.path, existing.fileName)
+        ) {
+            return@withLock existing.id
         }
 
-        val instance: Downloader by lazy { Downloader() }
+        val now = now()
+        val attemptId = Uuid.random().toString()
+        val entity = existing?.copy(
+            status = Status.Queued.name,
+            timeQueued = now,
+            updatedTime = now,
+            attemptId = attemptId,
+            autoRetryCount = 0,
+            nextAttemptAt = 0,
+            speedInBytePerMs = 0f,
+            failureReason = "",
+            failureCode = "",
+            metadata = metadata ?: existing.metadata,
+            requireUnmetered = constraints.requireUnmetered,
+            requiresCharging = constraints.requiresCharging,
+            requiresBatteryNotLow = constraints.requiresBatteryNotLow,
+        )?.also { downloadDao.update(it) }
+            ?: DownloadEntity(
+                id = Uuid.random().toString(),
+                url = url,
+                path = path,
+                fileName = resolvedFileName,
+                requestedFileName = requestedFileName,
+                fileNameResolved = explicitFileName != null,
+                timeQueued = now,
+                status = Status.Queued.name,
+                attemptId = attemptId,
+                createTime = now,
+                updatedTime = now,
+                metadata = metadata,
+                requireUnmetered = constraints.requireUnmetered,
+                requiresCharging = constraints.requiresCharging,
+                requiresBatteryNotLow = constraints.requiresBatteryNotLow,
+            ).also { downloadDao.insert(it) }
+        downloadManager.schedule(entity)
+        entity.id
     }
+
+    fun observeDownloads(): Flow<List<DownloadEntity>> = downloadDao.getAllEntityFlow()
+
+    fun observePendingCompletions(): Flow<List<DownloadEntity>> =
+        downloadDao.observePendingCompletions()
+
+    suspend fun getPendingCompletions(): List<DownloadEntity> =
+        downloadDao.getPendingCompletions()
+
+    suspend fun find(id: String): DownloadEntity? = downloadDao.find(id)
+
+    suspend fun getAllDownloads(): List<DownloadEntity> = downloadDao.getAllEntity()
+
+    suspend fun pause(id: String) = commandMutex.withLock {
+        val entity = downloadDao.find(id) ?: return@withLock
+        if (!entity.status.isActiveDownloadStatus()) return@withLock
+        downloadDao.update(
+            entity.copy(
+                status = Status.Paused.name,
+                attemptId = "",
+                speedInBytePerMs = 0f,
+                updatedTime = now(),
+            )
+        )
+        downloadManager.cancel(id)
+    }
+
+    suspend fun resume(id: String) = restart(id)
+
+    suspend fun retry(id: String) = restart(id)
+
+    suspend fun cancel(id: String) = commandMutex.withLock {
+        val entity = downloadDao.find(id) ?: return@withLock
+        downloadDao.update(
+            entity.copy(
+                status = Status.Cancelled.name,
+                attemptId = "",
+                speedInBytePerMs = 0f,
+                updatedTime = now(),
+            )
+        )
+        downloadManager.cancel(id)
+        FileUtil.deletePartIfExists(entity.path, entity.fileName)
+    }
+
+    suspend fun delete(id: String, deleteFile: Boolean) = commandMutex.withLock {
+        val entity = downloadDao.find(id) ?: return@withLock
+        downloadManager.cancel(id)
+        FileUtil.deletePartIfExists(entity.path, entity.fileName)
+        if (deleteFile) FileUtil.deleteFinalIfExists(entity.path, entity.fileName)
+        downloadDao.remove(id)
+    }
+
+    suspend fun markCompletionHandled(id: String) {
+        downloadDao.markCompletionHandled(id, now())
+    }
+
+    suspend fun initialize() {
+        downloadManager.reconcile()
+    }
+
+    private suspend fun restart(id: String) = commandMutex.withLock {
+        val entity = downloadDao.find(id) ?: return@withLock
+        if (entity.status.isActiveDownloadStatus()) return@withLock
+        val restarted = entity.copy(
+            status = Status.Queued.name,
+            attemptId = Uuid.random().toString(),
+            autoRetryCount = 0,
+            nextAttemptAt = 0,
+            speedInBytePerMs = 0f,
+            failureReason = "",
+            failureCode = "",
+            timeQueued = now(),
+            updatedTime = now(),
+        )
+        downloadDao.update(restarted)
+        downloadManager.schedule(restarted)
+    }
+
+    private fun now(): Long = Clock.System.now().toEpochMilliseconds()
 }

@@ -16,7 +16,7 @@ class DownloadRepositoryTest {
         articleId = "article-id",
         feedUrl = "https://example.com/feed.xml",
     )
-    private val entry = ArticleDownloadSourceEntry(downloadId = 7, source = source)
+    private val entry = ArticleDownloadSourceEntry(downloadId = "7", source = source)
 
     @Test
     fun resolvesCurrentArticleAndFeedMetadata() {
@@ -25,7 +25,7 @@ class DownloadRepositoryTest {
             sources = listOf(entry),
             articles = listOf(article(feed)),
             feeds = listOf(feed),
-        ).getValue(7)
+        ).getValue("7")
 
         assertEquals("Current episode title", result.articleTitle)
         assertEquals("episode.jpg", result.episodeImage)
@@ -40,7 +40,7 @@ class DownloadRepositoryTest {
             sources = listOf(entry),
             articles = emptyList(),
             feeds = listOf(feed),
-        ).getValue(7)
+        ).getValue("7")
 
         assertNull(result.articleTitle)
         assertNull(result.episodeImage)
@@ -55,7 +55,7 @@ class DownloadRepositoryTest {
             feeds = emptyList(),
         )
 
-        assertFalse(7 in result)
+        assertFalse("7" in result)
     }
 
     private fun feed() = FeedBean(

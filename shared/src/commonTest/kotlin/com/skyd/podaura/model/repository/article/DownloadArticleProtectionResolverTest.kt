@@ -1,6 +1,7 @@
 package com.skyd.podaura.model.repository.article
 
 import com.skyd.downloader.Status
+import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.db.dao.EnclosureDao
 import com.skyd.podaura.model.download.ArticleDownloadSource
@@ -17,7 +18,7 @@ class DownloadArticleProtectionResolverTest {
     fun protectsExplicitArticleDownloadsInEveryStoredStatus() = runTest {
         val tasks = Status.entries.mapIndexed { index, status ->
             task(
-                id = index,
+                id = index.toString(),
                 status = status,
                 source = ArticleDownloadSource(
                     articleId = "article-$status",
@@ -42,15 +43,15 @@ class DownloadArticleProtectionResolverTest {
         val downloadManager = FakeDownloadManager(
             listOf(
                 task(
-                    id = 1,
+                    id = "1",
                     url = explicitUrl,
                     source = ArticleDownloadSource(
                         articleId = "explicit-article",
                         feedUrl = "https://example.com/feed.xml",
                     ),
                 ),
-                task(id = 2, url = legacyUrl),
-                task(id = 3, url = legacyUrl, status = Status.Success),
+                task(id = "2", url = legacyUrl),
+                task(id = "3", url = legacyUrl, status = Status.Success),
             )
         )
         val enclosureDao = FakeEnclosureDao(
@@ -73,7 +74,7 @@ class DownloadArticleProtectionResolverTest {
     @Test
     fun disabledProtectionDoesNotReadDownloadOrArticleDatabases() = runTest {
         val downloadManager = FakeDownloadManager(
-            tasks = listOf(task(id = 1)),
+            tasks = listOf(task(id = "1")),
             failOnRead = true,
         )
         val enclosureDao = FakeEnclosureDao(emptyMap())
@@ -87,7 +88,7 @@ class DownloadArticleProtectionResolverTest {
     }
 
     private fun task(
-        id: Int,
+        id: String,
         url: String = "https://example.com/$id.mp3",
         status: Status = Status.Downloading,
         source: ArticleDownloadSource? = null,
@@ -111,12 +112,13 @@ class DownloadArticleProtectionResolverTest {
     ) : IDownloadManager {
         var readCount = 0
 
-        override fun download(
+        override suspend fun download(
             url: String,
             path: String,
             fileName: String?,
             articleDownloadSource: ArticleDownloadSource?,
-        ): Int = 0
+            constraints: DownloadConstraints,
+        ): String = "0"
 
         override suspend fun getAllDownloadTasks(): List<DownloadInfoBean> {
             readCount++

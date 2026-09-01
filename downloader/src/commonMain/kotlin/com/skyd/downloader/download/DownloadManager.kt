@@ -1,7 +1,9 @@
 package com.skyd.downloader.download
 
-expect class DownloadManager(): BaseDownloadManager {
-    override suspend fun download(downloadRequest: DownloadRequest)
-    override suspend fun onPause(id: Int)
-    override suspend fun onClearDbAsync(id: Int)
+import com.skyd.downloader.db.DownloadEntity
+
+internal expect class DownloadManager() {
+    suspend fun schedule(entity: DownloadEntity)
+    suspend fun cancel(id: String)
+    suspend fun reconcile()
 }

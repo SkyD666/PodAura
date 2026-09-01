@@ -56,7 +56,7 @@ class DownloadInfoBeanTest {
     }
 
     private fun downloadInfo() = DownloadInfoBean(
-        id = 1,
+        id = "1",
         url = "https://example.com/original-name.mp3",
         path = "/downloads",
         fileName = "original-name.mp3",
