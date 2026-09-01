@@ -35,7 +35,10 @@ internal fun Flow<PlayerState>.withoutHotPlayerValues(): Flow<PlayerState> = map
 }.distinctUntilChanged()
 
 internal fun Flow<PlayerState>.playerProgressValues(): Flow<PlayerProgress> =
-    map { PlayerProgress(it.position, it.duration, it.buffer) }.distinctUntilChanged()
+    map(PlayerState::toPlayerProgress).distinctUntilChanged()
+
+internal fun PlayerState.toPlayerProgress(): PlayerProgress =
+    PlayerProgress(position = position, duration = duration, buffer = buffer)
 
 internal fun Flow<PlayerState>.playerTransformValues(): Flow<PlayerTransform> =
     map { PlayerTransform(it.zoom, it.offsetX, it.offsetY, it.rotate) }.distinctUntilChanged()
@@ -46,7 +49,7 @@ internal fun collectPlayerProgress(source: StateFlow<PlayerState>): State<Player
         source.playerProgressValues()
     }
     return progress.collectAsStateWithLifecycle(
-        initialValue = source.value.let { PlayerProgress(it.position, it.duration, it.buffer) }
+        initialValue = source.value.toPlayerProgress()
     )
 }
 

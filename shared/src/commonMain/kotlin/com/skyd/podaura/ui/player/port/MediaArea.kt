@@ -1,5 +1,7 @@
 package com.skyd.podaura.ui.player.port
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -31,6 +33,7 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 internal fun MediaArea(
     playState: PlayState,
     modifier: Modifier = Modifier,
+    presentationState: PlayerPresentationState = PlayerPresentationState.Ready,
     playerContent: @Composable () -> Unit,
 ) {
     Box(
@@ -44,16 +47,29 @@ internal fun MediaArea(
             .fillMaxSize()
             .clip(RoundedCornerShape(12.dp))
             .heightIn(min = 20.dp)
-        val isVideo = playState.isVideo
-        if (isVideo) {
-            Box(modifier = modifier) { playerContent() }
-        } else {
-            Thumbnail(
-                modifier = modifier,
-                thumbnail = playState.thumbnail
-                    ?: playState.mediaThumbnail
-                    ?: playState.thumbnailAny,
-            )
+        Crossfade(
+            targetState = presentationState is PlayerPresentationState.Ready,
+            animationSpec = tween(PLAYER_PRESENTATION_CROSSFADE_MILLIS),
+            label = "playerMediaContent",
+        ) { ready ->
+            if (ready) {
+                if (playState.isVideo) {
+                    Box(modifier = modifier) { playerContent() }
+                } else {
+                    Thumbnail(
+                        modifier = modifier,
+                        thumbnail = playState.thumbnail
+                            ?: playState.mediaThumbnail
+                            ?: playState.thumbnailAny,
+                    )
+                }
+            } else {
+                PlayerSkeleton(
+                    modifier = modifier,
+                    shape = RoundedCornerShape(12.dp),
+                    animated = presentationState is PlayerPresentationState.Loading,
+                )
+            }
         }
     }
 }

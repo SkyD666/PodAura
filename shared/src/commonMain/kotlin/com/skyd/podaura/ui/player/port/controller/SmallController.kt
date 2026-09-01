@@ -40,6 +40,7 @@ internal fun SmallController(
     onOpenPlaylist: () -> Unit,
     onEnterFullscreen: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -48,13 +49,14 @@ internal fun SmallController(
     ) {
         // Playlist button
         ControllerIconButton(
+            enabled = enabled,
             onClick = onOpenPlaylist,
             imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
             contentDescription = stringResource(Res.string.playlist),
         )
         // Shuffle button
         ControllerIconToggleButton(
-            enabled = playState.mediaLoaded,
+            enabled = enabled && playState.mediaLoaded,
             checked = playState.shuffle,
             onCheckedChange = playStateCallback.onShuffle,
             imageVector = Icons.Outlined.Shuffle,
@@ -63,16 +65,18 @@ internal fun SmallController(
         // Speed button
         ControllerTextButton(
             text = "${playState.speed.format(2)}x",
-            enabled = playState.mediaLoaded,
+            enabled = enabled && playState.mediaLoaded,
             colors = ButtonDefaults.textButtonColors().copy(
                 contentColor = LocalContentColor.current,
-                disabledContentColor = LocalContentColor.current.copy(alpha = 0.6f),
+                disabledContentColor = LocalContentColor.current.copy(
+                    alpha = if (enabled) 0.6f else 0.38f
+                ),
             ),
             onClick = { onDialogVisibilityChanged.onSpeedDialog(true) },
         )
         // Loop button
         ControllerIconToggleButton(
-            enabled = playState.mediaLoaded,
+            enabled = enabled && playState.mediaLoaded,
             checked = playState.loop != LoopMode.None,
             onCheckedChange = { playStateCallback.onCycleLoop() },
             imageVector = when (playState.loop) {
@@ -82,6 +86,7 @@ internal fun SmallController(
             contentDescription = stringResource(Res.string.loop_playlist_mode),
         )
         ComponeIconButton(
+            enabled = enabled,
             onClick = onEnterFullscreen,
             imageVector = Icons.Outlined.Fullscreen,
             contentDescription = stringResource(Res.string.fullscreen),

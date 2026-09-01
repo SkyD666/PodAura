@@ -1,22 +1,9 @@
 package com.skyd.podaura.ui.player
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -26,11 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.podaura.ui.component.rememberOrientationController
@@ -52,8 +37,8 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDial
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
-import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
+import com.skyd.podaura.ui.player.port.PlayerPresentationState
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
@@ -65,7 +50,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.close
 import podaura.shared.generated.resources.playback_failed
 import podaura.shared.generated.resources.retry
 import kotlin.time.Duration.Companion.milliseconds
@@ -93,17 +77,7 @@ fun PlayerView(
 ) {
     val engineState by coordinator.engineState.collectAsStateWithLifecycle()
     PlatformPlayerLifecycleEffect(coordinator = coordinator)
-    if (!engineState.isReady) {
-        PlayerEngineScreen(
-            engineState = engineState,
-            onBack = {
-                coordinator.onCommand(PlayerCommand.Destroy)
-                onBack()
-            },
-            onRetry = { coordinator.onCommand(PlayerCommand.RetryInitialize) },
-        )
-        return
-    }
+    val presentationState = engineState.toPresentationState()
     val stablePlayerState = remember(coordinator.playerState) {
         coordinator.playerState.withoutHotPlayerValues()
     }
@@ -129,6 +103,7 @@ fun PlayerView(
     }
 
     val currentArticle = playerState.currentMedia?.article?.articleWithEnclosure?.article
+        ?.takeIf { presentationState is PlayerPresentationState.Ready }
     val currentArticleId = currentArticle?.articleId
     LaunchedEffect(currentArticleId) {
         articleContextViewModel.bindArticle(
@@ -268,6 +243,7 @@ fun PlayerView(
     }
 
     val commonContent = @Composable {
+        val ready = presentationState is PlayerPresentationState.Ready
         Content(
             coordinator = coordinator,
             playerStateFlow = coordinator.playerState,
@@ -294,9 +270,9 @@ fun PlayerView(
                     },
                 )
             },
-            playState = playState,
+            playState = if (ready) playState else enginePlayState,
             articleContextState = articleContextState.takeIf {
-                it.articleId == currentArticleId
+                ready && it.articleId == currentArticleId
             } ?: PlayerArticleContextState(),
             playStateCallback = playStateCallback,
             dialogState = dialogState,
@@ -306,6 +282,11 @@ fun PlayerView(
             onCommand = { coordinator.onCommand(it) },
             onSetArticleFavorite = articleContextViewModel::setFavorite,
             snackbarHostState = snackbarHostState,
+            modifier = Modifier.fillMaxSize().then(
+                if (ready) Modifier else Modifier.playerEngineSemantics(engineState)
+            ),
+            presentationState = presentationState,
+            onRetry = { coordinator.onCommand(PlayerCommand.RetryInitialize) },
         )
     }
 
@@ -326,45 +307,62 @@ private fun PlayerEngineScreen(
     onBack: () -> Unit,
     onRetry: () -> Unit = {},
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize().semantics {
-            contentDescription = when (engineState) {
-                PlayerEngineState.Initializing -> PLAYER_ENGINE_INITIALIZING_SEMANTICS
-                PlayerEngineState.AwaitingMedia -> PLAYER_ENGINE_AWAITING_MEDIA_SEMANTICS
-                PlayerEngineState.LoadingMedia -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
-                is PlayerEngineState.Failed -> PLAYER_ENGINE_FAILED_SEMANTICS
-                PlayerEngineState.Ready,
-                PlayerEngineState.Destroyed -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
-            }
-        }
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = stringResource(Res.string.close),
-            )
-        }
-        Column(
-            modifier = Modifier.align(Alignment.Center).padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (engineState is PlayerEngineState.Failed) {
-                Text(
-                    text = engineState.message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = onRetry) {
-                    Text(stringResource(Res.string.retry))
-                }
-            } else {
-                CircularProgressIndicator()
-            }
-        }
+    PortraitPlayerView(
+        playState = enginePlayState,
+        articleContextState = PlayerArticleContextState(),
+        playStateCallback = emptyPlayStateCallback,
+        onDialogVisibilityChanged = emptyDialogVisibilityChanged,
+        onBack = onBack,
+        onEnterFullscreen = {},
+        playerContent = {},
+        onSetArticleFavorite = {},
+        snackbarHostState = remember { SnackbarHostState() },
+        modifier = Modifier.fillMaxSize().playerEngineSemantics(engineState),
+        presentationState = engineState.toPresentationState(),
+        onRetry = onRetry,
+    )
+}
+
+private val enginePlayState = PlayState.initial
+
+private val emptyPlayStateCallback = PlayStateCallback(
+    onPlayStateChanged = {},
+    onPlayOrPause = {},
+    onSeekTo = {},
+    onSeekBy = {},
+    onSpeedChanged = {},
+    onPreviousMedia = {},
+    onNextMedia = {},
+    onCycleLoop = {},
+    onShuffle = {},
+    onPlayFileInPlaylist = {},
+    onRemoveFromPlaylist = {},
+)
+
+private val emptyDialogVisibilityChanged = OnDialogVisibilityChanged(
+    onSpeedDialog = {},
+    onSubtitleTrackDialog = {},
+    onAudioTrackDialog = {},
+    onSubtitleSettingDialog = {},
+    onAudioSettingDialog = {},
+    onReplaySecondDialog = {},
+    onForwardSecondDialog = {},
+)
+
+private fun PlayerEngineState.toPresentationState(): PlayerPresentationState = when (this) {
+    PlayerEngineState.Ready -> PlayerPresentationState.Ready
+    is PlayerEngineState.Failed -> PlayerPresentationState.Failed(message)
+    else -> PlayerPresentationState.Loading
+}
+
+private fun Modifier.playerEngineSemantics(engineState: PlayerEngineState): Modifier = semantics {
+    contentDescription = when (engineState) {
+        PlayerEngineState.Initializing -> PLAYER_ENGINE_INITIALIZING_SEMANTICS
+        PlayerEngineState.AwaitingMedia -> PLAYER_ENGINE_AWAITING_MEDIA_SEMANTICS
+        PlayerEngineState.LoadingMedia -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
+        is PlayerEngineState.Failed -> PLAYER_ENGINE_FAILED_SEMANTICS
+        PlayerEngineState.Ready,
+        PlayerEngineState.Destroyed -> PLAYER_ENGINE_LOADING_MEDIA_SEMANTICS
     }
 }
 
@@ -388,18 +386,24 @@ private fun Content(
     onCommand: (PlayerCommand) -> Unit,
     onSetArticleFavorite: (Boolean) -> Unit,
     snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+    presentationState: PlayerPresentationState = PlayerPresentationState.Ready,
+    onRetry: () -> Unit = {},
 ) {
+    val playerProgress = remember(playerStateFlow) { playerStateFlow.playerProgressValues() }
     val player = @Composable {
-        PlatformPlayerView(
-            coordinator = coordinator,
-            onCommand = onCommand,
-            modifier = Modifier.fillMaxSize()
-        )
+        if (presentationState is PlayerPresentationState.Ready) {
+            PlatformPlayerView(
+                coordinator = coordinator,
+                onCommand = onCommand,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     val orientationController = rememberOrientationController()
 
-    if (fullscreen) {
+    if (fullscreen && presentationState is PlayerPresentationState.Ready) {
         FullscreenPlayerView(
             playerStateFlow = playerStateFlow,
             playState = playState,
@@ -417,7 +421,6 @@ private fun Content(
         )
     } else {
         PortraitPlayerView(
-            playerStateFlow = playerStateFlow,
             playState = playState,
             articleContextState = articleContextState,
             playStateCallback = playStateCallback,
@@ -430,37 +433,44 @@ private fun Content(
             playerContent = player,
             onSetArticleFavorite = onSetArticleFavorite,
             snackbarHostState = snackbarHostState,
+            modifier = modifier,
+            presentationState = presentationState,
+            onRetry = onRetry,
+            playerProgress = playerProgress,
+            initialProgress = playerStateFlow.value.toPlayerProgress(),
         )
     }
 
-    SpeedDialog(
-        onDismissRequest = { onDialogVisibilityChanged.onSpeedDialog(false) },
-        playState = { playState },
-        speedDialogState = dialogState.speedDialogState,
-        speedDialogCallback = dialogCallback.speedDialogCallback,
-    )
-    AudioTrackDialog(
-        onDismissRequest = { onDialogVisibilityChanged.onAudioTrackDialog(false) },
-        playState = { playState },
-        audioTrackDialogState = dialogState.audioTrackDialogState,
-        audioTrackDialogCallback = dialogCallback.audioTrackDialogCallback,
-        onDialogVisibilityChanged = onDialogVisibilityChanged,
-    )
-    SubtitleTrackDialog(
-        onDismissRequest = { onDialogVisibilityChanged.onSubtitleTrackDialog(false) },
-        playState = { playState },
-        subtitleTrackDialogState = dialogState.subtitleTrackDialogState,
-        subtitleTrackDialogCallback = dialogCallback.subtitleTrackDialogCallback,
-        onDialogVisibilityChanged = onDialogVisibilityChanged,
-    )
-    ReplaySecondsDialog(
-        visible = { dialogState.replaySecondsDialogState().show },
-        onDismissRequest = { onDialogVisibilityChanged.onReplaySecondDialog(false) },
-    )
-    ForwardSecondsDialog(
-        visible = { dialogState.forwardSecondsDialogState().show },
-        onDismissRequest = { onDialogVisibilityChanged.onForwardSecondDialog(false) },
-    )
+    if (presentationState is PlayerPresentationState.Ready) {
+        SpeedDialog(
+            onDismissRequest = { onDialogVisibilityChanged.onSpeedDialog(false) },
+            playState = { playState },
+            speedDialogState = dialogState.speedDialogState,
+            speedDialogCallback = dialogCallback.speedDialogCallback,
+        )
+        AudioTrackDialog(
+            onDismissRequest = { onDialogVisibilityChanged.onAudioTrackDialog(false) },
+            playState = { playState },
+            audioTrackDialogState = dialogState.audioTrackDialogState,
+            audioTrackDialogCallback = dialogCallback.audioTrackDialogCallback,
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+        )
+        SubtitleTrackDialog(
+            onDismissRequest = { onDialogVisibilityChanged.onSubtitleTrackDialog(false) },
+            playState = { playState },
+            subtitleTrackDialogState = dialogState.subtitleTrackDialogState,
+            subtitleTrackDialogCallback = dialogCallback.subtitleTrackDialogCallback,
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
+        )
+        ReplaySecondsDialog(
+            visible = { dialogState.replaySecondsDialogState().show },
+            onDismissRequest = { onDialogVisibilityChanged.onReplaySecondDialog(false) },
+        )
+        ForwardSecondsDialog(
+            visible = { dialogState.forwardSecondsDialogState().show },
+            onDismissRequest = { onDialogVisibilityChanged.onForwardSecondDialog(false) },
+        )
+    }
 }
 
 @Composable

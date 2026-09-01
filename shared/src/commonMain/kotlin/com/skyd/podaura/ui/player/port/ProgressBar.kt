@@ -18,27 +18,44 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.skyd.podaura.ui.player.collectPlayerProgress
-import com.skyd.podaura.ui.player.component.state.PlayState
-import com.skyd.podaura.ui.player.component.state.PlayStateCallback
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.podaura.ui.player.PlayerProgress
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
-import com.skyd.podaura.ui.player.service.PlayerState
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 
 
 @Composable
-internal fun ProgressBar(
-    playerStateFlow: StateFlow<PlayerState>,
-    playState: PlayState,
-    playStateCallback: PlayStateCallback,
+internal fun PlayerProgressBar(
+    progress: Flow<PlayerProgress>,
+    initialProgress: PlayerProgress,
+    isSeeking: Boolean,
+    onSeekTo: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
-    val progress by collectPlayerProgress(playerStateFlow)
+    val currentProgress by progress.collectAsStateWithLifecycle(initialProgress)
+    ProgressBar(
+        progress = currentProgress,
+        isSeeking = isSeeking,
+        onSeekTo = onSeekTo,
+        modifier = modifier,
+        enabled = enabled,
+    )
+}
+
+@Composable
+private fun ProgressBar(
+    progress: PlayerProgress,
+    isSeeking: Boolean,
+    onSeekTo: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     var sliderValue by rememberSaveable {
         mutableFloatStateOf(progress.position.toFloat())
     }
     var valueIsChanging by rememberSaveable { mutableStateOf(false) }
-    if (!valueIsChanging && !playState.isSeeking && sliderValue != progress.position.toFloat()) {
+    if (!valueIsChanging && !isSeeking && sliderValue != progress.position.toFloat()) {
         sliderValue = progress.position.toFloat()
     }
     Column(modifier = modifier) {
@@ -50,11 +67,12 @@ internal fun ProgressBar(
                 sliderValue = it
             },
             onValueChangeFinished = {
-                playStateCallback.onSeekTo(sliderValue.toLong())
+                onSeekTo(sliderValue.toLong())
                 valueIsChanging = false
             },
             colors = SliderDefaults.colors(),
-            valueRange = 0f..progress.duration.toFloat().coerceAtLeast(0f),
+            enabled = enabled,
+            valueRange = 0f..progress.duration.toFloat().coerceAtLeast(1f),
         )
         Spacer(modifier = Modifier.height(3.dp))
         Row(modifier = Modifier.padding(horizontal = 3.dp)) {

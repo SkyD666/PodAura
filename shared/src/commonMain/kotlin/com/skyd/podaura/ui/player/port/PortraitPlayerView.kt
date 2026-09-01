@@ -50,18 +50,20 @@ import com.skyd.podaura.ui.component.isLandscape
 import com.skyd.podaura.ui.component.navigation.rememberMainPageOpener
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.PlayerArticleContextState
+import com.skyd.podaura.ui.player.PlayerProgress
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
+import com.skyd.podaura.ui.player.port.controller.PrimaryControlMode
 import com.skyd.podaura.ui.player.port.controller.SmallController
-import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import com.skyd.podaura.ui.screen.read.ReadRoute
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_screen_favorite
@@ -76,7 +78,6 @@ import podaura.shared.generated.resources.read_screen_name
 
 @Composable
 internal fun PortraitPlayerView(
-    playerStateFlow: StateFlow<PlayerState>,
     playState: PlayState,
     articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
@@ -86,12 +87,19 @@ internal fun PortraitPlayerView(
     playerContent: @Composable () -> Unit,
     onSetArticleFavorite: (Boolean) -> Unit,
     snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+    presentationState: PlayerPresentationState = PlayerPresentationState.Ready,
+    onRetry: () -> Unit = {},
+    playerProgress: Flow<PlayerProgress> = emptyFlow(),
+    initialProgress: PlayerProgress = PlayerProgress(0L, 0L, 0),
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var showMenu by rememberSaveable { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
+    val interactive = presentationState is PlayerPresentationState.Ready
 
     Scaffold(
+        modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             ComponeTopBar(
@@ -103,7 +111,7 @@ internal fun PortraitPlayerView(
                     val isFavorite = articleContextState.isFavorite
                     if (isFavorite != null) {
                         ComponeIconButton(
-                            enabled = !articleContextState.isFavoriteUpdating,
+                            enabled = interactive && !articleContextState.isFavoriteUpdating,
                             onClick = { onSetArticleFavorite(!isFavorite) },
                             imageVector = if (isFavorite) {
                                 Icons.Outlined.Favorite
@@ -119,23 +127,27 @@ internal fun PortraitPlayerView(
                     if (supportPip) {
                         val onEnterPip = rememberOnEnterPip()
                         ComponeIconButton(
+                            enabled = interactive,
                             onClick = onEnterPip::enter,
                             imageVector = Icons.Outlined.PictureInPictureAlt,
                             contentDescription = stringResource(Res.string.player_picture_in_picture),
                         )
                     }
                     ComponeIconButton(
+                        enabled = interactive,
                         onClick = { showMenu = true },
                         imageVector = Icons.Outlined.MoreVert,
                         contentDescription = stringResource(Res.string.more),
                     )
-                    Menu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                        playState = playState,
-                        onDialogVisibilityChanged = onDialogVisibilityChanged,
-                        media = playState.currentMedia,
-                    )
+                    if (interactive) {
+                        Menu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            playState = playState,
+                            onDialogVisibilityChanged = onDialogVisibilityChanged,
+                            media = playState.currentMedia,
+                        )
+                    }
                 }
             )
         }
@@ -143,7 +155,8 @@ internal fun PortraitPlayerView(
         val windowSizeClass = LocalWindowSizeClass.current
         if (windowSizeClass.isExpanded || isLandscape()) {
             ExpandedContent(
-                playerStateFlow = playerStateFlow,
+                playerProgress = playerProgress,
+                initialProgress = initialProgress,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
@@ -151,10 +164,13 @@ internal fun PortraitPlayerView(
                 onEnterFullscreen = onEnterFullscreen,
                 contentPadding = paddingValues,
                 playerContent = playerContent,
+                presentationState = presentationState,
+                onRetry = onRetry,
             )
         } else {
             CompactContent(
-                playerStateFlow = playerStateFlow,
+                playerProgress = playerProgress,
+                initialProgress = initialProgress,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
@@ -162,10 +178,12 @@ internal fun PortraitPlayerView(
                 onEnterFullscreen = onEnterFullscreen,
                 contentPadding = paddingValues,
                 playerContent = playerContent,
+                presentationState = presentationState,
+                onRetry = onRetry,
             )
         }
 
-        if (showPlaylistSheet) {
+        if (interactive && showPlaylistSheet) {
             AnimatedDismissModalBottomSheet(
                 onDismissRequest = { showPlaylistSheet = false }
             ) {
@@ -183,7 +201,8 @@ internal fun PortraitPlayerView(
 
 @Composable
 private fun CompactContent(
-    playerStateFlow: StateFlow<PlayerState>,
+    playerProgress: Flow<PlayerProgress>,
+    initialProgress: PlayerProgress,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -191,6 +210,8 @@ private fun CompactContent(
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
     playerContent: @Composable () -> Unit,
+    presentationState: PlayerPresentationState,
+    onRetry: () -> Unit,
 ) {
     Column(modifier = Modifier.padding(contentPadding)) {
         MediaArea(
@@ -199,28 +220,34 @@ private fun CompactContent(
                 .padding(horizontal = 30.dp)
                 .weight(1f),
             playerContent = playerContent,
+            presentationState = presentationState,
         )
         Spacer(modifier = Modifier.height(12.dp))
         Titles(
             playState = playState,
             modifier = Modifier.padding(horizontal = 30.dp),
+            presentationState = presentationState,
         )
         ControllerArea(
-            playerStateFlow = playerStateFlow,
+            playerProgress = playerProgress,
+            initialProgress = initialProgress,
             isExpanded = false,
             playState = playState,
             playStateCallback = playStateCallback,
             onDialogVisibilityChanged = onDialogVisibilityChanged,
             onOpenPlaylistSheet = onOpenPlaylistSheet,
             onEnterFullscreen = onEnterFullscreen,
-            contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp)
+            contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
+            presentationState = presentationState,
+            onRetry = onRetry,
         )
     }
 }
 
 @Composable
 private fun ExpandedContent(
-    playerStateFlow: StateFlow<PlayerState>,
+    playerProgress: Flow<PlayerProgress>,
+    initialProgress: PlayerProgress,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
@@ -228,6 +255,8 @@ private fun ExpandedContent(
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
     playerContent: @Composable () -> Unit,
+    presentationState: PlayerPresentationState,
+    onRetry: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -241,26 +270,34 @@ private fun ExpandedContent(
                 .weight(0.4f)
                 .align(Alignment.CenterVertically),
             playerContent = playerContent,
+            presentationState = presentationState,
         )
         Column(
             modifier = Modifier
                 .align(Alignment.Bottom)
                 .weight(0.6f)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(
+                    state = rememberScrollState(),
+                    enabled = presentationState is PlayerPresentationState.Ready,
+                ),
         ) {
             Titles(
                 playState = playState,
                 modifier = Modifier.padding(horizontal = 30.dp),
+                presentationState = presentationState,
             )
             ControllerArea(
-                playerStateFlow = playerStateFlow,
+                playerProgress = playerProgress,
+                initialProgress = initialProgress,
                 isExpanded = true,
                 playState = playState,
                 playStateCallback = playStateCallback,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
                 onOpenPlaylistSheet = onOpenPlaylistSheet,
                 onEnterFullscreen = onEnterFullscreen,
-                contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp)
+                contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
+                presentationState = presentationState,
+                onRetry = onRetry,
             )
         }
     }
@@ -268,7 +305,8 @@ private fun ExpandedContent(
 
 @Composable
 private fun ControllerArea(
-    playerStateFlow: StateFlow<PlayerState>,
+    playerProgress: Flow<PlayerProgress>,
+    initialProgress: PlayerProgress,
     isExpanded: Boolean,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
@@ -276,7 +314,10 @@ private fun ControllerArea(
     onOpenPlaylistSheet: () -> Unit,
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
+    presentationState: PlayerPresentationState,
+    onRetry: () -> Unit,
 ) {
+    val interactive = presentationState is PlayerPresentationState.Ready
     Column(modifier = Modifier.padding(contentPadding)) {
         val space: @Composable ColumnScope.() -> Unit = {
             Spacer(
@@ -289,11 +330,13 @@ private fun ControllerArea(
                 }
             )
         }
-        ProgressBar(
-            playerStateFlow = playerStateFlow,
-            playState = playState,
-            playStateCallback = playStateCallback,
+        PlayerProgressBar(
+            progress = playerProgress,
+            initialProgress = initialProgress,
+            isSeeking = playState.isSeeking,
+            onSeekTo = playStateCallback.onSeekTo,
             modifier = Modifier.padding(horizontal = 30.dp),
+            enabled = interactive,
         )
         space()
         Controller(
@@ -303,6 +346,9 @@ private fun ControllerArea(
                 .padding(horizontal = 22.dp)
                 .align(Alignment.CenterHorizontally),
             onDialogVisibilityChanged = onDialogVisibilityChanged,
+            enabled = interactive,
+            primaryControlMode = presentationState.toPrimaryControlMode(),
+            onRetry = onRetry,
         )
         space()
         SmallController(
@@ -312,8 +358,15 @@ private fun ControllerArea(
             onOpenPlaylist = onOpenPlaylistSheet,
             onEnterFullscreen = onEnterFullscreen,
             modifier = Modifier.padding(horizontal = 30.dp),
+            enabled = interactive,
         )
     }
+}
+
+private fun PlayerPresentationState.toPrimaryControlMode(): PrimaryControlMode = when (this) {
+    PlayerPresentationState.Ready -> PrimaryControlMode.Playback
+    PlayerPresentationState.Loading -> PrimaryControlMode.Loading
+    is PlayerPresentationState.Failed -> PrimaryControlMode.Retry
 }
 
 @Composable
