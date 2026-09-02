@@ -11,3 +11,5 @@ actual suspend fun Clipboard.setImage(file: PlatformFile, mimeType: String) {
     val data = NSData.dataWithContentsOfURL(file.nsUrl) ?: error("Unable to load image data")
     UIPasteboard.generalPasteboard.image = UIImage(data)
 }
+
+actual suspend fun Clipboard.readText(): String? = UIPasteboard.generalPasteboard.string

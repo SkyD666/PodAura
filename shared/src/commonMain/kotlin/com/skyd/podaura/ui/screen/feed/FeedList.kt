@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.UnfoldLess
 import androidx.compose.material.icons.outlined.UnfoldMore
+import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
@@ -51,6 +52,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -62,6 +64,7 @@ import com.skyd.compone.component.ComponeFloatingActionButton
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.compone.component.DefaultTrailingIcon
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.navigation.LocalNavBackStack
@@ -71,6 +74,7 @@ import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.lastIndex
+import com.skyd.podaura.ext.readText
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
@@ -95,8 +99,8 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.article_delete_batch_result
 import podaura.shared.generated.resources.add
+import podaura.shared.generated.resources.article_delete_batch_result
 import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.collapse_all_groups
 import podaura.shared.generated.resources.expand_all_groups
@@ -109,6 +113,7 @@ import podaura.shared.generated.resources.feed_screen_search_feed
 import podaura.shared.generated.resources.feed_style_screen_name
 import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.mute_feed_screen_name
+import podaura.shared.generated.resources.paste
 import podaura.shared.generated.resources.reorder_group_screen_name
 
 @Serializable
@@ -426,12 +431,30 @@ private fun AddFeedDialog(
     onConfirm: (url: String) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     TextFieldDialog(
         icon = { Icon(imageVector = Icons.Outlined.RssFeed, contentDescription = null) },
         titleText = stringResource(Res.string.add),
         placeholder = stringResource(Res.string.feed_screen_rss_url),
         value = url,
         onValueChange = onUrlChange,
+        trailingIcon = if (url.isEmpty()) {
+            {
+                ComponeIconButton(
+                    imageVector = Icons.Rounded.ContentPaste,
+                    contentDescription = stringResource(Res.string.paste),
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = {
+                        scope.launch {
+                            clipboard.readText()?.let(onUrlChange)
+                        }
+                    },
+                )
+            }
+        } else {
+            DefaultTrailingIcon
+        },
         onDismissRequest = onDismissRequest,
         onConfirm = onConfirm,
     )

@@ -4,3 +4,5 @@ import androidx.compose.ui.platform.Clipboard
 import io.github.vinceglb.filekit.PlatformFile
 
 expect suspend fun Clipboard.setImage(file: PlatformFile, mimeType: String)
+
+expect suspend fun Clipboard.readText(): String?

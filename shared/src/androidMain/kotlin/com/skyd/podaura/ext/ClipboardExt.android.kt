@@ -1,8 +1,10 @@
 package com.skyd.podaura.ext
 
 import android.content.ClipData
+import android.content.Context
 import android.net.Uri
 import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.nativeClipboardManager
 import androidx.compose.ui.platform.toClipEntry
 import com.skyd.fundation.di.get
 import io.github.vinceglb.filekit.AndroidFile
@@ -18,4 +20,11 @@ actual suspend fun Clipboard.setImage(file: PlatformFile, mimeType: String) {
     }
     val clipData = ClipData(getString(Res.string.app_name), arrayOf(mimeType), ClipData.Item(uri))
     setClipEntry(clipData.toClipEntry())
+}
+
+actual suspend fun Clipboard.readText(): String? {
+    val clip = nativeClipboardManager.primaryClip ?: return null
+    if (clip.itemCount == 0) return null
+    val context: Context = get()
+    return clip.getItemAt(0).coerceToText(context)?.toString()
 }

@@ -174,7 +174,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.jetbrains.compose.desktop.common)
             implementation(libs.androidx.sqlite.bundled)
-            implementation(libs.ktor.client.apache5)
+            implementation(libs.ktor.client.okhttp)
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
             implementation(libs.java.jaudiotagger)

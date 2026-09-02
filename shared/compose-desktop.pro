@@ -1,10 +1,13 @@
 # SLF4J
 -keep class org.slf4j.** { *; }
 
-# Apache5 engine
--dontwarn org.conscrypt.Conscrypt
--dontwarn org.brotli.dec.BrotliInputStream
--keep class io.ktor.client.engine.apache5.Apache5EngineContainer
+# OkHttp engine
+-dontwarn com.oracle.svm.core.annotate.**
+-dontwarn org.bouncycastle.jsse.**
+-dontwarn org.conscrypt.**
+-dontwarn org.graalvm.nativeimage.**
+-dontwarn org.openjsse.**
+-keep class io.ktor.client.engine.okhttp.OkHttpEngineContainer
 
 # ICU4J
 -keep enum com.ibm.icu.text.DateTimePatternGenerator$DTPGflags { *; } # ClassCastException
