@@ -47,7 +47,10 @@
     </p>
 </div>
 
-<a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80"></a>
+<a href="https://f-droid.org/packages/com.skyd.anivu"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80" align="middle" style="vertical-align: middle;"></a>
+<a href="https://apps.microsoft.com/detail/9NZFWMWFGV1C?referrer=appbadge&mode=full" target="_blank"  rel="noopener noreferrer">
+    <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" align="middle" style="vertical-align: middle;"/>
+</a>
 
 ## 💡 Features
 
