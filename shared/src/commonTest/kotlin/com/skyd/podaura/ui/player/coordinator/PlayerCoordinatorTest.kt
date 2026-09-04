@@ -41,9 +41,9 @@ class PlayerCoordinatorTest {
     }
 
     @Test
-    fun consumesTimestampOnlyOncePerLaunchRequest() {
-        assertTrue(shouldConsumeStartPosition(requestId = "new", lastRequestId = "old"))
-        assertFalse(shouldConsumeStartPosition(requestId = "same", lastRequestId = "same"))
-        assertTrue(shouldConsumeStartPosition(requestId = null, lastRequestId = "old"))
+    fun consumesLoadSideEffectsOnlyOncePerLaunchRequest() {
+        assertTrue(shouldConsumeLoadRequest(requestId = "new", lastRequestId = "old"))
+        assertFalse(shouldConsumeLoadRequest(requestId = "same", lastRequestId = "same"))
+        assertTrue(shouldConsumeLoadRequest(requestId = null, lastRequestId = "old"))
     }
 }

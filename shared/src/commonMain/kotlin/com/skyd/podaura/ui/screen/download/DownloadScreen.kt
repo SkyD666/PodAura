@@ -37,6 +37,9 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.plus
 import com.skyd.mvi.getDispatcher
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.isJvm
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.model.repository.download.DownloadManager
 import com.skyd.podaura.model.repository.download.DownloadStarter
@@ -46,8 +49,16 @@ import com.skyd.podaura.ui.component.EmptyPlaceholder
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.path
 import io.ktor.http.Url
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -58,6 +69,7 @@ import podaura.shared.generated.resources.download_screen_add_download
 import podaura.shared.generated.resources.download_screen_add_download_hint
 import podaura.shared.generated.resources.download_screen_name
 import podaura.shared.generated.resources.download_without_notifications_tip
+import podaura.shared.generated.resources.media_not_exists
 import podaura.shared.generated.resources.open_notification_settings
 
 
@@ -107,6 +119,9 @@ fun DownloadScreen(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val playerJumper = rememberPlayerJumper()
+    val mediaNotExistsMessage = stringResource(Res.string.media_not_exists)
+    val downloadPlaybackSupported = platform == Platform.Android || platform.isJvm
     var openLinkDialog by rememberSaveable { mutableStateOf(downloadLink) }
 
     LaunchedEffect(downloadLink) {
@@ -150,6 +165,20 @@ fun DownloadScreen(
                 downloadInfoBeanList = downloadListState.downloadInfoBeanList,
                 nestedScrollConnection = scrollBehavior.nestedScrollConnection,
                 contentPadding = innerPadding + PaddingValues(bottom = fabHeight + 16.dp),
+                onPlay = if (downloadPlaybackSupported) {
+                    { item ->
+                        scope.launch {
+                            val path = item.resolveExistingLocalPath()
+                            if (path == null) {
+                                snackbarHostState.showSnackbar(mediaNotExistsMessage)
+                            } else {
+                                playerJumper.jump(item.toPlayDataMode(path))
+                            }
+                        }
+                    }
+                } else {
+                    null
+                },
             )
         }
     }
@@ -189,6 +218,7 @@ private fun DownloadList(
     downloadInfoBeanList: List<DownloadInfoBean>,
     nestedScrollConnection: NestedScrollConnection,
     contentPadding: PaddingValues,
+    onPlay: ((DownloadInfoBean) -> Unit)?,
 ) {
     val scope = rememberCoroutineScope()
     if (downloadInfoBeanList.isNotEmpty()) {
@@ -210,6 +240,7 @@ private fun DownloadList(
                     onResume = { scope.launch { downloadManager.resume(item.id) } },
                     onRetry = { scope.launch { downloadManager.retry(item.id) } },
                     onDelete = { scope.launch { downloadManager.delete(item.id) } },
+                    onPlay = onPlay,
                 )
             }
         }
@@ -217,3 +248,24 @@ private fun DownloadList(
         EmptyPlaceholder(contentPadding = contentPadding)
     }
 }
+
+private suspend fun DownloadInfoBean.resolveExistingLocalPath(): String? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            val file = PlatformFile(PlatformFile(path), fileName)
+            file.path.takeIf { file.exists() }
+        }.getOrNull()
+    }
+
+internal fun DownloadInfoBean.toPlayDataMode(localPath: String) =
+    PlayDataMode.MediaLibraryList(
+        startMediaPath = localPath,
+        mediaList = listOf(
+            PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                path = localPath,
+                articleId = articleDownloadSource?.articleId,
+                title = displayTitle,
+                thumbnail = articleDownloadInfo?.imageCandidates?.firstOrNull(),
+            )
+        ),
+    )

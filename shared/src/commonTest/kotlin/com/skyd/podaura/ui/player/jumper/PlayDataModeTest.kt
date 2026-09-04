@@ -24,4 +24,24 @@ class PlayDataModeTest {
 
         assertNull(mode.startPositionSeconds)
     }
+
+    @Test
+    fun mediaLibraryListRoundTrips() {
+        val mode = PlayDataMode.MediaLibraryList(
+            startMediaPath = "/downloads/episode.mp3",
+            mediaList = listOf(
+                PlayDataMode.MediaLibraryList.PlayMediaListItem(
+                    path = "/downloads/episode.mp3",
+                    articleId = "article-id",
+                    title = "Episode",
+                    thumbnail = null,
+                )
+            ),
+        )
+
+        val decoded = PlayDataMode.decodeFromString(mode.encodeToString())
+                as PlayDataMode.MediaLibraryList
+
+        assertEquals(mode, decoded)
+    }
 }

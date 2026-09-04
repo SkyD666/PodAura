@@ -58,6 +58,39 @@ class DownloadRepositoryTest {
         assertFalse("7" in result)
     }
 
+    @Test
+    fun mediaResolutionFallsBackToFilenameWhenMimeLookupFails() {
+        val files = listOf(
+            CompletedDownloadFileEntry(
+                downloadId = "audio",
+                path = "/missing",
+                fileName = "episode.mp3",
+            ),
+            CompletedDownloadFileEntry(
+                downloadId = "document",
+                path = "/missing",
+                fileName = "notes.pdf",
+            ),
+        )
+
+        val result = resolvePlayableDownloadIds(files) { error("File is missing") }
+
+        assertEquals(setOf("audio"), result)
+    }
+
+    @Test
+    fun mediaResolutionHonorsExplicitNonMediaMimeType() {
+        val file = CompletedDownloadFileEntry(
+            downloadId = "document",
+            path = "/downloads",
+            fileName = "document.mp3",
+        )
+
+        val result = resolvePlayableDownloadIds(listOf(file)) { "application/pdf" }
+
+        assertFalse("document" in result)
+    }
+
     private fun feed() = FeedBean(
         url = source.feedUrl,
         title = "Feed title",

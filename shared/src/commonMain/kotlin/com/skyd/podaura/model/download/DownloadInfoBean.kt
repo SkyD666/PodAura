@@ -17,6 +17,7 @@ data class DownloadInfoBean(
     val failureReason: String,
     val articleDownloadSource: ArticleDownloadSource? = null,
     val articleDownloadInfo: ArticleDownloadInfoBean? = null,
+    val isPlayableMedia: Boolean = false,
 ) {
     val displayTitle: String
         get() = articleDownloadInfo?.articleTitle?.takeIf { it.isNotBlank() } ?: fileName

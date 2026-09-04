@@ -89,7 +89,7 @@ class PlayerCoordinator : LifecycleOwner {
     private var playlistId = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
     private var pendingStartPosition: PendingStartPosition? = null
-    private var lastStartPositionRequestId: String? = null
+    private var lastLoadRequestId: String? = null
     private var currentPath: String? = null
     private var currentPathPlayed = false
     private var hasMediaReady = false
@@ -253,16 +253,7 @@ class PlayerCoordinator : LifecycleOwner {
     private fun executeCommand(command: PlayerCommand) {
         when (command) {
             is PlayerCommand.RemoveMediaFromPlaylist -> removeMedia(command)
-            is PlayerCommand.Paused -> {
-                if (!command.paused && handleFailedPlaybackRetry()) return
-                if (!command.paused) {
-                    if (player.keepOpen && player.eofReached) player.seek(0)
-                    else if (player.isIdling && player.playlistCount > 0) {
-                        player.playMediaAtIndex(player.playlistCount - 1)
-                    }
-                }
-                player.paused = command.paused
-            }
+            is PlayerCommand.Paused -> setPaused(command.paused)
 
             PlayerCommand.PlayOrPause -> {
                 if (!handleFailedPlaybackRetry()) player.cyclePause()
@@ -338,11 +329,10 @@ class PlayerCoordinator : LifecycleOwner {
             return
         }
         if (!hasMediaReady) _engineState.value = PlayerEngineState.LoadingMedia
-        val startPositionSeconds = command.startPositionSeconds?.takeIf {
-            shouldConsumeStartPosition(command.requestId, lastStartPositionRequestId)
-        }
-        if (startPositionSeconds != null && command.requestId != null) {
-            lastStartPositionRequestId = command.requestId
+        val isNewRequest = shouldConsumeLoadRequest(command.requestId, lastLoadRequestId)
+        val startPositionSeconds = command.startPositionSeconds?.takeIf { isNewRequest }
+        if (isNewRequest && command.requestId != null) {
+            lastLoadRequestId = command.requestId
         }
         val seekCurrentMedia = shouldSeekCurrentMedia(
             startPositionSeconds = startPositionSeconds,
@@ -363,6 +353,18 @@ class PlayerCoordinator : LifecycleOwner {
         cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
         player.loadList(files = files, startFile = command.startPath)
         startPositionSeconds?.takeIf { seekCurrentMedia }?.let(::seekAndPlay)
+        if (isNewRequest) setPaused(false)
+    }
+
+    private fun setPaused(paused: Boolean) {
+        if (!paused && handleFailedPlaybackRetry()) return
+        if (!paused) {
+            if (player.keepOpen && player.eofReached) player.seek(0)
+            else if (player.isIdling && player.playlistCount > 0) {
+                player.playMediaAtIndex(player.playlistCount - 1)
+            }
+        }
+        player.paused = paused
     }
 
     private fun createMpvObserver(generation: Long) = object : EventListener {
@@ -791,5 +793,5 @@ internal fun shouldSeekCurrentMedia(
 ): Boolean = startPositionSeconds != null &&
         startPath == currentPath && currentPlaylist == requestedPlaylist
 
-internal fun shouldConsumeStartPosition(requestId: String?, lastRequestId: String?): Boolean =
+internal fun shouldConsumeLoadRequest(requestId: String?, lastRequestId: String?): Boolean =
     requestId == null || requestId != lastRequestId

@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.download
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
+import com.skyd.compone.ext.thenIf
 import com.skyd.downloader.Status
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.download.ArticleDownloadInfoBean
@@ -60,6 +62,7 @@ import podaura.shared.generated.resources.download_error_paused
 import podaura.shared.generated.resources.download_initializing
 import podaura.shared.generated.resources.download_pause
 import podaura.shared.generated.resources.downloading
+import podaura.shared.generated.resources.play
 
 @Composable
 fun DownloadItem(
@@ -68,6 +71,7 @@ fun DownloadItem(
     onResume: (DownloadInfoBean) -> Unit,
     onRetry: (DownloadInfoBean) -> Unit,
     onDelete: (DownloadInfoBean) -> Unit,
+    onPlay: ((DownloadInfoBean) -> Unit)? = null,
 ) {
     var description by remember { mutableStateOf(blockString(Res.string.download_initializing)) }
     var pauseButtonIcon by remember { mutableStateOf(Icons.Outlined.Pause) }
@@ -120,15 +124,23 @@ fun DownloadItem(
 
             Status.Success -> {
                 pauseButtonEnabled = false
-                pauseButtonIcon = Icons.Outlined.PlayArrow
-                pauseButtonContentDescription = getString(Res.string.delete)
                 description = getString(Res.string.download_completed)
             }
 
         }
     }
 
-    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
+    val canPlay = data.status == Status.Success && data.isPlayableMedia && onPlay != null
+    val playLabel = stringResource(Res.string.play)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .thenIf(canPlay) {
+                clickable(onClickLabel = playLabel) { onPlay?.invoke(data) }
+            }
+            .padding(16.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
         data.articleDownloadInfo?.let { articleDownloadInfo ->
             ArticleDownloadArtwork(info = articleDownloadInfo)
             Spacer(modifier = Modifier.width(12.dp))
@@ -190,39 +202,41 @@ fun DownloadItem(
                         )
                     }
                 }
-                ComponeIconButton(
-                    enabled = pauseButtonEnabled,
-                    onClick = {
-                        when (data.status) {
-                            Status.Downloading -> {
-                                onPause(data)
-                                pauseButtonEnabled = false
-                            }
+                if (data.status != Status.Success) {
+                    ComponeIconButton(
+                        enabled = pauseButtonEnabled,
+                        onClick = {
+                            when (data.status) {
+                                Status.Downloading -> {
+                                    onPause(data)
+                                    pauseButtonEnabled = false
+                                }
 
-                            Status.Paused -> {
-                                onResume(data)
-                                pauseButtonEnabled = false
-                            }
+                                Status.Paused -> {
+                                    onResume(data)
+                                    pauseButtonEnabled = false
+                                }
 
-                            Status.Failed -> {
-                                onRetry(data)
-                                pauseButtonEnabled = false
-                            }
+                                Status.Failed -> {
+                                    onRetry(data)
+                                    pauseButtonEnabled = false
+                                }
 
-                            Status.Cancelled -> {
-                                onRetry(data)
-                                pauseButtonEnabled = false
-                            }
+                                Status.Cancelled -> {
+                                    onRetry(data)
+                                    pauseButtonEnabled = false
+                                }
 
-                            Status.Started,
-                            Status.Init,
-                            Status.Queued,
-                            Status.Success -> Unit
-                        }
-                    },
-                    imageVector = pauseButtonIcon,
-                    contentDescription = pauseButtonContentDescription,
-                )
+                                Status.Started,
+                                Status.Init,
+                                Status.Queued,
+                                Status.Success -> Unit
+                            }
+                        },
+                        imageVector = pauseButtonIcon,
+                        contentDescription = pauseButtonContentDescription,
+                    )
+                }
                 ComponeIconButton(
                     enabled = cancelButtonEnabled,
                     onClick = {
