@@ -4,7 +4,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -18,10 +21,53 @@ import com.skyd.podaura.ui.player.PlayerArticleContextState
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
+import com.skyd.podaura.ui.player.port.controller.Controller
+import com.skyd.podaura.ui.player.service.PlayerState
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class PortraitPlayerLoadingTest {
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun primaryControlIconStaysCenteredDuringLoadingCrossfade() =
+        runDesktopComposeUiTest(width = 400, height = 240) {
+            mainClock.autoAdvance = false
+            var playState by mutableStateOf(
+                PlayState(
+                    isPlaying = true,
+                    isSeeking = false,
+                    state = PlayerState(mediaStarted = true, paused = false),
+                )
+            )
+
+            setContent {
+                MaterialTheme {
+                    Controller(
+                        playState = playState,
+                        playStateCallback = EmptyPlayStateCallback,
+                        onDialogVisibilityChanged = EmptyDialogVisibilityChanged,
+                    )
+                }
+            }
+            waitForIdle()
+            val initialCenter = onNodeWithContentDescription(
+                label = "Pause",
+                useUnmergedTree = true,
+            ).fetchSemanticsNode().boundsInRoot.center
+
+            runOnIdle {
+                playState = playState.copy(state = playState.state.copy(loading = true))
+            }
+            mainClock.advanceTimeBy(PLAYER_PRESENTATION_CROSSFADE_MILLIS / 2L)
+            waitForIdle()
+            val transitionCenter = onNodeWithContentDescription(
+                label = "Pause",
+                useUnmergedTree = true,
+            ).fetchSemanticsNode().boundsInRoot.center
+
+            assertEquals(initialCenter, transitionCenter)
+        }
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun compactLoadingKeepsBackEnabledAndDisablesPlayerActions() =

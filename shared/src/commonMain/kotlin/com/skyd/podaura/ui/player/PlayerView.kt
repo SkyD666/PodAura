@@ -1,10 +1,12 @@
 package com.skyd.podaura.ui.player
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,7 +20,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.component.rememberOrientationController
+import com.skyd.podaura.ui.component.tickVibrate
 import com.skyd.podaura.ui.player.component.dialog.SpeedDialog
 import com.skyd.podaura.ui.player.component.dialog.audio.AudioTrackDialog
 import com.skyd.podaura.ui.player.component.dialog.subtitle.SubtitleTrackDialog
@@ -38,6 +43,7 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDial
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
+import com.skyd.podaura.ui.player.land.controller.preview.LongPressSpeedPreview
 import com.skyd.podaura.ui.player.port.PlayerPresentationState
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.player.service.PlayerState
@@ -75,6 +81,20 @@ fun PlayerView(
     onBack: () -> Unit,
     onSaveScreenshot: (PlatformFile) -> Unit,
 ) {
+    val providedPressAndHoldSpeedController = LocalPressAndHoldSpeedController.current
+    val pressAndHoldSpeedController = remember(
+        coordinator,
+        providedPressAndHoldSpeedController,
+    ) {
+        providedPressAndHoldSpeedController ?: PressAndHoldSpeedController(
+            currentSpeed = { coordinator.playerState.value.speed },
+            onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
+        )
+    }
+    DisposableEffect(pressAndHoldSpeedController) {
+        onDispose { pressAndHoldSpeedController.cancelAll() }
+    }
+
     val engineState by coordinator.engineState.collectAsStateWithLifecycle()
     PlatformPlayerLifecycleEffect(coordinator = coordinator)
     val presentationState = engineState.toPresentationState()
@@ -178,7 +198,7 @@ fun PlayerView(
         )
     }
 
-    val playStateCallback = remember {
+    val playStateCallback = remember(coordinator, pressAndHoldSpeedController) {
         PlayStateCallback(
             onPlayStateChanged = {
                 val state = coordinator.playerState.value
@@ -195,7 +215,7 @@ fun PlayerView(
                     PlayerCommand.SeekTo(coordinator.playerState.value.position + it)
                 )
             },
-            onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
+            onSpeedChanged = pressAndHoldSpeedController::setRegularSpeed,
             onPreviousMedia = { coordinator.onCommand(PlayerCommand.PreviousMedia) },
             onNextMedia = { coordinator.onCommand(PlayerCommand.NextMedia) },
             onCycleLoop = { coordinator.onCommand(PlayerCommand.CycleLoop) },
@@ -205,10 +225,10 @@ fun PlayerView(
         )
     }
 
-    val dialogCallback = remember {
+    val dialogCallback = remember(coordinator, pressAndHoldSpeedController) {
         DialogCallback(
             speedDialogCallback = SpeedDialogCallback(
-                onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
+                onSpeedChanged = pressAndHoldSpeedController::setRegularSpeed,
             ),
             audioTrackDialogCallback = AudioTrackDialogCallback(
                 onAudioTrackChanged = { coordinator.onCommand(PlayerCommand.SetAudioTrack(it.trackId)) },
@@ -290,15 +310,19 @@ fun PlayerView(
         )
     }
 
-    PlatformContent(
-        modifier = Modifier.fillMaxSize(),
-        onBack = onBack,
-        coordinator = coordinator,
-        playerState = playerState,
-        playState = playState,
-        playStateCallback = playStateCallback,
-        commonContent = commonContent,
-    )
+    CompositionLocalProvider(
+        LocalPressAndHoldSpeedController provides pressAndHoldSpeedController,
+    ) {
+        PlatformContent(
+            modifier = Modifier.fillMaxSize(),
+            onBack = onBack,
+            coordinator = coordinator,
+            playerState = playerState,
+            playState = playState,
+            playStateCallback = playStateCallback,
+            commonContent = commonContent,
+        )
+    }
 }
 
 @Composable
@@ -390,6 +414,8 @@ private fun Content(
     presentationState: PlayerPresentationState = PlayerPresentationState.Ready,
     onRetry: () -> Unit = {},
 ) {
+    val pressAndHoldSpeedController =
+        requireNotNull(LocalPressAndHoldSpeedController.current)
     val playerProgress = remember(playerStateFlow) { playerStateFlow.playerProgressValues() }
     val player = @Composable {
         if (presentationState is PlayerPresentationState.Ready) {
@@ -403,42 +429,53 @@ private fun Content(
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     val orientationController = rememberOrientationController()
 
-    if (fullscreen && presentationState is PlayerPresentationState.Ready) {
-        FullscreenPlayerView(
-            playerStateFlow = playerStateFlow,
-            playState = playState,
-            playStateCallback = playStateCallback,
-            dialogState = dialogState,
-            onDialogVisibilityChanged = onDialogVisibilityChanged,
-            onSaveScreenshot = onSaveScreenshot,
-            onCommand = onCommand,
-            snackbarHostState = snackbarHostState,
-            playerContent = player,
-            onExitFullscreen = {
-                orientationController.unspecified()
-                fullscreen = false
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (fullscreen && presentationState is PlayerPresentationState.Ready) {
+            FullscreenPlayerView(
+                playerStateFlow = playerStateFlow,
+                playState = playState,
+                playStateCallback = playStateCallback,
+                dialogState = dialogState,
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                onSaveScreenshot = onSaveScreenshot,
+                onCommand = onCommand,
+                snackbarHostState = snackbarHostState,
+                playerContent = player,
+                onExitFullscreen = {
+                    orientationController.unspecified()
+                    fullscreen = false
+                }
+            )
+        } else {
+            PortraitPlayerView(
+                playState = playState,
+                articleContextState = articleContextState,
+                playStateCallback = playStateCallback,
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                onBack = onBack,
+                onEnterFullscreen = {
+                    orientationController.landscape()
+                    fullscreen = true
+                },
+                playerContent = player,
+                onSetArticleFavorite = onSetArticleFavorite,
+                snackbarHostState = snackbarHostState,
+                modifier = modifier,
+                presentationState = presentationState,
+                onRetry = onRetry,
+                playerProgress = playerProgress,
+                initialProgress = playerStateFlow.value.toPlayerProgress(),
+            )
+        }
+
+        if (pressAndHoldSpeedController.isActive) {
+            LaunchedEffect(Unit) {
+                if (platform == Platform.Android) tickVibrate()
             }
-        )
-    } else {
-        PortraitPlayerView(
-            playState = playState,
-            articleContextState = articleContextState,
-            playStateCallback = playStateCallback,
-            onDialogVisibilityChanged = onDialogVisibilityChanged,
-            onBack = onBack,
-            onEnterFullscreen = {
-                orientationController.landscape()
-                fullscreen = true
-            },
-            playerContent = player,
-            onSetArticleFavorite = onSetArticleFavorite,
-            snackbarHostState = snackbarHostState,
-            modifier = modifier,
-            presentationState = presentationState,
-            onRetry = onRetry,
-            playerProgress = playerProgress,
-            initialProgress = playerStateFlow.value.toPlayerProgress(),
-        )
+            LongPressSpeedPreview(
+                speed = { PressAndHoldSpeedController.HOLD_SPEED },
+            )
+        }
     }
 
     if (presentationState is PlayerPresentationState.Ready) {

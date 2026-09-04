@@ -2,22 +2,22 @@ package com.skyd.podaura.ui.window
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isAltPressed
-import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isMetaPressed
-import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPosition
@@ -29,6 +29,7 @@ import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_CACHE_DIR
 import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.ext.hasModifier
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
@@ -37,9 +38,13 @@ import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.LocalPressAndHoldSpeedController
 import com.skyd.podaura.ui.player.PlayerCommand
+import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
+import com.skyd.podaura.ui.player.PressAndHoldSpeedController
+import com.skyd.podaura.ui.player.PressAndHoldSpeedSource
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.media.DesktopMediaSessionManager
@@ -49,6 +54,8 @@ import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import kotlinx.coroutines.flow.filter
 import org.openani.mediamp.mpv.MpvMediampPlayer
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
 import java.io.File
 import java.nio.file.Files
 import javax.swing.SwingUtilities
@@ -57,7 +64,6 @@ private val playerWindowSize = DpSize(400.dp, 780.dp)
 
 internal enum class PlayerKeyboardAction {
     SeekBackward,
-    SeekForward,
     ConsumeSpaceKeyDown,
     TogglePlayPause,
 }
@@ -65,21 +71,11 @@ internal enum class PlayerKeyboardAction {
 internal fun playerKeyboardActionForKeyEvent(
     event: KeyEvent,
 ): PlayerKeyboardAction? {
-    if (event.isCtrlPressed || event.isAltPressed ||
-        event.isMetaPressed || event.isShiftPressed
-    ) {
-        return null
-    }
+    if (event.hasModifier) return null
 
     return when (event.key) {
         Key.DirectionLeft -> if (event.type == KeyEventType.KeyDown) {
             PlayerKeyboardAction.SeekBackward
-        } else {
-            null
-        }
-
-        Key.DirectionRight -> if (event.type == KeyEventType.KeyDown) {
-            PlayerKeyboardAction.SeekForward
         } else {
             null
         }
@@ -95,8 +91,7 @@ internal fun playerKeyboardActionForKeyEvent(
 }
 
 internal fun PlayerKeyboardAction.isAvailable(mediaStarted: Boolean): Boolean = when (this) {
-    PlayerKeyboardAction.SeekBackward,
-    PlayerKeyboardAction.SeekForward -> mediaStarted
+    PlayerKeyboardAction.SeekBackward -> mediaStarted
 
     PlayerKeyboardAction.ConsumeSpaceKeyDown,
     PlayerKeyboardAction.TogglePlayPause -> true
@@ -255,48 +250,140 @@ internal fun PlayerWindow(
     val windowTitle = playerState?.run {
         currentMedia?.title.orEmpty().ifBlank { mediaTitle }
     }.takeUnless { it.isNullOrBlank() } ?: "Player"
+    val pressAndHoldSpeedController = remember(playerCoordinator) {
+        playerCoordinator?.let { coordinator ->
+            PressAndHoldSpeedController(
+                currentSpeed = { coordinator.playerState.value.speed },
+                onSpeedChanged = { coordinator.onCommand(PlayerCommand.SetSpeed(it)) },
+            )
+        }
+    }
+    var rightArrowKeyHandler by remember {
+        mutableStateOf<PlayerRightArrowKeyHandler?>(null)
+    }
+    fun cancelPlayerInput(
+        handler: PlayerRightArrowKeyHandler? = rightArrowKeyHandler,
+        suppressUntilKeyUp: Boolean = false,
+    ) {
+        handler?.cancel(suppressUntilKeyUp = suppressUntilKeyUp)
+        pressAndHoldSpeedController?.cancelAll()
+    }
+
+    val closePlayerAndCancelHoldSpeed = {
+        cancelPlayerInput()
+        closePlayer()
+    }
 
     BaseWindow(
-        onCloseRequest = closePlayer,
+        onCloseRequest = closePlayerAndCancelHoldSpeed,
         state = playerWindowState,
         title = windowTitle,
         // Compose focus navigation consumes arrow keys before the bubbling onKeyEvent callback.
         onPreviewKeyEvent = { event ->
-            val action = playerKeyboardActionForKeyEvent(event)
-            if (playerCoordinator == null ||
-                action == null ||
-                !action.isAvailable(mediaStarted = playerState?.mediaStarted == true)
-            ) {
-                false
+            if (event.key == Key.DirectionRight) {
+                rightArrowKeyHandler?.onKeyEvent(event) ?: false
             } else {
-                when (action) {
-                    PlayerKeyboardAction.SeekBackward,
-                    PlayerKeyboardAction.SeekForward -> {
-                        val positionDelta = when (action) {
-                            PlayerKeyboardAction.SeekBackward ->
-                                dataStore.getOrDefault(PlayerReplaySecondsPreference)
-
-                            PlayerKeyboardAction.SeekForward ->
-                                dataStore.getOrDefault(PlayerForwardSecondsPreference)
-                        }
-                        playerCoordinator.onCommand(
-                            PlayerCommand.SeekTo(
-                                playerCoordinator.playerState.value.position + positionDelta
+                val action = playerKeyboardActionForKeyEvent(event)
+                if (playerCoordinator == null ||
+                    action == null ||
+                    !action.isAvailable(mediaStarted = playerState?.mediaStarted == true)
+                ) {
+                    false
+                } else {
+                    when (action) {
+                        PlayerKeyboardAction.SeekBackward -> {
+                            playerCoordinator.onCommand(
+                                PlayerCommand.SeekTo(
+                                    playerCoordinator.playerState.value.position +
+                                            dataStore.getOrDefault(PlayerReplaySecondsPreference)
+                                )
                             )
-                        )
-                        true
-                    }
+                            true
+                        }
 
-                    PlayerKeyboardAction.ConsumeSpaceKeyDown -> true
+                        PlayerKeyboardAction.ConsumeSpaceKeyDown -> true
 
-                    PlayerKeyboardAction.TogglePlayPause -> {
-                        playerCoordinator.onCommand(PlayerCommand.PlayOrPause)
-                        true
+                        PlayerKeyboardAction.TogglePlayPause -> {
+                            playerCoordinator.onCommand(PlayerCommand.PlayOrPause)
+                            true
+                        }
                     }
                 }
             }
         },
     ) {
+        val keyEventScope = rememberCoroutineScope()
+        val viewConfiguration = LocalViewConfiguration.current
+        val longPressTimeoutMillis = viewConfiguration.longPressTimeoutMillis
+        val rapidTapTimeoutMillis = viewConfiguration.doubleTapTimeoutMillis
+        val windowRightArrowKeyHandler = remember(
+            playerCoordinator,
+            pressAndHoldSpeedController,
+            longPressTimeoutMillis,
+            rapidTapTimeoutMillis,
+        ) {
+            if (playerCoordinator == null || pressAndHoldSpeedController == null) {
+                null
+            } else {
+                PlayerRightArrowKeyHandler(
+                    coroutineScope = keyEventScope,
+                    longPressTimeoutMillis = longPressTimeoutMillis,
+                    rapidTapTimeoutMillis = rapidTapTimeoutMillis,
+                    mediaStarted = { playerCoordinator.playerState.value.mediaStarted },
+                    currentMediaPath = { playerCoordinator.playerState.value.path },
+                    currentPosition = { playerCoordinator.playerState.value.position },
+                    forwardSeconds = {
+                        dataStore.getOrDefault(PlayerForwardSecondsPreference)
+                    },
+                    onSeekTo = { playerCoordinator.onCommand(PlayerCommand.SeekTo(it)) },
+                    onLongPressStart = {
+                        pressAndHoldSpeedController.start(PressAndHoldSpeedSource.Keyboard)
+                    },
+                    onLongPressEnd = {
+                        pressAndHoldSpeedController.stop(PressAndHoldSpeedSource.Keyboard)
+                    },
+                )
+            }
+        }
+        LaunchedEffect(
+            windowRightArrowKeyHandler,
+            playerState?.mediaStarted,
+            playerState?.path,
+        ) {
+            cancelPlayerInput(windowRightArrowKeyHandler, suppressUntilKeyUp = true)
+        }
+        LaunchedEffect(playerCoordinator, windowRightArrowKeyHandler) {
+            playerCoordinator?.model?.newStateByEvent?.collect { (_, event) ->
+                when (event) {
+                    is PlayerEvent.EndFile,
+                    is PlayerEvent.StartFile,
+                    PlayerEvent.Shutdown -> {
+                        cancelPlayerInput(
+                            windowRightArrowKeyHandler,
+                            suppressUntilKeyUp = true,
+                        )
+                    }
+
+                    else -> Unit
+                }
+            }
+        }
+        DisposableEffect(window, windowRightArrowKeyHandler, pressAndHoldSpeedController) {
+            rightArrowKeyHandler = windowRightArrowKeyHandler
+            val focusListener = object : WindowAdapter() {
+                override fun windowLostFocus(event: WindowEvent) {
+                    cancelPlayerInput(windowRightArrowKeyHandler)
+                }
+            }
+            window.addWindowFocusListener(focusListener)
+            onDispose {
+                window.removeWindowFocusListener(focusListener)
+                cancelPlayerInput(windowRightArrowKeyHandler)
+                if (rightArrowKeyHandler === windowRightArrowKeyHandler) {
+                    rightArrowKeyHandler = null
+                }
+            }
+        }
         LaunchedEffect(entry.activationToken) {
             playerWindowState.isMinimized = false
             window.toFront()
@@ -304,6 +391,7 @@ internal fun PlayerWindow(
         }
         CompositionLocalProvider(
             LocalDesktopAppState provides appState,
+            LocalPressAndHoldSpeedController provides pressAndHoldSpeedController,
             // Computed inside this window so it tracks this window's own size.
             LocalWindowSizeClass provides calculateWindowSizeClass(),
         ) {
@@ -318,7 +406,7 @@ internal fun PlayerWindow(
                     PlayerViewRoute(
                         coordinator = playerCoordinator,
                         articleContextViewModel = appState.playerArticleContextViewModel,
-                        onBack = closePlayer,
+                        onBack = closePlayerAndCancelHoldSpeed,
                         onSaveScreenshot = {
 
                         },

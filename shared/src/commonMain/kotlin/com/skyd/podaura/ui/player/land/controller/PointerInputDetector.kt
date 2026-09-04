@@ -34,17 +34,15 @@ internal fun Modifier.detectPressGestures(
     controllerWidth: () -> Int,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
+    onLongPressStart: () -> Unit,
+    onLongPressEnd: () -> Unit,
     showController: () -> Boolean,
     onShowControllerChanged: (Boolean) -> Unit,
-    isLongPressing: () -> Boolean,
-    isLongPressingChanged: (Boolean) -> Unit,
     onShowForwardRipple: (Offset) -> Unit,
     onShowBackwardRipple: (Offset) -> Unit,
     cancelAutoHideController: () -> Unit,
     restartAutoHideController: () -> Unit,
 ): Modifier {
-    var beforeLongPressingSpeed by rememberSaveable { mutableFloatStateOf(playState().speed) }
-
     val playerDoubleTap = PlayerDoubleTapPreference.current
     val onDoubleTapPausePlay: () -> Unit = remember { { playStateCallback.onPlayOrPause() } }
 
@@ -83,20 +81,16 @@ internal fun Modifier.detectPressGestures(
 
     return pointerInput(playerDoubleTap) {
         detectTapGestures(
-            onLongPress = {
-                beforeLongPressingSpeed = playState().speed
-                isLongPressingChanged(true)
-                playStateCallback.onSpeedChanged(3f)
-            },
+            onLongPress = { onLongPressStart() },
             onDoubleTap = {
                 restartAutoHideController()
                 onDoubleTap(it)
             },
             onPress = {
-                tryAwaitRelease()
-                if (isLongPressing()) {
-                    isLongPressingChanged(false)
-                    playStateCallback.onSpeedChanged(beforeLongPressingSpeed)
+                try {
+                    tryAwaitRelease()
+                } finally {
+                    onLongPressEnd()
                 }
             },
             onTap = {

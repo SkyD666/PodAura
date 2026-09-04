@@ -52,7 +52,8 @@ import com.skyd.podaura.model.preference.player.PlayerShowReplaySecondsButtonPre
 import com.skyd.podaura.model.preference.player.PlayerShowScreenshotButtonPreference
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
 import com.skyd.podaura.ui.component.shape.ForwardRippleDirect
-import com.skyd.podaura.ui.component.tickVibrate
+import com.skyd.podaura.ui.player.LocalPressAndHoldSpeedController
+import com.skyd.podaura.ui.player.PressAndHoldSpeedSource
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.DialogState
@@ -63,7 +64,6 @@ import com.skyd.podaura.ui.player.land.controller.button.ForwardOrReplaySeconds
 import com.skyd.podaura.ui.player.land.controller.button.ResetTransform
 import com.skyd.podaura.ui.player.land.controller.button.Screenshot
 import com.skyd.podaura.ui.player.land.controller.preview.BrightnessPreview
-import com.skyd.podaura.ui.player.land.controller.preview.LongPressSpeedPreview
 import com.skyd.podaura.ui.player.land.controller.preview.SeekTimePreview
 import com.skyd.podaura.ui.player.land.controller.preview.VolumePreview
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
@@ -93,6 +93,8 @@ internal fun PlayerController(
     onScreenshot: () -> Unit,
     onExitFullscreen: () -> Unit,
 ) {
+    val pressAndHoldSpeedController =
+        requireNotNull(LocalPressAndHoldSpeedController.current)
     var showController by rememberSaveable { mutableStateOf(true) }
     var controllerWidth by remember { mutableIntStateOf(0) }
     var controllerHeight by remember { mutableIntStateOf(0) }
@@ -146,8 +148,6 @@ internal fun PlayerController(
     var forwardRippleStartControllerOffset by remember { mutableStateOf(Offset.Zero) }
     var showBackwardRipple by remember { mutableStateOf(false) }
     var backwardRippleStartControllerOffset by remember { mutableStateOf(Offset.Zero) }
-
-    var isLongPressing by remember { mutableStateOf(false) }
 
     var showPlaylistSheet by remember { mutableStateOf(false) }
 
@@ -203,10 +203,14 @@ internal fun PlayerController(
                     controllerWidth = { controllerWidth },
                     playState = playState,
                     playStateCallback = playStateCallback,
+                    onLongPressStart = {
+                        pressAndHoldSpeedController.start(PressAndHoldSpeedSource.Pointer)
+                    },
+                    onLongPressEnd = {
+                        pressAndHoldSpeedController.stop(PressAndHoldSpeedSource.Pointer)
+                    },
                     showController = { showController },
                     onShowControllerChanged = { showController = it },
-                    isLongPressing = { isLongPressing },
-                    isLongPressingChanged = { isLongPressing = it },
                     onShowForwardRipple = {
                         forwardRippleStartControllerOffset = it
                         showForwardRipple = true
@@ -295,15 +299,6 @@ internal fun PlayerController(
             // Volume preview
             if (showVolumePreview) {
                 VolumePreview(value = { volumeValue }, range = { volumeRange })
-            }
-            // Long press speed preview
-            if (isLongPressing) {
-                LaunchedEffect(Unit) {
-                    if (isLongPressing) {
-                        tickVibrate()
-                    }
-                }
-                LongPressSpeedPreview(speed = { playState().speed })
             }
         }
     }

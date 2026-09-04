@@ -133,31 +133,36 @@ internal fun Controller(
                 animationSpec = tween(PLAYER_PRESENTATION_CROSSFADE_MILLIS),
                 label = "playerPrimaryControl",
             ) { state ->
-                when (state) {
-                    PrimaryControlState.Loading ->
-                        LoadingIndicator(modifier = Modifier.size(40.dp))
+                Box(
+                    modifier = Modifier.size(40.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    when (state) {
+                        PrimaryControlState.Loading ->
+                            LoadingIndicator(modifier = Modifier.size(40.dp))
 
-                    PrimaryControlState.Retry -> Icon(
-                        imageVector = Icons.Outlined.Refresh,
-                        contentDescription = stringResource(Res.string.retry),
-                        modifier = Modifier.size(36.dp),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
+                        PrimaryControlState.Retry -> Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = stringResource(Res.string.retry),
+                            modifier = Modifier.size(36.dp),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
 
-                    PrimaryControlState.Pause,
-                    PrimaryControlState.Play -> Icon(
-                        imageVector = if (state == PrimaryControlState.Pause) {
-                            Icons.Filled.Pause
-                        } else {
-                            Icons.Filled.PlayArrow
-                        },
-                        contentDescription = stringResource(
-                            if (state == PrimaryControlState.Pause) Res.string.pause
-                            else Res.string.play
-                        ),
-                        modifier = Modifier.size(36.dp),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
+                        PrimaryControlState.Pause,
+                        PrimaryControlState.Play -> Icon(
+                            imageVector = if (state == PrimaryControlState.Pause) {
+                                Icons.Filled.Pause
+                            } else {
+                                Icons.Filled.PlayArrow
+                            },
+                            contentDescription = stringResource(
+                                if (state == PrimaryControlState.Pause) Res.string.pause
+                                else Res.string.play
+                            ),
+                            modifier = Modifier.size(36.dp),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }

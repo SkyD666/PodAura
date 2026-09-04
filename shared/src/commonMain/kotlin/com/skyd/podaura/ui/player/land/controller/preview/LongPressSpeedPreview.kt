@@ -41,6 +41,7 @@ internal fun BoxScope.LongPressSpeedPreview(speed: () -> Float) {
             modifier = Modifier.size(30.dp),
             imageVector = Icons.Rounded.FastForward,
             contentDescription = stringResource(Res.string.player_long_press_playback_speed),
+            tint = Color.White,
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
