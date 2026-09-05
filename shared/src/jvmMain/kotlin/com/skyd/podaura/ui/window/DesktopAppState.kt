@@ -9,11 +9,14 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.skyd.fundation.di.get
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler.UrlData
+import com.skyd.podaura.ui.player.PlatformPlayerEntry
 import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
+import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerSession
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import io.github.vinceglb.filekit.PlatformFile
 
 internal sealed interface DesktopWindowId {
     data object Main : DesktopWindowId
@@ -109,23 +112,21 @@ internal class DesktopAppState(
     val windowManager: DesktopWindowManager,
     val playerWindowController: PlayerWindowController,
     val playerArticleContextViewModel: PlayerArticleContextViewModel,
+    hasAcceptedTerms: (() -> Boolean)? = null,
 ) : PlayerSession {
+    private val playerEntry =
+        PlatformPlayerEntry(windowManager, playerWindowController, hasAcceptedTerms)
     override val coordinator: PlayerCoordinator?
         get() = playerWindowController.coordinator
 
     override val isFullPlayerVisible: Boolean
         get() = windowManager.windows.any { it.id == DesktopWindowId.Player }
 
-    fun openPlayer(mode: PlayDataMode) {
-        playerWindowController.open(mode)
-        windowManager.openOrActivate(DesktopWindowSpec.Player)
-    }
+    fun openPlayer(mode: PlayDataMode) = playerEntry.open(PlayerOpenRequest.Media(mode))
 
-    override fun openFullPlayer() {
-        if (coordinator != null) {
-            windowManager.openOrActivate(DesktopWindowSpec.Player)
-        }
-    }
+    fun openFiles(files: List<PlatformFile>) = playerEntry.open(PlayerOpenRequest.Files(files))
+
+    override fun openFullPlayer() = playerEntry.open(PlayerOpenRequest.Resume)
 
     fun closePlayer() {
         windowManager.close(DesktopWindowId.Player)

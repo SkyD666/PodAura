@@ -5,6 +5,7 @@ import coil3.Bitmap
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import io.github.vinceglb.filekit.PlatformFile
+import kotlin.uuid.Uuid
 
 sealed interface PlayerCommand {
     data class Attach(val surfaceHolder: PlatformSurfaceHolder) : PlayerCommand
@@ -15,6 +16,7 @@ sealed interface PlayerCommand {
         val startPath: String? = null,
         val startPositionSeconds: Long? = null,
         val requestId: String? = null,
+        val externalBatch: ExternalMediaBatch? = null,
     ) : PlayerCommand
 
     data class RemoveMediaFromPlaylist(
@@ -72,6 +74,12 @@ data class PlaybackEnd(
     val path: String? = null,
 )
 
+data class PlaybackFailure(
+    val details: String? = null,
+    val retryEnd: PlaybackEnd? = null,
+    val id: String = Uuid.random().toString(),
+)
+
 sealed interface PlayerEvent {
     data object Shutdown : PlayerEvent
     data class Idling(val value: Boolean) : PlayerEvent
@@ -88,8 +96,17 @@ sealed interface PlayerEvent {
     data class Loading(val value: Boolean) : PlayerEvent
     data object Seek : PlayerEvent
     data class EndFile(val end: PlaybackEnd) : PlayerEvent
+    data class PlaybackFailed(val failure: PlaybackFailure) : PlayerEvent
     data object ClearPlaybackEnd : PlayerEvent
     data class StartFile(val path: String?) : PlayerEvent
+    data class FileLoaded(
+        val videoTracks: List<Track>,
+        val audioTracks: List<Track>,
+        val subtitleTracks: List<Track>,
+        val videoTrackId: Int,
+        val audioTrackId: Int,
+        val subtitleTrackId: Int,
+    ) : PlayerEvent
     data object PlaybackRestart : PlayerEvent
     data class Zoom(val value: Float) : PlayerEvent
     data class VideoOffsetX(val value: Float) : PlayerEvent

@@ -15,6 +15,7 @@ import androidx.compose.ui.window.rememberWindowState
 import com.skyd.compone.local.WindowController
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.window.CrashWindow
+import com.skyd.podaura.ui.window.DesktopOpenFiles
 import com.skyd.podaura.ui.window.DesktopWindowHost
 import com.skyd.podaura.ui.window.initWindowsAppIdentity
 import com.skyd.podaura.ui.window.rememberDesktopAppState
@@ -29,12 +30,17 @@ fun main() {
     // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-desktop-swing-interoperability.html#experimental-interop-blending
     System.setProperty("compose.interop.blending", "true")
 
+    val openFiles = DesktopOpenFiles().also { it.register() }
+
     initKoin()
     onAppStart()
 
     application {
         if (crashMessage.isBlank()) {
             val appState = rememberDesktopAppState()
+            LaunchedEffect(appState) {
+                openFiles.requests.collect(appState::openFiles)
+            }
             val exitPodAura = {
                 appState.destroySession()
                 exitApplication()

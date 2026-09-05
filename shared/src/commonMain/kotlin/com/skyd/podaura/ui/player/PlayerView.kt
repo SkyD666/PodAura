@@ -19,7 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.component.rememberOrientationController
@@ -50,10 +53,11 @@ import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import io.github.vinceglb.filekit.PlatformFile
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.playback_failed
@@ -144,39 +148,25 @@ fun PlayerView(
     }
     val playbackFailedMessage = stringResource(Res.string.playback_failed)
     val retryLabel = stringResource(Res.string.retry)
-    LaunchedEffect(coordinator, snackbarHostState, playbackFailedMessage, retryLabel) {
-        var pendingFailure: Job? = null
-        coordinator.model.newStateByEvent.collect { (_, event) ->
-            when (event) {
-                is PlayerEvent.EndFile if event.end.reason == PlaybackEndReason.Error -> {
-                    pendingFailure?.cancel()
-                    pendingFailure = launch {
-                        delay(250.milliseconds)
-                        if (coordinator.playerState.value.lastPlaybackEnd != event.end) return@launch
-                        val result = snackbarHostState.showSnackbar(
-                            message = playbackFailedMessage,
-                            actionLabel = retryLabel,
-                            withDismissAction = true,
-                            duration = SnackbarDuration.Long,
-                        )
-                        if (result == SnackbarResult.ActionPerformed &&
-                            coordinator.playerState.value.lastPlaybackEnd == event.end
-                        ) {
-                            coordinator.onCommand(PlayerCommand.PlayOrPause)
-                        }
-                    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(coordinator, snackbarHostState, playbackFailedMessage, retryLabel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            coordinator.playerState.map { it.pendingPlaybackFailures.firstOrNull() }
+                .distinctUntilChanged()
+                .collectLatest { failure ->
+                    if (failure == null) return@collectLatest
+                    if (failure.retryEnd != null) delay(250.milliseconds)
+                    val result = snackbarHostState.showSnackbar(
+                        message = listOfNotNull(playbackFailedMessage, failure.details).joinToString("\n"),
+                        actionLabel = retryLabel.takeIf { failure.retryEnd != null },
+                        withDismissAction = true,
+                        duration = SnackbarDuration.Long,
+                    )
+                    coordinator.onPlaybackFailureHandled(
+                        id = failure.id,
+                        retry = result == SnackbarResult.ActionPerformed,
+                    )
                 }
-
-                is PlayerEvent.StartFile, PlayerEvent.ClearPlaybackEnd -> {
-                    pendingFailure?.cancel()
-                    pendingFailure = null
-                    snackbarHostState.currentSnackbarData
-                        ?.takeIf { it.visuals.message == playbackFailedMessage }
-                        ?.dismiss()
-                }
-
-                else -> Unit
-            }
         }
     }
 

@@ -187,6 +187,7 @@ class MPVPlayer {
             runCatching { mpv.command("stop") }
                 .onFailure { logger.w(throwable = it) { "Failed to stop playback before destroy" } }
             mpv.destroy()
+            originalKeepOpen = null
             scope.cancel()
         }
     }
@@ -519,6 +520,18 @@ class MPVPlayer {
         paused = false
     }
 
+    private var originalKeepOpen: String? = null
+
+    fun setExternalQueue(enabled: Boolean) {
+        if (enabled) {
+            if (originalKeepOpen == null) originalKeepOpen = mpv.getPropertyString("keep-open")
+            mpv.setPropertyString("keep-open", "yes")
+        } else {
+            originalKeepOpen?.let { mpv.setPropertyString("keep-open", it) }
+            originalKeepOpen = null
+        }
+    }
+
     suspend fun loadList(files: List<String>, startFile: String?) {
         val realFiles = files.filter { it.isNotBlank() }
         if (realFiles.isNotEmpty()) {
@@ -622,6 +635,15 @@ class MPVPlayer {
 
         playMediaAtIndex(targetIndex)
         return true
+    }
+
+    fun playlistEntryPath(entryId: Long): String? {
+        for (index in 0 until playlistCount) {
+            if (mpv.getPropertyString("playlist/$index/id")?.toLongOrNull() == entryId) {
+                return mpv.getPropertyString("playlist/$index/filename")
+            }
+        }
+        return null
     }
 
     fun stop() {

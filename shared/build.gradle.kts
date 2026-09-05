@@ -1,4 +1,5 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
+import com.skyd.podaura.buildlogic.macOSMediaDocumentTypes
 import de.stefan_oltmann.msix.CreateAppxManifestTask
 import de.stefan_oltmann.msix.CreateMsixIconsTask
 import de.stefan_oltmann.msix.CreateMsixTask
@@ -66,6 +67,7 @@ kotlin {
     }
 
     sourceSets {
+        commonMain { kotlin.srcDir("media-types") }
         commonMain.dependencies {
             implementation(libs.kotlin.stdlib)
 
@@ -292,6 +294,9 @@ compose.desktop {
                 bundleID = "com.skyd.podaura"
                 iconFile = project.file("icons/icon_512x512.icns")
                 minimumSystemVersion = "11.0"
+                infoPlist {
+                    extraKeysRawXml = macOSMediaDocumentTypes()
+                }
             }
             windows {
                 iconFile = project.file("icons/PodAura.ico")

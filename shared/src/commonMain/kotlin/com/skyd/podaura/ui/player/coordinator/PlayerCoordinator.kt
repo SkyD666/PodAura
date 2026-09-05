@@ -19,8 +19,10 @@ import com.skyd.podaura.ui.PlatformSurfaceHolder
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlaybackEnd
 import com.skyd.podaura.ui.player.PlaybackEndReason
+import com.skyd.podaura.ui.player.PlaybackFailure
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
+import com.skyd.podaura.ui.player.externalPlaybackError
 import com.skyd.podaura.ui.player.mpv.EventListener
 import com.skyd.podaura.ui.player.mpv.MPV
 import com.skyd.podaura.ui.player.mpv.MPVEvent
@@ -86,6 +88,7 @@ class PlayerCoordinator : LifecycleOwner {
     private val observers = AtomicReference<Set<Observer>>(emptySet())
 
     // The fields below belong to the engine actor.
+    private var externalPlayback: ExternalPlaybackSession? = null
     private var playlistId = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
     private var pendingStartPosition: PendingStartPosition? = null
@@ -131,6 +134,9 @@ class PlayerCoordinator : LifecycleOwner {
                         savePosition(currentPath?.toStableMediaUrl())
                         emitShutdown()
                         playerTrace("Player/MpvDestroy") { player.destroy() }
+                        externalPlayback?.release()
+                        externalPlayback = null
+                        latestLoad.exchange(null)?.externalBatch?.release()
                         _engineState.value = PlayerEngineState.Destroyed
                         withContext(Dispatchers.Main.immediate) {
                             lifecycle.currentState = Lifecycle.State.DESTROYED
@@ -160,7 +166,9 @@ class PlayerCoordinator : LifecycleOwner {
 
             is PlayerCommand.LoadList -> {
                 if (!destroyed.load()) {
-                    latestLoad.store(command)
+                    if (command.externalBatch?.retain() == false) return
+                    latestLoad.exchange(command)?.externalBatch?.release()
+                    if (destroyed.load()) latestLoad.exchange(null)?.externalBatch?.release()
                     loadSignal.trySend(Unit)
                 }
             }
@@ -184,6 +192,12 @@ class PlayerCoordinator : LifecycleOwner {
                     commands.trySend(ActorMessage.Command(command))
                 }
             }
+        }
+    }
+
+    fun onPlaybackFailureHandled(id: String, retry: Boolean = false) {
+        if (!destroyed.load()) {
+            commands.trySend(ActorMessage.PlaybackFailureHandled(id, retry))
         }
     }
 
@@ -245,6 +259,15 @@ class PlayerCoordinator : LifecycleOwner {
             is ActorMessage.Property -> handleProperty(message)
             is ActorMessage.Surface -> handleSurface(message.event)
             is ActorMessage.ApplyLastPosition -> applyLastPosition(message)
+            is ActorMessage.PlaybackFailureHandled -> {
+                val failure = model.consumePlaybackFailure(message.id)
+                if (message.retry && failure?.retryEnd != null &&
+                    playerState.value.lastPlaybackEnd == failure.retryEnd && _engineState.value.isReady
+                ) {
+                    handleFailedPlaybackRetry()
+                }
+            }
+
             ActorMessage.FlushTransform -> flushTransform()
         }
         return true
@@ -312,6 +335,7 @@ class PlayerCoordinator : LifecycleOwner {
     private fun removeMedia(command: PlayerCommand.RemoveMediaFromPlaylist) {
         if (playlistId != command.playlist.firstOrNull()?.playlistMediaBean?.playlistId) return
         command.playlist.forEach { cachedPlaylistMap.remove(it.playlistMediaBean.url) }
+        externalPlayback?.retainPaths(cachedPlaylistMap.keys)
         val currentPlaylistId = playlistId
         ioScope.launch {
             addToPlaylistRepo.removeMediaFromPlaylist(
@@ -323,11 +347,29 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private suspend fun loadList(command: PlayerCommand.LoadList) {
-        val files = command.playlist.map { it.playlistMediaBean.url }
-        if (files.isEmpty()) {
-            _engineState.value = PlayerEngineState.AwaitingMedia
-            return
+        var adopted = false
+        try {
+            command.externalBatch?.failures?.takeIf { it.isNotEmpty() }?.let {
+                emitEvent(
+                    PlayerEvent.PlaybackFailed(
+                        PlaybackFailure(
+                            details = it.joinToString("\n") { failure -> "${failure.source}: ${failure.reason}" },
+                        )
+                    )
+                )
+            }
+            if (command.playlist.isEmpty()) return
+            loadPreparedList(command)
+            externalPlayback?.release()
+            externalPlayback = command.externalBatch?.let(::ExternalPlaybackSession)
+            adopted = true
+        } finally {
+            if (!adopted) command.externalBatch?.release()
         }
+    }
+
+    private suspend fun loadPreparedList(command: PlayerCommand.LoadList) {
+        val files = command.playlist.map { it.playlistMediaBean.url }
         if (!hasMediaReady) _engineState.value = PlayerEngineState.LoadingMedia
         val isNewRequest = shouldConsumeLoadRequest(command.requestId, lastLoadRequestId)
         val startPositionSeconds = command.startPositionSeconds?.takeIf { isNewRequest }
@@ -348,9 +390,16 @@ class PlayerCoordinator : LifecycleOwner {
                 ?.takeUnless { seekCurrentMedia }
                 ?.let { position -> command.startPath?.let { PendingStartPosition(it, position) } }
         }
+        if (currentPathPlayed && (externalPlayback != null || command.externalBatch != null)) {
+            // Save while the old engine URL still maps to its original content URI.
+            savePosition(currentPath?.toStableMediaUrl())
+        }
         playlistId = command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
         cachedPlaylistMap.clear()
         cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
+        // External multi-file opens must advance normally, even on desktop's keep-open=always.
+        player.setExternalQueue(command.externalBatch != null)
+        if (isNewRequest) emitEvent(PlayerEvent.ClearPlaybackEnd)
         player.loadList(files = files, startFile = command.startPath)
         startPositionSeconds?.takeIf { seekCurrentMedia }?.let(::seekAndPlay)
         if (isNewRequest) setPaused(false)
@@ -459,19 +508,32 @@ class PlayerCoordinator : LifecycleOwner {
         playlistEntryId: Long,
     ) {
         val mappedReason = PlaybackEndReason.fromMpv(reason)
+        // The engine may already have advanced by the time the actor consumes this event.
+        val endedPath = if (externalPlayback != null && playlistEntryId >= 0) {
+            player.playlistEntryPath(playlistEntryId) ?: return
+        } else currentPath
         val end = PlaybackEnd(
             reason = mappedReason,
             errorCode = mpvError.takeIf { mappedReason == PlaybackEndReason.Error },
             playlistEntryId = playlistEntryId.takeIf { it >= 0L },
-            path = currentPath,
+            path = endedPath,
         )
+        emitEvent(PlayerEvent.EndFile(end))
         if (mappedReason == PlaybackEndReason.Error) {
             logger.e {
                 "Playback failed (error=$mpvError, entryId=$playlistEntryId, " +
-                        "path=${currentPath})"
+                        "path=$endedPath)"
+            }
+            end.toPlaybackFailure(
+                autoAdvance = externalPlayback != null,
+                source = endedPath?.toStableMediaUrl(),
+            )?.let { emitEvent(PlayerEvent.PlaybackFailed(it)) }
+            if (endedPath != null &&
+                externalPlayback?.recordFailure(endedPath, cachedPlaylistMap.keys) == true
+            ) {
+                player.stop()
             }
         }
-        emitEvent(PlayerEvent.EndFile(end))
         emitEvent(PlayerEvent.Loading(false))
         if (currentPathPlayed) savePosition(currentPath?.toStableMediaUrl())
         currentPath = null
@@ -479,10 +541,24 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private fun onFileLoaded() {
+        val loadedPath = currentPath
+        externalPlayback?.onFileLoaded(loadedPath)
+        // A coalesced track-list update can be consumed before StartFile clears the model.
+        // Resnapshot after loading so portrait mode does not remain on the audio placeholder.
+        player.loadTracks()
+        emitEvent(
+            PlayerEvent.FileLoaded(
+                videoTracks = player.videoTrack,
+                audioTracks = player.audioTrack,
+                subtitleTracks = player.subtitleTrack,
+                videoTrackId = player.vid,
+                audioTrackId = player.aid,
+                subtitleTrackId = player.sid,
+            )
+        )
         currentPathPlayed = true
         hasMediaReady = true
         _engineState.value = PlayerEngineState.Ready
-        val loadedPath = currentPath
         val duration = player.duration.toLong()
         loadedPath?.let { path ->
             val stablePath = path.toStableMediaUrl()
@@ -751,6 +827,7 @@ class PlayerCoordinator : LifecycleOwner {
 
         data class Surface(val event: PlayerSurfaceEvent) : ActorMessage
         data class ApplyLastPosition(val path: String, val positionMillis: Long) : ActorMessage
+        data class PlaybackFailureHandled(val id: String, val retry: Boolean) : ActorMessage
         data object FlushTransform : ActorMessage
     }
 
@@ -795,3 +872,13 @@ internal fun shouldSeekCurrentMedia(
 
 internal fun shouldConsumeLoadRequest(requestId: String?, lastRequestId: String?): Boolean =
     requestId == null || requestId != lastRequestId
+
+internal fun PlaybackEnd.toPlaybackFailure(
+    autoAdvance: Boolean,
+    source: String? = path,
+): PlaybackFailure? {
+    if (reason != PlaybackEndReason.Error) return null
+    return if (autoAdvance) {
+        source?.let { PlaybackFailure(details = "$it: ${externalPlaybackError(errorCode ?: 0)}") }
+    } else PlaybackFailure(retryEnd = this)
+}

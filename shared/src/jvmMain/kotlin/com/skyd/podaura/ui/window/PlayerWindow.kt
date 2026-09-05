@@ -52,7 +52,7 @@ import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
-import kotlinx.coroutines.flow.filter
+import io.github.vinceglb.filekit.PlatformFile
 import org.openani.mediamp.mpv.MpvMediampPlayer
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -110,7 +110,17 @@ internal class PlayerWindowController(
         private set
     private var mediaSession: AutoCloseable? = null
 
-    fun open(mode: PlayDataMode) {
+    fun open(mode: PlayDataMode, requestId: String) {
+        preparePlayer()
+        playerViewModel.handlePlayDataMode(mode, requestId)
+    }
+
+    fun openFiles(files: List<PlatformFile>, requestId: String) {
+        preparePlayer()
+        playerViewModel.handlePlatformFiles(files, requestId)
+    }
+
+    private fun preparePlayer() {
         // NativeRuntimeLoader treats an existing wrapper as a complete, valid runtime and does not
         // overwrite the other libraries. Keep each mediamp version in its own directory so an
         // upgrade cannot combine a new JVM/JNI layer with stale libmpv/FFmpeg binaries.
@@ -125,7 +135,6 @@ internal class PlayerWindowController(
         if (coordinator == null) {
             coordinator = createCoordinator()
         }
-        playerViewModel.handlePlayDataMode(mode)
     }
 
     private fun createCoordinator(): PlayerCoordinator = PlayerCoordinator().also { created ->
@@ -167,6 +176,7 @@ internal class PlayerWindowController(
         )
 
     fun destroy() {
+        playerViewModel.clearPendingPlayback()
         val currentCoordinator = coordinator ?: return
         coordinator = null
         mediaSession?.close()
@@ -179,15 +189,8 @@ internal class PlayerWindowController(
      * mediaInfos has replay = 1, so resubscribing on every reopen would restart the previous list.
      */
     suspend fun collectMediaInfos() {
-        playerViewModel.mediaInfos.filter { it.startPath != null }.collect { launchData ->
-            coordinator?.onCommand(
-                PlayerCommand.LoadList(
-                    playlist = launchData.playlist,
-                    startPath = launchData.startPath,
-                    startPositionSeconds = launchData.startPositionSeconds,
-                    requestId = launchData.requestId,
-                )
-            )
+        playerViewModel.mediaInfos.collect { launchData ->
+            coordinator?.onCommand(launchData.toLoadCommand())
         }
     }
 }

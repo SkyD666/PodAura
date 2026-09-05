@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.player.coordinator
 
+import com.skyd.podaura.ui.player.PlaybackFailure
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.coroutines.channels.BufferOverflow
@@ -47,12 +48,11 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.Zoom -> old.copy(zoom = value)
         is PlayerEvent.AudioDelay -> old.copy(audioDelay = value)
         is PlayerEvent.SubtitleDelay -> old.copy(subTitleDelay = value)
-        is PlayerEvent.PlaybackRestart -> old.copy(
+        is PlayerEvent.PlaybackRestart -> old.clearPlaybackEnd().copy(
             mediaStarted = true,
-            lastPlaybackEnd = null,
         )
 
-        is PlayerEvent.StartFile -> old.copy(
+        is PlayerEvent.StartFile -> old.clearPlaybackEnd().copy(
             mediaStarted = true,
             seekable = false,
             path = path,
@@ -71,19 +71,49 @@ class PlayerModel : PlayerCoordinator.Observer {
             idling = false,
             mediaTitle = null,
             mediaThumbnail = null,
-            lastPlaybackEnd = null,
         )
 
-        is PlayerEvent.EndFile -> old.copy(
+        is PlayerEvent.FileLoaded -> old.copy(
+            videoTracks = videoTracks,
+            audioTracks = audioTracks,
+            subtitleTracks = subtitleTracks,
+            videoTrackId = videoTrackId,
+            audioTrackId = audioTrackId,
+            subtitleTrackId = subtitleTrackId,
+        )
+
+        is PlayerEvent.EndFile -> old.clearPlaybackEnd().copy(
             paused = true,
             mediaStarted = false,
             lastPlaybackEnd = end,
         )
 
-        PlayerEvent.ClearPlaybackEnd -> old.copy(lastPlaybackEnd = null)
+        is PlayerEvent.PlaybackFailed -> old.enqueueFailure(failure)
+
+        PlayerEvent.ClearPlaybackEnd -> old.clearPlaybackEnd()
         is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
         is PlayerEvent.Shutdown -> initialPlayerState
         else -> old
+    }
+
+    private fun PlayerState.clearPlaybackEnd() = copy(
+        lastPlaybackEnd = null,
+        pendingPlaybackFailures = pendingPlaybackFailures.filter { it.retryEnd == null },
+    )
+
+    private fun PlayerState.enqueueFailure(failure: PlaybackFailure) = copy(
+        // Retain recent notifications while no player UI is collecting them.
+        pendingPlaybackFailures = (pendingPlaybackFailures + failure).takeLast(MAX_PENDING_FAILURES),
+    )
+
+    // Called by the coordinator actor, just like onEvent, without broadcasting a player event.
+    internal fun consumePlaybackFailure(id: String): PlaybackFailure? {
+        val state = _playerState.value
+        val failure = state.pendingPlaybackFailures.firstOrNull { it.id == id } ?: return null
+        _playerState.value = state.copy(
+            pendingPlaybackFailures = state.pendingPlaybackFailures.filterNot { it.id == id },
+        )
+        return failure
     }
 
     override fun onEvent(event: PlayerEvent) {
@@ -91,5 +121,9 @@ class PlayerModel : PlayerCoordinator.Observer {
         val newState = event.reduce(oldState)
         if (newState != oldState) _playerState.value = newState
         _newStateByEvent.tryEmit(newState to event)
+    }
+
+    internal companion object {
+        const val MAX_PENDING_FAILURES = 32
     }
 }

@@ -14,12 +14,10 @@ import android.os.IBinder
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.core.util.Consumer
 import androidx.lifecycle.lifecycleScope
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.getString
@@ -29,15 +27,13 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.activity.BaseComposeActivity
 import com.skyd.podaura.ui.component.showToast
+import com.skyd.podaura.ui.player.PlatformPlayerEntry
 import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
-import com.skyd.podaura.ui.player.PlayerCommand
-import com.skyd.podaura.ui.player.PlayerViewRoute
+import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerViewModel
-import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
-import com.skyd.podaura.ui.player.jumper.PlayDataMode
+import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.service.PlayerService
 import io.github.vinceglb.filekit.PlatformFile
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import podaura.shared.generated.resources.Res
@@ -49,6 +45,7 @@ class PlayActivity : BaseComposeActivity() {
     private val viewModel: PlayerViewModel by viewModel()
     private val articleContextViewModel: PlayerArticleContextViewModel by viewModel()
     private var launchRequestId: String = ""
+    private val playerEntry by lazy { PlatformPlayerEntry(this, ::openAccepted) }
     private lateinit var picture: PlatformFile
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -62,6 +59,8 @@ class PlayActivity : BaseComposeActivity() {
 
     private lateinit var service: PlayerService
     private var serviceBound by mutableStateOf(false)
+    private var receiverRegistered = false
+    private var serviceBindingRequested = false
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerServiceBinder
@@ -74,14 +73,9 @@ class PlayActivity : BaseComposeActivity() {
             }
             this@PlayActivity.service = binder.getService()
             lifecycleScope.launch {
-                viewModel.mediaInfos.filter { it.startPath != null }.collect { launchData ->
+                viewModel.mediaInfos.collect { launchData ->
                     this@PlayActivity.service.playerCoordinator.onCommand(
-                        PlayerCommand.LoadList(
-                            playlist = launchData.playlist,
-                            startPath = launchData.startPath,
-                            startPositionSeconds = launchData.startPositionSeconds,
-                            requestId = launchData.requestId,
-                        )
+                        launchData.toLoadCommand()
                     )
                 }
             }
@@ -106,14 +100,34 @@ class PlayActivity : BaseComposeActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         launchRequestId = savedInstanceState?.getString(LAUNCH_REQUEST_ID_KEY)
             ?: UUID.randomUUID().toString()
+        addOnNewIntentListener { newIntent ->
+            intent = newIntent
+            launchRequestId = UUID.randomUUID().toString()
+            playerEntry.open(newIntent.toPlayerOpenRequest(launchRequestId))
+        }
+        playerEntry.open(intent.toPlayerOpenRequest(launchRequestId))
+    }
+
+    private fun openAccepted(request: PlayerOpenRequest) {
+        when (request) {
+            is PlayerOpenRequest.Media -> viewModel.handlePlayDataMode(
+                request.mode,
+                request.requestId
+            )
+
+            is PlayerOpenRequest.Files -> viewModel.handlePlatformFiles(
+                request.files,
+                request.requestId
+            )
+
+            PlayerOpenRequest.Resume -> Unit
+        }
+        if (receiverRegistered) return
 
         // Keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        handleIntent(intent, launchRequestId)
 
         ContextCompat.registerReceiver(
             this,
@@ -121,20 +135,13 @@ class PlayActivity : BaseComposeActivity() {
             IntentFilter(PlayerService.FINISH_PLAY_ACTIVITY_ACTION),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+        receiverRegistered = true
 
         val serviceIntent = Intent(this, PlayerService::class.java)
         ContextCompat.startForegroundService(this, serviceIntent)
-        bindService(serviceIntent, connection, BIND_AUTO_CREATE)
+        serviceBindingRequested = bindService(serviceIntent, connection, BIND_AUTO_CREATE)
 
         setContentBase {
-            DisposableEffect(Unit) {
-                val listener = Consumer<Intent> { newIntent ->
-                    launchRequestId = UUID.randomUUID().toString()
-                    handleIntent(newIntent, launchRequestId)
-                }
-                addOnNewIntentListener(listener)
-                onDispose { removeOnNewIntentListener(listener) }
-            }
             PlayerViewRoute(
                 coordinator = if (serviceBound) service.playerCoordinator else null,
                 articleContextViewModel = articleContextViewModel,
@@ -149,8 +156,8 @@ class PlayActivity : BaseComposeActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(serviceStopReceiver)
-        unbindService(connection)
+        if (receiverRegistered) unregisterReceiver(serviceStopReceiver)
+        if (serviceBindingRequested) unbindService(connection)
         serviceBound = false
         if (!dataStore.getOrDefault(BackgroundPlayPreference)) {
             stopService(Intent(this, PlayerService::class.java))
@@ -160,21 +167,6 @@ class PlayActivity : BaseComposeActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString(LAUNCH_REQUEST_ID_KEY, launchRequestId)
         super.onSaveInstanceState(outState)
-    }
-
-    private fun handleIntent(intent: Intent?, requestId: String) {
-        if (intent == null) return
-        val playDataMode = intent.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
-            PlayDataMode.decodeFromString(it)
-        }
-        if (playDataMode != null) {
-            viewModel.handlePlayDataMode(playDataMode, requestId)
-        } else {
-            val externalUri = intent.data
-            if (externalUri != null) {
-                viewModel.handlePlatformFile(PlatformFile(externalUri), requestId)
-            }
-        }
     }
 
     private fun saveScreenshot() {
