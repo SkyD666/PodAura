@@ -404,6 +404,8 @@
     <string name="feed_screen_mute_feed">静音</string>
     <string name="feed_screen_mute_all_feeds">静音</string>
     <string name="feed_screen_unmute_feed">取消静音</string>
+    <string name="feed_screen_enable_notifications">开启通知</string>
+    <string name="feed_screen_disable_notifications">关闭通知</string>
     <string name="feed_screen_unmute_all_feeds">取消静音</string>
     <string name="feed_screen_feed_muted">已静音</string>
     <string name="feed_screen_feed_unmuted">未静音</string>
@@ -604,4 +606,20 @@
     <string name="mpv_cache_external_storage_named">应用专属外部存储（%1$s）</string>
     <string name="mpv_config_sync">同步配置</string>
     <string name="mpv_storage_error">无法访问该目录</string>
+    <string name="notification_regex">正则表达式</string>
+    <string name="notification_content_hint">正则表达式（可空）</string>
+    <string name="notification_feeds">订阅</string>
+    <string name="notification_groups">分组</string>
+    <string name="notification_unrestricted">不限</string>
+    <string name="notification_match_help">本条规则内的条件需同时满足；命中任意一条规则即可通知。</string>
+    <string name="notification_custom_label">自定义规则</string>
+    <string name="notification_managed_label">订阅专属</string>
+    <string name="notification_managed_scope">全部新文章</string>
+    <string name="notification_managed_help">此规则通知该订阅的全部新文章，由订阅的通知开关创建，不可编辑。删除后会关闭该订阅的通知开关；其他匹配的规则仍可发送通知。</string>
+    <string name="notification_empty_rule">内容、订阅和分组不能全部为空。</string>
+    <string name="notification_invalid_regex">正则表达式无效</string>
+    <string name="notification_search">搜索</string>
+    <string name="notification_delete_question">删除通知规则“%1$s”？</string>
+    <string name="notification_delete_warning">此规则将被删除，其他匹配的规则仍可发送通知。</string>
+    <string name="notification_managed_delete_warning">删除此规则会关闭该订阅的通知开关；其他匹配的规则仍可发送通知。</string>
 </resources>

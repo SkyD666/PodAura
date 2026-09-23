@@ -6,7 +6,6 @@ import androidx.compose.ui.window.WindowScope
 import com.skyd.fundation.jna.windows.WindowsMediaPlayer
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
-import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.WString
@@ -14,6 +13,7 @@ import com.sun.jna.platform.win32.Advapi32Util
 import com.sun.jna.platform.win32.Shell32
 import com.sun.jna.platform.win32.WinReg
 import com.sun.jna.ptr.IntByReference
+import com.sun.jna.win32.StdCallLibrary
 import java.awt.Taskbar
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
@@ -61,7 +61,7 @@ private fun registerUnpackagedAppIdentity() {
     }
 }
 
-private object WindowsPackageIdentity {
+internal object WindowsPackageIdentity {
     fun hasPackageIdentity(): Boolean = runCatching {
         val packageNameLength = IntByReference()
         KernelAppModelApi.instance.GetCurrentPackageFullName(
@@ -70,7 +70,7 @@ private object WindowsPackageIdentity {
         ) != APPMODEL_ERROR_NO_PACKAGE
     }.getOrDefault(false)
 
-    private interface KernelAppModelApi : Library {
+    interface KernelAppModelApi : StdCallLibrary {
         fun GetCurrentPackageFullName(
             packageFullNameLength: IntByReference,
             packageFullName: Pointer?,

@@ -21,6 +21,9 @@ interface IFeedSheetRepository {
 
     fun editFeedSortXmlArticlesOnUpdate(url: String, sort: Boolean): Flow<FeedViewBean>
 
+    fun editFeedNotificationsEnabled(url: String, enabled: Boolean): Flow<FeedViewBean>
+    fun observeNotificationsEnabled(url: String): Flow<Boolean>
+
     fun removeFeed(url: String): Flow<Int>
 
     fun clearFeedArticles(url: String): Flow<ArticleDeleteResult>

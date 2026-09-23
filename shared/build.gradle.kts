@@ -1,5 +1,7 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
 import com.skyd.podaura.buildlogic.macOSMediaDocumentTypes
+import com.skyd.podaura.buildlogic.macOSNotificationUrlTypes
+import com.skyd.podaura.buildlogic.addWindowsNotificationProtocol
 import com.skyd.podaura.buildlogic.addWindowsMediaFileAssociations
 import com.skyd.podaura.buildlogic.windowsMediaFileAssociations
 import com.skyd.podaura.buildlogic.configureWindowsMsiOpenWith
@@ -300,7 +302,7 @@ compose.desktop {
                 bundleID = "com.skyd.podaura"
                 iconFile = project.file("icons/icon_512x512.icns")
                 infoPlist {
-                    extraKeysRawXml = macOSMediaDocumentTypes()
+                    extraKeysRawXml = macOSMediaDocumentTypes() + macOSNotificationUrlTypes()
                 }
             }
             windows {
@@ -379,8 +381,10 @@ tasks.named<CreateMsixIconsTask>("createMsixIcons") {
 tasks.named<CreateAppxManifestTask>("createAppxManifest") {
     outputFile.set(msixApplicationDirectory.map { it.file("AppxManifest.xml") })
     inputs.property("mediaFileAssociations", windowsMediaFileAssociations())
+    inputs.property("notificationProtocol", "podaura")
     doLast {
         addWindowsMediaFileAssociations(outputFile.get().asFile)
+        addWindowsNotificationProtocol(outputFile.get().asFile)
     }
 }
 tasks.named<CreateMsixTask>("createMsix") {

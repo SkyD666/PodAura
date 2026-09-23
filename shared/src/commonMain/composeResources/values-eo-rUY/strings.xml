@@ -534,4 +534,7 @@
     <string name="app_language_category">Lingvo</string>
     <string name="app_language_screen_name">Lingvo de la programo</string>
     <string name="app_language_follow_system">Laŭ la sistemo</string>
+    <string name="notification_delete_question">Ĉu forigi la sciigan regulon “%1$s”?</string>
+    <string name="notification_delete_warning">Ĉi tiu regulo estos forigita. Aliaj kongruaj reguloj ankoraŭ povas sendi sciigojn.</string>
+    <string name="notification_managed_delete_warning">Forigi ĉi tiun regulon malŝaltas la sciigan ŝaltilon de ĉi tiu abonfluo. Aliaj kongruaj reguloj ankoraŭ povas sendi sciigojn.</string>
 </resources>

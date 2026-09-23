@@ -41,6 +41,8 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Http
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.Public
@@ -137,6 +139,8 @@ import podaura.shared.generated.resources.feed_options
 import podaura.shared.generated.resources.feed_screen_add_group
 import podaura.shared.generated.resources.feed_screen_clear_articles_warning
 import podaura.shared.generated.resources.feed_screen_delete_feed_warning
+import podaura.shared.generated.resources.feed_screen_disable_notifications
+import podaura.shared.generated.resources.feed_screen_enable_notifications
 import podaura.shared.generated.resources.feed_screen_full_refresh
 import podaura.shared.generated.resources.feed_screen_full_refresh_description
 import podaura.shared.generated.resources.feed_screen_incremental_refresh
@@ -240,16 +244,28 @@ fun EditFeedSheet(
     }
 
     uiState.editFeedDialogBean?.let { feedView ->
+        val notificationsEnabled by remember(viewModel, feedView.feed.url) {
+            viewModel.observeNotificationsEnabled(feedView.feed.url)
+        }.collectAsStateWithLifecycle(initialValue = true)
         EditFeedSheet(
             onDismissRequest = onDismissRequest,
             snackbarHost = { SnackbarHost(hostState = bottomSheetSnackbarHostState) },
             feedView = feedView,
+            notificationsEnabled = notificationsEnabled,
             groups = uiState.groups.collectAsLazyPagingItems(),
             onReadAll = { dispatch(FeedSheetIntent.ReadAllInFeed(it)) },
             onRefresh = { feedUrl, full ->
                 dispatch(FeedSheetIntent.RefreshFeed(feedUrl, full))
             },
             onMute = { feedUrl, mute -> dispatch(FeedSheetIntent.MuteFeed(feedUrl, mute)) },
+            onNotificationsEnabledChanged = {
+                dispatch(
+                    FeedSheetIntent.EditFeedNotificationsEnabled(
+                        url = feedView.feed.url,
+                        enabled = it
+                    )
+                )
+            },
             onClear = { dispatch(FeedSheetIntent.ClearFeedArticles(it)) },
             onDelete = { dispatch(FeedSheetIntent.RemoveFeed(it)) },
             onUrlChange = {
@@ -313,10 +329,12 @@ private fun EditFeedSheet(
     onDismissRequest: () -> Unit,
     snackbarHost: @Composable () -> Unit = {},
     feedView: FeedViewBean,
+    notificationsEnabled: Boolean,
     groups: LazyPagingItems<GroupVo>,
     onReadAll: (String) -> Unit,
     onRefresh: (String, Boolean) -> Unit,
     onMute: (String, Boolean) -> Unit,
+    onNotificationsEnabledChanged: (Boolean) -> Unit,
     onClear: (String) -> Unit,
     onDelete: (String) -> Unit,
     onUrlChange: (String) -> Unit,
@@ -371,9 +389,11 @@ private fun EditFeedSheet(
             OptionArea(
                 sortXmlArticlesOnUpdate = feed.sortXmlArticlesOnUpdate,
                 mute = feed.mute,
+                notificationsEnabled = notificationsEnabled,
                 onReadAll = { onReadAll(feed.url) },
                 onRefresh = { onRefresh(feed.url, it) },
                 onMuteChanged = { onMute(feed.url, it) },
+                onNotificationsEnabledChanged = onNotificationsEnabledChanged,
                 onClear = { onClear(feed.url) },
                 onDelete = {
                     onDelete(feed.url)
@@ -656,9 +676,11 @@ internal fun OptionArea(
     deleteWarningText: String = stringResource(Res.string.feed_screen_delete_feed_warning),
     sortXmlArticlesOnUpdate: Boolean? = null,
     mute: Boolean? = null,
+    notificationsEnabled: Boolean? = null,
     onReadAll: () -> Unit,
     onRefresh: (full: Boolean) -> Unit,
     onMuteChanged: ((Boolean) -> Unit)? = null,
+    onNotificationsEnabledChanged: ((Boolean) -> Unit)? = null,
     onMuteAll: ((Boolean) -> Unit)? = null,
     onClear: () -> Unit,
     onDelete: (() -> Unit)?,
@@ -699,6 +721,17 @@ internal fun OptionArea(
                 icon = if (mute) Icons.AutoMirrored.Outlined.VolumeUp else Icons.AutoMirrored.Outlined.VolumeOff,
                 text = stringResource(if (mute) Res.string.feed_screen_unmute_feed else Res.string.feed_screen_mute_feed),
                 onClick = { onMuteChanged(!mute) },
+            )
+        }
+        if (onNotificationsEnabledChanged != null && notificationsEnabled != null) {
+            SheetChip(
+                icon = if (notificationsEnabled) Icons.Outlined.NotificationsOff
+                else Icons.Outlined.NotificationsActive,
+                text = stringResource(
+                    if (notificationsEnabled) Res.string.feed_screen_disable_notifications
+                    else Res.string.feed_screen_enable_notifications
+                ),
+                onClick = { onNotificationsEnabledChanged(!notificationsEnabled) },
             )
         }
         if (onMuteAll != null) {

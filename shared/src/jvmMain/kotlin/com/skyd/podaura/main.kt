@@ -13,7 +13,10 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.skyd.compone.local.WindowController
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.di.initKoin
+import com.skyd.podaura.ui.notification.DesktopArticleNotifications
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.ui.window.DesktopOpenFiles
 import com.skyd.podaura.ui.window.DesktopWindowHost
@@ -23,6 +26,7 @@ import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
 
 fun main(args: Array<String>) {
+    if (platform == Platform.macOS_Jvm) DesktopArticleNotifications.initialize()
     val openFiles = DesktopOpenFiles()
     val shutdownHook = Thread({ openFiles.close() }, "PodAura activation cleanup")
     Runtime.getRuntime().addShutdownHook(shutdownHook)
@@ -36,6 +40,7 @@ fun main(args: Array<String>) {
 
 private fun runDesktopApplication(openFiles: DesktopOpenFiles) {
     initWindowsAppIdentity()
+    DesktopArticleNotifications.initialize()
 
     var crashMessage by mutableStateOf("")
     CrashHandler.init(onCrash = { crashMessage = it })
@@ -49,6 +54,13 @@ private fun runDesktopApplication(openFiles: DesktopOpenFiles) {
     application {
         if (crashMessage.isBlank()) {
             val appState = rememberDesktopAppState()
+            LaunchedEffect(appState) {
+                DesktopArticleNotifications.activations.collect { uri ->
+                    val deeplink = DesktopArticleNotifications.articleDeeplink(uri)
+                    if (deeplink != null) appState.openMainPage(deeplink)
+                    else appState.windowManager.activate(DesktopWindowId.Main)
+                }
+            }
             LaunchedEffect(appState) {
                 openFiles.requests.collect { files ->
                     if (files.isEmpty()) {

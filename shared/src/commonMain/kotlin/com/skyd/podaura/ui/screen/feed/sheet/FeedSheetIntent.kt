@@ -13,6 +13,7 @@ sealed interface FeedSheetIntent : MviIntent {
 
     data class EditFeedCustomIcon(val url: String, val customIcon: String?) : FeedSheetIntent
     data class EditFeedSortXmlArticlesOnUpdate(val url: String, val sort: Boolean) : FeedSheetIntent
+    data class EditFeedNotificationsEnabled(val url: String, val enabled: Boolean) : FeedSheetIntent
 
     data class ClearFeedArticles(val url: String) : FeedSheetIntent
     data class RemoveFeed(val url: String) : FeedSheetIntent

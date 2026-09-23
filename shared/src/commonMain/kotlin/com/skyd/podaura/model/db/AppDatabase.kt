@@ -20,6 +20,7 @@ import com.skyd.podaura.model.bean.playlist.PlaylistBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
 import com.skyd.podaura.model.db.converter.RequestHeadersConverter
+import com.skyd.podaura.model.db.converter.NotificationTargetsConverter
 import com.skyd.podaura.model.db.dao.ArticleCategoryDao
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
@@ -53,6 +54,7 @@ import com.skyd.podaura.model.db.migration.Migration24To25
 import com.skyd.podaura.model.db.migration.Migration25To26
 import com.skyd.podaura.model.db.migration.Migration26To27
 import com.skyd.podaura.model.db.migration.Migration27To28
+import com.skyd.podaura.model.db.migration.Migration28To29
 import com.skyd.podaura.model.db.migration.Migration2To3
 import com.skyd.podaura.model.db.migration.Migration3To4
 import com.skyd.podaura.model.db.migration.Migration4To5
@@ -87,11 +89,11 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         TranslationProfileEntity::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 28,
+    version = 29,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 @ColumnTypeConverters(
-    value = [RequestHeadersConverter::class]
+    value = [RequestHeadersConverter::class, NotificationTargetsConverter::class]
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun groupDao(): GroupDao
@@ -123,7 +125,7 @@ fun AppDatabase.Companion.instance(
         Migration13To14(), Migration14To15(), Migration15To16(), Migration16To17(),
         Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
         Migration21To22(), Migration22To23(), Migration23To24(), Migration24To25(),
-        Migration25To26(), Migration26To27(), Migration27To28(),
+        Migration25To26(), Migration26To27(), Migration27To28(), Migration28To29(),
     )
 
     return builder

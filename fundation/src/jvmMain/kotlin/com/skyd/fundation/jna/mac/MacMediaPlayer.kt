@@ -1,13 +1,13 @@
 package com.skyd.fundation.jna.mac
 
 import co.touchlab.kermit.Logger
+import com.skyd.fundation.jna.DesktopNativeLibrary
 import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-import java.io.File
 
 sealed interface MacRemoteCommand {
     data object Play : MacRemoteCommand
@@ -190,15 +190,11 @@ private object MacMediaPlayerRuntime {
 
 private object MacMediaPlayerShim {
     private const val API_VERSION = 1
-    private const val APPLICATION_RESOURCES_DIRECTORY = "compose.application.resources.dir"
     private const val LIBRARY_BASENAME = "podaura_media_player"
     private const val LIBRARY_FILENAME = "libpodaura_media_player.dylib"
 
     val library: MacMediaPlayerLibrary by lazy {
-        val libraryFile = installedLibraryFile() ?: Native.extractFromResourcePath(
-            LIBRARY_BASENAME,
-            MacMediaPlayer::class.java.classLoader,
-        )
+        val libraryFile = DesktopNativeLibrary.file(LIBRARY_BASENAME, LIBRARY_FILENAME)
         Native.load(
             libraryFile.absolutePath,
             MacMediaPlayerLibrary::class.java,
@@ -210,11 +206,6 @@ private object MacMediaPlayerShim {
         }
     }
 
-    private fun installedLibraryFile(): File? = System.getProperty(APPLICATION_RESOURCES_DIRECTORY)
-        ?.takeIf(String::isNotBlank)
-        ?.let(::File)
-        ?.resolve(LIBRARY_FILENAME)
-        ?.takeIf(File::isFile)
 }
 
 private object MacNativeCommand {

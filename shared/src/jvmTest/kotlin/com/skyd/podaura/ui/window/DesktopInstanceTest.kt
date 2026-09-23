@@ -154,7 +154,7 @@ class DesktopInstanceTest {
         val names = arrayOf("folder/../a b.mp3", "\u4e2d\u6587 & #.mp4", "")
         assertEquals(
             names.take(2).map { java.io.File(it).absoluteFile.normalize().path },
-            desktopFileArguments(names),
+            desktopLaunchArguments(names),
         )
     }
 }

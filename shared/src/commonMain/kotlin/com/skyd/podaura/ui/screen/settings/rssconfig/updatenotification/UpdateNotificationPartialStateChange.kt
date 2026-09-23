@@ -1,6 +1,6 @@
 package com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification
 
-import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
+import com.skyd.podaura.model.repository.NotificationRuleData
 
 
 internal sealed interface UpdateNotificationPartialStateChange {
@@ -41,7 +41,7 @@ internal sealed interface UpdateNotificationPartialStateChange {
         override fun reduce(oldState: UpdateNotificationState): UpdateNotificationState {
             return when (this) {
                 is Success -> oldState.copy(
-                    ruleListState = RuleListState.Success(rules = rules),
+                    ruleListState = RuleListState.Success(data.rules, data.feeds, data.groups),
                     loadingDialog = false,
                 )
 
@@ -52,7 +52,7 @@ internal sealed interface UpdateNotificationPartialStateChange {
             }
         }
 
-        data class Success(val rules: List<ArticleNotificationRuleBean>) : RuleList
+        data class Success(val data: NotificationRuleData) : RuleList
         data class Failed(val msg: String) : RuleList
     }
 }

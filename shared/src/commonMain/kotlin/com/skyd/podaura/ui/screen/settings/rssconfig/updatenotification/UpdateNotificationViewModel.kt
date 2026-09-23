@@ -57,8 +57,8 @@ class UpdateNotificationViewModel(
     private fun Flow<UpdateNotificationIntent>.toUpdateNotificationPartialStateChangeFlow(): Flow<UpdateNotificationPartialStateChange> {
         return merge(
             filterIsInstance<UpdateNotificationIntent.Init>().flatMapConcat { intent ->
-                updateNotificationRepo.getAllRules().map {
-                    UpdateNotificationPartialStateChange.RuleList.Success(rules = it)
+                updateNotificationRepo.observeRules().map {
+                    UpdateNotificationPartialStateChange.RuleList.Success(data = it)
                 }.startWith(UpdateNotificationPartialStateChange.LoadingDialog.Show)
                     .catchMap { UpdateNotificationPartialStateChange.RuleList.Failed(it.message.orEmpty()) }
             },

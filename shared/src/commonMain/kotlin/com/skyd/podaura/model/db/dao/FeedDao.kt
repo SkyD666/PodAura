@@ -3,7 +3,6 @@ package com.skyd.podaura.model.db.dao
 import androidx.paging.PagingSource
 import androidx.room3.Dao
 import androidx.room3.DaoReturnTypeConverters
-import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
@@ -13,6 +12,8 @@ import androidx.room3.Transaction
 import androidx.room3.Update
 import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.skyd.fundation.di.get
+import com.skyd.podaura.model.bean.ARTICLE_NOTIFICATION_RULE_TABLE_NAME
+import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FEED_VIEW_NAME
@@ -22,13 +23,54 @@ import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.podaura.model.bean.group.GroupBean
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.Json
 
 @Dao
 @DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface FeedDao {
     @Transaction
+    suspend fun setFeed(feedBean: FeedBean) {
+        val isNew = getFeed(feedBean.url) == null
+        innerSetFeed(feedBean)
+        if (isNew) insertDefaultNotificationRule(
+            feedBean.nickname ?: feedBean.title ?: feedBean.url,
+            Json.encodeToString(listOf(feedBean.url)),
+        )
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun setFeed(feedBean: FeedBean)
+    suspend fun innerSetFeed(feedBean: FeedBean)
+
+    @Query(
+        "INSERT INTO $ARTICLE_NOTIFICATION_RULE_TABLE_NAME " +
+                "(${ArticleNotificationRuleBean.NAME_COLUMN}, ${ArticleNotificationRuleBean.REGEX_COLUMN}, " +
+                "${ArticleNotificationRuleBean.FEED_URLS_COLUMN}, ${ArticleNotificationRuleBean.IS_MANAGED_COLUMN}) " +
+                "SELECT :name, '', :feedUrlsJson, 1 WHERE NOT EXISTS (" +
+                "SELECT 1 FROM $ARTICLE_NOTIFICATION_RULE_TABLE_NAME " +
+                "WHERE ${ArticleNotificationRuleBean.IS_MANAGED_COLUMN} = 1 " +
+                "AND ${ArticleNotificationRuleBean.FEED_URLS_COLUMN} = :feedUrlsJson)"
+    )
+    suspend fun insertDefaultNotificationRule(name: String, feedUrlsJson: String)
+
+    fun observeNotificationsEnabled(feedUrl: String): Flow<Boolean> =
+        observeDefaultNotificationRule(Json.encodeToString(listOf(feedUrl)))
+
+    @Query(
+        "SELECT EXISTS(SELECT 1 FROM $ARTICLE_NOTIFICATION_RULE_TABLE_NAME " +
+                "WHERE ${ArticleNotificationRuleBean.IS_MANAGED_COLUMN} = 1 " +
+                "AND ${ArticleNotificationRuleBean.FEED_URLS_COLUMN} = :feedUrlsJson)"
+    )
+    fun observeDefaultNotificationRule(feedUrlsJson: String): Flow<Boolean>
+
+    suspend fun removeDefaultNotificationRule(feedUrl: String): Int =
+        deleteDefaultNotificationRule(Json.encodeToString(listOf(feedUrl)))
+
+    @Query(
+        "DELETE FROM $ARTICLE_NOTIFICATION_RULE_TABLE_NAME " +
+                "WHERE ${ArticleNotificationRuleBean.IS_MANAGED_COLUMN} = 1 " +
+                "AND ${ArticleNotificationRuleBean.FEED_URLS_COLUMN} = :feedUrlsJson"
+    )
+    suspend fun deleteDefaultNotificationRule(feedUrlsJson: String): Int
 
     @Transaction
     @Update
@@ -54,16 +96,25 @@ interface FeedDao {
     }
 
     @Transaction
-    @Delete
-    suspend fun removeFeed(feedBean: FeedBean): Int
+    suspend fun removeFeed(feedBean: FeedBean): Int = removeFeed(feedBean.url)
 
     @Transaction
+    suspend fun removeFeed(url: String): Int {
+        removeDefaultNotificationRule(url)
+        return innerRemoveFeed(url)
+    }
+
     @Query("DELETE FROM $FEED_TABLE_NAME WHERE ${FeedBean.URL_COLUMN} = :url")
-    suspend fun removeFeed(url: String): Int
+    suspend fun innerRemoveFeed(url: String): Int
 
     @Transaction
+    suspend fun removeFeedByGroupId(groupId: String): Int {
+        getFeedUrlsByGroupId(groupId).forEach { removeDefaultNotificationRule(it) }
+        return innerRemoveFeedByGroupId(groupId)
+    }
+
     @Query("DELETE FROM $FEED_TABLE_NAME WHERE ${FeedBean.GROUP_ID_COLUMN} = :groupId")
-    suspend fun removeFeedByGroupId(groupId: String): Int
+    suspend fun innerRemoveFeedByGroupId(groupId: String): Int
 
     @Transaction
     @Query(
@@ -124,6 +175,26 @@ interface FeedDao {
         """
     )
     suspend fun updateFeedSortXmlArticlesOnUpdate(feedUrl: String, sort: Boolean): Int
+
+    @Transaction
+    suspend fun updateFeedNotificationsEnabled(feedUrl: String, enabled: Boolean) {
+        if (enabled) {
+            val feed = getFeed(feedUrl) ?: return
+            insertDefaultNotificationRule(
+                feed.nickname ?: feed.title ?: feedUrl,
+                Json.encodeToString(listOf(feedUrl))
+            )
+        } else {
+            removeDefaultNotificationRule(feedUrl)
+        }
+    }
+
+    @Query(
+        "SELECT * FROM $FEED_TABLE_NAME " +
+                "ORDER BY COALESCE(${FeedBean.NICKNAME_COLUMN}, ${FeedBean.TITLE_COLUMN}, ${FeedBean.URL_COLUMN}), " +
+                FeedBean.URL_COLUMN
+    )
+    fun observeAllFeeds(): Flow<List<FeedBean>>
 
     @Transaction
     @Query(

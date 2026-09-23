@@ -527,4 +527,7 @@
     <string name="app_language_category">言語</string>
     <string name="app_language_screen_name">アプリの言語</string>
     <string name="app_language_follow_system">システム設定に従う</string>
+    <string name="notification_delete_question">通知ルール「%1$s」を削除しますか？</string>
+    <string name="notification_delete_warning">このルールは削除されます。他の一致するルールは引き続き通知を送信できます。</string>
+    <string name="notification_managed_delete_warning">このルールを削除すると、このフィードの通知スイッチがオフになります。他の一致するルールは引き続き通知を送信できます。</string>
 </resources>

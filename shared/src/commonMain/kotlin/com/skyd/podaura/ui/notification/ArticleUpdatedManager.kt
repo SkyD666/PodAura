@@ -6,6 +6,7 @@ import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
+import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,8 +94,11 @@ object ArticleUpdatedManager {
         val matchedData = mutableListOf<Pair<String, ArticleNotificationRuleBean>>()
         articleIds.onSubList { subArticleIds ->
             val data = articleDao.getArticleWithEnclosureListByIds(subArticleIds)
+            val feeds = get<FeedDao>().observeFeeds(data.map { it.article.feedUrl }.distinct())
+                .first().associateBy { it.url }
             matchedData += data.mapNotNull { item ->
-                val matchedRule = rules.firstOrNull { it.match(item) }
+                val feed = feeds[item.article.feedUrl] ?: return@mapNotNull null
+                val matchedRule = rules.firstOrNull { it.match(item, feed.groupId) }
                 matchedRule?.let { item.article.articleId to matchedRule }
             }
         }
@@ -107,6 +111,7 @@ object ArticleUpdatedManager {
 }
 
 expect object PlatformArticleNotification {
+    fun requestPermission()
     fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>)
 }
 

@@ -403,6 +403,8 @@
     <string name="feed_screen_mute_feed">設為靜音</string>
     <string name="feed_screen_mute_all_feeds">將所有訂閱設為靜音</string>
     <string name="feed_screen_unmute_feed">取消靜音</string>
+    <string name="feed_screen_enable_notifications">開啟通知</string>
+    <string name="feed_screen_disable_notifications">關閉通知</string>
     <string name="feed_screen_unmute_all_feeds">取消所有訂閱的靜音</string>
     <string name="feed_screen_feed_muted">已設為靜音</string>
     <string name="feed_screen_feed_unmuted">已取消靜音</string>
@@ -598,4 +600,20 @@
     <string name="translation_configure">開啟翻譯設定</string>
     <string name="translation_estimated_size">預計提交：%1$d 個字元，%2$d 位元組</string>
     <string name="translation_request_limit">服務商文字請求上限：%1$d 位元組</string>
+    <string name="notification_regex">正則表達式</string>
+    <string name="notification_content_hint">正則表達式（可空）</string>
+    <string name="notification_feeds">訂閱</string>
+    <string name="notification_groups">分組</string>
+    <string name="notification_unrestricted">不限</string>
+    <string name="notification_match_help">本條規則內的條件需同時滿足；命中任意一條規則即可通知。</string>
+    <string name="notification_custom_label">自訂規則</string>
+    <string name="notification_managed_label">訂閱專屬</string>
+    <string name="notification_managed_scope">全部新文章</string>
+    <string name="notification_managed_help">此規則通知該訂閱的全部新文章，由訂閱的通知開關建立，不可編輯。刪除後會關閉該訂閱的通知開關；其他符合的規則仍可傳送通知。</string>
+    <string name="notification_empty_rule">內容、訂閱和分組不能全部為空。</string>
+    <string name="notification_invalid_regex">正則表達式無效</string>
+    <string name="notification_search">搜尋</string>
+    <string name="notification_delete_question">刪除通知規則「%1$s」？</string>
+    <string name="notification_delete_warning">此規則將被刪除，其他符合的規則仍可傳送通知。</string>
+    <string name="notification_managed_delete_warning">刪除此規則會關閉該訂閱的通知開關；其他符合的規則仍可傳送通知。</string>
 </resources>

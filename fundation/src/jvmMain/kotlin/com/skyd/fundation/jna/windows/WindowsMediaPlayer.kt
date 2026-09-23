@@ -1,6 +1,7 @@
 package com.skyd.fundation.jna.windows
 
 import co.touchlab.kermit.Logger
+import com.skyd.fundation.jna.DesktopNativeLibrary
 import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Memory
@@ -8,7 +9,6 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 import com.sun.jna.WString
-import java.io.File
 import javax.swing.Timer
 
 sealed interface WindowsRemoteCommand {
@@ -318,15 +318,11 @@ private object WindowsMediaPlayerRuntime {
 
 private object WindowsMediaPlayerShim {
     private const val API_VERSION = 2
-    private const val APPLICATION_RESOURCES_DIRECTORY = "compose.application.resources.dir"
     private const val LIBRARY_BASENAME = "podaura_windows_media_player"
     private const val LIBRARY_FILENAME = "podaura_windows_media_player.dll"
 
     val library: WindowsMediaPlayerLibrary by lazy {
-        val libraryFile = installedLibraryFile() ?: Native.extractFromResourcePath(
-            LIBRARY_BASENAME,
-            WindowsMediaPlayer::class.java.classLoader,
-        )
+        val libraryFile = DesktopNativeLibrary.file(LIBRARY_BASENAME, LIBRARY_FILENAME)
         Native.load(
             libraryFile.absolutePath,
             WindowsMediaPlayerLibrary::class.java,
@@ -338,11 +334,6 @@ private object WindowsMediaPlayerShim {
         }
     }
 
-    private fun installedLibraryFile(): File? = System.getProperty(APPLICATION_RESOURCES_DIRECTORY)
-        ?.takeIf(String::isNotBlank)
-        ?.let(::File)
-        ?.resolve(LIBRARY_FILENAME)
-        ?.takeIf(File::isFile)
 }
 
 private object WindowsNativeCommand {

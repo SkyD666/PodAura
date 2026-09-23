@@ -20,7 +20,7 @@ val macMediaShimTarget = if (buildOperatingSystem.startsWith("mac")) {
 val macMediaShimSourceDirectory = rootProject.file(
     "fundation/src/jvmMain/objectiveC/macMediaPlayer"
 )
-val macMediaShimSource = macMediaShimSourceDirectory.resolve("PodAuraMediaPlayer.m")
+val macMediaShimSources = fileTree(macMediaShimSourceDirectory) { include("*.m") }
 val macMediaShimBinary = layout.buildDirectory.file(
     "generated/macMediaPlayer/native/libpodaura_media_player.dylib"
 )
@@ -33,8 +33,8 @@ val compileMacMediaPlayerShim = macMediaShimTarget?.let { (nativeArchitecture, _
         group = "desktop media"
         description = "Builds the macOS native media session shim."
         inputs.files(
-            macMediaShimSourceDirectory.resolve("PodAuraMediaPlayer.h"),
-            macMediaShimSource,
+            fileTree(macMediaShimSourceDirectory) { include("*.h") },
+            macMediaShimSources,
         )
         outputs.file(macMediaShimBinary)
 
@@ -56,10 +56,11 @@ val compileMacMediaPlayerShim = macMediaShimTarget?.let { (nativeArchitecture, _
             "-Wextra",
             "-Wl,-install_name,@rpath/libpodaura_media_player.dylib",
             "-I", macMediaShimSourceDirectory.absolutePath,
-            macMediaShimSource.absolutePath,
+            *macMediaShimSources.files.sortedBy { it.name }.map { it.absolutePath }.toTypedArray(),
             "-framework", "Foundation",
             "-framework", "AppKit",
             "-framework", "MediaPlayer",
+            "-framework", "UserNotifications",
             "-o", macMediaShimBinary.get().asFile.absolutePath,
         )
     }

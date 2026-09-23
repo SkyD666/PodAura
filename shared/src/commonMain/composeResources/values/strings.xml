@@ -411,6 +411,8 @@
     <string name="feed_screen_mute_feed">Mute</string>
     <string name="feed_screen_mute_all_feeds">Mute all</string>
     <string name="feed_screen_unmute_feed">Unmute</string>
+    <string name="feed_screen_enable_notifications">Enable notifications</string>
+    <string name="feed_screen_disable_notifications">Disable notifications</string>
     <string name="feed_screen_unmute_all_feeds">Unmute all</string>
     <string name="feed_screen_feed_muted">Muted</string>
     <string name="feed_screen_feed_unmuted">Unmuted</string>
@@ -618,4 +620,20 @@
     <string name="mpv_cache_external_storage_named">External app storage (%1$s)</string>
     <string name="mpv_config_sync">Sync configuration</string>
     <string name="mpv_storage_error">Could not access this directory</string>
+    <string name="notification_regex">Regular expression</string>
+    <string name="notification_content_hint">Regular expression (optional)</string>
+    <string name="notification_feeds">Subscriptions</string>
+    <string name="notification_groups">Groups</string>
+    <string name="notification_unrestricted">Unrestricted</string>
+    <string name="notification_match_help">All conditions in this rule must match. Any matching rule can send a notification.</string>
+    <string name="notification_custom_label">Custom rule</string>
+    <string name="notification_managed_label">Subscription rule</string>
+    <string name="notification_managed_scope">All new articles</string>
+    <string name="notification_managed_help">Notifies you about all new articles in this subscription. Created by the subscription’s notification switch and cannot be edited. Deleting it turns that switch off; other matching rules can still send notifications.</string>
+    <string name="notification_empty_rule">Specify content, subscriptions, or groups.</string>
+    <string name="notification_invalid_regex">Invalid regular expression</string>
+    <string name="notification_search">Search</string>
+    <string name="notification_delete_question">Delete notification rule “%1$s”?</string>
+    <string name="notification_delete_warning">This rule will be deleted. Other matching rules can still send notifications.</string>
+    <string name="notification_managed_delete_warning">Deleting this rule turns off this subscription’s notification switch. Other matching rules can still send notifications.</string>
 </resources>

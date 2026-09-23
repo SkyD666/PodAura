@@ -109,6 +109,9 @@ interface GroupDao {
     @Query("SELECT * FROM `$GROUP_TABLE_NAME` ORDER BY ${GroupBean.ORDER_POSITION_COLUMN}")
     fun getGroups(): PagingSource<Int, GroupBean>
 
+    @Query("SELECT * FROM `$GROUP_TABLE_NAME` ORDER BY ${GroupBean.ORDER_POSITION_COLUMN}")
+    fun observeAllGroups(): Flow<List<GroupBean>>
+
     @Transaction
     @Query(
         "SELECT DISTINCT ${GroupBean.GROUP_ID_COLUMN} FROM `$GROUP_TABLE_NAME` " +

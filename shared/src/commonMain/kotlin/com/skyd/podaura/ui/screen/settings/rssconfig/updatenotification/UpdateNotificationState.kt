@@ -2,6 +2,8 @@ package com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification
 
 import com.skyd.mvi.MviViewState
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
+import com.skyd.podaura.model.bean.feed.FeedBean
+import com.skyd.podaura.model.bean.group.GroupBean
 
 data class UpdateNotificationState(
     val ruleListState: RuleListState,
@@ -16,7 +18,12 @@ data class UpdateNotificationState(
 }
 
 sealed interface RuleListState {
-    data class Success(val rules: List<ArticleNotificationRuleBean>) : RuleListState
+    data class Success(
+        val rules: List<ArticleNotificationRuleBean>,
+        val feeds: List<FeedBean>,
+        val groups: List<GroupBean>,
+    ) : RuleListState
+
     data object Init : RuleListState
     data class Failed(val msg: String) : RuleListState
 }

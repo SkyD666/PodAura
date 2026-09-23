@@ -97,7 +97,7 @@ val repositoryModule = module {
         FullContentRepository(get(named("fullContent")), get(), get())
     } binds arrayOf(IFullContentRepository::class)
     factory { SearchRepository(get(), get(), get(), get()) }
-    factory { UpdateNotificationRepository(get()) }
+    factory { UpdateNotificationRepository(get(), get(), get()) }
     factory { RequestHeadersRepository(get()) }
     factory { FaviconExtractor() }
     factory { BaseUrlIconTagExtractor(get()) }
@@ -136,7 +136,7 @@ val repositoryModule = module {
     factory { RssHelper(get()) }
 
     factory {
-        FeedSheetRepository(get(), get(), get(), get(), get(), get())
+        FeedSheetRepository(get(), get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedSheetRepository::class)
 
     factory {

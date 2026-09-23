@@ -27,6 +27,9 @@ class FeedSheetViewModel(
 
     override val viewState: StateFlow<FeedSheetState>
 
+    fun observeNotificationsEnabled(url: String): Flow<Boolean> =
+        feedSheetRepo.observeNotificationsEnabled(url)
+
     init {
         val initialVS = FeedSheetState.initial()
 
@@ -133,6 +136,12 @@ class FeedSheetViewModel(
                 },
                 filterIsInstance<FeedSheetIntent.EditFeedNickname>().map { intent ->
                     feedSheetRepo.editFeedNickname(url = intent.url, nickname = intent.nickname)
+                },
+                filterIsInstance<FeedSheetIntent.EditFeedNotificationsEnabled>().map { intent ->
+                    feedSheetRepo.editFeedNotificationsEnabled(
+                        url = intent.url,
+                        enabled = intent.enabled
+                    )
                 },
             ).flatMapConcat { flow ->
                 flow.map { FeedSheetPartialStateChange.EditFeed.Success(it) }

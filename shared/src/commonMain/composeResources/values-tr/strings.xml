@@ -534,4 +534,7 @@
     <string name="app_language_category">Dil</string>
     <string name="app_language_screen_name">Uygulama dili</string>
     <string name="app_language_follow_system">Sistemi takip et</string>
+    <string name="notification_delete_question">“%1$s” bildirim kuralı silinsin mi?</string>
+    <string name="notification_delete_warning">Bu kural silinecek. Eşleşen diğer kurallar bildirim göndermeye devam edebilir.</string>
+    <string name="notification_managed_delete_warning">Bu kuralı silmek, bu akışın bildirim anahtarını kapatır. Eşleşen diğer kurallar bildirim göndermeye devam edebilir.</string>
 </resources>

@@ -3,6 +3,8 @@
 .idea
 .kotlin
 .DS_Store
+.codex
+.impeccable
 build/
 /captures
 .externalNativeBuild
