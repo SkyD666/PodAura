@@ -7,13 +7,18 @@ import com.skyd.podaura.model.db.dao.playlist.PlaylistDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_DELTA
 import com.skyd.podaura.model.repository.BaseRepository
+import com.skyd.podaura.model.repository.BatchProgress
+import com.skyd.podaura.model.repository.processBatch
+import kotlin.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlin.time.Clock
 
 class AddToPlaylistRepository(
     private val articleDao: ArticleDao,
@@ -22,10 +27,23 @@ class AddToPlaylistRepository(
 ) : BaseRepository(), IAddToPlaylistRepository {
     override fun getCommonPlaylists(
         medias: List<MediaUrlWithArticleIdBean>
-    ): Flow<List<String>> = playlistMediaDao.getCommonMediaPlaylistIdList(
-        medias.map { it.url },
-        medias.size
-    ).flowOn(Dispatchers.IO)
+    ): Flow<List<String>> {
+        val urls = medias.map { it.url }.distinct()
+        if (urls.isEmpty()) return flowOf(emptyList())
+        return combine(urls.chunked(900).map { chunk ->
+            playlistMediaDao.getCommonMediaPlaylistIdList(chunk, chunk.size)
+        }) { chunks ->
+            chunks.map { it.toSet() }.reduce { common, ids -> common.intersect(ids) }.toList()
+        }.flowOn(Dispatchers.IO)
+    }
+
+    fun insertSelectedPlaylistMedias(
+        playlistId: String,
+        medias: List<MediaUrlWithArticleIdBean>,
+    ): Flow<BatchProgress> = processBatch(medias.distinctBy { it.url }) {
+        check(playlistDao.exists(playlistId) > 0)
+        insertPlaylistMedia(playlistId, it.url, it.articleId).first()
+    }.flowOn(Dispatchers.IO)
 
     override fun insertPlaylistMedia(
         playlistId: String,

@@ -21,6 +21,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
@@ -86,8 +88,10 @@ class ArticleSelectionItemTest {
                 }
             }
         }
-        val titleBounds = onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-        val feedBounds = onNodeWithText(feedName, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val titleNode = onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode()
+        val feedNode = onNodeWithText(feedName, useUnmergedTree = true).fetchSemanticsNode()
+        val titleBounds = titleNode.boundsInRoot
+        val feedBounds = feedNode.boundsInRoot
         val itemBounds = onNodeWithTag("ArticleItem").fetchSemanticsNode().boundsInRoot
         val browseScreenshot = onRoot().captureToImage()
         val browseOutput = File("build/reports/article-browse-$width.png")
@@ -95,6 +99,8 @@ class ArticleSelectionItemTest {
         browseOutput.writeBytes(Image.makeFromBitmap(browseScreenshot.asSkiaBitmap()).encodeToData()!!.bytes)
         onNodeWithTag("ArticleItem").performTouchInput { longClick() }
         onNodeWithText(selectionLabel).performClick()
+        assertEquals(titleNode.id, onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode().id)
+        assertEquals(feedNode.id, onNodeWithText(feedName, useUnmergedTree = true).fetchSemanticsNode().id)
         assertEquals(titleBounds, onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot)
         assertEquals(feedBounds, onNodeWithText(feedName, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot)
         assertEquals(itemBounds, onNodeWithTag("ArticleItem").fetchSemanticsNode().boundsInRoot)
@@ -116,6 +122,15 @@ class ArticleSelectionItemTest {
         runOnIdle { assertEquals(1, navigationSize()) }
         runOnIdle { enabled = false }
         row.assertIsNotEnabled()
-        runOnIdle { assertEquals(3, toggleCount) }
+        row.performTouchInput { swipeLeft() }
+        row.performTouchInput { swipeRight() }
+        assertEquals(itemBounds, onNodeWithTag("ArticleItem").fetchSemanticsNode().boundsInRoot)
+        runOnIdle {
+            assertEquals(3, toggleCount)
+            assertEquals(1, navigationSize())
+        }
+        runOnIdle { selectionMode = false }
+        assertEquals(titleNode.id, onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode().id)
+        assertEquals(feedNode.id, onNodeWithText(feedName, useUnmergedTree = true).fetchSemanticsNode().id)
     }
 }

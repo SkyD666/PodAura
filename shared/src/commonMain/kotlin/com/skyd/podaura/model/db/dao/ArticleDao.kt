@@ -469,7 +469,7 @@ interface ArticleDao {
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    suspend fun favoriteArticle(articleId: String, favorite: Boolean)
+    suspend fun favoriteArticle(articleId: String, favorite: Boolean): Int
 
     @Transaction
     @Query(
@@ -478,7 +478,7 @@ interface ArticleDao {
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
-    suspend fun readArticle(articleId: String, read: Boolean)
+    suspend fun readArticle(articleId: String, read: Boolean): Int
 
     @Transaction
     @Query(

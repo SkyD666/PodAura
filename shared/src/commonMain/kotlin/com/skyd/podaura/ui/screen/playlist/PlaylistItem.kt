@@ -63,6 +63,8 @@ fun PlaylistItem(
     selected: Boolean = false,
     draggable: Boolean = false,
     dragIconModifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    selectedLabel: String? = null,
     onClick: (PlaylistViewBean) -> Unit,
     onRename: (PlaylistViewBean) -> Unit,
     onDelete: (PlaylistViewBean) -> Unit,
@@ -74,6 +76,7 @@ fun PlaylistItem(
             .fillMaxWidth()
             .thenIf(selected) { background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)) }
             .combinedClickable(
+                enabled = enabled,
                 onLongClick = { if (enableMenu) showMenu = true },
                 onClick = { onClick(playlistViewBean) },
             )
@@ -106,7 +109,10 @@ fun PlaylistItem(
             onRename = { onRename(playlistViewBean) },
             onDelete = { onDelete(playlistViewBean) },
         )
-        if (selected) {
+        if (selectedLabel != null) {
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(selectedLabel, style = MaterialTheme.typography.labelLarge)
+        } else if (selected) {
             Spacer(modifier = Modifier.width(16.dp))
             Checkbox(
                 checked = true,

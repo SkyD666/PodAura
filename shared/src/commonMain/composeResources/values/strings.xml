@@ -1,4 +1,14 @@
 <resources>
+    <string name="article_batch_result">Succeeded: %1$d; skipped: %2$d; failed: %3$d</string>
+    <string name="article_playlist_prepare_result">Skipped %1$d articles without audio or video; failed: %2$d</string>
+    <string name="article_playlist_no_media">No audio or video to add. Skipped: %1$d; failed: %2$d</string>
+    <string name="playlist_media_added">Added</string>
+    <string name="article_selection_exit_title">Stop processing and exit selection?</string>
+    <string name="article_selection_exit_message">Remaining items will stop being processed. Completed changes will be kept, and queued downloads will continue.</string>
+    <string name="article_selection_continue">Continue processing</string>
+    <string name="article_selection_stop_exit">Stop and exit</string>
+    <string name="article_selection_stopped">Stopped. Succeeded: %1$d; skipped: %2$d; failed: %3$d; unprocessed: %4$d. Queued downloads continue.</string>
+    <string name="article_selection_stopped_without_progress">Processing stopped. Completed changes are kept, and queued downloads continue.</string>
     <string name="article_select">Select episodes</string>
     <string name="article_selected_count">Selected: %1$d</string>
     <string name="article_select_all">Select all</string>

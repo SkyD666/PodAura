@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="article_batch_result">成功：%1$d；跳过：%2$d；失败：%3$d</string>
+    <string name="article_playlist_prepare_result">已跳过 %1$d 篇无音视频的文章；失败：%2$d</string>
+    <string name="article_playlist_no_media">没有可添加的音视频。跳过：%1$d；失败：%2$d</string>
+    <string name="playlist_media_added">已添加</string>
+    <string name="article_selection_exit_title">停止处理并退出多选？</string>
+    <string name="article_selection_exit_message">退出后将停止处理剩余条目。已完成的操作会保留，已进入下载队列的任务会继续。</string>
+    <string name="article_selection_continue">继续处理</string>
+    <string name="article_selection_stop_exit">停止并退出</string>
+    <string name="article_selection_stopped">已停止。成功：%1$d；跳过：%2$d；失败：%3$d；未处理：%4$d。已入队的下载会继续。</string>
+    <string name="article_selection_stopped_without_progress">已停止处理。已完成的操作会保留，已入队的下载会继续。</string>
     <string name="article_select">多选剧集</string>
     <string name="article_selected_count">已选：%1$d</string>
     <string name="article_select_all">全选</string>

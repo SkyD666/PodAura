@@ -128,62 +128,6 @@ fun Article1Item(
     onToggleSelection: () -> Unit = {},
     onEnterSelection: (() -> Unit)? = null,
 ) {
-    if (selected != null) {
-        SelectableArticle1Item(
-            data = data,
-            selected = selected,
-            selectionEnabled = selectionEnabled,
-            onToggleSelection = onToggleSelection,
-            onFavorite = onFavorite,
-            onRead = onRead,
-        )
-    } else {
-        BrowsableArticle1Item(
-            data = data,
-            onEnterSelection = onEnterSelection,
-            onFavorite = onFavorite,
-            onRead = onRead,
-            onDelete = onDelete,
-            onMessage = onMessage,
-            onEditFeedSheet = onEditFeedSheet,
-        )
-    }
-}
-
-@Composable
-private fun SelectableArticle1Item(
-    data: ArticleWithFeed,
-    selected: Boolean,
-    selectionEnabled: Boolean,
-    onToggleSelection: () -> Unit,
-    onFavorite: (ArticleWithFeed, Boolean) -> Unit,
-    onRead: (ArticleWithFeed, Boolean) -> Unit,
-) {
-    Box(Modifier.clip(RoundedCornerShape(12.dp)).testTag("ArticleItem")) {
-        Article1ItemContent(
-            data = data,
-            onLongClick = {},
-            onFavorite = onFavorite,
-            onRead = onRead,
-            onShowEnclosureBottomSheet = {},
-            onEditFeedSheet = null,
-            selected = selected,
-            selectionEnabled = selectionEnabled,
-            onToggleSelection = onToggleSelection,
-        )
-    }
-}
-
-@Composable
-private fun BrowsableArticle1Item(
-    data: ArticleWithFeed,
-    onEnterSelection: (() -> Unit)?,
-    onFavorite: (ArticleWithFeed, Boolean) -> Unit,
-    onRead: (ArticleWithFeed, Boolean) -> Unit,
-    onDelete: (ArticleWithFeed) -> Unit,
-    onMessage: (String) -> Unit,
-    onEditFeedSheet: ((String) -> Unit)?,
-) {
     val navBackStack = LocalNavBackStack.current
     val uriHandler = LocalUriHandler.current
     var expandMenu by rememberSaveable { mutableStateOf(false) }
@@ -220,8 +164,10 @@ private fun BrowsableArticle1Item(
         val enableDismissFromEndToStart =
             ArticleSwipeLeftActionPreference.current != ArticleSwipeActionPreference.NONE
 
+        // Keep the content at the same call site so switching modes retains image painters.
         SwipeableActionsBox(
-            startActions = if (enableDismissFromStartToEnd) {
+            enabled = selected == null,
+            startActions = if (selected == null && enableDismissFromStartToEnd) {
                 rememberSwipeActions(
                     isStart = true,
                     article = articleWithEnclosure.article,
@@ -230,7 +176,7 @@ private fun BrowsableArticle1Item(
             } else {
                 emptyList()
             },
-            endActions = if (enableDismissFromEndToStart) {
+            endActions = if (selected == null && enableDismissFromEndToStart) {
                 rememberSwipeActions(
                     isStart = false,
                     article = articleWithEnclosure.article,
@@ -248,22 +194,27 @@ private fun BrowsableArticle1Item(
                 onRead = onRead,
                 onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
                 onEditFeedSheet = onEditFeedSheet,
+                selected = selected,
+                selectionEnabled = selectionEnabled,
+                onToggleSelection = onToggleSelection,
             )
-            ArticleMenu(
-                expanded = expandMenu,
-                onEnterSelection = onEnterSelection,
-                onDismissRequest = { expandMenu = false },
-                data = data,
-                onFavorite = onFavorite,
-                onRead = onRead,
-                onDelete = onDelete,
-                onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
-                onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
-            )
+            if (selected == null) {
+                ArticleMenu(
+                    expanded = expandMenu,
+                    onEnterSelection = onEnterSelection,
+                    onDismissRequest = { expandMenu = false },
+                    data = data,
+                    onFavorite = onFavorite,
+                    onRead = onRead,
+                    onDelete = onDelete,
+                    onShowEnclosureBottomSheet = { openEnclosureBottomSheet = true },
+                    onOpenAddToPlaylistSheet = { openAddToPlaylistSheet = true },
+                )
+            }
         }
     }
 
-    if (openEnclosureBottomSheet) {
+    if (selected == null && openEnclosureBottomSheet) {
         val playerJumper = rememberPlayerJumper()
         EnclosureBottomSheet(
             onDismissRequest = { openEnclosureBottomSheet = false },
@@ -279,7 +230,7 @@ private fun BrowsableArticle1Item(
             },
         )
     }
-    if (openAddToPlaylistSheet) {
+    if (selected == null && openAddToPlaylistSheet) {
         val enclosures = data.articleWithEnclosure.enclosures
         AddToPlaylistSheet(
             onDismissRequest = { openAddToPlaylistSheet = false },

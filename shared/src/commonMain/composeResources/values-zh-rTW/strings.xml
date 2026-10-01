@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="article_batch_result">成功：%1$d；略過：%2$d；失敗：%3$d</string>
+    <string name="article_playlist_prepare_result">已略過 %1$d 篇無影音的文章；失敗：%2$d</string>
+    <string name="article_playlist_no_media">沒有可加入的影音。略過：%1$d；失敗：%2$d</string>
+    <string name="playlist_media_added">已加入</string>
+    <string name="article_selection_exit_title">停止處理並退出多選？</string>
+    <string name="article_selection_exit_message">退出後將停止處理剩餘項目。已完成的操作會保留，已加入下載佇列的任務會繼續。</string>
+    <string name="article_selection_continue">繼續處理</string>
+    <string name="article_selection_stop_exit">停止並退出</string>
+    <string name="article_selection_stopped">已停止。成功：%1$d；略過：%2$d；失敗：%3$d；未處理：%4$d。已加入佇列的下載會繼續。</string>
+    <string name="article_selection_stopped_without_progress">已停止處理。已完成的操作會保留，已加入佇列的下載會繼續。</string>
     <string name="article_select">多選單集</string>
     <string name="article_selected_count">已選：%1$d</string>
     <string name="article_select_all">全選</string>

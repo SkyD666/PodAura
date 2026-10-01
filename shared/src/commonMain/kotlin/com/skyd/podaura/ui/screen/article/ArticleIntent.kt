@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.article
 
 import com.skyd.mvi.MviIntent
+import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.repository.download.SelectedArticleDownloader
 import com.skyd.podaura.model.repository.download.SelectedDownloadPlan
 
@@ -49,5 +50,13 @@ sealed interface ArticleIntent : MviIntent {
             val downloader: SelectedArticleDownloader,
         ) : Selection
         data object DismissConfirmation : Selection
+        data class Read(val articleIds: Set<String>, val read: Boolean) : Selection
+        data class Favorite(val articleIds: Set<String>, val favorite: Boolean) : Selection
+        data class PreparePlaylist(val articleIds: Set<String>, val filterMask: Int) : Selection
+        data class AddToPlaylist(
+            val playlistId: String,
+            val medias: List<MediaUrlWithArticleIdBean>,
+        ) : Selection
+        data object DismissPlaylist : Selection
     }
 }

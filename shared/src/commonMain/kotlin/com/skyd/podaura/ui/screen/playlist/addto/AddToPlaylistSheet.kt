@@ -1,10 +1,15 @@
 package com.skyd.podaura.ui.screen.playlist.addto
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +33,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.playlist_media_added
 
 
 @Composable
@@ -36,6 +42,10 @@ fun AddToPlaylistSheet(
     currentPlaylistId: String?,
     selectedMediaList: List<MediaUrlWithArticleIdBean>,
     viewModel: AddToPlaylistViewModel = koinViewModel(),
+    addOnly: Boolean = false,
+    enabled: Boolean = true,
+    onAddTo: ((PlaylistViewBean) -> Unit)? = null,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     val dispatch = viewModel.getDispatcher(
         currentPlaylistId,
@@ -53,24 +63,38 @@ fun AddToPlaylistSheet(
             style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(6.dp))
-        when (val playlistState = uiState.playlistState) {
-            is PlaylistState.Failed -> ErrorPlaceholder(playlistState.msg)
-            PlaylistState.Init -> CircularProgressPlaceholder()
-            is PlaylistState.Success -> AddToPlaylistSheetContent(
-                playlist = playlistState.playlistPagingDataFlow.collectAsLazyPagingItems(),
-                selected = { it.playlist.playlistId in uiState.addedPlaylists },
-                onSelect = {
-                    dispatch(AddToPlaylistIntent.AddTo(medias = selectedMediaList, playlist = it))
-                },
-                onRemove = {
-                    dispatch(
-                        AddToPlaylistIntent.RemoveFromPlaylist(
-                            medias = selectedMediaList,
-                            playlist = it,
+        if (!enabled) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        Box(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+            when (val playlistState = uiState.playlistState) {
+                is PlaylistState.Failed -> ErrorPlaceholder(playlistState.msg)
+                PlaylistState.Init -> CircularProgressPlaceholder()
+                is PlaylistState.Success -> AddToPlaylistSheetContent(
+                    playlist = playlistState.playlistPagingDataFlow.collectAsLazyPagingItems(),
+                    selected = { it.playlist.playlistId in uiState.addedPlaylists },
+                    onSelect = {
+                        if (onAddTo != null) onAddTo(it)
+                        else dispatch(
+                            AddToPlaylistIntent.AddTo(
+                                medias = selectedMediaList,
+                                playlist = it
+                            )
                         )
-                    )
-                },
-            )
+                    },
+                    addOnly = addOnly,
+                    enabled = enabled,
+                    onRemove = {
+                        dispatch(
+                            AddToPlaylistIntent.RemoveFromPlaylist(
+                                medias = selectedMediaList,
+                                playlist = it,
+                            )
+                        )
+                    },
+                )
+            }
+            snackbarHostState?.let {
+                SnackbarHost(hostState = it, modifier = Modifier.align(Alignment.BottomCenter))
+            }
         }
     }
 }
@@ -83,6 +107,8 @@ fun AddToPlaylistSheetContent(
     onSelect: (PlaylistViewBean) -> Unit,
     onRemove: (PlaylistViewBean) -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
+    addOnly: Boolean = false,
+    enabled: Boolean = true,
 ) {
     PagingRefreshStateIndicator(
         lazyPagingItems = playlist,
@@ -99,6 +125,8 @@ fun AddToPlaylistSheetContent(
                         PlaylistItem(
                             playlistViewBean = item,
                             selected = s,
+                            enabled = enabled && !(addOnly && s),
+                            selectedLabel = if (addOnly && s) stringResource(Res.string.playlist_media_added) else null,
                             onClick = { if (s) onRemove(item) else onSelect(item) },
                             onRename = {},
                             onDelete = { },

@@ -3,6 +3,8 @@ package com.skyd.podaura.ui.screen.article
 import androidx.paging.PagingData
 import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.repository.BatchProgress
+import com.skyd.podaura.model.repository.article.ArticleRepository.SelectedPlaylistMedia
 import com.skyd.podaura.model.repository.download.SelectedDownloadPlan
 import com.skyd.podaura.model.repository.download.SelectedDownloadResult
 import kotlinx.coroutines.flow.Flow
@@ -19,22 +21,38 @@ internal sealed interface ArticlePartialStateChange {
                 is Enter -> if (!selection.active && !selection.busy) {
                     ArticleSelectionState(active = true, selectedIds = setOfNotNull(articleId))
                 } else selection
+
                 Exit -> ArticleSelectionState()
+                is Cancelled -> ArticleSelectionState()
                 is Toggle -> if (editable) selection.copy(
                     selectedIds = if (articleId in selection.selectedIds) {
                         selection.selectedIds - articleId
-                    } else selection.selectedIds + articleId,
+                    } else {
+                        selection.selectedIds + articleId
+                    },
                 ) else selection
+
                 Clear -> if (editable) selection.copy(selectedIds = emptySet()) else selection
-                Loading -> selection.copy(busy = true, confirmation = null)
+                is Loading -> selection.copy(busy = true, confirmation = null, progress = progress)
+                is Progress -> selection.copy(busy = true, progress = progress)
+                is Completed -> selection.copy(busy = false, progress = null)
                 is Selected -> selection.copy(selectedIds = articleIds, busy = false)
-                is Confirmation -> selection.copy(confirmation = plan, busy = false)
-                DismissConfirmation -> selection.copy(confirmation = null)
-                is Downloaded -> ArticleSelectionState(
-                    active = result.failedIds.isNotEmpty(),
-                    selectedIds = result.failedIds,
+                is Confirmation -> selection.copy(
+                    confirmation = plan,
+                    busy = false,
+                    progress = null
                 )
-                is Failed -> selection.copy(busy = false)
+
+                DismissConfirmation -> selection.copy(confirmation = null)
+                is Downloaded -> selection.copy(busy = false, progress = null)
+                is PlaylistPrepared -> selection.copy(
+                    busy = false,
+                    progress = null,
+                    playlistMedias = result.medias.takeIf { it.isNotEmpty() },
+                )
+
+                DismissPlaylist -> selection.copy(playlistMedias = null)
+                is Failed -> selection.copy(busy = false, progress = null)
             }
             return oldState.copy(selectionState = next)
         }
@@ -43,11 +61,16 @@ internal sealed interface ArticlePartialStateChange {
         data object Exit : Selection
         data class Toggle(val articleId: String) : Selection
         data object Clear : Selection
-        data object Loading : Selection
+        data class Loading(val progress: BatchProgress? = null) : Selection
+        data class Progress(val progress: BatchProgress) : Selection
+        data class Completed(val result: BatchProgress) : Selection
+        data class Cancelled(val progress: BatchProgress?) : Selection
         data class Selected(val articleIds: Set<String>) : Selection
         data class Confirmation(val plan: SelectedDownloadPlan) : Selection
         data object DismissConfirmation : Selection
         data class Downloaded(val result: SelectedDownloadResult) : Selection
+        data class PlaylistPrepared(val result: SelectedPlaylistMedia) : Selection
+        data object DismissPlaylist : Selection
         data class Failed(val msg: String) : Selection
     }
 

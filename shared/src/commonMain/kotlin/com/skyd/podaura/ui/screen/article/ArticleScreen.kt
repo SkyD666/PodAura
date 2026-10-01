@@ -24,19 +24,30 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.MarkEmailRead
+import androidx.compose.material.icons.outlined.MarkEmailUnread
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuGroup
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -50,6 +61,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +75,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
@@ -106,6 +121,7 @@ import com.skyd.podaura.ui.component.UuidList
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.uuidListType
 import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
+import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import io.ktor.http.URLBuilder
 import kotlinx.coroutines.Dispatchers
@@ -117,18 +133,33 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.add_to_playlist
+import podaura.shared.generated.resources.article_batch_result
 import podaura.shared.generated.resources.article_delete_protected_by_download
 import podaura.shared.generated.resources.article_deselect_all
 import podaura.shared.generated.resources.article_download_confirm
 import podaura.shared.generated.resources.article_download_result
+import podaura.shared.generated.resources.article_playlist_no_media
+import podaura.shared.generated.resources.article_playlist_prepare_result
+import podaura.shared.generated.resources.article_screen_favorite
+import podaura.shared.generated.resources.article_screen_mark_as_read
+import podaura.shared.generated.resources.article_screen_mark_as_unread
 import podaura.shared.generated.resources.article_screen_name
 import podaura.shared.generated.resources.article_screen_search_article
+import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.article_select_all
 import podaura.shared.generated.resources.article_selected_count
+import podaura.shared.generated.resources.article_selection_continue
+import podaura.shared.generated.resources.article_selection_exit_message
+import podaura.shared.generated.resources.article_selection_exit_title
+import podaura.shared.generated.resources.article_selection_stop_exit
+import podaura.shared.generated.resources.article_selection_stopped
+import podaura.shared.generated.resources.article_selection_stopped_without_progress
 import podaura.shared.generated.resources.cancel
 import podaura.shared.generated.resources.copy
 import podaura.shared.generated.resources.download
 import podaura.shared.generated.resources.download_without_notifications_tip
+import podaura.shared.generated.resources.more
 import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.to_top
 import kotlin.uuid.Uuid
@@ -217,6 +248,14 @@ fun ArticleScreen(
     )
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val selection = uiState.selectionState
+    var showExitConfirmation by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(selection.busy) {
+        if (!selection.busy) showExitConfirmation = false
+    }
+    val exitSelection = {
+        if (selection.busy) showExitConfirmation = true
+        else dispatch(ArticleIntent.Selection.Exit)
+    }
     val downloadStarter = rememberDownloadStarter {
         scope.launch {
             snackbarHostState.showSnackbar(getString(Res.string.download_without_notifications_tip))
@@ -235,8 +274,30 @@ fun ArticleScreen(
     NavigationBackHandler(
         state = rememberNavigationEventState(currentInfo = NavigationEventInfo.None),
         isBackEnabled = selection.active,
-        onBackCompleted = { dispatch(ArticleIntent.Selection.Exit) },
+        onBackCompleted = exitSelection,
     )
+    if (showExitConfirmation && selection.busy) {
+        ArticleSelectionExitDialog(
+            onDismiss = { showExitConfirmation = false },
+            onConfirm = {
+                showExitConfirmation = false
+                dispatch(ArticleIntent.Selection.Exit)
+            },
+        )
+    }
+    selection.playlistMedias?.let { medias ->
+        AddToPlaylistSheet(
+            onDismissRequest = { dispatch(ArticleIntent.Selection.DismissPlaylist) },
+            currentPlaylistId = null,
+            selectedMediaList = medias,
+            addOnly = true,
+            enabled = !selection.busy,
+            snackbarHostState = snackbarHostState,
+            onAddTo = {
+                dispatch(ArticleIntent.Selection.AddToPlaylist(it.playlist.playlistId, medias))
+            },
+        )
+    }
     selection.confirmation?.let { plan ->
         AlertDialog(
             onDismissRequest = { dispatch(ArticleIntent.Selection.DismissConfirmation) },
@@ -262,20 +323,28 @@ fun ArticleScreen(
         topBar = {
             ComponeTopBar(
                 title = {
+                    val title = if (selection.active) {
+                        stringResource(
+                            Res.string.article_selected_count,
+                            selection.selectedIds.size
+                        )
+                    } else {
+                        stringResource(Res.string.article_screen_name)
+                    }
                     Text(
-                        text = if (selection.active) {
-                            stringResource(
-                                Res.string.article_selected_count,
-                                selection.selectedIds.size
-                            )
-                        } else stringResource(Res.string.article_screen_name),
+                        text = if (selection.active) selection.selectedIds.size.toString() else title,
+                        modifier = Modifier.semantics { contentDescription = title },
+                        autoSize = if (selection.active) TextAutoSize.StepBased(
+                            minFontSize = 12.sp,
+                            maxFontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        ) else null,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
                     if (selection.active) BackIcon(
-                        onClick = { dispatch(ArticleIntent.Selection.Exit) }
+                        onClick = exitSelection,
                     )
                     else if (onBackClick == DefaultBackClick) BackIcon()
                     else if (onBackClick != null) BackIcon(onClick = onBackClick)
@@ -305,6 +374,30 @@ fun ArticleScreen(
                                     ArticleIntent.Selection.Download(
                                         selection.selectedIds,
                                         selectedDownloader
+                                    )
+                                )
+                            },
+                            onRead = {
+                                dispatch(
+                                    ArticleIntent.Selection.Read(
+                                        selection.selectedIds,
+                                        it
+                                    )
+                                )
+                            },
+                            onFavorite = {
+                                dispatch(
+                                    ArticleIntent.Selection.Favorite(
+                                        selection.selectedIds,
+                                        it
+                                    )
+                                )
+                            },
+                            onAddToPlaylist = {
+                                dispatch(
+                                    ArticleIntent.Selection.PreparePlaylist(
+                                        selection.selectedIds,
+                                        uiState.articleFilterState
                                     )
                                 )
                             },
@@ -412,6 +505,51 @@ fun ArticleScreen(
 
         MviEventListener(viewModel.singleEvent) { event ->
             when (event) {
+                is ArticleEvent.SelectionResultEvent.Completed -> {
+                    val result = event.result
+                    snackbarHostState.showSnackbar(
+                        getString(
+                            Res.string.article_batch_result,
+                            result.successCount, result.skippedCount, result.failedCount,
+                        )
+                    )
+                }
+
+                is ArticleEvent.SelectionResultEvent.Cancelled -> {
+                    val result = event.progress
+                    snackbarHostState.showSnackbar(
+                        if (result == null) getString(Res.string.article_selection_stopped_without_progress)
+                        else getString(
+                            Res.string.article_selection_stopped,
+                            result.successCount,
+                            result.skippedCount,
+                            result.failedCount,
+                            result.remainingCount,
+                        )
+                    )
+                }
+
+                is ArticleEvent.SelectionResultEvent.PlaylistPrepared -> {
+                    val result = event.result
+                    if (result.medias.isEmpty()) {
+                        snackbarHostState.showSnackbar(
+                            getString(
+                                Res.string.article_playlist_no_media,
+                                result.noMediaCount,
+                                result.failedCount,
+                            )
+                        )
+                    } else if (result.noMediaCount > 0 || result.failedCount > 0) {
+                        snackbarHostState.showSnackbar(
+                            getString(
+                                Res.string.article_playlist_prepare_result,
+                                result.noMediaCount,
+                                result.failedCount,
+                            )
+                        )
+                    }
+                }
+
                 is ArticleEvent.SelectionResultEvent.Downloaded -> {
                     val result = event.result
                     snackbarHostState.showSnackbar(
@@ -459,23 +597,27 @@ fun ArticleScreen(
 }
 
 @Composable
-private fun ArticleSelectionActions(
+internal fun ArticleSelectionActions(
     selection: ArticleSelectionState,
     onSelectAll: () -> Unit,
     onClearSelection: () -> Unit,
     onDownload: () -> Unit,
+    onRead: (Boolean) -> Unit,
+    onFavorite: (Boolean) -> Unit,
+    onAddToPlaylist: () -> Unit,
 ) {
+    val editable = !selection.busy && selection.confirmation == null
     ComponeIconButton(
         onClick = onSelectAll,
         imageVector = Icons.Outlined.SelectAll,
         contentDescription = stringResource(Res.string.article_select_all),
-        enabled = !selection.busy,
+        enabled = editable,
     )
     ComponeIconButton(
         onClick = onClearSelection,
         imageVector = Icons.Outlined.Deselect,
         contentDescription = stringResource(Res.string.article_deselect_all),
-        enabled = !selection.busy && selection.selectedIds.isNotEmpty(),
+        enabled = editable && selection.selectedIds.isNotEmpty(),
     )
     if (selection.busy) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -486,9 +628,62 @@ private fun ArticleSelectionActions(
             onClick = onDownload,
             imageVector = Icons.Outlined.Download,
             contentDescription = stringResource(Res.string.download),
-            enabled = selection.selectedIds.isNotEmpty(),
+            enabled = editable && selection.selectedIds.isNotEmpty(),
         )
     }
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        ComponeIconButton(
+            onClick = { expanded = true },
+            imageVector = Icons.Outlined.MoreVert,
+            contentDescription = stringResource(Res.string.more),
+            enabled = editable && selection.selectedIds.isNotEmpty(),
+        )
+        DropdownMenuPopup(expanded = expanded, onDismissRequest = { expanded = false }) {
+            val labels = listOf(
+                stringResource(Res.string.article_screen_mark_as_read),
+                stringResource(Res.string.article_screen_mark_as_unread),
+                stringResource(Res.string.article_screen_favorite),
+                stringResource(Res.string.article_screen_unfavorite),
+                stringResource(Res.string.add_to_playlist),
+            )
+            val icons = listOf(
+                Icons.Outlined.MarkEmailRead, Icons.Outlined.MarkEmailUnread,
+                Icons.Outlined.Favorite, Icons.Outlined.FavoriteBorder,
+                Icons.AutoMirrored.Outlined.PlaylistAdd,
+            )
+            val actions = listOf(
+                { onRead(true) }, { onRead(false) },
+                { onFavorite(true) }, { onFavorite(false) }, onAddToPlaylist,
+            )
+            DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
+                labels.forEachIndexed { index, label ->
+                    DropdownMenuItem(
+                        text = { Text(label) },
+                        leadingIcon = { Icon(icons[index], contentDescription = null) },
+                        shape = MenuDefaults.itemShape(index, labels.size).shape,
+                        enabled = editable && selection.selectedIds.isNotEmpty(),
+                        onClick = { expanded = false; actions[index]() },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ArticleSelectionExitDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(Res.string.article_selection_exit_title)) },
+        text = { Text(stringResource(Res.string.article_selection_exit_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(Res.string.article_selection_stop_exit)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.article_selection_continue)) }
+        },
+    )
 }
 
 @Composable

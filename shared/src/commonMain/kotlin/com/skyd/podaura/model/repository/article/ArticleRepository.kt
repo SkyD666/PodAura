@@ -12,6 +12,7 @@ import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
+import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
@@ -20,16 +21,20 @@ import com.skyd.podaura.model.preference.data.delete.KeepPlaylistArticlesPrefere
 import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreference
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
+import com.skyd.podaura.model.repository.BatchProgress
 import com.skyd.podaura.model.repository.download.SelectedArticleDownloader
 import com.skyd.podaura.model.repository.download.SelectedDownloadPlan
 import com.skyd.podaura.model.repository.download.SelectedDownloadResult
 import com.skyd.podaura.model.repository.feed.RssHelper
+import com.skyd.podaura.model.repository.processBatch
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -148,7 +153,8 @@ class ArticleRepository(
         emit(
             articleDao.getArticleIds(
                 genSql(
-                    feedUrls = requestRealFeedUrls(feedUrls, groupIds, articleIds).first().distinct(),
+                    feedUrls = requestRealFeedUrls(feedUrls, groupIds, articleIds).first()
+                        .distinct(),
                     articleIds = articleIds,
                     isFavorite = FeedBean.parseFilterMaskToFavorite(filterMask),
                     isRead = FeedBean.parseFilterMaskToRead(filterMask),
@@ -163,17 +169,78 @@ class ArticleRepository(
     fun prepareSelectedDownloads(
         articleIds: Set<String>,
         downloader: SelectedArticleDownloader,
+        onProgress: suspend (BatchProgress) -> Unit = {},
     ): Flow<SelectedDownloadPlan> = flow {
         val articles = articleIds.chunked(SQLITE_BIND_CHUNK_SIZE)
             .flatMap { articleDao.getArticleWithFeedListByIds(it) }
-        emit(downloader.prepare(articleIds, articles))
+        emit(downloader.prepare(articleIds, articles, onProgress))
     }.flowOn(Dispatchers.IO)
 
     fun downloadSelectedArticles(
         plan: SelectedDownloadPlan,
         downloader: SelectedArticleDownloader,
+        onProgress: suspend (BatchProgress) -> Unit = {},
     ): Flow<SelectedDownloadResult> = flow {
-        emit(downloader.execute(plan))
+        emit(downloader.execute(plan, onProgress))
+    }.flowOn(Dispatchers.IO)
+
+    fun readSelectedArticles(articleIds: Set<String>, read: Boolean): Flow<BatchProgress> =
+        processBatch(articleIds) {
+            check(articleDao.readArticle(it, read) > 0)
+            true
+        }.flowOn(Dispatchers.IO)
+
+    fun favoriteSelectedArticles(articleIds: Set<String>, favorite: Boolean): Flow<BatchProgress> =
+        processBatch(articleIds) {
+            check(articleDao.favoriteArticle(it, favorite) > 0)
+            true
+        }.flowOn(Dispatchers.IO)
+
+    data class SelectedPlaylistMedia(
+        val medias: List<MediaUrlWithArticleIdBean>,
+        val noMediaCount: Int,
+        val failedCount: Int,
+    )
+
+    fun prepareSelectedPlaylistMedia(
+        articleIds: Set<String>,
+        filterMask: Int,
+    ): Flow<SelectedPlaylistMedia> = flow {
+        val articles = mutableListOf<ArticleWithFeed>()
+        // Usually query in chunks; isolate a failed query so other articles still get prepared.
+        for (chunk in articleIds.chunked(SQLITE_BIND_CHUNK_SIZE)) {
+            currentCoroutineContext().ensureActive()
+            try {
+                articles += articleDao.getArticleWithFeedListByIds(chunk)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                for (id in chunk) {
+                    currentCoroutineContext().ensureActive()
+                    try {
+                        articles += articleDao.getArticleWithFeedListByIds(listOf(id))
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (_: Exception) {
+                        // Missing or unreadable articles are counted below.
+                    }
+                }
+            }
+        }
+        val sort = FeedBean.parseFilterMaskToSort(filterMask)
+        val comparator = when (sort) {
+            is FeedBean.SortBy.Date -> compareBy<ArticleWithFeed> { it.articleWithEnclosure.article.date }
+            is FeedBean.SortBy.Title -> compareBy<ArticleWithFeed> { it.articleWithEnclosure.article.title }
+        }.let { if (sort.asc) it else it.reversed() }
+        var noMediaCount = 0
+        val medias = articles.sortedWith(comparator).flatMap { article ->
+            val enclosures = article.articleWithEnclosure.enclosures.filter { it.isMedia }
+            if (enclosures.isEmpty()) noMediaCount++
+            enclosures.map {
+                MediaUrlWithArticleIdBean(it.url, article.articleWithEnclosure.article.articleId)
+            }
+        }.distinctBy { it.url }
+        emit(SelectedPlaylistMedia(medias, noMediaCount, articleIds.size - articles.size))
     }.flowOn(Dispatchers.IO)
 
     class RefreshFeedsException(msg: String) : RuntimeException(msg)
@@ -226,14 +293,16 @@ class ArticleRepository(
     }.flowOn(Dispatchers.IO)
 
     override fun favoriteArticle(articleId: String, favorite: Boolean): Flow<Unit> = flow {
-        emit(articleDao.favoriteArticle(articleId, favorite))
+        articleDao.favoriteArticle(articleId, favorite)
+        emit(Unit)
     }.flowOn(Dispatchers.IO)
 
     override fun observeArticleFavorite(articleId: String): Flow<Boolean?> =
         articleDao.observeArticleFavorite(articleId).flowOn(Dispatchers.IO)
 
     override fun readArticle(articleId: String, read: Boolean): Flow<Unit> = flow {
-        emit(articleDao.readArticle(articleId, read))
+        articleDao.readArticle(articleId, read)
+        emit(Unit)
     }.flowOn(Dispatchers.IO)
 
     override fun deleteArticle(articleId: String): Flow<ArticleDeleteResult> = flow {

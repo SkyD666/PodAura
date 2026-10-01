@@ -46,7 +46,7 @@ val viewModelModule = module {
     viewModel { FilePickerViewModel(get()) }
     viewModel { ReorderGroupViewModel(get()) }
     viewModel { ReorderFeedViewModel(get()) }
-    viewModel { ArticleViewModel(get()) }
+    viewModel { ArticleViewModel(get(), get()) }
     viewModel { FeedViewModel(get(), get()) }
     viewModel { FeedSheetViewModel(get(), get()) }
     viewModel { HistoryViewModel(get()) }
