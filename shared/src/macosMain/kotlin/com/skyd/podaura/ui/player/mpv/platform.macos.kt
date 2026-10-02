@@ -10,3 +10,6 @@ actual fun copyAssetsForMpv(configDir: String) {
 }
 
 internal actual fun mapPlayerKeyEvent(event: KeyEvent, logger: Logger): PlayerKeyInput? = null
+
+internal actual fun MPV.configurePlaylistHeaders(playlist: List<com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean>) =
+    Unit

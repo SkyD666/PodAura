@@ -40,6 +40,8 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.dialog.ComponeDialog
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.preference.player.HardwareDecodePreference
 import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvCacheLocation
@@ -70,6 +72,8 @@ import podaura.shared.generated.resources.item_selected
 import podaura.shared.generated.resources.mpv_cache_external_storage
 import podaura.shared.generated.resources.mpv_cache_external_storage_named
 import podaura.shared.generated.resources.mpv_cache_internal_storage
+import podaura.shared.generated.resources.mpv_config_apply_hint
+import podaura.shared.generated.resources.mpv_config_ios_hint
 import podaura.shared.generated.resources.mpv_config_sync
 import podaura.shared.generated.resources.mpv_storage_error
 import podaura.shared.generated.resources.player_config_advanced_screen_hardware_decode
@@ -155,7 +159,7 @@ fun PlayerConfigAdvancedScreen(
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.PlayCircle),
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_config),
-                        descriptionText = null,
+                        descriptionText = stringResource(if (platform == Platform.iOS) Res.string.mpv_config_ios_hint else Res.string.mpv_config_apply_hint),
                         onClick = {
                             scope.launch {
                                 runCatching { readMpvConfigFile("mpv.conf") }
@@ -172,7 +176,7 @@ fun PlayerConfigAdvancedScreen(
                     BaseSettingsItem(
                         icon = rememberVectorPainter(Icons.Outlined.Keyboard),
                         text = stringResource(Res.string.player_config_advanced_screen_mpv_input_config),
-                        descriptionText = null,
+                        descriptionText = stringResource(if (platform == Platform.iOS) Res.string.mpv_config_ios_hint else Res.string.mpv_config_apply_hint),
                         onClick = {
                             scope.launch {
                                 runCatching { readMpvConfigFile("input.conf") }

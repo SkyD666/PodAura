@@ -9,3 +9,5 @@ actual fun resolveExternalMedia(file: PlatformFile): ExternalMedia {
     Files.newInputStream(path).use { it.read() }
     return ExternalMedia(source = path.toString(), playbackUrl = path.toString())
 }
+
+internal actual suspend fun preparePlatformPlayback(data: PlayerLaunchData): PlayerLaunchData = data

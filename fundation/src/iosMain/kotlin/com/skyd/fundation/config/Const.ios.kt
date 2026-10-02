@@ -15,7 +15,7 @@ actual val Const.FEED_ICON_DIR: String
     get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Pictures", "FeedIcon")
         .ensureDirectoryExists()
 actual val Const.MPV_CACHE_DIR: String
-    get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Mpv", "Cache")
+    get() = joinPath(Directories.caches, BuildKonfig.packageName, "Mpv")
         .ensureDirectoryExists()
 actual val Const.MPV_CONFIG_DIR: String
     get() = joinPath(Directories.applicationSupport, BuildKonfig.packageName, "Mpv", "Config")

@@ -13,6 +13,8 @@ import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.releaseBookmark
 import io.github.vinceglb.filekit.sink
+import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
+import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -26,35 +28,40 @@ internal suspend fun persistDirectoryLocation(
     bookmarkKey: Preferences.Key<String>,
     beforePersist: suspend (PlatformFile) -> Unit = {},
 ): String = persistedDirectoryMutex.withLock {
-    require(directory.isDirectory()) { "The selected location is not a directory" }
-    val previousBookmark = dataStore.data.first()[bookmarkKey]
-    val bookmarkValue = directory.bookmarkData().bytes.toHexString()
-    val probeName = ".podaura-access-${Uuid.random()}.tmp"
-    val probe = PlatformFile(directory, probeName)
-
+    val accessed = directory.startAccessingSecurityScopedResource()
     try {
-        probe.sink().use { }
-        (directory.list().firstOrNull { it.name == probeName } ?: probe)
-            .delete(mustExist = false)
-        beforePersist(directory)
-        dataStore.edit { preferences ->
-            preferences[locationKey] = directory.path
-            preferences[bookmarkKey] = bookmarkValue
-        }
-    } catch (error: Throwable) {
-        if (previousBookmark != bookmarkValue) {
-            releaseBookmarkIfUnused(bookmarkValue)
-        }
-        throw error
-    } finally {
-        runCatching {
+        require(directory.isDirectory()) { "The selected location is not a directory" }
+        val previousBookmark = dataStore.data.first()[bookmarkKey]
+        val bookmarkValue = directory.bookmarkData().bytes.toHexString()
+        val probeName = ".podaura-access-${Uuid.random()}.tmp"
+        val probe = PlatformFile(directory, probeName)
+
+        try {
+            probe.sink().use { }
             (directory.list().firstOrNull { it.name == probeName } ?: probe)
                 .delete(mustExist = false)
+            beforePersist(directory)
+            dataStore.edit { preferences ->
+                preferences[locationKey] = directory.path
+                preferences[bookmarkKey] = bookmarkValue
+            }
+        } catch (error: Throwable) {
+            if (previousBookmark != bookmarkValue) {
+                releaseBookmarkIfUnused(bookmarkValue)
+            }
+            throw error
+        } finally {
+            runCatching {
+                (directory.list().firstOrNull { it.name == probeName } ?: probe)
+                    .delete(mustExist = false)
+            }
         }
-    }
 
-    releaseReplacedBookmark(previousBookmark, bookmarkValue)
-    return directory.path
+        releaseReplacedBookmark(previousBookmark, bookmarkValue)
+        directory.path
+    } finally {
+        if (accessed) directory.stopAccessingSecurityScopedResource()
+    }
 }
 
 internal suspend fun resetDirectoryLocation(

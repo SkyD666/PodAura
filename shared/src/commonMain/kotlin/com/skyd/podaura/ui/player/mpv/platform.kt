@@ -8,3 +8,5 @@ expect fun copyAssetsForMpv(configDir: String)
 internal data class PlayerKeyInput(val action: String?, val key: String?)
 
 internal expect fun mapPlayerKeyEvent(event: KeyEvent, logger: Logger): PlayerKeyInput?
+
+internal expect fun MPV.configurePlaylistHeaders(playlist: List<com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean>)

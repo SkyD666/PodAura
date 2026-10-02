@@ -130,20 +130,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
     val filePicker = rememberFilePickerLauncher(
         onError = { scope.launch { snackbarHostState.showSnackbar(locationError) } },
         onResult = { file ->
-            val url = file?.path ?: return@rememberFilePickerLauncher
-            playerJumper.jump(
-                PlayDataMode.MediaLibraryList(
-                    startMediaPath = url,
-                    mediaList = listOf(
-                        PlayDataMode.MediaLibraryList.PlayMediaListItem(
-                            path = url,
-                            articleId = null,
-                            title = null,
-                            thumbnail = null,
-                        )
-                    ),
-                )
-            )
+            if (file != null) playerJumper.openFiles(listOf(file))
         }
     )
 

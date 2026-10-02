@@ -19,6 +19,8 @@ import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.parent
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.readString
+import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
+import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -153,23 +155,31 @@ suspend fun prepareMpvRuntimeDirectories(): MpvRuntimeDirectories {
 suspend fun readMpvConfigFile(fileName: String): String = configMutex.withLock {
     requireSimpleFileName(fileName)
     val source = restoredMpvConfigDirectory()
-    val sourceFile = PlatformFile(source, fileName)
-    if (sourceFile.exists()) return@withLock sourceFile.readString()
-
-    val runtimeFile = PlatformFile(platformMpvRuntimeConfigDirectory(source), fileName)
-    if (runtimeFile.exists()) runtimeFile.readString() else ""
+    val accessed = source.startAccessingSecurityScopedResource()
+    try {
+        val sourceFile = PlatformFile(source, fileName)
+        if (sourceFile.exists()) return@withLock sourceFile.readString()
+        val runtimeFile = PlatformFile(platformMpvRuntimeConfigDirectory(source), fileName)
+        if (runtimeFile.exists()) runtimeFile.readString() else ""
+    } finally {
+        if (accessed) source.stopAccessingSecurityScopedResource()
+    }
 }
 
 suspend fun writeMpvConfigFile(fileName: String, value: String) = configMutex.withLock {
     requireSimpleFileName(fileName)
     val source = restoredMpvConfigDirectory()
-    val sourceFile = PlatformFile(source, fileName)
-    sourceFile.writeString(value)
-
-    val runtime = platformMpvRuntimeConfigDirectory(source)
-    if (runtime.path != source.path) {
-        runtime.createDirectories()
-        PlatformFile(runtime, fileName).writeString(value)
+    val accessed = source.startAccessingSecurityScopedResource()
+    try {
+        val sourceFile = PlatformFile(source, fileName)
+        sourceFile.writeString(value)
+        val runtime = platformMpvRuntimeConfigDirectory(source)
+        if (runtime.path != source.path) {
+            runtime.createDirectories()
+            PlatformFile(runtime, fileName).writeString(value)
+        }
+    } finally {
+        if (accessed) source.stopAccessingSecurityScopedResource()
     }
 }
 

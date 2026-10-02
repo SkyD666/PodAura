@@ -104,17 +104,20 @@ class PlayerViewModel(
         prepare: suspend () -> PlayerLaunchData,
     ) {
         var transferred = false
+        var preparedBatch = batch
         try {
-            val data = prepare()
+            val prepared = prepare()
+            val data = if (batch == null) preparePlatformPlayback(prepared) else prepared
+            preparedBatch = data.externalBatch
             withContext(Dispatchers.Main.immediate) {
                 currentCoroutineContext().ensureActive()
                 mediaInfos.emit(data)
                 externalBatch?.release()
-                externalBatch = batch
+                externalBatch = preparedBatch
                 transferred = true
             }
         } finally {
-            if (!transferred) batch?.release()
+            if (!transferred) preparedBatch?.release()
         }
     }
 
@@ -171,3 +174,5 @@ data class PlayerLaunchData(
         externalBatch = externalBatch,
     )
 }
+
+internal expect suspend fun preparePlatformPlayback(data: PlayerLaunchData): PlayerLaunchData

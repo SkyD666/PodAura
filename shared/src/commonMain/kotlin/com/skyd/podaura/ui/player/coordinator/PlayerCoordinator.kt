@@ -29,6 +29,7 @@ import com.skyd.podaura.ui.player.mpv.MPVEvent
 import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.mpv.PlayerKeyInput
 import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
+import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
 import com.skyd.podaura.ui.player.playerTrace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -160,7 +161,10 @@ class PlayerCoordinator : LifecycleOwner {
     fun removeObserver(observer: Observer) = observers.update { it - observer }
     fun removeAllObserver() = observers.store(emptySet())
 
+    internal var onPlaybackCommand: ((PlayerCommand) -> Unit)? = null
+
     fun onCommand(command: PlayerCommand) {
+        onPlaybackCommand?.invoke(command)
         when (command) {
             PlayerCommand.Destroy -> destroy()
             PlayerCommand.RetryInitialize -> {
@@ -404,6 +408,7 @@ class PlayerCoordinator : LifecycleOwner {
         // External multi-file opens must advance normally, even on desktop's keep-open=always.
         player.setExternalQueue(command.externalBatch != null)
         if (isNewRequest) emitEvent(PlayerEvent.ClearPlaybackEnd)
+        player.mpv.configurePlaylistHeaders(command.playlist)
         player.loadList(files = files, startFile = command.startPath)
         startPositionSeconds?.takeIf { seekCurrentMedia }?.let { seekAndPlay(it) }
         if (isNewRequest) setPaused(false)

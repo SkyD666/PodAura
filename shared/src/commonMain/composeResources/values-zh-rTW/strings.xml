@@ -626,4 +626,6 @@
     <string name="notification_delete_question">刪除通知規則「%1$s」？</string>
     <string name="notification_delete_warning">此規則將被刪除，其他符合的規則仍可傳送通知。</string>
     <string name="notification_managed_delete_warning">刪除此規則會關閉該訂閱的通知開關；其他符合的規則仍可傳送通知。</string>
+    <string name="mpv_config_apply_hint">設定將於下次播放器初始化時生效。</string>
+    <string name="mpv_config_ios_hint">設定將於下次播放器初始化時生效。iOS 不支援 Lua 和 JavaScript 腳本，影片和音訊輸出由應用程式管理。</string>
 </resources>

@@ -6,3 +6,5 @@ import io.github.vinceglb.filekit.path
 // Future document-open adapters must hold any security-scoped access in ExternalMedia.
 actual fun resolveExternalMedia(file: PlatformFile): ExternalMedia =
     ExternalMedia(file.path, requireNotNull(file.resolveToPlayer()) { "Cannot open media" })
+
+internal actual suspend fun preparePlatformPlayback(data: PlayerLaunchData): PlayerLaunchData = data

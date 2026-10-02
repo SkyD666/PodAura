@@ -63,3 +63,6 @@ internal actual fun mapPlayerKeyEvent(
     val action = if (nativeEvent.action == KeyEvent.ACTION_DOWN) "keydown" else "keyup"
     return PlayerKeyInput(action = action, key = mod.joinToString("+"))
 }
+
+internal actual fun MPV.configurePlaylistHeaders(playlist: List<com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean>) =
+    Unit

@@ -33,3 +33,5 @@ actual fun resolveExternalMedia(file: PlatformFile): ExternalMedia =
             }
         }
     }
+
+internal actual suspend fun preparePlatformPlayback(data: PlayerLaunchData): PlayerLaunchData = data

@@ -5,3 +5,7 @@ PRODUCT_BUNDLE_IDENTIFIER=com.skyd.podaura
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0
+
+// Static MPVKit frameworks prepared by mpvkit/prepare.py.
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(SRCROOT)/../../shared/build/mpvkit/$(PLATFORM_NAME) $(SRCROOT)/../../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+OTHER_LDFLAGS = $(inherited) -framework Shared -framework Libmpv -framework Libuchardet -framework Libbluray -framework Libavcodec -framework Libavdevice -framework Libavfilter -framework Libavformat -framework Libavutil -framework Libswresample -framework Libswscale -framework Libssl -framework Libcrypto -framework Libass -framework Libfreetype -framework Libfribidi -framework Libharfbuzz -framework MoltenVK -framework Libshaderc_combined -framework lcms2 -framework Libplacebo -framework Libdovi -framework Libunibreak -framework gmp -framework nettle -framework hogweed -framework gnutls -framework Libdav1d -framework Libuavs3d -framework AVFoundation -framework CoreAudio -framework AudioToolbox -framework CoreVideo -framework CoreFoundation -framework CoreMedia -framework Metal -framework OpenGLES -framework VideoToolbox -framework QuartzCore -lbz2 -liconv -lexpat -lresolv -lxml2 -lz -lc++

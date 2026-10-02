@@ -29,6 +29,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -139,6 +141,13 @@ class MPVPlayer {
 
             observeProperties()
             Companion.initialized.store(true)
+            scope.launch {
+                dataStore.data.map { preferences ->
+                    preferences[HardwareDecodePreference.key] ?: HardwareDecodePreference.default
+                }.distinctUntilChanged().collect { enabled ->
+                    newMpv.setPropertyString("hwdec", if (enabled) "auto" else "no")
+                }
+            }
         } catch (error: Throwable) {
             runCatching { newMpv.destroy() }
             Companion.initialized.store(false)

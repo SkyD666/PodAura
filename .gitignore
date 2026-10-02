@@ -18,3 +18,4 @@ build/
 *.xcuserdatad
 local.properties
 signing.properties
+/platform/ios/playback-smoke/

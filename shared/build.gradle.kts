@@ -27,6 +27,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.gradle.msix)
     id("podaura.desktop-media-shims")
+    id("podaura.ios-mpv")
 }
 
 val buildJvmArch = System.getProperty("os.arch").lowercase()

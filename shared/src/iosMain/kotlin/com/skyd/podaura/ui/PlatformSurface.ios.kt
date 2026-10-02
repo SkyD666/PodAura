@@ -1,3 +1,10 @@
 package com.skyd.podaura.ui
 
-actual interface PlatformSurfaceHolder
+import platform.AVFoundation.AVSampleBufferDisplayLayer
+
+actual interface PlatformSurfaceHolder {
+    val layer: AVSampleBufferDisplayLayer
+    val isActive: Boolean get() = true
+    val width: Int
+    val height: Int
+}

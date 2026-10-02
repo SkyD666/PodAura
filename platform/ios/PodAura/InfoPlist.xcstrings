@@ -30,6 +30,9 @@
           }
         }
       }
+    },
+    "OPML document" : {
+
     }
   },
   "version" : "1.3"

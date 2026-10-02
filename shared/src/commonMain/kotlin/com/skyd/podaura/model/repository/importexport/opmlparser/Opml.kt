@@ -1,15 +1,18 @@
 package com.skyd.podaura.model.repository.importexport.opmlparser
 
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.repository.importexport.opmlparser.entity.Opml
 import kotlinx.io.Sink
 import kotlinx.io.Source
+import kotlinx.io.readString
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
-import net.devrieze.xmlutil.serialization.kxio.decodeFromSource
 import net.devrieze.xmlutil.serialization.kxio.encodeToSink
+import net.devrieze.xmlutil.serialization.kxio.decodeFromSource
 import nl.adaptivity.xmlutil.serialization.XML
 import nl.adaptivity.xmlutil.serialization.XmlConfig
 
@@ -56,7 +59,13 @@ class OpmlBuilder internal constructor() {
 }
 
 fun OPML.decodeFromSource(source: Source): Opml {
-    return xml.decodeFromSource(Opml.serializer(), source)
+    // xmlutil 0.91.3's Native Source reader mishandles UTF-8 bytes and buffer refills.
+    // Keep byte-based encoding detection on Android/JVM.
+    return if (platform == Platform.iOS || platform == Platform.macOS_Native) {
+        xml.decodeFromString(Opml.serializer(), source.readString())
+    } else {
+        xml.decodeFromSource(Opml.serializer(), source)
+    }
 }
 
 fun OPML.encodeToSink(sink: Sink, value: Opml) {

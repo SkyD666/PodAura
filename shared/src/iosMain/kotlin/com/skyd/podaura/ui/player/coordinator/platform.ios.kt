@@ -7,6 +7,7 @@ internal actual fun onAttach(
     surfaceHolder: PlatformSurfaceHolder,
     onEvent: (PlayerSurfaceEvent) -> Unit,
 ) {
+    onEvent(PlayerSurfaceEvent.Created(surfaceHolder))
 }
 
 internal actual fun onDetach(owner: Any, surfaceHolder: PlatformSurfaceHolder) {

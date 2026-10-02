@@ -6,5 +6,7 @@ internal actual val supportPip: Boolean = false
 
 @Composable
 internal actual fun rememberOnEnterPip(): OnEnterPip {
-    TODO("Not yet implemented")
+    return object : OnEnterPip {
+        override fun enter() = Unit
+    }
 }

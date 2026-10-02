@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,20 +46,25 @@ import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.WaitingDialog
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
+import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.TipSettingsItem
 import com.skyd.settings.plus
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.path
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
@@ -74,36 +80,46 @@ import podaura.shared.generated.resources.import_opml_screen_on_conflict
 import podaura.shared.generated.resources.import_opml_screen_opml_not_selected
 import podaura.shared.generated.resources.import_opml_screen_select_file
 
+internal val OpmlFileSaver = Saver<PlatformFile?, String>(
+    save = { it?.path },
+    restore = { it.asPlatformFile() },
+)
 
 @Serializable
-data class ImportOpmlRoute(val opmlUrl: String? = null) : NavKey {
+data class ImportOpmlRoute(val opmlFile: PlatformFile? = null) : NavKey {
     companion object {
         @Composable
         fun ImportOpmlLauncher(route: ImportOpmlRoute) {
-            ImportOpmlScreen(opmlUrl = route.opmlUrl)
+            ImportOpmlScreen(initialFile = route.opmlFile)
         }
     }
 }
 
 @Serializable
-data class ImportOpmlDeepLinkRoute(val opmlUrl: String? = null) : NavKey {
+data class ImportOpmlDeepLinkRoute(
+    @SerialName(ExternalUrlHandler.UrlData.URL_NAME)
+    val opmlUrl: String? = null,
+) : NavKey {
     companion object {
         val deepLinkPattern = DeepLinkPattern(
             serializer(),
             urlPattern = null,
-            mimeTypes = listOf("text/xml", "application/xml", "text/x-opml")
+            mimeTypes = listOf("text/xml", "application/xml", "text/x-opml", "application/x-opml+xml")
         )
 
         @Composable
         fun ImportOpmlDeepLinkLauncher(route: ImportOpmlDeepLinkRoute) {
-            ImportOpmlScreen(opmlUrl = route.opmlUrl)
+            val file = remember(route.opmlUrl) {
+                route.opmlUrl?.takeIf { it.isNotBlank() }?.asPlatformFile()
+            }
+            ImportOpmlScreen(initialFile = file)
         }
     }
 }
 
 @Composable
 fun ImportOpmlScreen(
-    opmlUrl: String? = null,
+    initialFile: PlatformFile? = null,
     viewModel: ImportOpmlViewModel = koinViewModel(),
     windowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
@@ -115,13 +131,18 @@ fun ImportOpmlScreen(
 
     val dispatch = viewModel.getDispatcher(startWith = ImportOpmlIntent.Init)
 
-    var opmlFilePath by rememberSaveable(opmlUrl) { mutableStateOf(opmlUrl) }
+    // Android recreates its Activity on rotation; Apple needs the original security-scoped URL.
+    var opmlFile by if (platform == Platform.Android) {
+        rememberSaveable(initialFile, stateSaver = OpmlFileSaver) { mutableStateOf(initialFile) }
+    } else {
+        remember(initialFile) { mutableStateOf(initialFile) }
+    }
     val filePickerLauncher = rememberFilePickerLauncher(
         type = FileKitType.File(),
         mode = FileKitMode.Single,
     ) { file ->
         if (file != null) {
-            opmlFilePath = file.path
+            opmlFile = file
         }
     }
 
@@ -143,7 +164,8 @@ fun ImportOpmlScreen(
                 text = { Text(text = stringResource(Res.string.import_opml_screen_import)) },
                 icon = { Icon(imageVector = Icons.Default.Done, contentDescription = null) },
                 onClick = {
-                    if (opmlFilePath.isNullOrBlank()) {
+                    val selectedFile = opmlFile
+                    if (selectedFile == null) {
                         snackbarHostState.showSnackbar(
                             scope = scope,
                             message = Res.string.import_opml_screen_opml_not_selected,
@@ -151,7 +173,7 @@ fun ImportOpmlScreen(
                     } else {
                         dispatch(
                             ImportOpmlIntent.ImportOpml(
-                                opmlFile = opmlFilePath!!.asPlatformFile(),
+                                opmlFile = selectedFile,
                                 strategy = ImportOpmlConflictStrategy.strategies[selectedImportStrategyIndex],
                             )
                         )
@@ -175,7 +197,7 @@ fun ImportOpmlScreen(
                     BaseSettingsItem(
                         icon = rememberVectorPainter(image = Icons.AutoMirrored.Outlined.Segment),
                         text = stringResource(Res.string.import_opml_screen_select_file),
-                        descriptionText = opmlFilePath?.ifBlank { null },
+                        descriptionText = opmlFile?.path?.ifBlank { null },
                         onClick = { filePickerLauncher.launch() }
                     )
                 }

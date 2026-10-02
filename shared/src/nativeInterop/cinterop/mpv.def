@@ -1,0 +1,95 @@
+language = Objective-C
+headers = mpv/client.h mpv/render.h mpv/render_gl.h
+headerFilter = mpv/**
+package = com.skyd.podaura.libmpv
+nonStrictEnums = mpv_format mpv_event_id mpv_end_file_reason mpv_render_param_type mpv_render_update_flag
+
+---
+#import <OpenGLES/EAGL.h>
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+#import <CoreVideo/CoreVideo.h>
+#import <TargetConditionals.h>
+
+// Keep EAGL behind a small bridge: Kotlin/Native no longer ships OpenGLES bindings.
+static inline void *podaura_gl_create(void) {
+    return (__bridge_retained void *)[[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
+}
+static inline void *podaura_gl_current(void) {
+    return (__bridge void *)[EAGLContext currentContext];
+}
+static inline bool podaura_gl_make_current(void *context) {
+    return [EAGLContext setCurrentContext:(__bridge EAGLContext *)context];
+}
+static inline void podaura_gl_release(void *context) {
+    if (context) CFRelease(context);
+}
+static inline CVOpenGLESTextureCacheRef podaura_gl_texture_cache(void *context) {
+    CVOpenGLESTextureCacheRef cache = NULL;
+    CVOpenGLESTextureCacheCreate(NULL, NULL, (__bridge EAGLContext *)context, NULL, &cache);
+    return cache;
+}
+static inline unsigned int podaura_gl_create_fbo(void) {
+    GLuint fbo = 0;
+    glGenFramebuffers(1, &fbo);
+    return fbo;
+}
+static inline int podaura_gl_bind_buffer(CVOpenGLESTextureCacheRef cache, CVPixelBufferRef buffer,
+                                       int width, int height, unsigned int fbo,
+                                       CVOpenGLESTextureRef *texture) {
+    GLuint name = 0;
+#if TARGET_OS_SIMULATOR
+    // Simulator EAGL cannot import IOSurfaces. This test-only path never enters device builds.
+    glGenTextures(1, &name);
+    glBindTexture(GL_TEXTURE_2D, name);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#else
+    CVReturn result = CVOpenGLESTextureCacheCreateTextureFromImage(
+        NULL, cache, buffer, NULL, GL_TEXTURE_2D, GL_RGBA,
+        width, height, GL_BGRA, GL_UNSIGNED_BYTE, 0, texture);
+    if (result != kCVReturnSuccess) return result;
+    name = CVOpenGLESTextureGetName(*texture);
+#endif
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, name, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? 0 : -1;
+}
+static inline void podaura_gl_unbind_buffer(unsigned int fbo) {
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+#if TARGET_OS_SIMULATOR
+    GLint name = 0;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                         GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &name);
+#endif
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+#if TARGET_OS_SIMULATOR
+    GLuint texture = (GLuint)name;
+    glDeleteTextures(1, &texture);
+#endif
+}
+static inline void podaura_gl_finish(void) { glFinish(); }
+static inline void podaura_gl_present_buffer(CVPixelBufferRef buffer, int width, int height, unsigned int fbo) {
+    glFinish();
+#if TARGET_OS_SIMULATOR
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    CVPixelBufferLockBaseAddress(buffer, 0);
+    unsigned char *base = CVPixelBufferGetBaseAddress(buffer);
+    size_t stride = CVPixelBufferGetBytesPerRow(buffer);
+    glPixelStorei(GL_PACK_ROW_LENGTH, (GLint)(stride / 4));
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, base);
+    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+    for (int y = 0; y < height; ++y) {
+        unsigned char *row = base + y * stride;
+        for (int x = 0; x < width; ++x) {
+            unsigned char r = row[x * 4];
+            row[x * 4] = row[x * 4 + 2];
+            row[x * 4 + 2] = r;
+        }
+    }
+    CVPixelBufferUnlockBaseAddress(buffer, 0);
+#endif
+}
+static inline void podaura_gl_delete_fbo(unsigned int fbo) { glDeleteFramebuffers(1, &fbo); }

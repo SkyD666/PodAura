@@ -8,8 +8,11 @@ actual fun rememberBrightnessController(): BrightnessController {
     return remember {
         object : BrightnessController {
             override var percent: Float
-                get() = TODO("Not yet implemented")
-                set(value) = TODO("Not yet implemented")
+                get() = platform.UIKit.UIScreen.mainScreen.brightness.toFloat()
+                set(value) {
+                    platform.UIKit.UIScreen.mainScreen.brightness =
+                        value.coerceIn(0f, 1f).toDouble()
+                }
         }
     }
 }

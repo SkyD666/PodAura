@@ -248,6 +248,36 @@ private fun getLicenseList(): List<LicenseBean> {
             link = "https://github.com/SkyD666/MVIKit",
         ),
     ).apply {
+        if (platform == Platform.iOS) {
+            add(
+                LicenseBean(
+                    name = "MPVKit",
+                    license = "LGPL-3.0",
+                    link = "https://github.com/mpvkit/MPVKit"
+                )
+            )
+            add(
+                LicenseBean(
+                    name = "mpv",
+                    license = "LGPL-2.1-or-later (non-GPL build)",
+                    link = "https://github.com/mpv-player/mpv"
+                )
+            )
+            add(
+                LicenseBean(
+                    name = "FFmpeg",
+                    license = "LGPL (non-GPL build)",
+                    link = "https://ffmpeg.org/legal.html"
+                )
+            )
+            add(
+                LicenseBean(
+                    name = "Mozilla CA certificate store",
+                    license = "MPL-2.0",
+                    link = "https://curl.se/docs/caextract.html"
+                )
+            )
+        }
         if (platform == Platform.Android) {
             add(
                 LicenseBean(

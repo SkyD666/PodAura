@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.player.component.dialog.BasicPlayerDialog
 import com.skyd.podaura.ui.player.component.dialog.DelayMillisDialog
 import com.skyd.podaura.ui.player.component.dialog.TrackDialogListItem
@@ -70,11 +72,13 @@ internal fun SubtitleTrackDialog(
                         imageVector = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
                     )
-                    ComponeIconButton(
-                        onClick = { pickSubtitleFileLauncher.launch() },
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = stringResource(Res.string.player_add_external_subtitle),
-                    )
+                    if (platform != Platform.iOS) {
+                        ComponeIconButton(
+                            onClick = { pickSubtitleFileLauncher.launch() },
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = stringResource(Res.string.player_add_external_subtitle),
+                        )
+                    }
                 }
                 val currentPlayState = playState()
                 repeat(currentPlayState.subtitleTracks.size) { index ->

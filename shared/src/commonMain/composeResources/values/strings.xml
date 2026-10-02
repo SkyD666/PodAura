@@ -646,4 +646,6 @@
     <string name="notification_delete_question">Delete notification rule “%1$s”?</string>
     <string name="notification_delete_warning">This rule will be deleted. Other matching rules can still send notifications.</string>
     <string name="notification_managed_delete_warning">Deleting this rule turns off this subscription’s notification switch. Other matching rules can still send notifications.</string>
+    <string name="mpv_config_apply_hint">Changes apply the next time the player is initialized.</string>
+    <string name="mpv_config_ios_hint">Changes apply the next time the player is initialized. Lua and JavaScript scripts are not supported on iOS. Video and audio output are managed by the app.</string>
 </resources>
