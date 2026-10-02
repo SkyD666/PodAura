@@ -2,17 +2,25 @@ package com.skyd.podaura.ui.screen.settings.rssconfig.updatenotification
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.v2.runComposeUiTest
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
+import com.skyd.podaura.model.bean.feed.FeedBean
+import com.skyd.podaura.model.bean.group.GroupVo
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.more
@@ -23,6 +31,10 @@ import podaura.shared.generated.resources.notification_managed_delete_warning
 import podaura.shared.generated.resources.notification_custom_label
 import podaura.shared.generated.resources.notification_match_help
 import podaura.shared.generated.resources.notification_managed_help
+import podaura.shared.generated.resources.notification_feeds
+import podaura.shared.generated.resources.notification_groups
+import podaura.shared.generated.resources.notification_search
+import podaura.shared.generated.resources.default_feed_group
 import podaura.shared.generated.resources.ok
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -185,5 +197,46 @@ class UpdateNotificationDialogTest {
         waitForIdle()
         onNodeWithText(rule.name).assertExists()
         onNodeWithText(rule.regex).assertExists()
+    }
+
+    @Test
+    fun targetSearchPreservesMissingTargetsAndRefreshesRenamedFeeds() = runComposeUiTest {
+        val url = "https://example.com/feed"
+        val missing = "https://example.com/deleted"
+        val rule = ArticleNotificationRuleBean(
+            id = 1, name = "Targets", regex = "", feedUrls = listOf(url, missing),
+            groupIds = listOf(GroupVo.DEFAULT_GROUP_ID),
+        )
+        var feeds by mutableStateOf(listOf(FeedBean(url, title = "Original title")))
+        var feedsLabel = ""
+        var groupsLabel = ""
+        var defaultGroup = ""
+        var search = ""
+        var cancel = ""
+        setContent {
+            MaterialTheme {
+                feedsLabel = stringResource(Res.string.notification_feeds)
+                groupsLabel = stringResource(Res.string.notification_groups)
+                defaultGroup = stringResource(Res.string.default_feed_group)
+                search = stringResource(Res.string.notification_search)
+                cancel = stringResource(Res.string.cancel)
+                AddRuleDialog(
+                    rule = rule,
+                    ruleListState = RuleListState.Success(listOf(rule), feeds, emptyList()),
+                    onDismissRequest = {}, onAdd = {},
+                )
+            }
+        }
+        onNodeWithText("$groupsLabel: $defaultGroup").assertExists()
+        onNodeWithText("$feedsLabel: Original title, $missing").performClick()
+        onNodeWithText(search).performTextInput("ORIGINAL")
+        onNodeWithText("Original title").assertExists()
+        onNodeWithText(missing).assertDoesNotExist()
+        onNodeWithText(search).performTextReplacement("deleted")
+        onNodeWithText(missing).assertExists()
+        onNodeWithText("Original title").assertDoesNotExist()
+        onAllNodesWithText(cancel).let { it[it.fetchSemanticsNodes().lastIndex].performClick() }
+        runOnIdle { feeds = listOf(FeedBean(url, title = "Original title", nickname = "Renamed")) }
+        onNodeWithText("$feedsLabel: Renamed, $missing").assertExists()
     }
 }

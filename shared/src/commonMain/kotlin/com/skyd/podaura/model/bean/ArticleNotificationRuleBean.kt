@@ -39,20 +39,25 @@ data class ArticleNotificationRuleBean(
         const val IS_MANAGED_COLUMN = "isManaged"
     }
 
-    fun isValid(): Boolean {
-        if (regex.isBlank() && feedUrls.isEmpty() && groupIds.isEmpty()) return false
-        if (isManaged && (feedUrls.size != 1 || groupIds.isNotEmpty() || regex.isNotBlank())) return false
-        return regex.isBlank() || runCatching { Regex(regex) }.isSuccess
-    }
+    fun isValid(): Boolean = compileMatcher() != null
 
-    fun match(data: ArticleWithEnclosureBean, groupId: String? = null): Boolean {
-        if (!isValid()) return false
-        if (feedUrls.isNotEmpty() && data.article.feedUrl !in feedUrls) return false
-        if (groupIds.isNotEmpty() && (groupId ?: GroupVo.DEFAULT_GROUP_ID) !in groupIds) {
-            return false
+    fun match(data: ArticleWithEnclosureBean, groupId: String? = null): Boolean =
+        compileMatcher()?.invoke(data, groupId) == true
+
+    /** Snapshot a rule once per notification batch; editing the entity cannot stale a cache. */
+    internal fun compileMatcher(): ((ArticleWithEnclosureBean, String?) -> Boolean)? {
+        if (regex.isBlank() && feedUrls.isEmpty() && groupIds.isEmpty()) return null
+        if (isManaged && (feedUrls.size != 1 || groupIds.isNotEmpty() || regex.isNotBlank())) return null
+        val pattern = if (regex.isBlank()) null else runCatching { Regex(regex) }.getOrElse { return null }
+        val feeds = feedUrls.toSet()
+        val groups = groupIds.toSet()
+        return { data, groupId ->
+            val article = data.article
+            (feeds.isEmpty() || article.feedUrl in feeds) &&
+                    (groups.isEmpty() || (groupId ?: GroupVo.DEFAULT_GROUP_ID) in groups) &&
+                    (pattern == null || pattern.matches(article.title.orEmpty()) ||
+                            pattern.matches(article.description.orEmpty()) ||
+                            pattern.matches(article.content.orEmpty()))
         }
-        if (regex.isBlank()) return true
-        val fields = listOf(data.article.title, data.article.description, data.article.content)
-        return Regex(regex).let { pattern -> fields.any { pattern.matches(it.orEmpty()) } }
     }
 }

@@ -36,4 +36,21 @@ class BatchProgressTest {
         assertEquals(listOf(1, 2), visited)
         assertEquals(BatchProgress(3, successCount = 1), progress.last())
     }
+
+    @Test
+    fun chunkUpdatesIsolateFailuresCountMissingRowsAndStopOnCancellation() = runTest {
+        val attempted = mutableListOf<List<Int>>()
+        val progress = mutableListOf<BatchProgress>()
+        assertFailsWith<CancellationException> {
+            processBatchUpdates((1..8).toList(), chunkSize = 3) { chunk ->
+                attempted += chunk
+                if (7 in chunk) throw CancellationException()
+                check(2 !in chunk)
+                chunk.count { it != 6 } // Missing rows are failures, too.
+            }.collect { progress += it }
+        }
+        assertEquals(listOf(listOf(1, 2, 3), listOf(1), listOf(2), listOf(3), listOf(4, 5, 6), listOf(7, 8)), attempted)
+        assertEquals(BatchProgress(8, successCount = 4, failedCount = 2), progress.last())
+        assertEquals(listOf(0, 1, 1, 2, 4), progress.map { it.successCount })
+    }
 }

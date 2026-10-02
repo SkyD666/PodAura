@@ -71,6 +71,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalClipboard
@@ -129,6 +130,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -640,36 +642,53 @@ internal fun ArticleSelectionActions(
             enabled = editable && selection.selectedIds.isNotEmpty(),
         )
         DropdownMenuPopup(expanded = expanded, onDismissRequest = { expanded = false }) {
-            val labels = listOf(
-                stringResource(Res.string.article_screen_mark_as_read),
-                stringResource(Res.string.article_screen_mark_as_unread),
-                stringResource(Res.string.article_screen_favorite),
-                stringResource(Res.string.article_screen_unfavorite),
-                stringResource(Res.string.add_to_playlist),
-            )
-            val icons = listOf(
-                Icons.Outlined.MarkEmailRead, Icons.Outlined.MarkEmailUnread,
-                Icons.Outlined.Favorite, Icons.Outlined.FavoriteBorder,
-                Icons.AutoMirrored.Outlined.PlaylistAdd,
-            )
-            val actions = listOf(
-                { onRead(true) }, { onRead(false) },
-                { onFavorite(true) }, { onFavorite(false) }, onAddToPlaylist,
+            val items = listOf(
+                SelectionMenuItem(
+                    label = Res.string.article_screen_mark_as_read,
+                    icon = Icons.Outlined.MarkEmailRead,
+                    onClick = { onRead(true) },
+                ),
+                SelectionMenuItem(
+                    label = Res.string.article_screen_mark_as_unread,
+                    icon = Icons.Outlined.MarkEmailUnread,
+                    onClick = { onRead(false) }
+                ),
+                SelectionMenuItem(
+                    label = Res.string.article_screen_favorite,
+                    icon = Icons.Outlined.Favorite,
+                    onClick = { onFavorite(true) }
+                ),
+                SelectionMenuItem(
+                    label = Res.string.article_screen_unfavorite,
+                    icon = Icons.Outlined.FavoriteBorder,
+                    onClick = { onFavorite(false) }
+                ),
+                SelectionMenuItem(
+                    label = Res.string.add_to_playlist,
+                    icon = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                    onClick = onAddToPlaylist
+                ),
             )
             DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
-                labels.forEachIndexed { index, label ->
+                items.forEachIndexed { index, item ->
                     DropdownMenuItem(
-                        text = { Text(label) },
-                        leadingIcon = { Icon(icons[index], contentDescription = null) },
-                        shape = MenuDefaults.itemShape(index, labels.size).shape,
+                        text = { Text(stringResource(item.label)) },
+                        leadingIcon = { Icon(item.icon, contentDescription = null) },
+                        shape = MenuDefaults.itemShape(index, items.size).shape,
                         enabled = editable && selection.selectedIds.isNotEmpty(),
-                        onClick = { expanded = false; actions[index]() },
+                        onClick = { expanded = false; item.onClick() },
                     )
                 }
             }
         }
     }
 }
+
+private data class SelectionMenuItem(
+    val label: StringResource,
+    val icon: ImageVector,
+    val onClick: () -> Unit
+)
 
 @Composable
 internal fun ArticleSelectionExitDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {

@@ -20,6 +20,7 @@ import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.playlist.PLAYLIST_MEDIA_TABLE_NAME
+import com.skyd.podaura.model.bean.playlist.PlaylistArticleBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.ui.notification.ArticleUpdatedManager
 import kotlinx.coroutines.flow.Flow
@@ -372,6 +373,13 @@ interface ArticleDao {
 
     @Transaction
     @Query(
+        "SELECT ${ArticleBean.ARTICLE_ID_COLUMN}, ${ArticleBean.TITLE_COLUMN}, ${ArticleBean.DATE_COLUMN} " +
+                "FROM $ARTICLE_TABLE_NAME WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun getPlaylistArticlesByIds(articleIds: List<String>): List<PlaylistArticleBean>
+
+    @Transaction
+    @Query(
         "SELECT * FROM $ARTICLE_TABLE_NAME " +
                 "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
     )
@@ -473,12 +481,26 @@ interface ArticleDao {
 
     @Transaction
     @Query(
+        "UPDATE $ARTICLE_TABLE_NAME SET ${ArticleBean.IS_FAVORITE_COLUMN} = :favorite " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun favoriteArticles(articleIds: List<String>, favorite: Boolean): Int
+
+    @Transaction
+    @Query(
         """
         UPDATE $ARTICLE_TABLE_NAME SET ${ArticleBean.IS_READ_COLUMN} = :read
         WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId
         """
     )
     suspend fun readArticle(articleId: String, read: Boolean): Int
+
+    @Transaction
+    @Query(
+        "UPDATE $ARTICLE_TABLE_NAME SET ${ArticleBean.IS_READ_COLUMN} = :read " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} IN (:articleIds)"
+    )
+    suspend fun readArticles(articleIds: List<String>, read: Boolean): Int
 
     @Transaction
     @Query(

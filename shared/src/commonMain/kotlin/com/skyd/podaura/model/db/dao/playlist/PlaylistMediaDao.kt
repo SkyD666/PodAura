@@ -3,8 +3,6 @@ package com.skyd.podaura.model.db.dao.playlist
 import androidx.paging.PagingSource
 import androidx.room3.Dao
 import androidx.room3.DaoReturnTypeConverters
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.RawQuery
 import androidx.room3.RoomRawQuery
@@ -23,8 +21,23 @@ import kotlinx.coroutines.flow.Flow
 @DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface PlaylistMediaDao {
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertPlaylistMedia(playlistMediaBean: PlaylistMediaBean)
+    @Query(
+        "INSERT OR IGNORE INTO $PLAYLIST_MEDIA_TABLE_NAME " +
+                "(${PlaylistMediaBean.PLAYLIST_ID_COLUMN}, ${PlaylistMediaBean.URL_COLUMN}, " +
+                "${PlaylistMediaBean.ARTICLE_ID_COLUMN}, ${PlaylistMediaBean.ORDER_POSITION_COLUMN}, " +
+                "${PlaylistMediaBean.CREATE_TIME_COLUMN}) " +
+                "SELECT :playlistId, :url, " +
+                "(SELECT ${ArticleBean.ARTICLE_ID_COLUMN} FROM $ARTICLE_TABLE_NAME " +
+                "WHERE ${ArticleBean.ARTICLE_ID_COLUMN} = :articleId), " +
+                "COALESCE(MAX(${PlaylistMediaBean.ORDER_POSITION_COLUMN}), 0) + $ORDER_DELTA, :createTime " +
+                "FROM $PLAYLIST_MEDIA_TABLE_NAME WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId"
+    )
+    suspend fun appendPlaylistMedia(
+        playlistId: String,
+        url: String,
+        articleId: String?,
+        createTime: Long
+    ): Long
 
     @Transaction
     @Query(

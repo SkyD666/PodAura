@@ -1,11 +1,8 @@
 package com.skyd.podaura.model.repository.playlist
 
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
-import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
-import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
-import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao.Companion.ORDER_DELTA
 import com.skyd.podaura.model.repository.BaseRepository
 import com.skyd.podaura.model.repository.BatchProgress
 import com.skyd.podaura.model.repository.processBatch
@@ -15,13 +12,11 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
 class AddToPlaylistRepository(
-    private val articleDao: ArticleDao,
     private val playlistDao: PlaylistDao,
     private val playlistMediaDao: PlaylistMediaDao,
 ) : BaseRepository(), IAddToPlaylistRepository {
@@ -41,8 +36,10 @@ class AddToPlaylistRepository(
         playlistId: String,
         medias: List<MediaUrlWithArticleIdBean>,
     ): Flow<BatchProgress> = processBatch(medias.distinctBy { it.url }) {
-        check(playlistDao.exists(playlistId) > 0)
-        insertPlaylistMedia(playlistId, it.url, it.articleId).first()
+        // Foreign keys reject deleted playlists; IGNORE reports existing media as skipped.
+        playlistMediaDao.appendPlaylistMedia(
+            playlistId, it.url, it.articleId, Clock.System.now().toEpochMilliseconds(),
+        ) != -1L
     }.flowOn(Dispatchers.IO)
 
     override fun insertPlaylistMedia(
@@ -50,24 +47,15 @@ class AddToPlaylistRepository(
         url: String,
         articleId: String?
     ): Flow<Boolean> = flow {
-        if (playlistDao.exists(playlistId) == 0 ||
-            playlistMediaDao.exists(playlistId = playlistId, url = url) != 0
-        ) {
+        if (playlistDao.exists(playlistId) == 0) {
             emit(false)
             return@flow
         }
-        val orderPosition = playlistMediaDao.getMaxOrder(playlistId = playlistId) + ORDER_DELTA
-        val realArticleId = articleId?.takeIf { articleDao.exists(it) > 0 }
-        playlistMediaDao.insertPlaylistMedia(
-            PlaylistMediaBean(
-                playlistId = playlistId,
-                url = url,
-                articleId = realArticleId,
-                orderPosition = orderPosition,
-                createTime = Clock.System.now().toEpochMilliseconds(),
-            )
+        emit(
+            playlistMediaDao.appendPlaylistMedia(
+                playlistId, url, articleId, Clock.System.now().toEpochMilliseconds(),
+            ) != -1L
         )
-        emit(true)
     }.flowOn(Dispatchers.IO)
 
     override fun insertPlaylistMedias(

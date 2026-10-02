@@ -4,6 +4,8 @@ import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import kotlin.test.Test
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ArticleNotificationRuleTest {
@@ -77,5 +79,18 @@ class ArticleNotificationRuleTest {
         assertFalse(managed.copy(feedUrls = listOf("a", "b")).isValid())
         assertFalse(managed.copy(regex = ".*").isValid())
         assertFalse(managed.copy(groupIds = listOf("group")).isValid())
+    }
+
+    @Test
+    fun compiledMatcherIsASnapshotAndNewBatchesUseEditedPatterns() {
+        val rule = ArticleNotificationRuleBean(name = "Mutable", regex = "Tech", feedUrls = listOf("a"))
+        val matches = assertNotNull(rule.compileMatcher())
+        rule.regex = "Cooking"
+        assertTrue(matches(article(title = "Tech"), null))
+        assertFalse(matches(article(title = "Cooking"), null))
+        assertFalse(matches(article(url = "b", title = "Tech"), null))
+        assertTrue(assertNotNull(rule.compileMatcher())(article(title = "Cooking"), null))
+        rule.regex = "["
+        assertNull(rule.compileMatcher())
     }
 }

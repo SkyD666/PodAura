@@ -13,6 +13,7 @@ import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
+import com.skyd.podaura.model.bean.playlist.PlaylistArticleBean
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.preference.data.delete.KeepArticlesWithDownloadTasksPreference
@@ -26,8 +27,7 @@ import com.skyd.podaura.model.repository.download.SelectedArticleDownloader
 import com.skyd.podaura.model.repository.download.SelectedDownloadPlan
 import com.skyd.podaura.model.repository.download.SelectedDownloadResult
 import com.skyd.podaura.model.repository.feed.RssHelper
-import com.skyd.podaura.model.repository.processBatch
-import kotlinx.coroutines.Deferred
+import com.skyd.podaura.model.repository.processBatchUpdates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
@@ -44,9 +44,7 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
@@ -187,15 +185,13 @@ class ArticleRepository(
     }.flowOn(Dispatchers.IO)
 
     fun readSelectedArticles(articleIds: Set<String>, read: Boolean): Flow<BatchProgress> =
-        processBatch(articleIds) {
-            check(articleDao.readArticle(it, read) > 0)
-            true
+        processBatchUpdates(articleIds, SQLITE_BIND_CHUNK_SIZE) {
+            articleDao.readArticles(it, read)
         }.flowOn(Dispatchers.IO)
 
     fun favoriteSelectedArticles(articleIds: Set<String>, favorite: Boolean): Flow<BatchProgress> =
-        processBatch(articleIds) {
-            check(articleDao.favoriteArticle(it, favorite) > 0)
-            true
+        processBatchUpdates(articleIds, SQLITE_BIND_CHUNK_SIZE) {
+            articleDao.favoriteArticles(it, favorite)
         }.flowOn(Dispatchers.IO)
 
     data class SelectedPlaylistMedia(
@@ -208,19 +204,19 @@ class ArticleRepository(
         articleIds: Set<String>,
         filterMask: Int,
     ): Flow<SelectedPlaylistMedia> = flow {
-        val articles = mutableListOf<ArticleWithFeed>()
+        val articles = mutableListOf<PlaylistArticleBean>()
         // Usually query in chunks; isolate a failed query so other articles still get prepared.
         for (chunk in articleIds.chunked(SQLITE_BIND_CHUNK_SIZE)) {
             currentCoroutineContext().ensureActive()
             try {
-                articles += articleDao.getArticleWithFeedListByIds(chunk)
+                articles += articleDao.getPlaylistArticlesByIds(chunk)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
                 for (id in chunk) {
                     currentCoroutineContext().ensureActive()
                     try {
-                        articles += articleDao.getArticleWithFeedListByIds(listOf(id))
+                        articles += articleDao.getPlaylistArticlesByIds(listOf(id))
                     } catch (error: CancellationException) {
                         throw error
                     } catch (_: Exception) {
@@ -231,15 +227,15 @@ class ArticleRepository(
         }
         val sort = FeedBean.parseFilterMaskToSort(filterMask)
         val comparator = when (sort) {
-            is FeedBean.SortBy.Date -> compareBy<ArticleWithFeed> { it.articleWithEnclosure.article.date }
-            is FeedBean.SortBy.Title -> compareBy<ArticleWithFeed> { it.articleWithEnclosure.article.title }
+            is FeedBean.SortBy.Date -> compareBy { it.date }
+            is FeedBean.SortBy.Title -> compareBy<PlaylistArticleBean> { it.title }
         }.let { if (sort.asc) it else it.reversed() }
         var noMediaCount = 0
         val medias = articles.sortedWith(comparator).flatMap { article ->
-            val enclosures = article.articleWithEnclosure.enclosures.filter { it.isMedia }
+            val enclosures = article.enclosures.filter { it.isMedia }
             if (enclosures.isEmpty()) noMediaCount++
             enclosures.map {
-                MediaUrlWithArticleIdBean(it.url, article.articleWithEnclosure.article.articleId)
+                MediaUrlWithArticleIdBean(it.url, article.articleId)
             }
         }.distinctBy { it.url }
         emit(SelectedPlaylistMedia(medias, noMediaCount, articleIds.size - articles.size))
@@ -249,49 +245,42 @@ class ArticleRepository(
 
     override fun refreshArticleList(feedUrls: List<String>, full: Boolean): Flow<Unit> = flow {
         coroutineScope {
-            val requests = mutableListOf<Deferred<Unit>>()
-            val failMsg = mutableListOf<Pair<String, String>>()
-            val failMsgMutex = Mutex()
             val semaphore = Semaphore(5)
-            feedUrls.forEach { feedUrl ->
-                requests += async {
+            val failedUrls = feedUrls.map { feedUrl ->
+                async {
                     semaphore.withPermit {
                         try {
-                            val feed = feedDao.getFeed(feedUrl) ?: return@async
-                            rssHelper.queryRssXml(
+                            val feed = feedDao.getFeed(feedUrl) ?: return@async null
+                            val feedWithArticle = rssHelper.queryRssXml(
                                 feed = feed,
                                 full = full,
                                 latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
-                            )?.let { feedWithArticle ->
-                                val refreshContext = currentCoroutineContext()
-                                withContext(NonCancellable) {
-                                    // Cancel pending work, but let a save that has begun finish.
-                                    refreshContext.ensureActive()
-                                    feedDao.updateFeedWithArticleIfExists(feedWithArticle)
-                                }
+                            )
+                            val refreshContext = currentCoroutineContext()
+                            withContext(NonCancellable) {
+                                // Cancel pending work, but let a save that has begun finish.
+                                refreshContext.ensureActive()
+                                feedDao.updateFeedWithArticleIfExists(feedWithArticle)
                             }
+                            null
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
                             currentCoroutineContext().ensureActive()
                             e.printStackTrace()
-                            failMsgMutex.withLock {
-                                failMsg += (feedUrl to e.message.orEmpty())
-                            }
+                            feedUrl
                         }
-                        Unit
                     }
                 }
-            }
-            requests.awaitAll()
-            if (failMsg.isNotEmpty()) {
+            }.awaitAll().filterNotNull()
+            if (failedUrls.isNotEmpty()) {
                 throw RefreshFeedsException(
                     getString(
-                        Res.string.rss_update_failed, failMsg.size,
-                        failMsg.joinToString(
+                        Res.string.rss_update_failed, failedUrls.size,
+                        failedUrls.joinToString(
                             separator = "\n",
                             limit = 10,
-                            transform = { "-${it.first}" }
+                            transform = { "-$it" }
                         ),
                     )
                 )

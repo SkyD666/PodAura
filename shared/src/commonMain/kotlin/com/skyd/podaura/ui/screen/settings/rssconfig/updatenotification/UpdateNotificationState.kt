@@ -22,7 +22,10 @@ sealed interface RuleListState {
         val rules: List<ArticleNotificationRuleBean>,
         val feeds: List<FeedBean>,
         val groups: List<GroupBean>,
-    ) : RuleListState
+    ) : RuleListState {
+        val feedNames = feeds.associate { it.url to (it.nickname ?: it.title ?: it.url) }
+        val groupNames = groups.associate { it.groupId to it.name }
+    }
 
     data object Init : RuleListState
     data class Failed(val msg: String) : RuleListState

@@ -110,7 +110,7 @@ val repositoryModule = module {
     factory { CalendarRepository(get(), get()) }
     factory { MediaRepository(get(), get(), get()) } binds arrayOf(IMediaRepository::class)
     factory {
-        AddToPlaylistRepository(get(), get(), get())
+        AddToPlaylistRepository(get(), get())
     } binds arrayOf(IAddToPlaylistRepository::class)
 
     factory {

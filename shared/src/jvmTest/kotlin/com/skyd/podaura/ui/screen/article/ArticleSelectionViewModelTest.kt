@@ -3,6 +3,8 @@ package com.skyd.podaura.ui.screen.article
 import androidx.lifecycle.ViewModelStore
 import androidx.paging.PagingConfig
 import androidx.room3.Room
+import androidx.room3.executeSQL
+import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.podaura.model.bean.article.ArticleBean
@@ -10,7 +12,6 @@ import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistBean
-import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.db.AppDatabase
 import com.skyd.podaura.model.db.dao.playlist.PlaylistMediaDao
 import com.skyd.podaura.model.db.instance
@@ -40,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -73,7 +75,7 @@ class ArticleSelectionViewModelTest {
         withContext(Dispatchers.Main) {
             viewModel = ArticleViewModel(
                 articleRepo,
-                AddToPlaylistRepository(database.articleDao(), database.playlistDao(), database.playlistItemDao()),
+                AddToPlaylistRepository(database.playlistDao(), database.playlistItemDao()),
             )
             store.put("articles", viewModel)
         }
@@ -284,6 +286,46 @@ class ArticleSelectionViewModelTest {
     }
 
     @Test
+    fun batchUpdatesCommitChunksAndRetryOnlyFailedChunks() = runBlocking {
+        insertEpisodes(901)
+        val ids = (0..900).map { "episode-$it" }.toSet() + "deleted"
+        val progress = articleRepo.readSelectedArticles(ids, true).toList()
+        assertEquals(listOf(0, 900, 901), progress.map { it.successCount })
+        assertEquals(BatchProgress(902, successCount = 901, failedCount = 1), progress.last())
+        assertEquals(progress, articleRepo.favoriteSelectedArticles(ids, true).toList())
+
+        database.useWriterConnection {
+            it.executeSQL(
+                "CREATE TRIGGER reject_read BEFORE UPDATE OF isRead ON Article " +
+                        "WHEN NEW.articleId = 'episode-1' BEGIN SELECT RAISE(ABORT, 'Cannot update'); END"
+            )
+        }
+        val subset = setOf("episode-0", "episode-1", "episode-2")
+        val retried = articleRepo.readSelectedArticles(subset, false).toList()
+        assertEquals(BatchProgress(3, successCount = 2, failedCount = 1), retried.last())
+        val states = database.articleDao().getArticleListByIds(subset.toList()).associate { it.articleId to it.isRead }
+        assertEquals(mapOf("episode-0" to false, "episode-1" to true, "episode-2" to false), states)
+    }
+
+    @Test
+    fun playlistAppendIsAtomicAndDistinguishesDuplicatesFromDeletedPlaylists() = runBlocking {
+        database.playlistDao().createPlaylist(PlaylistBean("list", "Test", 10.0, 0, false))
+        val repo = AddToPlaylistRepository(database.playlistDao(), database.playlistItemDao())
+        val media = MediaUrlWithArticleIdBean("https://example.com/missing.mp3", "deleted-article")
+        assertEquals(BatchProgress(1, successCount = 1), repo.insertSelectedPlaylistMedias("list", listOf(media)).last())
+        assertEquals(BatchProgress(1, skippedCount = 1), repo.insertSelectedPlaylistMedias("list", listOf(media)).last())
+        assertEquals(BatchProgress(1, failedCount = 1), repo.insertSelectedPlaylistMedias("deleted-list", listOf(media)).last())
+
+        val first = async { repo.insertSelectedPlaylistMedias("list", (1..10).map { MediaUrlWithArticleIdBean("first-$it", null) }).last() }
+        val second = async { repo.insertSelectedPlaylistMedias("list", (1..10).map { MediaUrlWithArticleIdBean("second-$it", null) }).last() }
+        assertEquals(10, first.await().successCount)
+        assertEquals(10, second.await().successCount)
+        val stored = database.playlistItemDao().getPlaylistMediaList("list")
+        assertEquals((1..21).map { it * 10.0 }, stored.map { it.playlistMediaBean.orderPosition })
+        assertNull(stored.first().playlistMediaBean.articleId)
+    }
+
+    @Test
     fun playlistPreparationFiltersMediaDeduplicatesAndFollowsArticleSort() = runBlocking {
         val oldAudio = "https://example.com/old-a.mp3"
         val oldVideo = "https://example.com/old-b.mp4"
@@ -329,16 +371,16 @@ class ArticleSelectionViewModelTest {
         val gate = CompletableDeferred<Unit>()
         var fail = true
         val dao = object : PlaylistMediaDao by database.playlistItemDao() {
-            override suspend fun insertPlaylistMedia(playlistMediaBean: PlaylistMediaBean) {
-                if (fail && playlistMediaBean.articleId == "episode-1") {
+            override suspend fun appendPlaylistMedia(playlistId: String, url: String, articleId: String?, createTime: Long): Long {
+                if (fail && articleId == "episode-1") {
                     started.complete(Unit)
                     gate.await()
                     error("One item failed")
                 }
-                database.playlistItemDao().insertPlaylistMedia(playlistMediaBean)
+                return database.playlistItemDao().appendPlaylistMedia(playlistId, url, articleId, createTime)
             }
         }
-        val repo = AddToPlaylistRepository(database.articleDao(), database.playlistDao(), dao)
+        val repo = AddToPlaylistRepository(database.playlistDao(), dao)
         replacePlaylistRepository(repo)
         val ids = setOf("episode-0", "episode-1", "episode-2")
         select(ids)
@@ -373,15 +415,15 @@ class ArticleSelectionViewModelTest {
         val started = CompletableDeferred<Unit>()
         val cancelled = CompletableDeferred<Unit>()
         val dao = object : PlaylistMediaDao by database.playlistItemDao() {
-            override suspend fun insertPlaylistMedia(playlistMediaBean: PlaylistMediaBean) {
-                if (playlistMediaBean.articleId == "episode-1") {
+            override suspend fun appendPlaylistMedia(playlistId: String, url: String, articleId: String?, createTime: Long): Long {
+                if (articleId == "episode-1") {
                     started.complete(Unit)
                     try { CompletableDeferred<Unit>().await() } finally { cancelled.complete(Unit) }
                 }
-                database.playlistItemDao().insertPlaylistMedia(playlistMediaBean)
+                return database.playlistItemDao().appendPlaylistMedia(playlistId, url, articleId, createTime)
             }
         }
-        replacePlaylistRepository(AddToPlaylistRepository(database.articleDao(), database.playlistDao(), dao))
+        replacePlaylistRepository(AddToPlaylistRepository(database.playlistDao(), dao))
         val ids = setOf("episode-0", "episode-1", "episode-2")
         select(ids)
         val media = articleRepo.prepareSelectedPlaylistMedia(ids, 0).first().medias
@@ -403,7 +445,7 @@ class ArticleSelectionViewModelTest {
         for (id in listOf("full", "partial")) {
             database.playlistDao().createPlaylist(PlaylistBean(id, id, 10.0, 0, false))
         }
-        val repo = AddToPlaylistRepository(database.articleDao(), database.playlistDao(), database.playlistItemDao())
+        val repo = AddToPlaylistRepository(database.playlistDao(), database.playlistItemDao())
         val medias = (0..900).map { MediaUrlWithArticleIdBean("https://example.com/$it.mp3", null) }
         repo.insertSelectedPlaylistMedias("full", medias).last()
         repo.insertSelectedPlaylistMedias("partial", medias.take(900)).last()

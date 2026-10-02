@@ -211,6 +211,7 @@ internal fun AddRuleDialog(
         feedUrls = feedUrls, groupIds = groupIds,
     )
     val emptyRule = regex.isBlank() && feedUrls.isEmpty() && groupIds.isEmpty()
+    val validRule = remember(regex, feedUrls, groupIds) { draft.isValid() }
 
     ComponeDialog(
         onDismissRequest = onDismissRequest,
@@ -239,17 +240,15 @@ internal fun AddRuleDialog(
                 )
                 TargetPicker(
                     title = stringResource(Res.string.notification_feeds),
-                    options = ruleListState.feeds.map {
-                        it.url to (it.nickname ?: it.title ?: it.url)
-                    },
+                    options = ruleListState.feedNames,
                     selected = feedUrls,
                     onSelected = { feedUrls = it },
                 )
                 TargetPicker(
                     title = stringResource(Res.string.notification_groups),
-                    options = listOf(
+                    options = mapOf(
                         GroupVo.DEFAULT_GROUP_ID to stringResource(Res.string.default_feed_group)
-                    ) + ruleListState.groups.map { it.groupId to it.name },
+                    ) + ruleListState.groupNames,
                     selected = groupIds,
                     onSelected = { groupIds = it },
                 )
@@ -257,7 +256,7 @@ internal fun AddRuleDialog(
                     stringResource(Res.string.notification_match_help),
                     style = MaterialTheme.typography.bodySmall
                 )
-                if (!draft.isValid()) {
+                if (!validRule) {
                     Text(
                         stringResource(if (emptyRule) Res.string.notification_empty_rule else Res.string.notification_invalid_regex),
                         color = MaterialTheme.colorScheme.error,
@@ -268,7 +267,7 @@ internal fun AddRuleDialog(
         },
         confirmButton = {
             val confirmButtonEnabled =
-                name.isNotBlank() && draft.isValid() && rule?.isManaged != true
+                name.isNotBlank() && validRule && rule?.isManaged != true
             TextButton(
                 enabled = confirmButtonEnabled,
                 onClick = {
@@ -331,9 +330,9 @@ internal fun RuleItem(
     var showRuleHelp by rememberSaveable(rule.id) { mutableStateOf(false) }
     var showDeleteConfirmation by rememberSaveable(rule.id) { mutableStateOf(false) }
     var showActions by remember { mutableStateOf(false) }
-    val title = ruleListState.feeds.firstOrNull {
-        rule.isManaged && it.url == rule.feedUrls.singleOrNull()
-    }?.let { it.nickname ?: it.title ?: it.url } ?: rule.name
+    val title =
+        if (rule.isManaged) ruleListState.feedNames[rule.feedUrls.singleOrNull()] ?: rule.name
+        else rule.name
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -408,12 +407,11 @@ internal fun RuleItem(
                 val unrestricted = stringResource(Res.string.notification_unrestricted)
                 val defaultGroup = stringResource(Res.string.default_feed_group)
                 val feeds = rule.feedUrls.joinToString { url ->
-                    ruleListState.feeds.firstOrNull { it.url == url }
-                        ?.let { it.nickname ?: it.title ?: it.url } ?: url
+                    ruleListState.feedNames[url] ?: url
                 }.ifEmpty { unrestricted }
                 val groups = rule.groupIds.joinToString { id ->
                     if (id == GroupVo.DEFAULT_GROUP_ID) defaultGroup
-                    else ruleListState.groups.firstOrNull { it.groupId == id }?.name ?: id
+                    else ruleListState.groupNames[id] ?: id
                 }.ifEmpty { unrestricted }
                 Spacer(modifier = Modifier.height(8.dp))
                 SelectionContainer(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -554,17 +552,22 @@ private fun RuleCondition(label: String, value: String) {
 @Composable
 private fun TargetPicker(
     title: String,
-    options: List<Pair<String, String>>,
+    options: Map<String, String>,
     selected: List<String>,
     onSelected: (List<String>) -> Unit,
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var pendingSelected by rememberSaveable { mutableStateOf(selected) }
-    val allOptions =
-        options + selected.filter { id -> options.none { it.first == id } }.map { it to it }
-    val summary = selected.joinToString { id -> allOptions.first { it.first == id }.second }
-        .ifEmpty { stringResource(Res.string.notification_unrestricted) }
+    val allOptions = remember(options, selected) {
+        options + selected.filterNot { it in options }.associateWith { it }
+    }
+    val summary = remember(allOptions, selected) {
+        selected.joinToString { allOptions.getValue(it) }
+    }.ifEmpty { stringResource(Res.string.notification_unrestricted) }
+    val filteredOptions = remember(allOptions, query) {
+        allOptions.filterValues { it.contains(query, ignoreCase = true) }.toList()
+    }
     TextButton(onClick = {
         query = ""
         pendingSelected = selected
@@ -589,9 +592,7 @@ private fun TargetPicker(
                     }
                     LazyColumn(Modifier.heightIn(max = 360.dp)) {
                         items(
-                            items = allOptions.filter {
-                                it.second.contains(query, ignoreCase = true)
-                            },
+                            items = filteredOptions,
                             key = { it.first },
                         ) { (id, label) ->
                             Row(

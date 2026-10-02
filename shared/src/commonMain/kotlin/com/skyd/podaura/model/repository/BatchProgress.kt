@@ -35,3 +35,33 @@ internal fun <T> processBatch(
         emit(progress)
     }
 }
+
+/** [update] must be atomic: a failed chunk is retried one item at a time. */
+internal fun <T> processBatchUpdates(
+    items: Collection<T>,
+    chunkSize: Int,
+    update: suspend (List<T>) -> Int,
+): Flow<BatchProgress> = flow {
+    var progress = BatchProgress(items.size)
+    emit(progress)
+    suspend fun process(chunk: List<T>) {
+        currentCoroutineContext().ensureActive()
+        val updated = try {
+            update(chunk)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            if (chunk.size > 1) {
+                for (item in chunk) process(listOf(item))
+                return
+            }
+            0
+        }
+        progress = progress.copy(
+            successCount = progress.successCount + updated,
+            failedCount = progress.failedCount + chunk.size - updated,
+        )
+        emit(progress)
+    }
+    for (chunk in items.chunked(chunkSize)) process(chunk)
+}

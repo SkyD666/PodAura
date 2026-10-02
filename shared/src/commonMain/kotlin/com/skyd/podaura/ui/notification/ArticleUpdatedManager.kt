@@ -91,6 +91,8 @@ object ArticleUpdatedManager {
         val articleDao = get<ArticleDao>()
 
         val rules = articleNotificationRuleDao.getAllArticleNotificationRules().first()
+            .mapNotNull { rule -> rule.compileMatcher()?.let { rule to it } }
+        if (rules.isEmpty()) return
         val matchedData = mutableListOf<Pair<String, ArticleNotificationRuleBean>>()
         articleIds.onSubList { subArticleIds ->
             val data = articleDao.getArticleWithEnclosureListByIds(subArticleIds)
@@ -98,7 +100,9 @@ object ArticleUpdatedManager {
                 .first().associateBy { it.url }
             matchedData += data.mapNotNull { item ->
                 val feed = feeds[item.article.feedUrl] ?: return@mapNotNull null
-                val matchedRule = rules.firstOrNull { it.match(item, feed.groupId) }
+                val matchedRule = rules.firstOrNull { (_, matches) ->
+                    matches(item, feed.groupId)
+                }?.first
                 matchedRule?.let { item.article.articleId to matchedRule }
             }
         }
