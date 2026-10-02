@@ -23,6 +23,7 @@ import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.bean.group.GROUP_TABLE_NAME
 import com.skyd.podaura.model.bean.group.GroupBean
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
 @Dao
@@ -96,11 +97,21 @@ interface FeedDao {
     }
 
     @Transaction
+    suspend fun replaceFeedUrl(oldUrl: String, feedWithArticleBean: FeedWithArticleBean) {
+        val newUrl = feedWithArticleBean.feed.url
+        val notificationsEnabled = observeNotificationsEnabled(oldUrl).first()
+        get<ArticleNotificationRuleDao>().moveUserFeedTargets(oldUrl, newUrl)
+        removeFeed(oldUrl)
+        setFeedWithArticle(feedWithArticleBean)
+        updateFeedNotificationsEnabled(newUrl, notificationsEnabled)
+    }
+
+    @Transaction
     suspend fun removeFeed(feedBean: FeedBean): Int = removeFeed(feedBean.url)
 
     @Transaction
     suspend fun removeFeed(url: String): Int {
-        removeDefaultNotificationRule(url)
+        get<ArticleNotificationRuleDao>().removeFeedTargets(listOf(url))
         return innerRemoveFeed(url)
     }
 
@@ -109,7 +120,7 @@ interface FeedDao {
 
     @Transaction
     suspend fun removeFeedByGroupId(groupId: String): Int {
-        getFeedUrlsByGroupId(groupId).forEach { removeDefaultNotificationRule(it) }
+        get<ArticleNotificationRuleDao>().removeFeedTargets(getFeedUrlsByGroupId(groupId))
         return innerRemoveFeedByGroupId(groupId)
     }
 

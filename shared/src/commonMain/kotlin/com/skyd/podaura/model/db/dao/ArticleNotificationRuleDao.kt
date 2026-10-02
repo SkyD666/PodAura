@@ -36,6 +36,22 @@ interface ArticleNotificationRuleDao {
     }
 
     @Transaction
+    suspend fun removeFeedTargets(feedUrls: List<String>) {
+        if (feedUrls.isEmpty()) return
+        val removedUrls = feedUrls.toSet()
+        getAllArticleNotificationRules().first().forEach { rule ->
+            val remainingUrls = rule.feedUrls.filterNot { it in removedUrls }
+            if (remainingUrls.size == rule.feedUrls.size) return@forEach
+            // An empty target list means all feeds, so delete exhausted rules instead.
+            if (remainingUrls.isEmpty()) {
+                removeArticleNotificationRule(rule.id)
+            } else {
+                setArticleNotificationRule(rule.copy(feedUrls = remainingUrls))
+            }
+        }
+    }
+
+    @Transaction
     suspend fun moveUserFeedTargets(oldUrl: String, newUrl: String) {
         getAllArticleNotificationRules().first()
             .filter { !it.isManaged && oldUrl in it.feedUrls }

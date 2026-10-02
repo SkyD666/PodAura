@@ -14,7 +14,6 @@ import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.db.dao.ArticleDao
-import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
 import com.skyd.podaura.model.db.dao.playlist.PlaylistDao.Companion.ORDER_DELTA
@@ -35,7 +34,6 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -47,7 +45,6 @@ class FeedSheetRepository(
     private val rssHelper: RssHelper,
     private val pagingConfig: PagingConfig,
     private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
-    private val notificationRuleDao: ArticleNotificationRuleDao,
 ) : IFeedSheetRepository {
     override fun getFeed(feedUrl: String): Flow<FeedViewBean> = flow {
         emit(feedDao.getFeedView(feedUrl))
@@ -60,7 +57,6 @@ class FeedSheetRepository(
         val oldFeed = feedDao.getFeedView(oldUrl)
         var newFeed = oldFeed
         if (oldUrl != newUrl) {
-            val notificationsEnabled = feedDao.observeNotificationsEnabled(oldUrl).first()
             val feedWithArticleBean = rssHelper.searchFeed(url = newUrl).run {
                 copy(
                     feed = feed.copy(
@@ -71,10 +67,7 @@ class FeedSheetRepository(
                     )
                 )
             }
-            feedDao.removeFeed(oldUrl)
-            feedDao.setFeedWithArticle(feedWithArticleBean)
-            feedDao.updateFeedNotificationsEnabled(newUrl, notificationsEnabled)
-            notificationRuleDao.moveUserFeedTargets(oldUrl, newUrl)
+            feedDao.replaceFeedUrl(oldUrl, feedWithArticleBean)
             newFeed = feedDao.getFeedView(newUrl)
         }
         emit(newFeed)

@@ -136,7 +136,7 @@ val repositoryModule = module {
     factory { RssHelper(get()) }
 
     factory {
-        FeedSheetRepository(get(), get(), get(), get(), get(), get(), get())
+        FeedSheetRepository(get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedSheetRepository::class)
 
     factory {

@@ -164,6 +164,7 @@ class FeedSheetViewModel(
                     if (it > 0) FeedSheetPartialStateChange.RemoveFeed.Success
                     else FeedSheetPartialStateChange.RemoveFeed.Failed("Remove failed!")
                 }.startWith(FeedSheetPartialStateChange.LoadingDialog.Show)
+                    .catchMap { FeedSheetPartialStateChange.RemoveFeed.Failed(it.message.toString()) }
             },
             filterIsInstance<FeedSheetIntent.ReadAllInFeed>().flatMapConcat { intent ->
                 feedSheetRepo.readAllInFeed(intent.feedUrl).flatMapConcat {

@@ -1,24 +1,34 @@
 package com.skyd.podaura.model.db.dao
 
 import androidx.room3.Room
+import androidx.room3.executeSQL
+import androidx.room3.useReaderConnection
+import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 import com.skyd.podaura.model.bean.feed.FeedBean
+import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.db.AppDatabase
 import com.skyd.podaura.model.db.instance
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FeedNotificationTest {
@@ -35,10 +45,18 @@ class FeedNotificationTest {
     fun setUp() {
         directory = Files.createTempDirectory("feed-notification-test").toFile()
         database = openDatabase()
+        startKoin {
+            modules(module {
+                factory { database.feedDao() }
+                factory { database.articleDao() }
+                factory { database.articleNotificationRuleDao() }
+            })
+        }
     }
 
     @AfterTest
     fun tearDown() {
+        stopKoin()
         database.close()
         directory.deleteRecursively()
     }
@@ -120,10 +138,13 @@ class FeedNotificationTest {
         assertEquals("Edited", dao.getRule(ordinary.id)?.name)
         database.feedDao().removeFeed(url)
         assertEquals(1, dao.getAllArticleNotificationRules().first().size)
+        assertEquals(listOf("other"), dao.getRule(ordinary.id)?.feedUrls)
     }
 
     @Test
     fun urlChangesKeepOrdinaryRuleTargetsWithoutBroadeningScope() = runTest {
+        database.feedDao().setFeed(FeedBean(url))
+        database.feedDao().updateFeedNotificationsEnabled(url, false)
         val dao = database.articleNotificationRuleDao()
         dao.saveUserRule(
             ArticleNotificationRuleBean(
@@ -132,11 +153,159 @@ class FeedNotificationTest {
                 feedUrls = listOf(url, "other")
             )
         )
-        dao.moveUserFeedTargets(url, "new")
+        database.feedDao().replaceFeedUrl(
+            url, FeedWithArticleBean(FeedBean("new"), emptyList())
+        )
         assertEquals(
             listOf("new", "other"),
             dao.getAllArticleNotificationRules().first().single().feedUrls
         )
+        assertNull(database.feedDao().getFeed(url))
+        assertFalse(database.feedDao().observeNotificationsEnabled("new").first())
+    }
+
+    @Test
+    fun deletionRemovesExhaustedRulesWithoutBroadeningRegexOrGroupScope() = runTest {
+        database.feedDao().setFeed(FeedBean(url))
+        val dao = database.articleNotificationRuleDao()
+        for ((regex, groupIds) in listOf("" to emptyList(), ".*news.*" to listOf("group"))) {
+            dao.saveUserRule(
+                ArticleNotificationRuleBean(
+                    name = "Only this feed", regex = regex,
+                    feedUrls = listOf(url), groupIds = groupIds,
+                )
+            )
+        }
+        val global = ArticleNotificationRuleBean(name = "All feeds", regex = ".*news.*")
+        dao.saveUserRule(global)
+        database.feedDao().removeFeed(url)
+        val remaining = dao.getAllArticleNotificationRules().first()
+        assertEquals(listOf(global.name), remaining.map { it.name })
+        assertTrue(remaining.single().feedUrls.isEmpty())
+    }
+
+    @Test
+    fun deletingFeedCascadesThroughAllRelatedTablesAndPreservesOtherFeeds() = runTest {
+        insertRelatedData(url, "group")
+        insertRelatedData("survivor", "other")
+
+        assertEquals(1, database.feedDao().removeFeed(FeedBean(url)))
+
+        assertOnlySurvivorRemains()
+    }
+
+    @Test
+    fun deletingGroupCleansEveryFeedAndNotificationTarget() = runTest {
+        insertRelatedData(url, "group")
+        insertRelatedData("second", "group")
+        insertRelatedData("survivor", "other")
+        val dao = database.articleNotificationRuleDao()
+        dao.saveUserRule(
+            ArticleNotificationRuleBean(
+                name = "Shared", regex = "", feedUrls = listOf(url, "second", "survivor"),
+            )
+        )
+        dao.saveUserRule(
+            ArticleNotificationRuleBean(
+                name = "Deleted group feeds", regex = ".*", feedUrls = listOf(url, "second"),
+            )
+        )
+
+        assertEquals(2, database.groupDao().removeGroupWithFeed("group"))
+
+        assertOnlySurvivorRemains()
+        val rules = dao.getAllArticleNotificationRules().first()
+        assertEquals(2, rules.size)
+        assertTrue(rules.all { it.feedUrls == listOf("survivor") })
+    }
+
+    @Test
+    fun failedDeletionAndUrlReplacementRollBackFeedDataAndNotificationRules() = runTest {
+        insertRelatedData(url, "group")
+        val dao = database.articleNotificationRuleDao()
+        dao.saveUserRule(
+            ArticleNotificationRuleBean(name = "Scoped", regex = "", feedUrls = listOf(url))
+        )
+        val originalRules = dao.getAllArticleNotificationRules().first()
+        database.useWriterConnection {
+            it.executeSQL(
+                "CREATE TRIGGER reject_delete BEFORE DELETE ON Article " +
+                        "BEGIN SELECT RAISE(ABORT, 'Cannot delete'); END"
+            )
+        }
+        assertFails { database.feedDao().removeFeed(url) }
+        assertEquals(originalRules, dao.getAllArticleNotificationRules().first())
+
+        database.useWriterConnection {
+            it.executeSQL("DROP TRIGGER reject_delete")
+            it.executeSQL(
+                "CREATE TRIGGER reject_insert BEFORE INSERT ON Feed " +
+                        "BEGIN SELECT RAISE(ABORT, 'Cannot insert'); END"
+            )
+        }
+        assertFails {
+            database.feedDao().replaceFeedUrl(
+                url, FeedWithArticleBean(FeedBean("new"), emptyList())
+            )
+        }
+        assertNotNull(database.feedDao().getFeed(url))
+        assertNull(database.feedDao().getFeed("new"))
+        assertEquals(url, database.articleDao().getArticleListByIds(listOf(url)).single().feedUrl)
+        assertEquals(originalRules, dao.getAllArticleNotificationRules().first())
+    }
+
+    private suspend fun insertRelatedData(feedUrl: String, groupId: String) {
+        database.feedDao().setFeed(FeedBean(feedUrl, groupId = groupId))
+        database.articleDao().innerUpsertArticle(
+            ArticleBean(articleId = feedUrl, feedUrl = feedUrl, isFavorite = true)
+        )
+        database.useWriterConnection { connection ->
+            connection.executeSQL(
+                "INSERT OR IGNORE INTO Playlist VALUES ('playlist', 'Playlist', 0, 0, 0)"
+            )
+            connection.usePrepared(
+                "INSERT OR IGNORE INTO `Group` VALUES (?, 'Group', 1, 0)"
+            ) { statement ->
+                statement.bindText(1, groupId)
+                statement.step()
+            }
+            for (sql in listOf(
+                "INSERT INTO enclosure VALUES (?1, 'media', 0, 'audio/mpeg')",
+                "INSERT INTO ArticleCategory VALUES (?1, 'category')",
+                "INSERT INTO RssMedia (articleId, adult) VALUES (?1, 0)",
+                "INSERT INTO ReadHistory VALUES (?1, 0)",
+                "INSERT INTO MediaPlayHistory VALUES (?1, 100, 10, 0, ?1)",
+                "INSERT INTO PlaylistMedia VALUES ('playlist', ?1, ?1, 0, 0)",
+                "INSERT INTO AutoDownloadRule VALUES (?1, 0, 0, 0, 1, 10, NULL)",
+            )) {
+                connection.usePrepared(sql) { statement ->
+                    statement.bindText(1, feedUrl)
+                    statement.step()
+                }
+            }
+        }
+    }
+
+    private suspend fun assertOnlySurvivorRemains() {
+        database.useReaderConnection { connection ->
+            for (table in listOf(
+                "Feed", "Article", "enclosure", "ArticleCategory", "RssMedia",
+                "ReadHistory", "MediaPlayHistory", "PlaylistMedia", "AutoDownloadRule",
+            )) {
+                connection.usePrepared("SELECT * FROM $table") { statement ->
+                    assertTrue(statement.step(), "$table should retain the other feed's data")
+                    assertEquals(
+                        "survivor", statement.getText(if (table == "PlaylistMedia") 1 else 0), table
+                    )
+                    assertFalse(statement.step(), "$table should not retain deleted feed data")
+                }
+            }
+            connection.usePrepared("PRAGMA foreign_key_check") { statement ->
+                assertFalse(statement.step(), "No dangling foreign keys")
+            }
+        }
+        assertFalse(database.feedDao().observeNotificationsEnabled(url).first())
+        assertTrue(database.feedDao().observeNotificationsEnabled("survivor").first())
     }
 
     @Test
