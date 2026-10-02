@@ -116,6 +116,7 @@ import com.skyd.podaura.ui.component.TopSnackbatHostBox
 import com.skyd.podaura.ui.component.dialog.DeleteArticleWarningDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.screen.feed.FeedIcon
+import com.skyd.podaura.ui.screen.feed.RefreshFeedState
 import com.skyd.podaura.ui.screen.feed.autodl.AutoDownloadRuleRoute
 import com.skyd.podaura.ui.screen.feed.requestheaders.RequestHeadersRoute
 import com.skyd.podaura.ui.screen.image.rememberImagePreviewOpener
@@ -321,7 +322,14 @@ fun EditFeedSheet(
         }
     )
 
-    WaitingDialog(visible = uiState.loadingDialog)
+    WaitingDialog(
+        visible = uiState.loadingDialog || uiState.refreshFeedState != null,
+        onCancel = if (uiState.refreshFeedState != null) {
+            { dispatch(FeedSheetIntent.CancelRefreshFeed) }
+        } else null,
+        cancelEnabled = !uiState.loadingDialog &&
+                uiState.refreshFeedState == RefreshFeedState.Loading,
+    )
 }
 
 @Composable

@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
+import com.skyd.podaura.ui.screen.feed.RefreshFeedState
 import kotlinx.coroutines.flow.Flow
 
 
@@ -116,19 +117,31 @@ internal sealed interface FeedSheetPartialStateChange {
     sealed interface RefreshFeed : FeedSheetPartialStateChange {
         override fun reduce(oldState: FeedSheetState): FeedSheetState {
             return when (this) {
+                Loading -> oldState.copy(refreshFeedState = RefreshFeedState.Loading)
+                Cancelling -> oldState.copy(refreshFeedState = RefreshFeedState.Cancelling)
                 is Success -> oldState.copy(
                     editFeedDialogBean = oldState.editFeedDialogBean?.let { editFeedDialogBean ->
                         feeds.firstOrNull { feed -> feed.feed.url == editFeedDialogBean.feed.url }
                     },
-                    loadingDialog = false,
+                    refreshFeedState = null,
+                )
+
+                is Cancelled -> oldState.copy(
+                    editFeedDialogBean = feed?.takeIf {
+                        it.feed.url == oldState.editFeedDialogBean?.feed?.url
+                    } ?: oldState.editFeedDialogBean,
+                    refreshFeedState = null,
                 )
 
                 is Failed -> oldState.copy(
-                    loadingDialog = false,
+                    refreshFeedState = null,
                 )
             }
         }
 
+        data object Loading : RefreshFeed
+        data object Cancelling : RefreshFeed
+        data class Cancelled(val feed: FeedViewBean?) : RefreshFeed
         data class Success(val feeds: List<FeedViewBean>) : RefreshFeed
         data class Failed(val msg: String) : RefreshFeed
     }

@@ -33,12 +33,14 @@ suspend fun Feed.feedToFeedWithArticleBean(url: String, icon: String? = null): F
     )
 }
 
-fun Feed.feedUpdateFeedWithArticleBean(
+suspend fun Feed.feedUpdateFeedWithArticleBean(
     url: String,
     feed: FeedBean,
     icon: String? = null,
     articleTakeWhile: (String?) -> Boolean,
 ): FeedWithArticleBean {
+    val context = currentCoroutineContext()
+    context.ensureActive()
     return FeedWithArticleBean(
         feed = feed.copy(
             title = title,
@@ -48,13 +50,18 @@ fun Feed.feedUpdateFeedWithArticleBean(
         ),
         articles = entries.run {
             if (feed.sortXmlArticlesOnUpdate) {
-                sortedByDescending { entry -> entry.published?.let { Instant.tryParse(it) } }
+                sortedByDescending { entry ->
+                    context.ensureActive()
+                    entry.published?.let { Instant.tryParse(it) }
+                }
             } else {
                 this
             }
         }.takeWhile { entry ->
+            context.ensureActive()
             articleTakeWhile(entry.links?.firstOrNull { it.rel == "alternate" }?.href)
         }.map {
+            context.ensureActive()
             it.toArticleWithEnclosureBean(url)
         },
     )

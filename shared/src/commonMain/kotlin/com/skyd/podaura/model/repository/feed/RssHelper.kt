@@ -19,6 +19,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.xml.xml
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
@@ -85,22 +86,22 @@ class RssHelper(
         feed: FeedBean,
         full: Boolean,
         latestLink: String?,        // 日期最新的文章链接，更新时不会take比这个文章更旧的文章
-    ): FeedWithArticleBean? = withContext(Dispatchers.IO) {
-        runCatching {
-            val iconAsync = async { getRssIcon(feed.url) }
-            val httpClient = HttpClient {
-                httpClientConfig()
-                xmlConfig()
-                install(
-                    createClientPlugin("RssPlugin") {
-                        onRequest { request, _ ->
-                            feed.requestHeaders?.headers?.forEach { (t, u) ->
-                                request.headers[t] = u
-                            }
+    ): FeedWithArticleBean = withContext(Dispatchers.IO) {
+        val iconAsync = async { getRssIcon(feed.url) }
+        val httpClient = HttpClient {
+            httpClientConfig()
+            xmlConfig()
+            install(
+                createClientPlugin("RssPlugin") {
+                    onRequest { request, _ ->
+                        feed.requestHeaders?.headers?.forEach { (t, u) ->
+                            request.headers[t] = u
                         }
                     }
-                )
-            }
+                }
+            )
+        }
+        try {
             when (val rssData: BaseXml? = httpClient.get(feed.url).body()) {
                 is Rss -> rssData.rssUpdateFeedWithArticleBean(
                     url = feed.url,
@@ -118,9 +119,13 @@ class RssHelper(
 
                 else -> error("Not supported XML type")
             }
-        }.onFailure { e ->
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             log.e("queryRssXml[${feed.title}]", e)
             throw e
-        }.getOrNull()
+        } finally {
+            httpClient.close()
+        }
     }
 }

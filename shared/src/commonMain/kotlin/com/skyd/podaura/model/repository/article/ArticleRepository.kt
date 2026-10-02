@@ -30,6 +30,7 @@ import com.skyd.podaura.model.repository.processBatch
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -47,6 +48,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.rss_update_failed
@@ -254,21 +256,27 @@ class ArticleRepository(
             feedUrls.forEach { feedUrl ->
                 requests += async {
                     semaphore.withPermit {
-                        runCatching {
+                        try {
                             val feed = feedDao.getFeed(feedUrl) ?: return@async
                             rssHelper.queryRssXml(
                                 feed = feed,
                                 full = full,
                                 latestLink = articleDao.queryLatestByFeedUrl(feedUrl)?.link,
                             )?.let { feedWithArticle ->
-                                feedDao.updateFeedWithArticleIfExists(feedWithArticle)
-                            }
-                        }.onFailure { e ->
-                            if (e !is CancellationException) {
-                                e.printStackTrace()
-                                failMsgMutex.withLock {
-                                    failMsg += (feedUrl to e.message.orEmpty())
+                                val refreshContext = currentCoroutineContext()
+                                withContext(NonCancellable) {
+                                    // Cancel pending work, but let a save that has begun finish.
+                                    refreshContext.ensureActive()
+                                    feedDao.updateFeedWithArticleIfExists(feedWithArticle)
                                 }
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            currentCoroutineContext().ensureActive()
+                            e.printStackTrace()
+                            failMsgMutex.withLock {
+                                failMsg += (feedUrl to e.message.orEmpty())
                             }
                         }
                         Unit

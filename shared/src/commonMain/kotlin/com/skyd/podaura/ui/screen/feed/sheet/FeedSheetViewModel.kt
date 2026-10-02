@@ -3,16 +3,20 @@ package com.skyd.podaura.ui.screen.feed.sheet
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.skyd.mvi.AbstractMviViewModel
+import com.skyd.podaura.ext.cancellableTask
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.startWith
+import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -173,13 +177,15 @@ class FeedSheetViewModel(
                     .startWith(FeedSheetPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedSheetPartialStateChange.ReadAll.Failed(it.message.toString()) }
             },
-            filterIsInstance<FeedSheetIntent.RefreshFeed>().flatMapConcat { intent ->
+            refreshFeedChanges(
+                reloadFeed = { url ->
+                    feedSheetRepo.getFeedViewsByUrls(listOf(url)).first().firstOrNull()
+                },
+            ) { intent ->
                 val urls = listOf(intent.url)
                 articleRepo.refreshArticleList(feedUrls = urls, full = intent.full).flatMapConcat {
                     feedSheetRepo.getFeedViewsByUrls(urls)
-                }.map { FeedSheetPartialStateChange.RefreshFeed.Success(it) }
-                    .startWith(FeedSheetPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedSheetPartialStateChange.RefreshFeed.Failed(it.message.toString()) }
+                }
             },
             filterIsInstance<FeedSheetIntent.CreateGroup>().flatMapConcat { intent ->
                 feedSheetRepo.createGroup(intent.group).map {
@@ -195,4 +201,28 @@ class FeedSheetViewModel(
             },
         )
     }
+}
+
+internal fun Flow<FeedSheetIntent>.refreshFeedChanges(
+    reloadFeed: suspend (String) -> FeedViewBean?,
+    refresh: (FeedSheetIntent.RefreshFeed) -> Flow<List<FeedViewBean>>,
+): Flow<FeedSheetPartialStateChange.RefreshFeed> = cancellableTask(
+    cancelIntent = FeedSheetIntent.CancelRefreshFeed,
+    started = FeedSheetPartialStateChange.RefreshFeed.Loading,
+    cancelling = FeedSheetPartialStateChange.RefreshFeed.Cancelling,
+    onCancelled = { intent ->
+        // A save may have committed while cancellation was waiting for it.
+        val feed = try {
+            reloadFeed(intent.url)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+        FeedSheetPartialStateChange.RefreshFeed.Cancelled(feed)
+    },
+    onFailure = { FeedSheetPartialStateChange.RefreshFeed.Failed(it.message.toString()) },
+) { intent: FeedSheetIntent.RefreshFeed ->
+    FeedSheetPartialStateChange.RefreshFeed.Success(refresh(intent).first())
 }

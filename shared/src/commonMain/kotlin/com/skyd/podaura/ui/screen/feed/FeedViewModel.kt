@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.screen.feed
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.skyd.mvi.AbstractMviViewModel
+import com.skyd.podaura.ext.cancellableTask
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.flatMapFirst
 import com.skyd.podaura.ext.startWith
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -156,14 +158,12 @@ class FeedViewModel(
                     .startWith(FeedPartialStateChange.LoadingDialog.Show)
                     .catchMap { FeedPartialStateChange.ReadAll.Failed(it.message.toString()) }
             },
-            filterIsInstance<FeedIntent.RefreshGroupFeed>().flatMapConcat { intent ->
+            refreshGroupFeedChanges { intent ->
                 articleRepo.refreshGroupArticles(
                     groupId = intent.groupId, full = intent.full,
                 ).flatMapConcat {
                     feedRepo.getFeedViewsByGroupId(intent.groupId)
-                }.map { FeedPartialStateChange.RefreshFeed.Success(it) }
-                    .startWith(FeedPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedPartialStateChange.RefreshFeed.Failed(it.message.toString()) }
+                }
             },
             filterIsInstance<FeedIntent.RefreshAllFeeds>().flatMapFirst {
                 feedRepo.requestAllFeedList().take(1).flatMapConcat { feeds ->
@@ -232,6 +232,18 @@ class FeedViewModel(
 
 internal fun List<FeedBean>.unmutedFeedUrls(): List<String> =
     filterNot { it.mute }.map { it.url }
+
+internal fun Flow<FeedIntent>.refreshGroupFeedChanges(
+    refresh: (FeedIntent.RefreshGroupFeed) -> Flow<List<FeedViewBean>>,
+): Flow<FeedPartialStateChange.RefreshFeed> = cancellableTask(
+    cancelIntent = FeedIntent.CancelRefreshGroupFeed,
+    started = FeedPartialStateChange.RefreshFeed.Loading,
+    cancelling = FeedPartialStateChange.RefreshFeed.Cancelling,
+    onCancelled = { FeedPartialStateChange.RefreshFeed.Cancelled },
+    onFailure = { FeedPartialStateChange.RefreshFeed.Failed(it.message.toString()) },
+) { intent: FeedIntent.RefreshGroupFeed ->
+    FeedPartialStateChange.RefreshFeed.Success(refresh(intent).first())
+}
 
 internal fun Flow<FeedIntent>.addFeedChanges(
     setFeed: (FeedIntent.AddFeed, onSaving: suspend () -> Unit) -> Flow<FeedViewBean>,

@@ -3,8 +3,12 @@ package com.skyd.podaura.ext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.flowWithLifecycle
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.buffer
@@ -23,6 +27,7 @@ import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.Duration.Companion.milliseconds
 
 fun <T> Flow<T>.catchMap(transform: FlowCollector<T>.(Throwable) -> T): Flow<T> =
@@ -71,6 +76,63 @@ fun <T> Flow<Flow<T>>.flattenFirst(): Flow<T> = channelFlow {
                     inner.collect { send(it) }
                 } finally {
                     mutex.unlock()
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Runs one [Request] at a time, ignoring duplicate requests and unrelated intents.
+ * [cancelIntent] stops the task and waits for it before calling [onCancelled].
+ */
+internal inline fun <Intent : Any, reified Request : Intent, Change> Flow<Intent>.cancellableTask(
+    cancelIntent: Intent,
+    started: Change,
+    cancelling: Change,
+    noinline onCancelled: suspend (Request) -> Change,
+    noinline onFailure: (Exception) -> Change,
+    noinline task: suspend (Request) -> Change,
+): Flow<Change> = channelFlow {
+    val mutex = Mutex()
+    var job: Job? = null
+    var request: Request? = null
+    var cancelEnabled = false
+
+    collect { intent ->
+        when (intent) {
+            is Request -> mutex.withLock {
+                if (job?.isActive == true) return@withLock
+                request = intent
+                cancelEnabled = true
+                job = launch {
+                    send(started)
+                    val result = try {
+                        task(intent)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        onFailure(e)
+                    }
+                    mutex.withLock {
+                        currentCoroutineContext().ensureActive()
+                        cancelEnabled = false
+                        send(result)
+                    }
+                }
+            }
+
+            cancelIntent -> {
+                val cancelledJob = mutex.withLock {
+                    job?.takeIf { it.isActive && cancelEnabled }?.also {
+                        cancelEnabled = false
+                        it.cancel()
+                        send(cancelling)
+                    }
+                }
+                if (cancelledJob != null) {
+                    cancelledJob.join()
+                    send(onCancelled(checkNotNull(request)))
                 }
             }
         }

@@ -74,19 +74,24 @@ internal sealed interface FeedPartialStateChange {
     sealed interface RefreshFeed : FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
+                Loading -> oldState.copy(refreshFeedState = RefreshFeedState.Loading)
+                Cancelling -> oldState.copy(refreshFeedState = RefreshFeedState.Cancelling)
                 is Success -> oldState.copy(
                     editFeedUrl = oldState.editFeedUrl?.let {
                         feeds.firstOrNull { feed -> feed.feed.url == it }?.feed?.url
                     },
-                    loadingDialog = false,
+                    refreshFeedState = null,
                 )
 
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
+                is Failed, Cancelled -> oldState.copy(
+                    refreshFeedState = null,
                 )
             }
         }
 
+        data object Loading : RefreshFeed
+        data object Cancelling : RefreshFeed
+        data object Cancelled : RefreshFeed
         data class Success(val feeds: List<FeedViewBean>) : RefreshFeed
         data class Failed(val msg: String) : RefreshFeed
     }

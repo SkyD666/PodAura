@@ -12,9 +12,9 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.repository.feed.rssparser.rss.Item
 import com.skyd.podaura.model.repository.feed.rssparser.rss.Rss
-import kotlinx.datetime.LocalTime
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.datetime.LocalTime
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
@@ -35,12 +35,14 @@ suspend fun Rss.rssToFeedWithArticleBean(url: String, icon: String? = null): Fee
     )
 }
 
-fun Rss.rssUpdateFeedWithArticleBean(
+suspend fun Rss.rssUpdateFeedWithArticleBean(
     url: String,
     feed: FeedBean,
     icon: String? = null,
     articleTakeWhile: (String?) -> Boolean,
 ): FeedWithArticleBean {
+    val context = currentCoroutineContext()
+    context.ensureActive()
     return FeedWithArticleBean(
         feed = feed.copy(
             title = channel.title,
@@ -50,13 +52,18 @@ fun Rss.rssUpdateFeedWithArticleBean(
         ),
         articles = channel.items.run {
             if (feed.sortXmlArticlesOnUpdate) {
-                sortedByDescending { item -> item.pubDate?.let { Instant.tryParse(it) } }
+                sortedByDescending { item ->
+                    context.ensureActive()
+                    item.pubDate?.let { Instant.tryParse(it) }
+                }
             } else {
                 this
             }
         }.takeWhile {
+            context.ensureActive()
             articleTakeWhile(it.link)
         }.map {
+            context.ensureActive()
             it.toArticleWithEnclosureBean(url)
         },
     )

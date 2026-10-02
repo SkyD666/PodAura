@@ -19,6 +19,7 @@ sealed interface FeedSheetIntent : MviIntent {
     data class RemoveFeed(val url: String) : FeedSheetIntent
     data class ReadAllInFeed(val feedUrl: String) : FeedSheetIntent
     data class RefreshFeed(val url: String, val full: Boolean) : FeedSheetIntent
+    data object CancelRefreshFeed : FeedSheetIntent
     data class CreateGroup(val group: GroupVo) : FeedSheetIntent
     data class MuteFeed(val feedUrl: String, val mute: Boolean) : FeedSheetIntent
 }

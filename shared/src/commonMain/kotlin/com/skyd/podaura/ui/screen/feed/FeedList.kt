@@ -427,11 +427,24 @@ internal fun FeedList(
         }
 
         WaitingDialog(
-            visible = uiState.loadingDialog || uiState.addFeedState != null,
-            onCancel = if (uiState.addFeedState != null) {
-                { dispatch(FeedIntent.CancelAddFeed) }
-            } else null,
-            cancelEnabled = uiState.addFeedState == AddFeedState.Loading && !uiState.loadingDialog,
+            visible = uiState.loadingDialog || uiState.addFeedState != null ||
+                    uiState.refreshFeedState != null,
+            onCancel = when {
+                uiState.addFeedState != null -> {
+                    { dispatch(FeedIntent.CancelAddFeed) }
+                }
+
+                uiState.refreshFeedState != null -> {
+                    { dispatch(FeedIntent.CancelRefreshGroupFeed) }
+                }
+
+                else -> null
+            },
+            cancelEnabled = !uiState.loadingDialog && if (uiState.addFeedState != null) {
+                uiState.addFeedState == AddFeedState.Loading
+            } else {
+                uiState.refreshFeedState == RefreshFeedState.Loading
+            },
         )
     }
 }
