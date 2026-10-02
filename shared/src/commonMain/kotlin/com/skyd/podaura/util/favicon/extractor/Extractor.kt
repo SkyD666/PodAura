@@ -8,7 +8,7 @@ interface Extractor {
     fun Headers.isImage() = get("Content-Type")?.startsWith("image/") == true
     fun Headers.isSvg() = get("Content-Type")?.contains("svg", ignoreCase = true) == true
 
-    fun extract(url: String): List<IconData>
+    suspend fun extract(url: String): List<IconData>
 
     data class IconData(
         val url: String,

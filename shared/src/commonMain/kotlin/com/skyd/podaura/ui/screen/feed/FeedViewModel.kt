@@ -7,10 +7,16 @@ import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.flatMapFirst
 import com.skyd.podaura.ext.startWith
 import com.skyd.podaura.model.bean.feed.FeedBean
+import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.feed.FeedRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
@@ -21,6 +27,9 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class FeedViewModel(
     private val feedRepo: FeedRepository,
@@ -47,6 +56,9 @@ class FeedViewModel(
     private fun Flow<FeedPartialStateChange>.sendSingleEvent(): Flow<FeedPartialStateChange> {
         return onEach { change ->
             val event = when (change) {
+                is FeedPartialStateChange.AddFeed.Cancelled ->
+                    FeedEvent.AddFeedResultEvent.Cancelled(change.url)
+
                 is FeedPartialStateChange.AddFeed.Success ->
                     FeedEvent.AddFeedResultEvent.Success(change.feed)
 
@@ -123,15 +135,13 @@ class FeedViewModel(
                 }.startWith(FeedPartialStateChange.FeedList.Loading)
                     .catchMap { FeedPartialStateChange.FeedList.Failed(it.message.orEmpty()) }
             },
-            filterIsInstance<FeedIntent.AddFeed>().flatMapConcat { intent ->
+            addFeedChanges { intent, onSaving ->
                 feedRepo.setFeed(
                     url = intent.url,
                     nickname = intent.nickname,
                     groupId = intent.group.groupId,
-                ).map {
-                    FeedPartialStateChange.AddFeed.Success(it)
-                }.startWith(FeedPartialStateChange.LoadingDialog.Show)
-                    .catchMap { FeedPartialStateChange.AddFeed.Failed(it.message.toString()) }
+                    onSaving = onSaving,
+                )
             },
             filterIsInstance<FeedIntent.OnEditFeedDialog>().flatMapConcat { intent ->
                 flowOf(FeedPartialStateChange.OnEditFeedDialog(intent.feedUrl))
@@ -222,3 +232,65 @@ class FeedViewModel(
 
 internal fun List<FeedBean>.unmutedFeedUrls(): List<String> =
     filterNot { it.mute }.map { it.url }
+
+internal fun Flow<FeedIntent>.addFeedChanges(
+    setFeed: (FeedIntent.AddFeed, onSaving: suspend () -> Unit) -> Flow<FeedViewBean>,
+): Flow<FeedPartialStateChange.AddFeed> = channelFlow {
+    val mutex = Mutex()
+    var job: Job? = null
+    var request: FeedIntent.AddFeed? = null
+    var cancelEnabled = false
+
+    collect { intent ->
+        when (intent) {
+            is FeedIntent.AddFeed -> mutex.withLock {
+                if (job?.isActive == true) return@withLock
+                request = intent
+                cancelEnabled = true
+                job = launch {
+                    send(FeedPartialStateChange.AddFeed.Loading)
+                    try {
+                        setFeed(intent) {
+                            // Serialize the saving boundary with cancellation, even when the
+                            // repository runs on IO and the UI has not received Saving yet.
+                            mutex.withLock {
+                                currentCoroutineContext().ensureActive()
+                                cancelEnabled = false
+                                send(FeedPartialStateChange.AddFeed.Saving)
+                            }
+                        }.collect { feed ->
+                            mutex.withLock {
+                                currentCoroutineContext().ensureActive()
+                                cancelEnabled = false
+                                send(FeedPartialStateChange.AddFeed.Success(feed))
+                            }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        mutex.withLock {
+                            currentCoroutineContext().ensureActive()
+                            cancelEnabled = false
+                            send(FeedPartialStateChange.AddFeed.Failed(e.message.toString()))
+                        }
+                    }
+                }
+            }
+
+            FeedIntent.CancelAddFeed -> {
+                val cancelledJob = mutex.withLock {
+                    job?.takeIf { it.isActive && cancelEnabled }?.also {
+                        cancelEnabled = false
+                        it.cancel()
+                    }
+                }
+                if (cancelledJob != null) {
+                    cancelledJob.join()
+                    send(FeedPartialStateChange.AddFeed.Cancelled(checkNotNull(request).url))
+                }
+            }
+
+            else -> Unit
+        }
+    }
+}

@@ -11,11 +11,13 @@ import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.repository.feed.rssparser.atom.Entry
 import com.skyd.podaura.model.repository.feed.rssparser.atom.Feed
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
-fun Feed.feedToFeedWithArticleBean(url: String, icon: String? = null): FeedWithArticleBean {
+suspend fun Feed.feedToFeedWithArticleBean(url: String, icon: String? = null): FeedWithArticleBean {
     return FeedWithArticleBean(
         feed = FeedBean(
             url = url,
@@ -24,7 +26,10 @@ fun Feed.feedToFeedWithArticleBean(url: String, icon: String? = null): FeedWithA
             link = link,
             icon = logo ?: this.icon ?: icon,
         ),
-        articles = entries.map { it.toArticleWithEnclosureBean(url) },
+        articles = entries.map {
+            currentCoroutineContext().ensureActive()
+            it.toArticleWithEnclosureBean(url)
+        },
     )
 }
 

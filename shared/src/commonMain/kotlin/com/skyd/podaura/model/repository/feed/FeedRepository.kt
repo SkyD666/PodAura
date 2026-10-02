@@ -31,6 +31,8 @@ import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolv
 import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -153,6 +155,7 @@ class FeedRepository(
         url: String,
         groupId: String?,
         nickname: String?,
+        onSaving: suspend () -> Unit = {},
     ): Flow<FeedViewBean> = flow {
         val realNickname = if (nickname.isNullOrBlank()) null else nickname
         val realGroupId =
@@ -168,6 +171,8 @@ class FeedRepository(
                 )
             )
         }
+        currentCoroutineContext().ensureActive()
+        onSaving()
         feedDao.setFeedWithArticle(feedWithArticleBean)
         emit(feedDao.getFeedView(url))
     }.flowOn(Dispatchers.IO)

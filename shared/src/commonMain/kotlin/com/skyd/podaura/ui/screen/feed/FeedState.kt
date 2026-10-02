@@ -14,6 +14,7 @@ data class FeedState(
     val editGroupDialogBean: GroupVo?,
     val loadingDialog: Boolean,
     val refreshAllFeedsInProgress: Boolean,
+    val addFeedState: AddFeedState? = null,
 ) : MviViewState {
     companion object {
         fun initial() = FeedState(
@@ -27,6 +28,8 @@ data class FeedState(
         )
     }
 }
+
+enum class AddFeedState { Loading, Saving }
 
 sealed interface ListState {
     data class Success(val dataPagingDataFlow: Flow<PagingData<Any>>) : ListState

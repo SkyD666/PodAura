@@ -11,6 +11,8 @@ sealed interface FeedIntent : MviIntent {
         val group: GroupVo = GroupVo.DefaultGroup
     ) : FeedIntent
 
+    data object CancelAddFeed : FeedIntent
+
     data class OnEditFeedDialog(val feedUrl: String?) : FeedIntent
     data class OnEditGroupDialog(val group: GroupVo?) : FeedIntent
     data class ReadAllInGroup(val groupId: String?) : FeedIntent

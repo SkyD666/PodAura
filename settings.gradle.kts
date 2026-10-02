@@ -40,3 +40,12 @@ include(
     ":platform:android:app",
     ":platform:android:benchmark",
 )
+
+// Use -PcomponePath=../Compone to develop against the local UI library.
+providers.gradleProperty("componePath").orNull?.let { componePath ->
+    includeBuild(componePath) {
+        dependencySubstitution {
+            substitute(module("io.github.skyd666:compone")).using(project(":shared"))
+        }
+    }
+}

@@ -12,15 +12,16 @@ import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.charsets.decode
 import io.ktor.utils.io.readBuffer
 import io.ktor.utils.io.readByteArray
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.coroutineScope
 import kotlinx.io.Buffer
 
 open class IconTagExtractor(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
 ) : Extractor {
-    override fun extract(url: String): List<Extractor.IconData> = runBlocking {
+    override suspend fun extract(url: String): List<Extractor.IconData> = coroutineScope {
         val httpClient = HttpClient(httpClientConfig)
         try {
             val html = httpClient.prepareGet(url).execute { httpResponse ->
@@ -41,14 +42,22 @@ open class IconTagExtractor(
                 )
             }.map {
                 async {
-                    runCatching {
+                    try {
                         it.takeIf { httpClient.get(it.url).headers.isImage() }
-                    }.getOrNull()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: Exception) {
+                        null
+                    }
                 }
             }.awaitAll().filterNotNull()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        } finally {
+            httpClient.close()
         }
     }
 }

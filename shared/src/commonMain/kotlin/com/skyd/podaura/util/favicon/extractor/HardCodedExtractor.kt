@@ -3,9 +3,10 @@ package com.skyd.podaura.util.favicon.extractor
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.request.get
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class HardCodedExtractor(
     private val httpClientConfig: HttpClientConfig<*>.() -> Unit,
@@ -16,15 +17,15 @@ class HardCodedExtractor(
         "/apple-touch-icon-precomposed.png",
     )
 
-    override fun extract(url: String): List<Extractor.IconData> = runBlocking {
+    override suspend fun extract(url: String): List<Extractor.IconData> = coroutineScope {
+        val baseUrl = baseUrl(url) ?: return@coroutineScope emptyList()
+        val httpClient = HttpClient(httpClientConfig)
         try {
-            val baseUrl = baseUrl(url) ?: return@runBlocking emptyList()
-            val request = mutableListOf<Deferred<Extractor.IconData?>>()
-            hardCodedFavicons.forEach {
+            hardCodedFavicons.map {
                 val faviconUrl = baseUrl + it
-                request += async {
+                async {
                     try {
-                        val headers = HttpClient(httpClientConfig).get(faviconUrl).headers
+                        val headers = httpClient.get(faviconUrl).headers
                         if (headers.isImage()) {
                             Extractor.IconData(
                                 url = faviconUrl,
@@ -37,15 +38,15 @@ class HardCodedExtractor(
                                 },
                             )
                         } else null
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (_: Exception) {
                         null
                     }
                 }
-            }
-            request.mapNotNull { it.await() }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
+            }.awaitAll().filterNotNull()
+        } finally {
+            httpClient.close()
         }
     }
 }

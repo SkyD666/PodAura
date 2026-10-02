@@ -11,6 +11,7 @@ sealed interface FeedEvent : MviSingleEvent {
     }
 
     sealed interface AddFeedResultEvent : FeedEvent {
+        data class Cancelled(val url: String) : AddFeedResultEvent
         data class Success(val feed: FeedViewBean) : AddFeedResultEvent
         data class Failed(val msg: String) : AddFeedResultEvent
     }

@@ -302,6 +302,13 @@ internal fun FeedList(
 
         MviEventListener(viewModel.singleEvent) { event ->
             when (event) {
+                is FeedEvent.AddFeedResultEvent.Cancelled -> {
+                    addDialogUrl = event.url
+                    openAddDialog = true
+                }
+
+                is FeedEvent.AddFeedResultEvent.Success -> addDialogUrl = ""
+
                 is FeedEvent.AddFeedResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)
 
@@ -365,7 +372,6 @@ internal fun FeedList(
                     if (newUrl.isNotBlank()) {
                         dispatch(FeedIntent.AddFeed(url = newUrl))
                     }
-                    addDialogUrl = ""
                     openAddDialog = false
                 },
                 onDismissRequest = {
@@ -420,7 +426,13 @@ internal fun FeedList(
             )
         }
 
-        WaitingDialog(visible = uiState.loadingDialog)
+        WaitingDialog(
+            visible = uiState.loadingDialog || uiState.addFeedState != null,
+            onCancel = if (uiState.addFeedState != null) {
+                { dispatch(FeedIntent.CancelAddFeed) }
+            } else null,
+            cancelEnabled = uiState.addFeedState == AddFeedState.Loading && !uiState.loadingDialog,
+        )
     }
 }
 

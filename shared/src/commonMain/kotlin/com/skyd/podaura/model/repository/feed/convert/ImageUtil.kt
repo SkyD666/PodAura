@@ -2,10 +2,16 @@ package com.skyd.podaura.model.repository.feed.convert
 
 import com.skyd.fundation.di.get
 import com.skyd.podaura.util.favicon.FaviconExtractor
+import kotlinx.coroutines.CancellationException
 
-internal suspend fun getRssIcon(url: String): String? = runCatching {
+internal suspend fun getRssIcon(url: String): String? = try {
     get<FaviconExtractor>().extractFavicon(url)
-}.onFailure { it.printStackTrace() }.getOrNull()
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    e.printStackTrace()
+    null
+}
 
 internal fun findImg(rawDescription: String): String? {
     // From: https://gitlab.com/spacecowboy/Feeder

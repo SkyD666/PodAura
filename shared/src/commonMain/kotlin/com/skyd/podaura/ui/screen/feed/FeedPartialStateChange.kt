@@ -19,17 +19,22 @@ internal sealed interface FeedPartialStateChange {
     sealed interface AddFeed : FeedPartialStateChange {
         override fun reduce(oldState: FeedState): FeedState {
             return when (this) {
+                Loading -> oldState.copy(addFeedState = AddFeedState.Loading)
+                Saving -> oldState.copy(addFeedState = AddFeedState.Saving)
                 is Success -> oldState.copy(
                     editFeedUrl = feed.feed.url,
-                    loadingDialog = false,
+                    addFeedState = null,
                 )
 
-                is Failed -> oldState.copy(
-                    loadingDialog = false,
+                is Failed, is Cancelled -> oldState.copy(
+                    addFeedState = null,
                 )
             }
         }
 
+        data object Loading : AddFeed
+        data object Saving : AddFeed
+        data class Cancelled(val url: String) : AddFeed
         data class Success(val feed: FeedViewBean) : AddFeed
         data class Failed(val msg: String) : AddFeed
     }
