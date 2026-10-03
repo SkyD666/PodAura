@@ -387,7 +387,7 @@ class PlayerCoordinator : LifecycleOwner {
         if (isNewRequest && command.requestId != null) {
             lastLoadRequestId = command.requestId
         }
-        val seekCurrentMedia = shouldSeekCurrentMedia(
+        val seekCurrentMedia = startPositionSeconds != null && shouldSeekCurrentMedia(
             startPositionSeconds = startPositionSeconds,
             startPath = command.startPath,
             currentPath = player.path,

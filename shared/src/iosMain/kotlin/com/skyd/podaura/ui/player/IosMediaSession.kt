@@ -92,7 +92,7 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
 
     init {
         coordinator.onPlaybackCommand = ::userCommand
-        activateAudio()
+        // Activate when a playback command arrives, rather than blocking player presentation.
         command(remote.playCommand) { send(PlayerCommand.Paused(false)) }
         command(remote.pauseCommand) { send(PlayerCommand.Paused(true)) }
         command(remote.togglePlayPauseCommand) { send(PlayerCommand.PlayOrPause) }
@@ -231,7 +231,7 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
                 else -> startsPlayback
             }
             resumePolicy.userAction(allowsResume)
-            if (startsPlayback) activateAudio()
+            if (startsPlayback) playerTrace("Player/AudioSessionActivate") { activateAudio() }
         }
     }
 

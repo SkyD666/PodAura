@@ -3,16 +3,14 @@ package com.skyd.podaura
 import androidx.compose.ui.window.ComposeUIViewController
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.player.IosPlayerApp
+import com.skyd.podaura.ui.player.IosPlayerNavigationController
+import com.skyd.podaura.ui.player.IosPlayerSession
 import kotlinx.cinterop.cValue
 import platform.Foundation.NSOperatingSystemVersion
 import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIInterfaceOrientationMask
-import platform.UIKit.UIViewAutoresizingFlexibleHeight
-import platform.UIKit.UIViewAutoresizingFlexibleWidth
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindowSceneGeometryPreferencesIOS
-import platform.UIKit.addChildViewController
-import platform.UIKit.didMoveToParentViewController
 import platform.UIKit.setNeedsUpdateOfHomeIndicatorAutoHidden
 
 internal object IosPlayerChrome {
@@ -45,19 +43,9 @@ internal object IosPlayerChrome {
 fun MainViewController(): UIViewController {
     initKoin()
     onAppStart()
-    val compose = ComposeUIViewController { IosPlayerApp() }
-    return object : UIViewController(nibName = null, bundle = null) {
-        override fun viewDidLoad() {
-            super.viewDidLoad()
-            IosPlayerChrome.controller = this
-            addChildViewController(compose)
-            compose.view.setFrame(view.bounds)
-            compose.view.autoresizingMask =
-                UIViewAutoresizingFlexibleWidth or UIViewAutoresizingFlexibleHeight
-            view.addSubview(compose.view)
-            compose.didMoveToParentViewController(this)
-        }
-
-        override fun prefersStatusBarHidden(): Boolean = IosPlayerChrome.fullscreen
+    val session = IosPlayerSession()
+    val root = ComposeUIViewController { IosPlayerApp(session) }
+    return IosPlayerNavigationController(root, session::onFullPlayerClosed).also {
+        session.navigationController = it
     }
 }

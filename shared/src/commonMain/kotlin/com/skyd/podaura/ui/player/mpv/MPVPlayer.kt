@@ -550,8 +550,7 @@ class MPVPlayer {
                 mpv.command("stop")
                 if (realFiles.all(::canUseSafePlaylistFile)) loadPlaylistFile(realFiles)
                 else playerTrace("Player/LoadList") { loadFilesIndividually(realFiles) }
-                val loadedPlaylist = loadPlaylist()
-                val index = startFile?.let(loadedPlaylist::indexOf)
+                val index = startFile?.let(realFiles::indexOf)
                     ?.takeIf { it >= 0 } ?: 0
                 mpv.command("playlist-play-index", index.toString())
                 paused = false
