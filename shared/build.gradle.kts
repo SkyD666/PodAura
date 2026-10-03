@@ -1,16 +1,15 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
+import com.skyd.podaura.buildlogic.addWindowsMediaFileAssociations
+import com.skyd.podaura.buildlogic.addWindowsNotificationProtocol
+import com.skyd.podaura.buildlogic.configureWindowsMsiOpenWith
 import com.skyd.podaura.buildlogic.macOSMediaDocumentTypes
 import com.skyd.podaura.buildlogic.macOSNotificationUrlTypes
-import com.skyd.podaura.buildlogic.addWindowsNotificationProtocol
-import com.skyd.podaura.buildlogic.addWindowsMediaFileAssociations
 import com.skyd.podaura.buildlogic.windowsMediaFileAssociations
-import com.skyd.podaura.buildlogic.configureWindowsMsiOpenWith
 import de.stefan_oltmann.msix.CreateAppxManifestTask
 import de.stefan_oltmann.msix.CreateMsixIconsTask
 import de.stefan_oltmann.msix.CreateMsixTask
-import org.gradle.api.tasks.JavaExec
-import org.gradle.api.tasks.testing.Test
-import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.nativeplatform.platform.internal.Architectures
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.compose.desktop.application.tasks.AbstractNativeMacApplicationPackageAppDirTask
@@ -30,8 +29,6 @@ plugins {
     id("podaura.ios-mpv")
 }
 
-val buildJvmArch = System.getProperty("os.arch").lowercase()
-val buildOperatingSystem = System.getProperty("os.name").lowercase()
 val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
     .map { it.toBooleanStrict() }
     .getOrElse(false)
@@ -112,7 +109,6 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.serialization.kotlinx.xml)
 
             implementation(libs.androidx.room3.runtime)
             implementation(libs.androidx.room3.paging)
@@ -193,26 +189,23 @@ kotlin {
             implementation(libs.mediamp)
 
             // DefaultNativePlatform reports the physical CPU under Rosetta. Packaging must follow
-            // the JVM that runs Gradle so an x64 JDK produces an entirely x64 distribution.
+            // the JVM that runs Gradle so a x64 JDK produces an entirely x64 distribution.
+            val currentArch = Architectures.forInput(System.getProperty("os.arch"))
+            val currentOs = DefaultNativePlatform.getCurrentOperatingSystem()
             when {
-                buildOperatingSystem.startsWith("windows") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isWindows && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.x64)
                 }
-                buildOperatingSystem.startsWith("windows") &&
-                        buildJvmArch in setOf("aarch64", "arm64") -> {
+                currentOs.isWindows && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.arm64)
                 }
-                buildOperatingSystem.startsWith("mac") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isMacOsX && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.x64)
                 }
-                buildOperatingSystem.startsWith("mac") &&
-                        buildJvmArch in setOf("aarch64", "arm64") -> {
+                currentOs.isMacOsX && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.arm64)
                 }
-                buildOperatingSystem.startsWith("linux") &&
-                        buildJvmArch in setOf("amd64", "x86_64") -> {
+                currentOs.isLinux && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.linux.x64)
                 }
             }
@@ -289,7 +282,7 @@ configurations.matching { it.name == "jvmRuntimeClasspath" }.configureEach {
 compose.desktop {
     application {
         mainClass = "com.skyd.podaura.MainKt"
-        if (buildOperatingSystem.startsWith("mac")) {
+        if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
             jvmArgs += macGestureModuleExport
         }
 
@@ -297,7 +290,7 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "PodAura"
             packageVersion = findProperty("versionForDesktop")!!.toString()
-            appResourcesRootDir.set(desktopMediaShimAppResources)
+            appResourcesRootDir = desktopMediaShimAppResources
 
             macOS {
                 bundleID = "com.skyd.podaura"
@@ -354,21 +347,20 @@ compose.desktop {
 }
 
 msix {
-    svgIcon.set(rootProject.layout.projectDirectory.file("doc/image/PodAura.svg"))
+    svgIcon = rootProject.layout.projectDirectory.file("doc/image/PodAura.svg")
 
     manifest {
-        appId.set("PodAura")
-        displayName.set("PodAura")
-        description.set(
+        appId = "PodAura"
+        displayName = "PodAura"
+        description =
             "An all-in-one Podcast app for RSS subscriptions, updates, media downloads and playback."
-        )
-        identityName.set("SkyD666.PodAura")
-        publisher.set("CN=A899BB3F-B2EE-4733-BFE7-45715FA85273")
-        publisherDisplayName.set("SkyD666")
-        version.set("${findProperty("versionForDesktop")}.0")
-        processorArchitecture.set("x64")
-        appExecutable.set("PodAura.exe")
-        targetDeviceFamilyMinVersion.set("10.0.17763.0")
+        identityName = "SkyD666.PodAura"
+        publisher = "CN=A899BB3F-B2EE-4733-BFE7-45715FA85273"
+        publisherDisplayName = "SkyD666"
+        version = "${findProperty("versionForDesktop")}.0"
+        processorArchitecture = "x64"
+        appExecutable = "PodAura.exe"
+        targetDeviceFamilyMinVersion = "10.0.17763.0"
     }
 }
 
@@ -376,11 +368,11 @@ msix {
 val msixApplicationDirectory =
     layout.buildDirectory.dir("compose/binaries/main-release/app/PodAura")
 
-tasks.named<CreateMsixIconsTask>("createMsixIcons") {
-    outputDir.set(msixApplicationDirectory.map { it.dir("resources") })
+tasks.named<CreateMsixIconsTask>("createMsixIcons").configure {
+    outputDir = msixApplicationDirectory.map { it.dir("resources") }
 }
 tasks.named<CreateAppxManifestTask>("createAppxManifest") {
-    outputFile.set(msixApplicationDirectory.map { it.file("AppxManifest.xml") })
+    outputFile = msixApplicationDirectory.map { it.file("AppxManifest.xml") }
     inputs.property("mediaFileAssociations", windowsMediaFileAssociations())
     inputs.property("notificationProtocol", "podaura")
     doLast {
@@ -389,11 +381,11 @@ tasks.named<CreateAppxManifestTask>("createAppxManifest") {
     }
 }
 tasks.named<CreateMsixTask>("createMsix") {
-    appDirectory.set(msixApplicationDirectory)
-    msixOutputFile.set(layout.buildDirectory.file("PodAura.msix"))
+    appDirectory = msixApplicationDirectory
+    msixOutputFile = layout.buildDirectory.file("PodAura.msix")
 }
 
-if (buildOperatingSystem.startsWith("mac")) {
+if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
     tasks.withType<JavaExec>().configureEach {
         jvmArgs(macGestureModuleExport)
     }
@@ -407,9 +399,9 @@ tasks.withType<AbstractNativeMacApplicationPackageAppDirTask>().configureEach {
     bundleID = "com.skyd.podaura"
 }
 
-// Distribution's icon
 tasks.withType<AbstractJPackageTask>().configureEach {
     if (targetFormat == TargetFormat.Dmg) {
+        // Distribution's icon
         freeArgs.addAll("--icon", "icons/icon_512x512.icns")
     }
     if (targetFormat == TargetFormat.Msi) {

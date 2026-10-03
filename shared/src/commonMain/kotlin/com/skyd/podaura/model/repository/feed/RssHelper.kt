@@ -18,7 +18,7 @@ import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.xml.xml
+import io.ktor.serialization.kotlinx.serialization
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -45,11 +45,13 @@ class RssHelper(
 
     private fun HttpClientConfig<*>.xmlConfig() {
         install(ContentNegotiation) {
-            val xml = XML(module) {
-                autoPolymorphic = true
-                defaultPolicy {
-                    pedantic = false
+            val xml = XML.v1(module) {
+                policy {
                     ignoreUnknownChildren()
+                    isStrictAttributeNames = false
+                    isStrictOtherAttributes = false
+                    isStrictBoolean = false
+                    throwOnRepeatedElement = false
                 }
             }
             listOf(
@@ -59,7 +61,7 @@ class RssHelper(
                 ContentType.Text.Xml,
                 ContentType.Text.Plain,
             ).forEach { contentType ->
-                xml(format = xml, contentType = contentType)
+                serialization(contentType = contentType, format = xml)
             }
         }
     }

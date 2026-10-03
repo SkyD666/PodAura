@@ -6,12 +6,12 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 kotlinx-io = "0.9.1"
 ksp = "2.3.12"
-compose = "1.12.0"
+compose = "1.12.1"
 compose-material3 = "1.12.0-alpha03"
 compose-material3-adaptive = "1.3.0-rc01"
 compose-materialIconsExtended = "1.7.3"
 lifecycle = "2.11.0"
-navigation3 = "1.1.1"
+navigation3 = "1.1.2"
 navigationevent = "1.1.0"
 ktor = "3.6.0"
 koin = "4.2.2"
@@ -20,19 +20,19 @@ ksoup = "0.2.6"
 readability = "1.0.0"
 coil = "3.6.3"
 paging = "3.5.1"
-worker = "2.11.2"
+worker = "2.12.0"
 room3 = "3.0.3"
 filekit = "0.16.0"
-xmlutil = "0.91.3" # Wait ktor to support 1.0.0
+xmlutil = "1.0.2.1"
 okio = "3.18.2"
 jna = "5.19.1"
 tracing-perfetto = "1.0.1"
 mediamp = "0.4.0"
 jaudiotagger = "3.0.1"
-gradle-msix = "0.2.1"
+gradle-msix = "0.3.0"
 
 [libraries]
-androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.0" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.19.1" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.13.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
@@ -40,7 +40,7 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version = "1.8.0
 androidx-constraintlayout-compose = { module = "tech.annexflow.compose:constraintlayout-compose-multiplatform-shaded", version = "0.8.2" }
 androidx-media = { module = "androidx.media:media", version = "1.8.0" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
-androidx-webkit = { module = "androidx.webkit:webkit", version = "1.17.0" }
+androidx-webkit = { module = "androidx.webkit:webkit", version = "1.17.1" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 
 jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
@@ -106,7 +106,6 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-serialization-kotlinx-xml = { module = "io.ktor:ktor-serialization-kotlinx-xml", version.ref = "ktor" }
 
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
@@ -133,12 +132,12 @@ coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt.coil3:coil-video", version.ref = "coil" }
 
-zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.7.0-alpha01" }
+zoomimage = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version = "1.7.0" }
 
 material-kolor = { module = "com.materialkolor:material-kolor", version = "5.0.1" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version = "3.1.0" }
 
-compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.3.1" }
+compottie = { module = "io.github.alexzhirkevich:compottie", version = "2.3.2" }
 
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
@@ -168,8 +167,8 @@ androidx-compose-runtime-tracing = { module = "androidx.compose.runtime:runtime-
 androidx-tracing-perfetto = { module = "androidx.tracing:tracing-perfetto", version.ref = "tracing-perfetto" }
 androidx-tracing-perfetto-binary = { module = "androidx.tracing:tracing-perfetto-binary", version.ref = "tracing-perfetto" }
 
-mockito-core = { module = "org.mockito:mockito-core", version = "5.23.0" }
-mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.3.0" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.24.0" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.4.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -183,5 +182,5 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room3 = { id = "androidx.room3", version.ref = "room3" }
-buildkonfig = { id = "com.codingfeline.buildkonfig", version = "0.22.0" }
+buildkonfig = { id = "com.codingfeline.buildkonfig", version = "0.23.0" }
 gradle-msix = { id = "de.stefan-oltmann.gradle-msix-plugin", version.ref = "gradle-msix" }

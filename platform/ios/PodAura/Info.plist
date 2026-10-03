@@ -57,14 +57,14 @@
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>org.opml.opml</string>
-			<key>UTTypeDescription</key>
-			<string>OPML document</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.xml</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>OPML Document</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.opml.opml</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>

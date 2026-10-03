@@ -11,8 +11,10 @@ import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
-import net.devrieze.xmlutil.serialization.kxio.encodeToSink
 import net.devrieze.xmlutil.serialization.kxio.decodeFromSource
+import net.devrieze.xmlutil.serialization.kxio.encodeToSink
+import nl.adaptivity.xmlutil.XmlDeclMode
+import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import nl.adaptivity.xmlutil.serialization.XmlConfig
 
@@ -42,14 +44,17 @@ fun OPML(
 }
 
 class OpmlBuilder internal constructor() {
-    internal var xmlConfig: XmlConfig = XML {
-        autoPolymorphic = true
-        indentString = "  "
-        defaultPolicy {
-            pedantic = false
-            ignoreUnknownChildren()
+
+    internal var xmlConfig: XmlConfig = XmlConfig(
+        XmlConfig.DefaultBuilder().apply {
+            recommended_1_0_0 {
+                ignoreUnknownChildren()
+            }
+            setIndent(2)
+            xmlVersion = XmlVersion.XML10
+            xmlDeclMode = XmlDeclMode.Charset
         }
-    }.config
+    )
 
     internal fun build(): OpmlConfiguration {
         return OpmlConfiguration(

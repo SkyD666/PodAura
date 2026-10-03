@@ -23,10 +23,11 @@ import io.ktor.http.takeFrom
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.core.remaining
 import io.ktor.utils.io.exhausted
-import io.ktor.utils.io.readRemaining
+import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellationException
 import kotlinx.io.IOException
 import kotlin.math.max
+import kotlin.time.Clock
 
 internal data class TransferResponseMetadata(
     val suggestedFileName: String?,
@@ -259,16 +260,16 @@ internal class DownloadTransferEngine(
     ): Long {
         var received = rangeStart
         var lastReportedBytes = rangeStart
-        var lastReportedAt = kotlin.time.Clock.currentTimeMillis()
+        var lastReportedAt = Clock.currentTimeMillis()
         onProgress(TransferProgress(received, totalBytes, 0f))
         try {
             partFile.sink(append = append).use { sink ->
                 while (!channel.exhausted()) {
-                    val chunk = channel.readRemaining(CHUNK_SIZE)
+                    val chunk = channel.readBuffer(CHUNK_SIZE)
                     val chunkSize = chunk.remaining
                     chunk.transferTo(sink)
                     received += chunkSize
-                    val now = kotlin.time.Clock.currentTimeMillis()
+                    val now = Clock.currentTimeMillis()
                     if (now - lastReportedAt >= PROGRESS_INTERVAL_MILLIS) {
                         val elapsed = max(1, now - lastReportedAt)
                         onProgress(
@@ -373,7 +374,7 @@ internal class DownloadTransferEngine(
         val end = match.groupValues[2].toLongOrNull() ?: return null
         if (end < start) return null
         val total = match.groupValues[3].takeUnless { it == "*" }?.toLongOrNull() ?: 0
-        if (total > 0 && end >= total) return null
+        if (total in 1 .. end) return null
         return ParsedContentRange(start, end, total)
     }
 

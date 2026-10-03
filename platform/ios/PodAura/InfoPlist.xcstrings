@@ -31,8 +31,21 @@
         }
       }
     },
-    "OPML document" : {
-
+    "OPML Document" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML Document"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML 文稿"
+          }
+        }
+      }
     }
   },
   "version" : "1.3"
