@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import org.jetbrains.skia.Rect
 import org.jetbrains.skia.SamplingMode
 import org.openani.mediamp.mpv.internal.MpvSurfaceDrawResolver
+import org.openani.mediamp.mpv.utils.SkiaLayerRedrawer
 import org.openani.mediamp.mpv.utils.SkiaRenderDeviceInterop
 import org.openani.mediamp.mpv.utils.findSkiaLayer
 import kotlin.time.Duration.Companion.milliseconds
@@ -42,7 +43,7 @@ internal fun MPVSurface(
 ) {
     val logger = remember { Logger.withTag("MPVSurface") }
     val window = LocalAwtWindow.current
-    val interop: SkiaRenderDeviceInterop? = remember(window, player) {
+    val layerRedrawer = remember(window) {
         if (window == null) {
             logger.e { "LocalWindow.current is null; cannot locate SkiaLayer" }
             return@remember null
@@ -52,8 +53,14 @@ internal fun MPVSurface(
             logger.e { "No SkiaLayer found in player window" }
             return@remember null
         }
-        try {
-            val value = player.createSkiaInterop(layer)
+        SkiaLayerRedrawer(layer)
+    }
+    var interop by remember(player, layerRedrawer) { mutableStateOf<SkiaRenderDeviceInterop?>(null) }
+    LaunchedEffect(player, layerRedrawer) {
+        val liveLayer = layerRedrawer ?: return@LaunchedEffect
+        while (liveLayer.redrawerOrNull == null) delay(50.milliseconds)
+        interop = try {
+            val value = player.createSkiaInterop(liveLayer)
             value as? SkiaRenderDeviceInterop
                 ?: error("Unsupported Skia interop: ${value?.javaClass}")
         } catch (throwable: Throwable) {
@@ -72,9 +79,9 @@ internal fun MPVSurface(
         if (loggedStates.add(state)) logger.d { state }
     }
 
-    DisposableEffect(player) {
-        renderContextReady = player.renderContextLifecycle?.createEagerly() ?: false
-        if (!renderContextReady &&
+    DisposableEffect(player, interop) {
+        renderContextReady = interop != null && player.renderContextLifecycle?.createEagerly() == true
+        if (interop != null && !renderContextReady &&
             player.renderContextLifecycle?.deferredReadiness != true
         ) {
             logger.e { "Failed to create eager mpv render context" }

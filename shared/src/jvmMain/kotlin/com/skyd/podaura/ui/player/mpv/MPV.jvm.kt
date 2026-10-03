@@ -8,7 +8,6 @@ import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import org.jetbrains.skia.DirectContext
 import org.jetbrains.skia.Image
-import org.jetbrains.skiko.SkiaLayer
 import org.openani.mediamp.mpv.MPVHandle
 import org.openani.mediamp.mpv.RenderUpdateListener
 import org.openani.mediamp.mpv.internal.MpvRenderContextHost
@@ -16,6 +15,7 @@ import org.openani.mediamp.mpv.internal.MpvRenderContextLifecycle
 import org.openani.mediamp.mpv.internal.MpvSurfaceBackend
 import org.openani.mediamp.mpv.internal.MpvSurfaceConsumer
 import org.openani.mediamp.mpv.internal.currentSurfaceBackend
+import org.openani.mediamp.mpv.utils.SkiaLayerRedrawer
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
 import org.openani.mediamp.mpv.EventListener as MediampEventListener
@@ -25,15 +25,24 @@ actual class MPV {
     // deliberately does not call mpv_initialize(), allowing common configuration to be applied
     // first.
     private val mpvHandle = MPVHandle(Any())
-    private val ringBackend: MpvSurfaceBackend? = currentSurfaceBackend()
-    private val surfaceRing: MpvSurfaceConsumer? = ringBackend?.createSurfaceConsumer(mpvHandle.ptr)
+    private var ringBackend: MpvSurfaceBackend? = null
+    private var surfaceRing: MpvSurfaceConsumer? = null
     private val pendingCommandsLock = Any()
     private val pendingCommands = mutableListOf<Array<out String>>()
     private val closed = AtomicBoolean(false)
     private val playbackSessionActive = AtomicBoolean(false)
 
-    internal val renderContextLifecycle: MpvRenderContextLifecycle? =
-        ringBackend?.createRenderContextLifecycle(
+    internal var renderContextLifecycle: MpvRenderContextLifecycle? = null
+        private set
+
+    private fun attachBackend(backend: MpvSurfaceBackend) = synchronized(pendingCommandsLock) {
+        if (closed.get()) return@synchronized
+        ringBackend?.let {
+            check(it === backend) { "Skiko changed the mpv surface backend; recreate the player" }
+            return@synchronized
+        }
+        surfaceRing = backend.createSurfaceConsumer(mpvHandle.ptr)
+        renderContextLifecycle = backend.createRenderContextLifecycle(
             object : MpvRenderContextHost {
                 override val handle: MPVHandle get() = mpvHandle
                 override fun hasActivePlaybackSession(): Boolean = playbackSessionActive.get()
@@ -43,6 +52,10 @@ actual class MPV {
                 }
             },
         )
+        ringBackend = backend
+        renderContextLifecycle?.initialize()
+        if (renderContextLifecycle?.ensureReadyForLoad() == true) flushPendingCommands()
+    }
 
     // mediamp only supports a single EventListener, so one fan-out listener is registered and it
     // forwards to this set. CopyOnWriteArraySet because mpv dispatches on its own thread while
@@ -92,12 +105,15 @@ actual class MPV {
             Platform.macOS_Jvm -> {
                 option("ao", "coreaudio")
             }
+
             Platform.Windows -> {
                 option("ao", "wasapi")
             }
+
             Platform.Linux -> {
                 option("ao", "pulse,alsa")
             }
+
             else -> {}
         }
         // Match mediamp's initialization sequence: install its event bridge before
@@ -110,7 +126,8 @@ actual class MPV {
         option("force-window", "no")
         option("idle", "yes")
         option("keep-open", "always")
-        renderContextLifecycle?.initialize()
+        // Windows selects its backend only after the window has a live Skiko redrawer.
+        currentSurfaceBackend()?.let { attachBackend(it) }
     }
 
     actual fun destroy() {
@@ -153,7 +170,7 @@ actual class MPV {
             }
             val commandName = command.firstOrNull()
             if ((commandName == "loadfile" || commandName == "loadlist") &&
-                renderContextLifecycle?.ensureReadyForLoad() == false
+                renderContextLifecycle?.ensureReadyForLoad() != true
             ) {
                 pendingCommands += command
                 return
@@ -223,9 +240,11 @@ actual class MPV {
     // Do not expose mediamp's internal SkiaRenderDeviceInterop as this method's return type.
     // With INVISIBLE_REFERENCE suppression Kotlin 2.4 otherwise emits a bogus checkcast Void at
     // the call site, which turns every valid SkiaMetalInterop into ClassCastException.
-    internal fun createSkiaInterop(layer: SkiaLayer): Any? {
+    internal fun createSkiaInterop(layerRedrawer: SkiaLayerRedrawer): Any? {
         if (closed.get()) return null
-        return ringBackend?.createSkiaInterop(layer)
+        val backend = currentSurfaceBackend(layerRedrawer) ?: return null
+        attachBackend(backend)
+        return backend.createSkiaInterop(layerRedrawer)
     }
 
     internal fun requestSurface(width: Int, height: Int, devicePtr: Long): Boolean =

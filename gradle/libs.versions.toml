@@ -27,7 +27,7 @@ xmlutil = "1.0.2.1"
 okio = "3.18.2"
 jna = "5.19.1"
 tracing-perfetto = "1.0.1"
-mediamp = "0.4.0"
+mediamp = "0.5.0"
 jaudiotagger = "3.0.1"
 gradle-msix = "0.3.0"
 
