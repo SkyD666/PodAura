@@ -15,7 +15,20 @@
       "shouldTranslate" : false
     },
     "Matroska Video" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska Video"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska 视频"
+          }
+        }
+      }
     },
     "NSPhotoLibraryAddUsageDescription" : {
       "extractionState" : "manual",

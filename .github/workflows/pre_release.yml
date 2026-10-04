@@ -28,36 +28,59 @@ jobs:
                              'platform/android/app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
                              platform/android/app/build/outputs/apk/GitHub/release/*universal*.apk,
                              platform/android/app/build/outputs/mapping/GitHubRelease/mapping.txt ]
-            artifact-name: [ Pre-Release Android APK (arm64-v8a),
-                             Pre-Release Android APK (armeabi-v7a),
-                             Pre-Release Android APK (x86_64),
-                             Pre-Release Android APK (x86),
-                             Pre-Release Android APK (universal),
-                             Pre-Release Android Mapping ]
+            artifact-name: [ Android APK (arm64-v8a),
+                             Android APK (armeabi-v7a),
+                             Android APK (x86_64),
+                             Android APK (x86),
+                             Android APK (universal),
+                             Android Mapping ]
           - os: macos-26
-            target-platform: Jvm macOS arm64
+            target-platform: JVM macOS arm64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release macOS DMG (Jvm arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ macOS DMG (JVM arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26-intel
-            target-platform: Jvm macOS x64
+            target-platform: JVM macOS x64
             build-command: ./gradlew packageReleaseDistributionForCurrentOS
             artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ Pre-Release macOS DMG (Jvm x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ macOS DMG (JVM x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: windows-latest
-            target-platform: Jvm Windows x64
+            target-platform: JVM Windows x64
             build-command: |
               ./gradlew :shared:createReleaseDistributable -PmicrosoftStore=false
               New-Item -ItemType Directory -Force shared/build/windows-portable | Out-Null
               Copy-Item shared/build/compose/binaries/main-release/app/PodAura shared/build/windows-portable/PodAura -Recurse
               ./gradlew :shared:createMsix -PmicrosoftStore=true
             artifact-path: [ shared/build/windows-portable/PodAura/, shared/build/PodAura.msix ]
-            artifact-name: [ Pre-Release Windows Portable ZIP (Jvm x64), Pre-Release Windows Store MSIX (Jvm x64), Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ Windows Portable ZIP (JVM x64), Windows Store MSIX (JVM x64), Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
             artifact-path: [ shared/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg ]
-            artifact-name: [ Pre-Release macOS DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            artifact-name: [ macOS DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+
+          # The project.xcproj format requires Xcode 27.
+          - os: xcode-27
+            target-platform: iOS
+            build-command: |
+              xcodebuild archive \
+                -project platform/ios/PodAura.xcodeproj \
+                -scheme PodAura \
+                -configuration Release \
+                -sdk iphoneos \
+                -destination 'generic/platform=iOS' \
+                -archivePath "$RUNNER_TEMP/PodAura.xcarchive" \
+                ARCHS=arm64 \
+                CODE_SIGNING_ALLOWED=NO \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGN_IDENTITY="" \
+                CODE_SIGN_ENTITLEMENTS="" \
+                DEVELOPMENT_TEAM=""
+              mkdir -p "$RUNNER_TEMP/Payload"
+              cp -R "$RUNNER_TEMP/PodAura.xcarchive/Products/Applications/PodAura.app" "$RUNNER_TEMP/Payload/"
+              ( cd "$RUNNER_TEMP" && zip -9 -r -y "$GITHUB_WORKSPACE/PodAura_iOS_Unsigned.ipa" Payload )
+            artifact-path: [ PodAura_iOS_Unsigned.ipa ]
+            artifact-name: [ PodAura iOS Unsigned IPA, Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository
@@ -71,6 +94,17 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache Kotlin/Native toolchain
+        if: matrix.target-platform == 'iOS arm64'
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-${{ runner.arch }}-konan-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: Install MPV build dependencies
+        if: matrix.target-platform == 'iOS arm64'
+        run: brew install meson ninja pkg-config
 
       - name: Checkout Secret
         if: matrix.target-platform == 'Android'
@@ -88,7 +122,7 @@ jobs:
           rm -rf ./secret
 
       # Build
-      - name: Build with Gradle
+      - name: Build
         run: ${{ matrix.build-command }}
 
       - name: Upload Artifact - ${{ matrix.artifact-name[0] }}
@@ -96,6 +130,7 @@ jobs:
         with:
           name: ${{ matrix.artifact-name[0] }}
           path: ${{ matrix.artifact-path[0] }}
+          archive: ${{ matrix.target-platform != 'iOS arm64' }}
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[1] }}
