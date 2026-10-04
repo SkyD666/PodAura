@@ -272,7 +272,7 @@ composeCompiler {
     metricsDestination = layout.buildDirectory.dir("compose_compiler/metrics")
 }
 
-// mediamp 0.4.0 accidentally publishes Compose's JUnit UI test stack as a runtime
+// mediamp 0.5.0 accidentally publishes Compose's JUnit UI test stack as a runtime
 // dependency. Besides bloating distributions, Truth leaves optional ASM references
 // unresolved during desktop ProGuard.
 configurations.matching { it.name == "jvmRuntimeClasspath" }.configureEach {

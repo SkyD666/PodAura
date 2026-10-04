@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,7 +32,11 @@ internal fun Screenshot(
 ) {
     Icon(
         modifier = modifier
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End))
+            .windowInsetsPadding(
+                WindowInsets.systemBars
+                    .union(WindowInsets.displayCutout)
+                    .only(WindowInsetsSides.End)
+            )
             .clip(RoundedCornerShape(6.dp))
             .background(color = ControllerLabelGray)
             .clickable(onClick = onClick)

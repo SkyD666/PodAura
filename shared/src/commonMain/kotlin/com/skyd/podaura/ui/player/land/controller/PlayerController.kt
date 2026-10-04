@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.FastForward
@@ -404,7 +406,11 @@ private fun AutoHiddenBox(
                                 start.linkTo(parent.start)
                             }
                             .padding(start = 20.dp)
-                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                            .windowInsetsPadding(
+                                WindowInsets.systemBars
+                                    .union(WindowInsets.displayCutout)
+                                    .only(WindowInsetsSides.Start)
+                            )
                             .hoverable(hoverInteractionSource),
                         seconds = replaySecond,
                         onLongClick = { onDialogVisibilityChanged.onReplaySecondDialog(true) },
@@ -425,6 +431,11 @@ private fun AutoHiddenBox(
                                 end.linkTo(parent.end)
                             }
                             .padding(end = 20.dp)
+                            .windowInsetsPadding(
+                                WindowInsets.systemBars
+                                    .union(WindowInsets.displayCutout)
+                                    .only(WindowInsetsSides.End)
+                            )
                             .hoverable(hoverInteractionSource),
                         seconds = forwardSecond,
                         onLongClick = { onDialogVisibilityChanged.onForwardSecondDialog(true) },
