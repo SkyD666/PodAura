@@ -1,0 +1,120 @@
+name: Telegram Upload
+
+on:
+  workflow_call:
+    inputs:
+      artifact-run-id:
+        description: Workflow run containing the APK and IPA artifacts
+        required: true
+        type: string
+      caption:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      artifact-run-id:
+        description: Previous CI run ID (the number at the end of its URL)
+        required: true
+        type: string
+      caption:
+        description: Telegram message caption
+        default: '[TEST] PodAura Telegram upload'
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: telegram-upload
+      cancel-in-progress: false
+    env:
+      BOT_API_URL: http://127.0.0.1:8081
+      BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
+      COMMIT_MESSAGE: ${{ inputs.caption }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Test Upload Script
+        run: python3 -B .github/scripts/test_post_telegram.py
+
+      - name: Download Android arm64 APK
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.artifact-run-id }}
+          pattern: PodAura_*_Android_arm64-v8a_GitHub.apk
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.artifact-run-id }}
+          pattern: PodAura_*_iOS_arm64_Unsigned.ipa
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: Check Available Artifacts
+        id: artifacts
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          files = list(Path('telegram-artifacts').glob('*.apk')) + list(Path('telegram-artifacts').glob('*.ipa'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f"available={str(bool(files)).lower()}\n")
+          if not files:
+              print('No APK or IPA available; skipping Telegram upload.')
+          PY
+
+      - name: Start Local Bot API Server
+        id: server
+        if: steps.artifacts.outputs.available == 'true'
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+        run: |
+          test -n "$TELEGRAM_API_ID" || { echo 'Missing TELEGRAM_API_ID secret'; exit 1; }
+          test -n "$TELEGRAM_API_HASH" || { echo 'Missing TELEGRAM_API_HASH secret'; exit 1; }
+          test -n "$BOT_TOKEN" || { echo 'Missing TELEGRAM_TOKEN secret'; exit 1; }
+          test -n "$CHANNEL_ID" || { echo 'Missing TELEGRAM_TO secret'; exit 1; }
+          image='aiogram/telegram-bot-api:10.3@sha256:50a9ed1f229930add49fd3aad5fa4119f269e40a9b364e6bd03c4d754fb9d950'
+          docker pull "$image"
+          python3 .github/scripts/post_telegram.py --api-url https://api.telegram.org --logout
+          docker run -d --name telegram-bot-api \
+            -p 127.0.0.1:8081:8081 \
+            -e TELEGRAM_API_ID -e TELEGRAM_API_HASH -e TELEGRAM_LOCAL=1 \
+            "$image"
+          for attempt in {1..30}; do
+            if curl --silent --output /dev/null --connect-timeout 1 --max-time 2 "$BOT_API_URL"; then
+              python3 .github/scripts/post_telegram.py --check
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Local Bot API Server did not become ready'
+          exit 1
+
+      - name: Post to Telegram Channel
+        if: steps.artifacts.outputs.available == 'true'
+        run: python3 .github/scripts/post_telegram.py
+
+      - name: Stop Local Bot API Server
+        if: always() && steps.server.outcome != 'skipped'
+        run: |
+          if docker inspect telegram-bot-api > /dev/null 2>&1; then
+            trap 'docker rm -f telegram-bot-api > /dev/null' EXIT
+            python3 .github/scripts/post_telegram.py --logout
+          fi
