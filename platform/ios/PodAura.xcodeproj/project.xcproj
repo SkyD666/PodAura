@@ -49,6 +49,8 @@
           "run-on-every-build": true,
           "shell": "/bin/sh",
           "script": [
+            "set -e",
+            "export PATH=\"/opt/homebrew/bin:/opt/homebrew/sbin:$PATH\"",
             "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then",
             "  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"",
             "  exit 0",

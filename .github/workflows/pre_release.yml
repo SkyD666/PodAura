@@ -61,7 +61,7 @@ jobs:
 
           # The project.xcproj format requires Xcode 27.
           - os: xcode-27
-            target-platform: iOS
+            target-platform: iOS arm64
             build-command: |
               xcodebuild archive \
                 -project platform/ios/PodAura.xcodeproj \
