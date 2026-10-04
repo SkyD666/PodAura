@@ -2,11 +2,69 @@ package com.skyd.podaura.ui.player.mpv
 
 import co.touchlab.kermit.Logger
 import coil3.Bitmap
-import com.skyd.podaura.libmpv.*
+import com.skyd.podaura.libmpv.MPV_END_FILE_REASON_ERROR
+import com.skyd.podaura.libmpv.MPV_ERROR_VO_INIT_FAILED
+import com.skyd.podaura.libmpv.MPV_EVENT_END_FILE
+import com.skyd.podaura.libmpv.MPV_EVENT_FILE_LOADED
+import com.skyd.podaura.libmpv.MPV_EVENT_HOOK
+import com.skyd.podaura.libmpv.MPV_EVENT_NONE
+import com.skyd.podaura.libmpv.MPV_EVENT_PROPERTY_CHANGE
+import com.skyd.podaura.libmpv.MPV_EVENT_VIDEO_RECONFIG
+import com.skyd.podaura.libmpv.MPV_FORMAT_DOUBLE
+import com.skyd.podaura.libmpv.MPV_FORMAT_FLAG
+import com.skyd.podaura.libmpv.MPV_FORMAT_INT64
+import com.skyd.podaura.libmpv.MPV_FORMAT_NODE
+import com.skyd.podaura.libmpv.MPV_FORMAT_NODE_ARRAY
+import com.skyd.podaura.libmpv.MPV_FORMAT_STRING
+import com.skyd.podaura.libmpv.mpv_command
+import com.skyd.podaura.libmpv.mpv_create
+import com.skyd.podaura.libmpv.mpv_error_string
+import com.skyd.podaura.libmpv.mpv_event_end_file
+import com.skyd.podaura.libmpv.mpv_event_hook
+import com.skyd.podaura.libmpv.mpv_event_property
+import com.skyd.podaura.libmpv.mpv_free
+import com.skyd.podaura.libmpv.mpv_get_property
+import com.skyd.podaura.libmpv.mpv_get_property_string
+import com.skyd.podaura.libmpv.mpv_hook_add
+import com.skyd.podaura.libmpv.mpv_hook_continue
+import com.skyd.podaura.libmpv.mpv_initialize
+import com.skyd.podaura.libmpv.mpv_node
+import com.skyd.podaura.libmpv.mpv_node_list
+import com.skyd.podaura.libmpv.mpv_observe_property
+import com.skyd.podaura.libmpv.mpv_set_option_string
+import com.skyd.podaura.libmpv.mpv_set_property
+import com.skyd.podaura.libmpv.mpv_set_property_string
+import com.skyd.podaura.libmpv.mpv_set_wakeup_callback
+import com.skyd.podaura.libmpv.mpv_terminate_destroy
+import com.skyd.podaura.libmpv.mpv_wait_event
 import com.skyd.podaura.ui.PlatformSurfaceHolder
-import kotlinx.cinterop.*
-import kotlinx.coroutines.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.CPointerVar
+import kotlinx.cinterop.DoubleVar
+import kotlinx.cinterop.IntVar
+import kotlinx.cinterop.LongVar
+import kotlinx.cinterop.StableRef
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.asStableRef
+import kotlinx.cinterop.cstr
+import kotlinx.cinterop.get
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.set
+import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.toKString
+import kotlinx.cinterop.value
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import platform.Foundation.NSRecursiveLock
 
 actual class MPV {
@@ -39,6 +97,8 @@ actual class MPV {
         // These options belong to the host, even when a user config selects a desktop output.
         option("vo", "null")
         option("ao", "audiounit")
+        option("gpu-api", "vulkan")
+        option("gpu-context", "podaura")
         option("video-sync", "audio")
         option("input-default-bindings", "yes")
         checkResult(mpv_initialize(handle))
@@ -133,8 +193,8 @@ actual class MPV {
     actual fun setPropertyString(name: String, value: String) = locked {
         if (!closed) {
             val actualValue = platformOptionValue(name, value)
-            val restoreVideo = name == "vo" && actualValue == "libmpv" &&
-                    getPropertyString("vo") != "libmpv"
+            val restoreVideo = name == "vo" && actualValue == "gpu-next" &&
+                    getPropertyString("vo") != "gpu-next"
             // Keep the last stream selected: vid=no without audio produces artificial EOF
             // and can rewind a keep-open file or advance a multi-file queue.
             val canSuspendVideo = name == "vo" && getPropertyInt("aid") > 0
@@ -164,27 +224,16 @@ actual class MPV {
 
     actual fun attachSurface(surfaceHolder: PlatformSurfaceHolder) = locked {
         if (closed || !surfaceHolder.isActive) return@locked
-        val output = renderer ?: SampleBufferRenderer(handle) { error ->
-            // Never call the client API from libmpv's render thread.
-            scope.launch {
-                locked {
-                    if (closed) return@locked
-                    Logger.e(throwable = error, tag = "MPV") { "GPU video output failed" }
-                    setPropertyBoolean("pause", true)
-                    detachSurface()
-                    listeners.toList().forEach {
-                        it.onEndFile(
-                            MPV_END_FILE_REASON_ERROR.toInt(),
-                            MPV_ERROR_VO_INIT_FAILED,
-                            -1L
-                        )
-                    }
-                }
-            }
-        }.also { renderer = it }
-        output.videoSize(getPropertyInt("dwidth"), getPropertyInt("dheight"))
+        val output = renderer ?: SampleBufferRenderer(handle).also { renderer = it }
+        output.videoSize(
+            getPropertyInt("dwidth"),
+            getPropertyInt("dheight"),
+            getPropertyInt("video-out-params/rotate")
+        )
         output.attach(surfaceHolder)
     }
+
+    internal fun setRenderingActive(active: Boolean): Unit = locked { renderer?.setActive(active) }
 
     actual fun detachSurface(): Unit = locked {
         if (!closed) setPropertyString("vo", "null")
@@ -194,6 +243,7 @@ actual class MPV {
 
     actual fun destroy() = locked {
         if (closed) return@locked
+        setPropertyString("vo", "null")
         closed = true
         listeners.clear()
         mpv_set_wakeup_callback(handle, null, null)
@@ -209,11 +259,22 @@ actual class MPV {
     actual fun grabThumbnail(dimension: Int): Bitmap? = null
 
     private fun readEvent(): Boolean {
+        if (renderer?.failed == true) {
+            setPropertyBoolean("pause", true)
+            detachSurface()
+            listeners.toList().forEach {
+                it.onEndFile(MPV_END_FILE_REASON_ERROR.toInt(), MPV_ERROR_VO_INIT_FAILED, -1L)
+            }
+        }
         val event = mpv_wait_event(handle, 0.0)?.pointed ?: return false
         if (event.event_id == MPV_EVENT_NONE) return false
         val current = listeners.toList()
         if (event.event_id == MPV_EVENT_VIDEO_RECONFIG) {
-            renderer?.videoSize(getPropertyInt("dwidth"), getPropertyInt("dheight"))
+            renderer?.videoSize(
+                getPropertyInt("dwidth"),
+                getPropertyInt("dheight"),
+                getPropertyInt("video-out-params/rotate")
+            )
         }
         when (event.event_id) {
             MPV_EVENT_PROPERTY_CHANGE -> {
@@ -314,8 +375,11 @@ actual class MPV {
     }
 
     private fun platformOptionValue(name: String, value: String): String = when {
-        name == "vo" && (value == "gpu" || value == "libmpv") ->
-            if (renderer != null) "libmpv" else "null"
+        name == "vo" && value != "null" ->
+            if (renderer != null) "gpu-next" else "null"
+
+        name == "gpu-api" -> "vulkan"
+        name == "gpu-context" -> "podaura"
 
         name == "hwdec" && value == "auto" -> "videotoolbox"
         name == "vid" -> {

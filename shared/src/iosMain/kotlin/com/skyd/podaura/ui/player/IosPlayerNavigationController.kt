@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.player
 
 import com.skyd.podaura.IosPlayerChrome
+import kotlinx.cinterop.ObjCSignatureOverride
 import platform.UIKit.UIGestureRecognizer
 import platform.UIKit.UIGestureRecognizerDelegateProtocol
 import platform.UIKit.UINavigationController
@@ -15,11 +16,26 @@ internal class IosPlayerNavigationController(
     private val currentTransition: (UIViewController) -> UIViewControllerTransitionCoordinatorProtocol? = {
         it.transitionCoordinator
     },
+    private val onPlayerWillClose: () -> Unit = {},
+    private val onPlayerCloseCancelled: () -> Unit = {},
 ) : UINavigationController(rootViewController = root),
     UINavigationControllerDelegateProtocol, UIGestureRecognizerDelegateProtocol {
     private var pendingPlayer: UIViewController? = null
     private var pendingCompletion: Any? = null
     private var closeRequested = false
+    private var restoredPlayer: UIViewController? = null
+    private var restoredCompletion: ((Boolean) -> Unit)? = null
+    private var playerClosing = false
+    private var playerShown = false
+
+    fun whenPlayerShown(controller: UIViewController, completion: (Boolean) -> Unit) {
+        if (topViewController == controller && currentTransition(this) == null) completion(true)
+        else {
+            restoredCompletion?.invoke(false)
+            restoredPlayer = controller
+            restoredCompletion = completion
+        }
+    }
 
     init {
         delegate = this
@@ -48,6 +64,9 @@ internal class IosPlayerNavigationController(
     }
 
     fun closePlayer(animated: Boolean = true) {
+        restoredCompletion?.invoke(false)
+        restoredCompletion = null
+        restoredPlayer = null
         pendingPlayer = null
         pendingCompletion = null
         closeRequested = true
@@ -78,20 +97,55 @@ internal class IosPlayerNavigationController(
             if (viewControllers.size > 1) popToRootViewControllerAnimated(animated)
             else {
                 closeRequested = false
+                playerClosing = false
+                playerShown = false
                 onPlayerClosed()
             }
         }
     }
 
+    @ObjCSignatureOverride
+    override fun navigationController(
+        navigationController: UINavigationController,
+        willShowViewController: UIViewController,
+        animated: Boolean,
+    ) {
+        // UIKit can return another Kotlin wrapper for the same native controller.
+        if (willShowViewController == viewControllers.firstOrNull() &&
+            (playerShown || closeRequested)
+        ) {
+            playerClosing = true
+            onPlayerWillClose()
+        }
+    }
+
+    @ObjCSignatureOverride
     override fun navigationController(
         navigationController: UINavigationController,
         didShowViewController: UIViewController,
         animated: Boolean,
     ) {
-        if (pendingCompletion == null && pendingPlayer == null && viewControllers.size == 1) {
+        // Initial root presentation and callbacks from an older transition are not a player pop.
+        if (didShowViewController != topViewController) return
+        val showingRoot = didShowViewController == viewControllers.firstOrNull()
+        if (!showingRoot) playerShown = true
+        if (didShowViewController == restoredPlayer) {
+            val completion = restoredCompletion
+            restoredCompletion = null
+            restoredPlayer = null
+            completion?.invoke(true)
+        }
+        if (pendingCompletion == null && pendingPlayer == null && showingRoot &&
+            (playerClosing || closeRequested)
+        ) {
             // A cancelled swipe still shows the player, so it must not close the session.
             closeRequested = false
+            playerClosing = false
+            playerShown = false
             onPlayerClosed()
+        } else if (playerClosing) {
+            playerClosing = false
+            onPlayerCloseCancelled()
         }
     }
 

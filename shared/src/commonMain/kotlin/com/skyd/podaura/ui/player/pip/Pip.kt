@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 internal expect val supportPip: Boolean
 
 internal interface OnEnterPip {
+    val canEnter: Boolean get() = true
     fun enter()
 }
 

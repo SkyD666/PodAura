@@ -2,22 +2,26 @@ package com.skyd.podaura.ui.activity.player
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.KeyEvent
 import android.view.WindowManager
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.getString
@@ -25,13 +29,16 @@ import com.skyd.podaura.ext.safeLaunch
 import com.skyd.podaura.ext.savePictureToMediaStore
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PlayerAutoPipPreference
 import com.skyd.podaura.ui.activity.BaseComposeActivity
 import com.skyd.podaura.ui.component.showToast
 import com.skyd.podaura.ui.player.PlatformPlayerEntry
 import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
+import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.service.PlayerService
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
@@ -61,6 +68,7 @@ class PlayActivity : BaseComposeActivity() {
     private var serviceBound by mutableStateOf(false)
     private var receiverRegistered = false
     private var serviceBindingRequested = false
+    private val pipDismissal = PipDismissalTracker()
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as PlayerService.PlayerServiceBinder
@@ -68,10 +76,14 @@ class PlayActivity : BaseComposeActivity() {
                 unbindService(this)
                 if (!dataStore.getOrDefault(BackgroundPlayPreference)) {
                     binder.getService().stopSelf()
-                    return
                 }
+                return
             }
             this@PlayActivity.service = binder.getService()
+            this@PlayActivity.service.playbackSession.apply {
+                setPlayerVisible(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+                setPictureInPictureActive(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPictureInPictureMode)
+            }
             lifecycleScope.launch {
                 viewModel.mediaInfos.collect { launchData ->
                     this@PlayActivity.service.playerCoordinator.onCommand(
@@ -100,6 +112,7 @@ class PlayActivity : BaseComposeActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        onBackPressedDispatcher.addCallback(this) { onPlayerBack() }
         launchRequestId = savedInstanceState?.getString(LAUNCH_REQUEST_ID_KEY)
             ?: UUID.randomUUID().toString()
         addOnNewIntentListener { newIntent ->
@@ -145,7 +158,7 @@ class PlayActivity : BaseComposeActivity() {
             PlayerViewRoute(
                 coordinator = if (serviceBound) service.playerCoordinator else null,
                 articleContextViewModel = articleContextViewModel,
-                onBack = { finish() },
+                onBack = ::onPlayerBack,
                 onSaveScreenshot = {
                     picture = it
                     saveScreenshot()
@@ -154,7 +167,25 @@ class PlayActivity : BaseComposeActivity() {
         }
     }
 
+    private fun onPlayerBack() {
+        val coordinator = if (serviceBound) service.playerCoordinator else null
+        val state = coordinator?.playerState?.value
+        val supportsPip = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        val shouldEnterPip = supportsPip && !isFinishing && !isDestroyed &&
+                coordinator?.engineState?.value?.isReady == true && state?.mediaStarted == true &&
+                !state.paused && dataStore.getOrDefault(PlayerAutoPipPreference)
+        if (!enterPipOnPlayerBack(
+                shouldEnterPip = shouldEnterPip,
+                inPipMode = supportsPip && isInPictureInPictureMode,
+                enterPip = { enterPictureInPictureMode(PictureInPictureParams.Builder().build()) },
+            )
+        ) finish()
+    }
+
     override fun onDestroy() {
+        if (pipDismissal.isDismissed(isFinishing) && serviceBound) {
+            service.playerCoordinator.onCommand(PlayerCommand.Paused(true))
+        }
         super.onDestroy()
         if (receiverRegistered) unregisterReceiver(serviceStopReceiver)
         if (serviceBindingRequested) unbindService(connection)
@@ -162,6 +193,29 @@ class PlayActivity : BaseComposeActivity() {
         if (!dataStore.getOrDefault(BackgroundPlayPreference)) {
             stopService(Intent(this, PlayerService::class.java))
         }
+    }
+
+    override fun onPictureInPictureModeChanged(inPipMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(inPipMode, newConfig)
+        pipDismissal.onModeChanged(inPipMode)
+        if (serviceBound) service.playbackSession.setPictureInPictureActive(inPipMode)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (serviceBound) service.playbackSession.setPlayerVisible(true)
+    }
+
+    override fun onStop() {
+        if (serviceBound) service.playbackSession.setPlayerVisible(false)
+        super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // PiP is paused; RESUMED means the full player has been restored, even
+        // when its mode-change callback arrives afterwards.
+        pipDismissal.onFullPlayerResumed()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -192,3 +246,11 @@ class PlayActivity : BaseComposeActivity() {
         const val LAUNCH_REQUEST_ID_KEY = "launchRequestId"
     }
 }
+
+// A failed PiP request still completes back navigation. PiP dismissal must
+// finish the activity instead of requesting another floating window.
+internal fun enterPipOnPlayerBack(
+    shouldEnterPip: Boolean,
+    inPipMode: Boolean,
+    enterPip: () -> Boolean,
+): Boolean = shouldEnterPip && !inPipMode && runCatching(enterPip).getOrDefault(false)

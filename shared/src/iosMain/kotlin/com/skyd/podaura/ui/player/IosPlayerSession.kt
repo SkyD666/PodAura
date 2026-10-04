@@ -20,11 +20,17 @@ import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
 import co.touchlab.kermit.Logger
 import com.skyd.fundation.di.get
 import com.skyd.podaura.IosPlayerChrome
+import com.skyd.podaura.ext.flowOf
+import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.coordinator.isReady
+import com.skyd.podaura.ui.player.pip.IosPictureInPicture
 import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.screen.SettingsProvider
+import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,7 +44,6 @@ import platform.UIKit.UIViewAutoresizingFlexibleWidth
 import platform.UIKit.UIViewController
 import platform.UIKit.addChildViewController
 import platform.UIKit.didMoveToParentViewController
-import kotlin.time.TimeSource
 
 internal val LocalIosPlayerSession = staticCompositionLocalOf<IosPlayerSession> {
     error("iOS player session is not installed")
@@ -51,8 +56,11 @@ internal class IosPlayerSession : PlayerSession {
     val articleContext = get<PlayerArticleContextViewModel>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var mediaSession: IosMediaSession? = null
+    var pictureInPicture by mutableStateOf<IosPictureInPicture?>(null)
+        private set
     private var startupJob: Job? = null
     private var startupTime: TimeSource.Monotonic.ValueTimeMark? = null
+    private var automaticallyEnterPipOnClose = true
     override var coordinator by mutableStateOf<PlayerCoordinator?>(null)
         private set
     override var isFullPlayerVisible by mutableStateOf(false)
@@ -60,6 +68,11 @@ internal class IosPlayerSession : PlayerSession {
     private val entry = PlatformPlayerEntry(::openAccepted, ::closeFullPlayer)
 
     init {
+        scope.launch {
+            dataStore.flowOf(BackgroundPlayPreference).collect { enabled ->
+                if (!enabled) destroyIfUnused()
+            }
+        }
         scope.launch {
             viewModel.mediaInfos.collect {
                 startupTime?.let { started ->
@@ -80,7 +93,9 @@ internal class IosPlayerSession : PlayerSession {
         if (coordinator == null) {
             val created = PlayerCoordinator()
             coordinator = created
-            mediaSession = IosMediaSession(created)
+            val pip = IosPictureInPicture(created, this)
+            pictureInPicture = pip
+            mediaSession = IosMediaSession(created, pip::updateArtwork)
             created.lifecycle.addObserver(object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     if (coordinator === created) destroySession()
@@ -88,7 +103,7 @@ internal class IosPlayerSession : PlayerSession {
             })
         }
         isFullPlayerVisible = true
-        val controller = playerController ?: IosPlayerViewController(this)
+        val controller = playerController ?: IosPlayerViewController(this, checkNotNull(coordinator))
             .also { playerController = it }
         navigationController?.showPlayer(controller)
         startupJob?.cancel()
@@ -113,25 +128,69 @@ internal class IosPlayerSession : PlayerSession {
         }
     }
 
+    fun onPictureInPictureChanged(active: Boolean) {
+        mediaSession?.setPictureInPictureActive(active)
+    }
+
     override fun openFullPlayer() = open(PlayerOpenRequest.Resume)
+    fun restoreFullPlayer(completion: (Boolean) -> Unit) {
+        if (coordinator == null) {
+            completion(false); return
+        }
+        openFullPlayer()
+        val navigation = navigationController
+        val controller = playerController
+        if (navigation == null || controller == null) completion(false)
+        else navigation.whenPlayerShown(controller, completion)
+    }
+
     fun closeFullPlayer() {
+        closeFullPlayer(automaticallyEnterPip = true)
+    }
+
+    fun closeFullPlayer(automaticallyEnterPip: Boolean) {
+        automaticallyEnterPipOnClose = automaticallyEnterPip
         navigationController?.closePlayer()
     }
 
+    fun onFullPlayerWillClose() {
+        if (isFullPlayerVisible) pictureInPicture?.prepareForPlayerClose(
+            automaticallyEnterPipOnClose
+        )
+    }
+
+    fun onFullPlayerCloseCancelled() {
+        pictureInPicture?.cancelPlayerClose()
+        automaticallyEnterPipOnClose = true
+    }
+
     fun onFullPlayerClosed() {
+        if (isFullPlayerVisible) pictureInPicture?.onPlayerClosed(navigationController?.view)
         playerController = null
         isFullPlayerVisible = false
+        automaticallyEnterPipOnClose = true
+        destroyIfUnused()
+    }
+
+    // Navigation and AVKit jointly own the session; the list screen cannot decide its lifetime.
+    fun destroyIfUnused() {
+        if (coordinator != null && !isFullPlayerVisible &&
+            pictureInPicture?.keepsSession != true &&
+            !dataStore.getOrDefault(BackgroundPlayPreference)
+        ) destroySession()
     }
 
     override fun destroySession() {
+        val old = coordinator
+        coordinator = null
+        pictureInPicture?.close()
+        pictureInPicture = null
         startupJob?.cancel()
         startupJob = null
         startupTime = null
         isFullPlayerVisible = false
         navigationController?.closePlayer(animated = false)
         playerController = null
-        val old = coordinator
-        coordinator = null
         mediaSession?.close()
         mediaSession = null
         viewModel.clearPendingPlayback()
@@ -146,9 +205,9 @@ internal class IosPlayerSession : PlayerSession {
     }
 }
 
-private class IosPlayerViewController(session: IosPlayerSession) :
+private class IosPlayerViewController(session: IosPlayerSession, coordinator: PlayerCoordinator) :
     UIViewController(nibName = null, bundle = null) {
-    private val compose = ComposeUIViewController { IosFullPlayer(session) }
+    private val compose = ComposeUIViewController { IosFullPlayer(session, coordinator) }
 
     override fun viewDidLoad() {
         super.viewDidLoad()
@@ -180,7 +239,7 @@ internal fun IosPlayerApp(session: IosPlayerSession) {
 }
 
 @Composable
-private fun IosFullPlayer(session: IosPlayerSession) {
+private fun IosFullPlayer(session: IosPlayerSession, coordinator: PlayerCoordinator) {
     CompositionLocalProvider(
         LocalPlayerSession provides session,
         LocalIosPlayerSession provides session,
@@ -188,9 +247,12 @@ private fun IosFullPlayer(session: IosPlayerSession) {
         SettingsProvider {
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                 PlayerViewRoute(
-                    coordinator = session.coordinator,
+                    coordinator = coordinator,
                     articleContextViewModel = session.articleContext,
-                    onBack = session::closeFullPlayer,
+                    onBack = {
+                        // An outgoing controller can receive its old engine's delayed shutdown.
+                        if (session.coordinator === coordinator) session.closeFullPlayer()
+                    },
                     onSaveScreenshot = {},
                 )
             }

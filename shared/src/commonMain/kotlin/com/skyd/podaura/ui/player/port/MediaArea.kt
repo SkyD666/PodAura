@@ -28,6 +28,8 @@ import coil3.request.ImageRequest
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.component.state.PlayState
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 
 @Composable
 internal fun MediaArea(
@@ -53,7 +55,7 @@ internal fun MediaArea(
             label = "playerMediaContent",
         ) { ready ->
             if (ready) {
-                if (playState.isVideo) {
+                if (playState.isVideo || platform == Platform.iOS) {
                     Box(modifier = modifier) { playerContent() }
                 } else {
                     Thumbnail(

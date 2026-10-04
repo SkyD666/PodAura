@@ -168,7 +168,7 @@ fun PlayerConfigScreen(
                         onClick = { expandDoubleTapMenu = true },
                     )
                 }
-                if (platform == Platform.Android) {
+                if (platform == Platform.Android || platform == Platform.iOS) {
                     item {
                         SwitchSettingsItem(
                             imageVector = Icons.Outlined.PictureInPictureAlt,

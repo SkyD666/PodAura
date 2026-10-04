@@ -18,6 +18,85 @@ import kotlin.test.assertTrue
 
 class IosPlayerNavigationControllerTest {
     @Test
+    fun initialAndDuplicateRootCallbacksCannotCloseANewSession() {
+        val root = UIViewController()
+        val player = UIViewController()
+        var closed = 0
+        var preparing = 0
+        val navigation = IosPlayerNavigationController(root, { closed++ },
+            onPlayerWillClose = { preparing++ })
+        navigation.navigationController(navigation, willShowViewController = root, animated = false)
+        navigation.navigationController(navigation, didShowViewController = root, animated = false)
+        assertEquals(0, preparing)
+        assertEquals(0, closed)
+
+        navigation.showPlayer(player)
+        navigation.navigationController(navigation, didShowViewController = player, animated = true)
+        navigation.navigationController(navigation, willShowViewController = root, animated = true)
+        navigation.setViewControllers(listOf(root), animated = false)
+        navigation.navigationController(navigation, didShowViewController = root, animated = true)
+        assertEquals(1, closed)
+        // A duplicate completion can arrive while a later media request is being prepared.
+        navigation.navigationController(navigation, didShowViewController = root, animated = true)
+        assertEquals(1, closed)
+
+        navigation.showPlayer(player)
+        navigation.navigationController(navigation, didShowViewController = root, animated = true)
+        assertEquals(player, navigation.topViewController)
+        assertEquals(1, closed)
+    }
+
+    @Test
+    fun playerExitKeepsTheSourceUntilPopCommitsAndCancelsWithTheGesture() {
+        val root = UIViewController()
+        val player = UIViewController()
+        val events = mutableListOf<String>()
+        val navigation = IosPlayerNavigationController(
+            root, { events += "closed" },
+            onPlayerWillClose = { events += "prepare" },
+            onPlayerCloseCancelled = { events += "cancel" },
+        )
+        navigation.setViewControllers(listOf(root, player), animated = false)
+        navigation.navigationController(navigation, didShowViewController = player, animated = false)
+        events.clear()
+        navigation.navigationController(navigation, willShowViewController = root, animated = true)
+        assertEquals(listOf("prepare"), events)
+        navigation.navigationController(navigation, didShowViewController = player, animated = true)
+        assertEquals(listOf("prepare", "cancel"), events)
+        assertEquals(player, navigation.topViewController)
+
+        navigation.setViewControllers(listOf(root), animated = false)
+        events.clear()
+        navigation.navigationController(navigation, willShowViewController = root, animated = true)
+        navigation.navigationController(navigation, didShowViewController = root, animated = true)
+        assertEquals(listOf("prepare", "closed"), events)
+    }
+
+    @Test
+    fun pipRestorationWaitsForPlayerPresentationAndCompletesOnce() {
+        var transition: TestTransition? = TestTransition()
+        val root = UIViewController()
+        val player = UIViewController()
+        val navigation = IosPlayerNavigationController(root, {}, { transition })
+        val results = mutableListOf<Boolean>()
+        navigation.showPlayer(player)
+        navigation.whenPlayerShown(player, results::add)
+        assertTrue(results.isEmpty())
+        transition!!.complete()
+        transition = null
+        assertTrue(results.isEmpty())
+        navigation.navigationController(navigationController = navigation, didShowViewController = player, animated = true)
+        navigation.navigationController(navigationController = navigation, didShowViewController = player, animated = true)
+        assertEquals(listOf(true), results)
+        navigation.closePlayer(animated = false)
+        transition = TestTransition()
+        navigation.showPlayer(player)
+        navigation.whenPlayerShown(player, results::add)
+        navigation.closePlayer(animated = false)
+        assertEquals(listOf(true, false), results)
+    }
+
+    @Test
     fun usesNativePopGestureAndKeepsCancelledPopOnThePlayer() {
         val root = UIViewController()
         var closed = 0
@@ -48,7 +127,6 @@ class IosPlayerNavigationControllerTest {
             assertEquals(listOf(root), navigation.viewControllers)
             assertEquals(root, navigation.topViewController)
             assertFalse(navigation.gestureRecognizerShouldBegin(gesture))
-            closed = 0
             navigation.navigationController(
                 navigationController = navigation,
                 didShowViewController = root,

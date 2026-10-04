@@ -1,5 +1,6 @@
 package com.skyd.podaura.util.coil.localmedia
 
+import com.skyd.podaura.media.MediaTypes
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.AVFoundation.AVMetadataCommonIdentifierArtwork
@@ -19,6 +20,9 @@ import platform.Foundation.timeIntervalSince1970
 
 actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     val fileUrl = filePath.toLocalMediaUrl() ?: return null
+    if (fileUrl.pathExtension?.lowercase() in MediaTypes.videoExtensions) {
+        getLocalVideoThumbnailData(fileUrl.path ?: return null)?.let { return it }
+    }
     val asset = AVURLAsset(
         uRL = fileUrl,
         options = null,
@@ -53,7 +57,9 @@ private fun String.toLocalMediaUrl(): NSURL? {
     }
 }
 
-private fun NSData.toByteArray(): ByteArray {
+internal expect fun getLocalVideoThumbnailData(filePath: String): ByteArray?
+
+internal fun NSData.toByteArray(): ByteArray {
     require(length <= Int.MAX_VALUE.toULong()) {
         "Embedded artwork is too large: $length bytes"
     }

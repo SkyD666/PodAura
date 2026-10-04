@@ -85,6 +85,7 @@ internal fun TopBar(
             Spacer(modifier = Modifier.width(3.dp))
             ControllerIconButton(
                 modifier = Modifier.padding(2.dp),
+                enabled = onEnterPip.canEnter,
                 onClick = onEnterPip::enter,
                 imageVector = Icons.Outlined.PictureInPictureAlt,
                 contentDescription = stringResource(Res.string.player_picture_in_picture),

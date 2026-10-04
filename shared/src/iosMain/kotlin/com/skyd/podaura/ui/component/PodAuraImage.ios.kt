@@ -1,5 +1,5 @@
 package com.skyd.podaura.ui.component
 
-import coil3.ComponentRegistry
+import coil3.ImageLoader
 
-actual fun ComponentRegistry.Builder.platformComponents() {}
+actual fun ImageLoader.Builder.platformComponents() {}

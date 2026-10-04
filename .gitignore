@@ -19,3 +19,4 @@ build/
 local.properties
 signing.properties
 /platform/ios/playback-smoke/
+__pycache__/

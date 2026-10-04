@@ -72,11 +72,13 @@ internal fun Modifier.pipParams(
     autoEnterPipMode: Boolean,
     isVideo: Boolean,
     playState: PlayState,
+    includeBounds: Boolean = true,
 ): Modifier = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
     pipParamsApi26(
         autoEnterPipMode = autoEnterPipMode,
         isVideo = isVideo,
         playState = playState,
+        includeBounds = includeBounds,
     )
 } else this
 
@@ -86,6 +88,7 @@ private fun Modifier.pipParamsApi26(
     autoEnterPipMode: Boolean,
     isVideo: Boolean,
     playState: PlayState,
+    includeBounds: Boolean,
 ): Modifier {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -115,6 +118,8 @@ private fun Modifier.pipParamsApi26(
     }
 
     LaunchedEffect(playState.isPlaying, autoEnterPipMode, isVideo) { applyBuilder() }
+
+    if (!includeBounds) return this
 
     return onGloballyPositioned { layoutCoordinates ->
         val rect = layoutCoordinates.boundsInWindow()

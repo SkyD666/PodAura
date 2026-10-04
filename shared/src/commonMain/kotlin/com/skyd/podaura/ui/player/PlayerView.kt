@@ -235,7 +235,7 @@ fun PlayerView(
 
     // Keep the observer identity stable for lifecycle registration and removal.
     val currentOnBack by rememberUpdatedState(onBack)
-    val playerObserver = remember {
+    val playerObserver = remember(coordinator) {
         PlayerCoordinator.Observer { command ->
             when (command) {
                 is PlayerEvent.Shutdown -> currentOnBack()
@@ -245,7 +245,7 @@ fun PlayerView(
         }
     }
 
-    LifecycleStartEffect(Unit) {
+    LifecycleStartEffect(key1 = coordinator) {
         coordinator.addObserver(playerObserver)
         onStopOrDispose {
             coordinator.removeObserver(playerObserver)

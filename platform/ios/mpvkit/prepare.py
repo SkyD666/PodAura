@@ -87,6 +87,11 @@ def main():
             return
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(lambda item: prepare(item, destination), artifacts))
+        for sdk in ('iphoneos', 'iphonesimulator'):
+            shutil.copy2(here / 'podaura.h',
+                         destination / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
+        if not args.headers_only:
+            subprocess.run(['python3', str(here / 'build.py')], check=True)
 
 
 if __name__ == '__main__':

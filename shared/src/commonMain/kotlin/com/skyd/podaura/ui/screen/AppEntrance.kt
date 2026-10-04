@@ -2,7 +2,6 @@ package com.skyd.podaura.ui.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +23,6 @@ import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.AcceptTermsPreference
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
 import com.skyd.podaura.model.preference.dataStore
-import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
 import com.skyd.podaura.ui.component.navigation.ExternalUrlListener
@@ -32,7 +30,6 @@ import com.skyd.podaura.ui.component.navigation.PodAuraSerializersModule
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
 import com.skyd.podaura.ui.component.navigation.initialNavKey
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
-import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.mini.MiniPlayerNavDisplay
 import com.skyd.podaura.ui.player.mini.miniPlayerEntry
 import com.skyd.podaura.ui.screen.about.AboutRoute
@@ -136,17 +133,6 @@ internal val deepLinkPatterns: List<DeepLinkPattern<out NavKey>> = buildList {
 @Composable
 fun AppEntrance() {
     SettingsProvider {
-        val playerSession = LocalPlayerSession.current
-        val playerCoordinator = playerSession?.coordinator
-        val isFullPlayerVisible = playerSession?.isFullPlayerVisible == true
-        val backgroundPlay = BackgroundPlayPreference.current
-        LaunchedEffect(playerSession, playerCoordinator, backgroundPlay, isFullPlayerVisible) {
-            if (playerSession != null && playerCoordinator != null &&
-                !backgroundPlay && !isFullPlayerVisible
-            ) {
-                playerSession.destroySession()
-            }
-        }
         if (AcceptTermsPreference.current) {
             MainContent()
         } else {

@@ -1,0 +1,116 @@
+--- a/video/out/gpu/context.c
++++ b/video/out/gpu/context.c
+@@ -50,6 +50,7 @@
+ extern const struct ra_ctx_fns ra_ctx_vulkan_android;
+ extern const struct ra_ctx_fns ra_ctx_vulkan_display;
+ extern const struct ra_ctx_fns ra_ctx_vulkan_mac;
++extern const struct ra_ctx_fns ra_ctx_podaura;
+ 
+ /* Direct3D 11 */
+ extern const struct ra_ctx_fns ra_ctx_d3d11;
+@@ -84,6 +85,7 @@
+ 
+ // Vulkan contexts:
+ #if HAVE_VULKAN
++    &ra_ctx_podaura,
+ #if HAVE_WIN32_DESKTOP
+     &ra_ctx_vulkan_win,
+ #endif
+--- a/video/out/vulkan/context.c
++++ b/video/out/vulkan/context.c
+@@ -415,6 +415,9 @@
+     if (!ctx->ra)
+         goto error;
+ 
++    // The iOS host supplies an IOSurface target instead of a window swapchain.
++    if (!vk->surface) return true;
++
+     // Create the swapchain
+     struct pl_vulkan_swapchain_params pl_params = {
+         .surface = vk->surface,
+--- a/video/out/vo_gpu_next.c
++++ b/video/out/vo_gpu_next.c
+@@ -29,6 +29,7 @@
+ #include <libplacebo/utils/frame_queue.h>
+ 
+ #include "config.h"
++#include "video/out/vulkan/context_podaura.h"
+ #include "common/common.h"
+ #include "misc/io_utils.h"
+ #include "options/m_config.h"
+@@ -1002,7 +1003,7 @@
+ static void update_hook_opts_dynamic(struct priv *p, const struct pl_hook *hook,
+                                      const struct mp_image *mpi);
+ 
+-static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++static bool draw_frame_internal(struct vo *vo, struct vo_frame *frame)
+ {
+     struct priv *p = vo->priv;
+     pl_options pars = p->pars;
+@@ -1230,17 +1231,18 @@
+         // Update again after possible max_luma change
+         if (p->icc_profile)
+             hint = p->icc_profile->csp;
+-        if (!pass_colorspace)
++        if (!pass_colorspace && p->sw)
+             pl_swapchain_colorspace_hint(p->sw, &hint);
+     } else if (!target_hint) {
+         if (!hint.hdr.min_luma)
+             hint.hdr.min_luma = target_csp.hdr.min_luma;
+-        pl_swapchain_colorspace_hint(p->sw, NULL);
++        if (p->sw) pl_swapchain_colorspace_hint(p->sw, NULL);
+     }
+ 
+     struct pl_swapchain_frame swframe;
+     bool should_draw = sw->fns->start_frame(sw, NULL); // for wayland logic
+-    if (!should_draw || !pl_swapchain_start_frame(p->sw, &swframe)) {
++    if (!should_draw || !(p->sw ? pl_swapchain_start_frame(p->sw, &swframe)
++                              : podaura_start_frame(p->ra_ctx, &swframe))) {
+         if (frame->current) {
+             // Advance the queue state to the current PTS to discard unused frames
+             struct pl_queue_params qparams = *pl_queue_params(
+@@ -1443,18 +1445,30 @@
+     return VO_TRUE;
+ }
+ 
++static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++{
++    struct priv *p = vo->priv;
++    // Drain every GPU operation, including uploads and renderer cache updates,
++    // before the host leaves the foreground or loses its PiP rendering grant.
++    if (!p->sw && !podaura_begin_frame(p->ra_ctx)) return false;
++    bool drawn = draw_frame_internal(vo, frame);
++    if (!p->sw && !drawn) podaura_discard_frame(p->ra_ctx);
++    return drawn;
++}
++
+ static void flip_page(struct vo *vo)
+ {
+     struct priv *p = vo->priv;
+     struct ra_swapchain *sw = p->ra_ctx->swapchain;
+ 
+     if (p->frame_pending) {
+-        if (!pl_swapchain_submit_frame(p->sw))
++        if (!(p->sw ? pl_swapchain_submit_frame(p->sw)
++                    : podaura_submit_frame(p->ra_ctx)))
+             MP_ERR(vo, "Failed presenting frame!\n");
+         p->frame_pending = false;
+     }
+ 
+-    sw->fns->swap_buffers(sw);
++    if (p->sw) sw->fns->swap_buffers(sw);
+ }
+ 
+ static void get_vsync(struct vo *vo, struct vo_vsync_info *info)
+--- a/meson.build
++++ b/meson.build
+@@ -1308,6 +1308,9 @@
+                                             dependencies: vulkan))}
+ if features['vulkan']
+     dependencies += vulkan
++    add_languages('objc', native: false)
++    dependencies += dependency('appleframeworks', modules: ['AVFoundation', 'CoreVideo', 'CoreMedia', 'IOSurface'])
++    sources += files('video/out/vulkan/context_podaura.m')
+     sources += files('video/out/hwdec/hwdec_vulkan.c',
+                      'video/out/vulkan/context.c',
+                      'video/out/vulkan/utils.c',

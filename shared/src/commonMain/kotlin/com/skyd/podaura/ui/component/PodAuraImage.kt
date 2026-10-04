@@ -92,12 +92,11 @@ fun rememberPodAuraImageLoader(
     }
 }
 
-expect fun ComponentRegistry.Builder.platformComponents()
+expect fun ImageLoader.Builder.platformComponents()
 
 fun PlatformContext.imageLoaderBuilder(
     components: ComponentRegistry.Builder.() -> Unit = {},
-): ImageLoader.Builder = ImageLoader.Builder(this).components {
-    platformComponents()
+): ImageLoader.Builder = ImageLoader.Builder(this).apply { platformComponents() }.components {
     add(SvgDecoder.Factory())
     add(KtorNetworkFetcherFactory(httpClient = get<HttpClient>(named("coil"))))
     addLocalMediaComponents()

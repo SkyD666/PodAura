@@ -9,7 +9,8 @@ import org.jetbrains.kotlin.konan.target.Family
 // MPVKit download, C interop and native test linking. Targets/frameworks remain owned by the module.
 val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
     val script = rootProject.file("platform/ios/mpvkit/prepare.py")
-    inputs.files(script, rootProject.file("platform/ios/mpvkit/artifacts.json"))
+    inputs.files(script, rootProject.file("platform/ios/mpvkit/artifacts.json"),
+        rootProject.file("platform/ios/mpvkit/podaura.h"))
     outputs.dirs(layout.buildDirectory.dir("mpvkit/iphoneos/Libmpv.framework"),
         layout.buildDirectory.dir("mpvkit/iphonesimulator/Libmpv.framework"))
     commandLine("python3", script.absolutePath, "--headers-only")
@@ -44,8 +45,8 @@ val mpvFrameworks = (artifacts["artifacts"] as List<*>).map {
     (it as Map<*, *>)["name"].toString()
 }
 val systemFrameworks = listOf(
-    "AVFoundation", "AudioToolbox", "CoreAudio", "CoreVideo", "CoreMedia",
-    "Metal", "OpenGLES", "VideoToolbox", "QuartzCore",
+    "AVFoundation", "AVKit", "AudioToolbox", "CoreAudio", "CoreVideo", "CoreMedia",
+    "Metal", "IOSurface", "VideoToolbox", "QuartzCore",
 )
 
 extensions.configure<KotlinMultiplatformExtension> {

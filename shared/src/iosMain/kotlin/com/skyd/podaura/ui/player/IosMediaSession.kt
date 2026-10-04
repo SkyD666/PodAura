@@ -1,13 +1,20 @@
 package com.skyd.podaura.ui.player
 
 import co.touchlab.kermit.Logger
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.request.SuccessResult
+import coil3.size.Precision
+import coil3.size.Scale
+import coil3.toBitmap
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.ui.component.imageLoaderBuilder
+import com.skyd.podaura.ui.component.imageRequest
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
-import com.skyd.podaura.util.coil.localmedia.getLocalMediaThumbnailData
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
@@ -23,8 +30,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.jetbrains.skia.EncodedImageFormat
+import org.jetbrains.skia.Image
+import org.jetbrains.skia.impl.use
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
@@ -45,10 +54,7 @@ import platform.Foundation.NSNotification
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSNumber
 import platform.Foundation.NSOperationQueue
-import platform.Foundation.NSURL
-import platform.Foundation.NSURLSession
 import platform.Foundation.create
-import platform.Foundation.dataTaskWithURL
 import platform.MediaPlayer.MPChangePlaybackPositionCommandEvent
 import platform.MediaPlayer.MPMediaItemArtwork
 import platform.MediaPlayer.MPMediaItemPropertyArtist
@@ -68,23 +74,29 @@ import platform.MediaPlayer.MPSkipIntervalCommandEvent
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationDidEnterBackgroundNotification
+import platform.UIKit.UIApplicationProtectedDataDidBecomeAvailable
+import platform.UIKit.UIApplicationProtectedDataWillBecomeUnavailable
 import platform.UIKit.UIApplicationState.UIApplicationStateBackground
 import platform.UIKit.UIImage
-import kotlin.coroutines.resume
 
 /** App-lifetime system integration; never owned by the full-screen composable. */
-internal class IosMediaSession(private val coordinator: PlayerCoordinator) : AutoCloseable {
+internal class IosMediaSession(
+    private val coordinator: PlayerCoordinator,
+    private val onArtwork: (UIImage?) -> Unit,
+) : AutoCloseable {
     private val audio = AVAudioSession.sharedInstance()
     private val center = NSNotificationCenter.defaultCenter
     private val remote = MPRemoteCommandCenter.sharedCommandCenter()
     private val nowPlaying = MPNowPlayingInfoCenter.defaultCenter()
+    private val imageLoader = lazy { PlatformContext.INSTANCE.imageLoaderBuilder().build() }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val commands = mutableListOf<Pair<MPRemoteCommand, Any>>()
     private val observers = mutableListOf<Any>()
     private val resumePolicy = PlaybackResumePolicy(
-        initiallyBackground = UIApplication.sharedApplication.applicationState == UIApplicationStateBackground
+        initiallyBackground = UIApplication.sharedApplication.applicationState == UIApplicationStateBackground,
+        initiallyScreenLocked = !UIApplication.sharedApplication.protectedDataAvailable,
     )
-    private var artworkUrl: String? = null
+    private var artworkSource: Any? = null
     private var artwork: MPMediaItemArtwork? = null
     private var artworkJob: Job? = null
 
@@ -118,11 +130,14 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
             updateNowPlaying()
         }
         observe(UIApplicationDidBecomeActiveNotification) {
+            setScreenLocked(false)
             if (resumePolicy.enterForeground()) {
                 activateAudio(); systemPause(false)
             }
             updateNowPlaying()
         }
+        observe(UIApplicationProtectedDataWillBecomeUnavailable) { setScreenLocked(true) }
+        observe(UIApplicationProtectedDataDidBecomeAvailable) { setScreenLocked(false) }
         observe(AVAudioSessionInterruptionNotification) { notification ->
             val info = notification.userInfo.orEmpty()
             val type = (info[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.unsignedIntegerValue
@@ -165,27 +180,19 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
                     ) {
                         systemPause(true)
                     }
-                    val local =
-                        state.currentMedia?.playlistMediaBean?.takeIf { it.isLocalFile }?.url
-                    val url = state.currentMedia?.thumbnail ?: local
-                    if (url != artworkUrl) {
-                        artworkUrl = url
+                    val source = state.currentMedia?.thumbnail
+                        ?: state.mediaThumbnail
+                        ?: state.currentMedia?.thumbnailAny
+                    if (source != artworkSource) {
+                        artworkSource = source
                         artwork = null
+                        onArtwork(null)
                         artworkJob?.cancel()
-                        if (url != null) artworkJob = launch {
-                            val image = if (url == local) withContext(Dispatchers.IO) {
-                                getLocalMediaThumbnailData(url)?.takeIf { it.isNotEmpty() }
-                                    ?.usePinned {
-                                        UIImage.imageWithData(
-                                            NSData.create(
-                                                it.addressOf(0),
-                                                it.get().size.toULong()
-                                            )
-                                        )
-                                    }
-                            } else loadArtwork(url)
-                            if (image != null && artworkUrl == url) {
+                        if (source != null) artworkJob = launch {
+                            val image = loadIosArtwork(source, imageLoader.value)
+                            if (image != null && artworkSource == source) {
                                 artwork = MPMediaItemArtwork(image.size) { image }
+                                onArtwork(image)
                                 updateNowPlaying()
                             }
                         }
@@ -195,18 +202,30 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
         }
     }
 
-    private suspend fun loadArtwork(url: String): UIImage? =
-        suspendCancellableCoroutine { continuation ->
-            val address = NSURL.URLWithString(url)
-            if (address == null) {
-                continuation.resume(null); return@suspendCancellableCoroutine
-            }
-            val task = NSURLSession.sharedSession.dataTaskWithURL(address) { data, _, _ ->
-                continuation.resume(data?.let { UIImage.imageWithData(it) })
-            }
-            continuation.invokeOnCancellation { task.cancel() }
-            task.resume()
+    private fun setScreenLocked(locked: Boolean) {
+        if (resumePolicy.setScreenLocked(
+                locked,
+                !coordinator.playerState.value.paused,
+                dataStore.getOrDefault(BackgroundPlayPreference),
+            )
+        ) {
+            if (locked || activateAudio()) systemPause(locked)
         }
+                                                                                                                                                    updateNowPlaying()
+    }
+
+    fun setPictureInPictureActive(active: Boolean) {
+        if (resumePolicy.setPictureInPictureActive(active)) {
+            activateAudio(); systemPause(false)
+        }
+        if (resumePolicy.pauseWhenRequired(
+                !coordinator.playerState.value.paused,
+                coordinator.engineState.value.isReady,
+                dataStore.getOrDefault(BackgroundPlayPreference)
+            )
+        ) systemPause(true)
+        updateNowPlaying()
+    }
 
     /** UI commands clear pending system resumes even if pause was already true. */
     private fun systemPause(paused: Boolean) {
@@ -220,18 +239,12 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
 
     fun userCommand(command: PlayerCommand) {
         if (systemCommand) return
-        val startsPlayback = command is PlayerCommand.LoadList ||
-                command is PlayerCommand.PlayFileInPlaylist || command == PlayerCommand.NextMedia ||
-                command == PlayerCommand.PreviousMedia || command == PlayerCommand.PlayOrPause ||
-                command == PlayerCommand.Paused(false)
-        if (command is PlayerCommand.Paused || startsPlayback) {
-            val allowsResume = when (command) {
-                is PlayerCommand.Paused -> !command.paused
-                PlayerCommand.PlayOrPause -> coordinator.playerState.value.paused
-                else -> startsPlayback
-            }
-            resumePolicy.userAction(allowsResume)
-            if (startsPlayback) playerTrace("Player/AudioSessionActivate") { activateAudio() }
+        command.playbackIntent(coordinator.playerState.value.paused)?.let { allowsResume ->
+            resumePolicy.userAction(
+                allowsResume = allowsResume,
+                audioSessionActivated = allowsResume &&
+                        playerTrace("Player/AudioSessionActivate") { activateAudio() },
+            )
         }
     }
 
@@ -259,7 +272,7 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
         remote.changePlaybackPositionCommand.enabled = state.seekable
     }
 
-    private fun activateAudio() = memScoped {
+    private fun activateAudio(): Boolean = memScoped {
         val error = alloc<ObjCObjectVar<NSError?>>()
         if (!audio.setCategory(AVAudioSessionCategoryPlayback, error.ptr) || !audio.setActive(
                 true,
@@ -267,6 +280,9 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
             )
         ) {
             Logger.w("Audio session: ${error.value?.localizedDescription}", tag = "IosMediaSession")
+            false
+        } else {
+            true
         }
     }
 
@@ -296,8 +312,28 @@ internal class IosMediaSession(private val coordinator: PlayerCoordinator) : Aut
             command.removeTarget(token); command.enabled = false
         }
         scope.cancel()
+        if (imageLoader.isInitialized()) imageLoader.value.shutdown()
         nowPlaying.nowPlayingInfo = null
         UIApplication.sharedApplication.idleTimerDisabled = false
         audio.setActive(false, AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, null)
     }
 }
+
+/** Share the player's Coil fetchers, decoders and disk cache with the native artwork layer. */
+internal suspend fun loadIosArtwork(source: Any, imageLoader: ImageLoader): UIImage? =
+    withContext(Dispatchers.IO) {
+        val request = imageRequest(source, PlatformContext.INSTANCE).newBuilder()
+            .size(1024, 1024)
+            .scale(Scale.FIT)
+            .precision(Precision.INEXACT)
+            .build()
+        val result = imageLoader.execute(request) as? SuccessResult ?: return@withContext null
+        Image.makeFromBitmap(result.image.toBitmap()).use { image ->
+            image.encodeToData(EncodedImageFormat.PNG, 100)?.use { data ->
+                val bytes = data.bytes
+                bytes.usePinned {
+                    UIImage.imageWithData(NSData.create(it.addressOf(0), bytes.size.toULong()))
+                }
+            }
+        }
+    }

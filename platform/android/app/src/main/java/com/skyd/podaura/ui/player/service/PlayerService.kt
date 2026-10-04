@@ -18,6 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.skyd.fundation.di.get
 import com.skyd.podaura.BuildConfig
 import com.skyd.podaura.ui.player.LoopMode
+import com.skyd.podaura.ui.player.AndroidMediaSession
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,8 @@ import kotlinx.coroutines.cancel
 class PlayerService : Service() {
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
     val playerCoordinator = PlayerCoordinator()
+    lateinit var playbackSession: AndroidMediaSession
+        private set
     private val playerNotificationReceiver = PlayerNotificationReceiver()
     private val binder = PlayerServiceBinder()
     private val sessionManager = MediaSessionManager(
@@ -38,6 +41,7 @@ class PlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        playbackSession = AndroidMediaSession(this, playerCoordinator)
         ContextCompat.registerReceiver(
             this,
             playerNotificationReceiver,
@@ -59,6 +63,7 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
+        playbackSession.close()
         playerCoordinator.onCommand(PlayerCommand.Destroy)
         sessionManager.onDestroy()
         lifecycleScope.cancel()

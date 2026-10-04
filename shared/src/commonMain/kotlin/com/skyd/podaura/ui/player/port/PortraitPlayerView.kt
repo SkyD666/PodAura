@@ -127,7 +127,7 @@ internal fun PortraitPlayerView(
                     if (supportPip) {
                         val onEnterPip = rememberOnEnterPip()
                         ComponeIconButton(
-                            enabled = interactive,
+                            enabled = interactive && onEnterPip.canEnter,
                             onClick = onEnterPip::enter,
                             imageVector = Icons.Outlined.PictureInPictureAlt,
                             contentDescription = stringResource(Res.string.player_picture_in_picture),

@@ -45,7 +45,10 @@ fun MainViewController(): UIViewController {
     onAppStart()
     val session = IosPlayerSession()
     val root = ComposeUIViewController { IosPlayerApp(session) }
-    return IosPlayerNavigationController(root, session::onFullPlayerClosed).also {
+    return IosPlayerNavigationController(root, session::onFullPlayerClosed,
+        onPlayerWillClose = session::onFullPlayerWillClose,
+        onPlayerCloseCancelled = session::onFullPlayerCloseCancelled,
+    ).also {
         session.navigationController = it
     }
 }
