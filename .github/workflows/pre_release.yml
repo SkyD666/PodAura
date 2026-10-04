@@ -17,6 +17,7 @@ jobs:
     name: Build for ${{ matrix.target-platform }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -28,22 +29,26 @@ jobs:
                              'platform/android/app/build/outputs/apk/GitHub/release/*x86_[!6]*.apk',
                              platform/android/app/build/outputs/apk/GitHub/release/*universal*.apk,
                              platform/android/app/build/outputs/mapping/GitHubRelease/mapping.txt ]
-            artifact-name: [ Android APK (arm64-v8a),
-                             Android APK (armeabi-v7a),
-                             Android APK (x86_64),
-                             Android APK (x86),
-                             Android APK (universal),
-                             Android Mapping ]
+            artifact-name: [ Android_arm64-v8a_GitHub,
+                             Android_armeabi-v7a_GitHub,
+                             Android_x86_64_GitHub,
+                             Android_x86_GitHub,
+                             Android_universal_GitHub,
+                             Android_universal_mapping ]
           - os: macos-26
             target-platform: JVM macOS arm64
-            build-command: ./gradlew packageReleaseDistributionForCurrentOS
-            artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ macOS DMG (JVM arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            build-command: |
+              ./gradlew packageReleaseDistributionForCurrentOS
+              mv shared/build/compose/binaries/main-release/dmg/*.dmg "shared/build/PodAura_${ARTIFACT_VERSION}_macOS_arm64_JVM.dmg"
+            artifact-path: [ shared/build/PodAura_*_macOS_arm64_JVM.dmg ]
+            artifact-name: [ macOS_arm64_JVM, Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26-intel
             target-platform: JVM macOS x64
-            build-command: ./gradlew packageReleaseDistributionForCurrentOS
-            artifact-path: [ shared/build/compose/binaries/main-release/dmg/*.dmg ]
-            artifact-name: [ macOS DMG (JVM x64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            build-command: |
+              ./gradlew packageReleaseDistributionForCurrentOS
+              mv shared/build/compose/binaries/main-release/dmg/*.dmg "shared/build/PodAura_${ARTIFACT_VERSION}_macOS_x64_JVM.dmg"
+            artifact-path: [ shared/build/PodAura_*_macOS_x64_JVM.dmg ]
+            artifact-name: [ macOS_x64_JVM, Skipped, Skipped, Skipped, Skipped, Skipped ]
           - os: windows-latest
             target-platform: JVM Windows x64
             build-command: |
@@ -51,13 +56,16 @@ jobs:
               New-Item -ItemType Directory -Force shared/build/windows-portable | Out-Null
               Copy-Item shared/build/compose/binaries/main-release/app/PodAura shared/build/windows-portable/PodAura -Recurse
               ./gradlew :shared:createMsix -PmicrosoftStore=true
-            artifact-path: [ shared/build/windows-portable/PodAura/, shared/build/PodAura.msix ]
-            artifact-name: [ Windows Portable ZIP (JVM x64), Windows Store MSIX (JVM x64), Skipped, Skipped, Skipped, Skipped ]
+              Move-Item shared/build/PodAura.msix "shared/build/PodAura_${env:ARTIFACT_VERSION}_Windows_x64_JVM_Store.msix"
+            artifact-path: [ shared/build/windows-portable/PodAura/, shared/build/PodAura_*_Windows_x64_JVM_Store.msix ]
+            artifact-name: [ Windows_x64_JVM_Portable, Windows_x64_JVM_Store, Skipped, Skipped, Skipped, Skipped ]
           - os: macos-26
             target-platform: Native macOS arm64
-            build-command: ./gradlew packageDmgNativeReleaseMacosArm64
-            artifact-path: [ shared/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg ]
-            artifact-name: [ macOS DMG (Native arm64), Skipped, Skipped, Skipped, Skipped, Skipped ]
+            build-command: |
+              ./gradlew packageDmgNativeReleaseMacosArm64
+              mv shared/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg "shared/build/PodAura_${ARTIFACT_VERSION}_macOS_arm64_Native.dmg"
+            artifact-path: [ shared/build/PodAura_*_macOS_arm64_Native.dmg ]
+            artifact-name: [ macOS_arm64_Native, Skipped, Skipped, Skipped, Skipped, Skipped ]
 
           # The project.xcproj format requires Xcode 27.
           - os: xcode-27
@@ -78,13 +86,23 @@ jobs:
                 DEVELOPMENT_TEAM=""
               mkdir -p "$RUNNER_TEMP/Payload"
               cp -R "$RUNNER_TEMP/PodAura.xcarchive/Products/Applications/PodAura.app" "$RUNNER_TEMP/Payload/"
-              ( cd "$RUNNER_TEMP" && zip -9 -r -y "$GITHUB_WORKSPACE/PodAura_iOS_Unsigned.ipa" Payload )
-            artifact-path: [ PodAura_iOS_Unsigned.ipa ]
-            artifact-name: [ PodAura iOS Unsigned IPA, Skipped, Skipped, Skipped, Skipped, Skipped ]
+              ( cd "$RUNNER_TEMP" && zip -9 -r -y "$GITHUB_WORKSPACE/PodAura_${ARTIFACT_VERSION}_iOS_arm64_Unsigned.ipa" Payload )
+            artifact-path: [ PodAura_*_iOS_arm64_Unsigned.ipa ]
+            artifact-name: [ iOS_arm64_Unsigned, Skipped, Skipped, Skipped, Skipped, Skipped ]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
+
+      - name: Read Artifact Version
+        shell: bash
+        env:
+          VERSION_FILE: ${{ matrix.target-platform == 'iOS arm64' && 'platform/ios/Configuration/Config.xcconfig' || 'gradle.properties' }}
+          VERSION_PROPERTY: ${{ matrix.target-platform == 'Android' && 'versionName' || matrix.target-platform == 'iOS arm64' && 'MARKETING_VERSION' || 'versionForDesktop' }}
+        run: |
+          ARTIFACT_VERSION=$(sed -n "s/^${VERSION_PROPERTY}=//p" "$VERSION_FILE" | tr -d '\r')
+          test -n "$ARTIFACT_VERSION"
+          echo "ARTIFACT_VERSION=$ARTIFACT_VERSION" >> "$GITHUB_ENV"
 
       - name: Setup JDK 25
         uses: actions/setup-java@v5
@@ -128,72 +146,90 @@ jobs:
       - name: Upload Artifact - ${{ matrix.artifact-name[0] }}
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[0] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[0] }}
           path: ${{ matrix.artifact-path[0] }}
-          archive: ${{ matrix.target-platform != 'iOS arm64' }}
+          archive: ${{ matrix.target-platform == 'JVM Windows x64' }}
           compression-level: 9
 
       - name: Upload Artifact - ${{ matrix.artifact-name[1] }}
         if: matrix.artifact-path[1] != null
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[1] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[1] }}
           path: ${{ matrix.artifact-path[1] }}
-          compression-level: 9
+          archive: false
 
       - name: Upload Artifact - ${{ matrix.artifact-name[2] }}
         if: matrix.artifact-path[2] != null
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[2] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[2] }}
           path: ${{ matrix.artifact-path[2] }}
-          compression-level: 9
+          archive: false
 
       - name: Upload Artifact - ${{ matrix.artifact-name[3] }}
         if: matrix.artifact-path[3] != null
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[3] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[3] }}
           path: ${{ matrix.artifact-path[3] }}
-          compression-level: 9
+          archive: false
 
       - name: Upload Artifact - ${{ matrix.artifact-name[4] }}
         if: matrix.artifact-path[4] != null
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[4] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[4] }}
           path: ${{ matrix.artifact-path[4] }}
-          compression-level: 9
+          archive: false
 
       - name: Upload Artifact - ${{ matrix.artifact-name[5] }}
         if: matrix.artifact-path[5] != null
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact-name[5] }}
+          name: PodAura_${{ env.ARTIFACT_VERSION }}_${{ matrix.artifact-name[5] }}
           path: ${{ matrix.artifact-path[5] }}
+          archive: true
           compression-level: 9
 
-      - name: Get File Path
-        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]')
-        run: |
-          echo "PRE_RELEASE_APK_ARM64_V8=$(find platform/android/app/build/outputs/apk/GitHub/release -name '*arm64-v8a*.apk' -type f | head -1)" >> $GITHUB_ENV
+  telegram:
+    name: Post APK and IPA to Telegram
+    needs: build
+    if: ${{ always() && !cancelled() && needs.build.result != 'skipped' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
 
-      # Send to Telegram
+      - name: Download Android arm64 APK
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: PodAura_*_Android_arm64-v8a_GitHub.apk
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: Download iOS IPA
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: PodAura_*_iOS_arm64_Unsigned.ipa
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
       - name: Post to Telegram Channel
-        if: success() && matrix.target-platform == 'Android' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]')
         env:
           CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          PRE_RELEASE_ARM64_V8: ${{ env.PRE_RELEASE_APK_ARM64_V8 }}
           COMMIT_MESSAGE: |+
             GitHub New CI: PodAura
-            
-            `${{ github.event.head_commit.message }}`
-            
-            by `${{ github.event.head_commit.author.name }}`
-            
-            Workflow run [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            Commit details [here](${{ github.event.head_commit.url }})
-        run: |
-          ESCAPED=`python3 -c 'import json,os,urllib.parse; print(urllib.parse.quote(json.dumps(os.environ["COMMIT_MESSAGE"])))'`
-          curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22%3A%22document%22%2C%20%22media%22%3A%22attach%3A%2F%2Fpre_release_arm64_v8%22%2C%22parse_mode%22%3A%22MarkdownV2%22%2C%22caption%22%3A${ESCAPED}%7D%5D"  -F pre_release_arm64_v8="@$PRE_RELEASE_ARM64_V8"
+
+            ${{ github.event.head_commit.message }}
+
+            by ${{ github.event.head_commit.author.name }}
+
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Commit: ${{ github.event.head_commit.url }}
+        run: python3 .github/scripts/post_telegram.py

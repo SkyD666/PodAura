@@ -135,7 +135,8 @@ androidComponents.onVariants { variant ->
         val abi = output.getFilter(FilterConfiguration.FilterType.ABI)?.identifier ?: "universal"
         val buildType = variant.buildType
         val flavorName = variant.flavorName
-        output.outputFileName = "PodAura_${versionName}_${abi}_${buildType}_${flavorName}.apk"
+        val artifactType = if (buildType == "release") flavorName else "${buildType}_${flavorName}"
+        output.outputFileName = "PodAura_${versionName}_Android_${abi}_${artifactType}.apk"
     }
 }
 
