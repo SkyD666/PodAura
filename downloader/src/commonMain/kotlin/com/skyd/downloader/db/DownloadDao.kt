@@ -16,6 +16,13 @@ interface DownloadDao {
     suspend fun update(entity: DownloadEntity): Int
 
     @Query(
+        "UPDATE ${DownloadEntity.TABLE_NAME} SET ${DownloadEntity.PATH_COLUMN} = :path " +
+                "WHERE ${DownloadEntity.ID_COLUMN} = :id " +
+                "AND ${DownloadEntity.PATH_COLUMN} = :oldPath"
+    )
+    suspend fun relocatePath(id: String, oldPath: String, path: String): Int
+
+    @Query(
         "SELECT * FROM ${DownloadEntity.TABLE_NAME} " +
                 "WHERE ${DownloadEntity.ID_COLUMN} = :id"
     )

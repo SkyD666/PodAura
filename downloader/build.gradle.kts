@@ -57,6 +57,11 @@ kotlin {
             implementation(libs.ktor.client.mock)
         }
 
+        appleTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.work.runtime.ktx)

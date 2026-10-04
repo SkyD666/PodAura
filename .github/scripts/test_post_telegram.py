@@ -1,3 +1,5 @@
+from email.parser import BytesParser
+from email.policy import default
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
@@ -117,6 +119,75 @@ class TelegramUploadTest(unittest.TestCase):
         with patch.dict(os.environ, env), patch.object(post_telegram.subprocess, 'run', return_value=response):
             with self.assertRaises(RuntimeError):
                 post_telegram.request('logOut', {})
+
+    def test_special_characters_over_http(self):
+        received = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                body = self.rfile.read(int(self.headers['Content-Length']))
+                headers = f"Content-Type: {self.headers['Content-Type']}\r\nMIME-Version: 1.0\r\n\r\n"
+                message = BytesParser(policy=default).parsebytes(headers.encode() + body)
+                fields = {
+                    part.get_param('name', header='content-disposition'): part.get_payload(decode=True)
+                    for part in message.iter_parts()
+                }
+                received.append((self.path, fields))
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'{"ok":true,"result":true}')
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(('127.0.0.1', 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        previous = Path.cwd()
+        captions = [
+            '@not-a-file;type=text/plain',
+            '<not-a-file',
+            "引号 ' \" 反斜杠 \\ 换行\nCRLF\r\n制表符\t😀 & <tag> _*[]()~`>#+-=|{}.!%"
+            '\n$(touch injected) `touch injected` ; touch injected'
+            '\n${{ secrets.TEST }} ::set-output name=test::value',
+            '😀' * 1030,
+        ]
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                os.chdir(temp)
+                directory = Path('telegram-artifacts')
+                directory.mkdir()
+                (directory / 'PodAura_3.4-beta10_Android_arm64-v8a_GitHub.apk').touch()
+                ipa = directory / 'PodAura_1.0_iOS_arm64_Unsigned.ipa'
+                for count in [1, 2]:
+                    if count == 2:
+                        ipa.touch()
+                    for caption in captions:
+                        with self.subTest(files=count, caption=caption):
+                            env = {
+                                'BOT_TOKEN': 'test', 'CHANNEL_ID': 'channel', 'COMMIT_MESSAGE': caption,
+                                'BOT_API_URL': f'http://127.0.0.1:{server.server_port}',
+                            }
+                            with patch.dict(os.environ, env):
+                                post_telegram.main()
+                            path, fields = received[-1]
+                            self.assertNotIn('parse_mode', fields)
+                            if count == 1:
+                                self.assertEqual(path, '/bottest/sendDocument')
+                                actual = fields['caption'].decode('utf-8')
+                            else:
+                                self.assertEqual(path, '/bottest/sendMediaGroup')
+                                media = json.loads(fields['media'].decode('utf-8'))
+                                self.assertNotIn('parse_mode', media[0])
+                                actual = media[0]['caption']
+                            self.assertEqual(actual, caption[:1024])
+                            self.assertFalse(Path('injected').exists())
+                self.assertEqual(len(received), 8)
+        finally:
+            os.chdir(previous)
+            server.shutdown()
+            server.server_close()
+            thread.join()
 
     def test_api_error_does_not_expose_token(self):
         response = subprocess.CompletedProcess([], 22, stdout='{"ok":false,"description":"Request Entity Too Large"}')

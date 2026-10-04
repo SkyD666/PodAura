@@ -121,7 +121,8 @@ fun DownloadScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val playerJumper = rememberPlayerJumper()
     val mediaNotExistsMessage = stringResource(Res.string.media_not_exists)
-    val downloadPlaybackSupported = platform == Platform.Android || platform.isJvm
+    val downloadPlaybackSupported =
+        platform == Platform.Android || platform == Platform.iOS || platform.isJvm
     var openLinkDialog by rememberSaveable { mutableStateOf(downloadLink) }
 
     LaunchedEffect(downloadLink) {
