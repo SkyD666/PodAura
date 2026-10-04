@@ -11,8 +11,9 @@ val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
     val script = rootProject.file("platform/ios/mpvkit/prepare.py")
     inputs.files(script, rootProject.file("platform/ios/mpvkit/artifacts.json"),
         rootProject.file("platform/ios/mpvkit/podaura.h"))
-    outputs.dirs(layout.buildDirectory.dir("mpvkit/iphoneos/Libmpv.framework"),
-        layout.buildDirectory.dir("mpvkit/iphonesimulator/Libmpv.framework"))
+    // Gradle removes stale outputs on a fresh checkout; it must never own the native binaries here.
+    outputs.dirs(layout.buildDirectory.dir("mpvkit/iphoneos/Libmpv.framework/Headers"),
+        layout.buildDirectory.dir("mpvkit/iphonesimulator/Libmpv.framework/Headers"))
     commandLine("python3", script.absolutePath, "--headers-only")
 }
 

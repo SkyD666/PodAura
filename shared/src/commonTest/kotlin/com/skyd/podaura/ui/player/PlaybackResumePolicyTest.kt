@@ -5,6 +5,20 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PlaybackResumePolicyTest {
+    @Test fun delayedAudioActivationPreservesForegroundResumeAndUserPause() {
+        val policy = PlaybackResumePolicy()
+        policy.userAction(allowsResume = true)
+        assertTrue(policy.enterBackground(playing = true, enabled = false))
+        policy.audioSessionActivated()
+        assertTrue(policy.enterForeground())
+
+        policy.beginInterruption(playing = true)
+        policy.userAction(allowsResume = false)
+        policy.audioSessionActivated()
+        assertTrue(policy.pauseWhenRequired(playing = true, ready = true, backgroundEnabled = true))
+        assertFalse(policy.endInterruption(shouldResume = true, backgroundEnabled = true))
+    }
+
     @Test fun screenLockOverridesBackgroundAndPipAndUnlockResumesOnlyOnce() {
         for (backgroundEnabled in listOf(false, true)) {
             for (pip in listOf(false, true)) {

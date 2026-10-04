@@ -394,70 +394,74 @@ fun ReadScreen(
                             )
                         },
                     )
-                    if (openEnclosureBottomSheet) {
-                        EnclosureBottomSheet(
-                            onDismissRequest = { openEnclosureBottomSheet = false },
-                            dataList = remember(articleState.article) {
-                                getEnclosuresList(articleState.article.articleWithEnclosure)
-                            },
-                            article = articleState.article,
-                            onPlay = { playMedia(it) },
-                        )
-                    }
                 }
             }
         }
+    }
 
-        MviEventListener(viewModel.singleEvent) { event ->
-            when (event) {
-                is ReadEvent.FavoriteArticleResultEvent.Failed ->
-                    snackbarHostState.showSnackbar(event.msg)
+    // Scaffold subcomposes its content during measurement. Creating a modal there can
+    // synchronously end iOS text input and re-enter measureAndLayout when focus changes.
+    val articleState = uiState.articleState
+    if (openEnclosureBottomSheet && articleState is ArticleState.Success) {
+        EnclosureBottomSheet(
+            onDismissRequest = { openEnclosureBottomSheet = false },
+            dataList = remember(articleState.article) {
+                getEnclosuresList(articleState.article.articleWithEnclosure)
+            },
+            article = articleState.article,
+            onPlay = { playMedia(it) },
+        )
+    }
 
-                is ReadEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+    MviEventListener(viewModel.singleEvent) { event ->
+        when (event) {
+            is ReadEvent.FavoriteArticleResultEvent.Failed ->
+                snackbarHostState.showSnackbar(event.msg)
 
-                is ReadEvent.FullContentResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
+            is ReadEvent.ReadArticleResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
 
-                is ReadEvent.PlayTimestampResultEvent.OpenPlayer -> playMedia(
-                    url = event.mediaUrl,
-                    startPositionSeconds = event.positionSeconds,
-                )
+            is ReadEvent.FullContentResultEvent.Failed -> snackbarHostState.showSnackbar(event.msg)
 
-                ReadEvent.PlayTimestampResultEvent.MediaNotExists ->
-                    snackbarHostState.showSnackbar(mediaNotExistsMessage)
-            }
-        }
-
-        WaitingDialog(visible = uiState.loadingDialog || uiState.fullContentLoading)
-
-        if (openReadTextSizeSliderDialog) {
-            ReadTextSizeSliderDialog(
-                onDismissRequest = { openReadTextSizeSliderDialog = false },
+            is ReadEvent.PlayTimestampResultEvent.OpenPlayer -> playMedia(
+                url = event.mediaUrl,
+                startPositionSeconds = event.positionSeconds,
             )
-        }
 
-        if (openTranslationBottomSheet) {
-            val article = uiState.articleState as? ArticleState.Success
-            TranslationBottomSheet(
-                profiles = uiState.translationProfiles,
-                articleText = article?.let {
-                    buildString {
-                        append(it.article.articleWithEnclosure.article.title.orEmpty())
-                        append(it.displayedContent)
-                    }
-                }.orEmpty(),
-                initialProfileId = uiState.translationState.profileId,
-                initialTargetLanguage = uiState.translationState.targetLanguage,
-                onDismissRequest = { openTranslationBottomSheet = false },
-                onConfigureProfiles = {
-                    openTranslationBottomSheet = false
-                    globalNavBackStack.add(TranslationSettingsRoute)
-                },
-                onTranslate = { profileId, targetLanguage ->
-                    dispatcher(ReadIntent.Translate(profileId, targetLanguage))
-                    openTranslationBottomSheet = false
-                },
-            )
+            ReadEvent.PlayTimestampResultEvent.MediaNotExists ->
+                snackbarHostState.showSnackbar(mediaNotExistsMessage)
         }
+    }
+
+    WaitingDialog(visible = uiState.loadingDialog || uiState.fullContentLoading)
+
+    if (openReadTextSizeSliderDialog) {
+        ReadTextSizeSliderDialog(
+            onDismissRequest = { openReadTextSizeSliderDialog = false },
+        )
+    }
+
+    if (openTranslationBottomSheet) {
+        val article = uiState.articleState as? ArticleState.Success
+        TranslationBottomSheet(
+            profiles = uiState.translationProfiles,
+            articleText = article?.let {
+                buildString {
+                    append(it.article.articleWithEnclosure.article.title.orEmpty())
+                    append(it.displayedContent)
+                }
+            }.orEmpty(),
+            initialProfileId = uiState.translationState.profileId,
+            initialTargetLanguage = uiState.translationState.targetLanguage,
+            onDismissRequest = { openTranslationBottomSheet = false },
+            onConfigureProfiles = {
+                openTranslationBottomSheet = false
+                globalNavBackStack.add(TranslationSettingsRoute)
+            },
+            onTranslate = { profileId, targetLanguage ->
+                dispatcher(ReadIntent.Translate(profileId, targetLanguage))
+                openTranslationBottomSheet = false
+            },
+        )
     }
 }
 

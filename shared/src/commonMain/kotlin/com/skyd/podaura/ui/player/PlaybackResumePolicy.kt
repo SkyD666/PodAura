@@ -51,7 +51,12 @@ internal class PlaybackResumePolicy(
         resumeAfterUnlock = false
         // An interruption-ended notification is not guaranteed. A successful explicit
         // activation proves that a stale interruption must no longer block Play.
-        if (allowsResume && audioSessionActivated) interrupted = false
+        if (audioSessionActivated) this.audioSessionActivated()
+    }
+
+    /** Activation completion must not clear system resumes recorded while it was pending. */
+    fun audioSessionActivated() {
+        if (userAllowsResume) interrupted = false
     }
 
     fun enterBackground(playing: Boolean, enabled: Boolean): Boolean {

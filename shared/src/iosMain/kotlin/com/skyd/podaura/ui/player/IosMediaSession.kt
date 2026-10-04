@@ -79,6 +79,9 @@ import platform.UIKit.UIApplicationProtectedDataWillBecomeUnavailable
 import platform.UIKit.UIApplicationState.UIApplicationStateBackground
 import platform.UIKit.UIImage
 
+// AVAudioSession is shared across player lifetimes. Keep activation and teardown ordered.
+private val audioSessionDispatcher = Dispatchers.IO.limitedParallelism(1)
+
 /** App-lifetime system integration; never owned by the full-screen composable. */
 internal class IosMediaSession(
     private val coordinator: PlayerCoordinator,
@@ -101,9 +104,13 @@ internal class IosMediaSession(
     private var artworkJob: Job? = null
 
     private var systemCommand = false
+    private var audioActivationGeneration = 0L
+    private var requestedAudioActivationGeneration: Long? = null
+    private var closed = false
 
     init {
         coordinator.onPlaybackCommand = ::userCommand
+        coordinator.preparePlaybackCommand = ::preparePlaybackCommand
         // Activate when a playback command arrives, rather than blocking player presentation.
         command(remote.playCommand) { send(PlayerCommand.Paused(false)) }
         command(remote.pauseCommand) { send(PlayerCommand.Paused(true)) }
@@ -132,7 +139,7 @@ internal class IosMediaSession(
         observe(UIApplicationDidBecomeActiveNotification) {
             setScreenLocked(false)
             if (resumePolicy.enterForeground()) {
-                activateAudio(); systemPause(false)
+                systemPause(false)
             }
             updateNowPlaying()
         }
@@ -142,6 +149,7 @@ internal class IosMediaSession(
             val info = notification.userInfo.orEmpty()
             val type = (info[AVAudioSessionInterruptionTypeKey] as? NSNumber)?.unsignedIntegerValue
             if (type == AVAudioSessionInterruptionTypeBegan) {
+                audioActivationGeneration++
                 resumePolicy.beginInterruption(!coordinator.playerState.value.paused)
                 systemPause(true)
             } else if (type == AVAudioSessionInterruptionTypeEnded) {
@@ -153,7 +161,7 @@ internal class IosMediaSession(
                     dataStore.getOrDefault(BackgroundPlayPreference)
                 )
                 if (resume) {
-                    activateAudio(); systemPause(false)
+                    systemPause(false)
                 }
             }
         }
@@ -163,7 +171,9 @@ internal class IosMediaSession(
             }
         }
         observe(AVAudioSessionMediaServicesWereResetNotification) {
-            if (!coordinator.playerState.value.paused) activateAudio()
+            if (!coordinator.playerState.value.paused) scope.launch {
+                if (!activateAudio()) systemPause(true)
+            }
         }
         scope.launch {
             combine(
@@ -209,14 +219,14 @@ internal class IosMediaSession(
                 dataStore.getOrDefault(BackgroundPlayPreference),
             )
         ) {
-            if (locked || activateAudio()) systemPause(locked)
+            systemPause(locked)
         }
-                                                                                                                                                    updateNowPlaying()
+        updateNowPlaying()
     }
 
     fun setPictureInPictureActive(active: Boolean) {
         if (resumePolicy.setPictureInPictureActive(active)) {
-            activateAudio(); systemPause(false)
+            systemPause(false)
         }
         if (resumePolicy.pauseWhenRequired(
                 !coordinator.playerState.value.paused,
@@ -240,11 +250,23 @@ internal class IosMediaSession(
     fun userCommand(command: PlayerCommand) {
         if (systemCommand) return
         command.playbackIntent(coordinator.playerState.value.paused)?.let { allowsResume ->
-            resumePolicy.userAction(
-                allowsResume = allowsResume,
-                audioSessionActivated = allowsResume &&
-                        playerTrace("Player/AudioSessionActivate") { activateAudio() },
-            )
+            audioActivationGeneration++
+            requestedAudioActivationGeneration = audioActivationGeneration.takeIf { allowsResume }
+            resumePolicy.userAction(allowsResume = allowsResume)
+        }
+    }
+
+    private suspend fun preparePlaybackCommand(command: PlayerCommand): Boolean {
+        if (command.playbackIntent(coordinator.playerState.value.paused) != true) return true
+        return withContext(Dispatchers.Main.immediate) {
+            if (closed) return@withContext false
+            val generation = requestedAudioActivationGeneration
+            val activated = activateAudio()
+            if (closed) return@withContext false
+            if (activated && generation != null && generation == audioActivationGeneration) {
+                resumePolicy.audioSessionActivated()
+            }
+            activated
         }
     }
 
@@ -272,17 +294,23 @@ internal class IosMediaSession(
         remote.changePlaybackPositionCommand.enabled = state.seekable
     }
 
-    private fun activateAudio(): Boolean = memScoped {
-        val error = alloc<ObjCObjectVar<NSError?>>()
-        if (!audio.setCategory(AVAudioSessionCategoryPlayback, error.ptr) || !audio.setActive(
-                true,
-                error.ptr
-            )
-        ) {
-            Logger.w("Audio session: ${error.value?.localizedDescription}", tag = "IosMediaSession")
-            false
-        } else {
-            true
+    private suspend fun activateAudio(): Boolean = withContext(audioSessionDispatcher) {
+        playerTrace("Player/AudioSessionActivate") {
+            memScoped {
+                val error = alloc<ObjCObjectVar<NSError?>>()
+                if ((audio.category != AVAudioSessionCategoryPlayback &&
+                            !audio.setCategory(AVAudioSessionCategoryPlayback, error.ptr)) ||
+                    !audio.setActive(true, error.ptr)
+                ) {
+                    Logger.w(
+                        "Audio session: ${error.value?.localizedDescription}",
+                        tag = "IosMediaSession"
+                    )
+                    false
+                } else {
+                    true
+                }
+            }
         }
     }
 
@@ -306,7 +334,10 @@ internal class IosMediaSession(
     }
 
     override fun close() {
+        if (closed) return
+        closed = true
         coordinator.onPlaybackCommand = null
+        coordinator.preparePlaybackCommand = null
         observers.forEach(center::removeObserver)
         commands.forEach { (command, token) ->
             command.removeTarget(token); command.enabled = false
@@ -315,7 +346,23 @@ internal class IosMediaSession(
         if (imageLoader.isInitialized()) imageLoader.value.shutdown()
         nowPlaying.nowPlayingInfo = null
         UIApplication.sharedApplication.idleTimerDisabled = false
-        audio.setActive(false, AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, null)
+        // This job must survive cancellation of the player session above.
+        CoroutineScope(audioSessionDispatcher).launch {
+            memScoped {
+                val error = alloc<ObjCObjectVar<NSError?>>()
+                if (!audio.setActive(
+                        false,
+                        AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation,
+                        error.ptr
+                    )
+                ) {
+                    Logger.w(
+                        "Audio session deactivation: ${error.value?.localizedDescription}",
+                        tag = "IosMediaSession"
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -1,15 +1,17 @@
 package com.skyd.podaura.ui.player.mini
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.recalculateWindowInsets
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -82,14 +84,26 @@ private fun rememberMiniPlayerNavEntryDecorator(): NavEntryDecorator<NavKey> {
 }
 
 @Composable
-private fun MiniPlayerNavLayout(
+internal fun MiniPlayerNavLayout(
     playerSession: PlayerSession?,
     content: @Composable () -> Unit,
 ) {
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    Scaffold(
+    // Compose entries before measurement: iOS modal creation transfers native focus and
+    // can synchronously request layout, so a Scaffold content slot is unsafe here.
+    Surface(
         modifier = Modifier.fillMaxSize(),
-        bottomBar = {
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        Column(Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .recalculateWindowInsets(),
+            ) {
+                content()
+            }
             MiniPlayer(
                 coordinator = playerSession?.coordinator,
                 onOpenPlayer = { playerSession?.openFullPlayer() },
@@ -98,16 +112,6 @@ private fun MiniPlayerNavLayout(
                 windowInsets = WindowInsets.safeDrawing
                     .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
             )
-        },
-        contentWindowInsets = WindowInsets(),
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .consumeWindowInsets(innerPadding),
-        ) {
-            content()
         }
     }
 }

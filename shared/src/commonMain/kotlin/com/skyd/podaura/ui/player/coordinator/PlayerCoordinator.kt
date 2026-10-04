@@ -162,6 +162,8 @@ class PlayerCoordinator : LifecycleOwner {
     fun removeAllObserver() = observers.store(emptySet())
 
     internal var onPlaybackCommand: ((PlayerCommand) -> Unit)? = null
+    /** Runs in the engine queue before playback, without blocking the calling UI. */
+    internal var preparePlaybackCommand: (suspend (PlayerCommand) -> Boolean)? = null
 
     fun onCommand(command: PlayerCommand) {
         onPlaybackCommand?.invoke(command)
@@ -280,6 +282,7 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private suspend fun executeCommand(command: PlayerCommand) {
+        if (preparePlaybackCommand?.invoke(command) == false) return
         when (command) {
             is PlayerCommand.RemoveMediaFromPlaylist -> removeMedia(command)
             is PlayerCommand.Paused -> setPaused(command.paused)
@@ -370,6 +373,7 @@ class PlayerCoordinator : LifecycleOwner {
                 )
             }
             if (command.playlist.isEmpty()) return
+            if (preparePlaybackCommand?.invoke(command) == false) return
             loadPreparedList(command)
             externalPlayback?.release()
             externalPlayback = command.externalBatch?.let(::ExternalPlaybackSession)

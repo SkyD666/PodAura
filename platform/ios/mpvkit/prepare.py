@@ -25,11 +25,12 @@ def download(artifact, target):
         partial.replace(target)
 
 
-def prepare(artifact, destination):
+def prepare(artifact, destination, headers_only=False):
     name = artifact['name']
-    marker = destination / 'receipts' / name
+    marker = destination / 'receipts' / (name + ('-headers' if headers_only else ''))
+    expected = 'Headers/mpv/client.h' if headers_only else name
     if marker.exists() and marker.read_text() == artifact['sha256']:
-        if all((destination / sdk / f'{name}.framework' / name).is_file()
+        if all((destination / sdk / f'{name}.framework' / expected).is_file()
                for sdk in ('iphoneos', 'iphonesimulator')):
             return
     downloads = destination / 'downloads'
@@ -53,7 +54,10 @@ def prepare(artifact, destination):
                            and 'arm64' in lib['SupportedArchitectures'])
             source = framework / library['LibraryIdentifier'] / library['LibraryPath']
             target = destination / sdk / f'{name}.framework'
-            target.parent.mkdir(exist_ok=True)
+            if headers_only:
+                source = source / 'Headers'
+                target = target / 'Headers'
+            target.parent.mkdir(parents=True, exist_ok=True)
             if target.exists():
                 shutil.rmtree(target)
             if source.is_dir():
@@ -86,7 +90,7 @@ def main():
             download(manifest['caCertificate'], destination / 'downloads/cacert.pem')
             return
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-            list(pool.map(lambda item: prepare(item, destination), artifacts))
+            list(pool.map(lambda item: prepare(item, destination, args.headers_only), artifacts))
         for sdk in ('iphoneos', 'iphonesimulator'):
             shutil.copy2(here / 'podaura.h',
                          destination / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
