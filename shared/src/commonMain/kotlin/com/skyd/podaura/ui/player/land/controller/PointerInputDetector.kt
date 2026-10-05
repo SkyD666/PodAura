@@ -16,7 +16,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.fastAll
-import com.skyd.fundation.util.isJvm
+import com.skyd.fundation.util.isPhone
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.detectDoubleFingerTransformGestures
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
@@ -94,7 +94,7 @@ internal fun Modifier.detectPressGestures(
                 }
             },
             onTap = {
-                if (platform.isJvm) {
+                if (!platform.isPhone) {
                     restartAutoHideController()
                     playStateCallback.onPlayOrPause()
                 } else {
@@ -153,7 +153,7 @@ internal fun Modifier.detectControllerGestures(
                 cancelAutoHideController()
                 pointerStartX = it.x
                 pointerStartY = it.y
-                if (platform.isJvm || systemBarAreaDetector.inSystemBarArea(it.x, it.y)) {
+                if (!platform.isPhone || systemBarAreaDetector.inSystemBarArea(it.x, it.y)) {
                     return@onVerticalDragStart
                 }
                 when (pointerStartX) {
@@ -184,7 +184,7 @@ internal fun Modifier.detectControllerGestures(
             },
             onVerticalDrag = onVerticalDrag@{ change, _ ->
                 val deltaY = change.position.y - pointerStartY
-                if (platform.isJvm ||
+                if (!platform.isPhone ||
                     systemBarAreaDetector.inSystemBarArea(pointerStartX, pointerStartY) ||
                     abs(deltaY) < 50
                 ) {
@@ -253,7 +253,7 @@ internal fun Modifier.detectMouseMoveGestures(
     onMousePressChanged: (Boolean) -> Unit,
     onMouseMove: () -> Unit,
 ): Modifier {
-    if (!platform.isJvm) return this
+    if (platform.isPhone) return this
     val currentOnMousePressChanged by rememberUpdatedState(onMousePressChanged)
     val currentOnMouseMove by rememberUpdatedState(onMouseMove)
     return pointerInput(Unit) {

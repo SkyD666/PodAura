@@ -404,6 +404,7 @@ private fun MediaFolderNumberBadge(
 @Composable
 fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25.dp) {
     val context = LocalPlatformContext.current
+    val cover = remember(data) { data.cover }
     var showThumbnail by remember(data) { mutableStateOf(true) }
 
     @Composable
@@ -421,14 +422,14 @@ fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25
     }
 
     if (MediaShowThumbnailPreference.current) {
-        if (showThumbnail) {
+        if (showThumbnail && cover != null) {
             PodAuraImage(
                 modifier = modifier.fillMaxSize(),
-                model = remember(data.cover) {
+                model = remember(cover) {
                     ImageRequest.Builder(context)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .memoryCachePolicy(CachePolicy.ENABLED)
-                        .data(data.cover)
+                        .data(cover)
                         .crossfade(true)
                         .build()
                 },

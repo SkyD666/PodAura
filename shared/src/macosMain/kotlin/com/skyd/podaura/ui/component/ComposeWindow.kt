@@ -20,6 +20,7 @@ package com.skyd.podaura.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposeCanvas
 import androidx.compose.ui.input.key.KeyEvent
@@ -38,7 +39,7 @@ import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.platform.WindowInfoImpl
 import androidx.compose.ui.scene.CanvasLayersComposeScene
-import androidx.compose.ui.scene.SingleComposeSceneRenderingScope
+import androidx.compose.ui.scene.hasInvalidations
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
@@ -54,6 +55,7 @@ import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoRenderDelegate
+import platform.AppKit.NSApplication
 import platform.AppKit.NSBackingStoreBuffered
 import platform.AppKit.NSCursor
 import platform.AppKit.NSEvent
@@ -75,6 +77,8 @@ import platform.AppKit.NSTrackingInVisibleRect
 import platform.AppKit.NSTrackingMouseEnteredAndExited
 import platform.AppKit.NSTrackingMouseMoved
 import platform.AppKit.NSView
+import platform.AppKit.NSViewHeightSizable
+import platform.AppKit.NSViewWidthSizable
 import platform.AppKit.NSWindow
 import platform.AppKit.NSWindowDelegateProtocol
 import platform.AppKit.NSWindowStyleMaskClosable
@@ -88,6 +92,10 @@ import platform.Foundation.NSMakeRect
 import platform.Foundation.NSNotification
 import platform.darwin.NSObject
 
+internal val LocalMacosVideoContainer = staticCompositionLocalOf<NSView> {
+    error("No AppKit window host")
+}
+
 interface WindowScope {
     /**
      * [NSWindow] that was created inside [Window]
@@ -98,38 +106,52 @@ interface WindowScope {
 fun Window(
     title: String = "ComposeWindow",
     size: DpSize = DpSize(800.dp, 600.dp),
+    onClose: () -> Unit = {},
+    transparent: Boolean = false,
+    onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable WindowScope.() -> Unit,
-) {
-    ComposeWindow(
-        title = title,
-        size = size,
-        content = content,
-    )
-}
+): ComposeWindow = ComposeWindow(
+    title = title,
+    size = size,
+    content = content,
+    onClose = onClose,
+    transparent = transparent,
+    onKeyEvent = onKeyEvent,
+)
 
-private class ComposeWindow(
+class ComposeWindow(
     title: String,
     size: DpSize,
+    private val onClose: () -> Unit = {},
+    private val transparent: Boolean = false,
+    private val onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable WindowScope.() -> Unit,
 ) : WindowScope {
     private var isDisposed = false
+    private var isDispatchingScene = false
+
+    private inline fun <T> dispatchScene(block: () -> T): T? {
+        if (isDisposed || isDispatchingScene) return null
+        isDispatchingScene = true
+        return try {
+            block()
+        } finally {
+            isDispatchingScene = false
+        }
+    }
+
     private val macosTextInputService = MacosTextInputService()
     private val _windowInfo = WindowInfoImpl().apply {
         isWindowFocused = true
     }
     private val archComponentsOwner = DefaultArchitectureComponentsOwner()
 
-    // TODO: It must be shared between Compose instances.
-    //  It's supposed to be stored in platform's root view or window.
-    private val frameRecomposer = FrameRecomposer(Dispatchers.Main) { skiaLayer.needRender() }
+    private val frameRecomposer = FrameRecomposer(Dispatchers.Main, ::scheduleFrame)
+    private val nativeViewUpdates = MacosViewUpdates(::scheduleFrame)
 
-    // TODO: It cannot be used in case of shared [FrameRecomposer], replace this helper with calling
-    //  - [frameRecomposer.performFrame] once per frame (across all instances) before platform views layout phase
-    //  - [scene.measureAndLayout] during platform views layout phase. Note that it should be triggered
-    //    by platform view invalidation (which is triggered by [scene.invalidateLayout] OR by regular platform invalidation)
-    //  - [scene.draw] during drawing phase of platform views (which is triggered by [scene.invalidateDraw]).
-    //    Note that in case of custom GPU surface/V-Sync handling, it needs to be handled differently.
-    private val sceneRenderingScope = SingleComposeSceneRenderingScope { skiaLayer.needRender() }
+    private fun scheduleFrame() {
+        if (!isDisposed) skiaLayer.needRender()
+    }
 
     private val platformContext: PlatformContext =
         object : PlatformContext by PlatformContext.Empty() {
@@ -145,18 +167,29 @@ private class ComposeWindow(
     private val scene = CanvasLayersComposeScene(
         frameRecomposer = frameRecomposer,
         platformContext = platformContext,
-        // TODO: Route these to distinct AppKit invalidation paths: layout work should use
-        // native layout scheduling, while draw work should only mark display dirty.
-        invalidateLayout = sceneRenderingScope::onSceneInvalidation,
-        invalidateDraw = sceneRenderingScope::onSceneInvalidation,
+        invalidateLayout = ::scheduleFrame,
+        invalidateDraw = ::scheduleFrame,
     )
     private val renderDelegate = SkikoRenderDelegate { canvas, width, height, nanoTime ->
-        val sizeInPx = IntSize(width, height)
-        _windowInfo.containerSize = sizeInPx
-        _windowInfo.containerDpSize = sizeInPx.toSize().toDpSize(scene.density)
-        scene.size = sizeInPx // TODO: Move it out from onRender to avoid extra invalidation
-        with(sceneRenderingScope) {
-            scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+        // FileKit's runModal pumps AppKit while Compose is still dispatching its click.
+        // Flushing that scene again resumes the same coroutine twice.
+        if (isDispatchingScene || NSApplication.sharedApplication().modalWindow != null) return@SkikoRenderDelegate
+        dispatchScene {
+            if (transparent) canvas.clear(org.jetbrains.skia.Color.TRANSPARENT)
+            scene.density = density
+            val sizeInPx = IntSize(width, height)
+            _windowInfo.containerSize = sizeInPx
+            _windowInfo.containerDpSize = sizeInPx.toSize().toDpSize(scene.density)
+            scene.size = sizeInPx // TODO: Move it out from onRender to avoid extra invalidation
+            // AppKit interop must commit after placement and before the matching clear regions draw.
+            frameRecomposer.performFrame(nanoTime)
+            if (isDisposed) return@dispatchScene
+            scene.measureAndLayout()
+            nativeViewUpdates.flush()
+            scene.draw(canvas.asComposeCanvas())
+        }
+        if (!isDisposed && (frameRecomposer.hasPendingWork() || scene.hasInvalidations())) {
+            scheduleFrame()
         }
     }
 
@@ -168,7 +201,29 @@ private class ComposeWindow(
                 NSWindowStyleMaskFullSizeContentView
 
     private val windowDelegate = object : NSObject(), NSWindowDelegateProtocol {
-        override fun windowWillClose(notification: NSNotification) = dispose()
+        override fun windowWillClose(notification: NSNotification) {
+            dispose()
+            onClose()
+        }
+
+        override fun windowDidBecomeKey(notification: NSNotification) {
+            _windowInfo.isWindowFocused = true
+        }
+
+        override fun windowDidResignKey(notification: NSNotification) {
+            _windowInfo.isWindowFocused = false
+        }
+
+        override fun windowDidResize(notification: NSNotification) {
+            scene.invalidatePositionInWindow()
+            scheduleFrame()
+        }
+
+        override fun windowDidChangeBackingProperties(notification: NSNotification) {
+            scene.density = density
+            scene.invalidatePositionInWindow()
+            scheduleFrame()
+        }
     }
 
     override val window = object : NSWindow(
@@ -186,15 +241,19 @@ private class ComposeWindow(
         override fun canBecomeMainWindow() = true
     }
 
-    private val view = object : NSView(window.frame) {
+    private val container =
+        NSView(NSMakeRect(0.0, 0.0, size.width.value.toDouble(), size.height.value.toDouble()))
+    private val view = object : NSView(container.bounds) {
         private var trackingArea: NSTrackingArea? = null
         override fun wantsUpdateLayer() = true
         override fun acceptsFirstResponder() = true
         override fun viewWillMoveToWindow(newWindow: NSWindow?) {
+            super.viewWillMoveToWindow(newWindow)
             updateTrackingAreas()
         }
 
         override fun updateTrackingAreas() {
+            super.updateTrackingAreas()
             trackingArea?.let { removeTrackingArea(it) }
             trackingArea = NSTrackingArea(
                 rect = bounds,
@@ -241,6 +300,22 @@ private class ComposeWindow(
             onMouseEvent(event, PointerEventType.Move)
         }
 
+        override fun rightMouseDragged(event: NSEvent) {
+            onMouseEvent(event, PointerEventType.Move)
+        }
+
+        override fun otherMouseDragged(event: NSEvent) {
+            onMouseEvent(event, PointerEventType.Move)
+        }
+
+        override fun mouseEntered(event: NSEvent) {
+            onMouseEvent(event, PointerEventType.Enter)
+        }
+
+        override fun mouseExited(event: NSEvent) {
+            onMouseEvent(event, PointerEventType.Exit)
+        }
+
         override fun scrollWheel(event: NSEvent) {
             onMouseEvent(event, PointerEventType.Scroll)
         }
@@ -277,7 +352,11 @@ private class ComposeWindow(
         window.titleVisibility = NSWindowTitleHidden
 
         window.title = title
-        window.contentView = view
+        window.releasedWhenClosed = false
+        window.contentView = container
+        container.wantsLayer = true
+        view.autoresizingMask = NSViewWidthSizable or NSViewHeightSizable
+        container.addSubview(view)
 
         skiaLayer.renderDelegate = renderDelegate
         skiaLayer.attachTo(view) // Should be called after attaching to window
@@ -285,11 +364,14 @@ private class ComposeWindow(
         // TODO: Expose some API to control showing outside
         window.center()
         window.makeKeyAndOrderFront(null)
+        window.makeFirstResponder(view)
 
         scene.density = density
         scene.setContent {
             CompositionLocalProvider(
                 LocalPlatformWindowInsets provides windowInsets,
+                LocalMacosVideoContainer provides container,
+                LocalMacosViewUpdates provides nativeViewUpdates,
                 content = { content() }
             )
         }
@@ -300,18 +382,30 @@ private class ComposeWindow(
     }
 
     fun dispose() {
-        check(!isDisposed) { "ComposeWindow is already disposed" }
+        if (isDisposed) return
+        isDisposed = true
         archComponentsOwner.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         archComponentsOwner.viewModelStore.clear()
-        skiaLayer.detach()
         scene.close()
+        nativeViewUpdates.dispose()
+        skiaLayer.detach()
         frameRecomposer.close()
-        isDisposed = true
+        window.delegate = null
+    }
+
+    fun close() {
+        window.performClose(null)
+    }
+
+    fun activate() {
+        window.deminiaturize(null)
+        window.makeKeyAndOrderFront(null)
+        window.makeFirstResponder(view)
     }
 
     private fun onKeyboardEvent(event: KeyEvent): Boolean {
         if (isDisposed) return false
-        return scene.sendKeyEvent(event)
+        return dispatchScene { scene.sendKeyEvent(event) || onKeyEvent(event) } ?: false
     }
 
     private fun onMouseEvent(
@@ -320,14 +414,16 @@ private class ComposeWindow(
         button: PointerButton? = null,
     ) {
         if (isDisposed) return
-        scene.sendPointerEvent(
-            eventType = eventType,
-            position = event.offset.toOffset(scene.density),
-            scrollDelta = Offset(x = event.deltaX.toFloat(), y = event.deltaY.toFloat()),
-            keyboardModifiers = event.pointerKeyboardModifiers,
-            nativeEvent = event,
-            button = button,
-        )
+        dispatchScene {
+            scene.sendPointerEvent(
+                eventType = eventType,
+                position = event.offset.toOffset(scene.density),
+                scrollDelta = Offset(x = event.deltaX.toFloat(), y = event.deltaY.toFloat()),
+                keyboardModifiers = event.pointerKeyboardModifiers,
+                nativeEvent = event,
+                button = button,
+            )
+        }
     }
 
     private var lastMagnificationPosition: Offset? = null
@@ -379,14 +475,16 @@ private class ComposeWindow(
         scaleGestureFactor: Float = 1f,
         panGestureOffset: Offset = Offset.Zero,
     ) {
-        scene.sendPointerEvent(
-            eventType = eventType,
-            position = position,
-            keyboardModifiers = event.pointerKeyboardModifiers,
-            nativeEvent = event,
-            scaleGestureFactor = scaleGestureFactor,
-            panGestureOffset = panGestureOffset,
-        )
+        dispatchScene {
+            scene.sendPointerEvent(
+                eventType = eventType,
+                position = position,
+                keyboardModifiers = event.pointerKeyboardModifiers,
+                nativeEvent = event,
+                scaleGestureFactor = scaleGestureFactor,
+                panGestureOffset = panGestureOffset,
+            )
+        }
     }
 
     private val NSEvent.pointerKeyboardModifiers: PointerKeyboardModifiers

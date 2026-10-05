@@ -26,7 +26,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.gradle.msix)
     id("podaura.desktop-media-shims")
-    id("podaura.ios-mpv")
+    id("podaura.apple-mpv")
 }
 
 val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
@@ -343,6 +343,26 @@ compose.desktop {
                 iconFile = project.file("icons/PodAura.icns")
             }
         }
+    }
+}
+
+// Native executable runs need Compose resources beside the .kexe, outside an app bundle.
+listOf("Debug", "Release").forEach { buildType ->
+    val linkTask = tasks.named("link${buildType}ExecutableMacosArm64")
+    val copyResourcesTask = tasks.register<Sync>(
+        "copyMacosArm64ResourcesTo${buildType}Executable"
+    ) {
+        description = "Copies Compose resources beside the macOS $buildType executable."
+        dependsOn("macosArm64AggregateResources")
+        mustRunAfter(linkTask)
+        from(layout.buildDirectory.dir("kotlin-multiplatform-resources/aggregated-resources/macosArm64"))
+        into(layout.buildDirectory.dir("bin/macosArm64/${buildType.lowercase()}Executable/compose-resources"))
+    }
+    linkTask.configure {
+        finalizedBy(copyResourcesTask)
+    }
+    tasks.named("run${buildType}ExecutableMacosArm64") {
+        dependsOn(copyResourcesTask)
     }
 }
 

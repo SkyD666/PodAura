@@ -76,7 +76,7 @@ actual class MPV {
     private val wakeups = Channel<Unit>(Channel.CONFLATED)
     private val callback = StableRef.create(wakeups)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var renderer: SampleBufferRenderer? = null
+    private var renderer: AppleMpvRenderer? = null
     private var requestedVideoTrack = "auto"
     private var requestHeaders: Map<String, Map<String, String>> = emptyMap()
 
@@ -96,9 +96,9 @@ actual class MPV {
         check(!closed)
         // These options belong to the host, even when a user config selects a desktop output.
         option("vo", "null")
-        option("ao", "audiounit")
+        option("ao", appleMpvAudioOutput)
         option("gpu-api", "vulkan")
-        option("gpu-context", "podaura")
+        option("gpu-context", appleMpvGpuContext)
         option("video-sync", "audio")
         option("input-default-bindings", "yes")
         checkResult(mpv_initialize(handle))
@@ -223,8 +223,8 @@ actual class MPV {
     }
 
     actual fun attachSurface(surfaceHolder: PlatformSurfaceHolder) = locked {
-        if (closed || !surfaceHolder.isActive) return@locked
-        val output = renderer ?: SampleBufferRenderer(handle).also { renderer = it }
+        if (closed || !surfaceHolder.isMpvSurfaceActive()) return@locked
+        val output = renderer ?: AppleMpvRenderer(handle).also { renderer = it }
         output.videoSize(
             getPropertyInt("dwidth"),
             getPropertyInt("dheight"),
@@ -255,7 +255,7 @@ actual class MPV {
         scope.cancel()
     }
 
-    // Thumbnail extraction and screenshots are outside the first iOS release.
+    // Thumbnail extraction and screenshots are outside the first Apple release.
     actual fun grabThumbnail(dimension: Int): Bitmap? = null
 
     private fun readEvent(): Boolean {
@@ -379,7 +379,7 @@ actual class MPV {
             if (renderer != null) "gpu-next" else "null"
 
         name == "gpu-api" -> "vulkan"
-        name == "gpu-context" -> "podaura"
+        name == "gpu-context" -> appleMpvGpuContext
 
         name == "hwdec" && value == "auto" -> "videotoolbox"
         name == "vid" -> {

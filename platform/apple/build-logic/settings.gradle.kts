@@ -1,4 +1,4 @@
-rootProject.name = "podaura-ios-build-logic"
+rootProject.name = "podaura-apple-build-logic"
 
 dependencyResolutionManagement {
     repositories { gradlePluginPortal() }

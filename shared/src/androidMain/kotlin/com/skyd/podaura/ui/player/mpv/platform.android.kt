@@ -7,7 +7,7 @@ import co.touchlab.kermit.Logger
 import com.skyd.fundation.di.get
 import `is`.xyz.mpv.KeyMapping
 
-actual fun MPV.initOptionsPlatform(logger: Logger) {
+actual fun MPV.initOptionsPlatform(logger: Logger, configDir: String) {
     // vo: set display fps as reported by android
     val disp = ContextCompat.getDisplayOrDefault(get())
     val refreshRate = disp.mode.refreshRate
@@ -20,6 +20,10 @@ actual fun MPV.initOptionsPlatform(logger: Logger) {
 
 actual fun copyAssetsForMpv(configDir: String) {
     com.skyd.podaura.ui.player.copyAssetsForMpv(get(), configDir)
+}
+
+internal actual fun MPV.resizeSurface(width: Int, height: Int) {
+    setPropertyString("android-surface-size", "${width}x${height}")
 }
 
 internal actual fun mapPlayerKeyEvent(

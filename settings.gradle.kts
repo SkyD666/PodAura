@@ -6,7 +6,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 
 pluginManagement {
-    includeBuild("platform/ios/build-logic")
+    includeBuild("platform/apple/build-logic")
     repositories {
         google()
         // maven(url = "https://maven.aliyun.com/repository/public")

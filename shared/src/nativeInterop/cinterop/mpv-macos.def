@@ -1,0 +1,5 @@
+language = Objective-C
+headers = mpv/client.h
+headerFilter = mpv/**
+package = com.skyd.podaura.libmpv
+nonStrictEnums = mpv_format mpv_event_id mpv_end_file_reason

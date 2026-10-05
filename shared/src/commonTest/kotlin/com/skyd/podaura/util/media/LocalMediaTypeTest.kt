@@ -13,6 +13,7 @@ class LocalMediaTypeTest {
         assertEquals(LocalMediaKind.Audio, detectLocalMediaKind("download", "application/ogg"))
         assertEquals(LocalMediaKind.Audio, detectLocalMediaKind("download", "application/x-flac"))
         assertEquals(LocalMediaKind.Video, detectLocalMediaKind("download", "application/mp4"))
+        assertEquals(LocalMediaKind.Video, detectLocalMediaKind("movie.mkv", "application/x-matroska"))
     }
 
     @Test

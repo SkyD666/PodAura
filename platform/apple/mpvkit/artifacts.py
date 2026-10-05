@@ -1,16 +1,20 @@
-#!/usr/bin/env python3
-"""Fetch checksum-pinned MPVKit frameworks and CA certificates into the build directory."""
-import argparse
-import concurrent.futures
-import fcntl
+"""Shared pinned downloads and XCFramework extraction for Apple targets."""
 import hashlib
-import json
 from pathlib import Path
 import plistlib
 import shutil
 import subprocess
+import tarfile
 import tempfile
 import zipfile
+
+ROOT = Path(__file__).resolve().parents[3]
+DEST = ROOT / 'shared/build/mpvkit'
+MANIFEST = Path(__file__).with_name('artifacts.json')
+MPV = {'url': 'https://codeload.github.com/mpv-player/mpv/tar.gz/refs/tags/v0.41.0',
+       'sha256': 'ee21092a5ee427353392360929dc64645c54479aefdb5babc5cfbb5fad626209'}
+HEADERS = {'url': 'https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/e3b1eec08173d6b825cd3ac88c885a63b621504a',
+           'sha256': 'f492279345cbc10708b64fcd432b3ff6c8246a5837c4db2b649abba00cf82208'}
 
 
 def download(artifact, target):
@@ -25,20 +29,24 @@ def download(artifact, target):
         partial.replace(target)
 
 
-def prepare(artifact, destination, headers_only=False):
+def prepare_framework(artifact, destination, *, platform, headers_only=False):
+    sdks = {
+        'ios': [('iphoneos', None), ('iphonesimulator', 'simulator')],
+        'macos': [('macos', None)],
+    }[platform]
     name = artifact['name']
-    marker = destination / 'receipts' / (name + ('-headers' if headers_only else ''))
+    marker = destination / 'receipts' / (name + ('-macos-v2' if platform == 'macos' else '') + ('-headers' if headers_only else ''))
     expected = 'Headers/mpv/client.h' if headers_only else name
     if marker.exists() and marker.read_text() == artifact['sha256']:
         if all((destination / sdk / f'{name}.framework' / expected).is_file()
-               for sdk in ('iphoneos', 'iphonesimulator')):
+               for sdk, _ in sdks):
             return
     downloads = destination / 'downloads'
     downloads.mkdir(exist_ok=True)
     archive = downloads / f'{name}.zip'
     download(artifact, archive)
     with tempfile.TemporaryDirectory(dir=destination) as temporary:
-        root = Path(temporary)
+        root = Path(temporary).resolve()
         with zipfile.ZipFile(archive) as bundle:
             # Archives are pinned, but still reject paths escaping the extraction root.
             for entry in bundle.infolist():
@@ -47,9 +55,9 @@ def prepare(artifact, destination, headers_only=False):
             bundle.extractall(root)
         framework = root / f'{name}.xcframework'
         info = plistlib.loads((framework / 'Info.plist').read_bytes())
-        for sdk, variant in [('iphoneos', None), ('iphonesimulator', 'simulator')]:
+        for sdk, variant in sdks:
             library = next(lib for lib in info['AvailableLibraries']
-                           if lib['SupportedPlatform'] == 'ios'
+                           if lib['SupportedPlatform'] == platform
                            and lib.get('SupportedPlatformVariant') == variant
                            and 'arm64' in lib['SupportedArchitectures'])
             source = framework / library['LibraryIdentifier'] / library['LibraryPath']
@@ -62,6 +70,9 @@ def prepare(artifact, destination, headers_only=False):
                 shutil.rmtree(target)
             if source.is_dir():
                 shutil.copytree(source, target)
+                # zipfile extracts symlinks as text; flatten versioned macOS binaries.
+                if (source / 'Versions/A' / name).is_file():
+                    shutil.copy2(source / 'Versions/A' / name, target / name)
             else:
                 # MoltenVK and some dependencies package a static archive, not a framework.
                 target.mkdir()
@@ -71,32 +82,10 @@ def prepare(artifact, destination, headers_only=False):
     print(f'Prepared {name}', flush=True)
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument('--headers-only', action='store_true')
-    mode.add_argument('--cert-only', action='store_true')
-    args = parser.parse_args()
-    here = Path(__file__).resolve().parent
-    destination = here.parents[2] / 'shared/build/mpvkit'
-    destination.mkdir(parents=True, exist_ok=True)
-    manifest = json.loads((here / 'artifacts.json').read_text())
-    artifacts = manifest['artifacts']
-    if args.headers_only:
-        artifacts = [item for item in artifacts if item['name'] == 'Libmpv']
-    with (destination / '.lock').open('w') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        if args.cert_only:
-            download(manifest['caCertificate'], destination / 'downloads/cacert.pem')
-            return
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-            list(pool.map(lambda item: prepare(item, destination, args.headers_only), artifacts))
-        for sdk in ('iphoneos', 'iphonesimulator'):
-            shutil.copy2(here / 'podaura.h',
-                         destination / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
-        if not args.headers_only:
-            subprocess.run(['python3', str(here / 'build.py')], check=True)
-
-
-if __name__ == '__main__':
-    main()
+def extract(artifact, archive, destination):
+    download(artifact, archive)
+    with tarfile.open(archive) as bundle:
+        for entry in bundle.getmembers():
+            if not (destination / entry.name).resolve().is_relative_to(destination.resolve()):
+                raise RuntimeError(f'Invalid source path: {entry.name}')
+        bundle.extractall(destination, **({'filter': 'data'} if hasattr(tarfile, 'data_filter') else {}))

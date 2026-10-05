@@ -24,6 +24,7 @@ import com.skyd.podaura.model.repository.BaseRepository
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.atomicMove
 import io.github.vinceglb.filekit.createDirectories
+import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.exists
 import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.isRegularFile
@@ -34,6 +35,7 @@ import io.github.vinceglb.filekit.sink
 import io.github.vinceglb.filekit.source
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asFlow
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.io.buffered
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
@@ -57,6 +60,7 @@ import kotlinx.serialization.json.io.decodeFromSource
 import kotlinx.serialization.json.io.encodeToSink
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.uuid.Uuid
 
 class MediaRepository(
     private val json: Json,
@@ -69,10 +73,35 @@ class MediaRepository(
         const val OLD_MEDIA_LIB_JSON_NAME = "group.json"
         const val MEDIA_LIB_JSON_NAME = "MediaLib.json"
 
+        // ponytail: serialize library transactions globally; use per-path locks if contention matters.
+        private val mediaLibMutex = Mutex()
         private val mediaLibJsons = LruCache<String, MediaLibJson>(maxSize = 10)
 
         private val refreshPath = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
     }
+
+    // Mutable cached records never escape the lock. Consumers get detached snapshots.
+    private suspend fun readMediaLibJson(path: String): MediaLibJson = mediaLibMutex.withLock {
+        getOrReadMediaLibJson(path).let {
+            MediaLibJson(
+                it.allGroups.toMutableList(),
+                it.files.map { file -> file.copy() }.toMutableList()
+            )
+        }
+    }
+
+    private fun <T> mediaLibTransaction(block: suspend () -> T): Flow<T> = flow {
+        val result = mediaLibMutex.withLock {
+            try {
+                block()
+            } catch (error: Throwable) {
+                // A failed mutation may have changed a cached record before saving it.
+                mediaLibJsons.evictAll()
+                throw error
+            }
+        }
+        emit(result)
+    }.flowOn(Dispatchers.IO)
 
     private suspend fun parseMediaLibJson(
         mediaLibRoot: PlatformFile,
@@ -84,7 +113,9 @@ class MediaRepository(
             }
         }
         if (!mediaLibRootJsonFile.exists()) return null
-        return json.decodeFromSource<MediaLibJson>(mediaLibRootJsonFile.source().buffered()).apply {
+        return mediaLibRootJsonFile.source().buffered().use {
+            json.decodeFromSource<MediaLibJson>(it)
+        }.apply {
             files.removeAll {
                 !PlatformFile(mediaLibRoot, it.fileName).exists() ||
                         it.fileName.equals(FOLDER_INFO_JSON_NAME, true) ||
@@ -111,8 +142,8 @@ class MediaRepository(
             ?: MediaLibJson(files = mutableListOf())
         newMediaLibJson.files.appendFiles(root, existFiles(root))
 
-        mediaLibJsons.put(path, newMediaLibJson)
         tryFixWrongArticleId(path, newMediaLibJson)
+        mediaLibJsons.put(path, newMediaLibJson)
 
         return newMediaLibJson
     }
@@ -128,13 +159,19 @@ class MediaRepository(
     }
 
     private suspend fun writeMediaLibJson(path: String, data: MediaLibJson) {
-        PlatformFile(PlatformFile(path), MEDIA_LIB_JSON_NAME).sink().buffered().use {
-            json.encodeToSink(formatMediaLibJson(data), it)
+        val root = PlatformFile(path)
+        val temporary = PlatformFile(root, ".$MEDIA_LIB_JSON_NAME-${Uuid.random()}.tmp")
+        try {
+            temporary.sink().buffered().use {
+                json.encodeToSink(formatMediaLibJson(data), it)
+            }
+            temporary.atomicMove(PlatformFile(root, MEDIA_LIB_JSON_NAME))
+        } finally {
+            withContext(NonCancellable) { temporary.delete(mustExist = false) }
         }
         refreshPath.emit(path)
     }
 
-    private val appendFilesMutex = Mutex()
     private suspend fun MutableList<FileJson>.appendFiles(
         parent: PlatformFile,
         files: List<PlatformFile>,
@@ -150,16 +187,18 @@ class MediaRepository(
                 feedUrl = null,
             )
         },
-    ) = appendFilesMutex.withLock {
-        if (files.isEmpty()) return@withLock
+    ) {
         removeAll { !PlatformFile(parent, it.fileName).exists() }
+        val knownNames = mapTo(mutableSetOf()) { it.fileName }
         files.forEach { file ->
-            if (file.name.equals(FOLDER_INFO_JSON_NAME, true) ||
-                file.name.equals(MEDIA_LIB_JSON_NAME, true)
+            val name = file.name
+            if (name.equals(FOLDER_INFO_JSON_NAME, true) ||
+                name.equals(MEDIA_LIB_JSON_NAME, true) ||
+                (name.startsWith(".$MEDIA_LIB_JSON_NAME-") && name.endsWith(".tmp"))
             ) {
                 return@forEach
             }
-            if (firstOrNull { it.fileName == file.name } == null) {
+            if (knownNames.add(name)) {
                 add(fileJsonBuild(file))
             }
         }
@@ -218,7 +257,7 @@ class MediaRepository(
     override fun requestGroups(path: String): Flow<List<MediaGroupBean>> = merge(
         kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath
     ).filter { it == path }.map {
-        val allGroups = getOrReadMediaLibJson(path).allGroups
+        val allGroups = readMediaLibJson(path).allGroups
         listOf(MediaGroupBean.DefaultMediaGroup) +
                 allGroups.map { MediaGroupBean(name = it) }.sortedBy { it.name }
     }.flowOn(Dispatchers.IO)
@@ -237,7 +276,7 @@ class MediaRepository(
     ): Flow<List<MediaBean>> = combine(
         merge(kotlinx.coroutines.flow.flowOf(path), refreshFiles, refreshPath).filter { it == path }
             .map {
-                val mediaLibJson = getOrReadMediaLibJson(path)
+                val mediaLibJson = readMediaLibJson(path)
                 val fileJsons = mediaLibJson.files
                 val videoList = (if (group == null) fileJsons else {
                     val groupName = if (group.isDefaultGroup()) null else group.name
@@ -311,7 +350,7 @@ class MediaRepository(
             val fileJsonsWithDirPath = mutableListOf<Pair<FileJson, String>>()
             PlatformFile(path).walkDirectories(recursive).asFlow().collect { directory ->
                 val directoryPath = directory.path
-                val mediaLibJson = getOrReadMediaLibJson(directoryPath)
+                val mediaLibJson = readMediaLibJson(directoryPath)
                 fileJsonsWithDirPath += mediaLibJson.files.map { it to directoryPath }
             }
             val fileJsons = fileJsonsWithDirPath.map { it.first }
@@ -341,7 +380,7 @@ class MediaRepository(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun deleteFile(media: MediaBean): Flow<Boolean> = flow {
+    override fun deleteFile(media: MediaBean): Flow<Boolean> = mediaLibTransaction {
         val file = media.path
         val fileName = file.name
         val path = media.parentPath
@@ -350,30 +389,31 @@ class MediaRepository(
             files.removeAll { it.fileName == fileName }
         }
         writeMediaLibJson(path = path, mediaLibJson)
-        emit(true)
-    }.flowOn(Dispatchers.IO)
+        true
+    }
 
-    override fun renameFile(media: MediaBean, newName: String): Flow<PlatformFile?> = flow {
-        val file = media.path
-        val oldName = file.name
-        val path = media.parentPath
-        val mediaLibJson = getOrReadMediaLibJson(path)
-        val validateFileName = newName.validateFileName()
-        val newFile = file.renameIn(parent = PlatformFile(path), newName = validateFileName)
-        if (newFile != null) {
-            mediaLibJson.files.firstOrNull { it.fileName == oldName }?.fileName =
-                newFile.name
-            writeMediaLibJson(path = path, mediaLibJson)
-            emit(newFile)
-        } else {
-            emit(null)
+    override fun renameFile(media: MediaBean, newName: String): Flow<PlatformFile?> =
+        mediaLibTransaction {
+            val file = media.path
+            val oldName = file.name
+            val path = media.parentPath
+            val mediaLibJson = getOrReadMediaLibJson(path)
+            val validateFileName = newName.validateFileName()
+            val newFile = file.renameIn(parent = PlatformFile(path), newName = validateFileName)
+            if (newFile != null) {
+                mediaLibJson.files.firstOrNull { it.fileName == oldName }?.fileName =
+                    newFile.name
+                writeMediaLibJson(path = path, mediaLibJson)
+                newFile
+            } else {
+                null
+            }
         }
-    }.flowOn(Dispatchers.IO)
 
     override fun setDisplayName(
         mediaBean: MediaBean,
         displayName: String?,
-    ): Flow<MediaBean> = flow {
+    ): Flow<MediaBean> = mediaLibTransaction {
         val path = mediaBean.parentPath
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         mediaLibJson.files.firstOrNull {
@@ -381,8 +421,8 @@ class MediaRepository(
         }?.displayName = if (displayName.isNullOrBlank()) null else displayName
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(mediaBean.copy(displayName = displayName))
-    }.flowOn(Dispatchers.IO)
+        mediaBean.copy(displayName = displayName)
+    }
 
     override fun addNewFile(
         file: PlatformFile,
@@ -390,10 +430,9 @@ class MediaRepository(
         groupName: String?,
         articleId: String?,
         displayName: String?,
-    ): Flow<Boolean> = flow {
+    ): Flow<Boolean> = mediaLibTransaction {
         if (!file.exists()) {
-            emit(false)
-            return@flow
+            return@mediaLibTransaction false
         }
         val group = groupName?.let { MediaGroupBean(name = it) } ?: MediaGroupBean.DefaultMediaGroup
 
@@ -407,10 +446,9 @@ class MediaRepository(
             ?: article?.articleWithEnclosure?.article?.title
 
         val path = parent.path
-        var mediaLibJson = getOrReadMediaLibJson(path = path)
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
         if (realGroupName != null && !mediaLibJson.allGroups.contains(realGroupName)) {
-            createGroup(path, group).first()
-            mediaLibJson = getOrReadMediaLibJson(path = path)
+            mediaLibJson.allGroups.add(group.name)
         }
         val index = mediaLibJson.files.indexOfFirst { it.fileName == file.name }
         if (index >= 0) {
@@ -436,23 +474,22 @@ class MediaRepository(
         }
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(true)
-    }.flowOn(Dispatchers.IO)
+        true
+    }
 
     override fun getFolder(
         parentFile: PlatformFile,
         groupName: String?,
         feedUrl: String?,
         displayName: String?,
-    ): Flow<PlatformFile> = flow {
+    ): Flow<PlatformFile> = mediaLibTransaction {
         val path = parentFile.path
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         val existed = mediaLibJson.files.firstOrNull {
             it.feedUrl == feedUrl && !it.isFile
         }
         if (existed != null) {
-            emit(PlatformFile(parentFile, existed.fileName))
-            return@flow
+            return@mediaLibTransaction PlatformFile(parentFile, existed.fileName)
         }
         val newFolder = PlatformFile(
             parentFile,
@@ -464,21 +501,18 @@ class MediaRepository(
             groupName = groupName,
             feedUrl = feedUrl,
             displayName = displayName,
-        ).first()
-        emit(newFolder)
-    }.flowOn(Dispatchers.IO)
+        )
+        newFolder
+    }
 
-    private fun createFolder(
+    private suspend fun createFolder(
         file: PlatformFile,
         parent: PlatformFile,
         groupName: String?,
         feedUrl: String?,
         displayName: String?,
-    ): Flow<Boolean> = flow {
-        if (file.exists()) {
-            emit(false)
-            return@flow
-        }
+    ): Boolean {
+        if (file.exists()) return false
         file.createDirectories()
         val group = groupName?.let { MediaGroupBean(name = it) } ?: MediaGroupBean.DefaultMediaGroup
 
@@ -488,10 +522,9 @@ class MediaRepository(
         val realDisplayName = displayName.takeIf { !it.isNullOrBlank() } ?: feed?.feed?.title
 
         val path = parent.path
-        var mediaLibJson = getOrReadMediaLibJson(path = path)
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
         if (realGroupName != null && !mediaLibJson.allGroups.contains(realGroupName)) {
-            createGroup(path, group).first()
-            mediaLibJson = getOrReadMediaLibJson(path = path)
+            mediaLibJson.allGroups.add(group.name)
         }
         val index = mediaLibJson.files.indexOfFirst { it.fileName == file.name && !it.isFile }
         if (index >= 0) {
@@ -514,29 +547,26 @@ class MediaRepository(
         }
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(true)
-    }.flowOn(Dispatchers.IO)
+        return true
+    }
 
-    fun createGroup(path: String, group: MediaGroupBean): Flow<Unit> = flow {
+    fun createGroup(path: String, group: MediaGroupBean): Flow<Unit> = mediaLibTransaction {
         if (group.isDefaultGroup()) {
-            emit(Unit)
-            return@flow
+            return@mediaLibTransaction Unit
         }
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         if (mediaLibJson.allGroups.contains(group.name)) {
-            emit(Unit)
-            return@flow
+            return@mediaLibTransaction Unit
         }
         mediaLibJson.allGroups.add(group.name)
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
+        Unit
+    }
 
-    fun deleteGroup(path: String, group: MediaGroupBean): Flow<Unit> = flow {
+    fun deleteGroup(path: String, group: MediaGroupBean): Flow<Unit> = mediaLibTransaction {
         if (group.isDefaultGroup()) {
-            emit(Unit)
-            return@flow
+            return@mediaLibTransaction Unit
         }
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         mediaLibJson.files.forEach {
@@ -547,17 +577,16 @@ class MediaRepository(
         mediaLibJson.allGroups.remove(group.name)
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
+        Unit
+    }
 
     fun renameGroup(
         path: String,
         group: MediaGroupBean,
         newName: String,
-    ): Flow<MediaGroupBean> = flow {
+    ): Flow<MediaGroupBean> = mediaLibTransaction {
         if (group.isDefaultGroup()) {
-            emit(MediaGroupBean.DefaultMediaGroup)
-            return@flow
+            return@mediaLibTransaction MediaGroupBean.DefaultMediaGroup
         }
         val mediaLibJson = getOrReadMediaLibJson(path = path)
         mediaLibJson.files.forEach {
@@ -571,18 +600,17 @@ class MediaRepository(
         }
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(MediaGroupBean(name = newName))
-    }.flowOn(Dispatchers.IO)
+        MediaGroupBean(name = newName)
+    }
 
     fun changeMediaGroup(
         path: String,
         mediaBean: MediaBean,
         group: MediaGroupBean,
-    ): Flow<Unit> = flow {
-        var mediaLibJson = getOrReadMediaLibJson(path = path)
+    ): Flow<Unit> = mediaLibTransaction {
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
         if (!group.isDefaultGroup() && !mediaLibJson.allGroups.contains(group.name)) {
-            createGroup(path, group).first()
-            mediaLibJson = getOrReadMediaLibJson(path = path)
+            mediaLibJson.allGroups.add(group.name)
         }
         val index = mediaLibJson.files.indexOfFirst { it.fileName == mediaBean.path.name }
         if (index >= 0) {
@@ -605,23 +633,21 @@ class MediaRepository(
         }
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
+        Unit
+    }
 
     fun moveFilesToGroup(
         path: String,
         from: MediaGroupBean,
         to: MediaGroupBean
-    ): Flow<Unit> = flow {
-        var mediaLibJson = getOrReadMediaLibJson(path = path)
+    ): Flow<Unit> = mediaLibTransaction {
+        val mediaLibJson = getOrReadMediaLibJson(path = path)
         if (!to.isDefaultGroup() && !mediaLibJson.allGroups.contains(to.name)) {
-            createGroup(path, to).first()
-            mediaLibJson = getOrReadMediaLibJson(path = path)
+            mediaLibJson.allGroups.add(to.name)
         }
         if (from.isDefaultGroup()) {
             if (to.isDefaultGroup()) {
-                emit(Unit)
-                return@flow
+                return@mediaLibTransaction Unit
             } else {
                 mediaLibJson.files.appendFiles(
                     parent = PlatformFile(path),
@@ -652,8 +678,8 @@ class MediaRepository(
         }
         writeMediaLibJson(path = path, mediaLibJson)
 
-        emit(Unit)
-    }.flowOn(Dispatchers.IO)
+        Unit
+    }
 
     @Serializable
     data class MediaLibJson(

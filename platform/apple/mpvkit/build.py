@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build PodAura's IOSurface output against the checksum-pinned MPVKit libraries."""
+"""Build native libmpv with the selected Apple platform's output patches."""
+import argparse
 import hashlib
 import json
 import os
@@ -7,28 +8,13 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-import tarfile
 
-from prepare import download
+from artifacts import DEST, ROOT, MANIFEST, MPV, HEADERS, extract
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[2]
-DEST = ROOT / 'shared/build/mpvkit'
-SOURCES = [HERE / name for name in ('build.py', 'iosurface.patch', 'context_podaura.m',
-                                  'context_podaura.h', 'podaura.h', 'artifacts.json')]
-MPV = {'url': 'https://codeload.github.com/mpv-player/mpv/tar.gz/refs/tags/v0.41.0',
-       'sha256': 'ee21092a5ee427353392360929dc64645c54479aefdb5babc5cfbb5fad626209'}
-HEADERS = {'url': 'https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/e3b1eec08173d6b825cd3ac88c885a63b621504a',
-           'sha256': 'f492279345cbc10708b64fcd432b3ff6c8246a5837c4db2b649abba00cf82208'}
-
-
-def extract(artifact, archive, destination):
-    download(artifact, archive)
-    with tarfile.open(archive) as bundle:
-        for entry in bundle.getmembers():
-            if not (destination / entry.name).resolve().is_relative_to(destination.resolve()):
-                raise RuntimeError(f'Invalid source path: {entry.name}')
-        bundle.extractall(destination, **({'filter': 'data'} if hasattr(tarfile, 'data_filter') else {}))
+IOS = ROOT / 'platform/ios/mpvkit'
+MACOS = ROOT / 'platform/macos/mpvkit'
+COMMON_SOURCES = [HERE / 'build.py', HERE / 'artifacts.py', MANIFEST]
 
 
 def build(sdk, source, headers):
@@ -60,11 +46,13 @@ def build(sdk, source, headers):
             f'Version: {versions[name]}\nCflags: {cflags}\nLibs: -framework {framework}\n{variables}')
     (pc / 'vulkan.pc').write_text(f'Name: Vulkan\nDescription: pinned MoltenVK\nVersion: 1.4.0\n'
         f'Cflags: -I{headers / "include"}\nLibs: -framework MoltenVK\n')
-    sdk_path = subprocess.check_output(['xcrun', '--sdk', sdk, '--show-sdk-path'], text=True).strip()
-    clang = subprocess.check_output(['xcrun', '--sdk', sdk, '--find', 'clang'], text=True).strip()
-    triple = 'arm64-apple-ios17.0' + ('-simulator' if sdk == 'iphonesimulator' else '')
+    apple_sdk = 'macosx' if sdk == 'macos' else sdk
+    sdk_path = subprocess.check_output(['xcrun', '--sdk', apple_sdk, '--show-sdk-path'], text=True).strip()
+    clang = subprocess.check_output(['xcrun', '--sdk', apple_sdk, '--find', 'clang'], text=True).strip()
+    triple = ('arm64-apple-macos12.0' if sdk == 'macos' else
+              'arm64-apple-ios17.0' + ('-simulator' if sdk == 'iphonesimulator' else ''))
     compile_args = ['-target', triple, '-isysroot', sdk_path, '-F' + str(DEST / sdk)]
-    names = [x['name'] for x in json.loads((HERE / 'artifacts.json').read_text())['artifacts']
+    names = [x['name'] for x in json.loads(MANIFEST.read_text())['artifacts']
              if x['name'] != 'Libmpv']
     system = ['AVFoundation', 'CoreAudio', 'AudioToolbox', 'CoreVideo', 'CoreMedia',
               'Metal', 'VideoToolbox', 'QuartzCore', 'IOSurface', 'Foundation', 'CoreFoundation']
@@ -78,25 +66,28 @@ def build(sdk, source, headers):
         f'c_args = {compile_args!r}\nobjc_args = {compile_args!r}\n'
         f'c_link_args = {link_args!r}\nobjc_link_args = {link_args!r}\n')
     env = dict(os.environ, PKG_CONFIG_LIBDIR=str(pc), PKG_CONFIG_PATH='',
-               MACOS_SDK=sdk_path, MACOS_SDK_VERSION='0.0', SDKROOT=sdk_path)
-    # Suppress macOS SDK feature detection: the cross compiler already targets iOS.
-    env['MACOS_SDK_VERSION'] = '17.0'
+               MACOS_SDK=sdk_path, SDKROOT=sdk_path,
+               MACOS_SDK_VERSION='12.0' if sdk == 'macos' else '17.0')
     out = work / 'out'
     subprocess.run(['meson', 'setup', str(out), str(source), '--cross-file', str(cross),
                     '--buildtype=release', '-Ddefault_library=static', '-Dauto_features=disabled',
                     '-Dlibmpv=true', '-Dcplayer=false', '-Dgpl=false', '-Dvulkan=enabled',
                     '-Diconv=enabled', '-Dzlib=enabled', '-Dlua=disabled', '-Dgl=disabled',
-                    '-Dvideotoolbox-pl=enabled', '-Daudiounit=enabled', '-Duchardet=enabled',
-                    '-Dswift-build=disabled'], env=env, check=True)
+                    '-Dvideotoolbox-pl=enabled', '-Duchardet=enabled',
+                    '-Dswift-build=disabled'] + (['-Dcoreaudio=enabled', '-Dmoltenvk=enabled']
+                        if sdk == 'macos' else ['-Daudiounit=enabled']), env=env, check=True)
     subprocess.run(['ninja', '-C', str(out)], env=env, check=True)
     target = DEST / sdk / 'Libmpv.framework'
     shutil.copy2(out / 'libmpv.a', target / 'Libmpv')
-    shutil.copy2(HERE / 'podaura.h', target / 'Headers/mpv/podaura.h')
+    if sdk != 'macos':
+        shutil.copy2(IOS / 'podaura.h', target / 'Headers/mpv/podaura.h')
 
 
-def main():
+def build_ios():
+    sources = COMMON_SOURCES + [IOS / name for name in (
+        'iosurface.patch', 'context_podaura.m', 'context_podaura.h', 'podaura.h')]
     marker = DEST / 'receipts/podaura-output'
-    fingerprint = hashlib.sha256(b''.join(p.read_bytes() for p in SOURCES)).hexdigest()
+    fingerprint = hashlib.sha256(b''.join(p.read_bytes() for p in sources)).hexdigest()
     if marker.exists() and marker.read_text() == fingerprint and all(
         (DEST / sdk / 'Libmpv.framework/podaura-build').exists() and
         (DEST / sdk / 'Libmpv.framework/podaura-build').read_text() == fingerprint
@@ -111,10 +102,10 @@ def main():
     extract(HEADERS, DEST / 'downloads/vulkan-headers.tar.gz', directory)
     source = directory / 'mpv-0.41.0'
     headers = next(directory.glob('Vulkan-Headers-*'))
-    subprocess.run(['patch', '-p1', '-i', str(HERE / 'iosurface.patch')], cwd=source, check=True)
+    subprocess.run(['patch', '-p1', '-i', str(IOS / 'iosurface.patch')], cwd=source, check=True)
     for name in ('context_podaura.m', 'context_podaura.h'):
-        shutil.copy2(HERE / name, source / 'video/out/vulkan' / name)
-    shutil.copy2(HERE / 'podaura.h', source / 'include/mpv/podaura.h')
+        shutil.copy2(IOS / name, source / 'video/out/vulkan' / name)
+    shutil.copy2(IOS / 'podaura.h', source / 'include/mpv/podaura.h')
     for sdk in ('iphoneos', 'iphonesimulator'):
         out = DEST / 'native' / sdk / 'out'
         if out.exists(): shutil.rmtree(out)
@@ -123,4 +114,36 @@ def main():
     marker.write_text(fingerprint)
 
 
-if __name__ == '__main__': main()
+def build_macos():
+    sources = COMMON_SOURCES + [MACOS / 'moltenvk.patch']
+    fingerprint = hashlib.sha256(b''.join(p.read_bytes() for p in sources)).hexdigest()
+    target = DEST / 'macos/Libmpv.framework'
+    marker = target / 'podaura-build'
+    if marker.exists() and marker.read_text() == fingerprint:
+        return
+    directory = DEST / 'native/macos-source'
+    if directory.exists(): shutil.rmtree(directory)
+    directory.mkdir(parents=True)
+    extract(MPV, DEST / 'downloads/mpv-v0.41.0.tar.gz', directory)
+    extract(HEADERS, DEST / 'downloads/vulkan-headers.tar.gz', directory)
+    source = directory / 'mpv-0.41.0'
+    headers = next(directory.glob('Vulkan-Headers-*'))
+    subprocess.run(['patch', '-p1', '-i', str(MACOS / 'moltenvk.patch')], cwd=source, check=True)
+    out = DEST / 'native/macos/out'
+    if out.exists(): shutil.rmtree(out)
+    build('macos', source, headers)
+    marker.write_text(fingerprint)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--platform', choices=('ios', 'macos'), required=True)
+    args = parser.parse_args()
+    if args.platform == 'ios':
+        build_ios()
+    else:
+        build_macos()
+
+
+if __name__ == '__main__':
+    main()

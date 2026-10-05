@@ -1,3 +1,8 @@
 package com.skyd.podaura.ui
 
-actual interface PlatformSurfaceHolder
+import platform.QuartzCore.CAMetalLayer
+
+actual interface PlatformSurfaceHolder {
+    val layer: CAMetalLayer
+    var onResize: ((Int, Int) -> Unit)?
+}

@@ -125,7 +125,7 @@ class MPVPlayer {
             for (opt in arrayOf("gpu-shader-cache-dir", "icc-cache-dir")) {
                 newMpv.option(opt, cacheDir)
             }
-            initOptions(vo)
+            initOptions(vo, configDir)
             // Options above include initialization-only settings (notably config/config-dir).
             // Keep native mpv initialization after them on every platform.
             newMpv.initialize()
@@ -158,14 +158,14 @@ class MPVPlayer {
     var voInUse: String = ""
         private set
 
-    private fun initOptions(vo: String) {
+    private fun initOptions(vo: String, configDir: String) {
         // apply phone-optimized defaults
         mpv.option("profile", "fast")
 
         // vo
         voInUse = vo
 
-        mpv.initOptionsPlatform(logger)
+        mpv.initOptionsPlatform(logger, configDir)
         mpv.option("video-sync", "audio")
 
         mpv.option(

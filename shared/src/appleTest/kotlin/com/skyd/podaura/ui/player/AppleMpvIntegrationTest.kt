@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.player
 
 import com.skyd.podaura.ui.player.mpv.*
+import co.touchlab.kermit.Logger
+import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.cinterop.*
 import kotlinx.coroutines.delay
@@ -10,7 +12,7 @@ import platform.Foundation.*
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.test.*
 
-class IosMpvIntegrationTest {
+class AppleMpvIntegrationTest {
     @Test fun decodeObserveSeekAndRecreateNativePlayer() = runBlocking {
         val path = NSTemporaryDirectory() + "podaura-native-playback-test.wav"
         val bytes = silentWave()
@@ -22,9 +24,13 @@ class IosMpvIntegrationTest {
                 val observedPause = AtomicBoolean(false)
                 val player = MPV()
                 try {
+                    val customConfig = PlatformFile(PlatformFile(NSTemporaryDirectory()), "podaura-custom-mpv-config")
+                    player.initOptionsPlatform(Logger.withTag("AppleMpvIntegrationTest"), customConfig.path)
                     player.option("config", "no")
                     player.option("hwdec", "auto")
                     player.initialize()
+                    assertEquals(PlatformFile(customConfig, "cacert.pem").path,
+                        player.getPropertyString("tls-ca-file"))
                     assertEquals("videotoolbox", player.getPropertyString("hwdec"))
                     player.setPropertyString("hwdec", "no")
                     player.option("hwdec", "auto")

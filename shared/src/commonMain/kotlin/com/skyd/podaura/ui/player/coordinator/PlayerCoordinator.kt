@@ -30,6 +30,7 @@ import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.mpv.PlayerKeyInput
 import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
+import com.skyd.podaura.ui.player.mpv.resizeSurface
 import com.skyd.podaura.ui.player.playerTrace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -242,6 +243,10 @@ class PlayerCoordinator : LifecycleOwner {
         onDetachAll(this)
         engineJob.cancel()
     }
+
+    // Wait for history, native resources and lifecycle cleanup, including cancellation
+    // before the engine acquires playback ownership.
+    internal suspend fun awaitDestroyed() = engineJob.join()
 
     private suspend fun actorLoop() {
         var running = true
@@ -745,10 +750,7 @@ class PlayerCoordinator : LifecycleOwner {
 
             is PlayerSurfaceEvent.Changed -> {
                 if (event.holder == activeSurface) {
-                    player.mpv.setPropertyString(
-                        "android-surface-size",
-                        "${event.width}x${event.height}",
-                    )
+                    player.mpv.resizeSurface(event.width, event.height)
                 }
             }
 

@@ -11,21 +11,17 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
 import co.touchlab.kermit.Logger
-import com.skyd.fundation.config.Const
-import com.skyd.fundation.config.MPV_CONFIG_DIR
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.podaura.model.preference.player.platformMpvRuntimeConfigDirectory
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.runBlocking
 import podaura.shared.generated.resources.Res
 
-actual fun MPV.initOptionsPlatform(logger: Logger) {
+actual fun MPV.initOptionsPlatform(logger: Logger, configDir: String) {
     option("load-scripts", "no")
     option("tls-verify", "yes")
-    val runtime = platformMpvRuntimeConfigDirectory(PlatformFile(Const.MPV_CONFIG_DIR))
-    option("tls-ca-file", PlatformFile(runtime, "cacert.pem").path)
+    option("tls-ca-file", PlatformFile(PlatformFile(configDir), "cacert.pem").path)
 }
 
 actual fun copyAssetsForMpv(configDir: String) {
