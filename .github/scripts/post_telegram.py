@@ -1,4 +1,5 @@
 import argparse
+from html import escape
 import json
 import os
 from pathlib import Path
@@ -30,26 +31,46 @@ def request(method, fields, attachments=None):
     return payload["result"]
 
 
+def build_caption():
+    message = os.environ["COMMIT_MESSAGE"]
+    workflow_url = os.environ.get("WORKFLOW_URL", "")
+    if not workflow_url:
+        return escape(message[:1024])
+
+    author = os.environ.get("COMMIT_AUTHOR", "")
+    commit_url = os.environ.get("COMMIT_URL", "")
+    title = "GitHub New CI: PodAura\n\n"
+    footer_text = f"\n\nby {author}\n\nWorkflow run here"
+    footer = f'\n\nby <code>{escape(author)}</code>\n\nWorkflow run <a href="{escape(workflow_url)}">here</a>'
+    if commit_url:
+        footer_text += "\nCommit details here"
+        footer += f'\nCommit details <a href="{escape(commit_url)}">here</a>'
+    message = message[:max(0, 1024 - len(title) - len(footer_text))]
+    return f"{title}<code>{escape(message)}</code>{footer}"
+
+
 def main():
     directory = Path("telegram-artifacts")
     files = sorted(directory.glob("PodAura_*_Android_arm64-v8a_GitHub.apk"))
     files += sorted(directory.glob("PodAura_*_iOS_arm64_Unsigned.ipa"))
+    files += sorted(directory.glob("PodAura_*_macOS_arm64_Native.dmg"))
+    files += sorted(directory.glob("PodAura_*_Windows_x64_JVM_Portable.zip"))
     if not files:
-        print("No APK or IPA available; skipping Telegram upload.")
+        print("No supported artifacts available; skipping Telegram upload.")
         return
 
-    caption = os.environ["COMMIT_MESSAGE"][:1024]
+    caption = {"caption": build_caption(), "parse_mode": "HTML"}
     channel = os.environ["CHANNEL_ID"]
     total_size = sum(file.stat().st_size for file in files)
     print(f"Telegram upload: {len(files)} file(s), {total_size} bytes total.")
     if len(files) == 1:
-        request("sendDocument", {"chat_id": channel, "caption": caption}, {"document": files[0]})
+        request("sendDocument", {"chat_id": channel, **caption}, {"document": files[0]})
     else:
         media = [
             {"type": "document", "media": f"attach://file_{index}"}
             for index in range(len(files))
         ]
-        media[0]["caption"] = caption
+        media[-1].update(caption)
         request("sendMediaGroup", {
             "chat_id": channel, "media": json.dumps(media, ensure_ascii=False),
         }, {f"file_{index}": file for index, file in enumerate(files)})

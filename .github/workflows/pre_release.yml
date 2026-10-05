@@ -121,7 +121,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-konan-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Install MPV build dependencies
-        if: matrix.target-platform == 'iOS arm64'
+        if: matrix.target-platform == 'iOS arm64' || matrix.target-platform == 'Native macOS arm64'
         run: brew install meson ninja pkg-config
 
       - name: Checkout Secret
@@ -193,7 +193,7 @@ jobs:
           compression-level: 9
 
   telegram:
-    name: Post APK and IPA to Telegram
+    name: Post APK, IPA, Native DMG and Windows Portable to Telegram
     needs: build
     if: ${{ always() && !cancelled() && needs.build.result != 'skipped' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, '[skip_post]') }}
     permissions:
@@ -203,12 +203,7 @@ jobs:
     secrets: inherit
     with:
       artifact-run-id: ${{ github.run_id }}
-      caption: |+
-        GitHub New CI: PodAura
-
-        ${{ github.event.head_commit.message }}
-
-        by ${{ github.event.head_commit.author.name }}
-
-        Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        Commit: ${{ github.event.head_commit.url }}
+      caption: ${{ github.event.head_commit.message }}
+      commit-author: ${{ github.event.head_commit.author.name }}
+      workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      commit-url: ${{ github.event.head_commit.url }}

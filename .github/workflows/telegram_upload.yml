@@ -4,12 +4,21 @@ on:
   workflow_call:
     inputs:
       artifact-run-id:
-        description: Workflow run containing the APK and IPA artifacts
+        description: Workflow run containing the release artifacts
         required: true
         type: string
       caption:
         required: true
         type: string
+      commit-author:
+        type: string
+        default: ''
+      workflow-url:
+        type: string
+        default: ''
+      commit-url:
+        type: string
+        default: ''
   workflow_dispatch:
     inputs:
       artifact-run-id:
@@ -37,6 +46,9 @@ jobs:
       BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       CHANNEL_ID: ${{ secrets.TELEGRAM_TO }}
       COMMIT_MESSAGE: ${{ inputs.caption }}
+      COMMIT_AUTHOR: ${{ inputs.commit-author }}
+      WORKFLOW_URL: ${{ inputs.workflow-url }}
+      COMMIT_URL: ${{ inputs.commit-url }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
@@ -66,17 +78,39 @@ jobs:
           merge-multiple: true
           skip-decompress: true
 
+      - name: Download macOS arm64 Native DMG
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.artifact-run-id }}
+          pattern: PodAura_*_macOS_arm64_Native.dmg
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: Download Windows x64 JVM Portable ZIP
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.artifact-run-id }}
+          pattern: PodAura_*_Windows_x64_JVM_Portable
+          path: telegram-artifacts
+          merge-multiple: true
+          skip-decompress: true
+
       - name: Check Available Artifacts
         id: artifacts
         run: |
           python3 - <<'PY'
           import os
           from pathlib import Path
-          files = list(Path('telegram-artifacts').glob('*.apk')) + list(Path('telegram-artifacts').glob('*.ipa'))
+          files = [file for extension in ('apk', 'ipa', 'dmg', 'zip') for file in Path('telegram-artifacts').glob(f'*.{extension}')]
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write(f"available={str(bool(files)).lower()}\n")
           if not files:
-              print('No APK or IPA available; skipping Telegram upload.')
+              print('No supported artifacts available; skipping Telegram upload.')
           PY
 
       - name: Start Local Bot API Server

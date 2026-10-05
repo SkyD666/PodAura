@@ -1,6 +1,8 @@
 from email.parser import BytesParser
 from email.policy import default
+from html import escape
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from itertools import combinations
 import json
 import os
 from pathlib import Path
@@ -9,6 +11,7 @@ import subprocess
 import threading
 import unittest
 from unittest.mock import patch
+from xml.etree import ElementTree
 
 import post_telegram
 
@@ -17,7 +20,11 @@ class TelegramUploadTest(unittest.TestCase):
     def test_available_artifacts(self):
         apk = "PodAura_3.4-beta10_Android_arm64-v8a_GitHub.apk"
         ipa = "PodAura_1.0_iOS_arm64_Unsigned.ipa"
-        for filenames in [[], [apk], [ipa], [apk, ipa]]:
+        dmg = "PodAura_3.4-beta10_macOS_arm64_Native.dmg"
+        portable = "PodAura_3.4-beta10_Windows_x64_JVM_Portable.zip"
+        artifacts = [apk, ipa, dmg, portable]
+        cases = [files for count in range(len(artifacts) + 1) for files in combinations(artifacts, count)]
+        for filenames in cases:
             with self.subTest(files=filenames), tempfile.TemporaryDirectory() as temp:
                 previous = Path.cwd()
                 try:
@@ -27,7 +34,16 @@ class TelegramUploadTest(unittest.TestCase):
                     for filename in filenames:
                         (directory / filename).touch()
                     (directory / "PodAura_3.4-beta10_Android_x86_64_GitHub.apk").touch()
-                    env = {"BOT_TOKEN": "test", "BOT_API_URL": "http://127.0.0.1:8081", "CHANNEL_ID": "channel", "COMMIT_MESSAGE": "Commit `text` & 中文\n"}
+                    (directory / "PodAura_3.4-beta10_macOS_arm64_JVM.dmg").touch()
+                    (directory / "PodAura_3.4-beta10_macOS_x64_JVM.dmg").touch()
+                    (directory / "PodAura_3.4-beta10_Windows_x64_JVM_Store.msix").touch()
+                    (directory / "PodAura_3.4-beta10_Windows_arm64_JVM_Portable.zip").touch()
+                    env = {
+                        "BOT_TOKEN": "test", "BOT_API_URL": "http://127.0.0.1:8081", "CHANNEL_ID": "channel",
+                        "COMMIT_MESSAGE": "Commit `text` & <tag> 中文\n", "COMMIT_AUTHOR": "SkyD & 作者",
+                        "WORKFLOW_URL": "https://github.com/example/PodAura/actions/runs/123?x=1&y=2",
+                        "COMMIT_URL": "https://github.com/example/PodAura/commit/abc",
+                    }
                     response = subprocess.CompletedProcess([], 0, stdout='{"ok":true,"result":true}')
                     with patch.dict(os.environ, env), patch.object(post_telegram.subprocess, "run", return_value=response) as run:
                         post_telegram.main()
@@ -40,18 +56,48 @@ class TelegramUploadTest(unittest.TestCase):
                     if len(filenames) == 1:
                         self.assertIn("http://127.0.0.1:8081/bottest/sendDocument", args)
                         self.assertIn(f"document=@{directory / filenames[0]}", args)
-                        self.assertIn("caption=" + env["COMMIT_MESSAGE"], args)
+                        self.assertIn("parse_mode=HTML", args)
+                        caption = next(a[8:] for a in args if a.startswith("caption="))
                     else:
                         self.assertIn("http://127.0.0.1:8081/bottest/sendMediaGroup", args)
                         media = json.loads(next(a[6:] for a in args if a.startswith("media=")))
-                        self.assertEqual([m["media"] for m in media], ["attach://file_0", "attach://file_1"])
+                        self.assertEqual([m["media"] for m in media], [f"attach://file_{index}" for index in range(len(filenames))])
                         self.assertTrue(all(m["type"] == "document" for m in media))
-                        self.assertEqual(media[0]["caption"], env["COMMIT_MESSAGE"])
-                        self.assertNotIn("caption", media[1])
+                        for item in media[:-1]:
+                            self.assertNotIn("caption", item)
+                            self.assertNotIn("parse_mode", item)
+                        self.assertEqual(media[-1]["parse_mode"], "HTML")
+                        caption = media[-1]["caption"]
                         for index, filename in enumerate(filenames):
                             self.assertIn(f"file_{index}=@{directory / filename}", args)
+                    rendered = ElementTree.fromstring(f"<caption>{caption}</caption>")
+                    self.assertEqual(rendered.text, "GitHub New CI: PodAura\n\n")
+                    self.assertEqual([node.text for node in rendered.findall("code")], [env["COMMIT_MESSAGE"], env["COMMIT_AUTHOR"]])
+                    links = rendered.findall("a")
+                    self.assertEqual([link.text for link in links], ["here", "here"])
+                    self.assertEqual([link.attrib["href"] for link in links], [env["WORKFLOW_URL"], env["COMMIT_URL"]])
                 finally:
                     os.chdir(previous)
+
+    def test_long_formatted_caption_preserves_links(self):
+        for message in ["<tag> & `text` 😀\n" * 100, "😀" * 1030]:
+            with self.subTest(message=message):
+                env = {
+                    "COMMIT_MESSAGE": message, "COMMIT_AUTHOR": "作者 <admin> & `name` 😀",
+                    "WORKFLOW_URL": "https://github.com/example/PodAura/actions/runs/123",
+                    "COMMIT_URL": "https://github.com/example/PodAura/commit/abc",
+                }
+                with patch.dict(os.environ, env):
+                    caption = post_telegram.build_caption()
+                rendered = ElementTree.fromstring(f"<caption>{caption}</caption>")
+                self.assertEqual(len("".join(rendered.itertext())), 1024)
+                commit, author = rendered.findall("code")
+                self.assertTrue(commit.text)
+                self.assertTrue(message.startswith(commit.text))
+                self.assertEqual(author.text, env["COMMIT_AUTHOR"])
+                links = rendered.findall("a")
+                self.assertEqual([link.text for link in links], ["here", "here"])
+                self.assertEqual([link.attrib["href"] for link in links], [env["WORKFLOW_URL"], env["COMMIT_URL"]])
 
     def test_large_album_over_http(self):
         received = []
@@ -92,6 +138,7 @@ class TelegramUploadTest(unittest.TestCase):
                 env = {
                     'BOT_TOKEN': 'test', 'CHANNEL_ID': 'channel', 'COMMIT_MESSAGE': 'caption',
                     'BOT_API_URL': f'http://127.0.0.1:{server.server_port}',
+                    'WORKFLOW_URL': '', 'COMMIT_AUTHOR': '', 'COMMIT_URL': '',
                 }
                 with patch.dict(os.environ, env):
                     post_telegram.main()
@@ -159,30 +206,42 @@ class TelegramUploadTest(unittest.TestCase):
                 directory.mkdir()
                 (directory / 'PodAura_3.4-beta10_Android_arm64-v8a_GitHub.apk').touch()
                 ipa = directory / 'PodAura_1.0_iOS_arm64_Unsigned.ipa'
-                for count in [1, 2]:
+                dmg = directory / 'PodAura_3.4-beta10_macOS_arm64_Native.dmg'
+                portable = directory / 'PodAura_3.4-beta10_Windows_x64_JVM_Portable.zip'
+                for count in [1, 2, 3, 4]:
                     if count == 2:
                         ipa.touch()
+                    elif count == 3:
+                        dmg.touch()
+                    elif count == 4:
+                        portable.touch()
                     for caption in captions:
                         with self.subTest(files=count, caption=caption):
                             env = {
                                 'BOT_TOKEN': 'test', 'CHANNEL_ID': 'channel', 'COMMIT_MESSAGE': caption,
                                 'BOT_API_URL': f'http://127.0.0.1:{server.server_port}',
+                                'WORKFLOW_URL': '', 'COMMIT_AUTHOR': '', 'COMMIT_URL': '',
                             }
                             with patch.dict(os.environ, env):
                                 post_telegram.main()
                             path, fields = received[-1]
-                            self.assertNotIn('parse_mode', fields)
                             if count == 1:
                                 self.assertEqual(path, '/bottest/sendDocument')
+                                self.assertEqual(fields['parse_mode'], b'HTML')
                                 actual = fields['caption'].decode('utf-8')
                             else:
                                 self.assertEqual(path, '/bottest/sendMediaGroup')
                                 media = json.loads(fields['media'].decode('utf-8'))
-                                self.assertNotIn('parse_mode', media[0])
-                                actual = media[0]['caption']
-                            self.assertEqual(actual, caption[:1024])
+                                self.assertEqual(len(media), count)
+                                self.assertNotIn('parse_mode', fields)
+                                for item in media[:-1]:
+                                    self.assertNotIn('caption', item)
+                                    self.assertNotIn('parse_mode', item)
+                                self.assertEqual(media[-1]['parse_mode'], 'HTML')
+                                actual = media[-1]['caption']
+                            self.assertEqual(actual, escape(caption[:1024]))
                             self.assertFalse(Path('injected').exists())
-                self.assertEqual(len(received), 8)
+                self.assertEqual(len(received), 16)
         finally:
             os.chdir(previous)
             server.shutdown()
