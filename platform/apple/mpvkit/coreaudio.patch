@@ -1,0 +1,26 @@
+diff --git a/audio/out/ao_coreaudio.c b/audio/out/ao_coreaudio.c
+--- a/audio/out/ao_coreaudio.c
++++ b/audio/out/ao_coreaudio.c
+@@ -322,8 +322,8 @@
+                      "can't link audio unit to selected device");
+ 
+     err = AudioUnitSetProperty(p->audio_unit,
+-                               kAudioOutputUnitProperty_ChannelMap,
+-                               kAudioUnitScope_Global, 0, layout, layout_size);
++                               kAudioUnitProperty_AudioChannelLayout,
++                               kAudioUnitScope_Input, 0, layout, layout_size);
+ 
+     CHECK_CA_ERROR_L(coreaudio_error_audiounit,
+                      "unable to set the input channel layout on the audio unit");
+--- a/meson.build
++++ b/meson.build
+@@ -831,6 +831,9 @@
+     sources += files('audio/out/ao_coreaudio.c',
+                      'audio/out/ao_coreaudio_exclusive.c',
+                      'audio/out/ao_coreaudio_properties.c')
++    if not features['cocoa']
++        sources += files('osdep/utils-mac.c')
++    endif
+ endif
+ 
+ if features['audiounit'] or features['coreaudio'] or features['avfoundation']

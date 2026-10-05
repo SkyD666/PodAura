@@ -1,11 +1,6 @@
 package com.skyd.podaura.ui.component
 
-import androidx.compose.runtime.staticCompositionLocalOf
 import platform.Foundation.NSThread
-
-internal val LocalMacosViewUpdates = staticCompositionLocalOf<MacosViewUpdates> {
-    error("No AppKit window host")
-}
 
 /**
  * Commits NSView changes between

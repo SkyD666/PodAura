@@ -14,7 +14,7 @@ val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
     inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
-        rootProject.file("platform/ios/mpvkit/podaura.h"))
+        rootProject.file("platform/apple/mpvkit/podaura.h"))
     // Gradle removes stale outputs on a fresh checkout; it must never own the native binaries here.
     outputs.dirs(layout.buildDirectory.dir("mpvkit/iphoneos/Libmpv.framework/Headers"),
         layout.buildDirectory.dir("mpvkit/iphonesimulator/Libmpv.framework/Headers"))
@@ -80,7 +80,8 @@ val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
     enabled = HostManager.hostIsMac
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
     inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
-        rootProject.file("platform/apple/mpvkit/artifacts.json"))
+        rootProject.file("platform/apple/mpvkit/artifacts.json"),
+        rootProject.file("platform/apple/mpvkit/podaura.h"))
     outputs.dir(layout.buildDirectory.dir("mpvkit/macos/Libmpv.framework/Headers"))
     commandLine("python3", script.absolutePath, "--platform", "macos", "--headers-only")
 }
@@ -103,7 +104,7 @@ extensions.configure<KotlinMultiplatformExtension> {
     targets.withType<KotlinNativeTarget>().configureEach {
         if (konanTarget.family != Family.OSX) return@configureEach
         val interop = compilations.getByName("main").cinterops.create("mpv") {
-            definitionFile.set(project.file("src/nativeInterop/cinterop/mpv-macos.def"))
+            definitionFile.set(project.file("src/nativeInterop/cinterop/mpv.def"))
             includeDirs(layout.buildDirectory.dir("mpvkit/macos/Libmpv.framework/Headers"))
         }
         tasks.named(interop.interopProcessingTaskName).configure { dependsOn(prepareMacosMpv) }

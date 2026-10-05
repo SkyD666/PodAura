@@ -22,7 +22,7 @@
      if (!ctx->ra)
          goto error;
  
-+    // The iOS host supplies an IOSurface target instead of a window swapchain.
++    // The Apple host supplies an IOSurface target instead of a window swapchain.
 +    if (!vk->surface) return true;
 +
      // Create the swapchain

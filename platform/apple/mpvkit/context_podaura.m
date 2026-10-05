@@ -1,7 +1,10 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 #import <AVFoundation/AVFoundation.h>
 #import <Foundation/Foundation.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#endif
 #include "config.h"
 #include "options/options.h"
 #include "video/out/vulkan/context.h"
@@ -17,6 +20,8 @@
     int width, height;
     bool active;
     bool failed;
+    bool redraw;
+    struct vo *vo;
     uint64_t frames;
 }
 @end
@@ -39,12 +44,30 @@ void *podaura_output_create(void *display, int width, int height)
     return output;
 }
 
+void podaura_output_set_layer(void *ptr, void *display)
+{
+    PodAuraVideoOutput *output = ptr;
+    [output->lock lock];
+    if (output->layer != display) {
+        AVSampleBufferDisplayLayer *previous = output->layer;
+        output->layer = [(AVSampleBufferDisplayLayer *)display retain];
+        [previous release];
+        output->redraw = true;
+        if (output->vo) vo_wakeup(output->vo);
+    }
+    [output->lock unlock];
+}
+
 void podaura_output_resize(void *ptr, int width, int height)
 {
     PodAuraVideoOutput *output = ptr;
     [output->lock lock];
-    output->width = MAX(2, width);
-    output->height = MAX(2, height);
+    int w = MAX(2, width), h = MAX(2, height);
+    if (output->width != w || output->height != h) {
+        output->width = w;
+        output->height = h;
+        if (output->vo) vo_wakeup(output->vo);
+    }
     [output->lock unlock];
 }
 
@@ -82,6 +105,7 @@ int podaura_output_attach(mpv_handle *mpv, void *output)
     return mpv_set_property(mpv, "wid", MPV_FORMAT_INT64, &wid);
 }
 
+#if TARGET_OS_IOS
 void podaura_output_show_artwork(void *display, void *artwork)
 {
     AVSampleBufferDisplayLayer *layer = display;
@@ -134,6 +158,8 @@ void podaura_output_show_artwork(void *display, void *artwork)
     if (format) CFRelease(format);
     CVPixelBufferRelease(pixel);
 }
+
+#endif
 
 struct slot { IOSurfaceRef surface; pl_tex texture; };
 struct priv {
@@ -231,7 +257,7 @@ bool podaura_start_frame(struct ra_ctx *ctx, struct pl_swapchain_frame *frame)
         ));
         if (!slot->texture) {
             o->failed = true;
-            MP_ERR(ctx, "Unable to import the PiP IOSurface into Vulkan/Metal\n");
+            MP_ERR(ctx, "Unable to import the IOSurface into Vulkan/Metal\n");
             CFRelease(slot->surface);
             slot->surface = NULL;
             goto skip;
@@ -298,6 +324,11 @@ static void uninit(struct ra_ctx *ctx)
 {
     struct priv *p = ctx->priv;
     if (!p) return;
+    if (p->output) {
+        [p->output->lock lock];
+        p->output->vo = NULL;
+        [p->output->lock unlock];
+    }
     if (p->pixel) {
         pl_gpu_finish(p->vk.gpu);
         CVPixelBufferRelease(p->pixel);
@@ -326,6 +357,10 @@ static int control(struct ra_ctx *ctx, int *events, int request, void *arg)
     if (request == VOCTRL_CHECK_EVENTS) {
         struct priv *p = ctx->priv;
         [p->output->lock lock];
+        if (p->output->redraw) {
+            *events |= VO_EVENT_EXPOSE;
+            p->output->redraw = false;
+        }
         if (ctx->vo->dwidth != p->output->width || ctx->vo->dheight != p->output->height) {
             *events |= VO_EVENT_RESIZE;
             reconfig(ctx);
@@ -357,6 +392,9 @@ static bool init(struct ra_ctx *ctx)
         uninit(ctx);
         return false;
     }
+    [p->output->lock lock];
+    p->output->vo = ctx->vo;
+    [p->output->lock unlock];
     return reconfig(ctx);
 }
 

@@ -27,6 +27,7 @@ plugins {
     alias(libs.plugins.gradle.msix)
     id("podaura.desktop-media-shims")
     id("podaura.apple-mpv")
+    id("podaura.macos-appkit")
 }
 
 val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")

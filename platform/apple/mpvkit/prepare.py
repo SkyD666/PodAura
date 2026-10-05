@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import sys
 
-from artifacts import DEST, ROOT, MANIFEST, download, prepare_framework
+from artifacts import DEST, MANIFEST, download, prepare_framework
 
 
 def main():
@@ -34,10 +34,9 @@ def main():
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(lambda item: prepare_framework(
                 item, DEST, platform=args.platform, headers_only=args.headers_only), artifacts))
-        if args.platform == 'ios':
-            for sdk in ('iphoneos', 'iphonesimulator'):
-                shutil.copy2(ROOT / 'platform/ios/mpvkit/podaura.h',
-                             DEST / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
+        for sdk in (('macos',) if args.platform == 'macos' else ('iphoneos', 'iphonesimulator')):
+            shutil.copy2(Path(__file__).with_name('podaura.h'),
+                         DEST / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
         if not args.headers_only:
             subprocess.run([sys.executable, str(Path(__file__).with_name('build.py')),
                             '--platform', args.platform], check=True)

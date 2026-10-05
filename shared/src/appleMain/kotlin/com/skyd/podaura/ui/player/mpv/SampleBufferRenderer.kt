@@ -1,9 +1,19 @@
 package com.skyd.podaura.ui.player.mpv
 
 import cnames.structs.mpv_handle
-import com.skyd.podaura.libmpv.*
+import com.skyd.podaura.libmpv.podaura_output_attach
+import com.skyd.podaura.libmpv.podaura_output_create
+import com.skyd.podaura.libmpv.podaura_output_destroy
+import com.skyd.podaura.libmpv.podaura_output_failed
+import com.skyd.podaura.libmpv.podaura_output_resize
+import com.skyd.podaura.libmpv.podaura_output_set_active
+import com.skyd.podaura.libmpv.podaura_output_set_layer
 import com.skyd.podaura.ui.PlatformSurfaceHolder
-import kotlinx.cinterop.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.COpaquePointer
+import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.interpretCPointer
+import kotlinx.cinterop.objcPtr
 import kotlin.math.max
 import kotlin.math.min
 
@@ -23,6 +33,8 @@ internal class SampleBufferRenderer(private val handle: CPointer<mpv_handle>) : 
                 )
             )
             check(podaura_output_attach(handle, output) >= 0) { "Unable to attach Metal output" }
+        } else {
+            podaura_output_set_layer(output, interpretCPointer<ByteVar>(holder.layer.objcPtr()))
         }
         resize()
         podaura_output_set_active(output, holder.isActive)
@@ -34,8 +46,19 @@ internal class SampleBufferRenderer(private val handle: CPointer<mpv_handle>) : 
         resize()
     }
 
-    private fun resize() {
+    fun resize() {
         val target = holder ?: return
+        // Desktop zoom/pan must render into the entire viewport, including letterboxed areas.
+        if (appleMpvUsesViewportSize) {
+            output?.let {
+                podaura_output_resize(
+                    it,
+                    target.width.coerceAtLeast(2),
+                    target.height.coerceAtLeast(2)
+                )
+            }
+            return
+        }
         // The buffer keeps the media aspect ratio; AVFoundation fits it into the
         // inline view and the system derives the floating window's aspect from it.
         val scale = if (sourceWidth > 0 && sourceHeight > 0) min(

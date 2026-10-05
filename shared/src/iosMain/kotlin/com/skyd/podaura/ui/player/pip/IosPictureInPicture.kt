@@ -18,16 +18,66 @@ import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
-import kotlinx.cinterop.*
-import kotlinx.coroutines.*
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.COpaquePointer
+import kotlinx.cinterop.CValue
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.interpretCPointer
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.objcPtr
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.readValue
+import kotlinx.cinterop.useContents
+import kotlinx.cinterop.value
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
-import platform.AVFoundation.*
-import platform.AVKit.*
+import kotlinx.coroutines.launch
+import platform.AVFoundation.AVLayerVideoGravityResizeAspect
+import platform.AVFoundation.AVLayerVideoGravityResizeAspectFill
+import platform.AVFoundation.AVSampleBufferDisplayLayer
+import platform.AVFoundation.flushAndRemoveImage
+import platform.AVKit.AVPictureInPictureController
+import platform.AVKit.AVPictureInPictureControllerContentSource
+import platform.AVKit.AVPictureInPictureControllerDelegateProtocol
+import platform.AVKit.AVPictureInPictureSampleBufferPlaybackDelegateProtocol
+import platform.AVKit.create
+import platform.AVKit.invalidatePlaybackState
 import platform.CoreFoundation.CFRelease
-import platform.CoreMedia.*
-import platform.Foundation.*
+import platform.CoreMedia.CMClockGetHostTimeClock
+import platform.CoreMedia.CMTime
+import platform.CoreMedia.CMTimeGetSeconds
+import platform.CoreMedia.CMTimeMake
+import platform.CoreMedia.CMTimeMakeWithSeconds
+import platform.CoreMedia.CMTimeRange
+import platform.CoreMedia.CMTimeRangeMake
+import platform.CoreMedia.CMTimebaseCreateWithSourceClock
+import platform.CoreMedia.CMTimebaseRefVar
+import platform.CoreMedia.CMTimebaseSetRate
+import platform.CoreMedia.CMTimebaseSetTime
+import platform.CoreMedia.CMVideoDimensions
+import platform.CoreMedia.kCMTimePositiveInfinity
+import platform.CoreMedia.kCMTimeRangeInvalid
+import platform.Foundation.NSError
+import platform.Foundation.NSKeyValueObservingOptionNew
+import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSOperationQueue
+import platform.Foundation.addObserver
+import platform.Foundation.removeObserver
 import platform.QuartzCore.CATransaction
-import platform.UIKit.*
+import platform.UIKit.UIApplication
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
+import platform.UIKit.UIApplicationDidEnterBackgroundNotification
+import platform.UIKit.UIApplicationState
+import platform.UIKit.UIApplicationWillResignActiveNotification
+import platform.UIKit.UIColor
+import platform.UIKit.UIImage
+import platform.UIKit.UIScreen
+import platform.UIKit.UIView
 import platform.darwin.NSObject
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
@@ -46,6 +96,7 @@ internal class IosPictureInPicture(
     private val height = AtomicInt(640)
     private val rendering = AtomicBoolean(true)
     private val holder = object : PlatformSurfaceHolder {
+        override var onResize: ((Int, Int) -> Unit)? = null
         override val layer get() = this@IosPictureInPicture.layer
         override val width get() = this@IosPictureInPicture.width.load()
         override val height get() = this@IosPictureInPicture.height.load()

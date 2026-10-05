@@ -7,4 +7,5 @@ actual interface PlatformSurfaceHolder {
     val isActive: Boolean get() = true
     val width: Int
     val height: Int
+    var onResize: ((Int, Int) -> Unit)?
 }

@@ -233,6 +233,8 @@ actual class MPV {
         output.attach(surfaceHolder)
     }
 
+    internal fun resizeRenderingSurface(): Unit = locked { renderer?.resize() }
+
     internal fun setRenderingActive(active: Boolean): Unit = locked { renderer?.setActive(active) }
 
     actual fun detachSurface(): Unit = locked {

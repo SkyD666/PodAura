@@ -9,11 +9,9 @@ import re
 import shutil
 import subprocess
 
-from artifacts import DEST, ROOT, MANIFEST, MPV, HEADERS, extract
+from artifacts import DEST, MANIFEST, MPV, HEADERS, extract
 
 HERE = Path(__file__).resolve().parent
-IOS = ROOT / 'platform/ios/mpvkit'
-MACOS = ROOT / 'platform/macos/mpvkit'
 COMMON_SOURCES = [HERE / 'build.py', HERE / 'artifacts.py', MANIFEST]
 
 
@@ -74,75 +72,50 @@ def build(sdk, source, headers):
                     '-Dlibmpv=true', '-Dcplayer=false', '-Dgpl=false', '-Dvulkan=enabled',
                     '-Diconv=enabled', '-Dzlib=enabled', '-Dlua=disabled', '-Dgl=disabled',
                     '-Dvideotoolbox-pl=enabled', '-Duchardet=enabled',
-                    '-Dswift-build=disabled'] + (['-Dcoreaudio=enabled', '-Dmoltenvk=enabled']
+                    '-Dswift-build=disabled'] + (['-Dcoreaudio=enabled']
                         if sdk == 'macos' else ['-Daudiounit=enabled']), env=env, check=True)
     subprocess.run(['ninja', '-C', str(out)], env=env, check=True)
     target = DEST / sdk / 'Libmpv.framework'
     shutil.copy2(out / 'libmpv.a', target / 'Libmpv')
-    if sdk != 'macos':
-        shutil.copy2(IOS / 'podaura.h', target / 'Headers/mpv/podaura.h')
+    shutil.copy2(HERE / 'podaura.h', target / 'Headers/mpv/podaura.h')
 
 
-def build_ios():
-    sources = COMMON_SOURCES + [IOS / name for name in (
-        'iosurface.patch', 'context_podaura.m', 'context_podaura.h', 'podaura.h')]
-    marker = DEST / 'receipts/podaura-output'
+def build_platform(platform):
+    sdks = ('macos',) if platform == 'macos' else ('iphoneos', 'iphonesimulator')
+    patches = ['iosurface.patch'] + (['coreaudio.patch'] if platform == 'macos' else [])
+    sources = COMMON_SOURCES + [HERE / name for name in
+        patches + ['context_podaura.m', 'context_podaura.h', 'podaura.h']]
     fingerprint = hashlib.sha256(b''.join(p.read_bytes() for p in sources)).hexdigest()
-    if marker.exists() and marker.read_text() == fingerprint and all(
-        (DEST / sdk / 'Libmpv.framework/podaura-build').exists() and
-        (DEST / sdk / 'Libmpv.framework/podaura-build').read_text() == fingerprint
-        for sdk in ('iphoneos', 'iphonesimulator')):
+    if all((DEST / sdk / 'Libmpv.framework/podaura-build').exists() and
+           (DEST / sdk / 'Libmpv.framework/podaura-build').read_text() == fingerprint
+           for sdk in sdks):
         return
     for tool in ('meson', 'ninja', 'pkg-config'):
-        if not shutil.which(tool): raise RuntimeError(f'{tool} is required to build iOS libmpv')
-    directory = DEST / 'native/source'
+        if not shutil.which(tool): raise RuntimeError(f'{tool} is required to build Apple libmpv')
+    directory = DEST / 'native' / f'{platform}-source'
     if directory.exists(): shutil.rmtree(directory)
     directory.mkdir(parents=True)
     extract(MPV, DEST / 'downloads/mpv-v0.41.0.tar.gz', directory)
     extract(HEADERS, DEST / 'downloads/vulkan-headers.tar.gz', directory)
     source = directory / 'mpv-0.41.0'
     headers = next(directory.glob('Vulkan-Headers-*'))
-    subprocess.run(['patch', '-p1', '-i', str(IOS / 'iosurface.patch')], cwd=source, check=True)
+    for patch in patches:
+        subprocess.run(['patch', '-p1', '-i', str(HERE / patch)], cwd=source, check=True)
     for name in ('context_podaura.m', 'context_podaura.h'):
-        shutil.copy2(IOS / name, source / 'video/out/vulkan' / name)
-    shutil.copy2(IOS / 'podaura.h', source / 'include/mpv/podaura.h')
-    for sdk in ('iphoneos', 'iphonesimulator'):
+        shutil.copy2(HERE / name, source / 'video/out/vulkan' / name)
+    shutil.copy2(HERE / 'podaura.h', source / 'include/mpv/podaura.h')
+    for sdk in sdks:
         out = DEST / 'native' / sdk / 'out'
         if out.exists(): shutil.rmtree(out)
         build(sdk, source, headers)
         (DEST / sdk / 'Libmpv.framework/podaura-build').write_text(fingerprint)
-    marker.write_text(fingerprint)
-
-
-def build_macos():
-    sources = COMMON_SOURCES + [MACOS / 'moltenvk.patch']
-    fingerprint = hashlib.sha256(b''.join(p.read_bytes() for p in sources)).hexdigest()
-    target = DEST / 'macos/Libmpv.framework'
-    marker = target / 'podaura-build'
-    if marker.exists() and marker.read_text() == fingerprint:
-        return
-    directory = DEST / 'native/macos-source'
-    if directory.exists(): shutil.rmtree(directory)
-    directory.mkdir(parents=True)
-    extract(MPV, DEST / 'downloads/mpv-v0.41.0.tar.gz', directory)
-    extract(HEADERS, DEST / 'downloads/vulkan-headers.tar.gz', directory)
-    source = directory / 'mpv-0.41.0'
-    headers = next(directory.glob('Vulkan-Headers-*'))
-    subprocess.run(['patch', '-p1', '-i', str(MACOS / 'moltenvk.patch')], cwd=source, check=True)
-    out = DEST / 'native/macos/out'
-    if out.exists(): shutil.rmtree(out)
-    build('macos', source, headers)
-    marker.write_text(fingerprint)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--platform', choices=('ios', 'macos'), required=True)
     args = parser.parse_args()
-    if args.platform == 'ios':
-        build_ios()
-    else:
-        build_macos()
+    build_platform(args.platform)
 
 
 if __name__ == '__main__':

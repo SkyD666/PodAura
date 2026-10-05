@@ -20,7 +20,6 @@ package com.skyd.podaura.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposeCanvas
 import androidx.compose.ui.input.key.KeyEvent
@@ -48,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toDpSize
 import androidx.compose.ui.unit.toOffset
 import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.viewinterop.LocalInteropContainer
+import androidx.compose.ui.viewinterop.TrackInteropPlacementContainer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.enableSavedStateHandles
 import kotlinx.cinterop.CValue
@@ -91,10 +92,6 @@ import platform.Foundation.NSEdgeInsets
 import platform.Foundation.NSMakeRect
 import platform.Foundation.NSNotification
 import platform.darwin.NSObject
-
-internal val LocalMacosVideoContainer = staticCompositionLocalOf<NSView> {
-    error("No AppKit window host")
-}
 
 interface WindowScope {
     /**
@@ -243,6 +240,11 @@ class ComposeWindow(
 
     private val container =
         NSView(NSMakeRect(0.0, 0.0, size.width.value.toDouble(), size.height.value.toDouble()))
+    private val interopRoot = AppKitInteropRootView().apply {
+        setFrame(container.bounds)
+        autoresizingMask = NSViewWidthSizable or NSViewHeightSizable
+    }
+    private val interopContainer = AppKitInteropContainer(interopRoot, nativeViewUpdates)
     private val view = object : NSView(container.bounds) {
         private var trackingArea: NSTrackingArea? = null
         override fun wantsUpdateLayer() = true
@@ -356,6 +358,7 @@ class ComposeWindow(
         window.contentView = container
         container.wantsLayer = true
         view.autoresizingMask = NSViewWidthSizable or NSViewHeightSizable
+        container.addSubview(interopRoot)
         container.addSubview(view)
 
         skiaLayer.renderDelegate = renderDelegate
@@ -370,9 +373,8 @@ class ComposeWindow(
         scene.setContent {
             CompositionLocalProvider(
                 LocalPlatformWindowInsets provides windowInsets,
-                LocalMacosVideoContainer provides container,
-                LocalMacosViewUpdates provides nativeViewUpdates,
-                content = { content() }
+                LocalInteropContainer provides interopContainer,
+                content = { interopContainer.TrackInteropPlacementContainer { content() } }
             )
         }
 
@@ -387,6 +389,7 @@ class ComposeWindow(
         archComponentsOwner.lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         archComponentsOwner.viewModelStore.clear()
         scene.close()
+        interopContainer.dispose()
         nativeViewUpdates.dispose()
         skiaLayer.detach()
         frameRecomposer.close()
