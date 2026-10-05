@@ -65,7 +65,11 @@ extensions.configure<KotlinMultiplatformExtension> {
             definitionFile.set(project.file("src/nativeInterop/cinterop/mpv.def"))
             includeDirs(layout.buildDirectory.dir("mpvkit/$sdk/Libmpv.framework/Headers"))
         }
-        tasks.named(interop.interopProcessingTaskName).configure { dependsOn(prepareIosMpv) }
+        tasks.named(interop.interopProcessingTaskName).configure {
+            dependsOn(prepareIosMpv)
+            // Runtime extraction replaces the headers read by cinterop.
+            mustRunAfter(prepareIosMpvRuntime)
+        }
         binaries.withType<TestExecutable>().configureEach {
             linkerOpts("-F${layout.buildDirectory.dir("mpvkit/$sdk").get().asFile}")
             (mpvFrameworks + systemFrameworks).forEach { linkerOpts("-framework", it) }
@@ -107,7 +111,11 @@ extensions.configure<KotlinMultiplatformExtension> {
             definitionFile.set(project.file("src/nativeInterop/cinterop/mpv.def"))
             includeDirs(layout.buildDirectory.dir("mpvkit/macos/Libmpv.framework/Headers"))
         }
-        tasks.named(interop.interopProcessingTaskName).configure { dependsOn(prepareMacosMpv) }
+        tasks.named(interop.interopProcessingTaskName).configure {
+            dependsOn(prepareMacosMpv)
+            // Runtime extraction replaces the headers read by cinterop.
+            mustRunAfter(prepareMacosMpvRuntime)
+        }
         binaries.configureEach {
             linkerOpts("-F${layout.buildDirectory.dir("mpvkit/macos").get().asFile}")
             (mpvFrameworks + systemFrameworks + listOf("AppKit", "OpenGL", "IOKit", "CoreFoundation", "Security"))
