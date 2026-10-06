@@ -1,6 +1,8 @@
 package com.skyd.podaura.ui.screen.media
 
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,6 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
@@ -59,6 +62,7 @@ import com.skyd.compone.ext.withoutTop
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.isCompact
+import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.model.bean.MediaGroupBean
 import com.skyd.podaura.model.preference.appearance.media.MediaShowGroupTabPreference
 import com.skyd.podaura.model.preference.behavior.media.BaseMediaListSortByPreference
@@ -69,7 +73,6 @@ import com.skyd.podaura.ui.component.LongClickListener
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
-import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.media.list.GroupInfo
 import com.skyd.podaura.ui.screen.media.list.MediaList
@@ -77,7 +80,6 @@ import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.media.MediaStyleRoute
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -219,14 +221,24 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                     ) {
                         uiState.groups.forEachIndexed { index, group ->
                             val interactionSource = remember { MutableInteractionSource() }
+                            val rightClickInteractionSource = remember { MutableInteractionSource() }
+                            val onEditGroup: () -> Unit = {
+                                dispatch(MediaIntent.OnEditGroupDialog(group.first))
+                            }
                             LongClickListener(
                                 interactionSource = interactionSource,
-                                onLongClick = {
-                                    dispatch(MediaIntent.OnEditGroupDialog(uiState.groups[index].first))
-                                },
+                                onLongClick = onEditGroup,
                                 onClick = { scope.launch { pagerState.animateScrollToPage(index) } }
                             )
                             Tab(
+                                modifier = Modifier.onRightClickIfSupported(
+                                    interactionSource = rightClickInteractionSource,
+                                    pass = PointerEventPass.Initial,
+                                    onClick = onEditGroup,
+                                ).indication(
+                                    interactionSource = rightClickInteractionSource,
+                                    indication = LocalIndication.current,
+                                ),
                                 selected = pagerState.currentPage == index,
                                 onClick = { },
                                 text = {
@@ -269,6 +281,7 @@ fun MediaScreen(path: String, viewModel: MediaViewModel = koinViewModel()) {
                 onDismissRequest = { dispatch(MediaIntent.OnEditGroupDialog(null)) },
                 group = group,
                 groups = remember(uiState.groups) { uiState.groups.map { it.first } },
+                onRefresh = { dispatch(MediaIntent.RefreshGroup(path)) },
                 onDelete = { dispatch(MediaIntent.DeleteGroup(path, it)) },
                 onNameChange = { dispatch(MediaIntent.RenameGroup(path, group, it)) },
                 onMoveTo = { dispatch(MediaIntent.MoveFilesToGroup(path, group, it)) },

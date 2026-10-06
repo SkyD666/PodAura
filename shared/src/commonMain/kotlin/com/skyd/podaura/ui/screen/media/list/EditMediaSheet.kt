@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -67,6 +68,7 @@ import podaura.shared.generated.resources.media_screen_delete_file_warning
 import podaura.shared.generated.resources.nickname
 import podaura.shared.generated.resources.open_with
 import podaura.shared.generated.resources.read_screen_name
+import podaura.shared.generated.resources.refresh
 import podaura.shared.generated.resources.rename
 
 @Composable
@@ -233,13 +235,14 @@ internal fun OptionArea(
     onRenameClicked: (() -> Unit)? = null,
     onSetFileDisplayNameClicked: (() -> Unit)? = null,
     onAddToPlaylistClicked: (() -> Unit)? = null,
+    onRefresh: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onOpenFeed: (() -> Unit)? = null,
     onOpenArticle: (() -> Unit)? = null,
 ) {
     var openDeleteWarningDialog by rememberSaveable { mutableStateOf(false) }
 
-    if (onOpenWith != null || onDelete != null) {
+    if (onOpenWith != null || onRefresh != null || onDelete != null) {
         Text(
             text = stringResource(Res.string.media_options),
             style = MaterialTheme.typography.titleMedium,
@@ -276,6 +279,13 @@ internal fun OptionArea(
                     icon = Icons.AutoMirrored.Outlined.PlaylistAdd,
                     text = stringResource(Res.string.add_to_playlist),
                     onClick = onAddToPlaylistClicked,
+                )
+            }
+            if (onRefresh != null) {
+                SheetChip(
+                    icon = Icons.Outlined.Refresh,
+                    text = stringResource(Res.string.refresh),
+                    onClick = onRefresh,
                 )
             }
             if (onDelete != null) {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -55,7 +56,7 @@ class MediaListViewModel(
 
     private fun Flow<MediaListIntent>.toMediaListPartialStateChangeFlow(): Flow<MediaListPartialStateChange> {
         return merge(
-            filterIsInstance<MediaListIntent.Init>().flatMapConcat { intent ->
+            filterIsInstance<MediaListIntent.Init>().flatMapLatest { intent ->
                 combine(
                     mediaRepo.requestFiles(path = intent.path, intent.group, intent.isSubList),
                     mediaRepo.requestGroups(path = intent.path),

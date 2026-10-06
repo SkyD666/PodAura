@@ -38,6 +38,7 @@ fun EditMediaGroupSheet(
     onDismissRequest: () -> Unit,
     group: MediaGroupBean,
     groups: List<MediaGroupBean>,
+    onRefresh: () -> Unit,
     onDelete: (MediaGroupBean) -> Unit,
     onNameChange: (String) -> Unit,
     onMoveTo: (MediaGroupBean) -> Unit,
@@ -71,6 +72,10 @@ fun EditMediaGroupSheet(
                     Res.string.media_screen_delete_group_warning,
                     group.name,
                 ),
+                onRefresh = {
+                    onRefresh()
+                    animateToDismiss()
+                },
                 // Default group cannot be deleted
                 onDelete = if (group.isDefaultGroup()) null else {
                     {

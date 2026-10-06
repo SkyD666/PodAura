@@ -1,8 +1,19 @@
 package com.skyd.podaura.ext
 
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.isOutOfBounds
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -57,10 +68,60 @@ fun Modifier.aspectRatioIn(
     layout(width, height) { placeable.place(0, 0) }
 }
 
+/** Use [PointerEventPass.Initial] to handle right-clicks before a component's own click handler. */
 expect fun Modifier.onRightClickIfSupported(
     interactionSource: MutableInteractionSource? = null,
     enabled: Boolean = true,
+    pass: PointerEventPass = PointerEventPass.Main,
     onClick: () -> Unit
 ): Modifier
+
+internal fun Modifier.onRightClickInPass(
+    interactionSource: MutableInteractionSource?,
+    enabled: Boolean,
+    pass: PointerEventPass,
+    matches: (PointerEvent) -> Boolean,
+    onClick: () -> Unit,
+): Modifier = if (!enabled) this else composed {
+    val currentMatches by rememberUpdatedState(matches)
+    val currentOnClick by rememberUpdatedState(onClick)
+    pointerInput(interactionSource, pass) {
+        awaitEachGesture {
+            var event: PointerEvent
+            do {
+                event = awaitPointerEvent(pass)
+            } while (event.type != PointerEventType.Press || !currentMatches(event) ||
+                event.changes.any { it.isConsumed }
+            )
+            event.changes.forEach { it.consume() }
+            val press = PressInteraction.Press(event.changes.first().position)
+            interactionSource?.tryEmit(press)
+            var up: PointerInputChange? = null
+            try {
+                while (true) {
+                    event = awaitPointerEvent(pass)
+                    if (event.changes.any {
+                            it.isConsumed || it.isOutOfBounds(size, extendedTouchPadding)
+                        }) break
+                    if (event.type == PointerEventType.Release) {
+                        if (currentMatches(event)) up = event.changes.first()
+                        break
+                    }
+                    // An additional button press cancels this gesture.
+                    if (event.type == PointerEventType.Press) break
+                    if (awaitPointerEvent(PointerEventPass.Final).changes.any { it.isConsumed }) break
+                }
+                up?.consume()
+            } finally {
+                interactionSource?.tryEmit(
+                    if (up == null) PressInteraction.Cancel(press) else PressInteraction.Release(
+                        press
+                    )
+                )
+            }
+            if (up != null) currentOnClick()
+        }
+    }
+}
 
 expect fun Modifier.hideCursorIfSupported(hide: Boolean): Modifier
