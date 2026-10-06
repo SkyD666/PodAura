@@ -100,7 +100,7 @@ import com.skyd.compone.component.connectedButtonShapes
 import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.dialog.DeleteWarningDialog
 import com.skyd.compone.component.dialog.WaitingDialog
-import com.skyd.compone.component.navigation.LocalNavBackStack
+import com.skyd.compone.component.navigation.LocalGlobalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.compone.ext.setText
 import com.skyd.mvi.MviEventListener
@@ -354,7 +354,7 @@ private fun EditFeedSheet(
     openCreateGroupDialog: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
-    val navBackStack = LocalNavBackStack.current
+    val globalNavBackStack = LocalGlobalNavBackStack.current
     val feed = feedView.feed
     var openUrlDialog by rememberSaveable { mutableStateOf(false) }
     var url by rememberSaveable(feed.url) { mutableStateOf(feed.url) }
@@ -408,8 +408,8 @@ private fun EditFeedSheet(
                     onDismissRequest()
                 },
                 onSortXmlArticlesOnUpdateChanged = onSortXmlArticlesOnUpdateChanged,
-                onAutoDownload = { navBackStack.add(AutoDownloadRuleRoute(feedUrl = feed.url)) },
-                onEditRequestHeaders = { navBackStack.add(RequestHeadersRoute(feedUrl = feed.url)) },
+                onAutoDownload = { globalNavBackStack.add(AutoDownloadRuleRoute(feedUrl = feed.url)) },
+                onEditRequestHeaders = { globalNavBackStack.add(RequestHeadersRoute(feedUrl = feed.url)) },
                 onMessage = onMessage,
             )
             Spacer(modifier = Modifier.height(12.dp))
