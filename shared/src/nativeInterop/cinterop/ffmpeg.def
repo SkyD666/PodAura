@@ -1,0 +1,3 @@
+headers = libavformat/avformat.h
+headerFilter = libavformat/** libavcodec/** libavutil/**
+package = com.skyd.podaura.ffmpeg

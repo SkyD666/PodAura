@@ -44,19 +44,22 @@ class LocalMediaImageLoadingTest {
         val firstLoader = loader()
         val secondLoader = loader()
         try {
-            val request = ImageRequest.Builder(context).data(path).build()
-            val firstResult = firstLoader.execute(request)
-            val first = assertIs<SuccessResult>(firstResult, (firstResult as? ErrorResult)?.throwable?.stackTraceToString())
-            val bitmap = assertIs<BitmapImage>(first.image).bitmap
-            assertTrue(bitmap.width <= 320 && bitmap.height <= 320)
-            val color = bitmap.getColor(bitmap.width / 2, bitmap.height / 2)
-            assertTrue((color shr 8 and 255) > 200 && (color shr 16 and 255) < 50, "Expected green at 10%, got $color")
-            assertEquals(DataSource.MEMORY_CACHE, assertIs<SuccessResult>(firstLoader.execute(request)).dataSource)
-            val cacheKey = assertNotNull(first.diskCacheKey)
-            assertNotNull(firstLoader.diskCache?.openSnapshot(cacheKey)).close()
-            val cached = assertIs<SuccessResult>(secondLoader.execute(request))
-            assertEquals(DataSource.DISK, cached.dataSource)
-            assertEquals(cacheKey, cached.diskCacheKey)
+            val fileUrl = assertNotNull(NSURL.fileURLWithPath(path).absoluteString)
+            for (model in listOf(path, fileUrl, LocalMedia(path))) {
+                val request = ImageRequest.Builder(context).data(model).build()
+                val firstResult = firstLoader.execute(request)
+                val first = assertIs<SuccessResult>(firstResult, (firstResult as? ErrorResult)?.throwable?.stackTraceToString())
+                val bitmap = assertIs<BitmapImage>(first.image).bitmap
+                assertTrue(bitmap.width <= 320 && bitmap.height <= 320)
+                val color = bitmap.getColor(bitmap.width / 2, bitmap.height / 2)
+                assertTrue((color shr 8 and 255) > 200 && (color shr 16 and 255) < 50, "Expected green at 10%, got $color")
+                assertEquals(DataSource.MEMORY_CACHE, assertIs<SuccessResult>(firstLoader.execute(request)).dataSource)
+                val cacheKey = assertNotNull(first.diskCacheKey)
+                assertNotNull(firstLoader.diskCache?.openSnapshot(cacheKey)).close()
+                val cached = assertIs<SuccessResult>(secondLoader.execute(request))
+                assertEquals(DataSource.DISK, cached.dataSource)
+                assertEquals(cacheKey, cached.diskCacheKey)
+            }
         } finally {
             firstLoader.shutdown()
             secondLoader.shutdown()

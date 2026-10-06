@@ -2,7 +2,7 @@ package com.skyd.podaura.util.coil.localmedia
 
 import kotlin.io.encoding.Base64
 
-// Ten seconds: red before 1s, green from 1s onward; 10% must produce green.
+// Shared by native macOS and iOS: red before 1s, green from 1s onward; 10% must produce green.
 internal val videoThumbnailFixture: ByteArray
     get() = Base64.decode(
         "GkXfo6NChoEBQveBAULygQRC84EIQoKIbWF0cm9za2FCh4EEQoWBAhhTgGcBAAAAAAAHBxFNm3TAv4Qkq8RQTbuLU6uEFUmp" +

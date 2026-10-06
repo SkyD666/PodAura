@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.konan.target.HostManager
 
 // Disabled Kotlin link tasks still execute dependencies, so guard preparation tasks too.
 // MPVKit download, C interop and native test linking. Targets/frameworks remain owned by the module.
+val interopFrameworks = listOf("Libmpv", "Libavformat", "Libavcodec", "Libavutil")
 val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
     enabled = HostManager.hostIsMac
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
@@ -16,8 +17,12 @@ val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
         rootProject.file("platform/apple/mpvkit/podaura.h"))
     // Gradle removes stale outputs on a fresh checkout; it must never own the native binaries here.
-    outputs.dirs(layout.buildDirectory.dir("mpvkit/iphoneos/Libmpv.framework/Headers"),
-        layout.buildDirectory.dir("mpvkit/iphonesimulator/Libmpv.framework/Headers"))
+    for (sdk in listOf("iphoneos", "iphonesimulator")) {
+        outputs.dir(layout.buildDirectory.dir("mpvkit/$sdk/include"))
+        interopFrameworks.forEach {
+            outputs.dir(layout.buildDirectory.dir("mpvkit/$sdk/$it.framework/Headers"))
+        }
+    }
     commandLine("python3", script.absolutePath, "--platform", "ios", "--headers-only")
 }
 
@@ -70,6 +75,14 @@ extensions.configure<KotlinMultiplatformExtension> {
             // Runtime extraction replaces the headers read by cinterop.
             mustRunAfter(prepareIosMpvRuntime)
         }
+        val ffmpegInterop = compilations.getByName("main").cinterops.create("ffmpeg") {
+            definitionFile.set(project.file("src/nativeInterop/cinterop/ffmpeg.def"))
+            includeDirs(layout.buildDirectory.dir("mpvkit/$sdk/include"))
+        }
+        tasks.named(ffmpegInterop.interopProcessingTaskName).configure {
+            dependsOn(prepareIosMpv)
+            mustRunAfter(prepareIosMpvRuntime)
+        }
         binaries.withType<TestExecutable>().configureEach {
             linkerOpts("-F${layout.buildDirectory.dir("mpvkit/$sdk").get().asFile}")
             (mpvFrameworks + systemFrameworks).forEach { linkerOpts("-framework", it) }
@@ -86,7 +99,10 @@ val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
     inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
         rootProject.file("platform/apple/mpvkit/podaura.h"))
-    outputs.dir(layout.buildDirectory.dir("mpvkit/macos/Libmpv.framework/Headers"))
+    outputs.dir(layout.buildDirectory.dir("mpvkit/macos/include"))
+    interopFrameworks.forEach {
+        outputs.dir(layout.buildDirectory.dir("mpvkit/macos/$it.framework/Headers"))
+    }
     commandLine("python3", script.absolutePath, "--platform", "macos", "--headers-only")
 }
 val prepareMacosMpvRuntime = tasks.register<Exec>("prepareMacosMpvRuntime") {
@@ -114,6 +130,14 @@ extensions.configure<KotlinMultiplatformExtension> {
         tasks.named(interop.interopProcessingTaskName).configure {
             dependsOn(prepareMacosMpv)
             // Runtime extraction replaces the headers read by cinterop.
+            mustRunAfter(prepareMacosMpvRuntime)
+        }
+        val ffmpegInterop = compilations.getByName("main").cinterops.create("ffmpeg") {
+            definitionFile.set(project.file("src/nativeInterop/cinterop/ffmpeg.def"))
+            includeDirs(layout.buildDirectory.dir("mpvkit/macos/include"))
+        }
+        tasks.named(ffmpegInterop.interopProcessingTaskName).configure {
+            dependsOn(prepareMacosMpv)
             mustRunAfter(prepareMacosMpvRuntime)
         }
         binaries.configureEach {

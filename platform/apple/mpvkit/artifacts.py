@@ -11,6 +11,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[3]
 DEST = ROOT / 'shared/build/mpvkit'
 MANIFEST = Path(__file__).with_name('artifacts.json')
+INTEROP_HEADERS = {'Libmpv': 'mpv/client.h', 'Libavformat': 'avformat.h',
+                   'Libavcodec': 'avcodec.h', 'Libavutil': 'avutil.h'}
 MPV = {'url': 'https://codeload.github.com/mpv-player/mpv/tar.gz/refs/tags/v0.41.0',
        'sha256': 'ee21092a5ee427353392360929dc64645c54479aefdb5babc5cfbb5fad626209'}
 HEADERS = {'url': 'https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/e3b1eec08173d6b825cd3ac88c885a63b621504a',
@@ -36,7 +38,7 @@ def prepare_framework(artifact, destination, *, platform, headers_only=False):
     }[platform]
     name = artifact['name']
     marker = destination / 'receipts' / (name + ('-macos-v2' if platform == 'macos' else '') + ('-headers' if headers_only else ''))
-    expected = 'Headers/mpv/client.h' if headers_only else name
+    expected = f'Headers/{INTEROP_HEADERS[name]}' if headers_only else name
     if marker.exists() and marker.read_text() == artifact['sha256']:
         if all((destination / sdk / f'{name}.framework' / expected).is_file()
                for sdk, _ in sdks):

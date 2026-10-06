@@ -1,16 +1,67 @@
 """python3 -m unittest discover -s platform/apple/mpvkit -p 'test_*.py'."""
 import hashlib
+import json
 from pathlib import Path
 import plistlib
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
-from artifacts import prepare_framework
+from artifacts import INTEROP_HEADERS, prepare_framework
+import prepare
 
 
 class PrepareHeadersTest(unittest.TestCase):
+    def test_all_interop_headers_are_prepared_without_runtime_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory).resolve()
+            downloads = destination / 'downloads'
+            downloads.mkdir()
+            artifacts = []
+            sdks = [('iphoneos', 'ios', None), ('iphonesimulator', 'ios', 'simulator'),
+                    ('macos', 'macos', None)]
+            for name, header in INTEROP_HEADERS.items():
+                archive = downloads / f'{name}.zip'
+                libraries = []
+                with zipfile.ZipFile(archive, 'w') as bundle:
+                    for sdk, platform, variant in sdks:
+                        library = dict(LibraryIdentifier=sdk, LibraryPath=f'{name}.framework',
+                                       SupportedPlatform=platform, SupportedArchitectures=['arm64'])
+                        if variant:
+                            library['SupportedPlatformVariant'] = variant
+                        libraries.append(library)
+                        prefix = f'{name}.xcframework/{sdk}/{name}.framework/'
+                        bundle.writestr(prefix + name, b'upstream runtime')
+                        bundle.writestr(prefix + 'Headers/' + header, name.encode())
+                    bundle.writestr(f'{name}.xcframework/Info.plist',
+                                    plistlib.dumps(dict(AvailableLibraries=libraries)))
+                artifacts.append(dict(name=name, sha256=hashlib.sha256(archive.read_bytes()).hexdigest()))
+            manifest = destination / 'artifacts.json'
+            manifest.write_text(json.dumps(dict(artifacts=artifacts + [dict(name='UnneededRuntime')])))
+            with patch.object(prepare, 'DEST', destination), patch.object(prepare, 'MANIFEST', manifest), \
+                    patch.object(prepare.subprocess, 'run', side_effect=AssertionError('Runtime tool invoked')):
+                for platform in ('ios', 'macos'):
+                    with patch('sys.argv', ['prepare.py', '--platform', platform, '--headers-only']):
+                        prepare.main()
+                        for sdk, family, _ in sdks:
+                            if family == platform:
+                                (destination / sdk / 'Libavformat.framework/Headers/cached.h').touch()
+                        prepare.main()  # Cached headers must not be extracted again.
+            for sdk, _, _ in sdks:
+                self.assertTrue((destination / sdk / 'Libavformat.framework/Headers/cached.h').is_file())
+                for name, header in INTEROP_HEADERS.items():
+                    framework = destination / sdk / f'{name}.framework'
+                    self.assertEqual((framework / 'Headers' / header).read_bytes(), name.encode())
+                    self.assertFalse((framework / name).exists())
+                    if name != 'Libmpv':
+                        self.assertEqual((destination / sdk / 'include' / name.lower() / header).read_bytes(),
+                                         name.encode())
+            self.assertFalse((destination / 'native').exists())
+            self.assertTrue(all(receipt.name.endswith('-headers')
+                                for receipt in (destination / 'receipts').iterdir()))
+
     def test_headers_never_replace_native_library_or_claim_runtime_receipt(self):
         with tempfile.TemporaryDirectory() as directory:
             destination = Path(directory).resolve()

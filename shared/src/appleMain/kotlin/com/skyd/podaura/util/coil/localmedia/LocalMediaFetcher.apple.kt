@@ -6,7 +6,10 @@ import kotlinx.cinterop.usePinned
 import platform.AVFoundation.AVMetadataCommonIdentifierArtwork
 import platform.AVFoundation.AVMetadataItem
 import platform.AVFoundation.AVURLAsset
+import platform.AVFoundation.availableMetadataFormats
 import platform.AVFoundation.commonMetadata
+import platform.AVFoundation.dataValue
+import platform.AVFoundation.metadataForFormat
 import platform.AVFoundation.metadataItemsFromArray
 import platform.Foundation.NSData
 import platform.Foundation.NSDate
@@ -20,19 +23,29 @@ import platform.Foundation.timeIntervalSince1970
 
 actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     val fileUrl = filePath.toLocalMediaUrl() ?: return null
-    if (fileUrl.pathExtension?.lowercase() in MediaTypes.videoExtensions) {
+    val extension = fileUrl.pathExtension?.lowercase()
+    if (extension in MediaTypes.videoExtensions) {
         getLocalVideoThumbnailData(fileUrl.path ?: return null)?.let { return it }
     }
-    val asset = AVURLAsset(
-        uRL = fileUrl,
-        options = null,
-    )
-    val artwork = AVMetadataItem.metadataItemsFromArray(
-        metadataItems = asset.commonMetadata,
-        filteredByIdentifier = AVMetadataCommonIdentifierArtwork,
-    ).firstOrNull() as? AVMetadataItem
-    val data = artwork?.value as? NSData ?: return null
-    return data.toByteArray().takeIf { it.isNotEmpty() }
+    return getAppleArtworkData(fileUrl) ?: getFfmpegArtworkData(fileUrl.path ?: return null)
+}
+
+internal fun getAppleArtworkData(fileUrl: NSURL): ByteArray? {
+    val asset = AVURLAsset(uRL = fileUrl, options = null)
+    // FLAC and Vorbis artwork can be absent from commonMetadata but present in a format's metadata.
+    val metadata = sequence {
+        yield(asset.commonMetadata)
+        for (format in asset.availableMetadataFormats) {
+            yield(asset.metadataForFormat(format as String))
+        }
+    }
+    for (items in metadata) {
+        for (item in AVMetadataItem.metadataItemsFromArray(items, AVMetadataCommonIdentifierArtwork)) {
+            val bytes = (item as? AVMetadataItem)?.dataValue?.toByteArray()
+            if (bytes != null && bytes.isNotEmpty()) return bytes
+        }
+    }
+    return null
 }
 
 actual fun getLocalMediaFileRevision(filePath: String): String? {
@@ -56,8 +69,6 @@ private fun String.toLocalMediaUrl(): NSURL? {
         NSURL.fileURLWithPath(this)
     }
 }
-
-internal expect fun getLocalVideoThumbnailData(filePath: String): ByteArray?
 
 internal fun NSData.toByteArray(): ByteArray {
     require(length <= Int.MAX_VALUE.toULong()) {

@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import sys
 
-from artifacts import DEST, MANIFEST, download, prepare_framework
+from artifacts import DEST, INTEROP_HEADERS, MANIFEST, download, prepare_framework
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
     manifest = json.loads(MANIFEST.read_text())
     artifacts = manifest['artifacts']
     if args.headers_only:
-        artifacts = [item for item in artifacts if item['name'] == 'Libmpv']
+        artifacts = [item for item in artifacts if item['name'] in INTEROP_HEADERS]
     with (DEST / '.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         if args.cert_only:
@@ -37,6 +37,15 @@ def main():
         for sdk in (('macos',) if args.platform == 'macos' else ('iphoneos', 'iphonesimulator')):
             shutil.copy2(Path(__file__).with_name('podaura.h'),
                          DEST / sdk / 'Libmpv.framework/Headers/mpv/podaura.h')
+            include = DEST / sdk / 'include'
+            include.mkdir(exist_ok=True)
+            for name in INTEROP_HEADERS:
+                if name == 'Libmpv':
+                    continue
+                link = include / name.lower()
+                if link.is_symlink():
+                    link.unlink()
+                link.symlink_to(DEST / sdk / f'{name}.framework/Headers', target_is_directory=True)
         if not args.headers_only:
             subprocess.run([sys.executable, str(Path(__file__).with_name('build.py')),
                             '--platform', args.platform], check=True)

@@ -41,7 +41,7 @@ import kotlin.time.TimeSource
 // Decode one video at a time, so a grid cannot create many full-size decoder buffers at once.
 private val videoThumbnailLock = NSLock()
 
-internal actual fun getLocalVideoThumbnailData(filePath: String): ByteArray? {
+internal fun getLocalVideoThumbnailData(filePath: String): ByteArray? {
     videoThumbnailLock.lock()
     try {
         return extractVideoFrame(filePath, "10%") ?: extractVideoFrame(filePath, "0")
