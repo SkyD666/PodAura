@@ -3,18 +3,14 @@ package com.skyd.podaura.ui.player
 import co.touchlab.kermit.Logger
 import coil3.ImageLoader
 import coil3.PlatformContext
-import coil3.request.SuccessResult
-import coil3.size.Precision
-import coil3.size.Scale
-import coil3.toBitmap
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.imageLoaderBuilder
-import com.skyd.podaura.ui.component.imageRequest
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
+import com.skyd.podaura.ui.player.media.loadAppleArtwork
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
@@ -31,9 +27,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.skia.EncodedImageFormat
-import org.jetbrains.skia.Image
-import org.jetbrains.skia.impl.use
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
@@ -369,18 +362,8 @@ internal class IosMediaSession(
 /** Share the player's Coil fetchers, decoders and disk cache with the native artwork layer. */
 internal suspend fun loadIosArtwork(source: Any, imageLoader: ImageLoader): UIImage? =
     withContext(Dispatchers.IO) {
-        val request = imageRequest(source, PlatformContext.INSTANCE).newBuilder()
-            .size(1024, 1024)
-            .scale(Scale.FIT)
-            .precision(Precision.INEXACT)
-            .build()
-        val result = imageLoader.execute(request) as? SuccessResult ?: return@withContext null
-        Image.makeFromBitmap(result.image.toBitmap()).use { image ->
-            image.encodeToData(EncodedImageFormat.PNG, 100)?.use { data ->
-                val bytes = data.bytes
-                bytes.usePinned {
-                    UIImage.imageWithData(NSData.create(it.addressOf(0), bytes.size.toULong()))
-                }
-            }
+        val bytes = loadAppleArtwork(source, imageLoader)?.pngBytes ?: return@withContext null
+        bytes.usePinned {
+            UIImage.imageWithData(NSData.create(it.addressOf(0), bytes.size.toULong()))
         }
     }

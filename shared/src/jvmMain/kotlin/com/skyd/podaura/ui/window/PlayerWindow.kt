@@ -50,6 +50,7 @@ import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.media.DesktopMediaSessionManager
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
+import com.skyd.podaura.ui.player.media.attachWindow
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import io.github.vinceglb.filekit.PlatformFile

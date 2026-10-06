@@ -5,10 +5,13 @@ import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.player.PlaybackEnd
 import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
-import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -22,6 +25,47 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DesktopMediaSessionControllerTest {
+    @Test
+    fun managerPublishesCurrentStateAndStopsObservingAndDispatchingAfterClose() = runTest {
+        val adapter = RecordingAdapter()
+        val commands = mutableListOf<PlayerCommand>()
+        val state = MutableStateFlow(playerState(
+            paths = listOf("https://example.com/episode.mp3"),
+            index = 0,
+            duration = 120L,
+        ))
+        val manager = DesktopMediaSessionManager(
+            playerState = state,
+            commandSink = commands::add,
+            adapter = adapter,
+            artworkLoader = { null },
+            scope = CoroutineScope(SupervisorJob() + StandardTestDispatcher(testScheduler)),
+        )
+        try {
+            assertEquals("Episode 1", adapter.updates.single().title)
+            state.value = state.value.copy(position = 30L, paused = false)
+            runCurrent()
+            assertEquals(30.0, adapter.updates.last().positionSeconds)
+            assertEquals(DesktopPlaybackState.Playing, adapter.updates.last().playbackState)
+            adapter.send(DesktopMediaCommand.Pause)
+            runCurrent()
+            assertEquals(listOf<PlayerCommand>(PlayerCommand.Paused(true)), commands)
+
+            manager.close()
+            val updateCount = adapter.updates.size
+            state.value = state.value.copy(position = 40L)
+            adapter.send(DesktopMediaCommand.Play)
+            runCurrent()
+            assertEquals(updateCount, adapter.updates.size)
+            assertEquals(1, commands.size)
+            assertEquals(1, adapter.clearCount)
+            assertTrue(adapter.closed)
+        } finally {
+            manager.close()
+        }
+        assertEquals(1, adapter.clearCount)
+    }
+
     @Test
     fun publishesMetadataAvailabilityAndMapsEveryRemoteCommand() = runTest {
         val adapter = RecordingAdapter()
@@ -47,7 +91,6 @@ class DesktopMediaSessionControllerTest {
                 speed = 1.5f,
                 album = "Season 4",
             ),
-            PlayerEvent.PlaybackRestart,
         )
 
         val snapshot = adapter.updates.single()
@@ -162,14 +205,48 @@ class DesktopMediaSessionControllerTest {
             position = 10L,
         )
 
-        controller.update(initial, PlayerEvent.Duration(120L))
-        controller.update(initial.copy(position = 11L), PlayerEvent.Position(11L))
+        controller.update(initial)
+        controller.update(initial.copy(position = 11L))
         assertEquals(2, adapter.updates.size)
 
-        controller.update(initial.copy(position = 11L), PlayerEvent.Seek)
-        controller.update(initial.copy(position = 70L), PlayerEvent.Position(70L))
+        controller.update(initial.copy(position = 11L))
+        controller.update(initial.copy(position = 70L))
         assertEquals(3, adapter.updates.size)
         assertEquals(70.0, adapter.updates.last().positionSeconds)
+        controller.close()
+    }
+
+    @Test
+    fun loadingPauseAndEndKeepMetadataWithTheCorrectPlaybackRate() = runTest {
+        val adapter = RecordingAdapter()
+        val controller = controller(adapter)
+        val playing = playerState(
+            paths = listOf("https://example.com/episode.mp3"),
+            index = 0,
+            paused = false,
+            seekable = true,
+            duration = 120L,
+            speed = 1.5f,
+        )
+
+        controller.update(playing.copy(loading = true))
+        assertEquals(0.0, adapter.updates.last().playbackRate)
+        assertEquals(1.5, adapter.updates.last().defaultPlaybackRate)
+        controller.update(playing.copy(loading = false))
+        assertEquals(1.5, adapter.updates.last().playbackRate)
+        controller.update(playing.copy(paused = true, loading = false))
+        assertEquals(DesktopPlaybackState.Paused, adapter.updates.last().playbackState)
+        assertEquals(0.0, adapter.updates.last().playbackRate)
+        assertTrue(adapter.updates.last().canPlay)
+
+        controller.update(playing.copy(paused = true, mediaStarted = false))
+        val ended = adapter.updates.last()
+        assertEquals("Episode 1", ended.title)
+        assertEquals(DesktopPlaybackState.Paused, ended.playbackState)
+        assertTrue(ended.canPlay)
+        assertFalse(ended.canPause)
+        assertFalse(ended.canChangePlaybackPosition)
+        assertEquals(0, adapter.clearCount)
         controller.close()
     }
 
@@ -284,7 +361,7 @@ class DesktopMediaSessionControllerTest {
         val controller = controller(adapter)
 
         controller.update(playerState(paths = listOf("https://example.com/episode"), index = 0))
-        controller.update(PlayerState(), PlayerEvent.Shutdown)
+        controller.update(PlayerState())
 
         assertEquals(1, adapter.clearCount)
         controller.close()
