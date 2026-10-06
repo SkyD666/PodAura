@@ -3,6 +3,8 @@ package com.skyd.podaura.model.repository.media
 import androidx.collection.LruCache
 import androidx.compose.ui.util.fastFirstOrNull
 import com.skyd.fundation.ext.currentTimeMillis
+import com.skyd.fundation.util.isMac
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.splitByBlank
 import com.skyd.podaura.ext.validateFileName
@@ -79,6 +81,9 @@ class MediaRepository(
 
         private val refreshPath = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
     }
+
+    private fun String.isSystemMetadataFile(): Boolean =
+        platform.isMac && equals(".DS_Store", ignoreCase = true)
 
     // Mutable cached records never escape the lock. Consumers get detached snapshots.
     private suspend fun readMediaLibJson(path: String): MediaLibJson = mediaLibMutex.withLock {
@@ -188,11 +193,17 @@ class MediaRepository(
             )
         },
     ) {
-        removeAll { !PlatformFile(parent, it.fileName).exists() }
+        removeAll {
+            it.fileName.isSystemMetadataFile() || !PlatformFile(
+                parent,
+                it.fileName
+            ).exists()
+        }
         val knownNames = mapTo(mutableSetOf()) { it.fileName }
         files.forEach { file ->
             val name = file.name
-            if (name.equals(FOLDER_INFO_JSON_NAME, true) ||
+            if (name.isSystemMetadataFile() ||
+                name.equals(FOLDER_INFO_JSON_NAME, true) ||
                 name.equals(MEDIA_LIB_JSON_NAME, true) ||
                 (name.startsWith(".$MEDIA_LIB_JSON_NAME-") && name.endsWith(".tmp"))
             ) {
@@ -236,7 +247,7 @@ class MediaRepository(
         val file = PlatformFile(PlatformFile(path), fileName)
         if (!file.exists()) return null
         val fileCount = if (file.isDirectory()) {
-            runCatching { file.list().size }.getOrNull()?.run {
+            runCatching { file.list().count { !it.name.isSystemMetadataFile() } }.getOrNull()?.run {
                 this - listOf(
                     PlatformFile(file, MEDIA_LIB_JSON_NAME).exists(),
                     PlatformFile(file, FOLDER_INFO_JSON_NAME).exists(),

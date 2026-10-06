@@ -54,6 +54,10 @@ import androidx.lifecycle.enableSavedStateHandles
 import kotlinx.cinterop.CValue
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
+import org.jetbrains.skia.Picture
+import org.jetbrains.skia.PictureRecorder
+import org.jetbrains.skia.Rect
+import org.jetbrains.skia.impl.use
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoRenderDelegate
 import platform.AppKit.NSApplication
@@ -161,18 +165,23 @@ class ComposeWindow(
             }
         }
     private val skiaLayer = SkiaLayer()
+    private var lastFrame: Picture? = null
     private val scene = CanvasLayersComposeScene(
         frameRecomposer = frameRecomposer,
         platformContext = platformContext,
         invalidateLayout = ::scheduleFrame,
         invalidateDraw = ::scheduleFrame,
     )
-    private val renderDelegate = SkikoRenderDelegate { canvas, width, height, nanoTime ->
+    internal val renderDelegate = SkikoRenderDelegate { canvas, width, height, nanoTime ->
+        if (isDisposed) return@SkikoRenderDelegate
         // FileKit's runModal pumps AppKit while Compose is still dispatching its click.
-        // Flushing that scene again resumes the same coroutine twice.
-        if (isDispatchingScene || NSApplication.sharedApplication().modalWindow != null) return@SkikoRenderDelegate
+        // Replay the last frame: flushing the scene would resume the same coroutine twice,
+        // but returning without drawing replaces SkiaLayer's picture with a blank frame.
+        if (isDispatchingScene || NSApplication.sharedApplication().modalWindow != null) {
+            lastFrame?.let(canvas::drawPicture)
+            return@SkikoRenderDelegate
+        }
         dispatchScene {
-            if (transparent) canvas.clear(org.jetbrains.skia.Color.TRANSPARENT)
             scene.density = density
             val sizeInPx = IntSize(width, height)
             _windowInfo.containerSize = sizeInPx
@@ -183,7 +192,16 @@ class ComposeWindow(
             if (isDisposed) return@dispatchScene
             scene.measureAndLayout()
             nativeViewUpdates.flush()
-            scene.draw(canvas.asComposeCanvas())
+            val frame = PictureRecorder().use { recorder ->
+                val recordingCanvas =
+                    recorder.beginRecording(Rect.makeWH(width.toFloat(), height.toFloat()))
+                if (transparent) recordingCanvas.clear(org.jetbrains.skia.Color.TRANSPARENT)
+                scene.draw(recordingCanvas.asComposeCanvas())
+                recorder.finishRecordingAsPicture()
+            }
+            lastFrame?.close()
+            lastFrame = frame
+            canvas.drawPicture(frame)
         }
         if (!isDisposed && (frameRecomposer.hasPendingWork() || scene.hasInvalidations())) {
             scheduleFrame()
@@ -392,6 +410,8 @@ class ComposeWindow(
         interopContainer.dispose()
         nativeViewUpdates.dispose()
         skiaLayer.detach()
+        lastFrame?.close()
+        lastFrame = null
         frameRecomposer.close()
         window.delegate = null
     }
