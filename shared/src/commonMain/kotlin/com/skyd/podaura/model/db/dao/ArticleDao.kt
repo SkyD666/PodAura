@@ -68,7 +68,7 @@ interface ArticleDao {
 
     @Transaction
     suspend fun insertListIfNotExist(articleWithEnclosureList: List<ArticleWithEnclosureBean>) {
-        val updatedArticleIds = mutableListOf<String>()
+        val insertedArticleIds = mutableListOf<String>()
         articleWithEnclosureList.forEach { articleWithEnclosure ->
             val article = articleWithEnclosure.article
             // Duplicate article by guid or link
@@ -89,6 +89,7 @@ interface ArticleDao {
             if (newArticle == null) {
                 innerUpsertArticle(article)
                 newArticle = article
+                insertedArticleIds += article.articleId
             } else {
                 // Update all fields except articleId, isRead and isFavorite
                 newArticle = article.copy(
@@ -99,7 +100,6 @@ interface ArticleDao {
                 innerUpsertArticle(newArticle)
                 articleWithEnclosure.article = newArticle
             }
-            updatedArticleIds += newArticle.articleId
 
             // Update modules
             val media = articleWithEnclosure.media
@@ -122,7 +122,7 @@ interface ArticleDao {
                 }
             )
         }
-        ArticleUpdatedManager.send(updatedArticleIds)
+        if (insertedArticleIds.isNotEmpty()) ArticleUpdatedManager.send(insertedArticleIds)
     }
 
     @Query(

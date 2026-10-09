@@ -7,14 +7,19 @@ import androidx.room3.useWriterConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
+import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedWithArticleBean
 import com.skyd.podaura.model.db.AppDatabase
 import com.skyd.podaura.model.db.instance
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
+import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -78,6 +83,68 @@ class FeedNotificationTest {
         assertFalse(database.feedDao().observeNotificationsEnabled(url).first())
         database.feedDao().updateFeedNotificationsEnabled(url, true)
         assertTrue(database.feedDao().observeNotificationsEnabled(url).first())
+    }
+
+    @Test
+    fun refreshingExistingArticlesOnlyNotifiesNewArticlesOnce() = runBlocking {
+        val notificationIds = CompletableDeferred<List<String>>()
+        val autoDownloadIds = CompletableDeferred<List<String>>()
+        val articleDao = database.articleDao()
+        loadKoinModules(module {
+            single<ArticleDao> {
+                object : ArticleDao by articleDao {
+                    override suspend fun getArticleWithEnclosureListByIds(
+                        articleIds: List<String>,
+                    ): List<ArticleWithEnclosureBean> {
+                        notificationIds.complete(articleIds)
+                        return emptyList() // Capture notification candidates without posting OS notifications.
+                    }
+
+                    override suspend fun getArticleListByIds(articleIds: List<String>): List<ArticleBean> {
+                        autoDownloadIds.complete(articleIds)
+                        return emptyList()
+                    }
+                }
+            }
+            single { database.enclosureDao() }
+            single { database.autoDownloadRuleDao() }
+        })
+        database.feedDao().setFeed(FeedBean(url))
+        val existingArticles = listOf(
+            ArticleBean("existing-guid", url, guid = "stable-guid", isRead = true, isFavorite = true),
+            ArticleBean("existing-link", url, link = "$url/old", isRead = true, isFavorite = true),
+        )
+        existingArticles.forEach { articleDao.innerUpsertArticle(it) }
+        fun ArticleBean.withEnclosures() = ArticleWithEnclosureBean(this, emptyList(), emptyList(), null)
+        val refreshedArticles = existingArticles.map {
+            it.copy(articleId = "parsed-${it.articleId}", title = "Updated", isRead = false, isFavorite = false)
+                .withEnclosures()
+        }
+        val newArticle = ArticleBean("new", url, guid = "new-guid").withEnclosures()
+        val repeatedArticle = newArticle.copy(article = newArticle.article.copy(articleId = "parsed-new"))
+        // A full refresh can include old entries and repeated entries in the same response.
+        assertTrue(
+            database.feedDao().updateFeedWithArticleIfExists(
+                FeedWithArticleBean(FeedBean(url), refreshedArticles + newArticle + repeatedArticle)
+            )
+        )
+        // Refreshing the same response again must not enqueue any existing articles.
+        assertTrue(
+            database.feedDao().updateFeedWithArticleIfExists(
+                FeedWithArticleBean(FeedBean(url), refreshedArticles + newArticle)
+            )
+        )
+        existingArticles.forEach { original ->
+            val stored = articleDao.getArticleListByIds(listOf(original.articleId)).single()
+            assertEquals("Updated", stored.title)
+            assertTrue(stored.isRead)
+            assertTrue(stored.isFavorite)
+        }
+        assertEquals("new", articleDao.queryArticleByGuid("new-guid", url)?.articleId)
+        withTimeout(30_000) {
+            assertEquals(listOf("new"), notificationIds.await())
+            assertEquals(listOf("new"), autoDownloadIds.await())
+        }
     }
 
     @Test
