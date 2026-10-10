@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -15,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
 import co.touchlab.kermit.Logger
 import com.skyd.fundation.di.get
 import com.skyd.podaura.IosPlayerChrome
@@ -24,11 +21,12 @@ import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.ui.component.navigation.IosAppNavigationController
+import com.skyd.podaura.ui.component.navigation.LocalIosAppNavigation
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.pip.IosPictureInPicture
-import com.skyd.podaura.ui.screen.AppEntrance
 import com.skyd.podaura.ui.screen.SettingsProvider
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +48,7 @@ internal val LocalIosPlayerSession = staticCompositionLocalOf<IosPlayerSession> 
 }
 
 internal class IosPlayerSession : PlayerSession {
-    var navigationController: IosPlayerNavigationController? = null
+    var navigationController: IosAppNavigationController? = null
     private var playerController: UIViewController? = null
     private val viewModel = get<PlayerViewModel>()
     val articleContext = get<PlayerArticleContextViewModel>()
@@ -103,7 +101,7 @@ internal class IosPlayerSession : PlayerSession {
             })
         }
         isFullPlayerVisible = true
-        val controller = playerController ?: IosPlayerViewController(this, checkNotNull(coordinator))
+        val controller = playerController ?: IosPlayerViewController(this, requireNotNull(navigationController))
             .also { playerController = it }
         navigationController?.showPlayer(controller)
         startupJob?.cancel()
@@ -200,14 +198,15 @@ internal class IosPlayerSession : PlayerSession {
     fun close() {
         destroySession()
         scope.cancel()
-        if (IosPlayerChrome.controller === navigationController) IosPlayerChrome.controller = null
         navigationController = null
     }
 }
 
-private class IosPlayerViewController(session: IosPlayerSession, coordinator: PlayerCoordinator) :
-    UIViewController(nibName = null, bundle = null) {
-    private val compose = ComposeUIViewController { IosFullPlayer(session, coordinator) }
+private class IosPlayerViewController(
+    session: IosPlayerSession,
+    navigation: IosAppNavigationController,
+) : UIViewController(nibName = null, bundle = null) {
+    private val compose = ComposeUIViewController { IosFullPlayer(session, navigation) }
 
     override fun viewDidLoad() {
         super.viewDidLoad()
@@ -223,24 +222,10 @@ private class IosPlayerViewController(session: IosPlayerSession, coordinator: Pl
 }
 
 @Composable
-internal fun IosPlayerApp(session: IosPlayerSession) {
-    DisposableEffect(session) { onDispose { session.close() } }
+private fun IosFullPlayer(session: IosPlayerSession, navigation: IosAppNavigationController) {
+    val coordinator = session.coordinator
     CompositionLocalProvider(
-        LocalPlayerSession provides session,
-        LocalIosPlayerSession provides session
-    ) {
-        val appNavigation = rememberNavigationEventDispatcherOwner(
-            enabled = !session.isFullPlayerVisible,
-        )
-        CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides appNavigation) {
-            AppEntrance()
-        }
-    }
-}
-
-@Composable
-private fun IosFullPlayer(session: IosPlayerSession, coordinator: PlayerCoordinator) {
-    CompositionLocalProvider(
+        LocalIosAppNavigation provides navigation,
         LocalPlayerSession provides session,
         LocalIosPlayerSession provides session,
     ) {

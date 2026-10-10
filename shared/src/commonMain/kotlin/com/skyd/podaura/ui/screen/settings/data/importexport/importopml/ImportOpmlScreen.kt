@@ -55,6 +55,7 @@ import com.skyd.podaura.ext.showSnackbar
 import com.skyd.podaura.model.repository.importexport.opml.ImportOpmlConflictStrategy
 import com.skyd.podaura.ui.component.navigation.ExternalUrlHandler
 import com.skyd.podaura.ui.component.navigation.deeplink.DeepLinkPattern
+import com.skyd.podaura.ui.notification.PlatformArticleNotification
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
 import com.skyd.settings.TipSettingsItem
@@ -64,6 +65,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.path
+import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getPluralString
@@ -104,7 +106,12 @@ data class ImportOpmlDeepLinkRoute(
         val deepLinkPattern = DeepLinkPattern(
             serializer(),
             urlPattern = null,
-            mimeTypes = listOf("text/xml", "application/xml", "text/x-opml", "application/x-opml+xml")
+            mimeTypes = listOf(
+                "text/xml",
+                "application/xml",
+                "text/x-opml",
+                "application/x-opml+xml"
+            )
         )
 
         @Composable
@@ -245,14 +252,21 @@ fun ImportOpmlScreen(
 
     MviEventListener(viewModel.singleEvent) { event ->
         when (event) {
-            is ImportOpmlEvent.ImportOpmlResultEvent.Success -> snackbarHostState.showSnackbar(
-                getPluralString(
-                    Res.plurals.import_opml_result,
-                    event.result.importedFeedCount,
-                    event.result.importedFeedCount,
-                    event.result.time / 1000f,
-                ),
-            )
+            is ImportOpmlEvent.ImportOpmlResultEvent.Success -> {
+                if (event.result.importedFeedCount > 0) {
+                    scope.launch {
+                        PlatformArticleNotification.requestPermission(showSettingsIfDenied = false)
+                    }
+                }
+                snackbarHostState.showSnackbar(
+                    getPluralString(
+                        Res.plurals.import_opml_result,
+                        event.result.importedFeedCount,
+                        event.result.importedFeedCount,
+                        event.result.time / 1000f,
+                    ),
+                )
+            }
 
             is ImportOpmlEvent.ImportOpmlResultEvent.Failed ->
                 snackbarHostState.showSnackbar(getString(Res.string.failed_msg, event.msg))

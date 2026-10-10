@@ -22,6 +22,7 @@ import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.ui.component.ComposeWindow
 import com.skyd.podaura.ui.component.Window
+import com.skyd.podaura.ui.local.LocalMacosMainWindow
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.media.MacosMediaSession
 import com.skyd.podaura.ui.screen.SettingsProvider
@@ -41,8 +42,7 @@ internal val LocalMacosPlayerSession = staticCompositionLocalOf<MacosPlayerSessi
 }
 
 /** Application-owned session: closing the video window need not end audio playback. */
-internal class MacosPlayerSession : PlayerSession {
-    var mainWindow: NSWindow? = null
+internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : PlayerSession {
     private var playerWindow: ComposeWindow? = null
     private var mediaSession: MacosMediaSession? = null
     private val viewModel = get<PlayerViewModel>()
@@ -57,7 +57,7 @@ internal class MacosPlayerSession : PlayerSession {
         private set
     private val entry = PlatformPlayerEntry(::openAccepted) {
         destroySession()
-        mainWindow?.makeKeyAndOrderFront(null)
+        mainWindow()?.makeKeyAndOrderFront(null)
     }
 
     init {
@@ -124,10 +124,11 @@ internal class MacosPlayerSession : PlayerSession {
                     player = player,
                     articleContext = articleContext,
                     window = window,
+                    mainWindow = mainWindow(),
                     onBack = { playerWindow?.close() },
                 )
             }.also { host ->
-                mainWindow?.frame?.useContents {
+                mainWindow()?.frame?.useContents {
                     host.window.setFrameOrigin(
                         NSMakePoint(
                             origin.x + (size.width - 400) / 2,
@@ -175,6 +176,7 @@ private fun PlayerWindowContent(
     player: PlayerCoordinator,
     articleContext: PlayerArticleContextViewModel,
     window: NSWindow,
+    mainWindow: NSWindow?,
     onBack: () -> Unit,
 ) {
     val state by player.playerState.collectAsState()
@@ -185,6 +187,7 @@ private fun PlayerWindowContent(
     }
     val navigation = rememberNavigationEventDispatcherOwner()
     CompositionLocalProvider(
+        LocalMacosMainWindow provides mainWindow,
         LocalPlayerSession provides session,
         LocalMacosPlayerSession provides session,
         LocalNavigationEventDispatcherOwner provides navigation,

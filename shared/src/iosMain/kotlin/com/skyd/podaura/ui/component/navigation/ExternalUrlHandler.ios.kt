@@ -1,8 +1,10 @@
 package com.skyd.podaura.ui.component.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.NavKey
+import com.skyd.podaura.ui.notification.iosArticleNotificationRequests
 import com.skyd.podaura.ui.player.LocalIosPlayerSession
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
@@ -28,14 +30,26 @@ internal fun PlatformFile.opmlImportRoute(): ImportOpmlRoute? =
 
 @Composable
 actual fun ExternalUrlListener(navBackStack: MutableList<NavKey>) {
-    DefaultUrlListener(navBackStack = navBackStack)
     val player = LocalIosPlayerSession.current
-    LaunchedEffect(navBackStack, player) {
+    val navigation = LocalIosAppNavigation.current
+    DisposableEffect(navigation) {
+        ExternalUrlHandler.listener = { data ->
+            data.toNavKey()?.let { route ->
+                navigation.openPage(route)
+            }
+        }
+        onDispose { ExternalUrlHandler.listener = null }
+    }
+    LaunchedEffect(navigation) {
+        for (route in iosArticleNotificationRequests) {
+            navigation.openPage(route)
+        }
+    }
+    LaunchedEffect(navigation, player) {
         for (file in iosDocumentRequests) {
             val importRoute = file.opmlImportRoute()
             if (importRoute != null) {
-                player.closeFullPlayer()
-                navBackStack.add(importRoute)
+                navigation.openPage(importRoute)
             } else {
                 player.open(PlayerOpenRequest.Files(listOf(file)))
             }

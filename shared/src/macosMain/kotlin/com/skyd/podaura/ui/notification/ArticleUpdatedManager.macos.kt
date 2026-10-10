@@ -4,9 +4,9 @@ import com.skyd.podaura.model.bean.ArticleNotificationRuleBean
 import com.skyd.podaura.model.bean.article.ArticleBean
 
 actual object PlatformArticleNotification {
-    actual fun requestPermission() = Unit
+    actual suspend fun requestPermission(showSettingsIfDenied: Boolean) = Unit
 
-    actual fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
+    actual suspend fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
         TODO("Not yet implemented")
     }
 }

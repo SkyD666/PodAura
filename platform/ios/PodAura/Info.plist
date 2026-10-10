@@ -52,6 +52,11 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.skyd.podaura.rss-refresh</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>

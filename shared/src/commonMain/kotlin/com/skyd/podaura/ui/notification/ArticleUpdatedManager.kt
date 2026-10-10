@@ -8,47 +8,27 @@ import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.ArticleNotificationRuleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.download.AutoDownloadRuleDao
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.seconds
 
 object ArticleUpdatedManager {
     const val CHANNEL_ID = "articleNotification"
 
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val channel = Channel<List<String>>(capacity = Channel.UNLIMITED)
-
-    init {
-        onBatch()
+    private val batcher = ArticleUpdateBatcher(scope) { articleIds ->
+        deliverArticleUpdates(articleIds, ::sendNotification, ::autoDownload)
     }
 
-    fun send(articleIds: List<String>) = scope.launch {
-        channel.send(articleIds)
-    }
+    suspend fun send(articleIds: List<String>) = batcher.send(articleIds)
 
-    private fun onBatch() = scope.launch {
-        while (isActive) {
-            val articleIds = mutableListOf<List<String>>()
+    suspend fun flush() = batcher.flush()
 
-            if (isActive) articleIds += channel.receive()  // Suspend here when no data
-            while (isActive) {
-                articleIds += withTimeoutOrNull(20.seconds) {
-                    channel.receive()
-                } ?: break
-            }
+    internal suspend fun flush(delivery: ArticleUpdateDelivery) = batcher.flush(delivery)
 
-            val flattenArticleIds = articleIds.flatten()
-
-            sendNotification(flattenArticleIds)
-            autoDownload(flattenArticleIds)
-        }
-    }
+    fun setImmediateDelivery(enabled: Boolean) = batcher.setImmediateDelivery(enabled)
 
     private suspend fun autoDownload(articleIds: List<String>) {
         val articleDao = get<ArticleDao>()
@@ -114,9 +94,27 @@ object ArticleUpdatedManager {
     }
 }
 
+internal suspend fun deliverArticleUpdates(
+    articleIds: List<String>,
+    notify: suspend (List<String>) -> Unit,
+    download: suspend (List<String>) -> Unit,
+) {
+    var failure: Exception? = null
+    for (deliver in listOf(notify, download)) {
+        try {
+            deliver(articleIds)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            if (failure == null) failure = error else failure.addSuppressed(error)
+        }
+    }
+    failure?.let { throw it }
+}
+
 expect object PlatformArticleNotification {
-    fun requestPermission()
-    fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>)
+    suspend fun requestPermission(showSettingsIfDenied: Boolean = true)
+    suspend fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>)
 }
 
 expect object PlatformAutoDownload {

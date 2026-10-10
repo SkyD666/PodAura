@@ -83,6 +83,7 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationP
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
+import com.skyd.podaura.ui.notification.PlatformArticleNotification
 import com.skyd.podaura.ui.screen.calendar.CalendarRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
@@ -307,7 +308,12 @@ internal fun FeedList(
                     openAddDialog = true
                 }
 
-                is FeedEvent.AddFeedResultEvent.Success -> addDialogUrl = ""
+                is FeedEvent.AddFeedResultEvent.Success -> {
+                    addDialogUrl = ""
+                    scope.launch {
+                        PlatformArticleNotification.requestPermission(showSettingsIfDenied = false)
+                    }
+                }
 
                 is FeedEvent.AddFeedResultEvent.Failed ->
                     currentSnackbarHostState.showSnackbar(event.msg)

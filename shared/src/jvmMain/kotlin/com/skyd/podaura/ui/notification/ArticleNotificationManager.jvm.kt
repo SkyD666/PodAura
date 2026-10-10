@@ -11,9 +11,10 @@ import podaura.shared.generated.resources.article_notification_new_articles
 private const val TAG = "ArticleNotification"
 
 actual object PlatformArticleNotification {
-    actual fun requestPermission() = DesktopArticleNotifications.requestPermission()
+    actual suspend fun requestPermission(showSettingsIfDenied: Boolean) =
+        DesktopArticleNotifications.requestPermission()
 
-    actual fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
+    actual suspend fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
         if (matchedData.isEmpty()) return
         val ruleNames = matchedData.map { it.second }.distinctBy { it.id }
             .joinToString(", ") { it.name }

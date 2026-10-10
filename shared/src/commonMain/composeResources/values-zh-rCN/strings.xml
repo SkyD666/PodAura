@@ -382,6 +382,7 @@
     <string name="auto_delete_article_screen_keep_download_tasks_description">下载任务删除前，不删除对应文章</string>
     <string name="appearance_screen_amoled_dark">Amoled 深色</string>
     <string name="article_notification_new_articles">新文章</string>
+    <string name="notification_permission_denied">PodAura 的通知权限已关闭，可前往系统设置开启。</string>
     <string name="article_notification_content_text">你关注的 %1$s 更新了！</string>
     <string name="rss_config_screen_notification_category">通知</string>
     <string name="update_notification_screen_name">更新提醒</string>

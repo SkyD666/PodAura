@@ -31,9 +31,9 @@ class ArticleNotificationData(
 )
 
 actual object PlatformArticleNotification {
-    actual fun requestPermission() = Unit
+    actual suspend fun requestPermission(showSettingsIfDenied: Boolean) = Unit
 
-    actual fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
+    actual suspend fun sendNotification(matchedData: List<Pair<String, ArticleNotificationRuleBean>>) {
         val content = matchedData.map { it.second }
             .distinctBy { it.id }
             .joinToString(", ") { it.name }

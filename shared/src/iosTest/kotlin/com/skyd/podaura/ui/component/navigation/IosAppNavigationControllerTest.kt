@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.player
+package com.skyd.podaura.ui.component.navigation
 
 import com.skyd.podaura.IosPlayerChrome
 import kotlinx.cinterop.CValue
@@ -16,14 +16,146 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class IosPlayerNavigationControllerTest {
+class IosAppNavigationControllerTest {
+    @Test
+    fun pagesCanOpenAndCloseWithoutAPlayerSession() {
+        val root = UIViewController()
+        val page = UIViewController()
+        val navigation = IosAppNavigationController(root, currentTransition = { null })
+        navigation.showPage(page)
+        navigation.closePlayer(animated = false)
+        assertEquals(listOf(root, page), navigation.viewControllers)
+        navigation.closePage(page)
+        assertEquals(listOf(root), navigation.viewControllers)
+    }
+
+    @Test
+    fun everyPageLaunchHasItsOwnContainerAndBackReturnsToThePlayer() {
+        val root = UIViewController()
+        val player = UIViewController()
+        val firstPage = UIViewController()
+        val secondPage = UIViewController()
+        var closed = 0
+        val navigation = IosAppNavigationController(root, { closed++ })
+        navigation.showPlayer(player)
+        navigation.navigationController(navigation, didShowViewController = player, animated = false)
+        navigation.showPage(firstPage)
+        navigation.navigationController(navigation, didShowViewController = firstPage, animated = false)
+        navigation.showPage(secondPage)
+        navigation.navigationController(navigation, didShowViewController = secondPage, animated = false)
+        assertEquals(listOf(root, player, firstPage, secondPage), navigation.viewControllers)
+        assertEquals(secondPage, navigation.visibleController)
+        navigation.closePage(secondPage)
+        navigation.navigationController(navigation, didShowViewController = firstPage, animated = false)
+        assertEquals(listOf(root, player, firstPage), navigation.viewControllers)
+        navigation.closePage(firstPage)
+        navigation.navigationController(navigation, didShowViewController = player, animated = false)
+        assertEquals(listOf(root, player), navigation.viewControllers)
+        assertEquals(0, closed)
+    }
+
+    @Test
+    fun stoppingTheCoveredPlayerPreservesAllIndependentPages() {
+        val root = UIViewController()
+        val player = UIViewController()
+        val firstPage = UIViewController()
+        val secondPage = UIViewController()
+        var closed = 0
+        var pageCanPop = false
+        val navigation = IosAppNavigationController(root, { closed++ })
+        navigation.loadViewIfNeeded()
+        try {
+            navigation.showPlayer(player)
+            navigation.showPage(firstPage)
+            navigation.showPage(secondPage) { pageCanPop }
+            val gesture = assertNotNull(navigation.interactivePopGestureRecognizer)
+            assertFalse(navigation.gestureRecognizerShouldBegin(gesture))
+            repeat(2) { navigation.closePlayer(animated = false) }
+            assertEquals(listOf(root, firstPage, secondPage), navigation.viewControllers)
+            assertEquals(secondPage, navigation.topViewController)
+            assertEquals(1, closed)
+            assertFalse(navigation.gestureRecognizerShouldBegin(gesture))
+            pageCanPop = true
+            assertTrue(navigation.gestureRecognizerShouldBegin(gesture))
+            navigation.closePage(secondPage)
+            navigation.closePage(firstPage)
+            navigation.navigationController(navigation, didShowViewController = root, animated = false)
+            assertTrue(navigation.isRootVisible)
+            assertEquals(1, closed)
+        } finally {
+            if (IosPlayerChrome.controller === navigation) IosPlayerChrome.controller = null
+        }
+    }
+
+    @Test
+    fun reopeningThePlayerPreservesPagesAndClosingItReturnsToThePage() {
+        val root = UIViewController()
+        val player = UIViewController()
+        val page = UIViewController()
+        var closed = 0
+        val navigation = IosAppNavigationController(root, { closed++ }, { null })
+        navigation.showPlayer(player)
+        navigation.showPage(page)
+        navigation.showPlayer(player)
+        assertEquals(listOf(root, page, player), navigation.viewControllers)
+        assertEquals(0, closed)
+        navigation.closePlayer(animated = false)
+        assertEquals(listOf(root, page), navigation.viewControllers)
+        assertEquals(1, closed)
+        navigation.showPlayer(UIViewController())
+        navigation.closePlayer(animated = false)
+        assertEquals(listOf(root, page), navigation.viewControllers)
+        assertEquals(2, closed)
+    }
+
+    @Test
+    fun pagesQueuedDuringAPlayerTransitionSurviveItsCancellation() {
+        val root = UIViewController()
+        val page = UIViewController()
+        val transition = TestTransition()
+        var current: TestTransition? = transition
+        var closed = 0
+        val navigation = IosAppNavigationController(root, { closed++ }, { current })
+        navigation.showPlayer(UIViewController())
+        navigation.showPage(page)
+        navigation.closePlayer(animated = false)
+        current = null
+        transition.complete()
+        assertEquals(listOf(root, page), navigation.viewControllers)
+        assertEquals(1, closed)
+        navigation.closePlayer(animated = false)
+        assertEquals(listOf(root, page), navigation.viewControllers)
+        assertEquals(1, closed)
+    }
+
+    @Test
+    fun consecutivePagesRemainQueuedWhenTheAlreadyVisiblePlayerIsRequestedAgain() {
+        val root = UIViewController()
+        val player = UIViewController()
+        val first = UIViewController()
+        val second = UIViewController()
+        var transition: TestTransition? = null
+        val navigation = IosAppNavigationController(root, {}, { transition })
+        navigation.showPlayer(player)
+        transition = TestTransition()
+        navigation.showPage(first)
+        navigation.showPage(second)
+        navigation.showPlayer(player)
+        val completing = transition
+        transition = null
+        completing.complete()
+        navigation.navigationController(navigation, didShowViewController = first, animated = true)
+        navigation.navigationController(navigation, didShowViewController = second, animated = true)
+        assertEquals(listOf(root, player, first, second), navigation.viewControllers)
+    }
+
     @Test
     fun initialAndDuplicateRootCallbacksCannotCloseANewSession() {
         val root = UIViewController()
         val player = UIViewController()
         var closed = 0
         var preparing = 0
-        val navigation = IosPlayerNavigationController(root, { closed++ },
+        val navigation = IosAppNavigationController(root, { closed++ },
             onPlayerWillClose = { preparing++ })
         navigation.navigationController(navigation, willShowViewController = root, animated = false)
         navigation.navigationController(navigation, didShowViewController = root, animated = false)
@@ -51,12 +183,12 @@ class IosPlayerNavigationControllerTest {
         val root = UIViewController()
         val player = UIViewController()
         val events = mutableListOf<String>()
-        val navigation = IosPlayerNavigationController(
+        val navigation = IosAppNavigationController(
             root, { events += "closed" },
             onPlayerWillClose = { events += "prepare" },
             onPlayerCloseCancelled = { events += "cancel" },
         )
-        navigation.setViewControllers(listOf(root, player), animated = false)
+        navigation.showPlayer(player)
         navigation.navigationController(navigation, didShowViewController = player, animated = false)
         events.clear()
         navigation.navigationController(navigation, willShowViewController = root, animated = true)
@@ -77,7 +209,7 @@ class IosPlayerNavigationControllerTest {
         var transition: TestTransition? = TestTransition()
         val root = UIViewController()
         val player = UIViewController()
-        val navigation = IosPlayerNavigationController(root, {}, { transition })
+        val navigation = IosAppNavigationController(root, {}, { transition })
         val results = mutableListOf<Boolean>()
         navigation.showPlayer(player)
         navigation.whenPlayerShown(player, results::add)
@@ -100,7 +232,7 @@ class IosPlayerNavigationControllerTest {
     fun usesNativePopGestureAndKeepsCancelledPopOnThePlayer() {
         val root = UIViewController()
         var closed = 0
-        val navigation = IosPlayerNavigationController(root, { closed++ })
+        val navigation = IosAppNavigationController(root, { closed++ })
         // UIKit stacks can be tested offscreen; interactive animation needs a UIApplication.
         navigation.loadViewIfNeeded()
         try {
@@ -144,7 +276,7 @@ class IosPlayerNavigationControllerTest {
         val player = UIViewController()
         var closed = 0
         var transition: TestTransition? = null
-        val navigation = IosPlayerNavigationController(root, { closed++ }, { transition })
+        val navigation = IosAppNavigationController(root, { closed++ }, { transition })
         try {
             for (delegateFirst in listOf(true, false)) {
                 // An interactive pop temporarily removes the player, then cancellation restores it.

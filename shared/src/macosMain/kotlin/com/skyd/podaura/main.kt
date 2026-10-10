@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.blockString
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.ui.component.Window
+import com.skyd.podaura.ui.local.LocalMacosMainWindow
 import com.skyd.podaura.ui.player.LocalMacosPlayerSession
 import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.MacosPlayerSession
@@ -17,6 +18,7 @@ import platform.AppKit.NSApplicationTerminateReply
 import platform.AppKit.NSMenu
 import platform.AppKit.NSMenuItem
 import platform.AppKit.NSTerminateLater
+import platform.AppKit.NSWindow
 import platform.Foundation.NSNotification
 import platform.darwin.NSObject
 import platform.darwin.sel_registerName
@@ -31,7 +33,8 @@ fun main() {
     nsApplication.setActivationPolicy(NSApplicationActivationPolicy.NSApplicationActivationPolicyRegular)
     initKoin()
     onAppStart()
-    val session = MacosPlayerSession()
+    var mainWindow: NSWindow? = null
+    val session = MacosPlayerSession(mainWindow = { mainWindow })
     applicationDelegate = object : NSObject(), NSApplicationDelegateProtocol {
         override fun applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication) = false
         override fun applicationShouldTerminate(sender: NSApplication): NSApplicationTerminateReply {
@@ -43,14 +46,18 @@ fun main() {
             val host = Window(
                 title = blockString(Res.string.app_name),
                 size = DpSize(1200.dp, 800.dp),
-                onClose = { nsApplication.terminate(null) }
+                onClose = {
+                    mainWindow = null
+                    nsApplication.terminate(null)
+                }
             ) {
                 CompositionLocalProvider(
+                    LocalMacosMainWindow provides window,
                     LocalPlayerSession provides session,
                     LocalMacosPlayerSession provides session,
                 ) { AppEntrance() }
             }
-            session.mainWindow = host.window
+            mainWindow = host.window
             val menu = NSMenu()
             val applicationMenu = NSMenu()
             val applicationItem = NSMenuItem()
@@ -70,4 +77,5 @@ fun main() {
     nsApplication.delegate = applicationDelegate
     nsApplication.run()
     applicationDelegate = null
+    mainWindow = null
 }

@@ -194,7 +194,7 @@ fun SettingsProvider(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MainNavHost() {
+internal fun MainNavHost() {
     val navBackStack = LocalNavBackStack.current
 
     MiniPlayerNavDisplay(
