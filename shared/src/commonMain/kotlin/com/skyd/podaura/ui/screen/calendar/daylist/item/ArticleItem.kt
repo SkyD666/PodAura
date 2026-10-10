@@ -24,14 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.podaura.ext.readable
 import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.jumper.ArticlePlaylistSource
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import com.skyd.podaura.ui.screen.read.ReadRoute
@@ -70,11 +66,7 @@ fun ArticleItem(articleWithFeed: ArticleWithFeed, day: Long) {
                 modifier = Modifier
                     .size(size)
                     .clip(shape),
-                imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
-                    override fun onError(request: ImageRequest, result: ErrorResult) {
-                        imageLoadError = true
-                    }
-                }),
+                onError = { imageLoadError = true },
                 contentScale = ContentScale.Crop,
             )
         }

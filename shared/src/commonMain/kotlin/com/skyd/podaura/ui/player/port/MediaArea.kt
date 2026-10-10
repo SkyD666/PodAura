@@ -22,11 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
@@ -96,13 +92,7 @@ private fun Thumbnail(modifier: Modifier, thumbnail: Any?) {
             PodAuraImage(
                 model = thumbnail,
                 modifier = modifier,
-                imageLoader = rememberPodAuraImageLoader(
-                    listener = object : EventListener() {
-                        override fun onError(request: ImageRequest, result: ErrorResult) {
-                            imageLoadFailed = true
-                        }
-                    },
-                ),
+                onError = { imageLoadFailed = true },
                 contentScale = contentScale,
             )
         }

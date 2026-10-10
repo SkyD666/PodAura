@@ -19,13 +19,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.podaura.ext.firstCodePointOrNull
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 
 
 @Composable
@@ -64,15 +60,13 @@ fun FeedIcon(
                 .size(size)
                 .clip(shape),
             model = icon,
-            imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
-                override fun onError(request: ImageRequest, result: ErrorResult) {
-                    if (icon == data.customIcon) {
-                        icon = data.icon
-                    } else {
-                        imageLoadError = true
-                    }
+            onError = {
+                if (icon == data.customIcon) {
+                    icon = data.icon
+                } else {
+                    imageLoadError = true
                 }
-            }),
+            },
             contentScale = ContentScale.Crop,
         )
     }

@@ -11,10 +11,10 @@ import co.touchlab.kermit.coil.KermitCoilLogger
 import co.touchlab.kermit.loggerConfigInit
 import co.touchlab.kermit.platformLogWriter
 import coil3.ComponentRegistry
-import coil3.EventListener
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import coil3.compose.LocalPlatformContext
 import coil3.network.ktor3.KtorNetworkFetcherFactory
 import coil3.request.CachePolicy
@@ -51,6 +51,7 @@ fun PodAuraImage(
     contentScale: ContentScale = ContentScale.FillWidth,
     alpha: Float = DefaultAlpha,
     colorFilter: ColorFilter? = null,
+    onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
 ) {
     AsyncImage(
         model = if (model is ImageRequest) {
@@ -65,32 +66,12 @@ fun PodAuraImage(
         imageLoader = imageLoader,
         alpha = alpha,
         colorFilter = colorFilter,
+        onError = onError,
     )
 }
 
 @Composable
-fun rememberPodAuraImageLoader(
-    listener: EventListener? = null,
-    components: ComponentRegistry.Builder.() -> Unit = {},
-): ImageLoader {
-    val context = LocalPlatformContext.current
-    return remember {
-        context.imageLoaderBuilder(components = components)
-            .run { if (listener != null) eventListener(listener) else this }
-            .logger(
-                LocalMediaImageLogger(
-                    KermitCoilLogger(
-                        config = loggerConfigInit(
-                            platformLogWriter(),
-                            minSeverity = Severity.Info
-                        ),
-                        separator = ":"
-                    )
-                )
-            )
-            .build()
-    }
-}
+fun rememberPodAuraImageLoader(): ImageLoader = remember { get<ImageLoader>() }
 
 expect fun ImageLoader.Builder.platformComponents()
 
@@ -101,4 +82,11 @@ fun PlatformContext.imageLoaderBuilder(
     add(KtorNetworkFetcherFactory(httpClient = get<HttpClient>(named("coil"))))
     addLocalMediaComponents()
     components()
-}
+}.logger(
+    LocalMediaImageLogger(
+        KermitCoilLogger(
+            config = loggerConfigInit(platformLogWriter(), minSeverity = Severity.Info),
+            separator = ":",
+        )
+    )
+)

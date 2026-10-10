@@ -2,9 +2,12 @@ package com.skyd.podaura.di
 
 import co.touchlab.kermit.Severity
 import co.touchlab.kermit.ktor.KermitKtorLogger
+import coil3.ImageLoader
 import com.skyd.podaura.ext.getOrDefault
+import com.skyd.podaura.ext.platformContext
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.util.isFreeNetworkAvailable
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -19,9 +22,12 @@ import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import org.koin.dsl.onClose
 import co.touchlab.kermit.Logger as KermitLogger
 
 val ioModule = module {
+    single<ImageLoader> { platformContext().imageLoaderBuilder().build() }
+        .onClose { it?.shutdown() }
     single {
         Json {
             ignoreUnknownKeys = true

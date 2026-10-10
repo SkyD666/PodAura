@@ -7,9 +7,9 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
+import coil3.ImageLoader
 import com.skyd.fundation.di.get
 import com.skyd.podaura.ext.getImage
-import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.util.image.decodeSampledBitmap
 import io.github.vinceglb.filekit.AndroidFile
@@ -81,7 +81,7 @@ suspend fun createThumbnailFile(
 ): File? {
     thumbnailPath ?: return null
     val context = get<Context>()
-    return context.imageLoaderBuilder().build()
+    return get<ImageLoader>()
         .getImage(context, thumbnailPath)?.toString()?.let { File(it) }
 }
 

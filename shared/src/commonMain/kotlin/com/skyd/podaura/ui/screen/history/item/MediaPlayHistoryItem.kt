@@ -36,10 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
 import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
-import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.compone.component.TagText
@@ -50,7 +48,6 @@ import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.history.MediaPlayHistoryWithArticle
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
@@ -128,12 +125,7 @@ fun MediaPlayHistoryItem(
                             .crossfade(true)
                             .build()
                     },
-                    imageLoader = rememberPodAuraImageLoader(listener = object :
-                        EventListener() {
-                        override fun onError(request: ImageRequest, result: ErrorResult) {
-                            showThumbnail = false
-                        }
-                    }),
+                    onError = { showThumbnail = false },
                     contentScale = ContentScale.Crop,
                 )
             }

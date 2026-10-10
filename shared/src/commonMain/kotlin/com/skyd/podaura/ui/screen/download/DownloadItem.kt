@@ -35,9 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.compone.ext.thenIf
@@ -46,7 +43,6 @@ import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.download.ArticleDownloadInfoBean
 import com.skyd.podaura.model.download.DownloadInfoBean
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.screen.feed.FeedIcon
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -280,11 +276,7 @@ private fun ArticleDownloadArtwork(info: ArticleDownloadInfoBean) {
                     .size(50.dp)
                     .clip(shape),
                 model = image,
-                imageLoader = rememberPodAuraImageLoader(listener = object : EventListener() {
-                    override fun onError(request: ImageRequest, result: ErrorResult) {
-                        imageIndex++
-                    }
-                }),
+                onError = { imageIndex++ },
                 contentScale = ContentScale.Crop,
             )
         }

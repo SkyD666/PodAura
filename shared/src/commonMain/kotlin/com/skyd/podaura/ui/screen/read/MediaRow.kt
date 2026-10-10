@@ -36,10 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.ComponentRegistry
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
 import com.skyd.fundation.ext.formatElapsedTime
@@ -47,7 +43,6 @@ import com.skyd.podaura.model.bean.article.ArticleWithFeed
 import com.skyd.podaura.model.bean.article.EnclosureBean
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.screen.playlist.addto.AddToPlaylistSheet
 import com.skyd.podaura.util.isFreeNetworkAvailable
 import org.jetbrains.compose.resources.stringResource
@@ -55,8 +50,6 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add_to_playlist
 import podaura.shared.generated.resources.play
 import podaura.shared.generated.resources.read_screen_episode
-
-expect val components: ComponentRegistry.Builder.() -> Unit
 
 @Composable
 private fun MediaCover(
@@ -86,16 +79,11 @@ private fun MediaCover(
                 modifier = Modifier
                     .fillMaxHeight()
                     .widthIn(min = 200.dp),
-                imageLoader = rememberPodAuraImageLoader(
-                    listener = object : EventListener() {
-                        override fun onError(request: ImageRequest, result: ErrorResult) {
-                            if (cover != null && realImage != cover) {
-                                realImage = cover
-                            }
-                        }
-                    },
-                    components = components,
-                ),
+                onError = {
+                    if (cover != null && realImage != cover) {
+                        realImage = cover
+                    }
+                },
                 model = realImage,
                 contentScale = ContentScale.FillHeight,
                 colorFilter = ColorFilter.tint(

@@ -40,10 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.EventListener
 import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
-import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.skyd.compone.component.TagText
@@ -58,7 +56,6 @@ import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.model.bean.MediaBean
 import com.skyd.podaura.model.preference.appearance.media.MediaShowThumbnailPreference
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.openFileWithDefaultApplication
@@ -433,12 +430,7 @@ fun MediaCover(data: MediaBean, modifier: Modifier = Modifier, iconSize: Dp = 25
                         .crossfade(true)
                         .build()
                 },
-                imageLoader = rememberPodAuraImageLoader(listener = object :
-                    EventListener() {
-                    override fun onError(request: ImageRequest, result: ErrorResult) {
-                        showThumbnail = false
-                    }
-                }),
+                onError = { showThumbnail = false },
                 contentScale = ContentScale.Crop,
             )
         } else {

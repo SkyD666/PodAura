@@ -1,8 +1,10 @@
 package com.skyd.podaura.model.repository
 
 import androidx.compose.ui.platform.Clipboard
+import coil3.ImageLoader
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.TEMP_PICTURES_DIR
+import com.skyd.fundation.di.get
 import com.skyd.fundation.ext.PathWalkOption
 import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.fundation.ext.deleteRecursively
@@ -12,10 +14,8 @@ import com.skyd.fundation.ext.size
 import com.skyd.fundation.ext.source
 import com.skyd.fundation.ext.walk
 import com.skyd.podaura.ext.getImage
-import com.skyd.podaura.ext.platformContext
 import com.skyd.podaura.ext.setImage
 import com.skyd.podaura.ext.validateFileName
-import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.util.image.ImageFormatChecker
 import com.skyd.podaura.util.image.format.ImageFormat
 import io.github.vinceglb.filekit.FileKit
@@ -63,7 +63,7 @@ class ImageRepository : BaseRepository() {
     }.flowOn(Dispatchers.IO)
 
     private suspend fun loadImage(url: String): Pair<Path, ImageFormat> {
-        val imageFile = platformContext().imageLoaderBuilder().build().getImage(url = url)!!
+        val imageFile = get<ImageLoader>().getImage(url = url)!!
         val format = imageFile.source().use { ImageFormatChecker.check(it) }
         return imageFile to format
     }

@@ -40,16 +40,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.EventListener
-import coil3.request.ErrorResult
-import coil3.request.ImageRequest
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
 import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.ext.isLocalFileExists
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.component.rememberPodAuraImageLoader
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -102,13 +98,7 @@ fun PlaylistMediaItem(
                     model = thumbnail,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    imageLoader = rememberPodAuraImageLoader(
-                        listener = object : EventListener() {
-                            override fun onError(request: ImageRequest, result: ErrorResult) {
-                                imageLoadError = true
-                            }
-                        },
-                    ),
+                    onError = { imageLoadError = true },
                 )
             }
             if (playing) {
