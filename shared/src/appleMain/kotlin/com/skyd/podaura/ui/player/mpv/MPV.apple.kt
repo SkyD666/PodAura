@@ -97,6 +97,8 @@ actual class MPV {
         // These options belong to the host, even when a user config selects a desktop output.
         option("vo", "null")
         option("ao", appleMpvAudioOutput)
+        // AudioUnit otherwise enables MixWithOthers, making iOS Now Playing ineligible.
+        if (appleMpvAudioOutput == "audiounit") option("audio-exclusive", "yes")
         option("gpu-api", "vulkan")
         option("gpu-context", appleMpvGpuContext)
         option("video-sync", "audio")

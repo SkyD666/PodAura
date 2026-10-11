@@ -7,10 +7,13 @@ import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
+import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.imageLoaderBuilder
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.media.loadAppleArtwork
+import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
@@ -62,6 +65,7 @@ import platform.MediaPlayer.MPRemoteCommand
 import platform.MediaPlayer.MPRemoteCommandCenter
 import platform.MediaPlayer.MPRemoteCommandEvent
 import platform.MediaPlayer.MPRemoteCommandHandlerStatusCommandFailed
+import platform.MediaPlayer.MPRemoteCommandHandlerStatusNoActionableNowPlayingItem
 import platform.MediaPlayer.MPRemoteCommandHandlerStatusSuccess
 import platform.MediaPlayer.MPSkipIntervalCommandEvent
 import platform.UIKit.UIApplication
@@ -105,21 +109,29 @@ internal class IosMediaSession(
         coordinator.onPlaybackCommand = ::userCommand
         coordinator.preparePlaybackCommand = ::preparePlaybackCommand
         // Activate when a playback command arrives, rather than blocking player presentation.
-        command(remote.playCommand) { send(PlayerCommand.Paused(false)) }
-        command(remote.pauseCommand) { send(PlayerCommand.Paused(true)) }
-        command(remote.togglePlayPauseCommand) { send(PlayerCommand.PlayOrPause) }
-        command(remote.nextTrackCommand) { send(PlayerCommand.NextMedia) }
-        command(remote.previousTrackCommand) { send(PlayerCommand.PreviousMedia) }
+        command(remote.playCommand) { PlayerCommand.Paused(false) }
+        command(remote.pauseCommand) { PlayerCommand.Paused(true) }
+        command(remote.togglePlayPauseCommand) { PlayerCommand.PlayOrPause }
+        command(remote.nextTrackCommand) { PlayerCommand.NextMedia }
+        command(remote.previousTrackCommand) { PlayerCommand.PreviousMedia }
         command(remote.changePlaybackPositionCommand) { event ->
-            send(PlayerCommand.SeekTo((event as MPChangePlaybackPositionCommandEvent).positionTime.toLong()))
+            (event as? MPChangePlaybackPositionCommandEvent)?.positionTime
+                ?.takeIf { it.isFinite() && it >= 0.0 }
+                ?.let { PlayerCommand.SeekTo(it.toLong()) }
         }
-        remote.skipForwardCommand.preferredIntervals = listOf(NSNumber(int = 30))
-        remote.skipBackwardCommand.preferredIntervals = listOf(NSNumber(int = 10))
         command(remote.skipForwardCommand) { event ->
-            send(PlayerCommand.SeekTo(coordinator.playerState.value.position + (event as MPSkipIntervalCommandEvent).interval.toLong()))
+            (event as? MPSkipIntervalCommandEvent)?.interval
+                ?.takeIf { it.isFinite() && it > 0.0 }
+                ?.let { PlayerCommand.SeekTo((coordinator.playerState.value.position + it).toLong()) }
         }
         command(remote.skipBackwardCommand) { event ->
-            send(PlayerCommand.SeekTo(coordinator.playerState.value.position - (event as MPSkipIntervalCommandEvent).interval.toLong()))
+            (event as? MPSkipIntervalCommandEvent)?.interval
+                ?.takeIf { it.isFinite() && it > 0.0 }
+                ?.let { PlayerCommand.SeekTo((coordinator.playerState.value.position - it).toLong()) }
+        }
+        scope.launch {
+            dataStore.flowOf(PlayerForwardSecondsPreference, PlayerReplaySecondsPreference)
+                .collect { (forward, replay) -> updateIosSkipIntervals(forward, replay) }
         }
         observe(UIApplicationDidEnterBackgroundNotification) {
             if (resumePolicy.enterBackground(
@@ -271,20 +283,7 @@ internal class IosMediaSession(
         val state = coordinator.playerState.value
         UIApplication.sharedApplication.idleTimerDisabled =
             state.mediaStarted && !resumePolicy.background && !state.paused && state.isVideo
-        if (!state.mediaStarted) {
-            nowPlaying.nowPlayingInfo = null; return
-        }
-        val info = mutableMapOf<Any?, Any?>(
-            MPMediaItemPropertyTitle to (state.mediaTitle ?: state.currentMedia?.title.orEmpty()),
-            MPMediaItemPropertyArtist to (state.artist ?: state.currentMedia?.artist.orEmpty()),
-            MPMediaItemPropertyPlaybackDuration to NSNumber(double = state.duration.toDouble()),
-            MPNowPlayingInfoPropertyElapsedPlaybackTime to NSNumber(double = state.position.toDouble()),
-            MPNowPlayingInfoPropertyPlaybackRate to NSNumber(double = if (state.paused) 0.0 else state.speed.toDouble()),
-            MPNowPlayingInfoPropertyDefaultPlaybackRate to NSNumber(double = state.speed.toDouble()),
-        )
-        artwork?.let { info[MPMediaItemPropertyArtwork] = it }
-        nowPlaying.nowPlayingInfo = info
-        remote.changePlaybackPositionCommand.enabled = state.seekable
+        updateIosNowPlaying(state, coordinator.engineState.value.isReady, artwork)
     }
 
     private suspend fun activateAudio(): Boolean = withContext(audioSessionDispatcher) {
@@ -307,12 +306,25 @@ internal class IosMediaSession(
         }
     }
 
-    private fun command(command: MPRemoteCommand, block: (MPRemoteCommandEvent) -> Unit) {
-        command.enabled = true
+    private fun command(command: MPRemoteCommand, map: (MPRemoteCommandEvent) -> PlayerCommand?) {
+        command.enabled = false
         val token = command.addTargetWithHandler { event ->
-            if (event == null) MPRemoteCommandHandlerStatusCommandFailed else {
-                scope.launch { block(event) }
-                MPRemoteCommandHandlerStatusSuccess
+            if (closed || !command.enabled || !coordinator.engineState.value.isReady ||
+                !coordinator.playerState.value.mediaStarted
+            ) {
+                MPRemoteCommandHandlerStatusNoActionableNowPlayingItem
+            } else {
+                val mapped = event?.let(map)
+                if (mapped == null) MPRemoteCommandHandlerStatusCommandFailed else {
+                    scope.launch {
+                        // Recheck availability after dispatching to the player's main thread.
+                        if (!closed) {
+                            updateNowPlaying()
+                            if (command.enabled) send(mapped)
+                        }
+                    }
+                    MPRemoteCommandHandlerStatusSuccess
+                }
             }
         }
         commands += command to token
@@ -357,6 +369,55 @@ internal class IosMediaSession(
             }
         }
     }
+}
+
+internal fun updateIosSkipIntervals(forwardSeconds: Int, replaySeconds: Int) {
+    val remote = MPRemoteCommandCenter.sharedCommandCenter()
+    remote.skipForwardCommand.preferredIntervals = listOf(NSNumber(int = forwardSeconds))
+    // The app stores replay as a negative offset; MediaPlayer expects a positive interval.
+    remote.skipBackwardCommand.preferredIntervals = listOf(NSNumber(int = -replaySeconds))
+}
+
+internal fun updateIosNowPlaying(
+    state: PlayerState,
+    engineReady: Boolean,
+    artwork: MPMediaItemArtwork?,
+) {
+    val remote = MPRemoteCommandCenter.sharedCommandCenter()
+    val available = state.mediaStarted && engineReady
+    val queueAvailable = available && state.playlistPosition in 0 until state.playlist.size
+    remote.playCommand.enabled = available
+    remote.pauseCommand.enabled = available
+    remote.togglePlayPauseCommand.enabled = available
+    remote.previousTrackCommand.enabled = queueAvailable && !state.playlistFirst
+    remote.nextTrackCommand.enabled = queueAvailable && !state.playlistLast
+    remote.changePlaybackPositionCommand.enabled = available && state.seekable
+    remote.skipForwardCommand.enabled = available && state.seekable
+    remote.skipBackwardCommand.enabled = available && state.seekable
+
+    val nowPlaying = MPNowPlayingInfoCenter.defaultCenter()
+    if (!state.mediaStarted) {
+        nowPlaying.nowPlayingInfo = null
+        return
+    }
+    val media = state.currentMedia
+    val title = media?.article?.articleWithEnclosure?.article?.title.orEmpty()
+        .ifBlank { media?.playlistMediaBean?.title.orEmpty() }
+        .ifBlank { state.mediaTitle.orEmpty() }
+        .ifBlank { media?.playlistMediaBean?.stableUrl?.substringAfterLast("/").orEmpty() }
+    val info = mutableMapOf<Any?, Any?>(
+        MPMediaItemPropertyTitle to title,
+        MPMediaItemPropertyArtist to state.currentMedia?.artist.orEmpty()
+            .ifBlank { state.artist.orEmpty() },
+        MPMediaItemPropertyPlaybackDuration to NSNumber(double = state.duration.toDouble()),
+        MPNowPlayingInfoPropertyElapsedPlaybackTime to NSNumber(double = state.position.toDouble()),
+        MPNowPlayingInfoPropertyPlaybackRate to NSNumber(
+            double = if (state.paused || state.loading || !engineReady) 0.0 else state.speed.toDouble()
+        ),
+        MPNowPlayingInfoPropertyDefaultPlaybackRate to NSNumber(double = state.speed.toDouble()),
+    )
+    artwork?.let { info[MPMediaItemPropertyArtwork] = it }
+    nowPlaying.nowPlayingInfo = info
 }
 
 /** Share the player's Coil fetchers, decoders and disk cache with the native artwork layer. */

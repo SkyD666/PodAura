@@ -73,7 +73,6 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationDidEnterBackgroundNotification
 import platform.UIKit.UIApplicationState
-import platform.UIKit.UIApplicationWillResignActiveNotification
 import platform.UIKit.UIColor
 import platform.UIKit.UIImage
 import platform.UIKit.UIScreen
@@ -158,18 +157,13 @@ internal class IosPictureInPicture(
         } else null
     private val notifications = listOf(
         center.addObserverForName(
-            UIApplicationWillResignActiveNotification,
-            null,
-            NSOperationQueue.mainQueue
-        ) {
-            setRendering(false)
-        },
-        center.addObserverForName(
             UIApplicationDidEnterBackgroundNotification,
             null,
             NSOperationQueue.mainQueue
         ) {
-            if (active) setRendering(controller?.pictureInPictureSuspended == false) else detach()
+            // Control Center only makes the app inactive; keep rendering until backgrounded.
+            setRendering(active && controller?.pictureInPictureSuspended == false)
+            if (!active) detach()
         },
         center.addObserverForName(
             UIApplicationDidBecomeActiveNotification,
@@ -227,7 +221,7 @@ internal class IosPictureInPicture(
             }
             if (keyPath == "pictureInPictureSuspended") {
                 setRendering(
-                    UIApplication.sharedApplication.applicationState == UIApplicationState.UIApplicationStateActive ||
+                    UIApplication.sharedApplication.applicationState != UIApplicationState.UIApplicationStateBackground ||
                             (active && controller?.pictureInPictureSuspended == false)
                 )
             }
