@@ -5,7 +5,7 @@ import android.net.Uri
 import co.touchlab.kermit.Logger
 import java.io.File
 
-actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
+actual suspend fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     val retriever = MediaMetadataRetriever()
     return try {
         with(retriever) {

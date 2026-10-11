@@ -21,13 +21,15 @@ import platform.Foundation.NSURL
 import platform.Foundation.getBytes
 import platform.Foundation.timeIntervalSince1970
 
-actual fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
+actual suspend fun getLocalMediaThumbnailData(filePath: String): ByteArray? {
     val fileUrl = filePath.toLocalMediaUrl() ?: return null
+    val path = fileUrl.path ?: return null
+    (getAppleArtworkData(fileUrl) ?: getFfmpegArtworkData(path))?.let { return it }
     val extension = fileUrl.pathExtension?.lowercase()
     if (extension in MediaTypes.videoExtensions) {
-        getLocalVideoThumbnailData(fileUrl.path ?: return null)?.let { return it }
+        return getLocalVideoThumbnailData(path)
     }
-    return getAppleArtworkData(fileUrl) ?: getFfmpegArtworkData(fileUrl.path ?: return null)
+    return null
 }
 
 internal fun getAppleArtworkData(fileUrl: NSURL): ByteArray? {

@@ -31,6 +31,42 @@ import kotlin.test.assertTrue
 
 class LocalMediaImageLoadingTest {
     @Test
+    fun videoPrefersEmbeddedCoverOverVideoFrame() = runBlocking {
+        for ((extension, fixture) in videoArtworkFixtures) {
+            val path = NSTemporaryDirectory() + NSUUID().UUIDString + " 视频.$extension"
+            val files = NSFileManager.defaultManager
+            fixture.usePinned {
+                assertTrue(files.createFileAtPath(path, NSData.create(it.addressOf(0), fixture.size.toULong()), null))
+            }
+            val context = PlatformContext.INSTANCE
+            val loader = ImageLoader.Builder(context).components { addLocalMediaComponents() }.build()
+            try {
+                // Simulate a thumbnail cached by the previous frame-first implementation.
+                val cache = assertNotNull(loader.diskCache)
+                val oldKey = LocalMediaKeyer().key(LocalMedia(path), Options(context)) + ":frame-10%-320-v1"
+                val editor = assertNotNull(cache.openEditor(oldKey))
+                cache.fileSystem.write(editor.metadata) {}
+                cache.fileSystem.write(editor.data) { write(assertNotNull(getLocalVideoThumbnailData(path))) }
+                editor.commit()
+                val fileUrl = assertNotNull(NSURL.fileURLWithPath(path).absoluteString)
+                for (model in listOf(path, fileUrl, LocalMedia(path))) {
+                    val request = ImageRequest.Builder(context).data(model).build()
+                    val result = loader.execute(request)
+                    val success = assertIs<SuccessResult>(result, (result as? ErrorResult)?.throwable?.stackTraceToString())
+                    val bitmap = assertIs<BitmapImage>(success.image).bitmap
+                    val color = bitmap.getColor(bitmap.width / 2, bitmap.height / 2)
+                    assertTrue(color and 255 > 200 && color shr 16 and 255 < 50, "Expected blue cover for $extension, got $color")
+                    assertEquals(2.0, bitmap.width.toDouble() / bitmap.height)
+                    assertEquals(DataSource.MEMORY_CACHE, assertIs<SuccessResult>(loader.execute(request)).dataSource)
+                }
+            } finally {
+                loader.shutdown()
+                files.removeItemAtPath(path, null)
+            }
+        }
+    }
+
+    @Test
     fun realSixGigabyteMkvReturnsTheTenPercentFrameAndCachesIt() = runBlocking {
         val path = NSTemporaryDirectory() + NSUUID().UUIDString + " 视频.MKV"
         val files = NSFileManager.defaultManager

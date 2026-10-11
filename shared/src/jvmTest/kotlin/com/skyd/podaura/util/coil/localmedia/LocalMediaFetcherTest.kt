@@ -37,7 +37,44 @@ import java.nio.file.Path as JavaPath
 class LocalMediaFetcherTest {
 
     @Test
-    fun wavWithoutArtworkReturnsNull() {
+    fun videoPrefersEmbeddedCoverAndFallsBackToTenPercentFrame() = runBlocking {
+        val directory = Files.createTempDirectory("podaura-视频-")
+        val context = PlatformContext.INSTANCE
+        val loader = ImageLoader.Builder(context).components { addLocalMediaComponents() }.build()
+        val secondLoader = ImageLoader.Builder(context).components { addLocalMediaComponents() }.build()
+        try {
+            for ((name, bytes) in videoArtworkFixtures + ("plain.mkv" to videoThumbnailFixture)) {
+                val file = directory.resolve("视频 .$name")
+                Files.write(file, bytes)
+                try {
+                    for (model in listOf(file.toString(), file.toUri().toASCIIString(), LocalMedia(file.toString()))) {
+                        val request = ImageRequest.Builder(context).data(model).build()
+                        val result = loader.execute(request)
+                        val success = assertIs<SuccessResult>(result, (result as? ErrorResult)?.throwable?.stackTraceToString())
+                        val bitmap = assertIs<coil3.BitmapImage>(success.image).bitmap
+                        val color = bitmap.getColor(bitmap.width / 2, bitmap.height / 2)
+                        val blue = name != "plain.mkv"
+                        assertTrue(if (blue) color and 255 > 200 else color shr 8 and 255 > 200, "Wrong thumbnail for $name: $color")
+                        assertTrue(color shr 16 and 255 < 50)
+                        if (blue) assertEquals(2.0, bitmap.width.toDouble() / bitmap.height)
+                        assertEquals(DataSource.MEMORY_CACHE, assertIs<SuccessResult>(loader.execute(request)).dataSource)
+                        val cached = assertIs<SuccessResult>(secondLoader.execute(request))
+                        assertEquals(DataSource.DISK, cached.dataSource)
+                        assertEquals(assertNotNull(success.diskCacheKey), cached.diskCacheKey)
+                    }
+                } finally {
+                    Files.deleteIfExists(file)
+                }
+            }
+        } finally {
+            loader.shutdown()
+            secondLoader.shutdown()
+            Files.deleteIfExists(directory)
+        }
+    }
+
+    @Test
+    fun wavWithoutArtworkReturnsNull() = runBlocking {
         withTemporaryWav { wav ->
             assertNull(getLocalMediaThumbnailData(wav.toString()))
         }

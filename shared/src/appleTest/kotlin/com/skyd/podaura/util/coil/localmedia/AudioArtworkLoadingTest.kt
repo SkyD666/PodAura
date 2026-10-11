@@ -107,7 +107,7 @@ class AudioArtworkLoadingTest {
     }
 
     @Test
-    fun malformedPictureLengthsAndTruncatedBlocksReturnNull() {
+    fun malformedPictureLengthsAndTruncatedBlocksReturnNull() = runBlocking {
         val badMimeLength = WITH_COVER.copyOf().apply { fill(0xff.toByte(), 50, 54) }
         val badImageLength = WITH_COVER.copyOf().apply { fill(0xff.toByte(), 94, 98) }
         for (fixture in listOf(badMimeLength, badImageLength, WITH_COVER.copyOf(240))) {

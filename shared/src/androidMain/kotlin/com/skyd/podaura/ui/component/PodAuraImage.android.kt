@@ -6,9 +6,11 @@ import coil3.ImageLoader
 import coil3.gif.AnimatedImageDecoder
 import coil3.gif.GifDecoder
 import coil3.video.VideoFrameDecoder
+import coil3.video.preferVideoFrameEmbeddedThumbnail
 import coil3.video.videoFramePercent
 
 actual fun ImageLoader.Builder.platformComponents() {
+    extras[Extras.Key.preferVideoFrameEmbeddedThumbnail] = true
     extras[Extras.Key.videoFramePercent] = 0.1
     components {
         if (Build.VERSION.SDK_INT >= 28) {

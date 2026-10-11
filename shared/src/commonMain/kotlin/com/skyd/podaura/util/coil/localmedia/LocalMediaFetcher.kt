@@ -26,7 +26,7 @@ class LocalMediaFetcher(
 ) : Fetcher {
     override suspend fun fetch(): FetchResult {
         val cache = imageLoader.diskCache
-        val key = LocalMediaKeyer().key(data, options) + ":frame-10%-320-v1"
+        val key = LocalMediaKeyer().key(data, options) + ":artwork-first-frame-10%-320-v2"
         if (options.diskCachePolicy.readEnabled) {
             cache?.openSnapshot(key)?.let { return cachedResult(cache, key, it) }
         }
@@ -125,7 +125,7 @@ fun ComponentRegistry.Builder.addLocalMediaComponents() {
     if (platform != Platform.Android) add(LocalMediaFetcher.UriFactory())
 }
 
-expect fun getLocalMediaThumbnailData(filePath: String): ByteArray?
+expect suspend fun getLocalMediaThumbnailData(filePath: String): ByteArray?
 
 /**
  * Returns a cheap representation of the underlying file revision, or null when [filePath] cannot

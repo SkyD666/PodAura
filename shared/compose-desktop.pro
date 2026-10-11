@@ -39,6 +39,8 @@
 -keep class com.sun.jna.** { *; }
 -keep class * implements com.sun.jna.** { *; }
 -keep class com.skyd.fundation.jna.** { *; }
+-keep class com.skyd.podaura.util.coil.localmedia.Artwork* { *; }
+-keep class com.skyd.podaura.util.coil.localmedia.Thumbnail* { *; }
 
 # Compose
 -keep, allowshrinking, allowobfuscation class androidx.compose.ui.text.ParagraphKt { <methods>; }

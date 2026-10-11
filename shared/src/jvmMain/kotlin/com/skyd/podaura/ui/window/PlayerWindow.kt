@@ -25,9 +25,6 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.skyd.fundation.config.Const
-import com.skyd.fundation.config.MPV_CACHE_DIR
-import com.skyd.podaura.BuildKonfig
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.hasModifier
 import com.skyd.podaura.model.preference.appearance.DarkModePreference
@@ -52,13 +49,11 @@ import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.attachWindow
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
+import com.skyd.podaura.util.media.runtime.prepareMpvRuntime
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import io.github.vinceglb.filekit.PlatformFile
-import org.openani.mediamp.mpv.MpvMediampPlayer
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.File
-import java.nio.file.Files
 import javax.swing.SwingUtilities
 
 private val playerWindowSize = DpSize(400.dp, 780.dp)
@@ -122,17 +117,7 @@ internal class PlayerWindowController(
     }
 
     private fun preparePlayer() {
-        // NativeRuntimeLoader treats an existing wrapper as a complete, valid runtime and does not
-        // overwrite the other libraries. Keep each mediamp version in its own directory so an
-        // upgrade cannot combine a new JVM/JNI layer with stale libmpv/FFmpeg binaries.
-        val runtimeRoot = File(Const.MPV_CACHE_DIR, "Runtime")
-        val runtimeDir = File(runtimeRoot, BuildKonfig.mediampVersion)
-        removeStaleMpvRuntimes(runtimeRoot, runtimeDir)
-        removeLegacyMpvRuntimeFiles(runtimeRoot.parentFile)
-        MpvMediampPlayer.prepareLibraries(
-            path = runtimeDir.path,
-            extractRuntimeLibrary = true
-        )
+        prepareMpvRuntime()
         if (coordinator == null) {
             coordinator = createCoordinator()
         }
@@ -194,38 +179,6 @@ internal class PlayerWindowController(
             coordinator?.onCommand(launchData.toLoadCommand())
         }
     }
-}
-
-private fun removeStaleMpvRuntimes(runtimeRoot: File, currentRuntimeDir: File) {
-    runtimeRoot.listFiles()
-        ?.filter { it.name != currentRuntimeDir.name }
-        ?.forEach { staleRuntime ->
-            // Do not follow a symlink placed in the cache directory: delete the link itself,
-            // never files outside Runtime.
-            if (Files.isSymbolicLink(staleRuntime.toPath())) {
-                runCatching { Files.deleteIfExists(staleRuntime.toPath()) }
-            } else {
-                staleRuntime.deleteRecursively()
-            }
-        }
-}
-
-private fun removeLegacyMpvRuntimeFiles(cacheRoot: File) {
-    // Older PodAura versions extracted the runtime directly into Mpv/Cache. Remove only native
-    // library files at that level; shader/media caches and subdirectories are left untouched.
-    cacheRoot.listFiles()
-        ?.filter { it.isFile || Files.isSymbolicLink(it.toPath()) }
-        ?.filter {
-            val name = it.name.lowercase()
-            name.endsWith(".dylib") || name.endsWith(".dll") || ".so" in name
-        }
-        ?.forEach { legacyRuntime ->
-            if (Files.isSymbolicLink(legacyRuntime.toPath())) {
-                runCatching { Files.deleteIfExists(legacyRuntime.toPath()) }
-            } else {
-                legacyRuntime.delete()
-            }
-        }
 }
 
 @Composable
