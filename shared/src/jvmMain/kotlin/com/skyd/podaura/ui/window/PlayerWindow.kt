@@ -49,7 +49,6 @@ import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.attachWindow
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
-import com.skyd.podaura.util.media.runtime.prepareMpvRuntime
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import io.github.vinceglb.filekit.PlatformFile
 import java.awt.event.WindowAdapter
@@ -117,7 +116,6 @@ internal class PlayerWindowController(
     }
 
     private fun preparePlayer() {
-        prepareMpvRuntime()
         if (coordinator == null) {
             coordinator = createCoordinator()
         }

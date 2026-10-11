@@ -6,6 +6,7 @@ import coil3.Bitmap
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.PlatformSurfaceHolder
+import com.skyd.podaura.util.media.runtime.prepareMpvRuntime
 import org.jetbrains.skia.DirectContext
 import org.jetbrains.skia.Image
 import org.openani.mediamp.mpv.MPVHandle
@@ -24,7 +25,12 @@ actual class MPV {
     // MPVHandle's constructor only creates mpv. Unlike MpvMediampPlayer's constructor it
     // deliberately does not call mpv_initialize(), allowing common configuration to be applied
     // first.
-    private val mpvHandle = MPVHandle(Any())
+    private val mpvHandle = run {
+        // The engine creates MPV on its IO dispatcher, so extraction and upgrades never
+        // block opening the player window and failures use the engine's retry flow.
+        prepareMpvRuntime()
+        MPVHandle(Any())
+    }
     private var ringBackend: MpvSurfaceBackend? = null
     private var surfaceRing: MpvSurfaceConsumer? = null
     private val pendingCommandsLock = Any()

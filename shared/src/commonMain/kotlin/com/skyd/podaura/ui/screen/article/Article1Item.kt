@@ -410,14 +410,13 @@ private fun Article1ItemContent(
                     onEditFeedSheet = onEditFeedSheet,
                     interactive = selected == null,
                 )
-                if (hasMedia) {
+                if (hasMedia && selected == null) {
                     Box(
                         modifier = Modifier.heightIn(min = 36.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         ArticleItemPlayButton(
                             data = articleWithEnclosure,
-                            enabled = selected == null,
                             onShowEnclosureBottomSheet = onShowEnclosureBottomSheet,
                         )
                     }
@@ -475,7 +474,6 @@ private fun Article1ItemContent(
 @Composable
 private fun ArticleItemPlayButton(
     data: ArticleWithEnclosureBean,
-    enabled: Boolean,
     onShowEnclosureBottomSheet: () -> Unit,
 ) {
     val playerJumper = rememberPlayerJumper()
@@ -483,14 +481,16 @@ private fun ArticleItemPlayButton(
     val duration = data.media?.duration?.takeIf { it > 0 }
     FilledTonalButton(
         modifier = Modifier.height(28.dp),
-        enabled = enabled,
         onClick = {
             val enclosure = mediaEnclosures.singleOrNull()
             if (enclosure == null) {
                 onShowEnclosureBottomSheet()
             } else {
                 playerJumper.jump(
-                    PlayDataMode.ArticleList(articleId = data.article.articleId, url = enclosure.url)
+                    PlayDataMode.ArticleList(
+                        articleId = data.article.articleId,
+                        url = enclosure.url
+                    )
                 )
             }
         },
@@ -508,7 +508,8 @@ private fun ArticleItemPlayButton(
         )
         Spacer(modifier = Modifier.width(2.dp))
         Text(
-            text = duration?.let { (it / 1000).toDurationString() } ?: stringResource(Res.string.play),
+            text = duration?.let { (it / 1000).toDurationString() }
+                ?: stringResource(Res.string.play),
             style = MaterialTheme.typography.labelSmall,
             maxLines = 1,
         )

@@ -5,12 +5,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.mpv.MPVSurface
 import com.skyd.podaura.ui.player.service.PlayerState
+import org.jetbrains.compose.resources.stringResource
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.waiting
 
 @Composable
 actual fun PlatformPlayerView(
@@ -68,5 +72,9 @@ internal fun DesktopPlayerContent(
             bootstrapSurface(Modifier.matchParentSize())
         }
         content()
+        WaitingDialog(
+            visible = engineState == PlayerEngineState.Initializing,
+            title = stringResource(Res.string.waiting),
+        )
     }
 }
