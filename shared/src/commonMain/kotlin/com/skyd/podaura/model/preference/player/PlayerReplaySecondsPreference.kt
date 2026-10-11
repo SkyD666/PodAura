@@ -8,7 +8,7 @@ import com.skyd.podaura.model.preference.BasePreference
 object PlayerReplaySecondsPreference : BasePreference<Int>() {
     private const val PLAYER_REPLAY_SECONDS = "playerReplaySeconds"
 
-    val range = -300f..-5f
+    val range = -300f..-2f
     override val default = -10
     override val key = intPreferencesKey(PLAYER_REPLAY_SECONDS)
 }

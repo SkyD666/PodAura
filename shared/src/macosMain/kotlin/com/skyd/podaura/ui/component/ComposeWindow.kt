@@ -20,6 +20,7 @@ package com.skyd.podaura.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asComposeCanvas
 import androidx.compose.ui.input.key.KeyEvent
@@ -38,11 +39,15 @@ import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.platform.WindowInfoImpl
 import androidx.compose.ui.scene.CanvasLayersComposeScene
+import androidx.compose.ui.scene.ComposeSceneContext
+import androidx.compose.ui.scene.ComposeSceneLayer
+import androidx.compose.ui.scene.LocalComposeSceneContext
 import androidx.compose.ui.scene.hasInvalidations
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toDpSize
 import androidx.compose.ui.unit.toOffset
@@ -92,9 +97,11 @@ import platform.AppKit.NSWindowStyleMaskMiniaturizable
 import platform.AppKit.NSWindowStyleMaskResizable
 import platform.AppKit.NSWindowStyleMaskTitled
 import platform.AppKit.NSWindowTitleHidden
+import platform.CoreGraphics.CGPoint
 import platform.Foundation.NSEdgeInsets
 import platform.Foundation.NSMakeRect
 import platform.Foundation.NSNotification
+import platform.Foundation.NSPointInRect
 import platform.darwin.NSObject
 
 interface WindowScope {
@@ -102,6 +109,10 @@ interface WindowScope {
      * [NSWindow] that was created inside [Window]
      */
     val window: NSWindow
+
+    /** Register from a DisposableEffect and clear when the window content leaves composition. */
+    var onPreviewKeyEvent: ((KeyEvent) -> Boolean)?
+    var onOverlayFocus: (() -> Unit)?
 }
 
 fun Window(
@@ -128,6 +139,19 @@ class ComposeWindow(
     private val onKeyEvent: (KeyEvent) -> Boolean = { false },
     content: @Composable WindowScope.() -> Unit,
 ) : WindowScope {
+    override var onPreviewKeyEvent: ((KeyEvent) -> Boolean)? = null
+    override var onOverlayFocus: (() -> Unit)? = null
+
+    private var hasFocusedOverlay = false
+    private val overlayLayers = mutableListOf<ComposeSceneLayer>()
+
+    private fun updateOverlayFocus() {
+        val focused = overlayLayers.any { it.focusable }
+        val gainedFocus = focused && !hasFocusedOverlay
+        hasFocusedOverlay = focused
+        if (gainedFocus) onOverlayFocus?.invoke()
+    }
+
     private var isDisposed = false
     private var isDispatchingScene = false
 
@@ -256,8 +280,17 @@ class ComposeWindow(
         override fun canBecomeMainWindow() = true
     }
 
-    private val container =
-        NSView(NSMakeRect(0.0, 0.0, size.width.value.toDouble(), size.height.value.toDouble()))
+    private val container = object : NSView(
+        NSMakeRect(0.0, 0.0, size.width.value.toDouble(), size.height.value.toDouble())
+    ) {
+        override fun hitTest(point: CValue<CGPoint>): NSView? {
+            val nativeWindow = window ?: return super.hitTest(point)
+            val windowPoint = superview?.convertPoint(point, toView = null) ?: point
+            // Drawing beneath the titlebar must not make its window gestures hit Compose.
+            if (!NSPointInRect(windowPoint, nativeWindow.contentLayoutRect)) return null
+            return super.hitTest(point)
+        }
+    }
     private val interopRoot = AppKitInteropRootView().apply {
         setFrame(container.bounds)
         autoresizingMask = NSViewWidthSizable or NSViewHeightSizable
@@ -389,7 +422,39 @@ class ComposeWindow(
 
         scene.density = density
         scene.setContent {
+            val sceneContext = requireNotNull(LocalComposeSceneContext.current)
+            val windowSceneContext = remember(sceneContext) {
+                object : ComposeSceneContext by sceneContext {
+                    override fun createLayer(
+                        density: Density,
+                        layoutDirection: LayoutDirection,
+                        focusable: Boolean,
+                        consumePointerInputOutside: Boolean,
+                    ): ComposeSceneLayer {
+                        val layer = sceneContext.createLayer(
+                            density, layoutDirection, focusable, consumePointerInputOutside,
+                        )
+                        overlayLayers += layer
+                        updateOverlayFocus()
+                        return object : ComposeSceneLayer by layer {
+                            override var focusable: Boolean
+                                get() = layer.focusable
+                                set(value) {
+                                    layer.focusable = value
+                                    updateOverlayFocus()
+                                }
+
+                            override fun close() {
+                                layer.close()
+                                overlayLayers.remove(layer)
+                                updateOverlayFocus()
+                            }
+                        }
+                    }
+                }
+            }
             CompositionLocalProvider(
+                LocalComposeSceneContext provides windowSceneContext,
                 LocalPlatformWindowInsets provides windowInsets,
                 LocalInteropContainer provides interopContainer,
                 content = { interopContainer.TrackInteropPlacementContainer { content() } }
@@ -428,7 +493,15 @@ class ComposeWindow(
 
     private fun onKeyboardEvent(event: KeyEvent): Boolean {
         if (isDisposed) return false
-        return dispatchScene { scene.sendKeyEvent(event) || onKeyEvent(event) } ?: false
+        return dispatchScene {
+            // Dialogs and focusable popups own keyboard input, including unhandled keys.
+            if (hasFocusedOverlay) {
+                scene.sendKeyEvent(event)
+            } else {
+                onPreviewKeyEvent?.invoke(event) == true ||
+                        scene.sendKeyEvent(event) || onKeyEvent(event)
+            }
+        } ?: false
     }
 
     private fun onMouseEvent(
