@@ -5,13 +5,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 import org.jetbrains.kotlin.konan.target.Family
-import org.jetbrains.kotlin.konan.target.HostManager
 
-// Disabled Kotlin link tasks still execute dependencies, so guard preparation tasks too.
 // MPVKit download, C interop and native test linking. Targets/frameworks remain owned by the module.
 val interopFrameworks = listOf("Libmpv", "Libavformat", "Libavcodec", "Libavutil")
 val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
-    enabled = HostManager.hostIsMac
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
     inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
@@ -27,7 +24,6 @@ val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
 }
 
 val prepareIosMpvRuntime = tasks.register<Exec>("prepareIosMpvRuntime") {
-    enabled = HostManager.hostIsMac
     dependsOn(prepareIosMpv)
     commandLine("python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
         "--platform", "ios")
@@ -94,7 +90,6 @@ extensions.configure<KotlinMultiplatformExtension> {
 
 // Native macOS consumes the same pinned dependencies, using their macOS slices.
 val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
-    enabled = HostManager.hostIsMac
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
     inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
@@ -106,7 +101,6 @@ val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
     commandLine("python3", script.absolutePath, "--platform", "macos", "--headers-only")
 }
 val prepareMacosMpvRuntime = tasks.register<Exec>("prepareMacosMpvRuntime") {
-    enabled = HostManager.hostIsMac
     dependsOn(prepareMacosMpv)
     commandLine("python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
         "--platform", "macos")

@@ -26,7 +26,7 @@ plugins {
     alias(libs.plugins.buildkonfig)
     alias(libs.plugins.gradle.msix)
     id("podaura.desktop-media-shims")
-    id("podaura.apple-mpv")
+    id("podaura.apple-mpv") apply (System.getProperty("os.name").startsWith("Mac", true))
     id("podaura.macos-appkit")
 }
 
