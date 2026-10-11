@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -29,10 +30,13 @@ import androidx.compose.material.icons.outlined.ImportContacts
 import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.LocalContentColor
@@ -94,6 +98,7 @@ import com.skyd.podaura.ui.component.swipe.SwipeAction
 import com.skyd.podaura.ui.component.swipe.SwipeableActionsBox
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
+import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.screen.article.enclosure.EnclosureBottomSheet
 import com.skyd.podaura.ui.screen.article.enclosure.getEnclosuresList
 import com.skyd.podaura.ui.screen.feed.FeedIcon
@@ -113,6 +118,7 @@ import podaura.shared.generated.resources.article_screen_unfavorite
 import podaura.shared.generated.resources.article_select
 import podaura.shared.generated.resources.bottom_sheet_enclosure_title
 import podaura.shared.generated.resources.open_link_in_browser
+import podaura.shared.generated.resources.play
 
 
 @Composable
@@ -258,6 +264,11 @@ private fun Article1ItemContent(
     val articleTapAction = ArticleTapActionPreference.current
     val articleWithEnclosure = data.articleWithEnclosure
     val article = articleWithEnclosure.article
+    val cover = articleWithEnclosure.media?.image.orEmpty().ifBlank { article.image }
+    val hasCover = !cover.isNullOrBlank()
+    val hasMedia = remember(articleWithEnclosure.enclosures) {
+        articleWithEnclosure.enclosures.any { it.isMedia }
+    }
     val colorAlpha = if (data.articleWithEnclosure.article.isRead) 0.5f else 1f
     val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
         LocalAbsoluteTonalElevation.current + ArticleItemTonalElevationPreference.current.dp
@@ -275,7 +286,7 @@ private fun Article1ItemContent(
                     } else surfaceColor
                 )
                 .fillMaxWidth()
-                .thenIf(!article.image.isNullOrBlank()) { height(IntrinsicSize.Max) }
+                .thenIf(hasCover) { height(IntrinsicSize.Max) }
                 .combinedClickable(
                     enabled = selected == null || selectionEnabled,
                     role = if (selected != null) Role.Checkbox else null,
@@ -360,7 +371,7 @@ private fun Article1ItemContent(
                     }
                 }
 
-                if (!article.image.isNullOrBlank()) {
+                if (hasCover) {
                     OutlinedCard(
                         modifier = Modifier
                             .padding(top = 12.dp, end = 12.dp)
@@ -381,8 +392,7 @@ private fun Article1ItemContent(
                                         }
                                     }
                                 },
-                            model = articleWithEnclosure.media?.image.orEmpty()
-                                .ifBlank { article.image },
+                            model = cover,
                             contentScale = ContentScale.Crop,
                         )
                     }
@@ -400,6 +410,19 @@ private fun Article1ItemContent(
                     onEditFeedSheet = onEditFeedSheet,
                     interactive = selected == null,
                 )
+                if (hasMedia) {
+                    Box(
+                        modifier = Modifier.heightIn(min = 36.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ArticleItemPlayButton(
+                            data = articleWithEnclosure,
+                            enabled = selected == null,
+                            onShowEnclosureBottomSheet = onShowEnclosureBottomSheet,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 if (selected != null) {
                     // Match the two browse actions so switching modes preserves the layout.
                     Box(
@@ -446,6 +469,49 @@ private fun Article1ItemContent(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ArticleItemPlayButton(
+    data: ArticleWithEnclosureBean,
+    enabled: Boolean,
+    onShowEnclosureBottomSheet: () -> Unit,
+) {
+    val playerJumper = rememberPlayerJumper()
+    val mediaEnclosures = remember(data.enclosures) { data.enclosures.filter { it.isMedia } }
+    val duration = data.media?.duration?.takeIf { it > 0 }
+    FilledTonalButton(
+        modifier = Modifier.height(28.dp),
+        enabled = enabled,
+        onClick = {
+            val enclosure = mediaEnclosures.singleOrNull()
+            if (enclosure == null) {
+                onShowEnclosureBottomSheet()
+            } else {
+                playerJumper.jump(
+                    PlayDataMode.ArticleList(articleId = data.article.articleId, url = enclosure.url)
+                )
+            }
+        },
+        shape = CircleShape,
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            contentColor = MaterialTheme.colorScheme.primary,
+        ),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.PlayArrow,
+            contentDescription = if (duration != null) stringResource(Res.string.play) else null,
+            modifier = Modifier.size(14.dp),
+        )
+        Spacer(modifier = Modifier.width(2.dp))
+        Text(
+            text = duration?.let { (it / 1000).toDurationString() } ?: stringResource(Res.string.play),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+        )
     }
 }
 

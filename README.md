@@ -20,6 +20,9 @@
         <a href="https://www.android.com/versions/nougat-7-0" style="text-decoration:none" >
             <img src="https://img.shields.io/badge/Android 7.0+-brightgreen?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
         </a>
+        <a href="https://www.apple.com/os/ios/" style="text-decoration:none" >
+            <img src="https://img.shields.io/badge/iOS-black?style=for-the-badge&logo=apple&logoColor=white" alt="iOS"/>
+        </a>
         <a href="https://www.apple.com/os/macos/" style="text-decoration:none" >
             <img src="https://img.shields.io/badge/macOS-black?style=for-the-badge&logo=apple&logoColor=white" alt="macOS"/>
         </a>
