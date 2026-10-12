@@ -26,7 +26,11 @@ import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
 
 fun main(args: Array<String>) {
-    if (platform == Platform.macOS_Jvm) DesktopArticleNotifications.initialize()
+    if (platform == Platform.macOS_Jvm) {
+        // AWT reads this at startup; rootPane client properties do not affect native dialogs.
+        System.setProperty("apple.awt.application.appearance", "system")
+        DesktopArticleNotifications.initialize()
+    }
     val openFiles = DesktopOpenFiles()
     val shutdownHook = Thread({ openFiles.close() }, "PodAura activation cleanup")
     Runtime.getRuntime().addShutdownHook(shutdownHook)
