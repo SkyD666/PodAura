@@ -11,6 +11,7 @@ import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
 import kotlinx.coroutines.CoroutineScope
@@ -30,25 +31,39 @@ class AndroidMediaSession(context: Context, private val coordinator: PlayerCoord
     private val policy = PlaybackResumePolicy(
         initiallyBackground = true,
         initiallyScreenLocked = !power.isInteractive || keyguard.isKeyguardLocked,
+        independentScreenPlayback = true,
+        pauseOnScreenOff = dataStore.getOrDefault(PauseOnScreenOffPreference),
     )
     private var systemCommand = false
-    private val backgroundEnabled get() = dataStore.getOrDefault(BackgroundPlayPreference)
+
+    // Seed once when creating the session; the subscription owns all subsequent updates.
+    private var backgroundEnabled = dataStore.getOrDefault(BackgroundPlayPreference)
+    private val events = AndroidPlaybackEvents(
+        policy = policy,
+        screenOff = !power.isInteractive,
+        playing = { !coordinator.playerState.value.paused },
+        ready = { coordinator.engineState.value.isReady },
+        backgroundEnabled = { backgroundEnabled },
+        systemPause = ::systemPause,
+    )
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val locked = when (intent?.action) {
-                Intent.ACTION_SCREEN_OFF -> true
-                Intent.ACTION_USER_PRESENT -> false
-                Intent.ACTION_SCREEN_ON -> keyguard.isKeyguardLocked
-                else -> return
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> updateScreenState(off = true)
+                Intent.ACTION_USER_PRESENT -> updateScreenState(locked = false)
+                Intent.ACTION_SCREEN_ON -> updateScreenState(off = false)
             }
-            setScreenLocked(locked)
         }
     }
 
     init {
-        coordinator.onPlaybackCommand = { command ->
-            if (!systemCommand) command.playbackIntent(coordinator.playerState.value.paused)
-                ?.let { policy.userAction(it) }
+        coordinator.onPlaybackCommand = { command, intent ->
+            if (!systemCommand) {
+                val paused = coordinator.playerState.value.paused
+                intent?.let {
+                    policy.userAction(it, explicitPlay = command.isExplicitPlay(paused))
+                }
+            }
         }
         // USER_PRESENT can come from SystemUI under a non-system UID. All three
         // actions are protected system broadcasts, so this receiver must be exported.
@@ -60,44 +75,33 @@ class AndroidMediaSession(context: Context, private val coordinator: PlayerCoord
         scope.launch {
             combine(
                 coordinator.playerState, coordinator.engineState,
-                dataStore.flowOf(BackgroundPlayPreference)
-            ) { state, engine, enabled ->
+                dataStore.flowOf(BackgroundPlayPreference, PauseOnScreenOffPreference)
+            ) { state, engine, (enabled, pauseOnScreenOff) ->
+                backgroundEnabled = enabled
+                policy.pauseOnScreenOff = pauseOnScreenOff
                 policy.pauseWhenRequired(!state.paused, engine.isReady, enabled)
             }.collect { pause -> if (pause) systemPause(true) }
         }
     }
 
     fun setPlayerVisible(visible: Boolean) {
-        if (visible) {
-            setScreenLocked(!power.isInteractive || keyguard.isKeyguardLocked)
-            if (policy.enterForeground()) systemPause(false)
-        } else if (policy.enterBackground(
-                !coordinator.playerState.value.paused,
-                backgroundEnabled
-            )
-        ) {
-            systemPause(true)
-        }
+        events.setPlayerVisible(
+            visible = visible,
+            off = !power.isInteractive,
+            locked = keyguard.isKeyguardLocked
+        )
     }
 
-    private fun setScreenLocked(locked: Boolean) {
-        if (policy.setScreenLocked(
-                locked,
-                !coordinator.playerState.value.paused,
-                backgroundEnabled
-            )
-        ) {
-            systemPause(locked)
-        }
+    private fun updateScreenState(
+        off: Boolean = !power.isInteractive,
+        locked: Boolean = keyguard.isKeyguardLocked,
+    ) {
+        events.updateScreenState(off, locked)
     }
 
     fun setPictureInPictureActive(active: Boolean) {
         if (policy.setPictureInPictureActive(active)) systemPause(false)
-        if (policy.pauseWhenRequired(
-                !coordinator.playerState.value.paused,
-                coordinator.engineState.value.isReady, backgroundEnabled
-            )
-        ) systemPause(true)
+        events.enforcePolicy()
     }
 
     private fun systemPause(paused: Boolean) {

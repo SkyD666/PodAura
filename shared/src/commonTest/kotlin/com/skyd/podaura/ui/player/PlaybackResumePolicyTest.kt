@@ -1,10 +1,161 @@
 package com.skyd.podaura.ui.player
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PlaybackResumePolicyTest {
+    @Test fun eofSkipsPermitSystemResumeWithoutGrantingExplicitPlayback() {
+        for (command in listOf(PlayerCommand.NextMedia, PlayerCommand.PreviousMedia)) {
+            for (eofReached in listOf(false, true)) {
+                val intent = command.playbackIntent(paused = true, eofReached = eofReached) == true
+                assertEquals(eofReached, intent)
+                val policy = PlaybackResumePolicy()
+                policy.userAction(intent, explicitPlay = command.isExplicitPlay(paused = true))
+                assertEquals(intent, policy.enterBackground(playing = intent, enabled = false))
+                assertEquals(intent, policy.enterForeground())
+
+                val locked = PlaybackResumePolicy(initiallyBackground = true, initiallyScreenLocked = true)
+                locked.userAction(intent, explicitPlay = command.isExplicitPlay(paused = true))
+                // A skip at EOF can start playback, but cannot bypass either automatic policy.
+                assertTrue(locked.pauseWhenRequired(true, true, backgroundEnabled = true))
+                val background = PlaybackResumePolicy(initiallyBackground = true)
+                background.userAction(intent, explicitPlay = command.isExplicitPlay(paused = true))
+                assertTrue(background.pauseWhenRequired(true, true, backgroundEnabled = false))
+            }
+        }
+    }
+
+    @Test fun automaticScreenAndBackgroundPlaybackFollowBothSettings() {
+        for (android in listOf(false, true)) {
+            for (pauseOnScreenOff in listOf(false, true)) {
+                for (backgroundEnabled in listOf(false, true)) {
+                    val locked = PlaybackResumePolicy(
+                        independentScreenPlayback = android,
+                        pauseOnScreenOff = pauseOnScreenOff,
+                    )
+                    val pausedOnLock = locked.setScreenLocked(true, playing = true, backgroundEnabled)
+                    val pausedOnBackground = locked.enterBackground(!pausedOnLock, backgroundEnabled)
+                    val shouldPause = pauseOnScreenOff || (!android && !backgroundEnabled)
+                    assertEquals(shouldPause, pausedOnLock || pausedOnBackground)
+                    // Loading the next item must apply the same rules.
+                    assertEquals(shouldPause, locked.pauseWhenRequired(true, true, backgroundEnabled))
+
+                    val home = PlaybackResumePolicy(
+                        independentScreenPlayback = android,
+                        pauseOnScreenOff = pauseOnScreenOff,
+                    )
+                    assertEquals(!backgroundEnabled, home.enterBackground(true, backgroundEnabled))
+                }
+            }
+        }
+    }
+
+    @Test fun androidHomePauseIsNotUndoneByLockingAndUnlocking() {
+        val policy = PlaybackResumePolicy(independentScreenPlayback = true, pauseOnScreenOff = false)
+        assertTrue(policy.enterBackground(playing = true, enabled = false))
+        assertFalse(policy.setScreenLocked(true, playing = false, backgroundEnabled = false))
+        // A deferred load must not escape the earlier Home pause once the screen is off.
+        assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+        assertFalse(policy.setScreenLocked(false, playing = false, backgroundEnabled = false))
+        assertTrue(policy.enterForeground())
+        assertFalse(policy.enterForeground())
+    }
+
+    @Test fun androidUnlockRestoresBackgroundRestrictionAfterScreenPlayback() {
+        val policy = PlaybackResumePolicy(independentScreenPlayback = true, pauseOnScreenOff = false)
+        assertFalse(policy.setScreenLocked(true, playing = true, backgroundEnabled = false))
+        assertFalse(policy.enterBackground(playing = true, enabled = false))
+        assertFalse(policy.setScreenLocked(false, playing = true, backgroundEnabled = false))
+        assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+        assertTrue(policy.enterForeground())
+    }
+
+    @Test fun explicitPlaySurvivesQueueAdvancementButNotTheNextAndroidScreenOff() {
+        val policy = PlaybackResumePolicy(independentScreenPlayback = true)
+        assertTrue(policy.setScreenLocked(true, playing = true, backgroundEnabled = false))
+        policy.enterBackground(playing = false, enabled = false)
+        policy.userAction(allowsResume = true, explicitPlay = true)
+        repeat(3) {
+            assertFalse(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+        }
+        // Changing the playing item does not revoke the explicit Play permission.
+        policy.userAction(allowsResume = true)
+        assertFalse(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+        // The lit lock screen can turn off again without USER_PRESENT in between.
+        policy.onScreenOff()
+        assertFalse(policy.setScreenLocked(true, playing = true, backgroundEnabled = false))
+        assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+    }
+
+    @Test fun iosExplicitPlayLastsUntilForegroundOrUserPauseDespiteLateLockNotifications() {
+        for (userPause in listOf(false, true)) {
+            val policy = PlaybackResumePolicy()
+            assertTrue(policy.enterBackground(playing = true, enabled = false))
+            policy.userAction(allowsResume = true, explicitPlay = true)
+            repeat(2) {
+                assertFalse(policy.setScreenLocked(true, playing = true, backgroundEnabled = false))
+                assertFalse(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+                assertFalse(policy.setScreenLocked(false, playing = true, backgroundEnabled = false))
+            }
+            if (userPause) {
+                policy.userAction(allowsResume = false)
+                assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+                assertFalse(policy.enterForeground())
+            } else {
+                assertFalse(policy.enterForeground())
+                assertTrue(policy.enterBackground(playing = true, enabled = false))
+            }
+        }
+    }
+
+    @Test fun explicitBackgroundPlayDoesNotPermitFutureAndroidLocks() {
+        val policy = PlaybackResumePolicy(independentScreenPlayback = true)
+        assertTrue(policy.enterBackground(playing = true, enabled = false))
+        policy.userAction(allowsResume = true, explicitPlay = true)
+        assertFalse(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+        assertTrue(policy.setScreenLocked(true, playing = true, backgroundEnabled = false))
+    }
+
+    @Test fun interruptionStillPausesExplicitScreenPlaybackAndHonorsUserPause() {
+        for (android in listOf(false, true)) {
+            val policy = PlaybackResumePolicy(initiallyScreenLocked = true, independentScreenPlayback = android)
+            policy.enterBackground(playing = false, enabled = false)
+            policy.userAction(allowsResume = true, explicitPlay = true)
+            policy.beginInterruption(playing = true)
+            assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = false))
+            assertTrue(policy.endInterruption(shouldResume = true, backgroundEnabled = false))
+            policy.beginInterruption(playing = true)
+            policy.userAction(allowsResume = false)
+            assertFalse(policy.endInterruption(shouldResume = true, backgroundEnabled = false))
+            assertFalse(policy.setScreenLocked(false, playing = false, backgroundEnabled = false))
+            assertFalse(policy.enterForeground())
+        }
+    }
+
+    @Test fun onlyPlayCommandsGrantPermissionAndPausedTrackChangesRemainPaused() {
+        for (command in listOf(PlayerCommand.Paused(false), PlayerCommand.PlayOrPause)) {
+            assertTrue(command.isExplicitPlay(paused = true))
+        }
+        assertFalse(PlayerCommand.Paused(true).isExplicitPlay(paused = false))
+        assertFalse(PlayerCommand.PlayOrPause.isExplicitPlay(paused = false))
+        for (command in listOf(
+            PlayerCommand.NextMedia, PlayerCommand.PreviousMedia,
+            PlayerCommand.LoadList(emptyList()), PlayerCommand.PlayFileInPlaylist("episode"),
+        )) {
+            val policy = PlaybackResumePolicy(initiallyScreenLocked = true)
+            policy.userAction(
+                allowsResume = command.playbackIntent(paused = true) == true,
+                explicitPlay = command.isExplicitPlay(paused = true),
+            )
+            assertTrue(policy.pauseWhenRequired(true, true, backgroundEnabled = true))
+        }
+        assertEquals(false, PlayerCommand.NextMedia.playbackIntent(paused = true))
+        assertEquals(false, PlayerCommand.PreviousMedia.playbackIntent(paused = true))
+        assertEquals(true, PlayerCommand.NextMedia.playbackIntent(paused = false))
+    }
+
     @Test fun delayedAudioActivationPreservesForegroundResumeAndUserPause() {
         val policy = PlaybackResumePolicy()
         policy.userAction(allowsResume = true)

@@ -373,6 +373,8 @@
     <string name="player_notification_channel_name">Ludilo</string>
     <string name="player_notification_channel_description">Ludilaj regiloj</string>
     <string name="player_config_screen_background_play">Fona ludado</string>
+    <string name="player_config_screen_pause_on_screen_off">Paŭzi kiam la ekrano malŝaltiĝas</string>
+    <string name="player_config_screen_pause_on_screen_off_ios_description">Por plu ludi kun malŝaltita ekrano, malŝaltu “Paŭzi kiam la ekrano malŝaltiĝas” kaj ŝaltu “Fona ludado”.</string>
     <string name="expend">Malfaldi</string>
     <string name="collapse">Faldi</string>
     <string name="feed_number_badge_unread">Nelegitaj</string>

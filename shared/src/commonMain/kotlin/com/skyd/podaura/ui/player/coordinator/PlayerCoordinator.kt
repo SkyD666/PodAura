@@ -32,6 +32,7 @@ import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
 import com.skyd.podaura.ui.player.mpv.resizeSurface
 import com.skyd.podaura.ui.player.playerTrace
+import com.skyd.podaura.ui.player.playbackIntent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -162,12 +163,18 @@ class PlayerCoordinator : LifecycleOwner {
     fun removeObserver(observer: Observer) = observers.update { it - observer }
     fun removeAllObserver() = observers.store(emptySet())
 
-    internal var onPlaybackCommand: ((PlayerCommand) -> Unit)? = null
+    internal var onPlaybackCommand: ((PlayerCommand, Boolean?) -> Unit)? = null
     /** Runs in the engine queue before playback, without blocking the calling UI. */
-    internal var preparePlaybackCommand: (suspend (PlayerCommand) -> Boolean)? = null
+    internal var preparePlaybackCommand: (suspend (Boolean?) -> Boolean)? = null
 
     fun onCommand(command: PlayerCommand) {
-        onPlaybackCommand?.invoke(command)
+        // Resolve skips once, before enqueueing: keep-open's EOF pause is not a user pause.
+        // The policy, audio activation and engine all consume this same playback intent.
+        val skipping = command == PlayerCommand.NextMedia || command == PlayerCommand.PreviousMedia
+        val intent = if (skipping && _engineState.value.isReady && !destroyed.load()) {
+            command.playbackIntent(player.paused, player.eofReached)
+        } else command.playbackIntent(playerState.value.paused)
+        onPlaybackCommand?.invoke(command, intent)
         when (command) {
             PlayerCommand.Destroy -> destroy()
             PlayerCommand.RetryInitialize -> {
@@ -199,7 +206,7 @@ class PlayerCoordinator : LifecycleOwner {
             is PlayerCommand.VideoOffset -> postTransform { copy(offset = command.offset) }
             else -> {
                 if (_engineState.value.isReady && !destroyed.load()) {
-                    commands.trySend(ActorMessage.Command(command))
+                    commands.trySend(ActorMessage.Command(command, intent))
                 }
             }
         }
@@ -261,7 +268,7 @@ class PlayerCoordinator : LifecycleOwner {
 
     private suspend fun handleMessage(message: ActorMessage): Boolean {
         when (message) {
-            is ActorMessage.Command -> executeCommand(message.command)
+            is ActorMessage.Command -> executeCommand(message.command, message.playbackIntent)
             is ActorMessage.Key -> player.dispatchKey(message.input)
             is ActorMessage.EndFile -> handleEndFile(
                 reason = message.reason,
@@ -286,8 +293,8 @@ class PlayerCoordinator : LifecycleOwner {
         return true
     }
 
-    private suspend fun executeCommand(command: PlayerCommand) {
-        if (preparePlaybackCommand?.invoke(command) == false) return
+    private suspend fun executeCommand(command: PlayerCommand, playbackIntent: Boolean?) {
+        if (preparePlaybackCommand?.invoke(playbackIntent) == false) return
         when (command) {
             is PlayerCommand.RemoveMediaFromPlaylist -> removeMedia(command)
             is PlayerCommand.Paused -> setPaused(command.paused)
@@ -298,11 +305,11 @@ class PlayerCoordinator : LifecycleOwner {
 
             PlayerCommand.PreviousMedia -> {
                 progress.save()
-                player.playlistPrev()
+                player.playlistPrev(play = playbackIntent == true)
             }
             PlayerCommand.NextMedia -> {
                 progress.save()
-                player.playlistNext()
+                player.playlistNext(play = playbackIntent == true)
             }
             is PlayerCommand.SeekTo -> seekTo(command.position)
 
@@ -378,7 +385,7 @@ class PlayerCoordinator : LifecycleOwner {
                 )
             }
             if (command.playlist.isEmpty()) return
-            if (preparePlaybackCommand?.invoke(command) == false) return
+            if (preparePlaybackCommand?.invoke(true) == false) return
             loadPreparedList(command)
             externalPlayback?.release()
             externalPlayback = command.externalBatch?.let(::ExternalPlaybackSession)
@@ -828,7 +835,7 @@ class PlayerCoordinator : LifecycleOwner {
         cachedPlaylistMap[this]?.playlistMediaBean?.historyUrl ?: toStableMediaUrl()
 
     private sealed interface ActorMessage {
-        data class Command(val command: PlayerCommand) : ActorMessage
+        data class Command(val command: PlayerCommand, val playbackIntent: Boolean?) : ActorMessage
         data class Key(val input: PlayerKeyInput) : ActorMessage
         data class EndFile(
             val reason: Int,

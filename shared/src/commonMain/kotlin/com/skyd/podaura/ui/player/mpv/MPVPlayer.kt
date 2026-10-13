@@ -606,18 +606,18 @@ class MPVPlayer {
         }
     }
 
-    fun playlistPrev() {
+    fun playlistPrev(play: Boolean) {
         if (isIdling && playlistCount > 1) {
-            playMediaAtIndex(playlistCount - 2)
+            mpv.command("playlist-play-index", (playlistCount - 2).toString())
         } else {
             mpv.command("playlist-prev")
         }
-        paused = false
+        paused = !play
     }
 
-    fun playlistNext() {
+    fun playlistNext(play: Boolean) {
         mpv.command("playlist-next")
-        paused = false
+        paused = !play
     }
 
     fun playFileInPlaylist(path: String) {

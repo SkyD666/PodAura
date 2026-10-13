@@ -373,6 +373,8 @@
     <string name="player_notification_channel_name">Oynatıcı</string>
     <string name="player_notification_channel_description">Oynatıcı denetimleri</string>
     <string name="player_config_screen_background_play">Arka planda oynatma</string>
+    <string name="player_config_screen_pause_on_screen_off">Ekran kapandığında duraklat</string>
+    <string name="player_config_screen_pause_on_screen_off_ios_description">Ekran kapalıyken oynatmaya devam etmek için “Ekran kapandığında duraklat” seçeneğini kapatın ve “Arka planda oynatma” seçeneğini açın.</string>
     <string name="expend">Genişlet</string>
     <string name="collapse">Daralt</string>
     <string name="feed_number_badge_unread">Okunmamış</string>

@@ -360,6 +360,8 @@
     <string name="player_notification_channel_name">プレーヤー</string>
     <string name="player_notification_channel_description">プレーヤーのコントローラー</string>
     <string name="player_config_screen_background_play">バックグラウンド再生</string>
+    <string name="player_config_screen_pause_on_screen_off">画面オフ時に一時停止</string>
+    <string name="player_config_screen_pause_on_screen_off_ios_description">画面を消しても再生を続けるには、「画面オフ時に一時停止」をオフにし、「バックグラウンド再生」をオンにしてください。</string>
     <string name="expend">展開</string>
     <string name="collapse">折りたたむ</string>
     <string name="feed_number_badge_unread">未読</string>

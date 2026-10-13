@@ -7,6 +7,7 @@ import com.skyd.podaura.ext.flowOf
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
 import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.imageLoaderBuilder
@@ -95,7 +96,11 @@ internal class IosMediaSession(
     private val resumePolicy = PlaybackResumePolicy(
         initiallyBackground = UIApplication.sharedApplication.applicationState == UIApplicationStateBackground,
         initiallyScreenLocked = !UIApplication.sharedApplication.protectedDataAvailable,
+        pauseOnScreenOff = dataStore.getOrDefault(PauseOnScreenOffPreference),
     )
+
+    // Seed once when creating the session; system events use the subscription's latest values.
+    private var backgroundEnabled = dataStore.getOrDefault(BackgroundPlayPreference)
     private var artworkSource: Any? = null
     private var artwork: MPMediaItemArtwork? = null
     private var artworkJob: Job? = null
@@ -136,16 +141,16 @@ internal class IosMediaSession(
         observe(UIApplicationDidEnterBackgroundNotification) {
             if (resumePolicy.enterBackground(
                     !coordinator.playerState.value.paused,
-                    dataStore.getOrDefault(BackgroundPlayPreference)
+                    backgroundEnabled
                 )
             ) systemPause(true)
             updateNowPlaying()
         }
         observe(UIApplicationDidBecomeActiveNotification) {
-            setScreenLocked(false)
             if (resumePolicy.enterForeground()) {
                 systemPause(false)
             }
+            setScreenLocked(false)
             updateNowPlaying()
         }
         observe(UIApplicationProtectedDataWillBecomeUnavailable) { setScreenLocked(true) }
@@ -163,7 +168,7 @@ internal class IosMediaSession(
                         ?: 0u
                 val resume = resumePolicy.endInterruption(
                     options and AVAudioSessionInterruptionOptionShouldResume != 0uL,
-                    dataStore.getOrDefault(BackgroundPlayPreference)
+                    backgroundEnabled
                 )
                 if (resume) {
                     systemPause(false)
@@ -184,9 +189,12 @@ internal class IosMediaSession(
             combine(
                 coordinator.playerState,
                 coordinator.engineState,
-                dataStore.flowOf(BackgroundPlayPreference),
-            ) { state, engine, backgroundEnabled -> Triple(state, engine, backgroundEnabled) }
-                .collect { (state, engine, backgroundEnabled) ->
+                dataStore.flowOf(BackgroundPlayPreference, PauseOnScreenOffPreference),
+            ) { state, engine, preferences -> Triple(state, engine, preferences) }
+                .collect { (state, engine, preferences) ->
+                    val (enabled, pauseOnScreenOff) = preferences
+                    backgroundEnabled = enabled
+                    resumePolicy.pauseOnScreenOff = pauseOnScreenOff
                     if (resumePolicy.pauseWhenRequired(
                             !state.paused,
                             engine.isReady,
@@ -221,11 +229,12 @@ internal class IosMediaSession(
         if (resumePolicy.setScreenLocked(
                 locked,
                 !coordinator.playerState.value.paused,
-                dataStore.getOrDefault(BackgroundPlayPreference),
+                backgroundEnabled,
             )
         ) {
             systemPause(locked)
         }
+        enforcePolicy()
         updateNowPlaying()
     }
 
@@ -233,13 +242,17 @@ internal class IosMediaSession(
         if (resumePolicy.setPictureInPictureActive(active)) {
             systemPause(false)
         }
+        enforcePolicy()
+        updateNowPlaying()
+    }
+
+    private fun enforcePolicy() {
         if (resumePolicy.pauseWhenRequired(
                 !coordinator.playerState.value.paused,
                 coordinator.engineState.value.isReady,
-                dataStore.getOrDefault(BackgroundPlayPreference)
+                backgroundEnabled
             )
         ) systemPause(true)
-        updateNowPlaying()
     }
 
     /** UI commands clear pending system resumes even if pause was already true. */
@@ -252,17 +265,21 @@ internal class IosMediaSession(
         }
     }
 
-    fun userCommand(command: PlayerCommand) {
+    private fun userCommand(command: PlayerCommand, intent: Boolean?) {
         if (systemCommand) return
-        command.playbackIntent(coordinator.playerState.value.paused)?.let { allowsResume ->
+        val paused = coordinator.playerState.value.paused
+        intent?.let { allowsResume ->
             audioActivationGeneration++
             requestedAudioActivationGeneration = audioActivationGeneration.takeIf { allowsResume }
-            resumePolicy.userAction(allowsResume = allowsResume)
+            resumePolicy.userAction(
+                allowsResume = allowsResume,
+                explicitPlay = command.isExplicitPlay(paused),
+            )
         }
     }
 
-    private suspend fun preparePlaybackCommand(command: PlayerCommand): Boolean {
-        if (command.playbackIntent(coordinator.playerState.value.paused) != true) return true
+    private suspend fun preparePlaybackCommand(intent: Boolean?): Boolean {
+        if (intent != true) return true
         return withContext(Dispatchers.Main.immediate) {
             if (closed) return@withContext false
             val generation = requestedAudioActivationGeneration

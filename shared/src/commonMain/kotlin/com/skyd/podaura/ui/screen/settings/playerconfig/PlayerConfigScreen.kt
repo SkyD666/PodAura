@@ -18,6 +18,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material.icons.outlined.ScreenLockPortrait
 import androidx.compose.material.icons.outlined.Speaker
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.TouchApp
@@ -52,10 +53,12 @@ import com.skyd.compone.component.menu.CheckableListMenu
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.isPhone
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
 import com.skyd.podaura.model.preference.player.PlayerAutoPipPreference
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
 import com.skyd.podaura.model.preference.player.PlayerForwardSecondsPreference
@@ -95,6 +98,8 @@ import podaura.shared.generated.resources.player_config_screen_forward_seconds_d
 import podaura.shared.generated.resources.player_config_screen_max_back_cache_size
 import podaura.shared.generated.resources.player_config_screen_max_cache_size
 import podaura.shared.generated.resources.player_config_screen_name
+import podaura.shared.generated.resources.player_config_screen_pause_on_screen_off
+import podaura.shared.generated.resources.player_config_screen_pause_on_screen_off_ios_description
 import podaura.shared.generated.resources.player_config_screen_replay_second_button_value
 import podaura.shared.generated.resources.player_config_screen_replay_seconds_description
 import podaura.shared.generated.resources.player_config_screen_seek_option
@@ -152,6 +157,19 @@ fun PlayerConfigScreen(
                         onCheckedChange = { BackgroundPlayPreference.put(scope, it) }
                     )
                 }
+                if (platform.isPhone) {
+                    item {
+                        SwitchSettingsItem(
+                            imageVector = Icons.Outlined.ScreenLockPortrait,
+                            text = stringResource(Res.string.player_config_screen_pause_on_screen_off),
+                            description = if (platform == Platform.iOS) {
+                                stringResource(Res.string.player_config_screen_pause_on_screen_off_ios_description)
+                            } else null,
+                            checked = PauseOnScreenOffPreference.current,
+                            onCheckedChange = { PauseOnScreenOffPreference.put(scope, it) },
+                        )
+                    }
+                }
                 item {
                     BaseSettingsItem(
                         icon = rememberVectorPainter(image = Icons.Outlined.TouchApp),
@@ -204,7 +222,9 @@ fun PlayerConfigScreen(
                             text = stringResource(Res.string.player_config_screen_show_screenshot_button),
                             description = stringResource(Res.string.player_config_screen_show_screenshot_button_description),
                             checked = PlayerShowScreenshotButtonPreference.current,
-                            onCheckedChange = { PlayerShowScreenshotButtonPreference.put(scope, it) }
+                            onCheckedChange = {
+                                PlayerShowScreenshotButtonPreference.put(scope, it)
+                            }
                         )
                     }
                 }

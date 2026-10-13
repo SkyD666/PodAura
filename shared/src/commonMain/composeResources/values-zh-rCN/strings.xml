@@ -396,6 +396,8 @@
     <string name="player_notification_channel_name">播放器</string>
     <string name="player_notification_channel_description">播放器通知栏控制</string>
     <string name="player_config_screen_background_play">后台播放</string>
+    <string name="player_config_screen_pause_on_screen_off">熄屏暂停</string>
+    <string name="player_config_screen_pause_on_screen_off_ios_description">如需熄屏后继续播放，请关闭“熄屏暂停”，并开启“后台播放”。</string>
     <string name="expend">展开</string>
     <string name="collapse">收起</string>
     <string name="feed_number_badge_unread">未读</string>

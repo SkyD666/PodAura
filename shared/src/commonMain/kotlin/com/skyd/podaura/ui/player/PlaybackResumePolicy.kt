@@ -4,6 +4,9 @@ package com.skyd.podaura.ui.player
 internal class PlaybackResumePolicy(
     initiallyBackground: Boolean = false,
     initiallyScreenLocked: Boolean = false,
+    // Android can distinguish screen transitions from leaving the app. iOS cannot.
+    private val independentScreenPlayback: Boolean = false,
+    var pauseOnScreenOff: Boolean = true,
 ) {
     var background = initiallyBackground
         private set
@@ -13,13 +16,34 @@ internal class PlaybackResumePolicy(
     private var userAllowsResume = true
     private var pictureInPictureActive = false
     private var screenLocked = initiallyScreenLocked
+    private var lockedFromForeground = initiallyScreenLocked && !initiallyBackground
     private var resumeAfterUnlock = false
+    private var userPlaybackOverride = false
 
-    /** Returns whether this transition needs a pause (lock) or a resume (unlock). */
+    private val screenRequiresPause get() = screenLocked && pauseOnScreenOff && !userPlaybackOverride
+
+    private fun backgroundRequiresPause(enabled: Boolean) =
+        background && !enabled && !pictureInPictureActive && !userPlaybackOverride &&
+                !(independentScreenPlayback && screenLocked && lockedFromForeground)
+
+    /** A new Android screen-off event also ends permission granted on the lit lock screen. */
+    fun onScreenOff() {
+        if (independentScreenPlayback) userPlaybackOverride = false
+    }
+
+    /**
+     * Returns whether this transition needs a pause (lock) or a resume (unlock).
+     * Android must sample screen/keyguard state before entering the background, regardless of
+     * broadcast order. A lock first observed after a genuine Home transition remains a background
+     * lock; it must not undo that transition's pause. See [AndroidPlaybackEvents].
+     */
     fun setScreenLocked(locked: Boolean, playing: Boolean, backgroundEnabled: Boolean): Boolean {
         if (screenLocked == locked) return false
         screenLocked = locked
+        lockedFromForeground = locked && !background
+        if (independentScreenPlayback) userPlaybackOverride = false
         if (locked) {
+            if (!screenRequiresPause) return false
             resumeAfterUnlock = (playing && userAllowsResume) || resumeOnForeground
             resumeOnForeground = false
             return playing
@@ -30,7 +54,7 @@ internal class PlaybackResumePolicy(
             resumeAfterInterruption = resumeAfterInterruption || resume
             return false
         }
-        if (resume && background && !backgroundEnabled && !pictureInPictureActive) {
+        if (resume && backgroundRequiresPause(backgroundEnabled)) {
             resumeOnForeground = true
             return false
         }
@@ -39,13 +63,19 @@ internal class PlaybackResumePolicy(
 
     fun setPictureInPictureActive(active: Boolean): Boolean {
         pictureInPictureActive = active
-        if (!active || interrupted || screenLocked) return false
+        if (!active || interrupted || screenRequiresPause) return false
         // PiP can finish starting after the background notification paused playback.
         return resumeOnForeground.also { resumeOnForeground = false }
     }
 
-    fun userAction(allowsResume: Boolean = false, audioSessionActivated: Boolean = false) {
+    fun userAction(
+        allowsResume: Boolean = false,
+        audioSessionActivated: Boolean = false,
+        explicitPlay: Boolean = false,
+    ) {
         userAllowsResume = allowsResume
+        if (!allowsResume) userPlaybackOverride = false
+        else if (explicitPlay && (background || screenLocked)) userPlaybackOverride = true
         resumeOnForeground = false
         resumeAfterInterruption = false
         resumeAfterUnlock = false
@@ -61,21 +91,22 @@ internal class PlaybackResumePolicy(
 
     fun enterBackground(playing: Boolean, enabled: Boolean): Boolean {
         background = true
-        if (enabled || pictureInPictureActive || !playing || interrupted || screenLocked) return false
+        if (!backgroundRequiresPause(enabled) || !playing || interrupted || screenRequiresPause) return false
         resumeOnForeground = userAllowsResume
         return true
     }
 
     fun enterForeground(): Boolean {
         background = false
-        if (interrupted || screenLocked) return false
+        userPlaybackOverride = false
+        if (interrupted || screenRequiresPause) return false
         return resumeOnForeground.also { resumeOnForeground = false }
     }
 
     /** Reapply system policy when a deferred load starts playing or the engine becomes ready. */
     fun pauseWhenRequired(playing: Boolean, ready: Boolean, backgroundEnabled: Boolean): Boolean {
         if (!ready || !playing) return false
-        if (screenLocked) {
+        if (screenRequiresPause) {
             resumeAfterUnlock = userAllowsResume
             return true
         }
@@ -83,7 +114,7 @@ internal class PlaybackResumePolicy(
             resumeAfterInterruption = userAllowsResume
             return true
         }
-        if (background && !backgroundEnabled && !pictureInPictureActive) {
+        if (backgroundRequiresPause(backgroundEnabled)) {
             resumeOnForeground = userAllowsResume
             return true
         }
@@ -103,11 +134,11 @@ internal class PlaybackResumePolicy(
         val resume = resumeAfterInterruption && shouldResume
         resumeAfterInterruption = false
         if (!shouldResume) resumeAfterUnlock = false
-        if (resume && screenLocked) {
+        if (resume && screenRequiresPause) {
             resumeAfterUnlock = true
             return false
         }
-        if (resume && background && !backgroundEnabled && !pictureInPictureActive) {
+        if (resume && backgroundRequiresPause(backgroundEnabled)) {
             resumeOnForeground = true
             return false
         }
@@ -116,10 +147,17 @@ internal class PlaybackResumePolicy(
 }
 
 /** Null means this command does not change playback intent. */
-internal fun PlayerCommand.playbackIntent(paused: Boolean): Boolean? = when (this) {
+internal fun PlayerCommand.playbackIntent(paused: Boolean, eofReached: Boolean = false): Boolean? = when (this) {
     is PlayerCommand.Paused -> !this.paused
     PlayerCommand.PlayOrPause -> paused
-    is PlayerCommand.LoadList, is PlayerCommand.PlayFileInPlaylist,
-    PlayerCommand.NextMedia, PlayerCommand.PreviousMedia -> true
+    is PlayerCommand.LoadList, is PlayerCommand.PlayFileInPlaylist -> true
+    PlayerCommand.NextMedia, PlayerCommand.PreviousMedia -> !paused || eofReached
     else -> null
+}
+
+/** Loading or selecting another item must not grant permission to play while paused. */
+internal fun PlayerCommand.isExplicitPlay(paused: Boolean): Boolean = when (this) {
+    is PlayerCommand.Paused -> !this.paused
+    PlayerCommand.PlayOrPause -> paused
+    else -> false
 }

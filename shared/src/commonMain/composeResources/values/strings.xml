@@ -403,6 +403,8 @@
     <string name="player_notification_channel_name">Player</string>
     <string name="player_notification_channel_description">Player controller</string>
     <string name="player_config_screen_background_play">Background playback</string>
+    <string name="player_config_screen_pause_on_screen_off">Pause when screen is off</string>
+    <string name="player_config_screen_pause_on_screen_off_ios_description">To keep playing with the screen off, turn off “Pause when screen is off” and turn on “Background playback”.</string>
     <string name="expend">Expand</string>
     <string name="collapse">Collapse</string>
     <string name="feed_number_badge_unread">Unread</string>
