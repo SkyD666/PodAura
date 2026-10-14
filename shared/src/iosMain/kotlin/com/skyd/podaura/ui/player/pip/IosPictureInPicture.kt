@@ -73,10 +73,13 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationDidEnterBackgroundNotification
 import platform.UIKit.UIApplicationState
+import platform.UIKit.UIApplicationWillEnterForegroundNotification
 import platform.UIKit.UIColor
 import platform.UIKit.UIImage
+import platform.UIKit.UIImageView
 import platform.UIKit.UIScreen
 import platform.UIKit.UIView
+import platform.UIKit.UIViewContentMode.UIViewContentModeScaleAspectFill
 import platform.darwin.NSObject
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
@@ -89,6 +92,13 @@ internal class IosPictureInPicture(
     AVPictureInPictureSampleBufferPlaybackDelegateProtocol,
     PodAuraPictureInPictureObserverProtocol {
     val layer = AVSampleBufferDisplayLayer()
+
+    // Inline audio artwork must survive backgrounding without waiting for a video frame.
+    private val artworkView = UIImageView().apply {
+        contentMode = UIViewContentModeScaleAspectFill
+        clipsToBounds = true
+        userInteractionEnabled = false
+    }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val center = NSNotificationCenter.defaultCenter
     private val width = AtomicInt(640)
@@ -110,7 +120,6 @@ internal class IosPictureInPicture(
     private var exitSource: UIView? = null
     private var exitTimeout: Job? = null
     private var wasVideo: Boolean? = null
-    private var artwork: UIImage? = null
     private var skipCompletion: (() -> Unit)? = null
     private var skipTimeout: Job? = null
     private var seekStarted = false
@@ -157,13 +166,26 @@ internal class IosPictureInPicture(
         } else null
     private val notifications = listOf(
         center.addObserverForName(
+            UIApplicationWillEnterForegroundNotification,
+            null,
+            NSOperationQueue.mainQueue
+        ) {
+            // UIKit posts this while still transitioning out of the background. Check on the
+            // next main-queue turn: foreground-inactive is already visible during unlock.
+            scope.launch(Dispatchers.Main) {
+                if (!closing && UIApplication.sharedApplication.applicationState != UIApplicationState.UIApplicationStateBackground) {
+                    setRendering(true)
+                    attach()
+                }
+            }
+        },
+        center.addObserverForName(
             UIApplicationDidEnterBackgroundNotification,
             null,
             NSOperationQueue.mainQueue
         ) {
             // Control Center only makes the app inactive; keep rendering until backgrounded.
             setRendering(active && controller?.pictureInPictureSuspended == false)
-            if (!active) detach()
         },
         center.addObserverForName(
             UIApplicationDidBecomeActiveNotification,
@@ -171,6 +193,8 @@ internal class IosPictureInPicture(
             NSOperationQueue.mainQueue
         ) {
             setRendering(true)
+            // The display layer can lose its still image while the app is backgrounded.
+            if (!coordinator.playerState.value.isVideo) showArtwork()
             attach()
         },
     )
@@ -191,6 +215,7 @@ internal class IosPictureInPicture(
                     auto && visible && engine.isReady && state.mediaStarted && !state.paused
                 if (wasVideo != state.isVideo) {
                     wasVideo = state.isVideo
+                    artworkView.hidden = state.isVideo
                     layer.videoGravity =
                         if (state.isVideo) AVLayerVideoGravityResizeAspect else AVLayerVideoGravityResizeAspectFill
                     detach()
@@ -235,6 +260,7 @@ internal class IosPictureInPicture(
         view = target
         target.backgroundColor = UIColor.blackColor
         target.layer.addSublayer(layer)
+        target.addSubview(artworkView)
         layout(target)
         if (!coordinator.playerState.value.isVideo) showArtwork()
         attach()
@@ -245,6 +271,7 @@ internal class IosPictureInPicture(
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.frame = target.bounds
+        artworkView.setFrame(target.bounds)
         val scale = target.window?.screen?.scale ?: UIScreen.mainScreen.scale
         layer.contentsScale = scale
         target.bounds.useContents {
@@ -261,6 +288,7 @@ internal class IosPictureInPicture(
             controller?.canStartPictureInPictureAutomaticallyFromInline = false
             detach()
             layer.removeFromSuperlayer()
+            artworkView.removeFromSuperview()
             view = null
         }
     }
@@ -297,6 +325,7 @@ internal class IosPictureInPicture(
         exitSource = retained
         view = retained
         retained.layer.addSublayer(layer)
+        retained.addSubview(artworkView)
         layout(retained)
         if (controller.pictureInPicturePossible) enter()
         exitTimeout = scope.launch {
@@ -315,6 +344,7 @@ internal class IosPictureInPicture(
         exitSource?.removeFromSuperview()
         exitSource = null
         layer.removeFromSuperlayer()
+        artworkView.removeFromSuperview()
         view = null
     }
 
@@ -334,19 +364,19 @@ internal class IosPictureInPicture(
     private fun setRendering(enabled: Boolean) {
         rendering.store(enabled)
         if (coordinator.engineState.value.isReady) coordinator.renderPlayer.setRenderingActive(
-            enabled
+            enabled, suspendVideoDecoding = true
         )
     }
 
     fun updateArtwork(image: UIImage?) {
-        artwork = image
+        artworkView.image = image
         if (!coordinator.playerState.value.isVideo) showArtwork()
     }
 
     private fun showArtwork() {
         podaura_output_show_artwork(
             interpretCPointer<ByteVar>(layer.objcPtr()),
-            artwork?.let { interpretCPointer<ByteVar>(it.objcPtr()) })
+            artworkView.image?.let { interpretCPointer<ByteVar>(it.objcPtr()) })
     }
 
     fun enter() {

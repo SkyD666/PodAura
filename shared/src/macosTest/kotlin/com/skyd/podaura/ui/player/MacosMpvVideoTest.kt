@@ -7,6 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clipToBounds
 import com.skyd.podaura.ui.PlatformSurfaceHolder
+import com.skyd.podaura.libmpv.podaura_output_frame_count
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.toCPointer
 import kotlinx.cinterop.useContents
 import platform.QuartzCore.CALayer
 import androidx.compose.ui.unit.DpSize
@@ -16,6 +19,7 @@ import com.skyd.podaura.ui.player.mpv.MPV
 import com.skyd.podaura.ui.player.mpv.resizeSurface
 import kotlinx.cinterop.toKString
 import platform.AppKit.*
+import platform.AVFoundation.flushAndRemoveImage
 import platform.Foundation.*
 import platform.posix.getenv
 import kotlin.test.*
@@ -36,6 +40,7 @@ class MacosMpvVideoTest {
         player.option("terminal", "yes")
         player.option("msg-level", "all=v")
         player.option("keep-open", "yes")
+        player.option("force-window", "yes")
         player.option("hwdec", "auto")
         player.initialize()
         player.setPropertyBoolean("mute", true)
@@ -157,6 +162,32 @@ class MacosMpvVideoTest {
             assertTrue(replacement.layer.readyForDisplay,
                 "a live renderer must redraw into its replacement layer while paused")
             assertTrue(player.getPropertyBoolean("pause"))
+            player.setRenderingActive(false)
+            replacement.layer.flushAndRemoveImage()
+            pump(0.2)
+            assertFalse(replacement.layer.readyForDisplay)
+            player.setRenderingActive(true)
+            pump(0.5)
+            assertTrue(replacement.layer.readyForDisplay,
+                "reactivating a retained output must redraw even while playback is paused")
+            assertTrue(player.getPropertyBoolean("pause"))
+            val retainedOutput = player.getPropertyString("wid")
+            player.setRenderingActive(false, suspendVideoDecoding = true)
+            assertEquals("no", player.getPropertyString("vid"))
+            assertEquals("gpu-next", player.getPropertyString("current-vo"))
+            val output = requireNotNull(retainedOutput).toLong().toCPointer<ByteVar>()
+            val framesBeforePreparation = podaura_output_frame_count(output)
+            player.setRenderingActive(false)
+            pump(0.3)
+            assertTrue(player.getPropertyInt("vid") > 0)
+            assertEquals(framesBeforePreparation, podaura_output_frame_count(output),
+                "foreground preparation must restore decoding without submitting GPU frames")
+            player.setRenderingActive(true, suspendVideoDecoding = true)
+            pump(0.5)
+            assertEquals(retainedOutput, player.getPropertyString("wid"))
+            assertTrue(player.getPropertyInt("vid") > 0)
+            assertTrue(replacement.layer.readyForDisplay)
+            assertTrue(player.getPropertyBoolean("pause"))
             videoView.layer = previousHolder.layer
             player.attachSurface(previousHolder)
             pump(0.5)
@@ -171,6 +202,18 @@ class MacosMpvVideoTest {
             mounted = false
             pump(1.0)
             assertEquals("null", player.getPropertyString("vo"))
+            player.setRenderingActive(false, suspendVideoDecoding = true)
+            player.setRenderingActive(false)
+            assertEquals("no", player.getPropertyString("vid"),
+                "foreground preparation must preserve headless video suspension")
+            player.setRenderingActive(false, suspendVideoDecoding = true)
+            player.setRenderingActive(true, suspendVideoDecoding = true)
+            pump(0.3)
+            assertEquals("no", player.getPropertyString("vid"),
+                "foreground activation must preserve headless video suspension")
+            assertEquals("null", player.getPropertyString("vo"))
+            assertNull(player.getPropertyString("video-format"))
+            assertFalse(player.getPropertyBoolean("eof-reached"))
             mounted = true
             pump(2.0)
             player.setPropertyDouble("speed", 1.5)

@@ -78,6 +78,7 @@ actual class MPV {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var renderer: AppleMpvRenderer? = null
     private var requestedVideoTrack = "auto"
+    private var videoDecodingSuspended = false
     private var requestHeaders: Map<String, Map<String, String>> = emptyMap()
 
     internal fun updateRequestHeaders(headers: Map<String, Map<String, String>>) =
@@ -237,7 +238,22 @@ actual class MPV {
 
     internal fun resizeRenderingSurface(): Unit = locked { renderer?.resize() }
 
-    internal fun setRenderingActive(active: Boolean): Unit = locked { renderer?.setActive(active) }
+    internal fun setRenderingActive(active: Boolean, suspendVideoDecoding: Boolean = false): Unit =
+        locked {
+            if (closed) return@locked
+            if (!active) renderer?.setActive(false)
+            val suspended = !active && suspendVideoDecoding
+            if (videoDecodingSuspended != suspended) {
+                videoDecodingSuspended = suspended
+                // Keep the GPU output and its shader cache, but stop decoding invisible video.
+                // Never deselect the last stream of a video-only file: that would produce EOF.
+                if (!suspended || getPropertyInt("aid") > 0) {
+                    // Foreground restoration must also preserve headless suspension.
+                    setPropertyString("vid", requestedVideoTrack)
+                }
+            }
+            if (active) renderer?.setActive(true)
+        }
 
     actual fun detachSurface(): Unit = locked {
         if (!closed) setPropertyString("vo", "null")
@@ -329,7 +345,7 @@ actual class MPV {
             MPV_EVENT_FILE_LOADED -> {
                 // Only suspend after mpv has actually selected an audio stream. Disabling
                 // video before this point can leave video-only files with nothing to play.
-                if (renderer == null && getPropertyInt("aid") > 0) {
+                if ((renderer == null || videoDecodingSuspended) && getPropertyInt("aid") > 0) {
                     report(mpv_set_property_string(handle, "vid", "no"), "suspend video")
                 }
                 current.forEach { it.onEvent(event.event_id.toInt()) }
@@ -388,7 +404,7 @@ actual class MPV {
         name == "hwdec" && value == "auto" -> "videotoolbox"
         name == "vid" -> {
             requestedVideoTrack = value
-            if (initialized && renderer == null && getPropertyInt("aid") > 0) "no" else value
+            if (initialized && (renderer == null || videoDecodingSuspended) && getPropertyInt("aid") > 0) "no" else value
         }
 
         else -> value

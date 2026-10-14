@@ -75,6 +75,10 @@ void podaura_output_set_active(void *ptr, bool active)
 {
     PodAuraVideoOutput *output = ptr;
     [output->lock lock];
+    if (active && !output->active) {
+        output->redraw = true;
+        if (output->vo) vo_wakeup(output->vo);
+    }
     output->active = active;
     [output->lock unlock];
 }

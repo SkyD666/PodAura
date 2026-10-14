@@ -150,7 +150,8 @@ internal class IosMediaSession(
             if (resumePolicy.enterForeground()) {
                 systemPause(false)
             }
-            setScreenLocked(false)
+            // iOS can briefly become active between the lock warning and entering background.
+            // Only ProtectedDataDidBecomeAvailable clears a lock, not application activation.
             updateNowPlaying()
         }
         observe(UIApplicationProtectedDataWillBecomeUnavailable) { setScreenLocked(true) }

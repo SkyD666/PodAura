@@ -1,9 +1,27 @@
 package com.skyd.podaura.ui.player
 
+import androidx.datastore.preferences.core.edit
+import com.skyd.podaura.di.dataStoreModule
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.podaura.ui.player.service.PlayerState
+import com.skyd.podaura.model.preference.dataStore
+import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
+import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.mpv.MPV
+import com.skyd.podaura.ui.player.mpv.MPVPlayer
+import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSNumber
 import platform.MediaPlayer.MPMediaItemPropertyArtist
 import platform.MediaPlayer.MPMediaItemPropertyPlaybackDuration
@@ -13,6 +31,10 @@ import platform.MediaPlayer.MPNowPlayingInfoPropertyDefaultPlaybackRate
 import platform.MediaPlayer.MPNowPlayingInfoPropertyElapsedPlaybackTime
 import platform.MediaPlayer.MPNowPlayingInfoPropertyPlaybackRate
 import platform.MediaPlayer.MPRemoteCommandCenter
+import platform.UIKit.UIApplicationDidBecomeActiveNotification
+import platform.UIKit.UIApplicationDidEnterBackgroundNotification
+import platform.UIKit.UIApplicationProtectedDataDidBecomeAvailable
+import platform.UIKit.UIApplicationProtectedDataWillBecomeUnavailable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -21,6 +43,76 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class IosMediaSessionTest {
+    @Test
+    fun lockPauseSurvivesTransientActiveNotification() = runTest {
+        startKoin { modules(dataStoreModule) }
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        val acquired = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        // Keep the native engine idle: this exercises the real notification/command adapter.
+        val owner = launch(Dispatchers.IO) {
+            MPVPlayer.instance.withOwnership {
+                acquired.complete(Unit)
+                release.await()
+            }
+        }
+        var coordinator: PlayerCoordinator? = null
+        var session: IosMediaSession? = null
+        try {
+            acquired.await()
+            dataStore.edit {
+                it[BackgroundPlayPreference.key] = true
+                it[PauseOnScreenOffPreference.key] = true
+            }
+            val player = PlayerCoordinator().also { coordinator = it }
+            session = IosMediaSession(player) {}
+            val pauses = mutableListOf<Boolean>()
+            val intentHook = player.onPlaybackCommand
+            player.onPlaybackCommand = { command, intent ->
+                intentHook?.invoke(command, intent)
+                if (command is PlayerCommand.Paused) {
+                    pauses += command.paused
+                    player.model.onEvent(PlayerEvent.Paused(command.paused))
+                }
+            }
+            fun notify(name: String?) = NSNotificationCenter.defaultCenter
+                .postNotificationName(name, `object` = null)
+            notify(UIApplicationProtectedDataDidBecomeAvailable)
+            notify(UIApplicationDidBecomeActiveNotification)
+            player.model.onEvent(PlayerEvent.Paused(false))
+            // Observed on a physical iPhone: lock warning -> active -> background.
+            notify(UIApplicationProtectedDataWillBecomeUnavailable)
+            assertEquals(listOf(true), pauses)
+            notify(UIApplicationDidBecomeActiveNotification)
+            notify(UIApplicationDidEnterBackgroundNotification)
+            assertEquals(listOf(true), pauses)
+            assertTrue(player.playerState.value.paused)
+
+            notify(UIApplicationProtectedDataDidBecomeAvailable)
+            notify(UIApplicationProtectedDataDidBecomeAvailable)
+            notify(UIApplicationDidBecomeActiveNotification)
+            assertEquals(listOf(true, false), pauses)
+            assertFalse(player.playerState.value.paused)
+
+            notify(UIApplicationProtectedDataWillBecomeUnavailable)
+            player.onCommand(PlayerCommand.Paused(true))
+            notify(UIApplicationDidBecomeActiveNotification)
+            notify(UIApplicationDidEnterBackgroundNotification)
+            notify(UIApplicationProtectedDataDidBecomeAvailable)
+            notify(UIApplicationDidBecomeActiveNotification)
+            assertTrue(player.playerState.value.paused)
+            assertEquals(1, pauses.count { !it })
+        } finally {
+            session?.close()
+            coordinator?.onCommand(PlayerCommand.Destroy)
+            coordinator?.awaitDestroyed()
+            release.complete(Unit)
+            owner.join()
+            Dispatchers.resetMain()
+            stopKoin()
+        }
+    }
+
     @Test
     fun iosAudioOutputDisablesMixingForNowPlaying() {
         val player = MPV()
@@ -40,9 +132,14 @@ class IosMediaSessionTest {
         val remote = MPRemoteCommandCenter.sharedCommandCenter()
         val center = MPNowPlayingInfoCenter.defaultCenter()
         val commands = listOf(
-            remote.playCommand, remote.pauseCommand, remote.togglePlayPauseCommand,
-            remote.previousTrackCommand, remote.nextTrackCommand,
-            remote.changePlaybackPositionCommand, remote.skipForwardCommand, remote.skipBackwardCommand,
+            remote.playCommand,
+            remote.pauseCommand,
+            remote.togglePlayPauseCommand,
+            remote.previousTrackCommand,
+            remote.nextTrackCommand,
+            remote.changePlaybackPositionCommand,
+            remote.skipForwardCommand,
+            remote.skipBackwardCommand,
         )
         val playlist = linkedMapOf("first" to media("first"), "last" to media("last"))
         val playing = PlayerState(
@@ -52,8 +149,10 @@ class IosMediaSessionTest {
             mediaTitle = "Embedded title", artist = "Embedded artist",
             loop = LoopMode.LoopPlaylist,
         )
+
         fun publish(state: PlayerState, ready: Boolean = true) =
             updateIosNowPlaying(state, ready, artwork = null)
+
         fun number(key: String?) =
             (assertNotNull(center.nowPlayingInfo)[key] as NSNumber).doubleValue
 
@@ -145,8 +244,14 @@ class IosMediaSessionTest {
         try {
             for ((forward, replay) in listOf(10 to -10, 45 to -20, 300 to -5)) {
                 updateIosSkipIntervals(forward, replay)
-                assertEquals(forward, (remote.skipForwardCommand.preferredIntervals.single() as NSNumber).intValue)
-                assertEquals(-replay, (remote.skipBackwardCommand.preferredIntervals.single() as NSNumber).intValue)
+                assertEquals(
+                    forward,
+                    (remote.skipForwardCommand.preferredIntervals.single() as NSNumber).intValue
+                )
+                assertEquals(
+                    -replay,
+                    (remote.skipBackwardCommand.preferredIntervals.single() as NSNumber).intValue
+                )
             }
         } finally {
             updateIosSkipIntervals(10, -10)
