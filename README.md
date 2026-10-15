@@ -40,7 +40,7 @@
         </a>
     </p>
     <p>
-        An <b>all-in-one Podcast app</b> for <b>RSS subscription and updates</b>, <b>media downloads</b> and <b>playback</b>.
+        <img src="doc/image/Banner.jpg" alt="An all-in-one Podcast app for RSS subscription and updates, media downloads and playback." width="100%" />
     </p>
     <p>
         PodAura utilizes the <b><a href="https://developer.android.com/topic/architecture#recommended-app-arch">MVI</a></b> architecture and fully adopts the <b><a href="https://m3.material.io/">Material You</a></b> design style. All pages are developed using <b>Compose Multiplatform</b>.
@@ -73,16 +73,6 @@
 14. Support **import and export** subscriptions via **OPML**
 15. Support **dark mode**
 16. ......
-
-## 🤩 Screenshots
-
-<img src="doc/image/en/ic_rss_screen.jpg" alt="ic_rss_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_rss_screen_edit.jpg" alt="ic_rss_screen_edit" style="zoom:80%;" />
-<img src="doc/image/en/ic_article_screen.jpg" alt="ic_article_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_read_screen.jpg" alt="ic_read_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_media_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_player_activity_port.jpg" alt="ic_download_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_history_screen.jpg" alt="ic_media_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_download_screen.jpg" alt="ic_download_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_setting_screen.jpg" alt="ic_setting_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_appearance_screen.jpg" alt="ic_appearance_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_rss_config_screen.jpg" alt="ic_rss_config_screen" style="zoom:80%;" /> <img src="doc/image/en/ic_about_screen.jpg" alt="ic_about_screen" style="zoom:80%;" />
-<img src="doc/image/en/ic_player_activity.jpg" alt="ic_player_activity" style="zoom:80%;" />
 
 ## 🌏 Translation
 
