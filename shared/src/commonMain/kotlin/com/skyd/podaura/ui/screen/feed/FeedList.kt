@@ -91,6 +91,7 @@ import com.skyd.podaura.ui.screen.feed.item.Group1Item
 import com.skyd.podaura.ui.screen.feed.mute.MuteFeedRoute
 import com.skyd.podaura.ui.screen.feed.reorder.feed.ReorderFeedRoute
 import com.skyd.podaura.ui.screen.feed.reorder.group.ReorderGroupRoute
+import com.skyd.podaura.ui.screen.feed.sheet.CreateGroupDialog
 import com.skyd.podaura.ui.screen.feed.sheet.EditFeedSheet
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import com.skyd.podaura.ui.screen.settings.appearance.feed.FeedStyleRoute
@@ -431,6 +432,17 @@ internal fun FeedList(
                 onMessage = { scope.launch { currentSnackbarHostState.showSnackbar(it) } }
             )
         }
+
+        CreateGroupDialog(
+            visible = openCreateGroupDialog,
+            value = createGroupDialogGroup,
+            onValueChange = { createGroupDialogGroup = it },
+            onCreateGroup = {
+                dispatch(FeedIntent.CreateGroup(it))
+                openCreateGroupDialog = false
+            },
+            onDismissRequest = { openCreateGroupDialog = false },
+        )
 
         WaitingDialog(
             visible = uiState.loadingDialog || uiState.addFeedState != null ||

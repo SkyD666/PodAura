@@ -1044,7 +1044,7 @@ private fun EditIconDialog(
 }
 
 @Composable
-private fun CreateGroupDialog(
+internal fun CreateGroupDialog(
     visible: Boolean,
     value: String,
     onValueChange: (String) -> Unit,
