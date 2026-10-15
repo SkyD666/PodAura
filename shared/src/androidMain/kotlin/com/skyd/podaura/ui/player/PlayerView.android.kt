@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.player
 
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.asImage
 import coil3.compose.AsyncImage
 import coil3.compose.rememberAsyncImagePainter
@@ -25,9 +27,11 @@ import com.skyd.podaura.ui.player.component.PlayerAndroidView
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.pip.PipBroadcastReceiver
 import com.skyd.podaura.ui.player.pip.PipListenerPreAPI12
 import com.skyd.podaura.ui.player.pip.pipParams
+import com.skyd.podaura.ui.player.pip.pipPredictiveBack
 import com.skyd.podaura.ui.player.pip.rememberIsInPipMode
 import com.skyd.podaura.ui.player.service.PlayerState
 
@@ -60,6 +64,14 @@ actual fun PlatformContent(
     val inPipMode = rememberIsInPipMode()
     val shouldEnterPipMode = PlayerAutoPipPreference.current &&
             playerState.mediaStarted && playState.isPlaying
+    val engineState by coordinator.engineState.collectAsStateWithLifecycle()
+    // Only intercept back for PiP; normal activity exits use the system's predictive animation.
+    val pipBackModifier = Modifier.pipPredictiveBack(
+        enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                shouldEnterPipMode && engineState.isReady && !inPipMode,
+        inPipMode = inPipMode,
+        onBack = onBack,
+    )
     PipListenerPreAPI12(shouldEnterPipMode = shouldEnterPipMode)
 
     // Android 12+ needs auto-enter parameters before the first background
@@ -70,7 +82,7 @@ actual fun PlatformContent(
             isVideo = playState.isVideo,
             playState = playState,
             includeBounds = false,
-        ),
+        ).then(pipBackModifier),
     ) {
         if (inPipMode) {
             PipContent(

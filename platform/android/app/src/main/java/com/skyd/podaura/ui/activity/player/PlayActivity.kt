@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.view.KeyEvent
 import android.view.WindowManager
-import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,7 +111,6 @@ class PlayActivity : BaseComposeActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        onBackPressedDispatcher.addCallback(this) { onPlayerBack() }
         launchRequestId = savedInstanceState?.getString(LAUNCH_REQUEST_ID_KEY)
             ?: UUID.randomUUID().toString()
         addOnNewIntentListener { newIntent ->
