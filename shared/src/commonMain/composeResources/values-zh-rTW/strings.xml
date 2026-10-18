@@ -301,6 +301,7 @@
     <string name="storage_permission_request_screen_request_permission">要求權限</string>
     <string name="file_picker_screen_pick">文件選擇器</string>
     <string name="file_picker_screen_internal_storage">內部儲存空間</string>
+    <string name="media_library_location_error">無法使用所選資料夾，請選擇可讀取及寫入的資料夾。</string>
     <string name="media_screen_delete_file_warning">刪除此檔案？</string>
     <string name="media_options">選項</string>
     <string name="media_group">分組</string>
@@ -368,6 +369,7 @@
     <string name="read_screen_text_size">文字大小</string>
     <string name="download_without_notifications_tip">下載已開始，但不會顯示通知</string>
     <string name="open_notification_settings">設定</string>
+    <string name="notification_permission_denied">PodAura 的通知已關閉，可前往系統設定開啟。</string>
     <string name="read_style_screen_name">閱讀頁面樣式</string>
     <string name="read_style_screen_top_bar_category">頂端列</string>
     <string name="read_style_screen_content_category">文章內容</string>
@@ -557,6 +559,7 @@
     <string name="app_language_category">語言</string>
     <string name="app_language_screen_name">應用程式語言</string>
     <string name="app_language_follow_system">跟隨系統</string>
+    <string name="app_language_native_dialogs_restart_tip">重新啟動應用程式後，macOS 系統對話框才會套用新語言。</string>
     <string name="translation_profiles_category">翻譯設定檔</string>
     <string name="translation_empty_profiles">尚未設定翻譯服務</string>
     <string name="translation_empty_profiles_description">新增翻譯設定檔後即可翻譯文章</string>
@@ -612,6 +615,11 @@
     <string name="translation_configure">開啟翻譯設定</string>
     <string name="translation_estimated_size">預計提交：%1$d 個字元，%2$d 位元組</string>
     <string name="translation_request_limit">服務商文字請求上限：%1$d 位元組</string>
+    <string name="mpv_cache_internal_storage">應用程式內部儲存空間</string>
+    <string name="mpv_cache_external_storage">應用程式專用外部儲存空間</string>
+    <string name="mpv_cache_external_storage_named">應用程式專用外部儲存空間（%1$s）</string>
+    <string name="mpv_config_sync">同步設定</string>
+    <string name="mpv_storage_error">無法存取此資料夾</string>
     <string name="notification_regex">正則表達式</string>
     <string name="notification_content_hint">正則表達式（可空）</string>
     <string name="notification_feeds">訂閱</string>

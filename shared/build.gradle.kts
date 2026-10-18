@@ -3,6 +3,7 @@ import com.skyd.podaura.buildlogic.addWindowsMediaFileAssociations
 import com.skyd.podaura.buildlogic.addWindowsNotificationProtocol
 import com.skyd.podaura.buildlogic.configureWindowsMsiOpenWith
 import com.skyd.podaura.buildlogic.macOSMediaDocumentTypes
+import com.skyd.podaura.buildlogic.macOSAppLocalizations
 import com.skyd.podaura.buildlogic.macOSNotificationUrlTypes
 import com.skyd.podaura.buildlogic.windowsMediaFileAssociations
 import de.stefan_oltmann.msix.CreateAppxManifestTask
@@ -12,7 +13,6 @@ import org.gradle.nativeplatform.platform.internal.Architectures
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
-import org.jetbrains.compose.desktop.application.tasks.AbstractNativeMacApplicationPackageAppDirTask
 
 plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -28,6 +28,7 @@ plugins {
     id("podaura.desktop-media-shims")
     id("podaura.apple-mpv") apply (System.getProperty("os.name").startsWith("Mac", true))
     id("podaura.macos-appkit")
+    id("podaura.macos-application")
 }
 
 val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
@@ -297,7 +298,7 @@ compose.desktop {
                 bundleID = "com.skyd.podaura"
                 iconFile = project.file("icons/icon_512x512.icns")
                 infoPlist {
-                    extraKeysRawXml = macOSMediaDocumentTypes() + macOSNotificationUrlTypes()
+                    extraKeysRawXml = macOSMediaDocumentTypes() + macOSNotificationUrlTypes() + macOSAppLocalizations()
                 }
             }
             windows {
@@ -413,11 +414,6 @@ if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
     tasks.withType<Test>().configureEach {
         jvmArgs(macGestureModuleExport)
     }
-}
-
-// Compose does not propagate nativeApplication.macOS.bundleID to the generated task.
-tasks.withType<AbstractNativeMacApplicationPackageAppDirTask>().configureEach {
-    bundleID = "com.skyd.podaura"
 }
 
 tasks.withType<AbstractJPackageTask>().configureEach {

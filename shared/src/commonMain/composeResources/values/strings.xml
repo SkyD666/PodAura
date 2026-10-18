@@ -573,6 +573,7 @@
     <string name="app_language_category">Language</string>
     <string name="app_language_screen_name">App language</string>
     <string name="app_language_follow_system">Follow system</string>
+    <string name="app_language_native_dialogs_restart_tip">Restart the app to apply language changes to macOS system dialogs.</string>
     <string name="translation_profiles_category">Profiles</string>
     <string name="translation_empty_profiles">No translation profile configured</string>
     <string name="translation_empty_profiles_description">Add a translation profile to translate articles</string>

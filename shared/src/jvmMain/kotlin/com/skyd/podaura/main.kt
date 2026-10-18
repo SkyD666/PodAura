@@ -16,6 +16,7 @@ import com.skyd.compone.local.WindowController
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.di.initKoin
+import com.skyd.podaura.model.preference.language.initializePlatformAppLanguage
 import com.skyd.podaura.ui.notification.DesktopArticleNotifications
 import com.skyd.podaura.ui.window.CrashWindow
 import com.skyd.podaura.ui.window.DesktopOpenFiles
@@ -24,9 +25,12 @@ import com.skyd.podaura.ui.window.DesktopWindowId
 import com.skyd.podaura.ui.window.initWindowsAppIdentity
 import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
+import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) {
+    initKoin()
     if (platform == Platform.macOS_Jvm) {
+        runBlocking { initializePlatformAppLanguage() }
         // AWT reads this at startup; rootPane client properties do not affect native dialogs.
         System.setProperty("apple.awt.application.appearance", "system")
         DesktopArticleNotifications.initialize()
@@ -52,7 +56,6 @@ private fun runDesktopApplication(openFiles: DesktopOpenFiles) {
     // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-desktop-swing-interoperability.html#experimental-interop-blending
     System.setProperty("compose.interop.blending", "true")
 
-    initKoin()
     onAppStart()
 
     application {

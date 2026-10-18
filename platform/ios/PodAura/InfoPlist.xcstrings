@@ -22,10 +22,34 @@
             "value" : "Matroska Video"
           }
         },
+        "eo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska-video"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska 動画"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska videosu"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Matroska 视频"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matroska 影片"
           }
         }
       }
@@ -39,10 +63,34 @@
             "value" : "This app needs access to save photos to your photo library."
           }
         },
+        "eo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permesu al PodAura konservi bildojn en via fototeko."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を保存するため、写真ライブラリへのアクセスが必要です。"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PodAura’nın görselleri fotoğraf arşivinize kaydedebilmesi için izin gerekiyor."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "需要访问相册以保存图片到您的设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許 PodAura 將圖片儲存至您的照片圖庫。"
           }
         }
       }
@@ -55,10 +103,34 @@
             "value" : "OPML Document"
           }
         },
+        "eo" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML-dokumento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML 書類"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML belgesi"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OPML 文稿"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OPML 文件"
           }
         }
       }

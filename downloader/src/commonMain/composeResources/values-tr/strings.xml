@@ -2,6 +2,7 @@
 <resources>
     <string name="downloading_title">%1$s indiriliyor</string>
     <string name="download_successful">İndirme tamamlandı (%1$s)</string>
+    <string name="downloading_count">%1$d dosya indiriliyor</string>
     <string name="download_failed">İndirme başarısız</string>
     <string name="download_paused">Duraklatıldı</string>
     <string name="download_cancelled">İndirme iptal edildi</string>

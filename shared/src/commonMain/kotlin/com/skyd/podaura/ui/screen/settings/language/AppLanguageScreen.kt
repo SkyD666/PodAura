@@ -18,14 +18,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.navigation3.runtime.NavKey
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.model.preference.language.AppLanguage
 import com.skyd.podaura.model.preference.language.AppLanguagePreference
 import com.skyd.settings.BaseSettingsItem
 import com.skyd.settings.SettingsLazyColumn
+import com.skyd.settings.TipSettingsItem
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.app_language_follow_system
+import podaura.shared.generated.resources.app_language_native_dialogs_restart_tip
 import podaura.shared.generated.resources.app_language_screen_name
 
 @Serializable
@@ -76,6 +80,11 @@ fun AppLanguageScreen(
                                 onClick = null,
                             )
                         }
+                    }
+                }
+                if (platform == Platform.macOS_Jvm || platform == Platform.macOS_Native) {
+                    otherItem {
+                        TipSettingsItem(stringResource(Res.string.app_language_native_dialogs_restart_tip))
                     }
                 }
             }

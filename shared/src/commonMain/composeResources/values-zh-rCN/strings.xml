@@ -559,6 +559,7 @@
     <string name="app_language_category">语言</string>
     <string name="app_language_screen_name">应用语言</string>
     <string name="app_language_follow_system">跟随系统</string>
+    <string name="app_language_native_dialogs_restart_tip">重启应用后，macOS 系统对话框才会使用新语言。</string>
     <string name="translation_profiles_category">翻译档案</string>
     <string name="translation_empty_profiles">尚未配置翻译档案</string>
     <string name="translation_empty_profiles_description">添加翻译档案后即可翻译文章</string>

@@ -5,12 +5,14 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.blockString
 import com.skyd.podaura.di.initKoin
+import com.skyd.podaura.model.preference.language.initializePlatformAppLanguage
 import com.skyd.podaura.ui.component.Window
 import com.skyd.podaura.ui.local.LocalMacosMainWindow
 import com.skyd.podaura.ui.player.LocalMacosPlayerSession
 import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.MacosPlayerSession
 import com.skyd.podaura.ui.screen.AppEntrance
+import kotlinx.coroutines.runBlocking
 import platform.AppKit.NSApplication
 import platform.AppKit.NSApplicationActivationPolicy
 import platform.AppKit.NSApplicationDelegateProtocol
@@ -29,9 +31,10 @@ import podaura.shared.generated.resources.app_name
 private var applicationDelegate: NSApplicationDelegateProtocol? = null
 
 fun main() {
+    initKoin()
+    runBlocking { initializePlatformAppLanguage() }
     val nsApplication = NSApplication.sharedApplication()
     nsApplication.setActivationPolicy(NSApplicationActivationPolicy.NSApplicationActivationPolicyRegular)
-    initKoin()
     onAppStart()
     var mainWindow: NSWindow? = null
     val session = MacosPlayerSession(mainWindow = { mainWindow })

@@ -2,6 +2,7 @@
 <resources>
     <string name="downloading_title">%1$s をダウンロード中</string>
     <string name="download_successful">ダウンロード完了（%1$s）</string>
+    <string name="downloading_count">%1$d 件のファイルをダウンロード中</string>
     <string name="download_failed">ダウンロードに失敗しました</string>
     <string name="download_cancelled">ダウンロードをキャンセルしました</string>
     <string name="download_pause">一時停止</string>
