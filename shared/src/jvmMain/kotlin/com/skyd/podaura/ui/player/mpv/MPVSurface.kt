@@ -80,6 +80,7 @@ internal fun MPVSurface(
     }
 
     DisposableEffect(player, interop) {
+        if (interop != null) player.acquireSurface()
         renderContextReady = interop != null && player.renderContextLifecycle?.createEagerly() == true
         if (interop != null && !renderContextReady &&
             player.renderContextLifecycle?.deferredReadiness != true
@@ -91,7 +92,7 @@ internal fun MPVSurface(
         }
         onDispose {
             player.setRenderUpdateListener(null)
-            player.releaseSurface()
+            if (interop != null) player.releaseSurface()
             renderContextReady = false
         }
     }

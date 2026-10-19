@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -50,8 +51,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
+import com.skyd.podaura.ui.player.coordinator.PlaybackPreparation
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.player.withoutHotPlayerValues
 import org.jetbrains.compose.resources.stringResource
@@ -59,6 +63,7 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.close
 import podaura.shared.generated.resources.pause
 import podaura.shared.generated.resources.play
+import podaura.shared.generated.resources.retry
 import podaura.shared.generated.resources.skip_next
 import podaura.shared.generated.resources.skip_previous
 import podaura.shared.generated.resources.unknown
@@ -87,7 +92,10 @@ fun MiniPlayer(
             )
         ).value
     }
-    val sessionAvailable = liveState?.currentMedia != null
+    val engineState = coordinator?.engineState?.collectAsStateWithLifecycle()?.value
+    val preparation = coordinator?.preparationState?.collectAsStateWithLifecycle()?.value
+        ?: PlaybackPreparation.Idle
+    val sessionAvailable = liveState != null && engineState != PlayerEngineState.Destroyed
     val sessionVisible = isMiniPlayerVisible(
         sessionAvailable = sessionAvailable,
         hostVisible = visible,
@@ -108,20 +116,24 @@ fun MiniPlayer(
         DisposableEffect(Unit) {
             onDispose { retainedState = null }
         }
-        val state = liveState?.takeIf { it.currentMedia != null }
+        val state = liveState?.takeIf { sessionAvailable }
             ?: retainedState
             ?: return@AnimatedVisibility
-        val currentMedia = state.currentMedia ?: return@AnimatedVisibility
+        val currentMedia = state.currentMedia
+        val isLoading = miniPlayerLoading(state, engineState, preparation)
+        val failed = preparation == PlaybackPreparation.Failed ||
+                engineState is PlayerEngineState.Failed ||
+                state.lastPlaybackEnd?.reason == PlaybackEndReason.Error
 
         val unknown = stringResource(Res.string.unknown)
-        val title = currentMedia.title
+        val title = currentMedia?.title.orEmpty()
             .ifBlank { state.mediaTitle.orEmpty() }
             .ifBlank { unknown }
-        val artist = currentMedia.artist.orEmpty()
+        val artist = currentMedia?.artist.orEmpty()
             .ifBlank { state.artist.orEmpty() }
             .ifBlank { state.album.orEmpty() }
             .ifBlank { unknown }
-        val isPlaying = state.mediaStarted && !state.paused
+        val isPlaying = !failed && state.mediaStarted && !state.paused
         val isCompact = LocalWindowSizeClass.current.isCompact
 
         Surface(
@@ -150,7 +162,7 @@ fun MiniPlayer(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         PodAuraImage(
-                            model = currentMedia.thumbnailAny ?: state.mediaThumbnail,
+                            model = currentMedia?.thumbnailAny ?: state.mediaThumbnail,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                         )
@@ -176,7 +188,7 @@ fun MiniPlayer(
 
                     if (!isCompact) {
                         IconButton(
-                            enabled = sessionVisible && !state.playlistFirst,
+                            enabled = sessionVisible && !isLoading && state.currentMedia != null && !state.playlistFirst,
                             onClick = { coordinator?.onCommand(PlayerCommand.PreviousMedia) },
                         ) {
                             Icon(
@@ -187,23 +199,26 @@ fun MiniPlayer(
                     }
 
                     IconButton(
-                        enabled = sessionVisible,
-                        onClick = { coordinator?.onCommand(PlayerCommand.PlayOrPause) },
+                        enabled = sessionVisible && !isLoading,
+                        onClick = { coordinator?.playOrRetry() },
                     ) {
-                        Icon(
+                        if (isLoading) CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                        ) else Icon(
                             imageVector = if (isPlaying) {
                                 Icons.Filled.Pause
                             } else {
                                 Icons.Filled.PlayArrow
                             },
                             contentDescription = stringResource(
-                                if (isPlaying) Res.string.pause else Res.string.play
+                                if (failed) Res.string.retry else if (isPlaying) Res.string.pause else Res.string.play
                             ),
                         )
                     }
 
                     IconButton(
-                        enabled = sessionVisible && !state.playlistLast,
+                        enabled = sessionVisible && !isLoading && state.currentMedia != null && !state.playlistLast,
                         onClick = { coordinator?.onCommand(PlayerCommand.NextMedia) },
                     ) {
                         Icon(
@@ -251,3 +266,17 @@ internal fun miniPlayerProgress(position: Long, duration: Long): Float {
 
 internal fun isMiniPlayerVisible(sessionAvailable: Boolean, hostVisible: Boolean): Boolean =
     sessionAvailable && hostVisible
+
+internal fun miniPlayerLoading(
+    state: PlayerState,
+    engine: PlayerEngineState?,
+    preparation: PlaybackPreparation,
+): Boolean = when {
+    preparation == PlaybackPreparation.Loading -> true
+    preparation == PlaybackPreparation.Failed || engine is PlayerEngineState.Failed -> false
+    state.lastPlaybackEnd?.reason == PlaybackEndReason.Error -> false
+    engine == PlayerEngineState.Initializing || engine == PlayerEngineState.AwaitingMedia ||
+            engine == PlayerEngineState.LoadingMedia -> true
+    // Buffering after initialization must still allow pausing or skipping the stream.
+    else -> false
+}

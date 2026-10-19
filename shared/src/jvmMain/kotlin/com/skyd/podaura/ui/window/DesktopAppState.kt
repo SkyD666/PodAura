@@ -122,7 +122,8 @@ internal class DesktopAppState(
     override val isFullPlayerVisible: Boolean
         get() = windowManager.windows.any { it.id == DesktopWindowId.Player }
 
-    fun openPlayer(mode: PlayDataMode) = playerEntry.open(PlayerOpenRequest.Media(mode))
+    fun openPlayer(mode: PlayDataMode, showPlayer: Boolean = true) =
+        playerEntry.open(PlayerOpenRequest.Media(mode, showPlayer = showPlayer))
 
     fun openFiles(files: List<PlatformFile>) = playerEntry.open(PlayerOpenRequest.Files(files))
 
@@ -158,8 +159,7 @@ internal val LocalDesktopAppState = staticCompositionLocalOf<DesktopAppState> {
 
 @Composable
 internal fun rememberDesktopAppState(): DesktopAppState {
-    // Resolve one instance for the whole desktop application. The emitter and app-lifetime
-    // mediaInfos collector must share it, so this intentionally does not use a nav entry owner.
+    // Playback preparation belongs to the application, not a navigation entry.
     val playerViewModel = remember { get<PlayerViewModel>() }
     val playerArticleContextViewModel = remember { get<PlayerArticleContextViewModel>() }
     return remember(playerViewModel, playerArticleContextViewModel) {

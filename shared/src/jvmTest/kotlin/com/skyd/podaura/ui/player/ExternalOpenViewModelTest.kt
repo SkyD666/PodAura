@@ -9,10 +9,10 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -37,16 +37,25 @@ class ExternalOpenViewModelTest {
         try {
             val viewModel = createViewModel()
             store.put("player", viewModel)
-            viewModel.handlePlatformFiles(listOf(PlatformFile(first.toFile())), "A")
-            val firstBatch = assertNotNull(viewModel.mediaInfos.first { it.requestId == "A" }.externalBatch)
+            val firstPrepared = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(first.toFile())), "A",
+                onPrepared = { firstPrepared.complete(it) },
+                onFailure = { firstPrepared.completeExceptionally(it) },
+            )
+            val firstBatch = assertNotNull(firstPrepared.await().externalBatch)
 
-            viewModel.handlePlatformFiles(listOf(PlatformFile(second.toFile())), "B")
-            val secondBatch = assertNotNull(viewModel.mediaInfos.first { it.requestId == "B" }.externalBatch)
+            val secondPrepared = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(second.toFile())), "B",
+                onPrepared = { secondPrepared.complete(it) },
+                onFailure = { secondPrepared.completeExceptionally(it) },
+            )
+            val secondBatch = assertNotNull(secondPrepared.await().externalBatch)
 
             assertFalse(firstBatch.retain())
             store.clear()
             assertFalse(secondBatch.retain())
-            assertTrue(viewModel.mediaInfos.replayCache.isEmpty())
         } finally {
             store.clear()
             Files.deleteIfExists(first)
@@ -63,12 +72,22 @@ class ExternalOpenViewModelTest {
         try {
             val viewModel = createViewModel()
             store.put("player", viewModel)
-            viewModel.handlePlatformFiles(listOf(PlatformFile(file.toFile())), "external")
-            val batch = assertNotNull(viewModel.mediaInfos.first().externalBatch)
+            val externalPrepared = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(file.toFile())), "external",
+                onPrepared = { externalPrepared.complete(it) },
+                onFailure = { externalPrepared.completeExceptionally(it) },
+            )
+            val batch = assertNotNull(externalPrepared.await().externalBatch)
             assertTrue(batch.retain()) // The coordinator owns playback independently of the view model.
             try {
-                viewModel.handlePlayDataMode(PlayDataMode.Playlist("internal", null), "internal")
-                val internal = viewModel.mediaInfos.first { it.requestId == "internal" }
+                val internalPrepared = CompletableDeferred<PlayerLaunchData>()
+                viewModel.handlePlayDataMode(
+                    PlayDataMode.Playlist("internal", null), "internal",
+                    onPrepared = { internalPrepared.complete(it) },
+                    onFailure = { internalPrepared.completeExceptionally(it) },
+                )
+                val internal = internalPrepared.await()
                 assertNull(internal.externalBatch)
                 assertEquals("internal.mp3", internal.startPath)
                 assertTrue(batch.retain())
@@ -108,15 +127,27 @@ class ExternalOpenViewModelTest {
                 },
             )
             store.put("player", viewModel)
-            viewModel.handlePlayDataMode(PlayDataMode.Playlist("old", null), "A")
+            val oldResult = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlayDataMode(
+                PlayDataMode.Playlist("old", null), "A",
+                onPrepared = { oldResult.complete(it) },
+                onFailure = { oldResult.completeExceptionally(it) },
+            )
             entered.await()
-            viewModel.handlePlatformFiles(listOf(PlatformFile(file.toFile())), "B")
-            val latest = viewModel.mediaInfos.first { it.requestId == "B" }
+            val newResult = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(file.toFile())), "B",
+                onPrepared = { newResult.complete(it) },
+                onFailure = { newResult.completeExceptionally(it) },
+            )
+            val latest = newResult.await()
             assertEquals(listOf(file.toString()), latest.playlist.map { it.playlistMediaBean.stableUrl })
             assertEquals("", latest.playlist.single().playlistMediaBean.playlistId)
             finishOld.complete(Unit)
             oldFinished.await()
-            assertEquals("B", viewModel.mediaInfos.replayCache.single().requestId)
+            runCurrent()
+            assertFalse(oldResult.isCompleted, "Cancelled requests must not invoke either callback")
+            assertEquals("B", latest.requestId)
         } finally {
             finishOld.complete(Unit)
             store.clear()
@@ -140,6 +171,40 @@ class ExternalOpenViewModelTest {
         } finally {
             Files.deleteIfExists(file)
             Files.deleteIfExists(directory)
+        }
+    }
+
+    @Test
+    fun preparationFailureCanBeRetriedWithoutReplayingOldMedia() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val store = ViewModelStore()
+        val directory = Files.createTempDirectory("podaura-retry-")
+        val file = directory.resolve("retry.mp3")
+        try {
+            val viewModel = createViewModel()
+            store.put("player", viewModel)
+            val failure = CompletableDeferred<Throwable>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(file.toFile())), "failed",
+                onPrepared = { error("Missing file must fail") },
+                onFailure = { failure.complete(it) },
+            )
+            assertEquals("No playable media", failure.await().message)
+            Files.createFile(file)
+            val prepared = CompletableDeferred<PlayerLaunchData>()
+            viewModel.handlePlatformFiles(
+                listOf(PlatformFile(file.toFile())), "retry",
+                onPrepared = { prepared.complete(it) },
+                onFailure = { prepared.completeExceptionally(it) },
+            )
+            val retried = prepared.await()
+            assertEquals("retry", retried.requestId)
+            assertEquals(file.toString(), retried.startPath)
+        } finally {
+            store.clear()
+            Files.deleteIfExists(file)
+            Files.deleteIfExists(directory)
+            Dispatchers.resetMain()
         }
     }
 

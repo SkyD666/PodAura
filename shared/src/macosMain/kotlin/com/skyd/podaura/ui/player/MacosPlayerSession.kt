@@ -72,9 +72,6 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
 
     init {
         scope.launch {
-            viewModel.mediaInfos.collect { coordinator?.onCommand(it.toLoadCommand()) }
-        }
-        scope.launch {
             dataStore.flowOf(BackgroundPlayPreference).collect { enabled ->
                 if (!enabled && !isFullPlayerVisible) destroySession()
             }
@@ -103,19 +100,8 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                 }
             })
         }
-        when (request) {
-            is PlayerOpenRequest.Media -> viewModel.handlePlayDataMode(
-                request.mode,
-                request.requestId
-            )
-
-            is PlayerOpenRequest.Files -> viewModel.handlePlatformFiles(
-                request.files,
-                request.requestId
-            )
-
-            PlayerOpenRequest.Resume -> Unit
-        }
+        coordinator?.open(request, viewModel)
+        if (!request.showPlayer) return
         isFullPlayerVisible = true
         if (playerWindow == null) {
             playerWindow = Window(

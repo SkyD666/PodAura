@@ -10,17 +10,13 @@ actual open class PlatformPlayerEntry internal constructor(
     private val player: PlayerWindowController,
     hasAcceptedTerms: (() -> Boolean)? = null,
 ) : PlayerEntry(hasAcceptedTerms) {
-    protected actual override fun openAccepted(request: PlayerOpenRequest) {
-        when (request) {
-            is PlayerOpenRequest.Media -> player.open(request.mode, request.requestId)
-            is PlayerOpenRequest.Files -> {
-                player.openFiles(request.files, request.requestId)
-                windows.openOrActivate(DesktopWindowSpec.Main)
-            }
-
-            PlayerOpenRequest.Resume -> if (player.coordinator == null) return
+    actual override fun openAccepted(request: PlayerOpenRequest) {
+        if (request == PlayerOpenRequest.Resume && player.coordinator == null) return
+        player.open(request)
+        if (request.showPlayer) {
+            if (request is PlayerOpenRequest.Files) windows.openOrActivate(DesktopWindowSpec.Main)
+            windows.openOrActivate(DesktopWindowSpec.Player)
         }
-        windows.openOrActivate(DesktopWindowSpec.Player)
     }
 
     protected actual override fun showTerms() {

@@ -652,4 +652,7 @@
     <string name="notification_managed_delete_warning">Deleting this rule turns off this subscription’s notification switch. Other matching rules can still send notifications.</string>
     <string name="mpv_config_apply_hint">Changes apply the next time the player is initialized.</string>
     <string name="mpv_config_ios_hint">Changes apply the next time the player is initialized. Lua and JavaScript scripts are not supported on iOS. Video and audio output are managed by the app.</string>
+    <string name="player_config_screen_direct_background_play">Play in background directly</string>
+    <string name="player_config_screen_direct_background_play_description">Play without opening the player</string>
+    <string name="player_config_screen_direct_background_play_disabled">Requires background playback</string>
 </resources>

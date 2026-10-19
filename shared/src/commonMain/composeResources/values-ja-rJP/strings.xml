@@ -638,4 +638,7 @@
     <string name="notification_managed_delete_warning">このルールを削除すると、このフィードの通知スイッチがオフになります。他の一致するルールは引き続き通知を送信できます。</string>
     <string name="mpv_config_apply_hint">変更は次回プレーヤーを起動したときに反映されます。</string>
     <string name="mpv_config_ios_hint">変更は次回プレーヤーを起動したときに反映されます。iOS は Lua と JavaScript のスクリプトに対応していません。映像と音声の出力はアプリが管理します。</string>
+    <string name="player_config_screen_direct_background_play">直接バックグラウンド再生</string>
+    <string name="player_config_screen_direct_background_play_description">プレーヤーを開かずに再生</string>
+    <string name="player_config_screen_direct_background_play_disabled">バックグラウンド再生を有効にしてください</string>
 </resources>

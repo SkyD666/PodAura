@@ -8,14 +8,17 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlin.uuid.Uuid
 
 sealed interface PlayerOpenRequest {
+    val showPlayer: Boolean get() = true
     data class Media(
         val mode: PlayDataMode,
         val requestId: String = Uuid.random().toString(),
+        override val showPlayer: Boolean = true,
     ) : PlayerOpenRequest
 
     data class Files(
         val files: List<PlatformFile>,
         val requestId: String = Uuid.random().toString(),
+        override val showPlayer: Boolean = true,
     ) : PlayerOpenRequest
 
     data object Resume : PlayerOpenRequest
@@ -36,6 +39,6 @@ abstract class PlayerEntry(
 }
 
 expect open class PlatformPlayerEntry : PlayerEntry {
-    protected override fun openAccepted(request: PlayerOpenRequest)
-    protected override fun showTerms()
+    override fun openAccepted(request: PlayerOpenRequest)
+    override fun showTerms()
 }

@@ -638,4 +638,7 @@
     <string name="notification_managed_delete_warning">删除此规则会关闭该订阅的通知开关；其他匹配的规则仍可发送通知。</string>
     <string name="mpv_config_apply_hint">配置将在下次播放器初始化时生效。</string>
     <string name="mpv_config_ios_hint">配置将在下次播放器初始化时生效。iOS 不支持 Lua 和 JavaScript 脚本，视频和音频输出由应用管理。</string>
+    <string name="player_config_screen_direct_background_play">直接后台播放</string>
+    <string name="player_config_screen_direct_background_play_description">播放时不打开播放器</string>
+    <string name="player_config_screen_direct_background_play_disabled">需开启后台播放</string>
 </resources>

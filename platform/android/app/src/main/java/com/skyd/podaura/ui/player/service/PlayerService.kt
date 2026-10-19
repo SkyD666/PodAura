@@ -17,10 +17,14 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.skyd.fundation.di.get
 import com.skyd.podaura.BuildConfig
-import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.AndroidMediaSession
+import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlayerCommand
+import com.skyd.podaura.ui.player.PlayerOpenRequest
+import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
+import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -29,6 +33,7 @@ import kotlinx.coroutines.cancel
 class PlayerService : Service() {
     private val lifecycleScope = CoroutineScope(Dispatchers.Main)
     val playerCoordinator = PlayerCoordinator()
+    private val playerViewModel = get<PlayerViewModel>()
     lateinit var playbackSession: AndroidMediaSession
         private set
     private val playerNotificationReceiver = PlayerNotificationReceiver()
@@ -63,6 +68,7 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
+        playerViewModel.clearPendingPlayback()
         playbackSession.close()
         playerCoordinator.onCommand(PlayerCommand.Destroy)
         sessionManager.onDestroy()
@@ -74,7 +80,15 @@ class PlayerService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         sessionManager.startForegroundService(this)
+        intent?.getStringExtra(PLAY_DATA_MODE_KEY)?.let {
+            open(PlayerOpenRequest.Media(PlayDataMode.decodeFromString(it), showPlayer = false))
+        }
+        sendBroadcast(Intent(PLAYER_STARTED_ACTION).setPackage(packageName))
         return START_NOT_STICKY
+    }
+
+    fun open(request: PlayerOpenRequest) {
+        playerCoordinator.open(request, playerViewModel)
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
@@ -151,6 +165,7 @@ class PlayerService : Service() {
     }
 
     companion object {
+        const val PLAYER_STARTED_ACTION = BuildConfig.APPLICATION_ID + ".PlayerStarted"
         const val PLAY_ACTION = BuildConfig.APPLICATION_ID + ".PlayerPlay"
         const val CLOSE_ACTION = BuildConfig.APPLICATION_ID + ".PlayerClose"
         const val PREVIOUS_ACTION = BuildConfig.APPLICATION_ID + ".PlayerPrevious"

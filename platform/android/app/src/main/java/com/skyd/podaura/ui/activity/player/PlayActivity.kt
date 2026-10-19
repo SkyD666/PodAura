@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.getString
 import com.skyd.podaura.ext.safeLaunch
@@ -35,12 +34,10 @@ import com.skyd.podaura.ui.player.PlatformPlayerEntry
 import com.skyd.podaura.ui.player.PlayerArticleContextViewModel
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerOpenRequest
-import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.service.PlayerService
 import io.github.vinceglb.filekit.PlatformFile
-import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.player_no_permission_cannot_save_screenshot
@@ -48,7 +45,7 @@ import java.util.UUID
 
 
 class PlayActivity : BaseComposeActivity() {
-    private val viewModel: PlayerViewModel by viewModel()
+    private var pendingRequest: PlayerOpenRequest = PlayerOpenRequest.Resume
     private val articleContextViewModel: PlayerArticleContextViewModel by viewModel()
     private var launchRequestId: String = ""
     private val playerEntry by lazy { PlatformPlayerEntry(this, ::openAccepted) }
@@ -83,13 +80,7 @@ class PlayActivity : BaseComposeActivity() {
                 setPlayerVisible(lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
                 setPictureInPictureActive(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPictureInPictureMode)
             }
-            lifecycleScope.launch {
-                viewModel.mediaInfos.collect { launchData ->
-                    this@PlayActivity.service.playerCoordinator.onCommand(
-                        launchData.toLoadCommand()
-                    )
-                }
-            }
+            this@PlayActivity.service.open(pendingRequest)
 
             serviceBound = true
         }
@@ -122,19 +113,8 @@ class PlayActivity : BaseComposeActivity() {
     }
 
     private fun openAccepted(request: PlayerOpenRequest) {
-        when (request) {
-            is PlayerOpenRequest.Media -> viewModel.handlePlayDataMode(
-                request.mode,
-                request.requestId
-            )
-
-            is PlayerOpenRequest.Files -> viewModel.handlePlatformFiles(
-                request.files,
-                request.requestId
-            )
-
-            PlayerOpenRequest.Resume -> Unit
-        }
+        pendingRequest = request
+        if (serviceBound) service.open(request)
         if (receiverRegistered) return
 
         // Keep screen on

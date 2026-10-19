@@ -645,4 +645,7 @@
     <string name="notification_managed_delete_warning">Forigi ĉi tiun regulon malŝaltas la sciigan ŝaltilon de ĉi tiu abonfluo. Aliaj kongruaj reguloj ankoraŭ povas sendi sciigojn.</string>
     <string name="mpv_config_apply_hint">Ŝanĝoj ekvalidos ĉe la sekva starto de la ludilo.</string>
     <string name="mpv_config_ios_hint">Ŝanĝoj ekvalidos ĉe la sekva starto de la ludilo. iOS ne subtenas skriptojn en Lua aŭ JavaScript. La programo regas la eliron de video kaj sono.</string>
+    <string name="player_config_screen_direct_background_play">Rekta fona ludado</string>
+    <string name="player_config_screen_direct_background_play_description">Ludi sen malfermi la ludilon</string>
+    <string name="player_config_screen_direct_background_play_disabled">Necesas ebligi fonan ludadon</string>
 </resources>

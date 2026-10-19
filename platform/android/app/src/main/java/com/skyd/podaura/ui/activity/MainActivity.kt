@@ -1,7 +1,10 @@
 package com.skyd.podaura.ui.activity
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
@@ -9,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -25,6 +29,11 @@ class MainActivity : BaseComposeActivity(), PlayerSession {
         private set
     override val isFullPlayerVisible: Boolean = false
 
+    private val playerStartedReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            bindPlayerServiceIfRunning()
+        }
+    }
     private var bindingRequested = false
     private var coordinatorLifecycleObserver: DefaultLifecycleObserver? = null
 
@@ -69,6 +78,10 @@ class MainActivity : BaseComposeActivity(), PlayerSession {
 
     override fun onStart() {
         super.onStart()
+        ContextCompat.registerReceiver(
+            this, playerStartedReceiver, IntentFilter(PlayerService.PLAYER_STARTED_ACTION),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         bindPlayerServiceIfRunning()
     }
 
@@ -89,6 +102,7 @@ class MainActivity : BaseComposeActivity(), PlayerSession {
     }
 
     override fun onStop() {
+        unregisterReceiver(playerStartedReceiver)
         releasePlayerServiceBinding()
         super.onStop()
     }

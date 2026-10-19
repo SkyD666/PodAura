@@ -2,6 +2,7 @@ package com.skyd.podaura.ui.player.jumper
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.skyd.podaura.model.preference.player.DirectBackgroundPlayPreference
 import com.skyd.podaura.ui.player.LocalIosPlayerSession
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import io.github.vinceglb.filekit.PlatformFile
@@ -11,9 +12,18 @@ actual fun rememberPlayerJumper(): PlayerJumper {
     val session = LocalIosPlayerSession.current
     return remember(session) {
         object : PlayerJumper {
-            override fun jump(mode: PlayDataMode) = session.open(PlayerOpenRequest.Media(mode))
+            override fun jump(mode: PlayDataMode) = session.open(
+                PlayerOpenRequest.Media(
+                    mode = mode, showPlayer = !DirectBackgroundPlayPreference.enabled()
+                )
+            )
+
             override fun openFiles(files: List<PlatformFile>) =
-                session.open(PlayerOpenRequest.Files(files))
+                session.open(
+                    PlayerOpenRequest.Files(
+                        files = files, showPlayer = !DirectBackgroundPlayPreference.enabled()
+                    )
+                )
         }
     }
 }

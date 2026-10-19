@@ -28,7 +28,6 @@ import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
 import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.pip.IosPictureInPicture
 import com.skyd.podaura.ui.screen.SettingsProvider
-import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,6 +41,7 @@ import platform.UIKit.UIViewAutoresizingFlexibleWidth
 import platform.UIKit.UIViewController
 import platform.UIKit.addChildViewController
 import platform.UIKit.didMoveToParentViewController
+import kotlin.time.TimeSource
 
 internal val LocalIosPlayerSession = staticCompositionLocalOf<IosPlayerSession> {
     error("iOS player session is not installed")
@@ -57,7 +57,6 @@ internal class IosPlayerSession : PlayerSession {
     var pictureInPicture by mutableStateOf<IosPictureInPicture?>(null)
         private set
     private var startupJob: Job? = null
-    private var startupTime: TimeSource.Monotonic.ValueTimeMark? = null
     private var automaticallyEnterPipOnClose = true
     override var coordinator by mutableStateOf<PlayerCoordinator?>(null)
         private set
@@ -71,23 +70,12 @@ internal class IosPlayerSession : PlayerSession {
                 if (!enabled) destroyIfUnused()
             }
         }
-        scope.launch {
-            viewModel.mediaInfos.collect {
-                startupTime?.let { started ->
-                    Logger.d(tag = "PlayerStartup") {
-                        "Player/PlaylistPrepared (${it.playlist.size} items): ${started.elapsedNow()}"
-                    }
-                }
-                coordinator?.onCommand(it.toLoadCommand())
-            }
-        }
     }
 
     fun open(request: PlayerOpenRequest) = entry.open(request)
 
     private fun openAccepted(request: PlayerOpenRequest) {
         val started = TimeSource.Monotonic.markNow()
-        startupTime = started
         if (coordinator == null) {
             val created = PlayerCoordinator()
             coordinator = created
@@ -100,10 +88,14 @@ internal class IosPlayerSession : PlayerSession {
                 }
             })
         }
-        isFullPlayerVisible = true
-        val controller = playerController ?: IosPlayerViewController(this, requireNotNull(navigationController))
-            .also { playerController = it }
-        navigationController?.showPlayer(controller)
+        if (request.showPlayer) {
+            isFullPlayerVisible = true
+            val controller = playerController ?: IosPlayerViewController(
+                this,
+                requireNotNull(navigationController)
+            ).also { playerController = it }
+            navigationController?.showPlayer(controller)
+        }
         startupJob?.cancel()
         startupJob = scope.launch {
             coordinator?.engineState?.onEach { state ->
@@ -111,19 +103,7 @@ internal class IosPlayerSession : PlayerSession {
             }
                 ?.first { it.isReady || it is PlayerEngineState.Failed || it == PlayerEngineState.Destroyed }
         }
-        when (request) {
-            is PlayerOpenRequest.Media -> viewModel.handlePlayDataMode(
-                request.mode,
-                request.requestId
-            )
-
-            is PlayerOpenRequest.Files -> viewModel.handlePlatformFiles(
-                request.files,
-                request.requestId
-            )
-
-            PlayerOpenRequest.Resume -> Unit
-        }
+        coordinator?.open(request, viewModel)
     }
 
     fun onPictureInPictureChanged(active: Boolean) {
@@ -185,7 +165,6 @@ internal class IosPlayerSession : PlayerSession {
         pictureInPicture = null
         startupJob?.cancel()
         startupJob = null
-        startupTime = null
         isFullPlayerVisible = false
         navigationController?.closePlayer(animated = false)
         playerController = null

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Redo
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
+import androidx.compose.material.icons.outlined.PlayCircleOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Restore
@@ -58,6 +59,7 @@ import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.ext.toSignedString
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
+import com.skyd.podaura.model.preference.player.DirectBackgroundPlayPreference
 import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
 import com.skyd.podaura.model.preference.player.PlayerAutoPipPreference
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
@@ -91,6 +93,9 @@ import podaura.shared.generated.resources.player_config_screen_background_play
 import podaura.shared.generated.resources.player_config_screen_background_play_description
 import podaura.shared.generated.resources.player_config_screen_behavior_category
 import podaura.shared.generated.resources.player_config_screen_cache_category
+import podaura.shared.generated.resources.player_config_screen_direct_background_play
+import podaura.shared.generated.resources.player_config_screen_direct_background_play_description
+import podaura.shared.generated.resources.player_config_screen_direct_background_play_disabled
 import podaura.shared.generated.resources.player_config_screen_double_tap
 import podaura.shared.generated.resources.player_config_screen_forward_second_button_value
 import podaura.shared.generated.resources.player_config_screen_forward_seconds
@@ -155,6 +160,19 @@ fun PlayerConfigScreen(
                         description = stringResource(Res.string.player_config_screen_background_play_description),
                         checked = BackgroundPlayPreference.current,
                         onCheckedChange = { BackgroundPlayPreference.put(scope, it) }
+                    )
+                }
+                item {
+                    SwitchSettingsItem(
+                        imageVector = Icons.Outlined.PlayCircleOutline,
+                        text = stringResource(Res.string.player_config_screen_direct_background_play),
+                        description = stringResource(
+                            if (BackgroundPlayPreference.current) Res.string.player_config_screen_direct_background_play_description
+                            else Res.string.player_config_screen_direct_background_play_disabled
+                        ),
+                        enabled = BackgroundPlayPreference.current,
+                        checked = BackgroundPlayPreference.current && DirectBackgroundPlayPreference.current,
+                        onCheckedChange = { DirectBackgroundPlayPreference.put(scope, it) },
                     )
                 }
                 if (platform.isPhone) {

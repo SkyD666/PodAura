@@ -9,6 +9,8 @@ class PlayerEntryTest {
     private val requests = listOf(
         PlayerOpenRequest.Media(PlayDataMode.Playlist("playlist", null), "media-request"),
         PlayerOpenRequest.Files(emptyList(), "file-request"),
+        PlayerOpenRequest.Media(PlayDataMode.Playlist("background", null), showPlayer = false),
+        PlayerOpenRequest.Files(emptyList(), showPlayer = false),
         PlayerOpenRequest.Resume,
     )
 

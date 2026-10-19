@@ -35,6 +35,8 @@ actual class MPV {
     private var surfaceRing: MpvSurfaceConsumer? = null
     private val pendingCommandsLock = Any()
     private val pendingCommands = mutableListOf<Array<out String>>()
+    private var activeSurfaces = 0
+    private var backgroundVideoOutput = false
     private val closed = AtomicBoolean(false)
     private val playbackSessionActive = AtomicBoolean(false)
 
@@ -52,7 +54,11 @@ actual class MPV {
             object : MpvRenderContextHost {
                 override val handle: MPVHandle get() = mpvHandle
                 override fun hasActivePlaybackSession(): Boolean = playbackSessionActive.get()
-                override fun onRenderContextReady() = flushPendingCommands()
+                override fun onRenderContextReady() {
+                    restoreVideoOutput()
+                    flushPendingCommands()
+                }
+
                 override fun invalidateSurfaceRingForEnvironmentChange() {
                     surfaceRing?.invalidateForRenderEnvironmentChange()
                 }
@@ -175,11 +181,15 @@ actual class MPV {
                 return
             }
             val commandName = command.firstOrNull()
-            if ((commandName == "loadfile" || commandName == "loadlist") &&
-                renderContextLifecycle?.ensureReadyForLoad() != true
-            ) {
-                pendingCommands += command
-                return
+            if (commandName == "loadfile" || commandName == "loadlist") {
+                if (activeSurfaces == 0) {
+                    // No player window: start audio immediately, including video files.
+                    mpvHandle.setPropertyString("vo", "null")
+                    backgroundVideoOutput = true
+                } else if (renderContextLifecycle?.ensureReadyForLoad() != true) {
+                    pendingCommands += command
+                    return
+                }
             }
         }
         updatePlaybackSession(command)
@@ -274,8 +284,29 @@ actual class MPV {
         return mpvHandle.setRenderUpdateListener(nativeListener)
     }
 
+    private fun restoreVideoOutput() = synchronized(pendingCommandsLock) {
+        if (!closed.get() && activeSurfaces > 0 && backgroundVideoOutput) {
+            mpvHandle.setPropertyString("vo", "libmpv")
+            backgroundVideoOutput = false
+        }
+    }
+
+    internal fun acquireSurface() = synchronized(pendingCommandsLock) {
+        activeSurfaces++
+        if (renderContextLifecycle?.ensureReadyForLoad() == true) restoreVideoOutput()
+    }
+
     internal fun releaseSurface() {
-        if (!closed.get()) surfaceRing?.release()
+        synchronized(pendingCommandsLock) {
+            activeSurfaces--
+            if (activeSurfaces > 0) return
+            if (!closed.get()) {
+                mpvHandle.setPropertyString("vo", "null")
+                backgroundVideoOutput = true
+                surfaceRing?.release()
+            }
+        }
+        flushPendingCommands()
     }
 }
 

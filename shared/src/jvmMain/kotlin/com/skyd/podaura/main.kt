@@ -89,12 +89,6 @@ private fun runDesktopApplication(openFiles: DesktopOpenFiles) {
                 size = DpSize(1200.dp, 800.dp),
             )
 
-            // The collector is tied to the normal application lifetime, not to whether the native
-            // player window currently exists. This avoids consuming mediaInfos replay on reopen.
-            LaunchedEffect(appState.playerWindowController) {
-                appState.playerWindowController.collectMediaInfos()
-            }
-
             appState.windowManager.windows.forEach { entry ->
                 key(entry.id) {
                     DesktopWindowHost(

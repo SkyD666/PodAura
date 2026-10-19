@@ -38,19 +38,18 @@ import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.LocalPressAndHoldSpeedController
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
+import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.PressAndHoldSpeedController
 import com.skyd.podaura.ui.player.PressAndHoldSpeedSource
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
-import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.media.DesktopMediaSessionManager
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.attachWindow
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
 import com.skyd.podaura.ui.theme.PodAuraTheme
-import io.github.vinceglb.filekit.PlatformFile
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.SwingUtilities
@@ -105,20 +104,10 @@ internal class PlayerWindowController(
         private set
     private var mediaSession: AutoCloseable? = null
 
-    fun open(mode: PlayDataMode, requestId: String) {
-        preparePlayer()
-        playerViewModel.handlePlayDataMode(mode, requestId)
-    }
-
-    fun openFiles(files: List<PlatformFile>, requestId: String) {
-        preparePlayer()
-        playerViewModel.handlePlatformFiles(files, requestId)
-    }
-
-    private fun preparePlayer() {
-        if (coordinator == null) {
-            coordinator = createCoordinator()
-        }
+    fun open(request: PlayerOpenRequest) {
+        if (request == PlayerOpenRequest.Resume) return
+        val player = coordinator ?: createCoordinator().also { coordinator = it }
+        player.open(request, playerViewModel)
     }
 
     private fun createCoordinator(): PlayerCoordinator = PlayerCoordinator().also { created ->
@@ -167,16 +156,6 @@ internal class PlayerWindowController(
         mediaSession = null
         currentCoordinator.onCommand(PlayerCommand.Destroy)
     }
-
-    /**
-     * Collect for the whole normal application lifetime, not for the native window lifetime.
-     * mediaInfos has replay = 1, so resubscribing on every reopen would restart the previous list.
-     */
-    suspend fun collectMediaInfos() {
-        playerViewModel.mediaInfos.collect { launchData ->
-            coordinator?.onCommand(launchData.toLoadCommand())
-        }
-    }
 }
 
 @Composable
@@ -216,6 +195,7 @@ internal fun PlayerWindow(
     var rightArrowKeyHandler by remember {
         mutableStateOf<PlayerRightArrowKeyHandler?>(null)
     }
+
     fun cancelPlayerInput(
         handler: PlayerRightArrowKeyHandler? = rightArrowKeyHandler,
         suppressUntilKeyUp: Boolean = false,

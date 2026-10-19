@@ -14,13 +14,12 @@ import com.skyd.podaura.ui.player.jumper.ArticlePlaylistSource
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.path
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,18 +32,15 @@ class PlayerViewModel(
     private var loadJob: Job? = null
     private var externalBatch: ExternalMediaBatch? = null
 
-    // Do not store data
-    val mediaInfos = MutableSharedFlow<PlayerLaunchData>(
-        replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST,
-    )
-
     fun handlePlayDataMode(
         playDataMode: PlayDataMode,
         requestId: String = Uuid.random().toString(),
+        onPrepared: (PlayerLaunchData) -> Unit,
+        onFailure: (Throwable) -> Unit,
     ) {
         loadJob?.cancel()
-        loadJob = viewModelScope.launch(Dispatchers.IO) {
-            publish {
+        loadJob = launchPreparation(onFailure) {
+            publish(onPrepared = onPrepared) {
                 when (playDataMode) {
                     is PlayDataMode.ArticleList -> PlayerLaunchData(
                         startPath = playDataMode.url,
@@ -99,8 +95,22 @@ class PlayerViewModel(
         }
     }
 
+    private fun launchPreparation(
+        onFailure: (Throwable) -> Unit,
+        prepare: suspend () -> Unit,
+    ): Job = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            prepare()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            withContext(Dispatchers.Main.immediate) { onFailure(error) }
+        }
+    }
+
     private suspend fun publish(
         batch: ExternalMediaBatch? = null,
+        onPrepared: (PlayerLaunchData) -> Unit,
         prepare: suspend () -> PlayerLaunchData,
     ) {
         var transferred = false
@@ -109,9 +119,10 @@ class PlayerViewModel(
             val prepared = prepare()
             val data = if (batch == null) preparePlatformPlayback(prepared) else prepared
             preparedBatch = data.externalBatch
+            check(data.playlist.isNotEmpty()) { "No playable media" }
             withContext(Dispatchers.Main.immediate) {
                 currentCoroutineContext().ensureActive()
-                mediaInfos.emit(data)
+                onPrepared(data)
                 externalBatch?.release()
                 externalBatch = preparedBatch
                 transferred = true
@@ -124,11 +135,13 @@ class PlayerViewModel(
     fun handlePlatformFiles(
         files: List<PlatformFile>,
         requestId: String = Uuid.random().toString(),
+        onPrepared: (PlayerLaunchData) -> Unit,
+        onFailure: (Throwable) -> Unit,
     ) {
         loadJob?.cancel()
-        loadJob = viewModelScope.launch(Dispatchers.IO) {
+        loadJob = launchPreparation(onFailure) {
             val batch = resolveExternalMediaBatch(files, { it.path }, ::resolveExternalMedia)
-            publish(batch) {
+            publish(batch, onPrepared) {
                 val playlist = batch.media.mapIndexed { index, media ->
                     PlaylistMediaWithArticleBean.fromUrl(
                         playlistId = "",
@@ -150,12 +163,10 @@ class PlayerViewModel(
         clearPendingPlayback()
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun clearPendingPlayback() {
         loadJob?.cancel()
         externalBatch?.release()
         externalBatch = null
-        mediaInfos.resetReplayCache()
     }
 }
 

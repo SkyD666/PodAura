@@ -43,8 +43,10 @@ import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogC
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogCallback
 import com.skyd.podaura.ui.player.component.state.dialog.track.SubtitleTrackDialogState
+import com.skyd.podaura.ui.player.coordinator.PlaybackPreparation
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
 import com.skyd.podaura.ui.player.land.controller.preview.LongPressSpeedPreview
 import com.skyd.podaura.ui.player.port.PlayerPresentationState
@@ -101,7 +103,7 @@ fun PlayerView(
 
     val engineState by coordinator.engineState.collectAsStateWithLifecycle()
     PlatformPlayerLifecycleEffect(coordinator = coordinator)
-    val presentationState = engineState.toPresentationState()
+    val preparation by coordinator.preparationState.collectAsStateWithLifecycle()
     val stablePlayerState = remember(coordinator.playerState) {
         coordinator.playerState.withoutHotPlayerValues()
     }
@@ -115,6 +117,13 @@ fun PlayerView(
             rotate = 0f,
         )
     )
+    val presentationState = if (preparation == PlaybackPreparation.Failed ||
+        (!engineState.isReady && playerState.lastPlaybackEnd?.reason == PlaybackEndReason.Error)
+    ) {
+        PlayerPresentationState.Failed(stringResource(Res.string.playback_failed))
+    } else {
+        engineState.toPresentationState()
+    }
     val articleContextState by articleContextViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var isSeeking by remember { mutableStateOf(false) }
@@ -149,7 +158,13 @@ fun PlayerView(
     val playbackFailedMessage = stringResource(Res.string.playback_failed)
     val retryLabel = stringResource(Res.string.retry)
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(coordinator, snackbarHostState, playbackFailedMessage, retryLabel, lifecycleOwner) {
+    LaunchedEffect(
+        coordinator,
+        snackbarHostState,
+        playbackFailedMessage,
+        retryLabel,
+        lifecycleOwner
+    ) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             coordinator.playerState.map { it.pendingPlaybackFailures.firstOrNull() }
                 .distinctUntilChanged()
@@ -157,7 +172,10 @@ fun PlayerView(
                     if (failure == null) return@collectLatest
                     if (failure.retryEnd != null) delay(250.milliseconds)
                     val result = snackbarHostState.showSnackbar(
-                        message = listOfNotNull(playbackFailedMessage, failure.details).joinToString("\n"),
+                        message = listOfNotNull(
+                            playbackFailedMessage,
+                            failure.details
+                        ).joinToString("\n"),
                         actionLabel = retryLabel.takeIf { failure.retryEnd != null },
                         withDismissAction = true,
                         duration = SnackbarDuration.Long,
@@ -194,7 +212,7 @@ fun PlayerView(
                 val state = coordinator.playerState.value
                 coordinator.onCommand(PlayerCommand.Paused(!state.paused && state.mediaStarted))
             },
-            onPlayOrPause = { coordinator.onCommand(PlayerCommand.PlayOrPause) },
+            onPlayOrPause = { coordinator.playOrRetry() },
             onSeekTo = {
                 isSeeking = true
                 coordinator.onCommand(PlayerCommand.SeekTo(it))
@@ -296,7 +314,7 @@ fun PlayerView(
                 if (ready) Modifier else Modifier.playerEngineSemantics(engineState)
             ),
             presentationState = presentationState,
-            onRetry = { coordinator.onCommand(PlayerCommand.RetryInitialize) },
+            onRetry = { coordinator.playOrRetry() },
         )
     }
 

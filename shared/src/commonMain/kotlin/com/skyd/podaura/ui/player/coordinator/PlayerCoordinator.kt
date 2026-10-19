@@ -22,17 +22,20 @@ import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlaybackFailure
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
+import com.skyd.podaura.ui.player.PlayerLaunchData
+import com.skyd.podaura.ui.player.PlayerOpenRequest
+import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.externalPlaybackError
 import com.skyd.podaura.ui.player.mpv.EventListener
 import com.skyd.podaura.ui.player.mpv.MPV
 import com.skyd.podaura.ui.player.mpv.MPVEvent
 import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.mpv.PlayerKeyInput
-import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
+import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.resizeSurface
-import com.skyd.podaura.ui.player.playerTrace
 import com.skyd.podaura.ui.player.playbackIntent
+import com.skyd.podaura.ui.player.playerTrace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +78,44 @@ class PlayerCoordinator : LifecycleOwner {
 
     private val _engineState = MutableStateFlow<PlayerEngineState>(PlayerEngineState.Initializing)
     val engineState = _engineState.asStateFlow()
+    private val _preparationState = MutableStateFlow(PlaybackPreparation.Idle)
+    val preparationState = _preparationState.asStateFlow()
+    private var retryPreparation: (() -> Unit)? = null
+
+    fun open(request: PlayerOpenRequest, viewModel: PlayerViewModel) {
+        if (request == PlayerOpenRequest.Resume || destroyed.load()) return
+        retryPreparation = { open(request, viewModel) }
+        _preparationState.value = PlaybackPreparation.Loading
+        val onPrepared: (PlayerLaunchData) -> Unit = { data ->
+            if (!destroyed.load()) {
+                onCommand(data.toLoadCommand())
+                _preparationState.value = PlaybackPreparation.Idle
+            }
+        }
+        val onFailure: (Throwable) -> Unit = { error ->
+            logger.e(throwable = error) { "Failed to prepare playback" }
+            if (!destroyed.load()) _preparationState.value = PlaybackPreparation.Failed
+        }
+        when (request) {
+            is PlayerOpenRequest.Media -> viewModel.handlePlayDataMode(
+                request.mode, request.requestId, onPrepared, onFailure,
+            )
+
+            is PlayerOpenRequest.Files -> viewModel.handlePlatformFiles(
+                request.files, request.requestId, onPrepared, onFailure,
+            )
+
+            PlayerOpenRequest.Resume -> Unit
+        }
+    }
+
+    fun playOrRetry() {
+        when {
+            _preparationState.value == PlaybackPreparation.Failed -> retryPreparation?.invoke()
+            _engineState.value is PlayerEngineState.Failed -> onCommand(PlayerCommand.RetryInitialize)
+            else -> onCommand(PlayerCommand.PlayOrPause)
+        }
+    }
 
     private val engineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO.limitedParallelism(1)
@@ -164,6 +205,7 @@ class PlayerCoordinator : LifecycleOwner {
     fun removeAllObserver() = observers.store(emptySet())
 
     internal var onPlaybackCommand: ((PlayerCommand, Boolean?) -> Unit)? = null
+
     /** Runs in the engine queue before playback, without blocking the calling UI. */
     internal var preparePlaybackCommand: (suspend (Boolean?) -> Boolean)? = null
 
@@ -205,7 +247,10 @@ class PlayerCoordinator : LifecycleOwner {
             is PlayerCommand.Zoom -> postTransform { copy(zoom = command.zoom) }
             is PlayerCommand.VideoOffset -> postTransform { copy(offset = command.offset) }
             else -> {
-                if (_engineState.value.isReady && !destroyed.load()) {
+                val retryingFirstMedia = command == PlayerCommand.PlayOrPause &&
+                        _engineState.value == PlayerEngineState.LoadingMedia &&
+                        playerState.value.lastPlaybackEnd?.reason == PlaybackEndReason.Error
+                if ((_engineState.value.isReady || retryingFirstMedia) && !destroyed.load()) {
                     commands.trySend(ActorMessage.Command(command, intent))
                 }
             }
@@ -307,10 +352,12 @@ class PlayerCoordinator : LifecycleOwner {
                 progress.save()
                 player.playlistPrev(play = playbackIntent == true)
             }
+
             PlayerCommand.NextMedia -> {
                 progress.save()
                 player.playlistNext(play = playbackIntent == true)
             }
+
             is PlayerCommand.SeekTo -> seekTo(command.position)
 
             is PlayerCommand.AudioDelay -> player.audioDelay(command.delayMillis)
@@ -332,6 +379,7 @@ class PlayerCoordinator : LifecycleOwner {
                 progress.save()
                 player.playFileInPlaylist(command.path)
             }
+
             is PlayerCommand.Attach,
             is PlayerCommand.Detach,
             is PlayerCommand.LoadList,
@@ -513,6 +561,7 @@ class PlayerCoordinator : LifecycleOwner {
                 progress.beginSeek()
                 emitEvent(PlayerEvent.Seek)
             }
+
             MPVEvent.START_FILE -> {
                 progress.finish()
                 currentPath = message.path
@@ -629,6 +678,7 @@ class PlayerCoordinator : LifecycleOwner {
                     progress.update(it)
                     emitEvent(PlayerEvent.Position(it))
                 }
+
                 "aid" -> emitEvent(PlayerEvent.AudioTrackChanged(longValue?.toInt() ?: player.aid))
                 "sid" -> emitEvent(
                     PlayerEvent.SubtitleTrackChanged(
@@ -641,6 +691,7 @@ class PlayerCoordinator : LifecycleOwner {
                     progress.updateDuration(it)
                     emitEvent(PlayerEvent.Duration(it))
                 }
+
                 "video-rotate" -> longValue?.let { emitEvent(PlayerEvent.Rotate(it.toFloat())) }
                 "playlist-pos" -> longValue?.let {
                     emitEvent(PlayerEvent.PlaylistPosition(it.toInt()))
@@ -650,6 +701,7 @@ class PlayerCoordinator : LifecycleOwner {
                     if (it) progress.save()
                     emitEvent(PlayerEvent.Paused(it))
                 }
+
                 "seekable" -> booleanValue?.let { emitEvent(PlayerEvent.Seekable(it)) }
                 "shuffle" -> booleanValue?.let { emitEvent(PlayerEvent.Shuffle(it)) }
                 "idle-active" -> booleanValue?.let { emitEvent(PlayerEvent.Idling(it)) }
@@ -851,6 +903,7 @@ class PlayerCoordinator : LifecycleOwner {
             val duration: Long,
             val seekable: Boolean,
         ) : ActorMessage
+
         data class Property(
             val name: String,
             val longValue: Long? = null,
@@ -914,3 +967,5 @@ internal fun PlaybackEnd.toPlaybackFailure(
         source?.let { PlaybackFailure(details = "$it: ${externalPlaybackError(errorCode ?: 0)}") }
     } else PlaybackFailure(retryEnd = this)
 }
+
+enum class PlaybackPreparation { Idle, Loading, Failed }
