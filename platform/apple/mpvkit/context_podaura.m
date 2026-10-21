@@ -4,6 +4,8 @@
 #include <TargetConditionals.h>
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#else
+#import <AppKit/AppKit.h>
 #endif
 #include "config.h"
 #include "options/options.h"
@@ -12,6 +14,42 @@
 #include <vulkan/vulkan_metal.h>
 #include "context_podaura.h"
 #include "include/mpv/podaura.h"
+
+// macOS PiP needs the renderer API; mixing it with the deprecated layer queue can
+// leave the system's mirrored video blank. Keep the established iOS queue unchanged.
+static void enqueue_sample(AVSampleBufferDisplayLayer *layer, CMSampleBufferRef sample)
+{
+#if TARGET_OS_OSX
+    if (@available(macOS 14.0, *)) {
+        [layer.sampleBufferRenderer enqueueSampleBuffer:sample];
+        return;
+    }
+#endif
+    [layer enqueueSampleBuffer:sample];
+}
+
+static bool layer_failed(AVSampleBufferDisplayLayer *layer)
+{
+#if TARGET_OS_OSX
+    if (@available(macOS 14.0, *))
+        return layer.sampleBufferRenderer.status == AVQueuedSampleBufferRenderingStatusFailed;
+#endif
+    return layer.status == AVQueuedSampleBufferRenderingStatusFailed;
+}
+
+void podaura_output_flush(void *display, bool remove_image)
+{
+    AVSampleBufferDisplayLayer *layer = display;
+#if TARGET_OS_OSX
+    if (@available(macOS 14.0, *)) {
+        if (remove_image) [layer.sampleBufferRenderer flushWithRemovalOfDisplayedImage:YES completionHandler:nil];
+        else [layer.sampleBufferRenderer flush];
+        return;
+    }
+#endif
+    if (remove_image) [layer flushAndRemoveImage];
+    else [layer flush];
+}
 
 @interface PodAuraVideoOutput : NSObject {
 @public
@@ -109,15 +147,19 @@ int podaura_output_attach(mpv_handle *mpv, void *output)
     return mpv_set_property(mpv, "wid", MPV_FORMAT_INT64, &wid);
 }
 
-#if TARGET_OS_IOS
 void podaura_output_show_artwork(void *display, void *artwork)
 {
     AVSampleBufferDisplayLayer *layer = display;
+#if TARGET_OS_IOS
     UIImage *image = artwork;
+#else
+    NSImage *image = artwork;
+#endif
     CGFloat scale = image.size.width > 0 && image.size.height > 0
         ? MIN(640 / image.size.width, 640 / image.size.height) : 1;
     int width = image ? MAX(2, image.size.width * scale) : 640;
     int height = image ? MAX(2, image.size.height * scale) : 640;
+    CGRect imageRect = CGRectMake(0, 0, width, height);
     CVPixelBufferRef pixel = NULL;
     NSDictionary *attrs = @{(id)kCVPixelBufferIOSurfacePropertiesKey: @{}};
     if (CVPixelBufferCreate(NULL, width, height, kCVPixelFormatType_32BGRA,
@@ -135,6 +177,7 @@ void podaura_output_show_artwork(void *display, void *artwork)
     }
     CGContextSetRGBFillColor(canvas, 0, 0, 0, 1);
     CGContextFillRect(canvas, CGRectMake(0, 0, width, height));
+#if TARGET_OS_IOS
     if (image.CGImage) {
         CGContextTranslateCTM(canvas, 0, height);
         CGContextScaleCTM(canvas, 1, -1);
@@ -142,6 +185,10 @@ void podaura_output_show_artwork(void *display, void *artwork)
         [image drawInRect:CGRectMake(0, 0, width, height)];
         UIGraphicsPopContext();
     }
+#else
+    CGImageRef cgImage = [image CGImageForProposedRect:NULL context:nil hints:nil];
+    if (cgImage) CGContextDrawImage(canvas, imageRect, cgImage);
+#endif
     CGContextRelease(canvas);
     CGColorSpaceRelease(color);
     CVPixelBufferUnlockBaseAddress(pixel, 0);
@@ -155,15 +202,13 @@ void podaura_output_show_artwork(void *display, void *artwork)
         CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sample, true);
         CFDictionarySetValue((CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0),
                              kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-        [layer flush];
-        [layer enqueueSampleBuffer:sample];
+        podaura_output_flush(layer, false);
+        enqueue_sample(layer, sample);
     }
     if (sample) CFRelease(sample);
     if (format) CFRelease(format);
     CVPixelBufferRelease(pixel);
 }
-
-#endif
 
 struct slot { IOSurfaceRef surface; pl_tex texture; };
 struct priv {
@@ -216,8 +261,8 @@ bool podaura_begin_frame(struct ra_ctx *ctx)
     struct priv *p = ctx->priv;
     [p->output->lock lock];
     if (p->output->active && !p->output->failed) {
-        if (p->output->layer.status == AVQueuedSampleBufferRenderingStatusFailed)
-            [p->output->layer flush];
+        if (layer_failed(p->output->layer))
+            podaura_output_flush(p->output->layer, false);
         if (p->output->layer.readyForMoreMediaData) return true;
     }
     [p->output->lock unlock];
@@ -307,9 +352,9 @@ bool podaura_submit_frame(struct ra_ctx *ctx)
             CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sample, true);
             CFDictionarySetValue((CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0),
                                  kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-            if (p->output->layer.status == AVQueuedSampleBufferRenderingStatusFailed)
-                [p->output->layer flush];
-            [p->output->layer enqueueSampleBuffer:sample];
+            if (layer_failed(p->output->layer))
+                podaura_output_flush(p->output->layer, false);
+            enqueue_sample(p->output->layer, sample);
             p->output->frames++;
             ok = true;
         }

@@ -15,20 +15,13 @@ import com.skyd.podaura.model.preference.player.PlayerAutoPipPreference
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import com.skyd.podaura.ui.player.IosPlayerSession
 import com.skyd.podaura.ui.player.PlayerCommand
-import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.isReady
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.COpaquePointer
-import kotlinx.cinterop.CValue
-import kotlinx.cinterop.alloc
 import kotlinx.cinterop.interpretCPointer
-import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.objcPtr
-import kotlinx.cinterop.ptr
-import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
-import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,25 +37,9 @@ import platform.AVFoundation.flushAndRemoveImage
 import platform.AVKit.AVPictureInPictureController
 import platform.AVKit.AVPictureInPictureControllerContentSource
 import platform.AVKit.AVPictureInPictureControllerDelegateProtocol
-import platform.AVKit.AVPictureInPictureSampleBufferPlaybackDelegateProtocol
 import platform.AVKit.create
-import platform.AVKit.invalidatePlaybackState
-import platform.CoreFoundation.CFRelease
-import platform.CoreMedia.CMClockGetHostTimeClock
-import platform.CoreMedia.CMTime
-import platform.CoreMedia.CMTimeGetSeconds
-import platform.CoreMedia.CMTimeMake
-import platform.CoreMedia.CMTimeMakeWithSeconds
-import platform.CoreMedia.CMTimeRange
-import platform.CoreMedia.CMTimeRangeMake
-import platform.CoreMedia.CMTimebaseCreateWithSourceClock
-import platform.CoreMedia.CMTimebaseRefVar
-import platform.CoreMedia.CMTimebaseSetRate
-import platform.CoreMedia.CMTimebaseSetTime
-import platform.CoreMedia.CMVideoDimensions
-import platform.CoreMedia.kCMTimePositiveInfinity
-import platform.CoreMedia.kCMTimeRangeInvalid
 import platform.Foundation.NSError
+import platform.Foundation.NSKeyValueObservingOptionInitial
 import platform.Foundation.NSKeyValueObservingOptionNew
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
@@ -83,13 +60,13 @@ import platform.UIKit.UIViewContentMode.UIViewContentModeScaleAspectFill
 import platform.darwin.NSObject
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
+import kotlin.time.Duration.Companion.milliseconds
 
 /** The content source and display layer outlive the Compose player view. */
 internal class IosPictureInPicture(
     private val coordinator: PlayerCoordinator,
     private val session: IosPlayerSession,
 ) : NSObject(), AVPictureInPictureControllerDelegateProtocol,
-    AVPictureInPictureSampleBufferPlaybackDelegateProtocol,
     PodAuraPictureInPictureObserverProtocol {
     val layer = AVSampleBufferDisplayLayer()
 
@@ -120,32 +97,17 @@ internal class IosPictureInPicture(
     private var exitSource: UIView? = null
     private var exitTimeout: Job? = null
     private var wasVideo: Boolean? = null
-    private var skipCompletion: (() -> Unit)? = null
-    private var skipTimeout: Job? = null
-    private var seekStarted = false
-    private val playbackObserver = PlayerCoordinator.Observer { event ->
-        when (event) {
-            PlayerEvent.Seek -> if (skipCompletion != null) seekStarted = true
-            PlayerEvent.PlaybackRestart -> if (seekStarted) finishSkip()
-            is PlayerEvent.EndFile, PlayerEvent.Shutdown -> finishSkip()
-            else -> Unit
-        }
-    }
     var possible by mutableStateOf(false)
         private set
     val active get() = controller?.pictureInPictureActive == true
     val keepsSession get() = active || starting || exitSource != null
-    private val timebase = memScoped {
-        val result = alloc<CMTimebaseRefVar>()
-        check(CMTimebaseCreateWithSourceClock(null, CMClockGetHostTimeClock(), result.ptr) == 0)
-        checkNotNull(result.value)
-    }
+    private val playback = ApplePictureInPicturePlayback(coordinator, layer)
     private val controller: AVPictureInPictureController? =
         if (AVPictureInPictureController.isPictureInPictureSupported()) {
             AVPictureInPictureController(
                 AVPictureInPictureControllerContentSource.create(
                     layer,
-                    this
+                    playback
                 )
             )
                 .also {
@@ -153,13 +115,13 @@ internal class IosPictureInPicture(
                     it.addObserver(
                         this,
                         "pictureInPicturePossible",
-                        NSKeyValueObservingOptionNew,
+                        NSKeyValueObservingOptionNew or NSKeyValueObservingOptionInitial,
                         null
                     )
                     it.addObserver(
                         this,
                         "pictureInPictureSuspended",
-                        NSKeyValueObservingOptionNew,
+                        NSKeyValueObservingOptionNew or NSKeyValueObservingOptionInitial,
                         null
                     )
                 }
@@ -200,10 +162,9 @@ internal class IosPictureInPicture(
     )
 
     init {
-        coordinator.addObserver(playbackObserver)
+        playback.bind(controller)
         layer.videoGravity = AVLayerVideoGravityResizeAspect
         layer.opaque = true
-        layer.controlTimebase = timebase
         scope.launch {
             combine(
                 coordinator.playerState,
@@ -222,9 +183,6 @@ internal class IosPictureInPicture(
                     if (!state.isVideo) showArtwork()
                     attach()
                 }
-                CMTimebaseSetTime(timebase, CMTimeMake(state.position, 1))
-                CMTimebaseSetRate(timebase, if (state.paused) 0.0 else state.speed.toDouble())
-                controller?.invalidatePlaybackState()
                 Unit
             }.collect {}
         }
@@ -238,7 +196,8 @@ internal class IosPictureInPicture(
     ) {
         // KVO can arrive on AVFoundation's rendering thread. Client API calls
         // and UIKit state remain serialized on main, independent of the VO lock.
-        scope.launch {
+        // Initial KVO delivery can occur inside controller construction; defer until it is assigned.
+        scope.launch(Dispatchers.Main) {
             if (closing) return@launch
             if (keyPath == "pictureInPicturePossible") {
                 possible = controller?.pictureInPicturePossible == true
@@ -329,7 +288,7 @@ internal class IosPictureInPicture(
         layout(retained)
         if (controller.pictureInPicturePossible) enter()
         exitTimeout = scope.launch {
-            delay(2_000)
+            delay(2_000.milliseconds)
             if (exitSource != null && !active && !starting) {
                 detach()
                 releaseSource()
@@ -376,7 +335,8 @@ internal class IosPictureInPicture(
     private fun showArtwork() {
         podaura_output_show_artwork(
             interpretCPointer<ByteVar>(layer.objcPtr()),
-            artworkView.image?.let { interpretCPointer<ByteVar>(it.objcPtr()) })
+            artworkView.image?.let { interpretCPointer<ByteVar>(it.objcPtr()) },
+        )
     }
 
     fun enter() {
@@ -455,71 +415,9 @@ internal class IosPictureInPicture(
         )
     }
 
-    override fun pictureInPictureController(
-        pictureInPictureController: AVPictureInPictureController,
-        setPlaying: Boolean
-    ) {
-        coordinator.onCommand(PlayerCommand.Paused(!setPlaying))
-    }
-
-    override fun pictureInPictureControllerIsPlaybackPaused(pictureInPictureController: AVPictureInPictureController) =
-        coordinator.playerState.value.paused
-
-    override fun pictureInPictureControllerTimeRangeForPlayback(pictureInPictureController: AVPictureInPictureController): CValue<CMTimeRange> {
-        val state = coordinator.playerState.value
-        if (!state.mediaStarted) return kCMTimeRangeInvalid.readValue()
-        return CMTimeRangeMake(
-            CMTimeMake(0, 1),
-            if (state.duration > 0 && state.seekable) CMTimeMake(
-                state.duration,
-                1
-            ) else kCMTimePositiveInfinity.readValue()
-        )
-    }
-
-    override fun pictureInPictureController(
-        pictureInPictureController: AVPictureInPictureController,
-        didTransitionToRenderSize: CValue<CMVideoDimensions>
-    ) = Unit
-
-    override fun pictureInPictureController(
-        pictureInPictureController: AVPictureInPictureController,
-        skipByInterval: CValue<CMTime>, completionHandler: () -> Unit
-    ) {
-        val state = coordinator.playerState.value
-        if (!state.seekable || !coordinator.engineState.value.isReady) {
-            completionHandler(); return
-        }
-        finishSkip()
-        skipCompletion = completionHandler
-        seekStarted = false
-        skipTimeout = scope.launch { delay(10_000); finishSkip() }
-        val target =
-            (state.position + CMTimeGetSeconds(skipByInterval).toLong()).coerceAtLeast(0).let {
-                if (state.duration > 0) it.coerceAtMost(state.duration) else it
-            }
-        coordinator.onCommand(PlayerCommand.SeekTo(target))
-    }
-
-    private fun finishSkip() {
-        val completion = skipCompletion ?: return
-        skipCompletion = null
-        seekStarted = false
-        skipTimeout?.cancel()
-        skipTimeout = null
-        val state = coordinator.playerState.value
-        val position =
-            if (coordinator.engineState.value.isReady) coordinator.renderPlayer.getPropertyDouble("time-pos")
-            else state.position.toDouble()
-        CMTimebaseSetTime(timebase, CMTimeMakeWithSeconds(position, 600))
-        CMTimebaseSetRate(timebase, if (state.paused) 0.0 else state.speed.toDouble())
-        completion()
-    }
-
     fun close() {
         closing = true
-        finishSkip()
-        coordinator.removeObserver(playbackObserver)
+        playback.finishPendingSkip()
         controller?.canStartPictureInPictureAutomaticallyFromInline = false
         controller?.stopPictureInPicture()
         controller?.removeObserver(this, "pictureInPicturePossible")
@@ -530,7 +428,6 @@ internal class IosPictureInPicture(
         detach()
         releaseSource()
         layer.flushAndRemoveImage()
-        layer.controlTimebase = null
-        CFRelease(timebase)
+        playback.close()
     }
 }

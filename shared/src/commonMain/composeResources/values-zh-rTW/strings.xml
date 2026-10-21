@@ -641,4 +641,8 @@
     <string name="player_config_screen_direct_background_play">直接背景播放</string>
     <string name="player_config_screen_direct_background_play_description">播放時不開啟播放器</string>
     <string name="player_config_screen_direct_background_play_disabled">需開啟背景播放</string>
+    <string name="player_pip_active">正在子母畫面中播放</string>
+    <string name="player_pip_restore">返回播放器</string>
+    <string name="player_pip_failed">無法啟動子母畫面：%1$s</string>
+    <string name="player_pip_unavailable">子母畫面尚未準備好，請重試。</string>
 </resources>

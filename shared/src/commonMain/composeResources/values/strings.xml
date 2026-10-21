@@ -655,4 +655,8 @@
     <string name="player_config_screen_direct_background_play">Play in background directly</string>
     <string name="player_config_screen_direct_background_play_description">Play without opening the player</string>
     <string name="player_config_screen_direct_background_play_disabled">Requires background playback</string>
+    <string name="player_pip_active">Playing in picture in picture</string>
+    <string name="player_pip_restore">Return to player</string>
+    <string name="player_pip_failed">Could not start picture in picture: %1$s</string>
+    <string name="player_pip_unavailable">Picture in picture is not ready. Please try again.</string>
 </resources>

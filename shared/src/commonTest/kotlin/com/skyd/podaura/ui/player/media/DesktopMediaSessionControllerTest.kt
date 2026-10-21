@@ -1,5 +1,10 @@
 package com.skyd.podaura.ui.player.media
 
+import com.skyd.podaura.model.bean.article.ArticleBean
+import com.skyd.podaura.model.bean.article.ArticleWithEnclosureBean
+import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.bean.article.RssMediaBean
+import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.player.PlaybackEnd
@@ -25,6 +30,53 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DesktopMediaSessionControllerTest {
+    @Test
+    fun audioWithoutEmbeddedArtworkUsesArticleCoverBeforeFeedIcon() = runTest {
+        val adapter = RecordingAdapter()
+        val loaded = mutableListOf<String>()
+        val controller = DesktopMediaSessionController(
+            adapter = adapter,
+            artworkLoader = { source ->
+                loaded += source.toString()
+                DesktopArtworkData(byteArrayOf(1), 1, 1)
+            },
+            commandSink = {},
+            scope = this,
+        )
+        val path = "https://example.com/audio.mp3"
+        val state = playerState(paths = listOf(path), index = 0)
+        val article = ArticleWithFeed(
+            articleWithEnclosure = ArticleWithEnclosureBean(
+                article = ArticleBean("article", "feed", image = "article.jpg"),
+                enclosures = emptyList(),
+                categories = emptyList(),
+                media = RssMediaBean("article", image = " "),
+            ),
+            feed = FeedBean(url = "feed", icon = "feed.jpg"),
+        )
+        fun withArticle(value: ArticleWithFeed) = state.copy(
+            playlist = linkedMapOf(path to state.playlist.getValue(path).copy(article = value)),
+        )
+        controller.update(withArticle(article))
+        advanceUntilIdle()
+        assertEquals(listOf("article.jpg"), loaded)
+        assertIs<DesktopArtwork>(adapter.updates.last().artwork)
+
+        val enclosure = article.articleWithEnclosure
+        controller.update(withArticle(article.copy(
+            articleWithEnclosure = enclosure.copy(media = RssMediaBean("article", image = "episode.jpg")),
+        )))
+        advanceUntilIdle()
+        assertEquals(listOf("article.jpg", "episode.jpg"), loaded)
+
+        controller.update(withArticle(article.copy(
+            articleWithEnclosure = enclosure.copy(article = enclosure.article.copy(image = " ")),
+        )))
+        advanceUntilIdle()
+        assertEquals(listOf("article.jpg", "episode.jpg", "feed.jpg"), loaded)
+        controller.close()
+    }
+
     @Test
     fun managerPublishesCurrentStateAndStopsObservingAndDispatchingAfterClose() = runTest {
         val adapter = RecordingAdapter()

@@ -15,5 +15,6 @@ internal expect class AppleMpvRenderer(handle: CPointer<mpv_handle>) {
     fun resize()
     fun setActive(active: Boolean)
     val failed: Boolean
+    val hasFrame: Boolean
     fun close()
 }

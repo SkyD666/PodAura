@@ -648,4 +648,8 @@
     <string name="player_config_screen_direct_background_play">Rekta fona ludado</string>
     <string name="player_config_screen_direct_background_play_description">Ludi sen malfermi la ludilon</string>
     <string name="player_config_screen_direct_background_play_disabled">Necesas ebligi fonan ludadon</string>
+    <string name="player_pip_active">Ludado en bildo-en-bildo</string>
+    <string name="player_pip_restore">Reveni al la ludilo</string>
+    <string name="player_pip_failed">Ne eblis lanĉi bildo-en-bildon: %1$s</string>
+    <string name="player_pip_unavailable">Bildo-en-bildo ankoraŭ ne estas preta. Bonvolu reprovi.</string>
 </resources>

@@ -5,6 +5,7 @@ import com.skyd.podaura.libmpv.podaura_output_attach
 import com.skyd.podaura.libmpv.podaura_output_create
 import com.skyd.podaura.libmpv.podaura_output_destroy
 import com.skyd.podaura.libmpv.podaura_output_failed
+import com.skyd.podaura.libmpv.podaura_output_frame_count
 import com.skyd.podaura.libmpv.podaura_output_resize
 import com.skyd.podaura.libmpv.podaura_output_set_active
 import com.skyd.podaura.libmpv.podaura_output_set_layer
@@ -85,6 +86,7 @@ internal class SampleBufferRenderer(private val handle: CPointer<mpv_handle>) : 
     }
 
     val failed: Boolean get() = output?.let { podaura_output_failed(it) } == true
+    val hasFrame: Boolean get() = output?.let { podaura_output_frame_count(it) > 0uL } == true
 
     override fun close() {
         output?.let { podaura_output_set_active(it, false); podaura_output_destroy(it) }

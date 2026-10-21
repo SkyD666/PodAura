@@ -1,5 +1,11 @@
 package com.skyd.podaura.ui.player.media
 
+import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
+import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
+import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.jetbrains.skia.Bitmap
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.useContents
 import platform.AppKit.NSImage
@@ -36,6 +42,44 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MacosMediaSessionAdapterTest {
+    @Test
+    fun failedCoverLoadFallsBackToDecodedMediaArtwork() = runTest {
+        val snapshots = mutableListOf<DesktopMediaSnapshot>()
+        val loaded = mutableListOf<Any>()
+        val image = Bitmap().apply { allocN32Pixels(1, 1) }
+        val data = DesktopArtworkData(byteArrayOf(1), 1, 1)
+        val controller = DesktopMediaSessionController(
+            adapter = object : DesktopMediaSessionAdapter {
+                override fun setCommandListener(listener: (DesktopMediaCommand) -> Unit) = Unit
+                override fun update(snapshot: DesktopMediaSnapshot) { snapshots += snapshot }
+                override fun clear() = Unit
+                override fun close() = Unit
+            },
+            artworkLoader = { source ->
+                loaded += source
+                if (source === image) data else error("No cover in local media")
+            },
+            commandSink = {},
+            scope = this,
+        )
+        val path = "/audio.mp3"
+        try {
+            controller.update(PlayerState(
+                path = path,
+                playlist = linkedMapOf(path to PlaylistMediaWithArticleBean(
+                    PlaylistMediaBean("test", path, null, 0.0, 0), null,
+                )),
+                mediaThumbnail = image,
+            ))
+            advanceUntilIdle()
+            assertEquals(2, loaded.size)
+            assertEquals(data, snapshots.last().artwork?.data)
+        } finally {
+            controller.close()
+            image.close()
+        }
+    }
+
     /**
      * Publishes to the real system-wide Now Playing center. Run the linked test.kexe with
      * PODAURA_RUN_MAC_MEDIA_INTEGRATION=1 and --ktest_filter=*MacosMediaSessionAdapterTest*.
@@ -49,7 +93,8 @@ class MacosMediaSessionAdapterTest {
         }
         val center = MPNowPlayingInfoCenter.defaultCenter()
         val remote = MPRemoteCommandCenter.sharedCommandCenter()
-        val adapter = MacosMediaSessionAdapter()
+        val sharedImages = mutableListOf<NSImage?>()
+        val adapter = MacosMediaSessionAdapter { sharedImages += it }
         val snapshot = DesktopMediaSnapshot(
             mediaId = "test",
             title = "PodAura media integration test",
@@ -83,6 +128,11 @@ class MacosMediaSessionAdapterTest {
         )
         try {
             assertFalse(remote.playCommand.enabled)
+            adapter.update(snapshot)
+            assertNotNull(sharedImages.last(), "PiP must receive the decoded system artwork")
+            val publishedImages = sharedImages.size
+            adapter.update(snapshot.copy(positionSeconds = 31.0))
+            assertEquals(publishedImages, sharedImages.size, "metadata changes must reuse decoded artwork")
             adapter.update(snapshot)
             GC.collect()
             val info = assertNotNull(center.nowPlayingInfo)
@@ -120,6 +170,7 @@ class MacosMediaSessionAdapterTest {
                 canChangePlaybackPosition = false,
                 artwork = null,
             ))
+            assertNull(sharedImages.last(), "changing to no cover must clear PiP artwork")
             val paused = assertNotNull(center.nowPlayingInfo)
             assertNull(paused[MPMediaItemPropertyArtwork])
             assertEquals(MPNowPlayingInfoMediaTypeVideo.toDouble(),

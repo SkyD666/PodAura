@@ -34,6 +34,7 @@ import com.skyd.podaura.ui.component.Window
 import com.skyd.podaura.ui.local.LocalMacosMainWindow
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.media.MacosMediaSession
+import com.skyd.podaura.ui.player.pip.MacosPictureInPicture
 import com.skyd.podaura.ui.screen.SettingsProvider
 import com.skyd.podaura.ui.window.PlayerRightArrowKeyHandler
 import kotlinx.cinterop.useContents
@@ -55,6 +56,8 @@ internal val LocalMacosPlayerSession = staticCompositionLocalOf<MacosPlayerSessi
 internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : PlayerSession {
     private var playerWindow: ComposeWindow? = null
     private var mediaSession: MacosMediaSession? = null
+    var pictureInPicture by mutableStateOf<MacosPictureInPicture?>(null)
+        private set
     private val viewModel = get<PlayerViewModel>()
     private val articleContext = get<PlayerArticleContextViewModel>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -73,7 +76,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
     init {
         scope.launch {
             dataStore.flowOf(BackgroundPlayPreference).collect { enabled ->
-                if (!enabled && !isFullPlayerVisible) destroySession()
+                if (!enabled) destroyIfUnused()
             }
         }
     }
@@ -88,12 +91,14 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
         if (request == PlayerOpenRequest.Resume && coordinator == null) return
         val player = coordinator ?: PlayerCoordinator().also { created ->
             coordinator = created
-            mediaSession = runCatching { MacosMediaSession(created) }
-                .onFailure { throwable ->
-                    Logger.e(throwable = throwable, tag = "MacosPlayerSession") {
-                        "Could not initialize macOS system media controls"
-                    }
-                }.getOrNull()
+            pictureInPicture = MacosPictureInPicture(created, this)
+            mediaSession = runCatching {
+                MacosMediaSession(created) { pictureInPicture?.updateArtwork(it) }
+            }.onFailure { throwable ->
+                Logger.e(throwable = throwable, tag = "MacosPlayerSession") {
+                    "Could not initialize macOS system media controls"
+                }
+            }.getOrNull()
             created.lifecycle.addObserver(object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     if (coordinator === created) destroySession()
@@ -113,7 +118,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                 onClose = {
                     playerWindow = null
                     isFullPlayerVisible = false
-                    if (!dataStore.getOrDefault(BackgroundPlayPreference)) destroySession()
+                    destroyIfUnused()
                 },
             ) {
                 val keyScope = rememberCoroutineScope()
@@ -201,8 +206,18 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
         playerWindow?.activate()
     }
 
+    fun destroyIfUnused() {
+        if (!isFullPlayerVisible && pictureInPicture?.keepsSession != true &&
+            !dataStore.getOrDefault(BackgroundPlayPreference)
+        ) {
+            destroySession()
+        }
+    }
+
     override fun destroySession() {
         val old = coordinator
+        pictureInPicture?.close()
+        pictureInPicture = null
         mediaSession?.close()
         mediaSession = null
         old?.let {

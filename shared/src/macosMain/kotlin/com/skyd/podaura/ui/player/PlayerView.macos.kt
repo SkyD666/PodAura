@@ -1,62 +1,54 @@
 package com.skyd.podaura.ui.player
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.skyd.podaura.ui.PlatformSurfaceHolder
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.skyd.podaura.ui.component.AppKitView
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.pip.MacosPictureInPicture
 import com.skyd.podaura.ui.player.service.PlayerState
 import kotlinx.cinterop.CValue
-import kotlinx.cinterop.useContents
-import platform.AVFoundation.AVLayerVideoGravityResizeAspect
-import platform.AVFoundation.AVSampleBufferDisplayLayer
+import org.jetbrains.compose.resources.stringResource
 import platform.AppKit.NSView
 import platform.CoreGraphics.CGRect
 import platform.Foundation.NSMakeRect
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.math.roundToInt
+import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.player_pip_active
+import podaura.shared.generated.resources.player_pip_failed
+import podaura.shared.generated.resources.player_pip_restore
 
-private class MacosVideoView : NSView(NSMakeRect(0.0, 0.0, 1.0, 1.0)) {
-    var attached = false
-    private val pixelWidth = AtomicInt(2)
-    private val pixelHeight = AtomicInt(2)
-    val surface = object : PlatformSurfaceHolder {
-        override val layer = AVSampleBufferDisplayLayer().apply {
-            videoGravity = AVLayerVideoGravityResizeAspect
-        }
-        override val width get() = pixelWidth.load()
-        override val height get() = pixelHeight.load()
-        override var onResize: ((Int, Int) -> Unit)? = null
-    }
-
+private class MacosVideoView(private val pip: MacosPictureInPicture) :
+    NSView(NSMakeRect(0.0, 0.0, 1.0, 1.0)) {
     init {
-        wantsLayer = true
-        layer = surface.layer
+        pip.mount(this)
     }
 
     override fun setFrame(frame: CValue<CGRect>) {
         super.setFrame(frame)
-        updateSurfaceSize()
+        pip.layout(this)
     }
 
     override fun viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        updateSurfaceSize()
-    }
-
-    private fun updateSurfaceSize() {
-        val scale = window?.backingScaleFactor ?: 1.0
-        val width = bounds.useContents { (size.width * scale).roundToInt().coerceAtLeast(2) }
-        val height = bounds.useContents { (size.height * scale).roundToInt().coerceAtLeast(2) }
-        val changed = pixelWidth.load() != width || pixelHeight.load() != height
-        pixelWidth.store(width)
-        pixelHeight.store(height)
-        if (changed) surface.onResize?.invoke(width, height)
+        pip.layout(this)
     }
 }
 
@@ -66,22 +58,35 @@ actual fun PlatformPlayerView(
     modifier: Modifier,
     onCommand: (PlayerCommand) -> Unit,
 ) {
-    key(coordinator) { MacosVideoSurface(modifier, onCommand) }
+    val pip = LocalMacosPlayerSession.current.pictureInPicture ?: return
+    key(coordinator) {
+        Box(modifier) {
+            MacosVideoSurface(Modifier.fillMaxSize(), pip)
+            if (pip.active) {
+                Column(
+                    modifier = Modifier.fillMaxSize().background(Color.Black).padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+                ) {
+                    Text(
+                        stringResource(Res.string.player_pip_active), color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(onClick = pip::restore) {
+                        Text(stringResource(Res.string.player_pip_restore))
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-internal fun MacosVideoSurface(modifier: Modifier, onCommand: (PlayerCommand) -> Unit) {
-    val currentOnCommand by rememberUpdatedState(onCommand)
+internal fun MacosVideoSurface(modifier: Modifier, pip: MacosPictureInPicture) {
     AppKitView(
-        factory = { MacosVideoView() },
+        factory = { MacosVideoView(pip) },
         modifier = modifier,
-        update = {
-            if (!it.attached) {
-                it.attached = true
-                currentOnCommand(PlayerCommand.Attach(it.surface))
-            }
-        },
-        onRelease = { if (it.attached) currentOnCommand(PlayerCommand.Detach(it.surface)) },
+        onRelease = pip::unmount,
     )
 }
 
@@ -98,4 +103,19 @@ actual fun PlatformContent(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     commonContent: @Composable () -> Unit,
-) = commonContent()
+) {
+    val pip = LocalMacosPlayerSession.current.pictureInPicture
+    val snackbar = remember { SnackbarHostState() }
+    val error = pip?.error
+    val message = stringResource(Res.string.player_pip_failed, error.orEmpty())
+    LaunchedEffect(error) {
+        if (error != null) {
+            snackbar.showSnackbar(message)
+            if (pip.error == error) pip.error = null
+        }
+    }
+    Box(modifier) {
+        commonContent()
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter))
+    }
+}

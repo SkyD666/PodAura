@@ -22,9 +22,8 @@ MPV_EXPORT void podaura_output_resize(void *output, int width, int height);
 MPV_EXPORT void podaura_output_set_active(void *output, bool active);
 MPV_EXPORT void podaura_output_destroy(void *output);
 MPV_EXPORT int podaura_output_attach(mpv_handle *mpv, void *output);
-#if TARGET_OS_IOS
-// Pure audio emits a still only when the artwork changes (UIImage, or NULL).
+// Pure audio emits a still only when the artwork changes (UIImage/NSImage, or NULL).
 MPV_EXPORT void podaura_output_show_artwork(void *layer, void *image);
-#endif
+MPV_EXPORT void podaura_output_flush(void *layer, bool remove_image);
 MPV_EXPORT uint64_t podaura_output_frame_count(void *output);
 MPV_EXPORT bool podaura_output_failed(void *output);

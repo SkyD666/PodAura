@@ -648,4 +648,8 @@
     <string name="player_config_screen_direct_background_play">Doğrudan arka planda oynat</string>
     <string name="player_config_screen_direct_background_play_description">Oynatıcıyı açmadan oynat</string>
     <string name="player_config_screen_direct_background_play_disabled">Arka planda oynatma etkin olmalı</string>
+    <string name="player_pip_active">Resim içinde resim modunda oynatılıyor</string>
+    <string name="player_pip_restore">Oynatıcıya dön</string>
+    <string name="player_pip_failed">Resim içinde resim başlatılamadı: %1$s</string>
+    <string name="player_pip_unavailable">Resim içinde resim henüz hazır değil. Lütfen tekrar deneyin.</string>
 </resources>

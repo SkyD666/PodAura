@@ -22,10 +22,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.skyd.podaura.ui.component.PodAuraImage
-import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.skyd.podaura.ui.component.PodAuraImage
+import com.skyd.podaura.ui.player.component.state.PlayState
 
 @Composable
 internal fun MediaArea(
@@ -51,7 +51,7 @@ internal fun MediaArea(
             label = "playerMediaContent",
         ) { ready ->
             if (ready) {
-                if (playState.isVideo || platform == Platform.iOS) {
+                if (playState.isVideo || platform == Platform.iOS || platform == Platform.macOS_Native) {
                     Box(modifier = modifier) { playerContent() }
                 } else {
                     Thumbnail(

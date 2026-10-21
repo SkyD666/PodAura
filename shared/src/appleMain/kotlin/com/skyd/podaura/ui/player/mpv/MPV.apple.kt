@@ -238,6 +238,8 @@ actual class MPV {
 
     internal fun resizeRenderingSurface(): Unit = locked { renderer?.resize() }
 
+    internal fun hasRenderedVideoFrame(): Boolean = locked { renderer?.hasFrame == true }
+
     internal fun setRenderingActive(active: Boolean, suspendVideoDecoding: Boolean = false): Unit =
         locked {
             if (closed) return@locked

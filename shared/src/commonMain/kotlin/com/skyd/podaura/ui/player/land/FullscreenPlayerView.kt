@@ -23,6 +23,8 @@ import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChang
 import com.skyd.podaura.ui.player.land.controller.PlayerController
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
+import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
+import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.service.PlayerState
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.StateFlow
@@ -60,18 +62,21 @@ internal fun FullscreenPlayerView(
 
     Box(modifier = Modifier.fillMaxSize()) {
         playerContent()
-        PlayerController(
-            playerStateFlow = playerStateFlow,
-            enabled = { playState.mediaLoaded },
-            playState = { playState },
-            playStateCallback = playStateCallback,
-            dialogState = dialogState,
-            onDialogVisibilityChanged = onDialogVisibilityChanged,
-            transformState = { transformState },
-            transformStateCallback = transformStateCallback,
-            onScreenshot = { onCommand(PlayerCommand.Screenshot(onSaveScreenshot)) },
-            onExitFullscreen = onExitFullscreen,
-        )
+        val pipActive = supportPip && rememberOnEnterPip().isActive
+        if (!pipActive) {
+            PlayerController(
+                playerStateFlow = playerStateFlow,
+                enabled = { playState.mediaLoaded },
+                playState = { playState },
+                playStateCallback = playStateCallback,
+                dialogState = dialogState,
+                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                transformState = { transformState },
+                transformStateCallback = transformStateCallback,
+                onScreenshot = { onCommand(PlayerCommand.Screenshot(onSaveScreenshot)) },
+                onExitFullscreen = onExitFullscreen,
+            )
+        }
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),

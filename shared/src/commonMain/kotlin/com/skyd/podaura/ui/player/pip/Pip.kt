@@ -7,6 +7,7 @@ internal expect val supportPip: Boolean
 
 internal interface OnEnterPip {
     val canEnter: Boolean get() = true
+    val isActive: Boolean get() = false
     fun enter()
 }
 

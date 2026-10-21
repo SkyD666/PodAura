@@ -35,7 +35,9 @@ import platform.MediaPlayer.MPRemoteCommandHandlerStatusCommandFailed
 import platform.MediaPlayer.MPRemoteCommandHandlerStatusNoActionableNowPlayingItem
 import platform.MediaPlayer.MPRemoteCommandHandlerStatusSuccess
 
-internal class MacosMediaSessionAdapter : DesktopMediaSessionAdapter {
+internal class MacosMediaSessionAdapter(
+    private val onArtwork: (NSImage?) -> Unit = {},
+) : DesktopMediaSessionAdapter {
     private val remote = MPRemoteCommandCenter.sharedCommandCenter()
     private val nowPlaying = MPNowPlayingInfoCenter.defaultCenter()
     private val targets = mutableListOf<Pair<MPRemoteCommand, Any>>()
@@ -126,6 +128,7 @@ internal class MacosMediaSessionAdapter : DesktopMediaSessionAdapter {
         if (value?.id == artworkId) return artwork
         artworkId = value?.id
         artwork = null
+        onArtwork(null)
         if (value == null) return null
         val data = value.data
         if (data.pngBytes.isEmpty() || data.width <= 0 || data.height <= 0) return null
@@ -134,6 +137,7 @@ internal class MacosMediaSessionAdapter : DesktopMediaSessionAdapter {
                 NSImage(data = NSData.create(it.addressOf(0), data.pngBytes.size.toULong()))
             }
         }.getOrNull() ?: return null
+        onArtwork(image)
         artwork = MPMediaItemArtwork(
             NSMakeSize(
                 data.width.toDouble(),
@@ -162,6 +166,7 @@ internal class MacosMediaSessionAdapter : DesktopMediaSessionAdapter {
         nowPlaying.nowPlayingInfo = null
         artworkId = null
         artwork = null
+        onArtwork(null)
     }
 
     override fun close() {

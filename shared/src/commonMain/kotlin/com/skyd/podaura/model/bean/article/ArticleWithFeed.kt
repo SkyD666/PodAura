@@ -20,7 +20,10 @@ data class ArticleWithFeed(
     var feed: FeedBean,
 ) : BaseBean {
     fun getThumbnail(): String? {
-        return articleWithEnclosure.media?.image ?: feed.customIcon ?: feed.icon
+        return articleWithEnclosure.media?.image?.takeIf { it.isNotBlank() }
+            ?: articleWithEnclosure.article.image?.takeIf { it.isNotBlank() }
+            ?: feed.customIcon?.takeIf { it.isNotBlank() }
+            ?: feed.icon?.takeIf { it.isNotBlank() }
     }
 
     fun getArtist(): String? {

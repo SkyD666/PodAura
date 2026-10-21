@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.service.PlayerState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -93,7 +94,7 @@ internal class DesktopMediaSessionController(
     private var disabled = false
     private var closed = false
     private var generation = 0L
-    private var artworkSource: Any? = ArtworkSourceUnset
+    private var artworkSources: List<Any>? = null
     private var currentArtwork: DesktopArtwork? = null
     private var artworkJob: Job? = null
     private var latestSnapshot: DesktopMediaSnapshot? = null
@@ -114,13 +115,12 @@ internal class DesktopMediaSessionController(
             return
         }
 
-        val sourceChanged = artworkSource === ArtworkSourceUnset ||
-                artworkSource != descriptor.artworkSource
+        val sourceChanged = artworkSources != descriptor.artworkSources
         if (sourceChanged) {
             generation++
             artworkJob?.cancel()
             artworkJob = null
-            artworkSource = descriptor.artworkSource
+            artworkSources = descriptor.artworkSources
             currentArtwork = null
         }
 
@@ -130,9 +130,9 @@ internal class DesktopMediaSessionController(
             safePublish(snapshot)
         }
 
-        if (!disabled && sourceChanged && descriptor.artworkSource != null) {
+        if (!disabled && sourceChanged && descriptor.artworkSources.isNotEmpty()) {
             loadArtwork(
-                source = descriptor.artworkSource,
+                sources = descriptor.artworkSources,
                 artworkId = "${descriptor.snapshot.mediaId}:${generation}",
                 expectedGeneration = generation,
             )
@@ -150,18 +150,24 @@ internal class DesktopMediaSessionController(
     }
 
     private fun loadArtwork(
-        source: Any,
+        sources: List<Any>,
         artworkId: String,
         expectedGeneration: Long,
     ) {
         artworkJob = scope.launch {
-            val data = runCatching { artworkLoader.load(source) }
-                .onFailure { throwable ->
-                    logger.w(throwable = throwable) { "Now-playing artwork load failed" }
+            var data: DesktopArtworkData? = null
+            for (source in sources) {
+                data = try {
+                    artworkLoader.load(source)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    logger.w(throwable = failure) { "Now-playing artwork load failed" }
+                    null
                 }
-                .getOrNull()
-            if (closed || disabled || generation != expectedGeneration) return@launch
-
+                if (closed || disabled || generation != expectedGeneration) return@launch
+                if (data != null) break
+            }
             currentArtwork = data?.let { DesktopArtwork(id = artworkId, data = it) }
             val snapshot = latestSnapshot?.copy(artwork = currentArtwork) ?: return@launch
             latestSnapshot = snapshot
@@ -218,16 +224,14 @@ internal class DesktopMediaSessionController(
         generation++
         artworkJob?.cancel()
         artworkJob = null
-        artworkSource = ArtworkSourceUnset
+        artworkSources = null
         currentArtwork = null
     }
-
-    private object ArtworkSourceUnset
 }
 
 private data class DesktopMediaDescriptor(
     val snapshot: DesktopMediaSnapshot,
-    val artworkSource: Any?,
+    val artworkSources: List<Any>,
 )
 
 private fun PlayerState.toDesktopMediaDescriptor(
@@ -277,7 +281,8 @@ private fun PlayerState.toDesktopMediaDescriptor(
             canChangePlaybackPosition = !playbackFailed && mediaStarted && seekable && duration != null,
             artwork = artwork,
         ),
-        artworkSource = currentMedia.thumbnailAny,
+        // Match Android PiP: prefer the article/local cover, then try the decoded media image.
+        artworkSources = listOfNotNull(currentMedia.thumbnailAny, mediaThumbnail).distinct(),
     )
 }
 
