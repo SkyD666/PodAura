@@ -652,4 +652,13 @@
     <string name="player_pip_restore">Oynatıcıya dön</string>
     <string name="player_pip_failed">Resim içinde resim başlatılamadı: %1$s</string>
     <string name="player_pip_unavailable">Resim içinde resim henüz hazır değil. Lütfen tekrar deneyin.</string>
+
+    <string name="sleep_timer">Uyku zamanlayıcısı</string>
+    <string name="sleep_timer_off">Kapalı</string>
+    <string name="sleep_timer_end">Geçerli medya bittiğinde</string>
+    <string name="sleep_timer_after_minutes">%1$d dakika sonra</string>
+    <string name="sleep_timer_screen_off_hint">Ekran kapandığında oynatmayı duraklatma ayarı açık. Uyku zamanlayıcısı bu ayara uyar.</string>
+    <string name="sleep_timer_background_hint">Arka planda oynatma kapalı. Oynatıcıdan ayrılmak oynatmayı duraklatabilir veya oturumu sonlandırabilir.</string>
+    <string name="sleep_timer_end_short">Bitişte</string>
+    <string name="sleep_timer_playback_settings">Oynatma ayarları</string>
 </resources>

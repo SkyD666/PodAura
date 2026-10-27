@@ -25,10 +25,13 @@ import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.PlayerLaunchData
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerViewModel
+import com.skyd.podaura.ui.player.SleepTimer
+import com.skyd.podaura.ui.player.SleepTimerOption
 import com.skyd.podaura.ui.player.externalPlaybackError
 import com.skyd.podaura.ui.player.mpv.EventListener
 import com.skyd.podaura.ui.player.mpv.MPV
 import com.skyd.podaura.ui.player.mpv.MPVEvent
+import com.skyd.podaura.ui.player.mpv.MPVFormat
 import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.mpv.PlayerKeyInput
 import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
@@ -71,6 +74,9 @@ class PlayerCoordinator : LifecycleOwner {
             logger.w(throwable = error) { "Failed to persist playback history" }
         }
     }
+
+    private val timer = SleepTimer()
+    val sleepTimer = timer.state
 
     val model = PlayerModel()
     val playerState get() = model.playerState
@@ -136,6 +142,7 @@ class PlayerCoordinator : LifecycleOwner {
     private val observers = AtomicReference<Set<Observer>>(emptySet())
 
     // The fields below belong to the engine actor.
+    private val endOfMediaPause = EndOfMediaPause(player)
     private var externalPlayback: ExternalPlaybackSession? = null
     private var playlistId = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
@@ -146,6 +153,10 @@ class PlayerCoordinator : LifecycleOwner {
     private var hasMediaReady = false
     private val liveSurfaces = linkedSetOf<PlatformSurfaceHolder>()
     private var activeSurface: PlatformSurfaceHolder? = null
+    private var sleepTimerJob: Job? = null
+    private var sleepTimerPaused = false
+    private var endTimerPath: String? = null
+    private val playbackKeysDown = mutableSetOf<String>()
 
     private val engineJob: Job
 
@@ -160,6 +171,7 @@ class PlayerCoordinator : LifecycleOwner {
                     if (destroyed.load()) return@withOwnership
                     observer = createMpvObserver(generation)
                     player.mpv.addEventListener(observer)
+                    player.mpv.observeProperty("eof-reached", MPVFormat.MPV_FORMAT_FLAG)
                     setLoopMode(
                         PlayerLoopModePreference.toLoopMode(
                             dataStore.getOrDefault(PlayerLoopModePreference)
@@ -177,6 +189,8 @@ class PlayerCoordinator : LifecycleOwner {
                         withContext(Dispatchers.Main.immediate) {
                             onDetachAll(this@PlayerCoordinator)
                         }
+                        sleepTimerJob?.cancel()
+                        timer.set(SleepTimerOption.Off)
                         detachNativeSurface()
                         progress.finish()
                         emitShutdown()
@@ -208,6 +222,24 @@ class PlayerCoordinator : LifecycleOwner {
 
     /** Runs in the engine queue before playback, without blocking the calling UI. */
     internal var preparePlaybackCommand: (suspend (Boolean?) -> Boolean)? = null
+
+    fun setSleepTimer(option: SleepTimerOption) {
+        if (_engineState.value.isReady && !destroyed.load()) {
+            commands.trySend(ActorMessage.SetSleepTimer(option))
+        }
+    }
+
+    internal fun refreshSleepTimer() {
+        if (_engineState.value.isReady && !destroyed.load()) {
+            commands.trySend(ActorMessage.SleepTimerDeadline)
+        }
+    }
+
+    internal fun setSystemPaused(paused: Boolean) {
+        if (_engineState.value.isReady && !destroyed.load()) {
+            commands.trySend(ActorMessage.SystemPause(paused))
+        }
+    }
 
     fun onCommand(command: PlayerCommand) {
         // Resolve skips once, before enqueueing: keep-open's EOF pause is not a user pause.
@@ -293,6 +325,7 @@ class PlayerCoordinator : LifecycleOwner {
     private fun destroy() {
         if (!destroyed.compareAndSet(expectedValue = false, newValue = true)) return
         onDetachAll(this)
+        sleepTimerJob?.cancel()
         engineJob.cancel()
     }
 
@@ -314,7 +347,9 @@ class PlayerCoordinator : LifecycleOwner {
     private suspend fun handleMessage(message: ActorMessage): Boolean {
         when (message) {
             is ActorMessage.Command -> executeCommand(message.command, message.playbackIntent)
-            is ActorMessage.Key -> player.dispatchKey(message.input)
+            is ActorMessage.SystemPause -> applySystemPause(message.paused)
+            is ActorMessage.SetSleepTimer -> applySleepTimer(message.option)
+            is ActorMessage.Key -> executeKey(message.input)
             is ActorMessage.EndFile -> handleEndFile(
                 reason = message.reason,
                 mpvError = message.mpvError,
@@ -334,28 +369,60 @@ class PlayerCoordinator : LifecycleOwner {
             }
 
             ActorMessage.FlushTransform -> flushTransform()
+            ActorMessage.SleepTimerDeadline -> {
+                // A queued callback may belong to a replaced timer, or the clock may have changed.
+                if (!checkSleepTimer()) scheduleSleepTimer()
+            }
         }
         return true
     }
 
+    private suspend fun applySystemPause(paused: Boolean) {
+        checkSleepTimer()
+        if (!paused && sleepTimerPaused) return
+        if (preparePlaybackCommand?.invoke(!paused) == false) return
+        // Audio-session activation may suspend past the timer deadline.
+        checkSleepTimer()
+        if (!paused && sleepTimerPaused) return
+        setPaused(paused)
+    }
+
     private suspend fun executeCommand(command: PlayerCommand, playbackIntent: Boolean?) {
+        checkSleepTimer()
+        if (playbackIntent == true) {
+            clearTimerPause(command)
+        }
         if (preparePlaybackCommand?.invoke(playbackIntent) == false) return
         when (command) {
             is PlayerCommand.RemoveMediaFromPlaylist -> removeMedia(command)
             is PlayerCommand.Paused -> setPaused(command.paused)
 
-            PlayerCommand.PlayOrPause -> {
-                if (!handleFailedPlaybackRetry()) player.cyclePause()
-            }
+            PlayerCommand.PlayOrPause -> setPaused(playbackIntent != true)
 
             PlayerCommand.PreviousMedia -> {
+                if (player.playlistCount > 1 && (player.playlistPos > 0 || player.isIdling ||
+                            playerState.value.loop == LoopMode.LoopPlaylist)
+                ) {
+                    cancelEndTimerForMediaChange()
+                }
                 progress.save()
-                player.playlistPrev(play = playbackIntent == true)
+                endOfMediaPause.skip(
+                    next = false, play = playbackIntent == true,
+                    loopPlaylist = playerState.value.loop == LoopMode.LoopPlaylist,
+                )
             }
 
             PlayerCommand.NextMedia -> {
+                if (player.playlistCount > 1 && (player.playlistPos < player.playlistCount - 1 ||
+                            playerState.value.loop == LoopMode.LoopPlaylist)
+                ) {
+                    cancelEndTimerForMediaChange()
+                }
                 progress.save()
-                player.playlistNext(play = playbackIntent == true)
+                endOfMediaPause.skip(
+                    next = true, play = playbackIntent == true,
+                    loopPlaylist = playerState.value.loop == LoopMode.LoopPlaylist,
+                )
             }
 
             is PlayerCommand.SeekTo -> seekTo(command.position)
@@ -376,6 +443,9 @@ class PlayerCoordinator : LifecycleOwner {
             }
 
             is PlayerCommand.PlayFileInPlaylist -> {
+                if (command.path != player.path && command.path in player.loadPlaylist()) {
+                    cancelEndTimerForMediaChange()
+                }
                 progress.save()
                 player.playFileInPlaylist(command.path)
             }
@@ -389,6 +459,31 @@ class PlayerCoordinator : LifecycleOwner {
             is PlayerCommand.Zoom,
             is PlayerCommand.VideoOffset -> Unit
         }
+    }
+
+    private suspend fun clearTimerPause(command: PlayerCommand) {
+        if (!sleepTimerPaused) return
+        sleepTimerPaused = false
+        // Expiry may have overwritten the intent reported when this command was enqueued.
+        withContext(Dispatchers.Main.immediate) {
+            onPlaybackCommand?.invoke(command, true)
+        }
+    }
+
+    private suspend fun executeKey(input: PlayerKeyInput) {
+        val key = input.key ?: return
+        if (input.action == "keyup" && playbackKeysDown.remove(key)) return
+        val command = player.mpv.playbackCommandForKey(key)
+        if (command == null) {
+            player.dispatchKey(input)
+            return
+        }
+        if (input.action == "keydown") {
+            if (!playbackKeysDown.add(key)) return
+        } else if (input.action != "keypress") return
+        val intent = command.playbackIntent(player.paused, player.eofReached)
+        withContext(Dispatchers.Main.immediate) { onPlaybackCommand?.invoke(command, intent) }
+        executeCommand(command, intent)
     }
 
     private fun handleFailedPlaybackRetry(): Boolean {
@@ -407,6 +502,9 @@ class PlayerCoordinator : LifecycleOwner {
 
     private suspend fun removeMedia(command: PlayerCommand.RemoveMediaFromPlaylist) {
         if (playlistId != command.playlist.firstOrNull()?.playlistMediaBean?.playlistId) return
+        if (command.playlist.any { it.playlistMediaBean.url == player.path }) {
+            cancelEndTimerForMediaChange()
+        }
         progress.save()
         command.playlist.forEach { cachedPlaylistMap.remove(it.playlistMediaBean.url) }
         externalPlayback?.retainPaths(cachedPlaylistMap.keys)
@@ -433,6 +531,8 @@ class PlayerCoordinator : LifecycleOwner {
                 )
             }
             if (command.playlist.isEmpty()) return
+            checkSleepTimer()
+            clearTimerPause(command)
             if (preparePlaybackCommand?.invoke(true) == false) return
             loadPreparedList(command)
             externalPlayback?.release()
@@ -445,6 +545,8 @@ class PlayerCoordinator : LifecycleOwner {
 
     private suspend fun loadPreparedList(command: PlayerCommand.LoadList) {
         val files = command.playlist.map { it.playlistMediaBean.url }
+        val targetPath = command.startPath?.takeIf { it in files } ?: files.firstOrNull()
+        if (targetPath != player.path) cancelEndTimerForMediaChange()
         if (!hasMediaReady) _engineState.value = PlayerEngineState.LoadingMedia
         val isNewRequest = shouldConsumeLoadRequest(command.requestId, lastLoadRequestId)
         val startPositionSeconds = command.startPositionSeconds?.takeIf { isNewRequest }
@@ -470,7 +572,7 @@ class PlayerCoordinator : LifecycleOwner {
         cachedPlaylistMap.clear()
         cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
         // External multi-file opens must advance normally, even on desktop's keep-open=always.
-        player.setExternalQueue(command.externalBatch != null)
+        endOfMediaPause.setExternalQueue(command.externalBatch != null)
         if (isNewRequest) emitEvent(PlayerEvent.ClearPlaybackEnd)
         player.mpv.configurePlaylistHeaders(command.playlist)
         player.loadList(files = files, startFile = command.startPath)
@@ -481,7 +583,7 @@ class PlayerCoordinator : LifecycleOwner {
     private suspend fun setPaused(paused: Boolean) {
         if (!paused && handleFailedPlaybackRetry()) return
         if (!paused) {
-            if (player.keepOpen && player.eofReached) seekTo(0)
+            if ((endOfMediaPause.enabled || player.keepOpen) && player.eofReached) seekTo(0)
             else if (player.isIdling && player.playlistCount > 0) {
                 player.playMediaAtIndex(player.playlistCount - 1)
             }
@@ -563,6 +665,13 @@ class PlayerCoordinator : LifecycleOwner {
             }
 
             MPVEvent.START_FILE -> {
+                // START_FILE also covers native keyboard/remote playlist commands. END_FILE
+                // clears currentPath first, so compare with the timer's original target.
+                if (sleepTimer.value.option == SleepTimerOption.EndOfMedia &&
+                    endTimerPath != message.path
+                ) {
+                    cancelEndTimerForMediaChange()
+                }
                 progress.finish()
                 currentPath = message.path
                 currentMediaGeneration = message.mediaGeneration
@@ -581,6 +690,7 @@ class PlayerCoordinator : LifecycleOwner {
 
             MPVEvent.FILE_LOADED -> onFileLoaded(message.duration, message.seekable)
             MPVEvent.PLAYBACK_RESTART -> {
+                if (!player.eofReached) restoreEndOfMediaOptions()
                 progress.restarted(message.position)
                 emitEvent(PlayerEvent.PlaybackRestart)
                 emitEvent(PlayerEvent.Paused(player.paused))
@@ -607,6 +717,11 @@ class PlayerCoordinator : LifecycleOwner {
             playlistEntryId = playlistEntryId.takeIf { it >= 0L },
             path = endedPath,
         )
+        if (mappedReason == PlaybackEndReason.Eof &&
+            sleepTimer.value.option == SleepTimerOption.EndOfMedia && endedPath == endTimerPath
+        ) {
+            expireSleepTimer()
+        }
         emitEvent(PlayerEvent.EndFile(end))
         if (mappedReason == PlaybackEndReason.Error) {
             logger.e {
@@ -629,6 +744,9 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private suspend fun onFileLoaded(duration: Long, seekable: Boolean) {
+        checkSleepTimer()
+        if (sleepTimerPaused) player.paused = true
+        restoreEndOfMediaOptions()
         val loadedPath = currentPath
         externalPlayback?.onFileLoaded(loadedPath)
         // A coalesced track-list update can be consumed before StartFile clears the model.
@@ -663,10 +781,10 @@ class PlayerCoordinator : LifecycleOwner {
             // Native playback can advance while the actor is waiting for the database.
             if (nativeMediaGeneration.load() != currentMediaGeneration) return@let
             if (seekable && (position > 0 || startPosition != null)) {
-                player.seek(position.toInt())
+                endOfMediaPause.seek(position.toInt())
                 progress.seek(position)
             } else progress.save()
-            if (startPosition != null) player.paused = false
+            if (startPosition != null && !sleepTimerPaused) player.paused = false
         }
         emitEvent(PlayerEvent.MediaThumbnail(player.thumbnail))
     }
@@ -702,6 +820,12 @@ class PlayerCoordinator : LifecycleOwner {
                     emitEvent(PlayerEvent.Paused(it))
                 }
 
+                "eof-reached" -> if (booleanValue == true && player.eofReached &&
+                    sleepTimer.value.option == SleepTimerOption.EndOfMedia && player.path == endTimerPath
+                ) {
+                    expireSleepTimer()
+                }
+
                 "seekable" -> booleanValue?.let { emitEvent(PlayerEvent.Seekable(it)) }
                 "shuffle" -> booleanValue?.let { emitEvent(PlayerEvent.Shuffle(it)) }
                 "idle-active" -> booleanValue?.let { emitEvent(PlayerEvent.Idling(it)) }
@@ -725,6 +849,7 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private fun updateLoopMode() {
+        if (endOfMediaPause.enabled) return
         val mode = when {
             player.loopPlaylist -> LoopMode.LoopPlaylist
             player.loopOne -> LoopMode.LoopFile
@@ -842,11 +967,69 @@ class PlayerCoordinator : LifecycleOwner {
     }
 
     private fun setLoopMode(mode: LoopMode) {
-        when (mode) {
-            LoopMode.LoopPlaylist -> player.loopPlaylist()
-            LoopMode.LoopFile -> player.loopFile()
-            LoopMode.None -> player.loopNo()
+        endOfMediaPause.setLoopMode(mode)
+        emitEvent(PlayerEvent.Loop(mode))
+        PlayerLoopModePreference.put(ioScope, mode)
+    }
+
+    private suspend fun applySleepTimer(option: SleepTimerOption) {
+        checkSleepTimer()
+        timer.set(option)
+        scheduleSleepTimer()
+        endTimerPath = player.path.takeIf { option == SleepTimerOption.EndOfMedia }
+        // Keep the EOF guard after expiration until the user explicitly resumes or changes media.
+        if (!sleepTimerPaused || option == SleepTimerOption.EndOfMedia) {
+            endOfMediaPause.setEnabled(option == SleepTimerOption.EndOfMedia)
         }
+        if (option == SleepTimerOption.EndOfMedia && player.eofReached) {
+            expireSleepTimer()
+        }
+    }
+
+    private fun scheduleSleepTimer() {
+        sleepTimerJob?.cancel()
+        val remainingMillis = timer.remainingMillis ?: return
+        sleepTimerJob = engineScope.launch {
+            delay(remainingMillis)
+            commands.send(ActorMessage.SleepTimerDeadline)
+        }
+    }
+
+    private fun cancelEndTimerForMediaChange() {
+        timer.mediaChanged()
+        endTimerPath = null
+        // Keep the old EOF suppressed until FILE_LOADED/PLAYBACK_RESTART selects the target.
+    }
+
+    private fun restoreEndOfMediaOptions() {
+        if (!sleepTimerPaused && sleepTimer.value.option != SleepTimerOption.EndOfMedia) {
+            endOfMediaPause.setEnabled(false)
+        }
+    }
+
+    private suspend fun checkSleepTimer(): Boolean {
+        if (!timer.checkExpired()) return false
+        expireSleepTimer()
+        return true
+    }
+
+    private suspend fun expireSleepTimer() {
+        timer.set(SleepTimerOption.Off)
+        endTimerPath = null
+        sleepTimerJob?.cancel()
+        setTimerPaused()
+    }
+
+    private suspend fun setTimerPaused() {
+        sleepTimerPaused = true
+        player.paused = true
+        emitEvent(PlayerEvent.Paused(true))
+        // Treat expiry as an explicit pause, even if the screen already paused playback.
+        // Platform policies are main-thread owned; clear all pending automatic resumes there.
+        withContext(Dispatchers.Main.immediate) {
+            onPlaybackCommand?.invoke(PlayerCommand.Paused(true), false)
+        }
+        progress.save()
     }
 
     private suspend fun seekTo(positionSeconds: Long) {
@@ -856,7 +1039,7 @@ class PlayerCoordinator : LifecycleOwner {
         val position = positionSeconds.coerceAtLeast(0L).let {
             if (duration > 0) it.coerceAtMost(duration) else it
         }
-        player.seek(position.toInt())
+        endOfMediaPause.seek(position.toInt())
         progress.seek(position)
     }
 
@@ -888,6 +1071,8 @@ class PlayerCoordinator : LifecycleOwner {
 
     private sealed interface ActorMessage {
         data class Command(val command: PlayerCommand, val playbackIntent: Boolean?) : ActorMessage
+        data class SystemPause(val paused: Boolean) : ActorMessage
+        data class SetSleepTimer(val option: SleepTimerOption) : ActorMessage
         data class Key(val input: PlayerKeyInput) : ActorMessage
         data class EndFile(
             val reason: Int,
@@ -915,6 +1100,7 @@ class PlayerCoordinator : LifecycleOwner {
         data class Surface(val event: PlayerSurfaceEvent) : ActorMessage
         data class PlaybackFailureHandled(val id: String, val retry: Boolean) : ActorMessage
         data object FlushTransform : ActorMessage
+        data object SleepTimerDeadline : ActorMessage
     }
 
     private data class Telemetry(

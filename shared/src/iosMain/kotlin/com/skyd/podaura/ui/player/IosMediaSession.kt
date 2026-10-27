@@ -105,7 +105,6 @@ internal class IosMediaSession(
     private var artwork: MPMediaItemArtwork? = null
     private var artworkJob: Job? = null
 
-    private var systemCommand = false
     private var audioActivationGeneration = 0L
     private var requestedAudioActivationGeneration: Long? = null
     private var closed = false
@@ -256,18 +255,10 @@ internal class IosMediaSession(
         ) systemPause(true)
     }
 
-    /** UI commands clear pending system resumes even if pause was already true. */
-    private fun systemPause(paused: Boolean) {
-        systemCommand = true
-        try {
-            coordinator.onCommand(PlayerCommand.Paused(paused))
-        } finally {
-            systemCommand = false
-        }
-    }
+    private fun systemPause(paused: Boolean) = coordinator.setSystemPaused(paused)
 
+    /** UI commands clear pending system resumes even if pause was already true. */
     private fun userCommand(command: PlayerCommand, intent: Boolean?) {
-        if (systemCommand) return
         val paused = coordinator.playerState.value.paused
         intent?.let { allowsResume ->
             audioActivationGeneration++

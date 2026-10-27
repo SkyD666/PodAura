@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.player.component.state.dialog
 
 import androidx.compose.runtime.Immutable
+import com.skyd.podaura.ui.player.SleepTimerState
 import com.skyd.podaura.ui.player.component.state.dialog.seconds.ForwardSecondsDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.seconds.ReplaySecondsDialogState
 import com.skyd.podaura.ui.player.component.state.dialog.track.AudioTrackDialogCallback
@@ -15,6 +16,7 @@ data class DialogState(
     val subtitleTrackDialogState: () -> SubtitleTrackDialogState,
     val forwardSecondsDialogState: () -> ForwardSecondsDialogState,
     val replaySecondsDialogState: () -> ReplaySecondsDialogState,
+    val sleepTimerState: () -> SleepTimerState,
 )
 
 @Immutable
@@ -33,4 +35,5 @@ data class OnDialogVisibilityChanged(
     val onAudioSettingDialog: (Boolean) -> Unit,
     val onReplaySecondDialog: (Boolean) -> Unit,
     val onForwardSecondDialog: (Boolean) -> Unit,
+    val onSleepTimerDialog: (Boolean) -> Unit,
 )

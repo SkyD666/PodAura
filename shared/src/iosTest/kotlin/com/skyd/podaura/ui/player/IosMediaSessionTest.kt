@@ -7,22 +7,37 @@ import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.BackgroundPlayPreference
 import com.skyd.podaura.model.preference.player.PauseOnScreenOffPreference
+import com.skyd.podaura.model.repository.player.IPlayerRepository
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
+import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.mpv.MPV
-import com.skyd.podaura.ui.player.mpv.MPVPlayer
 import com.skyd.podaura.ui.player.service.PlayerState
-import kotlinx.coroutines.CompletableDeferred
+import io.ktor.client.HttpClient
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
+import org.koin.dsl.onClose
+import platform.Foundation.NSData
+import platform.Foundation.NSDate
+import platform.Foundation.NSFileManager
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSNumber
+import platform.Foundation.NSRunLoop
+import platform.Foundation.NSTemporaryDirectory
+import platform.Foundation.create
+import platform.Foundation.dateWithTimeIntervalSinceNow
+import platform.Foundation.runUntilDate
+import platform.Foundation.timeIntervalSinceNow
+import platform.Foundation.writeToFile
 import platform.MediaPlayer.MPMediaItemPropertyArtist
 import platform.MediaPlayer.MPMediaItemPropertyPlaybackDuration
 import platform.MediaPlayer.MPMediaItemPropertyTitle
@@ -44,73 +59,104 @@ import kotlin.test.assertTrue
 
 class IosMediaSessionTest {
     @Test
-    fun lockPauseSurvivesTransientActiveNotification() = runTest {
-        startKoin { modules(dataStoreModule) }
-        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
-        val acquired = CompletableDeferred<Unit>()
-        val release = CompletableDeferred<Unit>()
-        // Keep the native engine idle: this exercises the real notification/command adapter.
-        val owner = launch(Dispatchers.IO) {
-            MPVPlayer.instance.withOwnership {
-                acquired.complete(Unit)
-                release.await()
-            }
+    fun lockPauseSurvivesTransientActiveNotification() {
+        startKoin { modules(dataStoreModule, module {
+            single(named("coil")) { HttpClient() }.onClose { it?.close() }
+            single<IPlayerRepository> { object : IPlayerRepository {
+                override fun requestLastPlayPosition(path: String, fallbackPath: String?) = flowOf(0L)
+                override fun insertPlayHistory(path: String, duration: Long, articleId: String?) = flowOf(Unit)
+                override fun updateLastPlayPosition(path: String, lastPlayPosition: Long, duration: Long, articleId: String?) = flowOf(Unit)
+            } }
+        }) }
+        val path = NSTemporaryDirectory() + "podaura-lock-pause-test.wav"
+        AppleMpvIntegrationTest().silentWave().usePinned {
+            NSData.create(bytes = it.addressOf(0), length = it.get().size.toULong()).writeToFile(path, true)
         }
         var coordinator: PlayerCoordinator? = null
         var session: IosMediaSession? = null
         try {
-            acquired.await()
-            dataStore.edit {
-                it[BackgroundPlayPreference.key] = true
-                it[PauseOnScreenOffPreference.key] = true
-            }
-            val player = PlayerCoordinator().also { coordinator = it }
-            session = IosMediaSession(player) {}
-            val pauses = mutableListOf<Boolean>()
-            val intentHook = player.onPlaybackCommand
-            player.onPlaybackCommand = { command, intent ->
-                intentHook?.invoke(command, intent)
-                if (command is PlayerCommand.Paused) {
-                    pauses += command.paused
-                    player.model.onEvent(PlayerEvent.Paused(command.paused))
+            runBlocking {
+                dataStore.edit {
+                    it[BackgroundPlayPreference.key] = true
+                    it[PauseOnScreenOffPreference.key] = true
                 }
             }
+            val player = PlayerCoordinator().also { coordinator = it }
+            awaitPlayback { player.engineState.value == PlayerEngineState.AwaitingMedia }
+            player.renderPlayer.setPropertyString("ao", "null")
+            session = IosMediaSession(player) {}
+            val pauses = mutableListOf<Boolean>()
+            // Exercise the real SystemPause actor channel and observe native playback changes.
+            // Keep this test focused on notification routing, without activating system audio.
+            player.preparePlaybackCommand = { true }
             fun notify(name: String?) = NSNotificationCenter.defaultCenter
                 .postNotificationName(name, `object` = null)
             notify(UIApplicationProtectedDataDidBecomeAvailable)
             notify(UIApplicationDidBecomeActiveNotification)
-            player.model.onEvent(PlayerEvent.Paused(false))
+            player.onCommand(PlayerCommand.LoadList(listOf(media(path))))
+            awaitPlayback { player.engineState.value.isReady && !player.playerState.value.paused }
+            var lastPaused = false
+            player.addObserver { event ->
+                if (event is PlayerEvent.Paused && event.value != lastPaused) {
+                    lastPaused = event.value
+                    pauses += event.value
+                }
+            }
+            fun awaitPaused(paused: Boolean) {
+                awaitPlayback { player.playerState.value.paused == paused && lastPaused == paused }
+                // Process policy collectors too, so an unwanted automatic resume is observed.
+                NSRunLoop.mainRunLoop.runUntilDate(NSDate.dateWithTimeIntervalSinceNow(0.1))
+            }
             // Observed on a physical iPhone: lock warning -> active -> background.
             notify(UIApplicationProtectedDataWillBecomeUnavailable)
+            awaitPaused(true)
             assertEquals(listOf(true), pauses)
             notify(UIApplicationDidBecomeActiveNotification)
             notify(UIApplicationDidEnterBackgroundNotification)
+            awaitPaused(true)
             assertEquals(listOf(true), pauses)
             assertTrue(player.playerState.value.paused)
 
             notify(UIApplicationProtectedDataDidBecomeAvailable)
             notify(UIApplicationProtectedDataDidBecomeAvailable)
             notify(UIApplicationDidBecomeActiveNotification)
+            awaitPaused(false)
             assertEquals(listOf(true, false), pauses)
             assertFalse(player.playerState.value.paused)
 
             notify(UIApplicationProtectedDataWillBecomeUnavailable)
+            awaitPaused(true)
             player.onCommand(PlayerCommand.Paused(true))
             notify(UIApplicationDidBecomeActiveNotification)
+            awaitPaused(true)
             notify(UIApplicationDidEnterBackgroundNotification)
             notify(UIApplicationProtectedDataDidBecomeAvailable)
             notify(UIApplicationDidBecomeActiveNotification)
+            awaitPaused(true)
             assertTrue(player.playerState.value.paused)
             assertEquals(1, pauses.count { !it })
         } finally {
             session?.close()
-            coordinator?.onCommand(PlayerCommand.Destroy)
-            coordinator?.awaitDestroyed()
-            release.complete(Unit)
-            owner.join()
-            Dispatchers.resetMain()
+            coordinator?.let { player ->
+                player.onCommand(PlayerCommand.Destroy)
+                var destroyed = false
+                CoroutineScope(Dispatchers.Main).launch {
+                    player.awaitDestroyed()
+                    destroyed = true
+                }
+                awaitPlayback { destroyed }
+            }
+            NSFileManager.defaultManager.removeItemAtPath(path, null)
             stopKoin()
         }
+    }
+
+    private fun awaitPlayback(condition: () -> Boolean) {
+        val deadline = NSDate.dateWithTimeIntervalSinceNow(15.0)
+        while (!condition() && deadline.timeIntervalSinceNow > 0) {
+            NSRunLoop.mainRunLoop.runUntilDate(NSDate.dateWithTimeIntervalSinceNow(0.01))
+        }
+        assertTrue(condition(), "Timed out waiting for native playback")
     }
 
     @Test

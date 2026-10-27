@@ -27,6 +27,7 @@ import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ui.component.rememberOrientationController
 import com.skyd.podaura.ui.component.tickVibrate
+import com.skyd.podaura.ui.player.component.SleepTimerDialog
 import com.skyd.podaura.ui.player.component.dialog.SpeedDialog
 import com.skyd.podaura.ui.player.component.dialog.audio.AudioTrackDialog
 import com.skyd.podaura.ui.player.component.dialog.subtitle.SubtitleTrackDialog
@@ -193,8 +194,10 @@ fun PlayerView(
     var speedDialogState by remember { mutableStateOf(SpeedDialogState.initial) }
     var forwardSecondsDialogState by remember { mutableStateOf(ForwardSecondsDialogState.initial) }
     var replaySecondsDialogState by remember { mutableStateOf(ReplaySecondsDialogState.initial) }
+    var showSleepTimer by remember(coordinator) { mutableStateOf(false) }
+    val sleepTimerState by coordinator.sleepTimer.collectAsStateWithLifecycle()
 
-    val dialogState by remember {
+    val dialogState by remember(coordinator) {
         mutableStateOf(
             DialogState(
                 speedDialogState = { speedDialogState },
@@ -202,6 +205,7 @@ fun PlayerView(
                 subtitleTrackDialogState = { subtitleTrackDialogState },
                 forwardSecondsDialogState = { forwardSecondsDialogState },
                 replaySecondsDialogState = { replaySecondsDialogState },
+                sleepTimerState = { sleepTimerState },
             )
         )
     }
@@ -265,6 +269,7 @@ fun PlayerView(
 
     LifecycleStartEffect(key1 = coordinator) {
         coordinator.addObserver(playerObserver)
+        coordinator.refreshSleepTimer()
         onStopOrDispose {
             coordinator.removeObserver(playerObserver)
         }
@@ -272,32 +277,34 @@ fun PlayerView(
 
     val commonContent = @Composable {
         val ready = presentationState is PlayerPresentationState.Ready
+        val onDialogVisibilityChanged = remember(coordinator) {
+            OnDialogVisibilityChanged(
+                onSpeedDialog = { speedDialogState = speedDialogState.copy(show = it) },
+                onAudioTrackDialog = {
+                    audioTrackDialogState = audioTrackDialogState.copy(show = it)
+                },
+                onSubtitleTrackDialog = {
+                    subtitleTrackDialogState = subtitleTrackDialogState.copy(show = it)
+                },
+                onSubtitleSettingDialog = {
+                    subtitleTrackDialogState = subtitleTrackDialogState.copy(showSetting = it)
+                },
+                onAudioSettingDialog = {
+                    audioTrackDialogState = audioTrackDialogState.copy(showSetting = it)
+                },
+                onReplaySecondDialog = {
+                    replaySecondsDialogState = replaySecondsDialogState.copy(show = it)
+                },
+                onForwardSecondDialog = {
+                    forwardSecondsDialogState = forwardSecondsDialogState.copy(show = it)
+                },
+                onSleepTimerDialog = { showSleepTimer = it },
+            )
+        }
         Content(
             coordinator = coordinator,
             playerStateFlow = coordinator.playerState,
-            onDialogVisibilityChanged = remember {
-                OnDialogVisibilityChanged(
-                    onSpeedDialog = { speedDialogState = speedDialogState.copy(show = it) },
-                    onAudioTrackDialog = {
-                        audioTrackDialogState = audioTrackDialogState.copy(show = it)
-                    },
-                    onSubtitleTrackDialog = {
-                        subtitleTrackDialogState = subtitleTrackDialogState.copy(show = it)
-                    },
-                    onSubtitleSettingDialog = {
-                        subtitleTrackDialogState = subtitleTrackDialogState.copy(showSetting = it)
-                    },
-                    onAudioSettingDialog = {
-                        audioTrackDialogState = audioTrackDialogState.copy(showSetting = it)
-                    },
-                    onReplaySecondDialog = {
-                        replaySecondsDialogState = replaySecondsDialogState.copy(show = it)
-                    },
-                    onForwardSecondDialog = {
-                        forwardSecondsDialogState = forwardSecondsDialogState.copy(show = it)
-                    },
-                )
-            },
+            onDialogVisibilityChanged = onDialogVisibilityChanged,
             playState = if (ready) playState else enginePlayState,
             articleContextState = articleContextState.takeIf {
                 ready && it.articleId == currentArticleId
@@ -316,6 +323,13 @@ fun PlayerView(
             presentationState = presentationState,
             onRetry = { coordinator.playOrRetry() },
         )
+        if (showSleepTimer) {
+            SleepTimerDialog(
+                sleepTimerState = dialogState.sleepTimerState,
+                onSelect = coordinator::setSleepTimer,
+                onDismissRequest = { onDialogVisibilityChanged.onSleepTimerDialog(false) },
+            )
+        }
     }
 
     CompositionLocalProvider(
@@ -346,12 +360,12 @@ private fun PlayerEngineScreen(
         onDialogVisibilityChanged = emptyDialogVisibilityChanged,
         onBack = onBack,
         onEnterFullscreen = {},
-        playerContent = {},
         onSetArticleFavorite = {},
         snackbarHostState = remember { SnackbarHostState() },
         modifier = Modifier.fillMaxSize().playerEngineSemantics(engineState),
         presentationState = engineState.toPresentationState(),
         onRetry = onRetry,
+        playerContent = {},
     )
 }
 
@@ -379,6 +393,7 @@ private val emptyDialogVisibilityChanged = OnDialogVisibilityChanged(
     onAudioSettingDialog = {},
     onReplaySecondDialog = {},
     onForwardSecondDialog = {},
+    onSleepTimerDialog = {},
 )
 
 private fun PlayerEngineState.toPresentationState(): PlayerPresentationState = when (this) {
@@ -448,24 +463,24 @@ private fun Content(
                 onSaveScreenshot = onSaveScreenshot,
                 onCommand = onCommand,
                 snackbarHostState = snackbarHostState,
-                playerContent = player,
                 onExitFullscreen = {
                     orientationController.unspecified()
                     fullscreen = false
-                }
+                },
+                playerContent = player,
             )
         } else {
             PortraitPlayerView(
                 playState = playState,
                 articleContextState = articleContextState,
                 playStateCallback = playStateCallback,
+                dialogState = dialogState,
                 onDialogVisibilityChanged = onDialogVisibilityChanged,
                 onBack = onBack,
                 onEnterFullscreen = {
                     orientationController.landscape()
                     fullscreen = true
                 },
-                playerContent = player,
                 onSetArticleFavorite = onSetArticleFavorite,
                 snackbarHostState = snackbarHostState,
                 modifier = modifier,
@@ -473,6 +488,7 @@ private fun Content(
                 onRetry = onRetry,
                 playerProgress = playerProgress,
                 initialProgress = playerStateFlow.value.toPlayerProgress(),
+                playerContent = player,
             )
         }
 

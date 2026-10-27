@@ -47,12 +47,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ui.component.PodAuraImage
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlayerCommand
+import com.skyd.podaura.ui.player.component.SleepTimerButton
+import com.skyd.podaura.ui.player.component.SleepTimerDialog
 import com.skyd.podaura.ui.player.coordinator.PlaybackPreparation
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.coordinator.PlayerEngineState
@@ -77,6 +80,12 @@ fun MiniPlayer(
     visible: Boolean = true,
     windowInsets: WindowInsets = WindowInsets(),
 ) {
+    var showSleepTimer by remember(coordinator) { mutableStateOf(false) }
+    val sleepTimerState = coordinator?.sleepTimer?.collectAsStateWithLifecycle()
+    LifecycleStartEffect(coordinator) {
+        coordinator?.refreshSleepTimer()
+        onStopOrDispose { }
+    }
     var retainedState by remember { mutableStateOf<PlayerState?>(null) }
     val liveState = coordinator?.playerState?.let { source ->
         remember(source) {
@@ -100,6 +109,14 @@ fun MiniPlayer(
         sessionAvailable = sessionAvailable,
         hostVisible = visible,
     )
+
+    if (showSleepTimer && coordinator != null && sessionVisible && sleepTimerState != null) {
+        SleepTimerDialog(
+            sleepTimerState = { sleepTimerState.value },
+            onSelect = coordinator::setSleepTimer,
+            onDismissRequest = { showSleepTimer = false },
+        )
+    }
 
     SideEffect {
         if (sessionAvailable) {
@@ -177,13 +194,24 @@ fun MiniPlayer(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        Text(
-                            text = artist,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = artist,
+                                modifier = Modifier.weight(1f, fill = false),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            sleepTimerState?.let {
+                                SleepTimerButton(
+                                    sleepTimerState = { it.value },
+                                    onClick = { showSleepTimer = true },
+                                    activeOnly = true,
+                                    modifier = Modifier.padding(start = 8.dp),
+                                )
+                            }
+                        }
                     }
 
                     if (!isCompact) {

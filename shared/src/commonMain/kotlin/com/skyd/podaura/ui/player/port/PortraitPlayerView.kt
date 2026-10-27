@@ -55,8 +55,10 @@ import com.skyd.podaura.ui.component.navigation.rememberMainPageOpener
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.PlayerArticleContextState
 import com.skyd.podaura.ui.player.PlayerProgress
+import com.skyd.podaura.ui.player.component.SleepTimerButton
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
+import com.skyd.podaura.ui.player.component.state.dialog.DialogState
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
@@ -85,10 +87,10 @@ internal fun PortraitPlayerView(
     playState: PlayState,
     articleContextState: PlayerArticleContextState,
     playStateCallback: PlayStateCallback,
+    dialogState: DialogState? = null,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onBack: () -> Unit,
     onEnterFullscreen: () -> Unit,
-    playerContent: @Composable () -> Unit,
     onSetArticleFavorite: (Boolean) -> Unit,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
@@ -96,6 +98,7 @@ internal fun PortraitPlayerView(
     onRetry: () -> Unit = {},
     playerProgress: Flow<PlayerProgress> = emptyFlow(),
     initialProgress: PlayerProgress = PlayerProgress(0L, 0L, 0),
+    playerContent: @Composable () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var showMenu by rememberSaveable { mutableStateOf(false) }
@@ -112,6 +115,13 @@ internal fun PortraitPlayerView(
                 title = { },
                 navigationIcon = { BackIcon(onClick = onBack) },
                 actions = {
+                    if (dialogState != null) {
+                        SleepTimerButton(
+                            sleepTimerState = dialogState.sleepTimerState,
+                            onClick = { onDialogVisibilityChanged.onSleepTimerDialog(true) },
+                            enabled = interactive,
+                        )
+                    }
                     val isFavorite = articleContextState.isFavorite
                     if (isFavorite != null) {
                         ComponeIconButton(
@@ -168,9 +178,9 @@ internal fun PortraitPlayerView(
                 onOpenPlaylistSheet = { showPlaylistSheet = true },
                 onEnterFullscreen = onEnterFullscreen,
                 contentPadding = innerPadding,
-                playerContent = playerContent,
                 presentationState = presentationState,
                 onRetry = onRetry,
+                playerContent = playerContent,
             )
         } else {
             CompactContent(
@@ -182,9 +192,9 @@ internal fun PortraitPlayerView(
                 onOpenPlaylistSheet = { showPlaylistSheet = true },
                 onEnterFullscreen = onEnterFullscreen,
                 contentPadding = innerPadding,
-                playerContent = playerContent,
                 presentationState = presentationState,
                 onRetry = onRetry,
+                playerContent = playerContent,
             )
         }
 
@@ -214,9 +224,9 @@ private fun CompactContent(
     onOpenPlaylistSheet: () -> Unit,
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
-    playerContent: @Composable () -> Unit,
     presentationState: PlayerPresentationState,
     onRetry: () -> Unit,
+    playerContent: @Composable () -> Unit,
 ) {
     Column(modifier = Modifier.padding(contentPadding)) {
         MediaArea(
@@ -224,8 +234,8 @@ private fun CompactContent(
             modifier = Modifier
                 .padding(horizontal = 30.dp)
                 .weight(1f),
-            playerContent = playerContent,
             presentationState = presentationState,
+            playerContent = playerContent,
         )
         Spacer(modifier = Modifier.height(12.dp))
         Titles(
@@ -259,9 +269,9 @@ private fun ExpandedContent(
     onOpenPlaylistSheet: () -> Unit,
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
-    playerContent: @Composable () -> Unit,
     presentationState: PlayerPresentationState,
     onRetry: () -> Unit,
+    playerContent: @Composable () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -274,8 +284,8 @@ private fun ExpandedContent(
                 .padding(start = 30.dp)
                 .weight(0.4f)
                 .align(Alignment.CenterVertically),
-            playerContent = playerContent,
             presentationState = presentationState,
+            playerContent = playerContent,
         )
         Column(
             modifier = Modifier

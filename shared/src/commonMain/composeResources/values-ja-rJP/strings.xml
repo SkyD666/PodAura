@@ -645,4 +645,13 @@
     <string name="player_pip_restore">プレーヤーに戻る</string>
     <string name="player_pip_failed">ピクチャーインピクチャーを開始できませんでした：%1$s</string>
     <string name="player_pip_unavailable">ピクチャーインピクチャーの準備ができていません。もう一度お試しください。</string>
+
+    <string name="sleep_timer">スリープタイマー</string>
+    <string name="sleep_timer_off">オフ</string>
+    <string name="sleep_timer_end">現在のメディアの終了時</string>
+    <string name="sleep_timer_after_minutes">%1$d 分後</string>
+    <string name="sleep_timer_screen_off_hint">画面オフ時に再生を一時停止する設定が有効です。スリープタイマーはこの設定に従います。</string>
+    <string name="sleep_timer_background_hint">バックグラウンド再生がオフです。プレーヤーを離れると、再生が一時停止するかセッションが終了する場合があります。</string>
+    <string name="sleep_timer_end_short">終了時</string>
+    <string name="sleep_timer_playback_settings">再生設定</string>
 </resources>

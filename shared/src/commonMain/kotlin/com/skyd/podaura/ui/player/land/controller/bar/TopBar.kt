@@ -32,6 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.ui.player.component.ControllerBarGray
 import com.skyd.podaura.ui.player.component.ControllerIconButton
+import com.skyd.podaura.ui.player.component.SleepTimerButton
+import com.skyd.podaura.ui.player.component.state.dialog.DialogState
+import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.pip.rememberOnEnterPip
 import com.skyd.podaura.ui.player.pip.supportPip
 import org.jetbrains.compose.resources.stringResource
@@ -45,6 +48,8 @@ internal fun TopBar(
     modifier: Modifier = Modifier,
     title: String,
     onExitFullscreen: () -> Unit,
+    dialogState: DialogState,
+    onDialogVisibilityChanged: OnDialogVisibilityChanged,
 ) {
     Row(
         modifier = modifier
@@ -81,6 +86,10 @@ internal fun TopBar(
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
             maxLines = 1,
+        )
+        SleepTimerButton(
+            sleepTimerState = dialogState.sleepTimerState,
+            onClick = { onDialogVisibilityChanged.onSleepTimerDialog(true) },
         )
         if (supportPip) {
             val onEnterPip = rememberOnEnterPip()

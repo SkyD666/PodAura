@@ -645,4 +645,13 @@
     <string name="player_pip_restore">返回播放器</string>
     <string name="player_pip_failed">無法啟動子母畫面：%1$s</string>
     <string name="player_pip_unavailable">子母畫面尚未準備好，請重試。</string>
+
+    <string name="sleep_timer">睡眠定時</string>
+    <string name="sleep_timer_off">關閉</string>
+    <string name="sleep_timer_end">目前內容結束時</string>
+    <string name="sleep_timer_after_minutes">%1$d 分鐘後</string>
+    <string name="sleep_timer_screen_off_hint">目前已開啟熄屏暫停。睡眠定時會遵守此設定。</string>
+    <string name="sleep_timer_background_hint">目前已關閉背景播放。離開播放器可能暫停播放或結束播放工作階段。</string>
+    <string name="sleep_timer_end_short">結束時</string>
+    <string name="sleep_timer_playback_settings">播放設定</string>
 </resources>

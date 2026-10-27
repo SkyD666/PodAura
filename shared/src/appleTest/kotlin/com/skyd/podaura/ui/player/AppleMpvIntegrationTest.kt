@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.player
 
 import com.skyd.podaura.ui.player.mpv.*
+import com.skyd.podaura.ui.player.coordinator.playbackCommandForKey
 import co.touchlab.kermit.Logger
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.PlatformFile
@@ -29,6 +30,7 @@ class AppleMpvIntegrationTest {
                     player.option("config", "no")
                     player.option("hwdec", "auto")
                     player.initialize()
+                    assertEquals(PlayerCommand.PlayOrPause, player.playbackCommandForKey("SPACE"))
                     assertEquals(PlatformFile(customConfig, "cacert.pem").path,
                         player.getPropertyString("tls-ca-file"))
                     assertEquals("videotoolbox", player.getPropertyString("hwdec"))
@@ -86,7 +88,7 @@ class AppleMpvIntegrationTest {
         }
     }
 
-    private fun silentWave(): ByteArray {
+    internal fun silentWave(): ByteArray {
         val size = 44 + 8000 * 2 * 10
         val data = ByteArray(size)
         fun text(offset: Int, text: String) { text.encodeToByteArray().copyInto(data, offset) }

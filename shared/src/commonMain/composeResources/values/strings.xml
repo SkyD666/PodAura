@@ -659,4 +659,13 @@
     <string name="player_pip_restore">Return to player</string>
     <string name="player_pip_failed">Could not start picture in picture: %1$s</string>
     <string name="player_pip_unavailable">Picture in picture is not ready. Please try again.</string>
+
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_timer_off">Off</string>
+    <string name="sleep_timer_end">When current media ends</string>
+    <string name="sleep_timer_after_minutes">In %1$d minutes</string>
+    <string name="sleep_timer_screen_off_hint">Playback is set to pause when the screen is off. The sleep timer respects this setting.</string>
+    <string name="sleep_timer_background_hint">Background playback is off. Leaving the player may pause playback or end the session.</string>
+    <string name="sleep_timer_end_short">End</string>
+    <string name="sleep_timer_playback_settings">Playback settings</string>
 </resources>

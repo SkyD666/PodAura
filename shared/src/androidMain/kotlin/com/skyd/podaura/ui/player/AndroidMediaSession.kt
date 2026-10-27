@@ -34,7 +34,6 @@ class AndroidMediaSession(context: Context, private val coordinator: PlayerCoord
         independentScreenPlayback = true,
         pauseOnScreenOff = dataStore.getOrDefault(PauseOnScreenOffPreference),
     )
-    private var systemCommand = false
 
     // Seed once when creating the session; the subscription owns all subsequent updates.
     private var backgroundEnabled = dataStore.getOrDefault(BackgroundPlayPreference)
@@ -58,11 +57,9 @@ class AndroidMediaSession(context: Context, private val coordinator: PlayerCoord
 
     init {
         coordinator.onPlaybackCommand = { command, intent ->
-            if (!systemCommand) {
-                val paused = coordinator.playerState.value.paused
-                intent?.let {
-                    policy.userAction(it, explicitPlay = command.isExplicitPlay(paused))
-                }
+            val paused = coordinator.playerState.value.paused
+            intent?.let {
+                policy.userAction(it, explicitPlay = command.isExplicitPlay(paused))
             }
         }
         // USER_PRESENT can come from SystemUI under a non-system UID. All three
@@ -104,14 +101,7 @@ class AndroidMediaSession(context: Context, private val coordinator: PlayerCoord
         events.enforcePolicy()
     }
 
-    private fun systemPause(paused: Boolean) {
-        systemCommand = true
-        try {
-            coordinator.onCommand(PlayerCommand.Paused(paused))
-        } finally {
-            systemCommand = false
-        }
-    }
+    private fun systemPause(paused: Boolean) = coordinator.setSystemPaused(paused)
 
     override fun close() {
         context.unregisterReceiver(receiver)

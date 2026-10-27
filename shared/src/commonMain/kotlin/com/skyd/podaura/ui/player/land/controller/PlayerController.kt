@@ -261,6 +261,7 @@ internal fun PlayerController(
             }
             // Auto hide box
             AutoHiddenBox(
+                dialogState = dialogState,
                 playerStateFlow = playerStateFlow,
                 enabled = enabled,
                 show = { showController },
@@ -342,6 +343,7 @@ private fun AutoHiddenBox(
     hoverInteractionSource: MutableInteractionSource,
     playState: () -> PlayState,
     playStateCallback: PlayStateCallback,
+    dialogState: DialogState,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     transformState: () -> TransformState,
     transformStateCallback: TransformStateCallback,
@@ -360,6 +362,8 @@ private fun AutoHiddenBox(
                 val (topBar, bottomBar, screenshot, replaySeconds, forwardSeconds, resetTransform) = createRefs()
 
                 TopBar(
+                    dialogState = dialogState,
+                    onDialogVisibilityChanged = onDialogVisibilityChanged,
                     modifier = Modifier
                         .constrainAs(topBar) { top.linkTo(parent.top) }
                         .hoverable(hoverInteractionSource),

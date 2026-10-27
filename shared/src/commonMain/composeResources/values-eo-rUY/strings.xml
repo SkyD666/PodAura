@@ -652,4 +652,13 @@
     <string name="player_pip_restore">Reveni al la ludilo</string>
     <string name="player_pip_failed">Ne eblis lanĉi bildo-en-bildon: %1$s</string>
     <string name="player_pip_unavailable">Bildo-en-bildo ankoraŭ ne estas preta. Bonvolu reprovi.</string>
+
+    <string name="sleep_timer">Dormotempigilo</string>
+    <string name="sleep_timer_off">Malŝaltita</string>
+    <string name="sleep_timer_end">Kiam la nuna aŭdvidaĵo finiĝos</string>
+    <string name="sleep_timer_after_minutes">Post %1$d minutoj</string>
+    <string name="sleep_timer_screen_off_hint">La agordo por paŭzi kiam la ekrano estas malŝaltita estas aktiva. La dormotempigilo respektas ĉi tiun agordon.</string>
+    <string name="sleep_timer_background_hint">Fona ludado estas malŝaltita. Forlaso de la ludilo povas paŭzi la ludadon aŭ fini la seancon.</string>
+    <string name="sleep_timer_end_short">Je fino</string>
+    <string name="sleep_timer_playback_settings">Ludaj agordoj</string>
 </resources>

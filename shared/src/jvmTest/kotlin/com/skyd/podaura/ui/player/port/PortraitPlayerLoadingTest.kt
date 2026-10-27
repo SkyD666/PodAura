@@ -128,11 +128,11 @@ class PortraitPlayerLoadingTest {
                     onDialogVisibilityChanged = EmptyDialogVisibilityChanged,
                     onBack = onBack,
                     onEnterFullscreen = {},
-                    playerContent = {},
                     onSetArticleFavorite = {},
                     snackbarHostState = remember { SnackbarHostState() },
                     presentationState = presentationState,
                     onRetry = onRetry,
+                    playerContent = {},
                 )
             }
         }
@@ -161,6 +161,7 @@ class PortraitPlayerLoadingTest {
             onAudioSettingDialog = {},
             onReplaySecondDialog = {},
             onForwardSecondDialog = {},
+            onSleepTimerDialog = {},
         )
     }
 }
