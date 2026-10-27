@@ -13,7 +13,7 @@ import com.skyd.podaura.model.bean.article.ArticleDeleteResult
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
-import com.skyd.podaura.model.bean.group.groupfeed.GroupOrFeedBean
+import com.skyd.podaura.model.bean.group.GroupWithFeedCount
 import com.skyd.podaura.model.db.dao.ArticleDao
 import com.skyd.podaura.model.db.dao.FeedDao
 import com.skyd.podaura.model.db.dao.GroupDao
@@ -73,14 +73,12 @@ class FeedRepository(
                 hideMutedFeed = hideMutedFeed,
             )
         }.flow.map { pagingData ->
-            pagingData.map<GroupOrFeedBean, Any> { entity ->
-                if (entity.group == null && entity.feed == null) {
-                    GroupVo.DefaultGroup
-                } else if (entity.group != null) {
-                    entity.group.toVo()
-                } else {
-                    entity.feed!!
-                }
+            pagingData.map { entity ->
+                entity.feed ?: GroupWithFeedCount(
+                    group = entity.group?.toVo() ?: GroupVo.DefaultGroup,
+                    feedCount = entity.feedCount,
+                    mutedFeedCount = entity.mutedFeedCount,
+                )
             }
         }
     }.flowOn(Dispatchers.IO)

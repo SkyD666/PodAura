@@ -149,10 +149,15 @@ interface GroupDao {
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
-        "WITH default_group_order(`order`) AS (SELECT COALESCE(MIN(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) - $ORDER_DELTA FROM `$GROUP_TABLE_NAME`) " +
+        "WITH default_group_order(`order`) AS (SELECT COALESCE(MIN(`${GroupBean.ORDER_POSITION_COLUMN}`), 0) - $ORDER_DELTA FROM `$GROUP_TABLE_NAME`), " +
+                "feed_counts AS (SELECT ${FeedBean.GROUP_ID_COLUMN}, COUNT(*) AS feed_count, " +
+                "    SUM(CASE WHEN ${FeedBean.MUTE_COLUMN} THEN 1 ELSE 0 END) AS muted_feed_count " +
+                "    FROM `$FEED_TABLE_NAME` GROUP BY ${FeedBean.GROUP_ID_COLUMN}) " +
                 "SELECT " +
                 "    NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
                 "    NULL AS ${FeedBean.URL_COLUMN}, " +
+                "    COALESCE((SELECT feed_count FROM feed_counts WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL), 0) AS feed_count, " +
+                "    COALESCE((SELECT muted_feed_count FROM feed_counts WHERE ${FeedBean.GROUP_ID_COLUMN} IS NULL), 0) AS muted_feed_count, " +
                 "    (SELECT `order` FROM default_group_order) AS group_order, " +
                 "    0 AS is_feed, " +
                 "    '' AS feed_order " +
@@ -162,6 +167,8 @@ interface GroupDao {
                 "SELECT " +
                 "    NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
                 "    f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
+                "    0 AS feed_count, " +
+                "    0 AS muted_feed_count, " +
                 "    (SELECT `order` FROM default_group_order) AS group_order, " +
                 "    1 AS is_feed, " +
                 "    f.${FeedBean.ORDER_POSITION_COLUMN} AS feed_order " +
@@ -174,14 +181,19 @@ interface GroupDao {
                 "    SELECT " +
                 "        g.${GroupBean.GROUP_ID_COLUMN} AS ${GroupBean.GROUP_ID_COLUMN}, " +
                 "        NULL AS ${FeedBean.URL_COLUMN}, " +
+                "        COALESCE(c.feed_count, 0) AS feed_count, " +
+                "        COALESCE(c.muted_feed_count, 0) AS muted_feed_count, " +
                 "        g.${GroupBean.ORDER_POSITION_COLUMN} AS group_order, " +
                 "        0 AS is_feed, " +
                 "        '' AS feed_order " +
                 "    FROM `$GROUP_TABLE_NAME` g " +
+                "    LEFT JOIN feed_counts c ON c.${FeedBean.GROUP_ID_COLUMN} = g.${GroupBean.GROUP_ID_COLUMN} " +
                 "    UNION ALL " +
                 "    SELECT " +
                 "        NULL AS ${GroupBean.GROUP_ID_COLUMN}, " +
                 "        f.${FeedBean.URL_COLUMN} AS ${FeedBean.URL_COLUMN}, " +
+                "        0 AS feed_count, " +
+                "        0 AS muted_feed_count, " +
                 "        g.${GroupBean.ORDER_POSITION_COLUMN} AS group_order, " +
                 "        1 AS is_feed, " +
                 "        f.${FeedBean.ORDER_POSITION_COLUMN} AS feed_order " +

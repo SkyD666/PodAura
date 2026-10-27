@@ -1,5 +1,6 @@
 package com.skyd.podaura.model.bean.group.groupfeed
 
+import androidx.room3.ColumnInfo
 import androidx.room3.Embedded
 import androidx.room3.Relation
 import com.skyd.podaura.model.bean.feed.FeedBean
@@ -20,4 +21,8 @@ data class GroupOrFeedBean(
         entityColumns = [FeedBean.URL_COLUMN],
     )
     val feed: FeedViewBean?,
+    @ColumnInfo(name = "feed_count")
+    val feedCount: Int,
+    @ColumnInfo(name = "muted_feed_count")
+    val mutedFeedCount: Int,
 )

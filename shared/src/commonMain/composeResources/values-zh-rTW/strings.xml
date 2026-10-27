@@ -654,4 +654,8 @@
     <string name="sleep_timer_background_hint">目前已關閉背景播放。離開播放器可能暫停播放或結束播放工作階段。</string>
     <string name="sleep_timer_end_short">結束時</string>
     <string name="sleep_timer_playback_settings">播放設定</string>
+    <string name="feed_group_all_muted">全部訂閱已設為靜音</string>
+    <plurals name="feed_group_muted_count">
+        <item quantity="other">%1$d 個訂閱已設為靜音</item>
+    </plurals>
 </resources>

@@ -79,6 +79,7 @@ import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.DEFAULT_GROUP_ID
+import com.skyd.podaura.model.bean.group.GroupWithFeedCount
 import com.skyd.podaura.model.preference.appearance.feed.FeedListTonalElevationPreference
 import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevationPreference
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
@@ -535,8 +536,7 @@ private fun FeedList(
                 count = lazyPagingItems.itemCount,
                 key = lazyPagingItems.safeItemKey { item ->
                     when (item) {
-                        is GroupVo.DefaultGroup -> item.groupId
-                        is GroupVo -> item.groupId
+                        is GroupWithFeedCount -> item.group.groupId
                         is FeedViewBean -> item.feed.url
                         else -> item
                     }
@@ -544,11 +544,11 @@ private fun FeedList(
             ) { index ->
                 Box(modifier = Modifier.animateItem()) {
                     when (val item = lazyPagingItems[index]) {
-                        is GroupVo -> Group1Item(
+                        is GroupWithFeedCount -> Group1Item(
                             index = index,
                             data = item,
                             onExpandChange = onExpandChanged,
-                            isEmpty = { it == lazyPagingItems.lastIndex || lazyPagingItems[it + 1] is GroupVo },
+                            isEmpty = { it == lazyPagingItems.lastIndex || lazyPagingItems[it + 1] is GroupWithFeedCount },
                             onShowAllArticles = { group -> onShowArticleListByGroupId(group.groupId) },
                             onEdit = onEditGroup,
                         )
@@ -559,7 +559,7 @@ private fun FeedList(
                                     selectedGroupIds != null &&
                                     (item.feed.groupId ?: DEFAULT_GROUP_ID) in selectedGroupIds,
                             inGroup = true,
-                            isEnd = index == lazyPagingItems.lastIndex || lazyPagingItems[index + 1] is GroupVo,
+                            isEnd = index == lazyPagingItems.lastIndex || lazyPagingItems[index + 1] is GroupWithFeedCount,
                             onClick = { onShowArticleListByFeedUrls(listOf(it.url)) },
                             onEdit = onEditFeed,
                         )

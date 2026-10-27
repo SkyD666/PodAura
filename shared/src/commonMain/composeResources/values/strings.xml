@@ -668,4 +668,9 @@
     <string name="sleep_timer_background_hint">Background playback is off. Leaving the player may pause playback or end the session.</string>
     <string name="sleep_timer_end_short">End</string>
     <string name="sleep_timer_playback_settings">Playback settings</string>
+    <string name="feed_group_all_muted">All subscriptions are muted</string>
+    <plurals name="feed_group_muted_count">
+        <item quantity="one">%1$d muted subscription</item>
+        <item quantity="other">%1$d muted subscriptions</item>
+    </plurals>
 </resources>

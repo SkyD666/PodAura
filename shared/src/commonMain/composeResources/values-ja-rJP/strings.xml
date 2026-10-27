@@ -654,4 +654,8 @@
     <string name="sleep_timer_background_hint">バックグラウンド再生がオフです。プレーヤーを離れると、再生が一時停止するかセッションが終了する場合があります。</string>
     <string name="sleep_timer_end_short">終了時</string>
     <string name="sleep_timer_playback_settings">再生設定</string>
+    <string name="feed_group_all_muted">すべてのフィードがミュートされています</string>
+    <plurals name="feed_group_muted_count">
+        <item quantity="other">%1$d 件のフィードがミュートされています</item>
+    </plurals>
 </resources>

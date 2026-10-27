@@ -3,31 +3,54 @@ package com.skyd.podaura.ui.screen.feed.item
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
+import com.skyd.compone.component.ComponeTooltipBox
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
+import com.skyd.podaura.model.bean.group.GroupWithFeedCount
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.collapse
 import podaura.shared.generated.resources.expend
+import podaura.shared.generated.resources.feed_group_all_muted
+import podaura.shared.generated.resources.feed_group_muted_count
 
 
 val SHAPE_CORNER_DP = 26.dp
@@ -35,14 +58,15 @@ val SHAPE_CORNER_DP = 26.dp
 @Composable
 fun Group1Item(
     index: Int,
-    data: GroupVo,
+    data: GroupWithFeedCount,
     onExpandChange: (GroupVo, Boolean) -> Unit,
     isEmpty: (index: Int) -> Boolean,
     onShowAllArticles: (GroupVo) -> Unit,
     onEdit: ((GroupVo) -> Unit)? = null,
 ) {
+    val group = data.group
     val isExpanded =
-        if (data.isDefaultGroup()) FeedDefaultGroupExpandPreference.current else data.isExpanded
+        if (group.isDefaultGroup()) FeedDefaultGroupExpandPreference.current else group.isExpanded
     val backgroundShapeCorner: Dp by animateDpAsState(
         targetValue = if (isExpanded && !isEmpty(index)) 0.dp else SHAPE_CORNER_DP,
         label = "background shape corner",
@@ -54,7 +78,7 @@ fun Group1Item(
         backgroundShapeCorner,
     )
     val onEditBlock = if (onEdit == null) null else {
-        { onEdit(data) }
+        { onEdit(group) }
     }
 
     Row(
@@ -67,7 +91,7 @@ fun Group1Item(
             .clip(shape)
             .combinedClickable(
                 onLongClick = onEditBlock,
-                onClick = { onShowAllArticles(data) },
+                onClick = { onShowAllArticles(group) },
             )
             .thenIfNotNull(onEditBlock) { onRightClickIfSupported(onClick = it) }
             .padding(start = 20.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
@@ -75,9 +99,57 @@ fun Group1Item(
     ) {
         Text(
             modifier = Modifier.weight(1f),
-            text = data.name,
+            text = group.name,
             style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
+        if (data.mutedFeedCount > 0) {
+            val allMuted = data.mutedFeedCount == data.feedCount
+            val description = if (allMuted) {
+                stringResource(Res.string.feed_group_all_muted)
+            } else {
+                pluralStringResource(
+                    Res.plurals.feed_group_muted_count,
+                    data.mutedFeedCount,
+                    data.mutedFeedCount,
+                )
+            }
+            val tooltipState = rememberTooltipState(isPersistent = true)
+            val scope = rememberCoroutineScope()
+            ComponeTooltipBox(
+                tooltip = { PlainTooltip { Text(description) } },
+                state = tooltipState,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button) { scope.launch { tooltipState.show() } }
+                        .semantics { contentDescription = description }
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (!allMuted) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = data.mutedFeedCount.toString(),
+                            modifier = Modifier.clearAndSetSemantics {},
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+        }
 
         val expandIconRotate by animateFloatAsState(
             targetValue = if (isExpanded) 0f else 180f,
@@ -85,7 +157,7 @@ fun Group1Item(
         )
 
         ComponeIconButton(
-            onClick = { onExpandChange(data, !isExpanded) },
+            onClick = { onExpandChange(group, !isExpanded) },
             imageVector = Icons.Outlined.KeyboardArrowUp,
             contentDescription = stringResource(if (isExpanded) Res.string.collapse else Res.string.expend),
             rotate = expandIconRotate,

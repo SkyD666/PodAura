@@ -13,9 +13,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
@@ -29,6 +27,8 @@ class FeedSheetViewModel(
     private val articleRepo: IArticleRepository,
 ) : AbstractMviViewModel<FeedSheetIntent, FeedSheetState, FeedSheetEvent>() {
 
+    private val groups = feedSheetRepo.requestGroups().cachedIn(viewModelScope)
+
     override val viewState: StateFlow<FeedSheetState>
 
     fun observeNotificationsEnabled(url: String): Flow<Boolean> =
@@ -37,10 +37,8 @@ class FeedSheetViewModel(
     init {
         val initialVS = FeedSheetState.initial()
 
-        viewState = merge(
-            intentFlow.filterIsInstance<FeedSheetIntent.Init>().distinctUntilChanged(),
-            intentFlow.filterNot { it is FeedSheetIntent.Init }
-        )
+        // Opening the same feed again must reload changes made outside this sheet.
+        viewState = intentFlow
             .toFeedPartialStateChangeFlow()
             .debugLog("FeedSheetPartialStateChange")
             .sendSingleEvent()
@@ -104,7 +102,7 @@ class FeedSheetViewModel(
         return merge(
             filterIsInstance<FeedSheetIntent.Init>().flatMapConcat { intent ->
                 combine(
-                    flowOf(feedSheetRepo.requestGroups().cachedIn(viewModelScope)),
+                    flowOf(groups),
                     feedSheetRepo.getFeed(intent.feedUrl),
                 ) { groups, editFeedDialogBean ->
                     FeedSheetPartialStateChange.Init.Success(

@@ -661,4 +661,9 @@
     <string name="sleep_timer_background_hint">Fona ludado estas malŝaltita. Forlaso de la ludilo povas paŭzi la ludadon aŭ fini la seancon.</string>
     <string name="sleep_timer_end_short">Je fino</string>
     <string name="sleep_timer_playback_settings">Ludaj agordoj</string>
+    <string name="feed_group_all_muted">Ĉiuj abonfluoj estas silentigitaj</string>
+    <plurals name="feed_group_muted_count">
+        <item quantity="one">%1$d silentigita abonfluo</item>
+        <item quantity="other">%1$d silentigitaj abonfluoj</item>
+    </plurals>
 </resources>

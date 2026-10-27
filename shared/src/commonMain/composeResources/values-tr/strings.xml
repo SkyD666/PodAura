@@ -661,4 +661,9 @@
     <string name="sleep_timer_background_hint">Arka planda oynatma kapalı. Oynatıcıdan ayrılmak oynatmayı duraklatabilir veya oturumu sonlandırabilir.</string>
     <string name="sleep_timer_end_short">Bitişte</string>
     <string name="sleep_timer_playback_settings">Oynatma ayarları</string>
+    <string name="feed_group_all_muted">Tüm akışlar sessize alındı</string>
+    <plurals name="feed_group_muted_count">
+        <item quantity="one">%1$d akış sessize alındı</item>
+        <item quantity="other">%1$d akış sessize alındı</item>
+    </plurals>
 </resources>
