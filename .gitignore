@@ -18,5 +18,7 @@ build/
 *.xcuserdatad
 local.properties
 signing.properties
+/key.jks
+/doc/image/*.pptx
 /platform/ios/playback-smoke/
 __pycache__/

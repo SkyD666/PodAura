@@ -21,6 +21,7 @@ sealed interface SleepTimerOption {
 data class SleepTimerState(
     val option: SleepTimerOption = SleepTimerOption.Off,
     val deadlineMillis: Long? = null,
+    internal val pauseGeneration: Long = 0L,
 ) {
     internal fun remainingMillis(
         nowMillis: Long = Clock.System.now().toEpochMilliseconds()
@@ -31,7 +32,7 @@ data class SleepTimerState(
     ): Long = remainingMillis(nowMillis)?.let { (it + 999) / 1000 } ?: 0
 }
 
-/** Owned by the playback actor, independently of UI visibility and media progress. */
+/** Owned by the playback engine, independently of UI visibility and media progress. */
 internal class SleepTimer(
     private val nowMillis: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
@@ -44,14 +45,13 @@ internal class SleepTimer(
             option = option,
             deadlineMillis = (option as? SleepTimerOption.AfterMinutes)
                 ?.let { nowMillis() + it.minutes * 60_000L },
+            pauseGeneration = state.value.pauseGeneration,
         )
     }
 
-    /** Returns true only once, including when execution resumes after suspension. */
-    fun checkExpired(): Boolean {
-        if (remainingMillis != 0L) return false
-        set(SleepTimerOption.Off)
-        return true
+    fun expire() {
+        // Publish expiry and its generation together so queued playback uses one snapshot.
+        mutableState.value = SleepTimerState(pauseGeneration = state.value.pauseGeneration + 1)
     }
 
     fun mediaChanged() {

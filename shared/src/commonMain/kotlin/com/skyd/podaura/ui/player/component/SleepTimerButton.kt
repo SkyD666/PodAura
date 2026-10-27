@@ -64,7 +64,7 @@ import podaura.shared.generated.resources.sleep_timer_end_short
 import podaura.shared.generated.resources.sleep_timer_off
 import podaura.shared.generated.resources.sleep_timer_playback_settings
 import podaura.shared.generated.resources.sleep_timer_screen_off_hint
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun SleepTimerButton(
@@ -148,7 +148,8 @@ private fun sleepTimerStatus(state: SleepTimerState): String = when (state.optio
                 while (true) {
                     remainingSeconds = state.remainingSeconds()
                     if (remainingSeconds == 0L) break
-                    delay(1.seconds)
+                    // Wake at the deadline too, so the one-second fade is displayed as 0:00.
+                    delay((state.remainingMillis()?.coerceAtMost(1_000L) ?: 0L).milliseconds)
                 }
             }
         }
