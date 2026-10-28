@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="player_current_queue">現在の再生キュー</string>
+    <string name="player_queue_empty">再生キューは空です</string>
     <string name="article_batch_result">完了：%1$d 件、スキップ：%2$d 件、失敗：%3$d 件</string>
     <string name="article_playlist_prepare_result">音声・動画のない記事 %1$d 件をスキップ、失敗 %2$d 件</string>
     <string name="article_playlist_no_media">追加できる音声・動画がありません。スキップ：%1$d 件、失敗：%2$d 件</string>

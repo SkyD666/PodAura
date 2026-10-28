@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.player.coordinator
 
+import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.player.PlaybackEnd
 import com.skyd.podaura.ui.player.PlaybackEndReason
 import com.skyd.podaura.ui.player.PlaybackFailure
@@ -25,6 +26,31 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PlayerModelTest {
+    @Test
+    fun playlistReordersKeepCurrentMediaMatchedByPath() {
+        val model = PlayerModel()
+        val items = listOf("first.mp3", "second.mp3", "third.mp3").mapIndexed { index, path ->
+            PlaylistMediaWithArticleBean.fromUrl("queue", path, index.toDouble())
+        }
+        fun publish(items: List<PlaylistMediaWithArticleBean>) = model.onEvent(
+            PlayerEvent.Playlist("queue", items.associateByTo(linkedMapOf()) { it.playlistMediaBean.url }),
+        )
+        publish(items)
+        model.onEvent(PlayerEvent.StartFile("first.mp3"))
+        model.onEvent(PlayerEvent.PlaylistPosition(0))
+        assertEquals(items.first(), model.playerState.value.currentMedia)
+
+        publish(items.reversed())
+        assertEquals(items.reversed(), model.playerState.value.playlist)
+        // The engine may report the new index after the queue order has already changed.
+        assertEquals(items.first(), model.playerState.value.currentMedia)
+        model.onEvent(PlayerEvent.PlaylistPosition(2))
+        assertEquals(items.first(), model.playerState.value.currentMedia)
+
+        publish(items.drop(1))
+        assertNull(model.playerState.value.currentMedia)
+    }
+
     private fun PlayerModel.endWithFailure(end: PlaybackEnd) {
         onEvent(PlayerEvent.EndFile(end))
         onEvent(PlayerEvent.PlaybackFailed(requireNotNull(end.toPlaybackFailure(autoAdvance = false))))

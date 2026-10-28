@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
@@ -41,10 +41,10 @@ internal fun MediaArea(
         contentAlignment = Alignment.Center,
     ) {
         val modifier = Modifier
+            .testTag("PlayerMedia")
             .aspectRatio(1f)
             .fillMaxSize()
             .clip(RoundedCornerShape(12.dp))
-            .heightIn(min = 20.dp)
         Crossfade(
             targetState = presentationState is PlayerPresentationState.Ready,
             animationSpec = tween(PLAYER_PRESENTATION_CROSSFADE_MILLIS),
@@ -80,7 +80,7 @@ private fun Thumbnail(modifier: Modifier, thumbnail: Any?) {
 
         }
     } else {
-        val contentScale = ContentScale.Crop
+        val contentScale = ContentScale.Fit
         if (thumbnail is ImageBitmap) {
             Image(
                 bitmap = thumbnail,

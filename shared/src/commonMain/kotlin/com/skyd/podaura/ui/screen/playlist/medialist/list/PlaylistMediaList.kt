@@ -207,27 +207,14 @@ private fun PlaylistMediaList(
     }
 
     Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
-        AnimatedVisibility(selectMode) {
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 12.dp),
-            ) {
-                ComponeIconButton(
-                    onClick = {
-                        onDelete(uiState.selectedItems)
-                        dispatch(ListIntent.ClearSelected)
-                    },
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = stringResource(Res.string.delete),
-                )
-                ComponeIconButton(
-                    onClick = onOpenAddToPlaylistSheet,
-                    imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
-                    contentDescription = stringResource(Res.string.add_to_playlist),
-                )
-            }
-        }
+        PlaylistSelectionActions(
+            visible = selectMode,
+            onDelete = {
+                onDelete(uiState.selectedItems)
+                dispatch(ListIntent.ClearSelected)
+            },
+            onAddToPlaylist = onOpenAddToPlaylistSheet,
+        )
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Adaptive(300.dp),
             modifier = Modifier
@@ -273,6 +260,33 @@ private fun PlaylistMediaList(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Selection actions shared by saved playlists and the current playback queue. */
+@Composable
+internal fun PlaylistSelectionActions(
+    visible: Boolean,
+    onDelete: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+) {
+    AnimatedVisibility(visible) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp),
+        ) {
+            ComponeIconButton(
+                onClick = onDelete,
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = stringResource(Res.string.delete),
+            )
+            ComponeIconButton(
+                onClick = onAddToPlaylist,
+                imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                contentDescription = stringResource(Res.string.add_to_playlist),
+            )
         }
     }
 }

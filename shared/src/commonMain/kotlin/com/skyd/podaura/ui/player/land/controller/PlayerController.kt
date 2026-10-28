@@ -71,8 +71,8 @@ import com.skyd.podaura.ui.player.land.controller.preview.VolumePreview
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
 import com.skyd.podaura.ui.player.land.rememberSystemBarsVisibilityController
+import com.skyd.podaura.ui.player.queue.PlayerQueue
 import com.skyd.podaura.ui.player.service.PlayerState
-import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -310,14 +310,7 @@ internal fun PlayerController(
         AnimatedDismissModalBottomSheet(
             onDismissRequest = { showPlaylistSheet = false }
         ) {
-            val playStateValue = playState()
-            PlaylistMediaList(
-                currentPlaylistId = playStateValue.playlistId,
-                currentPlay = playStateValue.currentMedia,
-                playlist = remember(playStateValue) { playStateValue.playlist.values.toList() },
-                onPlay = { playStateCallback.onPlayFileInPlaylist(it.playlistMediaBean.url) },
-                onDelete = { playStateCallback.onRemoveFromPlaylist(it) },
-            )
+            PlayerQueue(playState = playState(), playStateCallback = playStateCallback)
         }
     }
 

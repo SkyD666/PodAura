@@ -187,7 +187,7 @@ class IosMediaSessionTest {
             remote.skipForwardCommand,
             remote.skipBackwardCommand,
         )
-        val playlist = linkedMapOf("first" to media("first"), "last" to media("last"))
+        val playlist = listOf(media("first"), media("last"))
         val playing = PlayerState(
             playlist = playlist, path = "first", playlistPosition = 0,
             mediaStarted = true, paused = false, seekable = true,
@@ -236,7 +236,7 @@ class IosMediaSessionTest {
             assertTrue(commands.none { it.enabled })
             assertEquals(0.0, number(MPNowPlayingInfoPropertyPlaybackRate))
 
-            publish(playing.copy(playlist = linkedMapOf("first" to media("first", " ", ""))))
+            publish(playing.copy(playlist = listOf(media("first", " ", ""))))
             assertFalse(remote.previousTrackCommand.enabled)
             assertFalse(remote.nextTrackCommand.enabled)
             assertEquals("Embedded title", center.nowPlayingInfo?.get(MPMediaItemPropertyTitle))
@@ -263,7 +263,7 @@ class IosMediaSessionTest {
         val path = "file:///media/episode.m4a"
         val item = media(path, title = null)
         val playing = PlayerState(
-            playlist = linkedMapOf(path to item), path = path,
+            playlist = listOf(item), path = path,
             mediaStarted = true, mediaTitle = "Embedded title",
         )
         val center = MPNowPlayingInfoCenter.defaultCenter()

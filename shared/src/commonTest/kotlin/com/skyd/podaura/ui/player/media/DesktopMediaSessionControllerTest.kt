@@ -55,7 +55,7 @@ class DesktopMediaSessionControllerTest {
             feed = FeedBean(url = "feed", icon = "feed.jpg"),
         )
         fun withArticle(value: ArticleWithFeed) = state.copy(
-            playlist = linkedMapOf(path to state.playlist.getValue(path).copy(article = value)),
+            playlist = listOf(state.playlist.single().copy(article = value)),
         )
         controller.update(withArticle(article))
         advanceUntilIdle()
@@ -463,8 +463,7 @@ class DesktopMediaSessionControllerTest {
         playlistPosition: Int = index,
         playbackEnd: PlaybackEnd? = null,
     ): PlayerState {
-        val playlist = LinkedHashMap<String, PlaylistMediaWithArticleBean>()
-        paths.forEachIndexed { itemIndex, path ->
+        val playlist = paths.mapIndexed { itemIndex, path ->
             val bean = PlaylistMediaBean(
                 playlistId = "playlist",
                 url = path,
@@ -475,7 +474,7 @@ class DesktopMediaSessionControllerTest {
                 title = "Episode ${itemIndex + 1}"
                 artist = "Presenter ${itemIndex + 1}"
             }
-            playlist[path] = PlaylistMediaWithArticleBean(bean, article = null)
+            PlaylistMediaWithArticleBean(bean, article = null)
         }
         return PlayerState(
             playlistId = "playlist",

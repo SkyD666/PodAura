@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
@@ -66,6 +68,7 @@ fun PlaylistMediaItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { this.selected = selected }
             .thenIf(selected) { background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)) }
             .combinedClickable(onLongClick = { onLongClick(data) }, onClick = { onClick(data) })
             .padding(vertical = 8.dp)

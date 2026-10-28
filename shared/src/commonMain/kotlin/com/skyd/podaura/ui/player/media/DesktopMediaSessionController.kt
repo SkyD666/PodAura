@@ -238,13 +238,14 @@ private fun PlayerState.toDesktopMediaDescriptor(
     artwork: DesktopArtwork?,
 ): DesktopMediaDescriptor? {
     if (playlist.isEmpty()) return null
-    val entries = playlist.entries.toList()
-    val pathIndex = path?.let { currentPath -> entries.indexOfFirst { it.key == currentPath } }
+    val pathIndex = path?.let { currentPath ->
+        playlist.indexOfFirst { it.playlistMediaBean.url == currentPath }
+    }
         ?.takeIf { it >= 0 }
     val currentIndex = pathIndex
-        ?: playlistPosition.takeIf { it in entries.indices }
+        ?: playlistPosition.takeIf { it in playlist.indices }
         ?: 0
-    val currentMedia = entries[currentIndex].value
+    val currentMedia = playlist[currentIndex]
     val duration = duration.takeIf { it > 0L }?.toDouble()
     val position = duration?.let { position.coerceIn(0L, it.toLong()).toDouble() }
     val playing = mediaStarted && !paused
@@ -256,7 +257,7 @@ private fun PlayerState.toDesktopMediaDescriptor(
 
     return DesktopMediaDescriptor(
         snapshot = DesktopMediaSnapshot(
-            mediaId = entries[currentIndex].key,
+            mediaId = currentMedia.playlistMediaBean.url,
             title = showTitle,
             artist = showArtist,
             album = showAlbum,
@@ -265,7 +266,7 @@ private fun PlayerState.toDesktopMediaDescriptor(
             playbackRate = if (playing && !loading) effectiveRate else 0.0,
             defaultPlaybackRate = effectiveRate,
             queueIndex = currentIndex,
-            queueCount = entries.size,
+            queueCount = playlist.size,
             isVideo = isVideo,
             playbackState = when {
                 playbackFailed -> DesktopPlaybackState.Stopped
@@ -277,7 +278,7 @@ private fun PlayerState.toDesktopMediaDescriptor(
             canPause = !playbackFailed && playing,
             canTogglePlayPause = true,
             canGoPrevious = currentIndex > 0,
-            canGoNext = currentIndex < entries.lastIndex,
+            canGoNext = currentIndex < playlist.lastIndex,
             canChangePlaybackPosition = !playbackFailed && mediaStarted && seekable && duration != null,
             artwork = artwork,
         ),

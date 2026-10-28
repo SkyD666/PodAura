@@ -597,12 +597,10 @@ class MPVPlayer {
     }
 
     fun removeFromList(files: List<String>) {
-        val currentList = loadPlaylist()
-        files.forEach { file ->
-            val index = currentList.indexOfFirst { it == file }
-            if (index != -1) {
-                mpv.command("playlist-remove", index.toString())
-            }
+        val removing = files.toSet()
+        // Removing a later index first leaves every earlier index valid, including the current item.
+        loadPlaylist().withIndex().reversed().forEach { (index, file) ->
+            if (file in removing) mpv.command("playlist-remove", index.toString())
         }
     }
 

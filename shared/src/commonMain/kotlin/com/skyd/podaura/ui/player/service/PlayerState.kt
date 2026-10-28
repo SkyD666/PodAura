@@ -9,7 +9,7 @@ import com.skyd.podaura.ui.player.Track
 
 data class PlayerState(
     val playlistId: String = "",
-    val playlist: LinkedHashMap<String, PlaylistMediaWithArticleBean> = linkedMapOf(),
+    val playlist: List<PlaylistMediaWithArticleBean> = emptyList(),
     val mediaStarted: Boolean = false,
     val seekable: Boolean = false,
     val path: String? = null,
@@ -42,7 +42,9 @@ data class PlayerState(
     val lastPlaybackEnd: PlaybackEnd? = null,
     val pendingPlaybackFailures: List<PlaybackFailure> = emptyList(),
 ) {
-    val currentMedia = playlist[path]
+    val currentMedia = playlist.getOrNull(playlistPosition)
+        ?.takeIf { it.playlistMediaBean.url == path }
+        ?: playlist.firstOrNull { it.playlistMediaBean.url == path }
     val isVideo = videoTracks.any { it.trackId >= 0 && !it.isAlbumArt }
     val playlistFirst = playlistPosition == 0 && playlist.isNotEmpty() || playlist.size == 1
     val playlistLast = playlistPosition == playlist.size - 1 ||

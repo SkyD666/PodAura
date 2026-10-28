@@ -66,7 +66,7 @@ class MacosMediaSessionAdapterTest {
         try {
             controller.update(PlayerState(
                 path = path,
-                playlist = linkedMapOf(path to PlaylistMediaWithArticleBean(
+                playlist = listOf(PlaylistMediaWithArticleBean(
                     PlaylistMediaBean("test", path, null, 0.0, 0), null,
                 )),
                 mediaThumbnail = image,

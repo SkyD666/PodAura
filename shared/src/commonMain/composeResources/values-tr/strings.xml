@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="player_current_queue">Mevcut oynatma kuyruğu</string>
+    <string name="player_queue_empty">Oynatma kuyruğu boş</string>
     <string name="article_batch_result">Başarılı: %1$d; atlanan: %2$d; başarısız: %3$d</string>
     <string name="article_playlist_prepare_result">Ses veya video içermeyen %1$d makale atlandı; başarısız: %2$d</string>
     <string name="article_playlist_no_media">Eklenecek ses veya video yok. Atlanan: %1$d; başarısız: %2$d</string>

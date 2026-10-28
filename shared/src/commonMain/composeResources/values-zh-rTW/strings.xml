@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="player_current_queue">目前播放佇列</string>
+    <string name="player_queue_empty">播放佇列為空</string>
     <string name="article_batch_result">成功：%1$d；略過：%2$d；失敗：%3$d</string>
     <string name="article_playlist_prepare_result">已略過 %1$d 篇無影音的文章；失敗：%2$d</string>
     <string name="article_playlist_no_media">沒有可加入的影音。略過：%1$d；失敗：%2$d</string>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="player_current_queue">Aktuala ludvico</string>
+    <string name="player_queue_empty">La ludvico estas malplena</string>
     <string name="article_batch_result">Sukcesaj: %1$d; preterlasitaj: %2$d; malsukcesaj: %3$d</string>
     <string name="article_playlist_prepare_result">Preterlasitaj %1$d artikoloj sen sono aŭ video; malsukcesaj: %2$d</string>
     <string name="article_playlist_no_media">Neniu sono aŭ video aldonebla. Preterlasitaj: %1$d; malsukcesaj: %2$d</string>

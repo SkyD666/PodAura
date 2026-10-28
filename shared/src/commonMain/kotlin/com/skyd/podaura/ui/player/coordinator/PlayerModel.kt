@@ -91,7 +91,11 @@ class PlayerModel : PlayerCoordinator.Observer {
         is PlayerEvent.PlaybackFailed -> old.enqueueFailure(failure)
 
         PlayerEvent.ClearPlaybackEnd -> old.clearPlaybackEnd()
-        is PlayerEvent.Playlist -> old.copy(playlistId = playlistId, playlist = newPlaylist)
+        is PlayerEvent.Playlist -> old.copy(
+            playlistId = playlistId,
+            playlist = newPlaylist.values.toList(),
+        )
+
         is PlayerEvent.Shutdown -> initialPlayerState
         else -> old
     }

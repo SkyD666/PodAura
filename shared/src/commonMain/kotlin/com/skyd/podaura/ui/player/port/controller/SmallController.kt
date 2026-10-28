@@ -37,7 +37,7 @@ internal fun SmallController(
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
-    onOpenPlaylist: () -> Unit,
+    onOpenPlaylist: (() -> Unit)?,
     onEnterFullscreen: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -47,13 +47,14 @@ internal fun SmallController(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
-        // Playlist button
-        ControllerIconButton(
-            enabled = enabled,
-            onClick = onOpenPlaylist,
-            imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
-            contentDescription = stringResource(Res.string.playlist),
-        )
+        if (onOpenPlaylist != null) {
+            ControllerIconButton(
+                enabled = enabled,
+                onClick = onOpenPlaylist,
+                imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                contentDescription = stringResource(Res.string.playlist),
+            )
+        }
         // Shuffle button
         ControllerIconToggleButton(
             enabled = enabled && playState.mediaLoaded,

@@ -1,20 +1,19 @@
 package com.skyd.podaura.ui.player.port
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.ClosedCaption
@@ -28,13 +27,16 @@ import androidx.compose.material3.DropdownMenuGroup
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +49,9 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
-import com.skyd.podaura.ext.isExpanded
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.ui.component.AnimatedDismissModalBottomSheet
-import com.skyd.podaura.ui.component.isLandscape
 import com.skyd.podaura.ui.component.navigation.rememberMainPageOpener
-import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.PlayerArticleContextState
 import com.skyd.podaura.ui.player.PlayerProgress
 import com.skyd.podaura.ui.player.component.SleepTimerButton
@@ -65,8 +64,8 @@ import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.PrimaryControlMode
 import com.skyd.podaura.ui.player.port.controller.SmallController
+import com.skyd.podaura.ui.player.queue.PlayerQueue
 import com.skyd.podaura.ui.screen.article.ArticleRoute
-import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -167,153 +166,72 @@ internal fun PortraitPlayerView(
         },
         contentWindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
     ) { innerPadding ->
-        val windowSizeClass = LocalWindowSizeClass.current
-        if (windowSizeClass.isExpanded || isLandscape()) {
-            ExpandedContent(
-                playerProgress = playerProgress,
-                initialProgress = initialProgress,
-                playState = playState,
-                playStateCallback = playStateCallback,
-                onDialogVisibilityChanged = onDialogVisibilityChanged,
-                onOpenPlaylistSheet = { showPlaylistSheet = true },
-                onEnterFullscreen = onEnterFullscreen,
-                contentPadding = innerPadding,
-                presentationState = presentationState,
-                onRetry = onRetry,
-                playerContent = playerContent,
-            )
-        } else {
-            CompactContent(
-                playerProgress = playerProgress,
-                initialProgress = initialProgress,
-                playState = playState,
-                playStateCallback = playStateCallback,
-                onDialogVisibilityChanged = onDialogVisibilityChanged,
-                onOpenPlaylistSheet = { showPlaylistSheet = true },
-                onEnterFullscreen = onEnterFullscreen,
-                contentPadding = innerPadding,
-                presentationState = presentationState,
-                onRetry = onRetry,
-                playerContent = playerContent,
-            )
-        }
-
-        if (interactive && showPlaylistSheet) {
-            AnimatedDismissModalBottomSheet(
-                onDismissRequest = { showPlaylistSheet = false }
-            ) {
-                PlaylistMediaList(
-                    currentPlaylistId = playState.playlistId,
-                    currentPlay = playState.currentMedia,
-                    playlist = remember(playState) { playState.playlist.values.toList() },
-                    onPlay = { playStateCallback.onPlayFileInPlaylist(it.playlistMediaBean.url) },
-                    onDelete = { playStateCallback.onRemoveFromPlaylist(it) },
+        BoxWithConstraints(Modifier.padding(innerPadding).fillMaxSize()) {
+            // 440 dp keeps the playback controls comfortable; the queue gets at least 360 dp.
+            val wide = maxWidth >= 840.dp
+            val queueWidth = (maxWidth * 0.38f).coerceIn(360.dp, 480.dp)
+            LaunchedEffect(wide) {
+                if (wide) showPlaylistSheet = false
+            }
+            Row(Modifier.fillMaxSize()) {
+                PlaybackPane(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    media = {
+                        MediaArea(
+                            playState = playState,
+                            modifier = Modifier.padding(horizontal = 30.dp),
+                            presentationState = presentationState,
+                            playerContent = playerContent,
+                        )
+                    },
+                    controls = {
+                        Column {
+                            Spacer(Modifier.height(12.dp))
+                            Titles(
+                                playState = playState,
+                                modifier = Modifier.padding(horizontal = 30.dp),
+                                presentationState = presentationState,
+                            )
+                            ControllerArea(
+                                playerProgress = playerProgress,
+                                initialProgress = initialProgress,
+                                playState = playState,
+                                playStateCallback = playStateCallback,
+                                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                                onOpenPlaylistSheet = if (wide) null else {
+                                    { showPlaylistSheet = true }
+                                },
+                                onEnterFullscreen = onEnterFullscreen,
+                                contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
+                                presentationState = presentationState,
+                                onRetry = onRetry,
+                            )
+                        }
+                    },
                 )
+                if (wide) {
+                    Surface(
+                        modifier = Modifier.padding(end = 16.dp, bottom = 16.dp)
+                            .width(queueWidth)
+                            .fillMaxHeight(),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ) {
+                        PlayerQueue(
+                            playState = playState,
+                            playStateCallback = playStateCallback,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun CompactContent(
-    playerProgress: Flow<PlayerProgress>,
-    initialProgress: PlayerProgress,
-    playState: PlayState,
-    playStateCallback: PlayStateCallback,
-    onDialogVisibilityChanged: OnDialogVisibilityChanged,
-    onOpenPlaylistSheet: () -> Unit,
-    onEnterFullscreen: () -> Unit,
-    contentPadding: PaddingValues = PaddingValues(),
-    presentationState: PlayerPresentationState,
-    onRetry: () -> Unit,
-    playerContent: @Composable () -> Unit,
-) {
-    Column(modifier = Modifier.padding(contentPadding)) {
-        MediaArea(
-            playState = playState,
-            modifier = Modifier
-                .padding(horizontal = 30.dp)
-                .weight(1f),
-            presentationState = presentationState,
-            playerContent = playerContent,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Titles(
-            playState = playState,
-            modifier = Modifier.padding(horizontal = 30.dp),
-            presentationState = presentationState,
-        )
-        ControllerArea(
-            playerProgress = playerProgress,
-            initialProgress = initialProgress,
-            isExpanded = false,
-            playState = playState,
-            playStateCallback = playStateCallback,
-            onDialogVisibilityChanged = onDialogVisibilityChanged,
-            onOpenPlaylistSheet = onOpenPlaylistSheet,
-            onEnterFullscreen = onEnterFullscreen,
-            contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
-            presentationState = presentationState,
-            onRetry = onRetry,
-        )
-    }
-}
-
-@Composable
-private fun ExpandedContent(
-    playerProgress: Flow<PlayerProgress>,
-    initialProgress: PlayerProgress,
-    playState: PlayState,
-    playStateCallback: PlayStateCallback,
-    onDialogVisibilityChanged: OnDialogVisibilityChanged,
-    onOpenPlaylistSheet: () -> Unit,
-    onEnterFullscreen: () -> Unit,
-    contentPadding: PaddingValues = PaddingValues(),
-    presentationState: PlayerPresentationState,
-    onRetry: () -> Unit,
-    playerContent: @Composable () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .padding(contentPadding)
-            .fillMaxSize(),
-    ) {
-        MediaArea(
-            playState = playState,
-            modifier = Modifier
-                .padding(start = 30.dp)
-                .weight(0.4f)
-                .align(Alignment.CenterVertically),
-            presentationState = presentationState,
-            playerContent = playerContent,
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.Bottom)
-                .weight(0.6f)
-                .verticalScroll(
-                    state = rememberScrollState(),
-                    enabled = presentationState is PlayerPresentationState.Ready,
-                ),
-        ) {
-            Titles(
-                playState = playState,
-                modifier = Modifier.padding(horizontal = 30.dp),
-                presentationState = presentationState,
-            )
-            ControllerArea(
-                playerProgress = playerProgress,
-                initialProgress = initialProgress,
-                isExpanded = true,
-                playState = playState,
-                playStateCallback = playStateCallback,
-                onDialogVisibilityChanged = onDialogVisibilityChanged,
-                onOpenPlaylistSheet = onOpenPlaylistSheet,
-                onEnterFullscreen = onEnterFullscreen,
-                contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
-                presentationState = presentationState,
-                onRetry = onRetry,
-            )
+        if (interactive && showPlaylistSheet) {
+            AnimatedDismissModalBottomSheet(
+                onDismissRequest = { showPlaylistSheet = false },
+            ) {
+                PlayerQueue(playState = playState, playStateCallback = playStateCallback)
+            }
         }
     }
 }
@@ -322,11 +240,10 @@ private fun ExpandedContent(
 private fun ControllerArea(
     playerProgress: Flow<PlayerProgress>,
     initialProgress: PlayerProgress,
-    isExpanded: Boolean,
     playState: PlayState,
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
-    onOpenPlaylistSheet: () -> Unit,
+    onOpenPlaylistSheet: (() -> Unit)?,
     onEnterFullscreen: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(),
     presentationState: PlayerPresentationState,
@@ -334,17 +251,6 @@ private fun ControllerArea(
 ) {
     val interactive = presentationState is PlayerPresentationState.Ready
     Column(modifier = Modifier.padding(contentPadding)) {
-        val space: @Composable ColumnScope.() -> Unit = {
-            Spacer(
-                modifier = Modifier.run {
-                    if (isExpanded) {
-                        weight(1f).heightIn(max = 16.dp)
-                    } else {
-                        height(16.dp)
-                    }
-                }
-            )
-        }
         PlayerProgressBar(
             progress = playerProgress,
             initialProgress = initialProgress,
@@ -353,7 +259,7 @@ private fun ControllerArea(
             modifier = Modifier.padding(horizontal = 30.dp),
             enabled = interactive,
         )
-        space()
+        Spacer(Modifier.height(16.dp))
         Controller(
             playState = playState,
             playStateCallback = playStateCallback,
@@ -365,7 +271,7 @@ private fun ControllerArea(
             primaryControlMode = presentationState.toPrimaryControlMode(),
             onRetry = onRetry,
         )
-        space()
+        Spacer(Modifier.height(16.dp))
         SmallController(
             playState = playState,
             playStateCallback = playStateCallback,
