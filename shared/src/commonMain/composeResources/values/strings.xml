@@ -675,4 +675,11 @@
         <item quantity="one">%1$d muted subscription</item>
         <item quantity="other">%1$d muted subscriptions</item>
     </plurals>
+    <string name="player_queue_follow">Follow current playback</string>
+    <string name="player_queue_unfollow">Stop following playback</string>
+    <string name="playlist_reorder">Reorder</string>
+    <string name="playlist_reorder_failed">Could not update the playlist order. Please try again.</string>
+    <string name="playlist_reorder_shuffle">Turn off shuffle to reorder the queue.</string>
+    <string name="playlist_move_up">Move up</string>
+    <string name="playlist_move_down">Move down</string>
 </resources>

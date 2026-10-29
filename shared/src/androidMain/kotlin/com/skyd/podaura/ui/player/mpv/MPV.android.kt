@@ -106,6 +106,8 @@ actual class MPV {
         MPVLib.command(command)
     }
 
+    actual val hasPendingCommands: Boolean get() = false
+
     actual fun option(key: String, value: String) {
         MPVLib.setOptionString(key, value)
     }

@@ -5,6 +5,8 @@ import androidx.paging.cachedIn
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.startWith
+import com.skyd.podaura.model.playlist.PlaylistController
+import com.skyd.podaura.model.playlist.PlaylistPlayback
 import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.model.repository.playlist.IPlaylistRepository
 import com.skyd.podaura.model.repository.playlist.PlaylistMediaRepository
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -25,6 +28,7 @@ class PlaylistMediaListViewModel(
     private val playlistRepo: IPlaylistRepository,
     private val playlistMediaRepo: PlaylistMediaRepository,
     private val addToPlaylist: IAddToPlaylistRepository,
+    private val playlistOrder: PlaylistController,
 ) : AbstractMviViewModel<PlaylistMediaListIntent, PlaylistMediaListState, PlaylistMediaListEvent>() {
 
     override val viewState: StateFlow<PlaylistMediaListState>
@@ -44,6 +48,17 @@ class PlaylistMediaListViewModel(
             .toState(initialVS)
     }
 
+    suspend fun reorder(
+        playlistId: String, fromUrl: String, toUrl: String, displayedOrder: List<String>,
+        playback: PlaylistPlayback?,
+    ) {
+        playlistOrder.reorder(playlistId, fromUrl, toUrl, displayedOrder, playback = playback)
+    }
+
+    suspend fun setSort(playlistId: String, sortBy: String, ascending: Boolean) {
+        playlistMediaRepo.setSort(playlistId, sortBy, ascending)
+    }
+
     private fun Flow<PlaylistMediaListPartialStateChange>.sendSingleEvent(): Flow<PlaylistMediaListPartialStateChange> {
         return onEach { change ->
             val event = when (change) {
@@ -58,7 +73,7 @@ class PlaylistMediaListViewModel(
 
     private fun Flow<PlaylistMediaListIntent>.toPlaylistMediaListPartialStateChangeFlow(): Flow<PlaylistMediaListPartialStateChange> {
         return merge(
-            filterIsInstance<PlaylistMediaListIntent.Init>().flatMapConcat { intent ->
+            filterIsInstance<PlaylistMediaListIntent.Init>().flatMapLatest { intent ->
                 combine(
                     playlistRepo.requestPlaylist(intent.playlistId),
                     flowOf(
@@ -82,21 +97,7 @@ class PlaylistMediaListViewModel(
                     PlaylistMediaListPartialStateChange.DeleteMedia.Failed(it.message.toString())
                 }
             },
-            filterIsInstance<PlaylistMediaListIntent.Reorder>().flatMapConcat { intent ->
-                playlistMediaRepo.reorderPlaylistMedia(
-                    playlistId = intent.playlistId,
-                    fromIndex = intent.fromIndex,
-                    toIndex = intent.toIndex,
-                ).map { count ->
-                    if (count == 0) {
-                        PlaylistMediaListPartialStateChange.Reorder.Failed("No media moved")
-                    } else {
-                        PlaylistMediaListPartialStateChange.Reorder.Success
-                    }
-                }.catchMap {
-                    PlaylistMediaListPartialStateChange.Reorder.Failed(it.message.toString())
-                }
-            },
-        )
+
+            )
     }
 }

@@ -8,13 +8,13 @@ import androidx.lifecycle.LifecycleRegistry
 import co.touchlab.kermit.Logger
 import com.skyd.fundation.di.inject
 import com.skyd.podaura.ext.getOrDefault
-import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean.Companion.articleId
+import com.skyd.podaura.model.bean.playlist.mergePlaylistOrder
+import com.skyd.podaura.model.playlist.PlaylistPlayback
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.preference.player.PlayerLoopModePreference
 import com.skyd.podaura.model.repository.player.IPlayerRepository
-import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.ui.PlatformSurfaceHolder
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.PlaybackEnd
@@ -37,8 +37,10 @@ import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
 import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.resizeSurface
 import com.skyd.podaura.ui.player.playbackIntent
+import com.skyd.podaura.ui.player.preparePlatformPlayback
 import com.skyd.podaura.ui.player.playerTrace
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -46,12 +48,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
@@ -61,12 +65,12 @@ import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.update
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.uuid.Uuid
 
-class PlayerCoordinator : LifecycleOwner {
+class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
     override val lifecycle = LifecycleRegistry(this)
     private val logger = Logger.withTag("PlayerCoordinator")
     private val playerRepo: IPlayerRepository by inject()
-    private val addToPlaylistRepo: IAddToPlaylistRepository by inject()
     private val player = MPVPlayer.instance
     private val progress by lazy {
         PlaybackProgress(playerRepo) { error ->
@@ -78,6 +82,10 @@ class PlayerCoordinator : LifecycleOwner {
 
     val model = PlayerModel()
     val playerState get() = model.playerState
+    private val _playlistLoads = MutableSharedFlow<Unit>(
+        replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    internal val playlistLoads = _playlistLoads.asSharedFlow()
     internal val renderPlayer: MPV get() = player.mpv
 
     private val _engineState = MutableStateFlow<PlayerEngineState>(PlayerEngineState.Initializing)
@@ -149,6 +157,7 @@ class PlayerCoordinator : LifecycleOwner {
     }
     private var externalPlayback: ExternalPlaybackSession? = null
     private var playlistId = ""
+    private var queueId = ""
     private val cachedPlaylistMap = linkedMapOf<String, PlaylistMediaWithArticleBean>()
     private var pendingStartPosition: PendingStartPosition? = null
     private var lastLoadRequestId: String? = null
@@ -217,6 +226,43 @@ class PlayerCoordinator : LifecycleOwner {
     fun addObserver(observer: Observer) = observers.update { it + observer }
     fun removeObserver(observer: Observer) = observers.update { it - observer }
     fun removeAllObserver() = observers.store(emptySet())
+
+    override suspend fun withQueueOrder(
+        playlistId: String,
+        expectedOrder: List<String>?,
+        update: suspend (applyOrder: (List<String>) -> Unit) -> Unit,
+    ): Boolean {
+        if (destroyed.load() || !_engineState.value.isReady) return false
+        val result = CompletableDeferred<Boolean>()
+        val completion = engineJob.invokeOnCompletion {
+            result.completeExceptionally(CancellationException("Player closed"))
+        }
+        try {
+            commands.send(
+                ActorMessage.UpdateQueueOrder(playlistId, expectedOrder, update, result)
+            )
+            return result.await()
+        } finally {
+            completion.dispose()
+        }
+    }
+
+    override suspend fun synchronizePlaylist(
+        playlistId: String,
+        readPlaylist: suspend () -> List<PlaylistMediaWithArticleBean>,
+    ) {
+        if (destroyed.load()) return
+        val result = CompletableDeferred<Unit>()
+        val completion = engineJob.invokeOnCompletion {
+            result.completeExceptionally(CancellationException("Player closed"))
+        }
+        try {
+            commands.send(ActorMessage.SynchronizePlaylist(playlistId, readPlaylist, result))
+            result.await()
+        } finally {
+            completion.dispose()
+        }
+    }
 
     internal var onPlaybackCommand: ((PlayerCommand, Boolean?) -> Unit)? = null
 
@@ -292,7 +338,13 @@ class PlayerCoordinator : LifecycleOwner {
                         _engineState.value == PlayerEngineState.LoadingMedia &&
                         playerState.value.lastPlaybackEnd?.reason == PlaybackEndReason.Error
                 if ((_engineState.value.isReady || retryingFirstMedia) && !destroyed.load()) {
-                    commands.trySend(ActorMessage.Command(command, intent, submittedTimerPauseGeneration))
+                    commands.trySend(
+                        ActorMessage.Command(
+                            command,
+                            intent,
+                            submittedTimerPauseGeneration
+                        )
+                    )
                 }
             }
         }
@@ -327,7 +379,13 @@ class PlayerCoordinator : LifecycleOwner {
             val intent = command.playbackIntent(player.paused, player.eofReached)
             mainScope.launch {
                 onPlaybackCommand?.invoke(command, intent)
-                commands.trySend(ActorMessage.Command(command, intent, submittedTimerPauseGeneration))
+                commands.trySend(
+                    ActorMessage.Command(
+                        command,
+                        intent,
+                        submittedTimerPauseGeneration
+                    )
+                )
             }
             if (intent == false) sleepTimerController.finishFadeOnPause()
         }
@@ -375,9 +433,12 @@ class PlayerCoordinator : LifecycleOwner {
 
     private suspend fun handleMessage(message: ActorMessage): Boolean {
         when (message) {
+            is ActorMessage.UpdateQueueOrder -> updateQueueOrder(message)
+            is ActorMessage.SynchronizePlaylist -> synchronizePlaylist(message)
             is ActorMessage.Command -> executeCommand(
                 message.command, message.playbackIntent, message.submittedTimerPauseGeneration,
             )
+
             is ActorMessage.SystemPause -> applySystemPause(message.paused)
             is ActorMessage.EndFile -> handleEndFile(
                 reason = message.reason,
@@ -490,7 +551,10 @@ class PlayerCoordinator : LifecycleOwner {
         }
     }
 
-    private suspend fun clearTimerPause(command: PlayerCommand, submittedTimerPauseGeneration: Long?) {
+    private suspend fun clearTimerPause(
+        command: PlayerCommand,
+        submittedTimerPauseGeneration: Long?
+    ) {
         if (!sleepTimerController.resume(submittedTimerPauseGeneration)) return
         // Expiry may have overwritten the intent reported when this command was enqueued.
         withContext(Dispatchers.Main.immediate) {
@@ -519,15 +583,111 @@ class PlayerCoordinator : LifecycleOwner {
         }
         progress.save()
         command.playlist.forEach { cachedPlaylistMap.remove(it.playlistMediaBean.url) }
-        externalPlayback?.retainPaths(cachedPlaylistMap.keys)
-        val currentPlaylistId = playlistId
-        ioScope.launch {
-            addToPlaylistRepo.removeMediaFromPlaylist(
-                playlistId = currentPlaylistId,
-                mediaList = command.playlist.map { it.toMediaUrlWithArticleIdBean() },
-            ).collect()
-        }
         player.removeFromList(command.playlist.map { it.playlistMediaBean.url })
+        externalPlayback?.retainPaths(cachedPlaylistMap.keys)
+    }
+
+    private suspend fun synchronizePlaylist(request: ActorMessage.SynchronizePlaylist) {
+        if (request.result.isCompleted) return
+        if (request.playlistId != playlistId || playlistId.isEmpty()) {
+            request.result.complete(Unit)
+            return
+        }
+        // A desktop full load can await a render surface. Do not compute edits from the old
+        // native queue or enqueue duplicate appends behind it. Leave the actor free for attach,
+        // detach and source changes, then read the latest database state after that load settles.
+        if (player.mpv.hasPendingCommands) {
+            engineScope.launch {
+                delay(50)
+                if (!destroyed.load() && !request.result.isCompleted) commands.send(request)
+            }
+            return
+        }
+        try {
+            val source = request.readPlaylist()
+            val original = player.loadPlaylist()
+            val existing = original.mapNotNull(cachedPlaylistMap::get)
+                .associateBy { it.playlistMediaBean.stableUrl }
+            val additions = source.filterNot { it.playlistMediaBean.stableUrl in existing }
+            val prepared = preparePlatformPlayback(
+                PlayerLaunchData(null, additions, requestId = Uuid.random().toString())
+            )
+            prepared.externalBatch?.let { batch ->
+                if (externalPlayback == null) externalPlayback = ExternalPlaybackSession(batch)
+                else externalPlayback?.add(batch)
+                batch.failures.takeIf { it.isNotEmpty() }?.let { failures ->
+                    emitEvent(PlayerEvent.PlaybackFailed(PlaybackFailure(
+                        details = failures.joinToString("\n") { "${it.source}: ${it.reason}" },
+                    )))
+                }
+            }
+            val added = prepared.playlist.associateBy { it.playlistMediaBean.stableUrl }
+            val desired = source.mapNotNull { item ->
+                // Retain the native path (e.g. an iOS provider URL) and its existing access lease.
+                existing[item.playlistMediaBean.stableUrl]?.copy(article = item.article)
+                    ?: added[item.playlistMediaBean.stableUrl]
+            }
+            val paths = desired.map { it.playlistMediaBean.url }
+            if (player.path in original && player.path !in paths) {
+                sleepTimerController.mediaChanging()
+                progress.save()
+            }
+            cachedPlaylistMap.putAll(desired.map { it.playlistMediaBean.url to it })
+            player.mpv.configurePlaylistHeaders(desired)
+            player.synchronizePlaylist(paths)
+            cachedPlaylistMap.keys.retainAll(paths.toSet())
+            externalPlayback?.retainPaths(paths.toSet())
+            if (sleepTimerController.paused) player.paused = true
+            emitPlaylist()
+            emitEvent(PlayerEvent.PlaylistPosition(player.playlistPos))
+            request.result.complete(Unit)
+        } catch (error: Throwable) {
+            // The source is already committed. Report failure and retain access to any entries
+            // actually present after a partial native update; later source changes can retry.
+            val actual = player.loadPlaylist().toSet()
+            cachedPlaylistMap.keys.retainAll(actual)
+            externalPlayback?.retainPaths(actual)
+            emitPlaylist()
+            emitEvent(PlayerEvent.PlaylistPosition(player.playlistPos))
+            if (error !is CancellationException) {
+                emitEvent(PlayerEvent.PlaybackFailed(PlaybackFailure(details = error.message)))
+            }
+            request.result.completeExceptionally(error)
+            if (error is CancellationException) throw error
+        }
+    }
+
+    private suspend fun updateQueueOrder(request: ActorMessage.UpdateQueueOrder) {
+        if (request.result.isCancelled) return
+        if (request.playlistId != playlistId) {
+            request.result.complete(false)
+            return
+        }
+        val original = player.loadPlaylist()
+        try {
+            check(!player.shuffle) { "Turn off shuffle before reordering" }
+            val stableToPath = original.associateBy { it.toStableMediaUrl() }
+            val applyOrder: (List<String>) -> Unit = { order ->
+                val paths = order.mapNotNull(stableToPath::get)
+                player.reorderPlaylist(mergePlaylistOrder(original, paths))
+            }
+            request.expectedOrder?.let { expected ->
+                check(expected.size == original.size && expected.toSet() == stableToPath.keys) {
+                    "The queue changed during the drag"
+                }
+            }
+            request.update(applyOrder)
+            emitPlaylist()
+            emitEvent(PlayerEvent.PlaylistPosition(player.playlistPos))
+            request.result.complete(true)
+        } catch (error: Throwable) {
+            // The caller owns the operation; undo native moves if it cannot complete.
+            runCatching { player.reorderPlaylist(original) }.onFailure { error.addSuppressed(it) }
+            emitPlaylist()
+            emitEvent(PlayerEvent.PlaylistPosition(player.playlistPos))
+            request.result.completeExceptionally(error)
+            if (error is CancellationException) throw error
+        }
     }
 
     private suspend fun loadList(load: PendingLoad) {
@@ -551,6 +711,9 @@ class PlayerCoordinator : LifecycleOwner {
             externalPlayback?.release()
             externalPlayback = command.externalBatch?.let(::ExternalPlaybackSession)
             adopted = true
+            // Even a same-source load may contain a snapshot prepared before a committed edit.
+            // Let the playlist owner reconcile it after this load and resource adoption finish.
+            _playlistLoads.tryEmit(Unit)
         } finally {
             if (!adopted) command.externalBatch?.release()
         }
@@ -581,7 +744,14 @@ class PlayerCoordinator : LifecycleOwner {
                 ?.let { position -> command.startPath?.let { PendingStartPosition(it, position) } }
         }
         progress.save()
-        playlistId = command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
+        val newPlaylistId = command.playlist.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
+        // Saved sources identify their own queue. Temporary sources need an identity that changes
+        // only on replacement, not on reordering, removing an item or advancing playback.
+        if (newPlaylistId.isNotEmpty()) queueId = newPlaylistId
+        else if (playlistId.isNotEmpty() || files.toSet() != cachedPlaylistMap.keys) {
+            queueId = Uuid.random().toString()
+        }
+        playlistId = newPlaylistId
         cachedPlaylistMap.clear()
         cachedPlaylistMap.putAll(command.playlist.map { it.playlistMediaBean.url to it })
         // External multi-file opens must advance normally, even on desktop's keep-open=always.
@@ -589,6 +759,12 @@ class PlayerCoordinator : LifecycleOwner {
         if (isNewRequest) emitEvent(PlayerEvent.ClearPlaybackEnd)
         player.mpv.configurePlaylistHeaders(command.playlist)
         player.loadList(files = files, startFile = command.startPath)
+        // Switching between saved sources with identical native contents produces no playlist
+        // event. Publish that source change too, once the requested contents are actually loaded.
+        if (player.loadPlaylist() == files) {
+            emitPlaylist()
+            emitEvent(PlayerEvent.PlaylistPosition(player.playlistPos))
+        }
         if (sleepTimerController.paused) player.paused = true
         startPositionSeconds?.takeIf { seekCurrentMedia }?.let { seekAndPlay(it) }
         if (isNewRequest) setPaused(false)
@@ -895,7 +1071,7 @@ class PlayerCoordinator : LifecycleOwner {
                     orderPosition = index.toDouble(),
                 )
         }
-        emitEvent(PlayerEvent.Playlist(playlistId, playlistMap))
+        emitEvent(PlayerEvent.Playlist(playlistId, playlistMap, queueId))
     }
 
     private fun postTelemetry(update: Telemetry.() -> Telemetry) {
@@ -1016,9 +1192,25 @@ class PlayerCoordinator : LifecycleOwner {
         cachedPlaylistMap[this]?.playlistMediaBean?.historyUrl ?: toStableMediaUrl()
 
     private sealed interface ActorMessage {
-        data class Command(
-            val command: PlayerCommand, val playbackIntent: Boolean?, val submittedTimerPauseGeneration: Long?,
+        data class SynchronizePlaylist(
+            val playlistId: String,
+            val readPlaylist: suspend () -> List<PlaylistMediaWithArticleBean>,
+            val result: CompletableDeferred<Unit>,
         ) : ActorMessage
+
+        data class UpdateQueueOrder(
+            val playlistId: String,
+            val expectedOrder: List<String>?,
+            val update: suspend (applyOrder: (List<String>) -> Unit) -> Unit,
+            val result: CompletableDeferred<Boolean>,
+        ) : ActorMessage
+
+        data class Command(
+            val command: PlayerCommand,
+            val playbackIntent: Boolean?,
+            val submittedTimerPauseGeneration: Long?,
+        ) : ActorMessage
+
         data class SystemPause(val paused: Boolean) : ActorMessage
         data class EndFile(
             val reason: Int,

@@ -18,6 +18,7 @@ data class PlayState(
     }
 
     val playlistId = state.playlistId
+    val queueId = state.queueId
     val playlist = state.playlist
     val currentMedia = state.currentMedia
     val path = state.path
@@ -70,4 +71,5 @@ data class PlayStateCallback(
     val onShuffle: (Boolean) -> Unit,
     val onPlayFileInPlaylist: (String) -> Unit,
     val onRemoveFromPlaylist: (List<PlaylistMediaWithArticleBean>) -> Unit,
+    val onReorderPlaylist: suspend (playlistId: String, fromUrl: String, toUrl: String, order: List<String>) -> Unit = { _, _, _, _ -> },
 )

@@ -44,6 +44,7 @@ expect class MPV {
     fun addEventListener(listener: EventListener)
     fun removeEventListener(listener: EventListener)
     fun command(vararg command: String)
+    val hasPendingCommands: Boolean
     fun option(key: String, value: String)
     fun getPropertyInt(name: String): Int
     fun getPropertyBoolean(name: String): Boolean

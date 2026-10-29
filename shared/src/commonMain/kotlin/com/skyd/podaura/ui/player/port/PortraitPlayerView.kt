@@ -64,6 +64,8 @@ import com.skyd.podaura.ui.player.pip.supportPip
 import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.PrimaryControlMode
 import com.skyd.podaura.ui.player.port.controller.SmallController
+import com.skyd.podaura.ui.player.queue.LocalPlayerQueueState
+import com.skyd.podaura.ui.player.queue.PlayerQueueState
 import com.skyd.podaura.ui.player.queue.PlayerQueue
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute
@@ -102,6 +104,7 @@ internal fun PortraitPlayerView(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var showMenu by rememberSaveable { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
+    val queueState = LocalPlayerQueueState.current ?: remember(playState.queueId) { PlayerQueueState() }
     val interactive = presentationState is PlayerPresentationState.Ready
 
     Scaffold(
@@ -220,6 +223,7 @@ internal fun PortraitPlayerView(
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
                     ) {
                         PlayerQueue(
+                            queueState = queueState,
                             playState = playState,
                             playStateCallback = playStateCallback,
                             modifier = Modifier.fillMaxSize(),
@@ -232,7 +236,7 @@ internal fun PortraitPlayerView(
             AnimatedDismissModalBottomSheet(
                 onDismissRequest = { showPlaylistSheet = false },
             ) {
-                PlayerQueue(playState = playState, playStateCallback = playStateCallback)
+                PlayerQueue(playState = playState, playStateCallback = playStateCallback, queueState = queueState)
             }
         }
     }
@@ -251,6 +255,7 @@ private fun ControllerArea(
     presentationState: PlayerPresentationState,
     onRetry: () -> Unit,
 ) {
+    val queueState = LocalPlayerQueueState.current ?: remember(playState.queueId) { PlayerQueueState() }
     val interactive = presentationState is PlayerPresentationState.Ready
     Column(modifier = Modifier.padding(contentPadding)) {
         PlayerProgressBar(

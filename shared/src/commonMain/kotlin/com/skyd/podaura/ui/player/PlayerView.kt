@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,8 +24,10 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.skyd.fundation.di.get
 import com.skyd.fundation.util.Platform
 import com.skyd.fundation.util.platform
+import com.skyd.podaura.model.playlist.PlaylistController
 import com.skyd.podaura.ui.component.rememberOrientationController
 import com.skyd.podaura.ui.component.tickVibrate
 import com.skyd.podaura.ui.player.component.SleepTimerDialog
@@ -51,12 +54,16 @@ import com.skyd.podaura.ui.player.coordinator.isReady
 import com.skyd.podaura.ui.player.land.FullscreenPlayerView
 import com.skyd.podaura.ui.player.land.controller.preview.LongPressSpeedPreview
 import com.skyd.podaura.ui.player.port.PlayerPresentationState
+import com.skyd.podaura.ui.player.queue.LocalPlayerQueueState
+import com.skyd.podaura.ui.player.queue.PlayerQueueState
 import com.skyd.podaura.ui.player.port.PortraitPlayerView
 import com.skyd.podaura.ui.player.service.PlayerState
 import com.skyd.podaura.ui.screen.settings.playerconfig.ForwardSecondsDialog
 import com.skyd.podaura.ui.screen.settings.playerconfig.ReplaySecondsDialog
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -210,7 +217,9 @@ fun PlayerView(
         )
     }
 
-    val playStateCallback = remember(coordinator, pressAndHoldSpeedController) {
+    val playlistOrder = remember { get<PlaylistController>() }
+    val playlistScope = rememberCoroutineScope()
+    val playStateCallback = remember(coordinator, pressAndHoldSpeedController, playlistOrder, playbackFailedMessage) {
         PlayStateCallback(
             onPlayStateChanged = {
                 val state = coordinator.playerState.value
@@ -233,7 +242,22 @@ fun PlayerView(
             onCycleLoop = { coordinator.onCommand(PlayerCommand.CycleLoop) },
             onShuffle = { coordinator.onCommand(PlayerCommand.Shuffle(it)) },
             onPlayFileInPlaylist = { coordinator.onCommand(PlayerCommand.PlayFileInPlaylist(it)) },
-            onRemoveFromPlaylist = { coordinator.onCommand(PlayerCommand.RemoveMediaFromPlaylist(it)) }
+            onRemoveFromPlaylist = { items ->
+                val source = items.firstOrNull()?.playlistMediaBean?.playlistId.orEmpty()
+                if (source.isEmpty()) coordinator.onCommand(PlayerCommand.RemoveMediaFromPlaylist(items))
+                else playlistScope.launch {
+                    try {
+                        playlistOrder.remove(source, items.map { it.playlistMediaBean.stableUrl })
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        snackbarHostState.showSnackbar(error.message ?: playbackFailedMessage)
+                    }
+                }
+            },
+            onReorderPlaylist = { playlistId, from, to, order ->
+                playlistOrder.reorder(playlistId, from, to, order, fromQueue = true, playback = coordinator)
+            },
         )
     }
 
@@ -332,7 +356,9 @@ fun PlayerView(
         }
     }
 
+    val queueState = remember(coordinator, playState.queueId) { PlayerQueueState() }
     CompositionLocalProvider(
+        LocalPlayerQueueState provides queueState,
         LocalPressAndHoldSpeedController provides pressAndHoldSpeedController,
     ) {
         PlatformContent(

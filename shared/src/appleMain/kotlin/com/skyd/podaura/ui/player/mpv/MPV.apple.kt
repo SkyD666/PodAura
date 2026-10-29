@@ -128,6 +128,8 @@ actual class MPV {
         locked { listeners -= listener }
     }
 
+    actual val hasPendingCommands: Boolean get() = false
+
     actual fun command(vararg command: String) = locked {
         if (closed) return@locked
         memScoped {

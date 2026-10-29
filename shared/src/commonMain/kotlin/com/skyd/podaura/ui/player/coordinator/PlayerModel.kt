@@ -93,6 +93,7 @@ class PlayerModel : PlayerCoordinator.Observer {
         PlayerEvent.ClearPlaybackEnd -> old.clearPlaybackEnd()
         is PlayerEvent.Playlist -> old.copy(
             playlistId = playlistId,
+            queueId = queueId,
             playlist = newPlaylist.values.toList(),
         )
 

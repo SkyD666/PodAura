@@ -8,6 +8,4 @@ sealed interface PlaylistMediaListIntent : MviIntent {
     data class Delete(val playlistId: String, val deletes: List<MediaUrlWithArticleIdBean>) :
         PlaylistMediaListIntent
 
-    data class Reorder(val playlistId: String, val fromIndex: Int, val toIndex: Int) :
-        PlaylistMediaListIntent
 }

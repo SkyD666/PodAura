@@ -14,10 +14,30 @@ import com.skyd.podaura.model.bean.playlist.PLAYLIST_TABLE_NAME
 import com.skyd.podaura.model.bean.playlist.PLAYLIST_VIEW_NAME
 import com.skyd.podaura.model.bean.playlist.PlaylistBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 @DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface PlaylistDao {
+    @Query("SELECT * FROM Playlist WHERE playlistId = :playlistId")
+    suspend fun getPlaylist(playlistId: String): PlaylistBean?
+
+    @Query("SELECT * FROM Playlist WHERE playlistId = :playlistId")
+    fun observePlaylist(playlistId: String): Flow<PlaylistBean?>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM Playlist WHERE mediaSortBy IS NULL)")
+    suspend fun hasLegacyMediaSort(): Boolean
+
+    @Query("UPDATE Playlist SET mediaSortBy = :sortBy, mediaSortAsc = :ascending WHERE mediaSortBy IS NULL")
+    suspend fun initializeMediaSort(sortBy: String, ascending: Boolean)
+
+    @Query("UPDATE Playlist SET mediaSortBy = :sortBy, mediaSortAsc = :ascending WHERE playlistId = :playlistId")
+    suspend fun setMediaSort(playlistId: String, sortBy: String, ascending: Boolean): Int
+
+    @Transaction
+    @Query("SELECT * FROM PlaylistView WHERE playlistId = :playlistId")
+    fun observePlaylistView(playlistId: String): Flow<PlaylistViewBean>
+
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun createPlaylist(playlistBean: PlaylistBean)

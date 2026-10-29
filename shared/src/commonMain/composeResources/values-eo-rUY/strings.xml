@@ -668,4 +668,11 @@
         <item quantity="one">%1$d silentigita abonfluo</item>
         <item quantity="other">%1$d silentigitaj abonfluoj</item>
     </plurals>
+    <string name="player_queue_follow">Sekvi la nunan ludadon</string>
+    <string name="player_queue_unfollow">Ĉesi sekvi la ludadon</string>
+    <string name="playlist_reorder">Reordigi</string>
+    <string name="playlist_reorder_failed">Ne eblis ĝisdatigi la ordon de la ludlisto. Bonvolu reprovi.</string>
+    <string name="playlist_reorder_shuffle">Malŝaltu miksadon por reordigi la ludvicon.</string>
+    <string name="playlist_move_up">Movi supren</string>
+    <string name="playlist_move_down">Movi malsupren</string>
 </resources>

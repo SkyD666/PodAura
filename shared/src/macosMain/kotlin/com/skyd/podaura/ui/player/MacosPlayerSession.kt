@@ -90,6 +90,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
     private fun openAccepted(request: PlayerOpenRequest) {
         if (request == PlayerOpenRequest.Resume && coordinator == null) return
         val player = coordinator ?: PlayerCoordinator().also { created ->
+            created.followPlaylistChanges()
             coordinator = created
             pictureInPicture = MacosPictureInPicture(created, this)
             mediaSession = runCatching {

@@ -88,7 +88,8 @@ sealed interface PlayerEvent {
     data class MediaTitle(val value: String) : PlayerEvent
     data class Playlist(
         val playlistId: String,
-        val newPlaylist: LinkedHashMap<String, PlaylistMediaWithArticleBean>
+        val newPlaylist: LinkedHashMap<String, PlaylistMediaWithArticleBean>,
+        val queueId: String = playlistId,
     ) : PlayerEvent
 
     data class Paused(val value: Boolean) : PlayerEvent

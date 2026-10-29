@@ -604,6 +604,38 @@ class MPVPlayer {
         }
     }
 
+    /** Apply a source snapshot without reloading surviving entries or seeking the current media. */
+    fun synchronizePlaylist(files: List<String>) {
+        val wanted = files.toSet()
+        require(files.size == wanted.size && files.none { it.isBlank() })
+        val current = loadPlaylist()
+        if (current == files || (shuffle && current.toSet() == wanted)) return
+        val wasPaused = paused
+        val existing = current.toSet()
+        files.filterNot { it in existing }.forEach { mpv.command("loadfile", it, "append") }
+        removeFromList(current.filterNot { it in wanted })
+        // Keep the random order of surviving entries. Newly added entries join its tail.
+        if (!shuffle) reorderPlaylist(files)
+        check(loadPlaylist().toSet() == wanted) { "The player could not synchronize the queue" }
+        paused = wasPaused || files.isEmpty()
+    }
+
+    /** Native moves retain the current entry, decoder, playback position and pause state. */
+    fun reorderPlaylist(order: List<String>) {
+        val current = loadPlaylist().toMutableList()
+        require(order.size == current.size && order.toSet() == current.toSet())
+        // ponytail: linear searches suit ordinary queues; index bookkeeping can replace them
+        // if reordering very large queues becomes measurable.
+        order.forEachIndexed { target, path ->
+            val source = current.indexOf(path)
+            if (source != target) {
+                mpv.command("playlist-move", source.toString(), target.toString())
+                current.add(target, current.removeAt(source))
+            }
+        }
+        check(loadPlaylist() == order) { "The player could not reorder the queue" }
+    }
+
     fun playlistPrev(play: Boolean) {
         if (isIdling && playlistCount > 1) {
             mpv.command("playlist-play-index", (playlistCount - 2).toString())

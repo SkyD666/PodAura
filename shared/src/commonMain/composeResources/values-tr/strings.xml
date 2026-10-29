@@ -668,4 +668,11 @@
         <item quantity="one">%1$d akış sessize alındı</item>
         <item quantity="other">%1$d akış sessize alındı</item>
     </plurals>
+    <string name="player_queue_follow">Çalınan öğeyi takip et</string>
+    <string name="player_queue_unfollow">Çalmayı takip etmeyi bırak</string>
+    <string name="playlist_reorder">Yeniden sırala</string>
+    <string name="playlist_reorder_failed">Çalma listesi sırası güncellenemedi. Lütfen tekrar deneyin.</string>
+    <string name="playlist_reorder_shuffle">Kuyruğu yeniden sıralamak için karıştırmayı kapatın.</string>
+    <string name="playlist_move_up">Yukarı taşı</string>
+    <string name="playlist_move_down">Aşağı taşı</string>
 </resources>

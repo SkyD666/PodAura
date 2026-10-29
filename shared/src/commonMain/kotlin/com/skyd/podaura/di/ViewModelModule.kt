@@ -57,7 +57,7 @@ val viewModelModule = module {
     viewModel { MediaSearchViewModel(get()) }
     viewModel { PlaylistViewModel(get()) }
     viewModel { AddToPlaylistViewModel(get(), get()) }
-    viewModel { PlaylistMediaListViewModel(get(), get(), get()) }
+    viewModel { PlaylistMediaListViewModel(get(), get(), get(), get()) }
     viewModel { ListViewModel() }
     viewModel { ReadViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }

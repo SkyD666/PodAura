@@ -44,9 +44,9 @@ class PlaylistRepository(
         ).mapNotNull { it.getThumbnail() }
     }
 
-    override fun requestPlaylist(playlistId: String): Flow<PlaylistViewBean> = flow {
-        emit(playlistDao.getPlaylistView(playlistId).updateThumbnails())
-    }.flowOn(Dispatchers.IO)
+    override fun requestPlaylist(playlistId: String): Flow<PlaylistViewBean> =
+        playlistDao.observePlaylistView(playlistId).map { it.updateThumbnails() }
+            .flowOn(Dispatchers.IO)
 
     override fun requestPlaylistList(): Flow<PagingData<PlaylistViewBean>> {
         return dataStore.flowOf(

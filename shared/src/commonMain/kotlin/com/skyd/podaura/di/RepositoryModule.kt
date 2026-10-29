@@ -1,5 +1,6 @@
 package com.skyd.podaura.di
 
+import com.skyd.podaura.model.playlist.PlaylistController
 import com.skyd.podaura.model.repository.DataRepository
 import com.skyd.podaura.model.repository.FilePickerRepository
 import com.skyd.podaura.model.repository.HistoryRepository
@@ -116,6 +117,8 @@ val repositoryModule = module {
     factory {
         PlaylistMediaRepository(get(), get(), get(), get())
     } binds arrayOf(IPlaylistMediaRepository::class)
+
+    factory { PlaylistController(get()) }
 
     factory {
         PlaylistRepository(get(), get(), get())

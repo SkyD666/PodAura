@@ -146,7 +146,7 @@ interface PlaylistMediaDao {
         RoomRawQuery(
             sql = "SELECT * FROM $PLAYLIST_MEDIA_TABLE_NAME " +
                     "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = ? " +
-                    "ORDER BY $orderByColumnName ${if (asc) "ASC" else "DESC"}",
+                    "ORDER BY $orderByColumnName ${if (asc) "ASC" else "DESC"}, orderPosition ASC, url ASC",
             onBindStatement = { it.bindText(1, playlistId) },
         )
     )
@@ -155,9 +155,21 @@ interface PlaylistMediaDao {
     @Query(
         "SELECT * FROM $PLAYLIST_MEDIA_TABLE_NAME " +
                 "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId " +
-                "ORDER BY ${PlaylistMediaBean.ORDER_POSITION_COLUMN}"
+                "ORDER BY ${PlaylistMediaBean.ORDER_POSITION_COLUMN}, ${PlaylistMediaBean.URL_COLUMN}"
     )
     suspend fun getPlaylistMediaList(playlistId: String): List<PlaylistMediaWithArticleBean>
+
+    // One query observes both membership and this playlist's sorting rule, including deletion
+    // of the playlist itself. A transaction keeps relation loading in the same snapshot.
+    @Transaction
+    @Query(
+        "SELECT m.* FROM PlaylistMedia m JOIN Playlist p ON p.playlistId = m.playlistId " +
+                "WHERE m.playlistId = :playlistId ORDER BY " +
+                "CASE WHEN p.mediaSortBy = 'CreateTime' AND p.mediaSortAsc = 1 THEN m.createTime END ASC, " +
+                "CASE WHEN p.mediaSortBy = 'CreateTime' AND p.mediaSortAsc = 0 THEN m.createTime END DESC, " +
+                "m.orderPosition ASC, m.url ASC"
+    )
+    fun observePlaylistMediaList(playlistId: String): Flow<List<PlaylistMediaWithArticleBean>>
 
     @Transaction
     @Query(
@@ -177,7 +189,7 @@ interface PlaylistMediaDao {
         "SELECT ${PlaylistMediaBean.URL_COLUMN} " +
                 "FROM $PLAYLIST_MEDIA_TABLE_NAME " +
                 "WHERE ${PlaylistMediaBean.PLAYLIST_ID_COLUMN} = :playlistId " +
-                "ORDER BY ${PlaylistMediaBean.ORDER_POSITION_COLUMN}"
+                "ORDER BY ${PlaylistMediaBean.ORDER_POSITION_COLUMN}, ${PlaylistMediaBean.URL_COLUMN}"
     )
     suspend fun getPlaylistMediaIdList(playlistId: String): List<String>
 

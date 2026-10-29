@@ -3,18 +3,15 @@ package com.skyd.podaura.ui.player.coordinator
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.preferencesOf
-import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
 import com.skyd.podaura.model.preference.player.MpvCacheDirPreference
 import com.skyd.podaura.model.preference.player.MpvConfigDirPreference
 import com.skyd.podaura.model.repository.player.IPlayerRepository
-import com.skyd.podaura.model.repository.playlist.IAddToPlaylistRepository
 import com.skyd.podaura.ui.player.PlayerCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -27,13 +24,12 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import java.nio.file.Files
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class PlayerQueueDeletionTest {
     @Test
-    fun bulkDeletionRemovesExactlyTheSelectedEntriesFromEngineAndSourcePlaylist() = runTest {
+    fun bulkDeletionRemovesExactlyTheSelectedEntriesFromTemporaryQueue() = runTest {
         assumeTrue("Requires the bundled MPV runtime", System.getenv("PODAURA_RUN_MPV_INTEGRATION") == "1")
         val directory = Files.createTempDirectory("podaura-queue-deletion").toFile()
         val preferences = object : DataStore<Preferences> {
@@ -44,22 +40,12 @@ class PlayerQueueDeletionTest {
             override suspend fun updateData(transform: suspend (Preferences) -> Preferences): Preferences =
                 transform(data.value).also { data.value = it }
         }
-        val removedFromSource = CopyOnWriteArrayList<Pair<String, List<String>>>()
         startKoin { modules(module {
             single<DataStore<Preferences>> { preferences }
             single<IPlayerRepository> { object : IPlayerRepository {
                 override fun requestLastPlayPosition(path: String, fallbackPath: String?) = flowOf(0L)
                 override fun insertPlayHistory(path: String, duration: Long, articleId: String?) = flowOf(Unit)
                 override fun updateLastPlayPosition(path: String, lastPlayPosition: Long, duration: Long, articleId: String?) = flowOf(Unit)
-            } }
-            single<IAddToPlaylistRepository> { object : IAddToPlaylistRepository {
-                override fun getCommonPlaylists(medias: List<MediaUrlWithArticleIdBean>) = flowOf(emptyList<String>())
-                override fun insertPlaylistMedia(playlistId: String, url: String, articleId: String?) = flowOf(true)
-                override fun insertPlaylistMedias(toPlaylistId: String, medias: List<MediaUrlWithArticleIdBean>) = flowOf(Unit)
-                override fun removeMediaFromPlaylist(playlistId: String, mediaList: List<MediaUrlWithArticleIdBean>) = flow {
-                    removedFromSource += playlistId to mediaList.map { it.url }
-                    emit(mediaList.size)
-                }
             } }
         }) }
         Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
@@ -72,7 +58,7 @@ class PlayerQueueDeletionTest {
             val bytes = checkNotNull(javaClass.getResourceAsStream("/player/queue-silence.m4a")).use { it.readBytes() }
             val items = (0..4).map { index ->
                 PlaylistMediaWithArticleBean(
-                    PlaylistMediaBean("saved-source", directory.resolve("$index.m4a").apply {
+                    PlaylistMediaBean("", directory.resolve("$index.m4a").apply {
                         writeBytes(bytes)
                     }.path, null, index.toDouble(), 0L), null,
                 )
@@ -83,14 +69,12 @@ class PlayerQueueDeletionTest {
             await { player.playerState.value.paused }
             val selected = listOf(items[0], items[2], items[3])
             player.onCommand(PlayerCommand.RemoveMediaFromPlaylist(selected))
-            await { player.playerState.value.playlist.size == 2 && removedFromSource.size == 1 }
+            await { player.playerState.value.playlist.size == 2 }
             val remaining = listOf(items[1], items[4])
             assertEquals(remaining.map { it.playlistMediaBean.url }, player.playerState.value.playlist.map { it.playlistMediaBean.url })
-            assertEquals("saved-source" to selected.map { it.playlistMediaBean.url }, removedFromSource.single())
             // The current entry was included; removing the last entries must also settle to empty.
             player.onCommand(PlayerCommand.RemoveMediaFromPlaylist(remaining))
-            await { player.playerState.value.playlist.isEmpty() && removedFromSource.size == 2 }
-            assertEquals("saved-source" to remaining.map { it.playlistMediaBean.url }, removedFromSource.last())
+            await { player.playerState.value.playlist.isEmpty() }
         } finally {
             coordinator?.onCommand(PlayerCommand.Destroy)
             coordinator?.awaitDestroyed()

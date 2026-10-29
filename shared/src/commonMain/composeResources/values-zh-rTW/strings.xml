@@ -660,4 +660,11 @@
     <plurals name="feed_group_muted_count">
         <item quantity="other">%1$d 個訂閱已設為靜音</item>
     </plurals>
+    <string name="player_queue_follow">跟隨目前播放</string>
+    <string name="player_queue_unfollow">停止跟隨播放</string>
+    <string name="playlist_reorder">拖曳排序</string>
+    <string name="playlist_reorder_failed">無法更新播放清單順序，請重試。</string>
+    <string name="playlist_reorder_shuffle">關閉隨機播放後可拖曳排序。</string>
+    <string name="playlist_move_up">上移</string>
+    <string name="playlist_move_down">下移</string>
 </resources>

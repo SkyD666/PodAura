@@ -23,6 +23,7 @@ import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.player.PlayerViewModel
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.followPlaylistChanges
 import com.skyd.podaura.ui.player.jumper.PLAY_DATA_MODE_KEY
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +47,7 @@ class PlayerService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        playerCoordinator.followPlaylistChanges()
         playbackSession = AndroidMediaSession(this, playerCoordinator)
         ContextCompat.registerReceiver(
             this,

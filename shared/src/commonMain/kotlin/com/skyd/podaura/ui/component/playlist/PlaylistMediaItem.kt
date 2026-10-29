@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.screen.playlist.medialist
+package com.skyd.podaura.ui.component.playlist
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,7 +43,6 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.TagText
 import com.skyd.compone.ext.thenIf
 import com.skyd.podaura.ext.isLocalFileExists
@@ -54,6 +54,7 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.history_screen_local_file
 import podaura.shared.generated.resources.media_not_exists
 import podaura.shared.generated.resources.playing
+import podaura.shared.generated.resources.playlist_reorder
 
 @Composable
 fun PlaylistMediaItem(
@@ -182,12 +183,15 @@ fun PlaylistMediaItem(
             )
         }
         if (draggable) {
-            ComponeIconButton(
+            IconButton(
                 onClick = {},
-                imageVector = Icons.Rounded.DragHandle,
                 modifier = dragIconModifier,
-                contentDescription = null,
-            )
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.DragHandle,
+                    contentDescription = stringResource(Res.string.playlist_reorder),
+                )
+            }
         }
     }
 }

@@ -660,4 +660,11 @@
     <plurals name="feed_group_muted_count">
         <item quantity="other">%1$d 件のフィードがミュートされています</item>
     </plurals>
+    <string name="player_queue_follow">再生中の項目を追跡</string>
+    <string name="player_queue_unfollow">再生中の項目の追跡を停止</string>
+    <string name="playlist_reorder">並べ替え</string>
+    <string name="playlist_reorder_failed">プレイリストの順序を更新できませんでした。もう一度お試しください。</string>
+    <string name="playlist_reorder_shuffle">並べ替えるにはシャッフルをオフにしてください。</string>
+    <string name="playlist_move_up">上に移動</string>
+    <string name="playlist_move_down">下に移動</string>
 </resources>

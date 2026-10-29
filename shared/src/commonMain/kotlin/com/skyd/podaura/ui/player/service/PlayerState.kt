@@ -9,6 +9,7 @@ import com.skyd.podaura.ui.player.Track
 
 data class PlayerState(
     val playlistId: String = "",
+    val queueId: String = playlistId,
     val playlist: List<PlaylistMediaWithArticleBean> = emptyList(),
     val mediaStarted: Boolean = false,
     val seekable: Boolean = false,

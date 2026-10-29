@@ -31,6 +31,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,12 +51,9 @@ import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.fundation.ext.toRelativeDateTimeString
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.rememberUpdateSemaphore
-import com.skyd.podaura.ext.vThenP
 import com.skyd.podaura.model.bean.playlist.MediaUrlWithArticleIdBean.Companion.toMediaUrlWithArticleIdBean
 import com.skyd.podaura.model.bean.playlist.PlaylistViewBean
 import com.skyd.podaura.model.preference.behavior.playlist.BasePlaylistSortByPreference
-import com.skyd.podaura.model.preference.behavior.playlist.PlaylistMediaSortAscPreference
 import com.skyd.podaura.model.preference.behavior.playlist.PlaylistMediaSortByPreference
 import com.skyd.podaura.ui.component.CircularProgressPlaceholder
 import com.skyd.podaura.ui.component.ErrorPlaceholder
@@ -64,7 +62,17 @@ import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import com.skyd.podaura.ui.player.jumper.rememberPlayerJumper
 import com.skyd.podaura.ui.screen.playlist.PlaylistThumbnail
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.MutableStateFlow
+import com.skyd.podaura.ui.player.service.PlayerState
+import androidx.compose.runtime.snapshotFlow
+import com.skyd.podaura.ui.player.LocalPlayerSession
+import org.jetbrains.compose.resources.getString
+import podaura.shared.generated.resources.playlist_reorder_failed
+import podaura.shared.generated.resources.playlist_reorder_shuffle
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -101,6 +109,20 @@ fun PlaylistMediaListScreen(
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
 
     var showSortDialog by rememberSaveable { mutableStateOf(false) }
+    val coordinator = LocalPlayerSession.current?.coordinator
+    val playerSource = remember(coordinator) { coordinator?.playerState ?: MutableStateFlow(PlayerState()) }
+    val activePlayer by playerSource.collectAsStateWithLifecycle()
+    val shuffleBlocked = activePlayer.playlistId == playlistId && activePlayer.shuffle
+    val settings = (uiState.listState as? ListState.Success)?.playlistViewBean?.playlist
+    val sortBy = settings?.mediaSortBy ?: BasePlaylistSortByPreference.MANUAL
+    val ascending = settings?.mediaSortAsc ?: true
+    val updateSort: (String, Boolean) -> Unit = { by, asc ->
+        scope.launch {
+            try { viewModel.setSort(playlistId, by, asc) }
+            catch (error: CancellationException) { throw error }
+            catch (_: Exception) { snackbarHostState.showSnackbar(getString(Res.string.playlist_reorder_failed)) }
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -133,61 +155,71 @@ fun PlaylistMediaListScreen(
             is ListState.Failed -> ErrorPlaceholder(listState.msg, innerPadding)
             ListState.Init -> CircularProgressPlaceholder(innerPadding)
             is ListState.Success -> Column(modifier = Modifier.padding(innerPadding)) {
+                if (shuffleBlocked) {
+                    Text(
+                        text = stringResource(Res.string.playlist_reorder_shuffle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                }
                 val lazyPagingItems =
                     listState.playlistMediaPagingDataFlow.collectAsLazyPagingItems()
-                val reorderSemaphore = remember { Channel<Unit>(Channel.UNLIMITED) }
-                val reorderPagingItemsSemaphore = lazyPagingItems.rememberUpdateSemaphore(
-                    default = null,
-                    sendData = { reorderSemaphore.tryReceive().getOrNull() }
-                )
                 val playerJumper = rememberPlayerJumper()
-                PlaylistMediaList(
-                    currentPlaylistId = playlistId,
-                    playlist = lazyPagingItems,
-                    draggable = PlaylistMediaSortByPreference.current == BasePlaylistSortByPreference.MANUAL,
-                    state = lazyGridState,
-                    header = {
-                        PlaylistInfo(
-                            playlistViewBean = listState.playlistViewBean,
-                            onPlay = {
-                                playerJumper.jump(
-                                    PlayDataMode.Playlist(
-                                        playlistId = listState.playlistViewBean.playlist.playlistId,
-                                        mediaUrl = null,
+                key(playlistId, sortBy, ascending) {
+                    PlaylistMediaList(
+                        currentPlaylistId = playlistId,
+                        playlist = lazyPagingItems,
+                        draggable = !shuffleBlocked,
+                        state = lazyGridState,
+                        header = {
+                            PlaylistInfo(
+                                playlistViewBean = listState.playlistViewBean,
+                                onPlay = {
+                                    playerJumper.jump(
+                                        PlayDataMode.Playlist(
+                                            playlistId = listState.playlistViewBean.playlist.playlistId,
+                                            mediaUrl = null,
+                                        )
                                     )
-                                )
-                            },
-                        )
-                    },
-                    onPlay = {
-                        playerJumper.jump(
-                            PlayDataMode.Playlist(
-                                playlistId = playlistId,
-                                mediaUrl = it.playlistMediaBean.url,
+                                },
                             )
-                        )
-                    },
-                    onDelete = { beans ->
-                        dispatch(
-                            PlaylistMediaListIntent.Delete(
-                                playlistId = playlistId,
-                                deletes = beans.map { it.toMediaUrlWithArticleIdBean() },
-                            )
-                        )
-                    },
-                    onMoved = onMoved@{ fromIndex, toIndex ->
-                        if (fromIndex == toIndex) return@onMoved
-                        reorderSemaphore.vThenP(reorderPagingItemsSemaphore) {
-                            dispatch(
-                                PlaylistMediaListIntent.Reorder(
+                        },
+                        onPlay = {
+                            playerJumper.jump(
+                                PlayDataMode.Playlist(
                                     playlistId = playlistId,
-                                    fromIndex = fromIndex,
-                                    toIndex = toIndex,
+                                    mediaUrl = it.playlistMediaBean.url,
                                 )
                             )
-                        }
-                    },
-                )
+                        },
+                        onDelete = { beans ->
+                            dispatch(
+                                PlaylistMediaListIntent.Delete(
+                                    playlistId = playlistId,
+                                    deletes = beans.map { it.toMediaUrlWithArticleIdBean() },
+                                )
+                            )
+                        },
+                        onMoved = { fromUrl, toUrl, displayedOrder ->
+                            val before = lazyPagingItems.itemSnapshotList.items.map { it.playlistMediaBean.url }
+                            try {
+                                viewModel.reorder(playlistId, fromUrl, toUrl, displayedOrder, coordinator)
+                                // Keep the drag preview until Paging has delivered the committed order.
+                                withTimeoutOrNull(2_000) {
+                                    snapshotFlow { lazyPagingItems.itemSnapshotList.items.map { it.playlistMediaBean.url } }
+                                        .first { it != before && it.isNotEmpty() }
+                                }
+                            } catch (error: CancellationException) {
+                                throw error
+                            } catch (_: Exception) {
+                                // Let finish restore the preview immediately; the message may remain
+                                // visible much longer when accessibility timeouts are enabled.
+                                scope.launch { snackbarHostState.showSnackbar(getString(Res.string.playlist_reorder_failed)) }
+                            }
+                        },
+                    )
+                }
             }
         }
 
@@ -195,11 +227,11 @@ fun PlaylistMediaListScreen(
             visible = showSortDialog,
             onDismissRequest = { showSortDialog = false },
             sortByValues = PlaylistMediaSortByPreference.values,
-            sortBy = PlaylistMediaSortByPreference.current,
-            sortAsc = PlaylistMediaSortAscPreference.current,
-            enableSortAsc = PlaylistMediaSortByPreference.current != BasePlaylistSortByPreference.MANUAL,
-            onSortBy = { PlaylistMediaSortByPreference.put(scope, it) },
-            onSortAsc = { PlaylistMediaSortAscPreference.put(scope, it) },
+            sortBy = sortBy,
+            sortAsc = ascending,
+            enableSortAsc = sortBy != BasePlaylistSortByPreference.MANUAL,
+            onSortBy = { updateSort(it, ascending) },
+            onSortAsc = { updateSort(sortBy, it) },
             onSortByDisplayName = { BasePlaylistSortByPreference.toDisplayName(it) },
             onSortByIcon = { BasePlaylistSortByPreference.toIcon(it) },
         )

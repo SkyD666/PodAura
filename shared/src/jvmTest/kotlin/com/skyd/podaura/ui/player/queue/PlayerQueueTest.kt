@@ -1,16 +1,11 @@
 package com.skyd.podaura.ui.player.queue
 
-import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -18,11 +13,20 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.swipe
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.lifecycle.ViewModelStore
@@ -32,12 +36,9 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaBean
 import com.skyd.podaura.model.bean.playlist.PlaylistMediaWithArticleBean
-import com.skyd.podaura.ui.player.PlayerEvent
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
-import com.skyd.podaura.ui.player.coordinator.PlayerModel
 import com.skyd.podaura.ui.player.service.PlayerState
-import com.skyd.podaura.ui.player.withoutHotPlayerValues
 import com.skyd.podaura.ui.screen.playlist.medialist.list.ListViewModel
 import com.skyd.podaura.ui.screen.playlist.medialist.list.PlaylistMediaList
 import kotlin.test.AfterTest
@@ -45,11 +46,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -71,185 +68,169 @@ class PlayerQueueTest {
     }
 
     @Test
-    fun modelEventsFollowCurrentItemAndReordersWithoutFollowingProgress() =
-        runDesktopComposeUiTest(width = 420, height = 480) {
-            val model = PlayerModel()
-            val items = queueItems(40)
-            fun publish(items: List<PlaylistMediaWithArticleBean>) = model.onEvent(
-                PlayerEvent.Playlist("queue", items.associateByTo(linkedMapOf()) { it.playlistMediaBean.url }),
-            )
-            publish(items)
-            model.onEvent(PlayerEvent.StartFile(items[20].playlistMediaBean.url))
-            lateinit var listState: LazyListState
-            setContent {
-                // The same state projection used by the real player must retain reorder events.
-                val source = androidx.compose.runtime.remember(model) { model.playerState.withoutHotPlayerValues() }
-                val state by source.collectAsState(model.playerState.value)
-                listState = rememberLazyListState()
-                MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks, state = listState) }
-            }
-            onNodeWithText(items[20].title).assertIsDisplayed()
-            onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            runOnIdle { model.onEvent(PlayerEvent.Position(10)) }
-            runOnIdle { assertEquals(0, listState.firstVisibleItemIndex) }
-            runOnIdle { model.onEvent(PlayerEvent.StartFile(items[21].playlistMediaBean.url)) }
-            onNodeWithText(items[21].title).assertIsDisplayed()
-            runOnIdle { assertEquals(21, listState.firstVisibleItemIndex) }
-
-            // Browse away, then reorder without changing the current path or any metadata.
-            onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            runOnIdle { publish(items.reversed()) }
-            onNodeWithText(items[21].title).assertIsDisplayed()
-            runOnIdle { assertEquals(18, listState.firstVisibleItemIndex) }
-            onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            val first = onNodeWithText(items[39].title).fetchSemanticsNode().boundsInRoot
-            val second = onNodeWithText(items[38].title).fetchSemanticsNode().boundsInRoot
-            assertTrue(first.top < second.top, "The actual displayed queue must use the new order")
-            assertEquals(first.left, second.left, "The queue stays in one column")
-
-            // Removing the current entry before the engine reports its successor must be safe.
-            runOnIdle { publish(items.filterNot { it == items[21] }) }
-            runOnIdle { model.onEvent(PlayerEvent.StartFile(items[22].playlistMediaBean.url)) }
-            onNodeWithText(items[22].title).assertIsDisplayed()
-            runOnIdle { assertEquals(21, listState.firstVisibleItemIndex) }
-            runOnIdle { model.onEvent(PlayerEvent.StartFile("https://example.invalid/missing")) }
-            runOnIdle { publish(emptyList()) }
-            onNodeWithText("The queue is empty").assertIsDisplayed()
-            runOnIdle {
-                publish(listOf(items[0]))
-                model.onEvent(PlayerEvent.StartFile(items[0].playlistMediaBean.url))
-            }
-            onNodeWithText(items[0].title).assertIsDisplayed()
-            runOnIdle { assertEquals(0, listState.firstVisibleItemIndex) }
-        }
-
-    @Test
-    fun unrelatedRecompositionDoesNotPullBrowsingBackToCurrentItem() =
-        runDesktopComposeUiTest(width = 420, height = 480) {
-            var state by mutableStateOf(queueState(queueItems(40), currentIndex = 20))
-            lateinit var listState: LazyListState
-            setContent {
-                listState = rememberLazyListState()
-                MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks, state = listState) }
-            }
-            onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            // Deliberately pass raw progress and metadata updates, even though the real player filters ticks.
-            runOnIdle { state = state.copy(position = 15, buffer = 50, mediaTitle = "Updated metadata") }
-            runOnIdle { assertEquals(0, listState.firstVisibleItemIndex) }
-            runOnIdle { state = state.copy(path = state.playlist[22].playlistMediaBean.url) }
-            runOnIdle { assertEquals(22, listState.firstVisibleItemIndex) }
-        }
-
-    @Test
-    fun currentItemChangeDuringUserInputIsNotLostAndDoesNotKeepPullingBack() =
+    fun followingIsExplicitAndManualScrollingUnlocksIt() =
         runDesktopComposeUiTest(width = 420, height = 480) {
             val items = queueItems(40)
             var state by mutableStateOf(queueState(items, currentIndex = 20))
-            lateinit var listState: LazyListState
-            lateinit var scope: CoroutineScope
+            val browsing = PlayerQueueState()
             setContent {
-                listState = rememberLazyListState()
-                scope = rememberCoroutineScope()
-                MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks, state = listState) }
+                MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks, queueState = browsing) }
             }
             onNodeWithText(items[20].title).assertIsDisplayed()
             onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            val releaseDrag = CompletableDeferred<Unit>()
-            val drag = runOnIdle {
-                scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                    // Hold the same priority used by touch dragging while the current media changes.
-                    listState.scroll(MutatePriority.UserInput) {
-                        scrollBy(1f)
-                        releaseDrag.await()
-                    }
-                }
-            }
-            try {
-                runOnIdle {
-                    assertTrue(listState.isScrollInProgress)
-                    assertTrue(drag.isActive)
-                    state = state.copy(path = items[21].playlistMediaBean.url)
-                }
-                // Allow the key-triggered effect to run while UserInput still owns the mutex.
-                waitForIdle()
-                runOnIdle { releaseDrag.complete(Unit) }
-                runOnIdle { assertEquals(21, listState.firstVisibleItemIndex) }
-                onNodeWithText(items[21].title).assertIsDisplayed()
-
-                // Following the new item is a one-shot request, not a persistent scroll constraint.
-                onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-                runOnIdle { state = state.copy(position = 25, buffer = 50) }
-                runOnIdle { assertEquals(0, listState.firstVisibleItemIndex) }
-            } finally {
-                runOnIdle { drag.cancel() }
-            }
+            runOnIdle { state = state.copy(path = items[21].playlistMediaBean.url, position = 20) }
+            runOnIdle { assertEquals(0, browsing.listState.firstVisibleItemIndex) }
+            onNodeWithContentDescription("Follow current playback").performClick()
+            onNodeWithText(items[21].title).assertIsDisplayed()
+            runOnIdle { state = state.copy(path = items[22].playlistMediaBean.url) }
+            onNodeWithText(items[22].title).assertIsDisplayed()
+            onNode(hasScrollToIndexAction()).performTouchInput { swipeDown() }
+            runOnIdle { assertTrue(!browsing.following) }
+            val browsed = runOnIdle { browsing.listState.firstVisibleItemIndex }
+            runOnIdle { state = state.copy(path = items[35].playlistMediaBean.url) }
+            runOnIdle { assertEquals(browsed, browsing.listState.firstVisibleItemIndex) }
+            onNodeWithContentDescription("Follow current playback").performClick()
+            onNodeWithText(items[35].title).assertIsDisplayed()
+            onNodeWithContentDescription("Stop following playback").performClick()
+            val stoppedAt = runOnIdle { browsing.listState.firstVisibleItemIndex }
+            runOnIdle { state = state.copy(path = items[0].playlistMediaBean.url) }
+            runOnIdle { assertEquals(stoppedAt, browsing.listState.firstVisibleItemIndex) }
         }
 
     @Test
-    fun rapidChangesDuringUserInputFollowOnlyTheLatestItemInTheUpdatedQueue() =
-        runDesktopComposeUiTest(width = 420, height = 480) {
-            val model = PlayerModel()
-            val items = queueItems(40)
-            fun publish(items: List<PlaylistMediaWithArticleBean>) = model.onEvent(
-                PlayerEvent.Playlist("queue", items.associateByTo(linkedMapOf()) { it.playlistMediaBean.url }),
-            )
-            publish(items)
-            model.onEvent(PlayerEvent.StartFile(items[10].playlistMediaBean.url))
-            lateinit var listState: LazyListState
-            lateinit var scope: CoroutineScope
+    fun handleRequiresLongPressOnTouchAndCommitsOnlyOnRelease() =
+        runDesktopComposeUiTest(width = 420, height = 600) {
+            val items = queueItems(6)
+            var state by mutableStateOf(queueState(items))
+            var calls = 0
+            var played = 0
+            val browsing = PlayerQueueState()
             setContent {
-                val state by model.playerState.collectAsState()
-                listState = rememberLazyListState()
-                scope = rememberCoroutineScope()
-                MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks, state = listState) }
+                MaterialTheme {
+                    PlayerQueue(PlayState(false, false, state), queueCallbacks.copy(
+                        onPlayFileInPlaylist = { played++ },
+                        onReorderPlaylist = { _, from, to, original ->
+                            calls++
+                            val order = com.skyd.podaura.model.bean.playlist.movePlaylistItem(original, from, to)
+                            state = state.copy(playlist = order.map { url -> items.first { it.playlistMediaBean.url == url } })
+                        },
+                    ), queueState = browsing)
+                }
             }
-            onNodeWithText(items[10].title).assertIsDisplayed()
+            val handle = onAllNodesWithContentDescription("Reorder")[0]
+            handle.performClick()
+            runOnIdle { assertEquals(0, calls); assertEquals(0, played) }
+            handle.performTouchInput { swipe(center, center + androidx.compose.ui.geometry.Offset(0f, 140f), 150) }
+            runOnIdle { assertEquals(0, calls) }
             onNode(hasScrollToIndexAction()).performScrollToIndex(0)
-            val releaseDrag = CompletableDeferred<Unit>()
-            val drag = runOnIdle {
-                scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                    listState.scroll(MutatePriority.UserInput) {
-                        scrollBy(1f)
-                        releaseDrag.await()
-                    }
+            onNodeWithContentDescription("Follow current playback").performClick()
+            onAllNodesWithContentDescription("Reorder")[0].performTouchInput {
+                down(center)
+                advanceEventTime(700)
+                moveBy(androidx.compose.ui.geometry.Offset(0f, 160f), 200)
+            }
+            waitForIdle()
+            runOnIdle { assertEquals(0, calls); assertTrue(!browsing.following) }
+            onNode(hasScrollToIndexAction()).performTouchInput { up() }
+            waitForIdle()
+            runOnIdle { assertEquals(1, calls); assertTrue(state.playlist.first() != items[0]) }
+            onAllNodesWithContentDescription("Reorder")[0].performTouchInput {
+                down(center)
+                advanceEventTime(700)
+                moveBy(androidx.compose.ui.geometry.Offset(0f, 100f), 150)
+            }
+            waitForIdle()
+            // Desktop's injected cancel() is a no-op. Disabling the handle cancels its real
+            // pointer coroutine and exercises the same cleanup as removal or a layout change.
+            runOnIdle { state = state.copy(shuffle = true) }
+            onNode(hasScrollToIndexAction()).performTouchInput { up() }
+            runOnIdle { assertEquals(1, calls); state = state.copy(shuffle = false) }
+            // Long-pressing the row still selects; selection hides handles and unlocks following.
+            onNodeWithText(state.playlist.first().title).performTouchInput { longClick() }
+            onAllNodesWithContentDescription("Reorder").assertCountEquals(0)
+        }
+
+    @Test
+    fun mouseKeyboardAndAccessibilityActionsCanReorderWithoutLongPress() =
+        runDesktopComposeUiTest(width = 420, height = 600) {
+            val items = queueItems(6)
+            var state by mutableStateOf(queueState(items))
+            var calls = 0
+            setContent {
+                MaterialTheme {
+                    PlayerQueue(PlayState(false, false, state), queueCallbacks.copy(
+                        onReorderPlaylist = { _, from, to, original ->
+                            calls++
+                            val order = com.skyd.podaura.model.bean.playlist.movePlaylistItem(original, from, to)
+                            state = state.copy(playlist = order.map { url -> items.first { it.playlistMediaBean.url == url } })
+                        },
+                    ))
                 }
             }
-            try {
-                runOnIdle {
-                    assertTrue(listState.isScrollInProgress)
-                    assertTrue(drag.isActive)
-                    model.onEvent(PlayerEvent.StartFile(items[30].playlistMediaBean.url))
-                }
-                waitForIdle()
-                runOnIdle {
-                    model.onEvent(PlayerEvent.StartFile(items[31].playlistMediaBean.url))
-                    publish(items.reversed())
-                }
-                waitForIdle()
-                // The current item can disappear before the engine supplies its replacement.
-                runOnIdle { publish(items.filterNot { it == items[31] }) }
-                waitForIdle()
-                val finalQueue = items.drop(12).filterNot { it == items[31] }.reversed()
-                runOnIdle {
-                    model.onEvent(PlayerEvent.StartFile(items[19].playlistMediaBean.url))
-                    model.onEvent(PlayerEvent.StartFile(items[20].playlistMediaBean.url))
-                    model.onEvent(PlayerEvent.StartFile(items[32].playlistMediaBean.url))
-                    publish(finalQueue)
-                }
-                val expectedIndex = finalQueue.indexOf(items[32])
-                // The latest target is reached even before the held user-input block is released.
-                runOnIdle { assertEquals(expectedIndex, listState.firstVisibleItemIndex) }
-                onNodeWithText(items[32].title).assertIsDisplayed()
-                runOnIdle { releaseDrag.complete(Unit) }
-                mainClock.advanceTimeBy(250)
-                runOnIdle {
-                    assertEquals(expectedIndex, listState.firstVisibleItemIndex)
-                    model.onEvent(PlayerEvent.Position(50))
-                }
-                runOnIdle { assertEquals(expectedIndex, listState.firstVisibleItemIndex) }
-            } finally {
-                runOnIdle { drag.cancel() }
+            onAllNodesWithContentDescription("Reorder")[0].performMouseInput {
+                moveTo(center)
+                press()
+                moveTo(center + androidx.compose.ui.geometry.Offset(0f, 30f), 20)
             }
+            waitForIdle()
+            onAllNodesWithContentDescription("Reorder")[0].performMouseInput {
+                moveTo(center + androidx.compose.ui.geometry.Offset(0f, 160f), 80)
+            }
+            waitForIdle()
+            onNode(hasScrollToIndexAction()).performMouseInput { release() }
+            runOnIdle { assertEquals(1, calls) }
+            onAllNodesWithContentDescription("Reorder")[0].performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+            onAllNodesWithContentDescription("Reorder")[0].performKeyInput {
+                keyDown(Key.AltLeft)
+                keyDown(Key.DirectionDown)
+                keyUp(Key.DirectionDown)
+                keyUp(Key.AltLeft)
+            }
+            runOnIdle { assertEquals(2, calls) }
+            val actions = onAllNodesWithContentDescription("Reorder")[0].fetchSemanticsNode().config[SemanticsActions.CustomActions]
+            runOnIdle { actions.first { it.label == "Move down" }.action() }
+            runOnIdle { assertEquals(3, calls) }
+        }
+
+    @Test
+    fun reopeningQueuePreservesPositionAndFollowStateAndShuffleDisablesDragging() =
+        runDesktopComposeUiTest(width = 420, height = 480) {
+            val items = queueItems(40)
+            var visible by mutableStateOf(true)
+            var state by mutableStateOf(queueState(items, 20))
+            val browsing = PlayerQueueState()
+            setContent {
+                MaterialTheme {
+                    if (visible) PlayerQueue(PlayState(false, false, state), queueCallbacks, queueState = browsing)
+                }
+            }
+            onNode(hasScrollToIndexAction()).performScrollToIndex(3)
+            runOnIdle { visible = false }
+            runOnIdle { visible = true }
+            runOnIdle { assertEquals(3, browsing.listState.firstVisibleItemIndex); assertTrue(!browsing.following) }
+            onNodeWithContentDescription("Follow current playback").performClick()
+            runOnIdle { visible = false; state = state.copy(path = items[25].playlistMediaBean.url) }
+            runOnIdle { visible = true }
+            onNodeWithText(items[25].title).assertIsDisplayed()
+            runOnIdle { state = state.copy(shuffle = true) }
+            onAllNodesWithContentDescription("Reorder").assertCountEquals(0)
+            onNodeWithText("Turn off shuffle to reorder the queue.").assertIsDisplayed()
+        }
+
+    @Test
+    fun replacingTemporaryQueueResetsSelectionAndFollowing() =
+        runDesktopComposeUiTest(width = 420, height = 480) {
+            val items = queueItems(12, "")
+            var state by mutableStateOf(queueState(items, 4).copy(queueId = "temporary-a"))
+            setContent { MaterialTheme { PlayerQueue(PlayState(false, false, state), queueCallbacks) } }
+            onNodeWithContentDescription("Follow current playback").performClick()
+            onNodeWithText(items[4].title).performTouchInput { longClick() }
+            onNodeWithText(items[4].title).assertIsSelected()
+            onNodeWithContentDescription("Follow current playback").performClick()
+            runOnIdle { state = state.copy(queueId = "temporary-b", path = items[0].playlistMediaBean.url) }
+            onNodeWithContentDescription("Follow current playback").assertIsDisplayed()
+            onNodeWithContentDescription("Delete").assertDoesNotExist()
+            onNodeWithText(items[0].title).assertIsDisplayed().assertIsNotSelected()
         }
 
     @Test
@@ -267,7 +248,7 @@ class PlayerQueueTest {
                         PlayerQueue(PlayState(false, false, queueState(items)), queueCallbacks)
                     } else {
                         PlaylistMediaList(
-                            currentPlaylistId = "queue", playlist = paging, onMoved = { _, _ -> },
+                            currentPlaylistId = "queue", playlist = paging, onMoved = { _, _, _ -> },
                             onPlay = {}, onDelete = {}, viewModel = viewModel,
                         )
                     }

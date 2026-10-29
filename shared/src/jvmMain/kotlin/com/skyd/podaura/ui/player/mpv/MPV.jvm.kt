@@ -35,6 +35,10 @@ actual class MPV {
     private var surfaceRing: MpvSurfaceConsumer? = null
     private val pendingCommandsLock = Any()
     private val pendingCommands = mutableListOf<Array<out String>>()
+    private var flushingCommands = false
+
+    actual val hasPendingCommands: Boolean
+        get() = synchronized(pendingCommandsLock) { flushingCommands || pendingCommands.isNotEmpty() }
     private var activeSurfaces = 0
     private var backgroundVideoOutput = false
     private val closed = AtomicBoolean(false)
@@ -176,12 +180,16 @@ actual class MPV {
     actual fun command(vararg command: String) {
         if (closed.get()) return
         synchronized(pendingCommandsLock) {
-            if (pendingCommands.isNotEmpty()) {
+            if (flushingCommands || pendingCommands.isNotEmpty()) {
                 pendingCommands += command
                 return
             }
             val commandName = command.firstOrNull()
-            if (commandName == "loadfile" || commandName == "loadlist") {
+            // Pure append edits the queue without starting a file. It must remain synchronous
+            // while a newly opened window is still preparing its render context.
+            if ((commandName == "loadfile" || commandName == "loadlist") &&
+                command.getOrNull(2) != "append"
+            ) {
                 if (activeSurfaces == 0) {
                     // No player window: start audio immediately, including video files.
                     mpvHandle.setPropertyString("vo", "null")
@@ -197,19 +205,34 @@ actual class MPV {
     }
 
     private fun flushPendingCommands() {
-        val commands = synchronized(pendingCommandsLock) {
-            pendingCommands.toList().also { pendingCommands.clear() }
+        synchronized(pendingCommandsLock) {
+            if (flushingCommands || pendingCommands.isEmpty()) return
+            flushingCommands = true
         }
-        if (closed.get()) return
-        commands.forEach {
-            updatePlaybackSession(it)
-            mpvHandle.command(*it)
+        var drained = false
+        try {
+            while (!closed.get()) {
+                val commands = synchronized(pendingCommandsLock) {
+                    if (pendingCommands.isEmpty()) {
+                        flushingCommands = false
+                        drained = true
+                        return
+                    }
+                    pendingCommands.toList().also { pendingCommands.clear() }
+                }
+                commands.forEach {
+                    updatePlaybackSession(it)
+                    mpvHandle.command(*it)
+                }
+            }
+        } finally {
+            if (!drained) synchronized(pendingCommandsLock) { flushingCommands = false }
         }
     }
 
     private fun updatePlaybackSession(command: Array<out String>) {
         when (command.firstOrNull()) {
-            "loadfile", "loadlist" -> playbackSessionActive.set(true)
+            "loadfile", "loadlist" -> if (command.getOrNull(2) != "append") playbackSessionActive.set(true)
             "stop" -> playbackSessionActive.set(false)
         }
     }

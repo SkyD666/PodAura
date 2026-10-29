@@ -28,6 +28,11 @@ data class PlaylistBean(
     val createTime: Long,
     @ColumnInfo(name = DELETE_MEDIA_ON_FINISH_COLUMN)
     val deleteMediaOnFinish: Boolean,
+    // Null only for pre-migration rows, until their old global preference is copied.
+    @ColumnInfo(name = MEDIA_SORT_BY_COLUMN)
+    val mediaSortBy: String? = "Manual",
+    @ColumnInfo(name = MEDIA_SORT_ASC_COLUMN, defaultValue = "1")
+    val mediaSortAsc: Boolean = true,
 ) : BaseBean {
     companion object {
         const val PLAYLIST_ID_COLUMN = "playlistId"
@@ -35,5 +40,7 @@ data class PlaylistBean(
         const val ORDER_POSITION_COLUMN = "orderPosition"
         const val CREATE_TIME_COLUMN = "createTime"
         const val DELETE_MEDIA_ON_FINISH_COLUMN = "deleteMediaOnFinish"
+        const val MEDIA_SORT_BY_COLUMN = "mediaSortBy"
+        const val MEDIA_SORT_ASC_COLUMN = "mediaSortAsc"
     }
 }

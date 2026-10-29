@@ -55,6 +55,7 @@ import com.skyd.podaura.model.db.migration.Migration25To26
 import com.skyd.podaura.model.db.migration.Migration26To27
 import com.skyd.podaura.model.db.migration.Migration27To28
 import com.skyd.podaura.model.db.migration.Migration28To29
+import com.skyd.podaura.model.db.migration.Migration29To30
 import com.skyd.podaura.model.db.migration.Migration2To3
 import com.skyd.podaura.model.db.migration.Migration3To4
 import com.skyd.podaura.model.db.migration.Migration4To5
@@ -89,7 +90,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
         TranslationProfileEntity::class,
     ],
     views = [FeedViewBean::class, PlaylistViewBean::class],
-    version = 29,
+    version = 30,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 @ColumnTypeConverters(
@@ -126,6 +127,7 @@ fun AppDatabase.Companion.instance(
         Migration17To18(), Migration18To19(), Migration19To20(), Migration20To21(),
         Migration21To22(), Migration22To23(), Migration23To24(), Migration24To25(),
         Migration25To26(), Migration26To27(), Migration27To28(), Migration28To29(),
+        Migration29To30(),
     )
 
     return builder

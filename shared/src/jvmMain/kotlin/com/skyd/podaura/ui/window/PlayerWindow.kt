@@ -44,6 +44,7 @@ import com.skyd.podaura.ui.player.PlayerViewRoute
 import com.skyd.podaura.ui.player.PressAndHoldSpeedController
 import com.skyd.podaura.ui.player.PressAndHoldSpeedSource
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
+import com.skyd.podaura.ui.player.followPlaylistChanges
 import com.skyd.podaura.ui.player.media.DesktopMediaSessionManager
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
@@ -111,6 +112,7 @@ internal class PlayerWindowController(
     }
 
     private fun createCoordinator(): PlayerCoordinator = PlayerCoordinator().also { created ->
+        created.followPlaylistChanges()
         val createdMediaSession = mediaSessionFactory(created)
         mediaSession = createdMediaSession
         created.lifecycle.addObserver(object : DefaultLifecycleObserver {

@@ -71,7 +71,7 @@ class ExternalPlaybackSessionTest {
     }
 
     @Test
-    fun failureTrackingDoesNotReleaseThePlayersMediaAccess() {
+    fun accessRemainsUntilItsEntriesLeaveTheQueue() {
         var closed = 0
         val media = ExternalMedia("content://media/1", "fd://10") { closed++ }
         val batch = ExternalMediaBatch(listOf(media), emptyList())
@@ -81,12 +81,29 @@ class ExternalPlaybackSessionTest {
 
         assertTrue(session.recordFailure("fd://10", setOf("fd://10")))
         session.onFileLoaded("fd://10")
-        session.retainPaths(emptySet())
         assertEquals(0, closed)
+        session.retainPaths(emptySet())
+        assertEquals(1, closed)
 
         session.release()
         assertEquals(1, closed)
         assertFalse(batch.retain())
+    }
+
+    @Test
+    fun addedBatchesKeepAccessUntilRemovedOrSessionEnds() {
+        val closed = mutableListOf<String>()
+        fun batch(path: String) = ExternalMediaBatch(
+            listOf(ExternalMedia(path, path) { closed += path }), emptyList(),
+        )
+        val session = ExternalPlaybackSession(batch("first"))
+        session.add(batch("second"))
+        session.retainPaths(setOf("first", "second"))
+        assertTrue(closed.isEmpty())
+        session.retainPaths(setOf("second"))
+        assertEquals(listOf("first"), closed)
+        session.release()
+        assertEquals(listOf("first", "second"), closed)
     }
 
     private fun session() = ExternalPlaybackSession(ExternalMediaBatch(emptyList(), emptyList()))

@@ -78,6 +78,7 @@ internal class IosPlayerSession : PlayerSession {
         val started = TimeSource.Monotonic.markNow()
         if (coordinator == null) {
             val created = PlayerCoordinator()
+            created.followPlaylistChanges()
             coordinator = created
             val pip = IosPictureInPicture(created, this)
             pictureInPicture = pip

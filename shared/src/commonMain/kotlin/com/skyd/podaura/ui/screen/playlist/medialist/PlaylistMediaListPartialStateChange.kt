@@ -57,15 +57,4 @@ internal sealed interface PlaylistMediaListPartialStateChange {
         data class Failed(val msg: String) : DeleteMedia
     }
 
-    sealed interface Reorder : PlaylistMediaListPartialStateChange {
-        override fun reduce(oldState: PlaylistMediaListState): PlaylistMediaListState {
-            return when (this) {
-                is Success,
-                is Failed -> oldState.copy(loadingDialog = false)
-            }
-        }
-
-        data object Success : Reorder
-        data class Failed(val msg: String) : Reorder
-    }
 }
