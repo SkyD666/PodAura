@@ -11,27 +11,47 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 
-/** Measures the controls first, then gives the media the remaining viewport height. */
+/** Keeps the media mounted while adapting between stacked and side-by-side playback. */
 @Composable
 internal fun PlaybackPane(
     modifier: Modifier = Modifier,
+    sideBySide: Boolean = false,
     media: @Composable () -> Unit,
     controls: @Composable () -> Unit,
 ) {
     BoxWithConstraints(modifier) {
         val viewportHeight = constraints.maxHeight
+        val paneScrollState = rememberScrollState()
+        val controlsScrollState = rememberScrollState()
         Layout(
-            modifier = Modifier.verticalScroll(rememberScrollState()),
+            modifier = if (sideBySide) Modifier else Modifier.verticalScroll(paneScrollState),
             content = {
                 Box(contentAlignment = Alignment.Center) { media() }
-                Box { controls() }
+                Box(
+                    modifier = if (sideBySide) Modifier.verticalScroll(controlsScrollState) else Modifier,
+                    contentAlignment = Alignment.BottomStart,
+                ) { controls() }
             },
         ) { measurables, constraints ->
+            if (sideBySide) {
+                // Reserve enough width for the playback buttons at the 600 dp breakpoint.
+                val controlsWidth = maxOf((constraints.maxWidth * 0.6f).toInt(), 380.dp.roundToPx())
+                val mediaWidth = constraints.maxWidth - controlsWidth
+                val mediaPlaceable =
+                    measurables[0].measure(Constraints.fixed(mediaWidth, viewportHeight))
+                val controlsPlaceable =
+                    measurables[1].measure(Constraints.fixed(controlsWidth, viewportHeight))
+                return@Layout layout(constraints.maxWidth, viewportHeight) {
+                    mediaPlaceable.placeRelative(0, 0)
+                    controlsPlaceable.placeRelative(mediaWidth, 0)
+                }
+            }
             val controlsPlaceable = measurables[1].measure(
                 constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity),
             )
             // Keep a 96 dp cover plus MediaArea's vertical padding; scroll this pane if needed.
-            val mediaHeight = (viewportHeight - controlsPlaceable.height).coerceAtLeast(108.dp.roundToPx())
+            val mediaHeight =
+                (viewportHeight - controlsPlaceable.height).coerceAtLeast(108.dp.roundToPx())
             val mediaPlaceable = measurables[0].measure(
                 Constraints.fixed(constraints.maxWidth, mediaHeight),
             )

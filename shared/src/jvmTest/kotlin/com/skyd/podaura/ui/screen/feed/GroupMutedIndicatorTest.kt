@@ -10,11 +10,11 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
@@ -46,7 +46,7 @@ import kotlin.test.assertFalse
 class GroupMutedIndicatorTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun compactIndicatorsExplainMuteStateOnTapWithoutChangingTheGroup() {
+    fun compactIndicatorsDescribeMuteStateWithoutOwnClickAction() {
         for (largeText in listOf(false, true)) {
             runDesktopComposeUiTest(width = 360, height = 360) {
                 val data = mutableStateOf(GroupWithFeedCount(GroupVo("group", "Podcasts", false), 4, 0))
@@ -95,35 +95,37 @@ class GroupMutedIndicatorTest {
                 onNodeWithContentDescription(allMuted).assertDoesNotExist()
                 runOnIdle { data.value = data.value.copy(mutedFeedCount = 2) }
                 assertEquals(rowHeight, onNodeWithText("Podcasts").fetchSemanticsNode().boundsInRoot.height)
-                onNodeWithContentDescription(partialMuted).assertIsDisplayed()
+                onNodeWithContentDescription(partialMuted, useUnmergedTree = true)
+                    .assertIsDisplayed()
+                    .assertHasNoClickAction()
                 onNodeWithText(partialMuted).assertDoesNotExist()
                 capture("compact-partial")
-                onNodeWithContentDescription(partialMuted).performTouchInput { click() }
-                onNodeWithText(partialMuted).assertIsDisplayed()
-                assertEquals(0, articleOpens)
-                assertFalse(data.value.group.isExpanded)
-                onNodeWithTag("group-preview").performTouchInput { click(Offset(1f, 1f)) }
+                onNodeWithContentDescription(partialMuted, useUnmergedTree = true)
+                    .performTouchInput { click() }
                 onNodeWithText(partialMuted).assertDoesNotExist()
+                assertEquals(1, articleOpens)
+                assertFalse(data.value.group.isExpanded)
                 runOnIdle { hideMuted.value = false }
                 onNodeWithContentDescription(partialMuted).assertIsDisplayed()
                 runOnIdle { data.value = data.value.copy(mutedFeedCount = 4) }
                 assertEquals(rowHeight, onNodeWithText("Podcasts").fetchSemanticsNode().boundsInRoot.height)
-                onNodeWithContentDescription(allMuted).assertIsDisplayed()
+                onNodeWithContentDescription(allMuted, useUnmergedTree = true)
+                    .assertIsDisplayed()
+                    .assertHasNoClickAction()
                 onNodeWithContentDescription(partialMuted).assertDoesNotExist()
                 capture("compact-all")
-                onNodeWithContentDescription(allMuted).performTouchInput { click() }
-                onNodeWithText(allMuted).assertIsDisplayed()
-                assertEquals(0, articleOpens)
-                assertFalse(data.value.group.isExpanded)
-                onNodeWithTag("group-preview").performTouchInput { click(Offset(1f, 1f)) }
+                onNodeWithContentDescription(allMuted, useUnmergedTree = true)
+                    .performTouchInput { click() }
                 onNodeWithText(allMuted).assertDoesNotExist()
+                assertEquals(2, articleOpens)
+                assertFalse(data.value.group.isExpanded)
                 runOnIdle { hideMuted.value = true }
                 onNodeWithContentDescription(allMuted).assertIsDisplayed()
                 onNodeWithContentDescription(expand).performClick()
                 onNodeWithContentDescription(allMuted).assertIsDisplayed()
                 onNodeWithContentDescription(collapse).performClick()
                 onNodeWithText("Podcasts").performClick()
-                assertEquals(1, articleOpens)
+                assertEquals(3, articleOpens)
                 runOnIdle { data.value = data.value.copy(feedCount = 0, mutedFeedCount = 0) }
                 onNodeWithContentDescription(allMuted).assertDoesNotExist()
                 onNodeWithText("Podcasts").assertIsDisplayed()

@@ -3,32 +3,24 @@ package com.skyd.podaura.ui.screen.feed.item
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,14 +28,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeIconButton
-import com.skyd.compone.component.ComponeTooltipBox
 import com.skyd.compone.ext.thenIfNotNull
 import com.skyd.podaura.ext.onRightClickIfSupported
 import com.skyd.podaura.model.bean.group.GroupVo
 import com.skyd.podaura.model.bean.group.GroupVo.Companion.isDefaultGroup
 import com.skyd.podaura.model.bean.group.GroupWithFeedCount
 import com.skyd.podaura.model.preference.appearance.feed.FeedDefaultGroupExpandPreference
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -115,39 +105,28 @@ fun Group1Item(
                     data.mutedFeedCount,
                 )
             }
-            val tooltipState = rememberTooltipState(isPersistent = true)
-            val scope = rememberCoroutineScope()
-            ComponeTooltipBox(
-                tooltip = { PlainTooltip { Text(description) } },
-                state = tooltipState,
+            Row(
+                modifier = Modifier
+                    .semantics { contentDescription = description }
+                    .padding(start = 8.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier
-                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-                        .clip(CircleShape)
-                        .clickable(role = Role.Button) { scope.launch { tooltipState.show() } }
-                        .semantics { contentDescription = description }
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                if (!allMuted) {
+                    Text(
+                        text = data.mutedFeedCount.toString(),
+                        modifier = Modifier.clearAndSetSemantics {},
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
-                    if (!allMuted) {
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = data.mutedFeedCount.toString(),
-                            modifier = Modifier.clearAndSetSemantics {},
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                        )
-                    }
+                    Spacer(Modifier.width(4.dp))
                 }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
 

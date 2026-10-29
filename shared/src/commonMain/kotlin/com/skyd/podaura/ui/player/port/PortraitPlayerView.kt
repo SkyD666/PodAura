@@ -169,6 +169,7 @@ internal fun PortraitPlayerView(
         BoxWithConstraints(Modifier.padding(innerPadding).fillMaxSize()) {
             // 440 dp keeps the playback controls comfortable; the queue gets at least 360 dp.
             val wide = maxWidth >= 840.dp
+            val sideBySide = !wide && maxWidth >= 600.dp && maxWidth > maxHeight
             val queueWidth = (maxWidth * 0.38f).coerceIn(360.dp, 480.dp)
             LaunchedEffect(wide) {
                 if (wide) showPlaylistSheet = false
@@ -176,6 +177,7 @@ internal fun PortraitPlayerView(
             Row(Modifier.fillMaxSize()) {
                 PlaybackPane(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
+                    sideBySide = sideBySide,
                     media = {
                         MediaArea(
                             playState = playState,

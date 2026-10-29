@@ -3,7 +3,7 @@ package com.skyd.podaura.ui.player.port
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.darkColorScheme
@@ -57,6 +57,7 @@ import kotlin.math.abs
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -91,18 +92,27 @@ class PlayerLayoutTest {
     }
 
     @Test
-    fun availableWidthSwitchesBetweenSidebarAndSheetInsideTheSameWindow() =
+    fun availableSizeSwitchesBetweenSidebarStackedAndSideBySideInsideTheSameWindow() =
         runDesktopComposeUiTest(width = 1100, height = 760) {
             var availableWidth by mutableStateOf(1100.dp)
-            setContent { MaterialTheme { TestPlayer(modifier = Modifier.width(availableWidth)) } }
+            var availableHeight by mutableStateOf(760.dp)
+            setContent { MaterialTheme { TestPlayer(modifier = Modifier.size(availableWidth, availableHeight)) } }
             onNodeWithText("Current queue").assertIsDisplayed()
             onNodeWithContentDescription("Playlist").assertDoesNotExist()
             runOnIdle { availableWidth = 600.dp }
             onNodeWithText("Current queue").assertDoesNotExist()
+            val stackedMedia = onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot
+            val stackedTitle = onNodeWithText("queue episode 0").fetchSemanticsNode().boundsInRoot
+            assertTrue(stackedMedia.bottom <= stackedTitle.top)
+            runOnIdle { availableHeight = 400.dp }
+            val sideMedia = onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot
+            val sideTitle = onNodeWithText("queue episode 0").fetchSemanticsNode().boundsInRoot
+            assertTrue(sideMedia.right < sideTitle.left)
+            onNodeWithContentDescription("Fullscreen").assertIsDisplayed()
             onNodeWithContentDescription("Playlist").assertIsDisplayed().performClick()
             onNodeWithText("Current queue").assertIsDisplayed()
             save("narrow-queue-sheet", onNode(isDialog()).captureToImage())
-            runOnIdle { availableWidth = 1100.dp }
+            runOnIdle { availableWidth = 1100.dp; availableHeight = 760.dp }
             onNode(isDialog()).assertDoesNotExist()
             onNodeWithContentDescription("Playlist").assertDoesNotExist()
             onNodeWithText("Current queue").assertIsDisplayed()
@@ -114,7 +124,12 @@ class PlayerLayoutTest {
             LayoutCase("wide-light", 1200, 800),
             LayoutCase("wide-dark", 1200, 800, dark = true),
             LayoutCase("narrow-light", 390, 800),
-            LayoutCase("narrow-landscape", 700, 400),
+            LayoutCase("narrow-landscape", 700, 400, sideBySide = true),
+            LayoutCase("narrow-landscape-dark", 700, 400, dark = true, sideBySide = true),
+            LayoutCase("narrow-landscape-large-type", 700, 400, fontScale = 2f, sideBySide = true),
+            LayoutCase("medium-landscape", 600, 400, sideBySide = true),
+            LayoutCase("medium-portrait", 600, 900),
+            LayoutCase("compact-short", 599, 360),
             LayoutCase("wide-short", 1100, 420),
             LayoutCase("wide-short-large-type", 1100, 420, fontScale = 2f, dark = true),
             LayoutCase("narrow-large-type", 390, 600, fontScale = 2f),
@@ -146,10 +161,20 @@ class PlayerLayoutTest {
                 onNodeWithContentDescription("Playlist").assertDoesNotExist()
             } else {
                 onNodeWithText("Current queue").assertDoesNotExist()
+                val play = onNodeWithContentDescription("Play").fetchSemanticsNode().boundsInRoot
+                if (case.sideBySide) {
+                    assertTrue(media.right < play.left, "${case.name}: controls belong to the right of media")
+                } else {
+                    assertTrue(media.bottom < play.top, "${case.name}: controls belong below media")
+                }
             }
             save(case.name, onNodeWithTag("PlayerLayout").captureToImage())
             if (case.count == 0) onNodeWithText("The queue is empty").assertExists()
             onNodeWithContentDescription("Fullscreen").performScrollTo().assertIsDisplayed()
+            if (case.sideBySide) {
+                assertEquals(media, onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot,
+                    "${case.name}: scrolling controls must leave the cover in place")
+            }
             if (case.fontScale > 1f) save("${case.name}-scrolled", onNodeWithTag("PlayerLayout").captureToImage())
             if (case.presentation is PlayerPresentationState.Failed) {
                 onNodeWithContentDescription("Retry").performScrollTo().assertIsDisplayed()
@@ -164,10 +189,11 @@ class PlayerLayoutTest {
             var mounts = 0
             var disposals = 0
             var availableWidth by mutableStateOf(1100.dp)
+            var availableHeight by mutableStateOf(700.dp)
             setContent {
                 MaterialTheme {
                     TestPlayer(
-                        modifier = Modifier.width(availableWidth),
+                        modifier = Modifier.size(availableWidth, availableHeight),
                         state = queueState(queueItems(12)).copy(videoTracks = listOf(Track(1, "Video", false))),
                         onEnterFullscreen = { fullscreenRequests++ },
                         playerContent = {
@@ -181,7 +207,10 @@ class PlayerLayoutTest {
             onNodeWithText("Current queue").assertIsDisplayed()
             runOnIdle { availableWidth = 600.dp }
             onNodeWithTag("VideoSurface").assertIsDisplayed()
-            runOnIdle { availableWidth = 1100.dp }
+            runOnIdle { availableWidth = 700.dp; availableHeight = 400.dp }
+            onNodeWithTag("VideoSurface").assertIsDisplayed()
+            onNodeWithText("Current queue").assertDoesNotExist()
+            runOnIdle { availableWidth = 1100.dp; availableHeight = 700.dp }
             onNodeWithContentDescription("Fullscreen").performClick()
             runOnIdle {
                 assertTrue(fullscreenRequests == 1)
@@ -226,6 +255,7 @@ class PlayerLayoutTest {
         val height: Int,
         val fontScale: Float = 1f,
         val dark: Boolean = false,
+        val sideBySide: Boolean = false,
         val count: Int = 30,
         val presentation: PlayerPresentationState = PlayerPresentationState.Ready,
     )
