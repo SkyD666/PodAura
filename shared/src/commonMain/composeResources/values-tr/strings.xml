@@ -245,6 +245,7 @@
     <string name="import_opml_screen_opml_not_selected">Lütfen bir OPML dosyası seçin</string>
     <string name="data_screen_sync_category">Senkronizasyon</string>
     <string name="player_speed">Hız</string>
+    <string name="player_speed_fine_tune">İnce ayar için kaydırın</string>
     <string name="player_add_external_audio">Ses dosyası ekle</string>
     <string name="feed_screen_rss_description_hint">Açıklama eklemek için tıklayın</string>
     <string name="feed_screen_rss_description">Açıklama</string>

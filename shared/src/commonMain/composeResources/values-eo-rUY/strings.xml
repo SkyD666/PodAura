@@ -256,6 +256,7 @@
     <string name="data_screen_sync_category">Sinkronigo</string>
     <string name="import_export_screen_description">Importi kaj eksporti datumojn</string>
     <string name="player_speed">Rapido</string>
+    <string name="player_speed_fine_tune">Ŝovu por precize ĝustigi</string>
     <string name="player_add_external_audio">Aldoni sondosieron</string>
     <string name="feed_screen_rss_description_hint">Frapeti por aldoni priskribon</string>
     <string name="feed_screen_rss_description">Priskribo</string>

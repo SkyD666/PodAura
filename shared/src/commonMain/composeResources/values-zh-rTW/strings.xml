@@ -246,6 +246,7 @@
     <string name="data_screen_sync_category">同步</string>
     <string name="import_export_screen_description">匯入和匯出資料</string>
     <string name="player_speed">速度</string>
+    <string name="player_speed_fine_tune">左右滑動以精細調整</string>
     <string name="player_add_external_audio">添加音訊檔案</string>
     <string name="feed_screen_rss_description_hint">點擊設定描述</string>
     <string name="feed_screen_rss_description">敘述</string>

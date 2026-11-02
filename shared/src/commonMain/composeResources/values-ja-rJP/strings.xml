@@ -247,6 +247,7 @@
     <string name="import_opml_screen_opml_not_selected">OPML ファイルを選択してください</string>
     <string name="data_screen_sync_category">同期</string>
     <string name="player_speed">速度</string>
+    <string name="player_speed_fine_tune">左右にスワイプして微調整</string>
     <string name="player_add_external_audio">オーディオファイルを追加</string>
     <string name="feed_screen_rss_description_hint">タップで説明を設定します</string>
     <string name="feed_screen_rss_description">説明</string>
