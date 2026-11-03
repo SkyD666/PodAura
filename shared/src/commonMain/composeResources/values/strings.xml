@@ -683,4 +683,8 @@
     <string name="playlist_reorder_shuffle">Turn off shuffle to reorder the queue.</string>
     <string name="playlist_move_up">Move up</string>
     <string name="playlist_move_down">Move down</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_mute">Mute</string>
+    <string name="player_unmute">Unmute</string>
+    <string name="player_muted">Muted</string>
 </resources>

@@ -13,7 +13,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.DpSize
@@ -35,6 +37,7 @@ import com.skyd.podaura.ui.local.LocalMacosMainWindow
 import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.media.MacosMediaSession
 import com.skyd.podaura.ui.player.pip.MacosPictureInPicture
+import com.skyd.podaura.ui.player.volume.LocalVolumeControlFocus
 import com.skyd.podaura.ui.screen.SettingsProvider
 import com.skyd.podaura.ui.window.PlayerRightArrowKeyHandler
 import kotlinx.cinterop.useContents
@@ -63,6 +66,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val cleanupJob = SupervisorJob(scope.coroutineContext[Job])
     private val cleanupScope = CoroutineScope(scope.coroutineContext + cleanupJob)
+    private val volumeControlFocus = mutableStateOf(false)
     private var shuttingDown = false
     override var coordinator by mutableStateOf<PlayerCoordinator?>(null)
         private set
@@ -115,7 +119,11 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                 size = DpSize(400.dp, 780.dp),
                 transparent = true,
                 // Right-arrow input belongs to the hold handler, including suppressed presses.
-                onKeyEvent = { it.key != Key.DirectionRight && player.onKey(it) },
+                onKeyEvent = {
+                    !volumeControlFocus.value &&
+                            it.key != Key.DirectionRight &&
+                            player.onKey(it)
+                },
                 onClose = {
                     playerWindow = null
                     isFullPlayerVisible = false
@@ -163,6 +171,9 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                 ) {
                     cancelInput(suppressUntilKeyUp = windowInfo.isWindowFocused)
                 }
+                LaunchedEffect(volumeControlFocus.value) {
+                    if (volumeControlFocus.value) cancelInput()
+                }
                 LaunchedEffect(player, handler) {
                     player.model.newStateByEvent.collect { (_, event) ->
                         when (event) {
@@ -175,7 +186,16 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                     }
                 }
                 DisposableEffect(handler) {
-                    onPreviewKeyEvent = handler::onKeyEvent
+                    onPreviewKeyEvent = {
+                        if (volumeControlFocus.value) {
+                            if (it.key == Key.DirectionRight && it.type == KeyEventType.KeyUp) {
+                                handler.onKeyEvent(it)
+                            }
+                            false
+                        } else {
+                            handler.onKeyEvent(it)
+                        }
+                    }
                     onOverlayFocus = { cancelInput() }
                     onDispose {
                         onPreviewKeyEvent = null
@@ -183,7 +203,10 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
                         cancelInput()
                     }
                 }
-                CompositionLocalProvider(LocalPressAndHoldSpeedController provides speedController) {
+                CompositionLocalProvider(
+                    LocalVolumeControlFocus provides volumeControlFocus,
+                    LocalPressAndHoldSpeedController provides speedController,
+                ) {
                     PlayerWindowContent(
                         session = this@MacosPlayerSession,
                         player = player,

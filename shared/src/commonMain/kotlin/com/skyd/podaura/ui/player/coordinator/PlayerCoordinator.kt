@@ -37,8 +37,8 @@ import com.skyd.podaura.ui.player.mpv.configurePlaylistHeaders
 import com.skyd.podaura.ui.player.mpv.mapPlayerKeyEvent
 import com.skyd.podaura.ui.player.mpv.resizeSurface
 import com.skyd.podaura.ui.player.playbackIntent
-import com.skyd.podaura.ui.player.preparePlatformPlayback
 import com.skyd.podaura.ui.player.playerTrace
+import com.skyd.podaura.ui.player.preparePlatformPlayback
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -138,6 +138,7 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
     private val activeGeneration = AtomicReference<Long?>(null)
     private val nativeMediaGeneration = AtomicReference(0L)
     private val commands = Channel<ActorMessage>(Channel.UNLIMITED)
+    private val pendingVolume = AtomicReference<List<PlayerCommand>>(emptyList())
     private val retrySignal = Channel<Unit>(Channel.CONFLATED)
     private val loadSignal = Channel<Unit>(Channel.CONFLATED)
     private val telemetrySignal = Channel<Unit>(Channel.CONFLATED)
@@ -176,11 +177,21 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
             player.withOwnership { generation ->
                 activeGeneration.store(generation)
                 var observer: EventListener? = null
+                var volumePolling: Job? = null
                 try {
                     initializeWithRetry()
                     if (destroyed.load()) return@withOwnership
                     observer = createMpvObserver(generation)
                     player.mpv.addEventListener(observer)
+                    if (player.volumeController.needsPolling) {
+                        // Read changes made in the Windows system mixer.
+                        volumePolling = engineScope.launch {
+                            while (isActive) {
+                                player.volumeController.refresh()
+                                delay(500.milliseconds)
+                            }
+                        }
+                    }
                     player.mpv.observeProperty("eof-reached", MPVFormat.MPV_FORMAT_FLAG)
                     setLoopMode(
                         PlayerLoopModePreference.toLoopMode(
@@ -194,11 +205,13 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
                     actorLoop()
                 } finally {
                     activeGeneration.store(null)
+                    volumePolling?.cancel()
                     withContext(NonCancellable) {
                         observer?.let { runCatching { player.mpv.removeEventListener(it) } }
                         withContext(Dispatchers.Main.immediate) {
                             onDetachAll(this@PlayerCoordinator)
                         }
+                        flushVolume()
                         sleepTimerController.close()
                         detachNativeSurface()
                         progress.finish()
@@ -293,6 +306,13 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
     }
 
     fun onCommand(command: PlayerCommand) {
+        if (command is PlayerCommand.SetVolume || command == PlayerCommand.ToggleMute) {
+            if (_engineState.value.isReady && !destroyed.load()) {
+                pendingVolume.update { it + command }
+                commands.trySend(ActorMessage.FlushVolume)
+            }
+            return
+        }
         // Snapshot before querying native playback intent, which can straddle expiry.
         val submittedTimerPauseGeneration = sleepTimerController.pendingPauseGeneration()
         // Resolve skips once, before enqueueing: keep-open's EOF pause is not a user pause.
@@ -431,6 +451,17 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
         }
     }
 
+    // Also flushed during teardown, so cancellation cannot discard the last submitted adjustment.
+    private fun flushVolume() {
+        pendingVolume.exchange(emptyList()).forEach { command ->
+            when (command) {
+                is PlayerCommand.SetVolume -> player.volumeController.setVolume(command.volume)
+                PlayerCommand.ToggleMute -> player.volumeController.toggleMute()
+                else -> Unit
+            }
+        }
+    }
+
     private suspend fun handleMessage(message: ActorMessage): Boolean {
         when (message) {
             is ActorMessage.UpdateQueueOrder -> updateQueueOrder(message)
@@ -458,6 +489,7 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
                 }
             }
 
+            ActorMessage.FlushVolume -> flushVolume()
             ActorMessage.FlushTransform -> flushTransform()
             ActorMessage.SaveProgress -> progress.save()
         }
@@ -518,6 +550,8 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
 
             is PlayerCommand.AudioDelay -> player.audioDelay(command.delayMillis)
             is PlayerCommand.SubtitleDelay -> player.subtitleDelay(command.delayMillis)
+            is PlayerCommand.SetVolume -> player.volumeController.setVolume(command.volume)
+            PlayerCommand.ToggleMute -> player.volumeController.toggleMute()
             is PlayerCommand.SetSpeed -> player.playbackSpeed = command.speed.toDouble()
             is PlayerCommand.SetSubtitleTrack -> player.sid = command.trackId
             is PlayerCommand.SetAudioTrack -> player.aid = command.trackId
@@ -616,9 +650,13 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
                 if (externalPlayback == null) externalPlayback = ExternalPlaybackSession(batch)
                 else externalPlayback?.add(batch)
                 batch.failures.takeIf { it.isNotEmpty() }?.let { failures ->
-                    emitEvent(PlayerEvent.PlaybackFailed(PlaybackFailure(
-                        details = failures.joinToString("\n") { "${it.source}: ${it.reason}" },
-                    )))
+                    emitEvent(
+                        PlayerEvent.PlaybackFailed(
+                            PlaybackFailure(
+                                details = failures.joinToString("\n") { "${it.source}: ${it.reason}" },
+                            )
+                        )
+                    )
                 }
             }
             val added = prepared.playlist.associateBy { it.playlistMediaBean.stableUrl }
@@ -976,6 +1014,7 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
     private suspend fun handleProperty(property: ActorMessage.Property) {
         with(property) {
             when (name) {
+                "volume", "mute", "audio-device", "audio-exclusive", "current-ao" -> player.volumeController.refresh()
                 "time-pos" -> longValue?.let {
                     progress.update(it)
                     emitEvent(PlayerEvent.Position(it))
@@ -1237,6 +1276,7 @@ class PlayerCoordinator : LifecycleOwner, PlaylistPlayback {
 
         data class Surface(val event: PlayerSurfaceEvent) : ActorMessage
         data class PlaybackFailureHandled(val id: String, val retry: Boolean) : ActorMessage
+        data object FlushVolume : ActorMessage
         data object FlushTransform : ActorMessage
         data object SaveProgress : ActorMessage
     }

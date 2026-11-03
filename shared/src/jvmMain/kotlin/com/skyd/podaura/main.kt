@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -25,6 +26,7 @@ import com.skyd.podaura.ui.window.DesktopWindowId
 import com.skyd.podaura.ui.window.initWindowsAppIdentity
 import com.skyd.podaura.ui.window.rememberDesktopAppState
 import com.skyd.podaura.util.CrashHandler
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) {
@@ -77,9 +79,16 @@ private fun runDesktopApplication(openFiles: DesktopOpenFiles) {
                     }
                 }
             }
-            val exitPodAura = {
-                appState.destroySession()
-                exitApplication()
+            val exitScope = rememberCoroutineScope()
+            var exiting by remember { mutableStateOf(false) }
+            val exitPodAura: () -> Unit = {
+                if (!exiting) {
+                    exiting = true
+                    exitScope.launch {
+                        appState.shutdown()
+                        exitApplication()
+                    }
+                }
             }
             val windowController = remember(appState) {
                 WindowController(onClose = exitPodAura)

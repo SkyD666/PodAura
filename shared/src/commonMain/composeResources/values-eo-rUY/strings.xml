@@ -676,4 +676,8 @@
     <string name="playlist_reorder_shuffle">Malŝaltu miksadon por reordigi la ludvicon.</string>
     <string name="playlist_move_up">Movi supren</string>
     <string name="playlist_move_down">Movi malsupren</string>
+    <string name="player_volume">Laŭteco</string>
+    <string name="player_mute">Silentigi</string>
+    <string name="player_unmute">Malsilentigi</string>
+    <string name="player_muted">Silentigita</string>
 </resources>

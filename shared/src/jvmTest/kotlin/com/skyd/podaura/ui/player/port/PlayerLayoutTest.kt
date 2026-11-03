@@ -18,12 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asSkiaBitmap
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -51,6 +52,13 @@ import com.skyd.podaura.ui.window.DesktopAppState
 import com.skyd.podaura.ui.window.DesktopWindowManager
 import com.skyd.podaura.ui.window.LocalDesktopAppState
 import com.skyd.podaura.ui.window.PlayerWindowController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import org.jetbrains.skia.Image
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import java.io.File
 import java.lang.reflect.Proxy
 import kotlin.math.abs
@@ -59,13 +67,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import org.jetbrains.skia.Image
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
 
 @OptIn(ExperimentalTestApi::class)
 class PlayerLayoutTest {
@@ -81,7 +82,12 @@ class PlayerLayoutTest {
         val article = PlayerArticleContextViewModel(unused())
         store.put("player", player)
         store.put("article", article)
-        app = DesktopAppState(DesktopWindowManager(), PlayerWindowController(player), article, { false })
+        app = DesktopAppState(
+            windowManager = DesktopWindowManager(),
+            playerWindowController = PlayerWindowController(player),
+            playerArticleContextViewModel = article,
+            hasAcceptedTerms = { false },
+        )
     }
 
     @AfterTest
@@ -96,7 +102,13 @@ class PlayerLayoutTest {
         runDesktopComposeUiTest(width = 1100, height = 760) {
             var availableWidth by mutableStateOf(1100.dp)
             var availableHeight by mutableStateOf(760.dp)
-            setContent { MaterialTheme { TestPlayer(modifier = Modifier.size(availableWidth, availableHeight)) } }
+            setContent {
+                MaterialTheme {
+                    TestPlayer(
+                        modifier = Modifier.size(availableWidth, availableHeight)
+                    )
+                }
+            }
             onNodeWithText("Current queue").assertIsDisplayed()
             onNodeWithContentDescription("Playlist").assertDoesNotExist()
             runOnIdle { availableWidth = 600.dp }
@@ -119,6 +131,41 @@ class PlayerLayoutTest {
         }
 
     @Test
+    fun moreMenuFollowsItsButtonWhenThePlayerIsResized() =
+        runDesktopComposeUiTest(width = 1100, height = 760) {
+            var availableWidth by mutableStateOf(1100.dp)
+            setContent {
+                MaterialTheme {
+                    TestPlayer(
+                        modifier = Modifier.size(availableWidth, 760.dp),
+                        articleContextState = PlayerArticleContextState(isFavorite = false),
+                    )
+                }
+            }
+            for (width in listOf(1100, 390)) {
+                runOnIdle { availableWidth = width.dp }
+                val more = onNodeWithContentDescription("More")
+                more.performClick()
+                onNodeWithText("Audio track").assertIsDisplayed()
+                val button = more.fetchSemanticsNode().layoutInfo.coordinates.boundsInWindow()
+                val menu = onNodeWithText("Audio track")
+                    .fetchSemanticsNode().layoutInfo.coordinates.boundsInWindow()
+                save("more-menu-$width", onNode(isPopup()).captureToImage())
+                assertTrue(
+                    menu.top in button.bottom..(button.bottom + 12f),
+                    "$width: menu $menu must open below the More button $button"
+                )
+                // The menu can align either edge to its anchor, with 4 dp of group padding.
+                assertTrue(
+                    abs(menu.right - button.right) <= 8f || abs(menu.left - button.left) <= 8f,
+                    "$width: menu $menu must align with the More button $button"
+                )
+                onNodeWithText("Audio track").performClick()
+                onNode(isPopup()).assertDoesNotExist()
+            }
+        }
+
+    @Test
     fun wideNarrowShortAndLargeTypeKeepControlsReachableAndMediaProportional() {
         val cases = listOf(
             LayoutCase("wide-light", 1200, 800),
@@ -135,35 +182,59 @@ class PlayerLayoutTest {
             LayoutCase("narrow-large-type", 390, 600, fontScale = 2f),
             LayoutCase("empty", 1100, 700, count = 0),
             LayoutCase("single", 1100, 700, count = 1),
-            LayoutCase("loading", 1100, 700, count = 0, presentation = PlayerPresentationState.Loading),
-            LayoutCase("failed", 1100, 420, count = 0,
-                presentation = PlayerPresentationState.Failed("Decoder unavailable. Retry playback.")),
+            LayoutCase(
+                "loading",
+                1100,
+                700,
+                count = 0,
+                presentation = PlayerPresentationState.Loading
+            ),
+            LayoutCase(
+                "failed", 1100, 420, count = 0,
+                presentation = PlayerPresentationState.Failed("Decoder unavailable. Retry playback.")
+            ),
         )
         for (case in cases) runDesktopComposeUiTest(width = case.width, height = case.height) {
             setContent {
                 val density = LocalDensity.current
-                CompositionLocalProvider(LocalDensity provides Density(density.density, case.fontScale)) {
+                CompositionLocalProvider(
+                    LocalDensity provides Density(
+                        density.density,
+                        case.fontScale
+                    )
+                ) {
                     MaterialTheme(colorScheme = if (case.dark) darkColorScheme() else lightColorScheme()) {
-                        val items = remember { queueItems(case.count).also { items ->
-                            items.firstOrNull()?.playlistMediaBean?.title =
-                                "A long episode title about music, science, and the stories behind everyday discoveries"
-                        } }
+                        val items = remember {
+                            queueItems(case.count).also { items ->
+                                items.firstOrNull()?.playlistMediaBean?.title =
+                                    "A long episode title about music, science, and the stories behind everyday discoveries"
+                            }
+                        }
                         TestPlayer(state = queueState(items), presentation = case.presentation)
                     }
                 }
             }
             val media = onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot
-            assertTrue(abs(media.width - media.height) < 1f, "${case.name}: media must remain square")
+            assertTrue(
+                abs(media.width - media.height) < 1f,
+                "${case.name}: media must remain square"
+            )
             assertTrue(media.height > 0f)
             if (case.width >= 840) {
                 val queue = onNodeWithText("Current queue").fetchSemanticsNode().boundsInRoot
-                assertTrue(media.right < queue.left, "${case.name}: queue belongs to the right of media")
+                assertTrue(
+                    media.right < queue.left,
+                    "${case.name}: queue belongs to the right of media"
+                )
                 onNodeWithContentDescription("Playlist").assertDoesNotExist()
             } else {
                 onNodeWithText("Current queue").assertDoesNotExist()
                 val play = onNodeWithContentDescription("Play").fetchSemanticsNode().boundsInRoot
                 if (case.sideBySide) {
-                    assertTrue(media.right < play.left, "${case.name}: controls belong to the right of media")
+                    assertTrue(
+                        media.right < play.left,
+                        "${case.name}: controls belong to the right of media"
+                    )
                 } else {
                     assertTrue(media.bottom < play.top, "${case.name}: controls belong below media")
                 }
@@ -172,10 +243,15 @@ class PlayerLayoutTest {
             if (case.count == 0) onNodeWithText("The queue is empty").assertExists()
             onNodeWithContentDescription("Fullscreen").performScrollTo().assertIsDisplayed()
             if (case.sideBySide) {
-                assertEquals(media, onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot,
-                    "${case.name}: scrolling controls must leave the cover in place")
+                assertEquals(
+                    media, onNodeWithTag("PlayerMedia").fetchSemanticsNode().boundsInRoot,
+                    "${case.name}: scrolling controls must leave the cover in place"
+                )
             }
-            if (case.fontScale > 1f) save("${case.name}-scrolled", onNodeWithTag("PlayerLayout").captureToImage())
+            if (case.fontScale > 1f) save(
+                "${case.name}-scrolled",
+                onNodeWithTag("PlayerLayout").captureToImage()
+            )
             if (case.presentation is PlayerPresentationState.Failed) {
                 onNodeWithContentDescription("Retry").performScrollTo().assertIsDisplayed()
             }
@@ -194,11 +270,22 @@ class PlayerLayoutTest {
                 MaterialTheme {
                     TestPlayer(
                         modifier = Modifier.size(availableWidth, availableHeight),
-                        state = queueState(queueItems(12)).copy(videoTracks = listOf(Track(1, "Video", false))),
+                        state = queueState(queueItems(12)).copy(
+                            videoTracks = listOf(
+                                Track(
+                                    1,
+                                    "Video",
+                                    false
+                                )
+                            )
+                        ),
                         onEnterFullscreen = { fullscreenRequests++ },
                         playerContent = {
                             DisposableEffect(Unit) { mounts++; onDispose { disposals++ } }
-                            Box(Modifier.fillMaxSize().background(Color.Black).testTag("VideoSurface"))
+                            Box(
+                                Modifier.fillMaxSize().background(Color.Black)
+                                    .testTag("VideoSurface")
+                            )
                         },
                     )
                 }
@@ -214,7 +301,10 @@ class PlayerLayoutTest {
             onNodeWithContentDescription("Fullscreen").performClick()
             runOnIdle {
                 assertTrue(fullscreenRequests == 1)
-                assertTrue(mounts == 1 && disposals == 0, "Resizing must keep the same video composition")
+                assertTrue(
+                    mounts == 1 && disposals == 0,
+                    "Resizing must keep the same video composition"
+                )
             }
             save("ordinary-video", onNodeWithTag("PlayerLayout").captureToImage())
         }
@@ -223,6 +313,7 @@ class PlayerLayoutTest {
     private fun TestPlayer(
         modifier: Modifier = Modifier.fillMaxSize(),
         state: PlayerState = queueState(queueItems(30)),
+        articleContextState: PlayerArticleContextState = PlayerArticleContextState(),
         presentation: PlayerPresentationState = PlayerPresentationState.Ready,
         onEnterFullscreen: () -> Unit = {},
         playerContent: @Composable () -> Unit = {},
@@ -230,16 +321,25 @@ class PlayerLayoutTest {
         CompositionLocalProvider(LocalDesktopAppState provides app) {
             PortraitPlayerView(
                 playState = PlayState(false, false, state),
-                articleContextState = PlayerArticleContextState(),
+                articleContextState = articleContextState,
                 playStateCallback = queueCallbacks,
                 onDialogVisibilityChanged = OnDialogVisibilityChanged(
-                    onSpeedDialog = {}, onSubtitleTrackDialog = {}, onAudioTrackDialog = {},
-                    onSubtitleSettingDialog = {}, onAudioSettingDialog = {}, onReplaySecondDialog = {},
-                    onForwardSecondDialog = {}, onSleepTimerDialog = {},
+                    onSpeedDialog = {},
+                    onSubtitleTrackDialog = {},
+                    onAudioTrackDialog = {},
+                    onSubtitleSettingDialog = {},
+                    onAudioSettingDialog = {},
+                    onReplaySecondDialog = {},
+                    onForwardSecondDialog = {},
+                    onSleepTimerDialog = {},
                 ),
-                onBack = {}, onEnterFullscreen = onEnterFullscreen, onSetArticleFavorite = {},
-                snackbarHostState = remember { SnackbarHostState() }, modifier = modifier.testTag("PlayerLayout"),
-                presentationState = presentation, playerContent = playerContent,
+                onBack = {},
+                onEnterFullscreen = onEnterFullscreen,
+                onSetArticleFavorite = {},
+                snackbarHostState = remember { SnackbarHostState() },
+                modifier = modifier.testTag("PlayerLayout"),
+                presentationState = presentation,
+                playerContent = playerContent,
                 initialProgress = PlayerProgress(state.position, state.duration, state.buffer),
             )
         }

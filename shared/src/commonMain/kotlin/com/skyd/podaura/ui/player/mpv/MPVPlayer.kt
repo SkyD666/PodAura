@@ -6,6 +6,8 @@ import com.skyd.compone.component.blockString
 import com.skyd.fundation.config.Const
 import com.skyd.fundation.config.MPV_FONT_DIR
 import com.skyd.fundation.config.TEMP_PICTURES_DIR
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.asPlatformFile
 import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.model.preference.dataStore
@@ -17,6 +19,7 @@ import com.skyd.podaura.model.preference.player.prepareMpvRuntimeDirectories
 import com.skyd.podaura.ui.player.Track
 import com.skyd.podaura.ui.player.land.controller.bar.toDurationString
 import com.skyd.podaura.ui.player.playerTrace
+import com.skyd.podaura.ui.player.volume.PlayerVolumeController
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.exists
@@ -48,6 +51,8 @@ import kotlin.reflect.KProperty
 import kotlin.time.Duration.Companion.milliseconds
 
 class MPVPlayer {
+    internal val volumeController = PlayerVolumeController()
+
     companion object {
         private const val TAG = "MPVPlayer"
         private val TRACK_TYPES = arrayOf("sub", "audio", "video")
@@ -139,6 +144,9 @@ class MPVPlayer {
             newMpv.setPropertyString("sub-fonts-dir", fontDir)
             newMpv.setPropertyString("osd-fonts-dir", fontDir)
 
+            if (platform in setOf(Platform.Windows, Platform.macOS_Jvm, Platform.macOS_Native)) {
+                volumeController.attach(newMpv)
+            }
             observeProperties()
             Companion.initialized.store(true)
             scope.launch {
@@ -149,6 +157,7 @@ class MPVPlayer {
                 }
             }
         } catch (error: Throwable) {
+            runCatching { volumeController.detach() }
             runCatching { newMpv.destroy() }
             Companion.initialized.store(false)
             throw error
@@ -193,6 +202,8 @@ class MPVPlayer {
             // shutdown are still dispatched into an already-destroyed player.
             // Stop playback explicitly instead of relying on the handle teardown to do it: the
             // desktop/mediamp backend keeps the audio running until the file is unloaded.
+            // AO properties disappear when stop unloads the output; capture them first.
+            volumeController.detach()
             runCatching { mpv.command("stop") }
                 .onFailure { logger.w(throwable = it) { "Failed to stop playback before destroy" } }
             mpv.destroy()

@@ -8,10 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.VolumeDown
-import androidx.compose.material.icons.automirrored.rounded.VolumeMute
-import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skyd.podaura.ext.toPercentage
 import com.skyd.podaura.ui.player.component.ControllerLabelGray
+import com.skyd.podaura.ui.player.component.volumeIcon
 
 
 @Composable
@@ -43,12 +40,7 @@ internal fun BoxScope.VolumePreview(
         val start = range().start
         val endInclusive = range().endInclusive
         val length = endInclusive - start
-        val v = value()
-        val icon = when {
-            v <= start -> Icons.AutoMirrored.Rounded.VolumeMute
-            v in start..start + length / 2 -> Icons.AutoMirrored.Rounded.VolumeDown
-            else -> Icons.AutoMirrored.Rounded.VolumeUp
-        }
+        val icon = volumeIcon(value(), range())
         val percentValue = (value() - start) / length
         Icon(modifier = Modifier.size(30.dp), imageVector = icon, contentDescription = null)
         LinearProgressIndicator(

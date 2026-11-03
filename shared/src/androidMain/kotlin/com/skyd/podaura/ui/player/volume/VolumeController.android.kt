@@ -1,4 +1,4 @@
-package com.skyd.podaura.ui.component
+package com.skyd.podaura.ui.player.volume
 
 import android.content.Context
 import android.media.AudioManager
@@ -8,7 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-actual fun rememberAudioController(): AudioController {
+actual fun rememberVolumeController(): VolumeController {
     val context = LocalContext.current
     return remember(context) {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -16,7 +16,7 @@ actual fun rememberAudioController(): AudioController {
         val minVolume = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
         } else 0
-        object : AudioController {
+        object : VolumeController {
             override val range: ClosedFloatingPointRange<Float>
                 get() = minVolume.toFloat()..maxVolume.toFloat()
             override var value: Float
@@ -28,3 +28,7 @@ actual fun rememberAudioController(): AudioController {
         }
     }
 }
+
+internal actual fun createPlayerVolumeBackend(
+    mpv: com.skyd.podaura.ui.player.mpv.MPV,
+): PlayerVolumeBackend = MpvVolumeBackend(mpv)

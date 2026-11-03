@@ -1,5 +1,6 @@
 package com.skyd.podaura.ui.player.port
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -65,8 +66,8 @@ import com.skyd.podaura.ui.player.port.controller.Controller
 import com.skyd.podaura.ui.player.port.controller.PrimaryControlMode
 import com.skyd.podaura.ui.player.port.controller.SmallController
 import com.skyd.podaura.ui.player.queue.LocalPlayerQueueState
-import com.skyd.podaura.ui.player.queue.PlayerQueueState
 import com.skyd.podaura.ui.player.queue.PlayerQueue
+import com.skyd.podaura.ui.player.queue.PlayerQueueState
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import kotlinx.coroutines.flow.Flow
@@ -104,7 +105,8 @@ internal fun PortraitPlayerView(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var showMenu by rememberSaveable { mutableStateOf(false) }
     var showPlaylistSheet by remember { mutableStateOf(false) }
-    val queueState = LocalPlayerQueueState.current ?: remember(playState.queueId) { PlayerQueueState() }
+    val queueState =
+        LocalPlayerQueueState.current ?: remember(playState.queueId) { PlayerQueueState() }
     val interactive = presentationState is PlayerPresentationState.Ready
 
     Scaffold(
@@ -149,20 +151,22 @@ internal fun PortraitPlayerView(
                             contentDescription = stringResource(Res.string.player_picture_in_picture),
                         )
                     }
-                    ComponeIconButton(
-                        enabled = interactive,
-                        onClick = { showMenu = true },
-                        imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = stringResource(Res.string.more),
-                    )
-                    if (interactive) {
-                        Menu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            playState = playState,
-                            onDialogVisibilityChanged = onDialogVisibilityChanged,
-                            media = playState.currentMedia,
+                    Box {
+                        ComponeIconButton(
+                            enabled = interactive,
+                            onClick = { showMenu = true },
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = stringResource(Res.string.more),
                         )
+                        if (interactive) {
+                            Menu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false },
+                                playState = playState,
+                                onDialogVisibilityChanged = onDialogVisibilityChanged,
+                                media = playState.currentMedia,
+                            )
+                        }
                     }
                 }
             )
@@ -236,7 +240,11 @@ internal fun PortraitPlayerView(
             AnimatedDismissModalBottomSheet(
                 onDismissRequest = { showPlaylistSheet = false },
             ) {
-                PlayerQueue(playState = playState, playStateCallback = playStateCallback, queueState = queueState)
+                PlayerQueue(
+                    playState = playState,
+                    playStateCallback = playStateCallback,
+                    queueState = queueState
+                )
             }
         }
     }
@@ -255,7 +263,6 @@ private fun ControllerArea(
     presentationState: PlayerPresentationState,
     onRetry: () -> Unit,
 ) {
-    val queueState = LocalPlayerQueueState.current ?: remember(playState.queueId) { PlayerQueueState() }
     val interactive = presentationState is PlayerPresentationState.Ready
     Column(modifier = Modifier.padding(contentPadding)) {
         PlayerProgressBar(

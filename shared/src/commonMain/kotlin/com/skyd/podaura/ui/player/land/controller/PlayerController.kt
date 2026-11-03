@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -103,6 +104,9 @@ internal fun PlayerController(
     var controllerLayoutCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val scope = rememberCoroutineScope()
 
+    var volumeInteraction by remember { mutableStateOf(false) }
+    var menuInteraction by remember { mutableStateOf(false) }
+    val overlayInteraction by rememberUpdatedState(volumeInteraction || menuInteraction)
     val controllerHoverInteractionSource = remember { MutableInteractionSource() }
     val controllerHovered by controllerHoverInteractionSource.collectIsHoveredAsState()
 
@@ -119,7 +123,7 @@ internal fun PlayerController(
 
     fun restartAutoHideController() {
         cancelAutoHideController()
-        if (showController && !controllerHovered && mousePressed.value != true &&
+        if (showController && !controllerHovered && !overlayInteraction && mousePressed.value != true &&
             !dialogState.subtitleTrackDialogState().show
         ) {
             autoHideControllerJob.value = scope.launch {
@@ -131,8 +135,8 @@ internal fun PlayerController(
         }
     }
     LaunchedEffect(showController) { restartAutoHideController() }
-    LaunchedEffect(controllerHovered) {
-        if (controllerHovered) cancelAutoHideController() else restartAutoHideController()
+    LaunchedEffect(controllerHovered, overlayInteraction) {
+        if (controllerHovered || overlayInteraction) cancelAutoHideController() else restartAutoHideController()
     }
 
     var showSeekTimePreview by remember { mutableStateOf(false) }
@@ -261,6 +265,8 @@ internal fun PlayerController(
             }
             // Auto hide box
             AutoHiddenBox(
+                onVolumeInteractionChanged = { volumeInteraction = it },
+                onMenuInteractionChanged = { menuInteraction = it },
                 dialogState = dialogState,
                 playerStateFlow = playerStateFlow,
                 enabled = enabled,
@@ -330,6 +336,8 @@ internal fun PlayerController(
 
 @Composable
 private fun AutoHiddenBox(
+    onVolumeInteractionChanged: (Boolean) -> Unit,
+    onMenuInteractionChanged: (Boolean) -> Unit,
     playerStateFlow: StateFlow<PlayerState>,
     enabled: () -> Boolean,
     show: () -> Boolean,
@@ -355,6 +363,8 @@ private fun AutoHiddenBox(
                 val (topBar, bottomBar, screenshot, replaySeconds, forwardSeconds, resetTransform) = createRefs()
 
                 TopBar(
+                    enabled = enabled(),
+                    onMenuInteractionChanged = onMenuInteractionChanged,
                     dialogState = dialogState,
                     onDialogVisibilityChanged = onDialogVisibilityChanged,
                     modifier = Modifier
@@ -364,6 +374,7 @@ private fun AutoHiddenBox(
                     onExitFullscreen = onExitFullscreen,
                 )
                 BottomBar(
+                    onVolumeInteractionChanged = onVolumeInteractionChanged,
                     playerStateFlow = playerStateFlow,
                     modifier = Modifier
                         .constrainAs(bottomBar) { bottom.linkTo(parent.bottom) }

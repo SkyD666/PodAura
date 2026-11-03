@@ -35,6 +35,7 @@ import com.skyd.podaura.model.preference.player.PlayerReplaySecondsPreference
 import com.skyd.podaura.ui.component.SettingsProvider
 import com.skyd.podaura.ui.component.calculateWindowSizeClass
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
+import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.LocalPressAndHoldSpeedController
 import com.skyd.podaura.ui.player.PlayerCommand
 import com.skyd.podaura.ui.player.PlayerEvent
@@ -50,6 +51,7 @@ import com.skyd.podaura.ui.player.media.DesktopMediaWindowRegistration
 import com.skyd.podaura.ui.player.media.DesktopMediaWindowTooltips
 import com.skyd.podaura.ui.player.media.attachWindow
 import com.skyd.podaura.ui.player.media.createDesktopMediaSessionManager
+import com.skyd.podaura.ui.player.volume.LocalVolumeControlFocus
 import com.skyd.podaura.ui.theme.PodAuraTheme
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -104,9 +106,11 @@ internal class PlayerWindowController(
     var coordinator by mutableStateOf<PlayerCoordinator?>(null)
         private set
     private var mediaSession: AutoCloseable? = null
+    private val closingCoordinators = mutableSetOf<PlayerCoordinator>()
+    private var shuttingDown = false
 
     fun open(request: PlayerOpenRequest) {
-        if (request == PlayerOpenRequest.Resume) return
+        if (shuttingDown || request == PlayerOpenRequest.Resume) return
         val player = coordinator ?: createCoordinator().also { coordinator = it }
         player.open(request, playerViewModel)
     }
@@ -118,6 +122,7 @@ internal class PlayerWindowController(
         created.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 val clearDestroyedCoordinator = {
+                    closingCoordinators.remove(created)
                     if (mediaSession === createdMediaSession) {
                         mediaSession = null
                         createdMediaSession?.close()
@@ -150,12 +155,19 @@ internal class PlayerWindowController(
             tooltips = tooltips,
         )
 
+    suspend fun shutdown() {
+        shuttingDown = true
+        destroy()
+        closingCoordinators.toList().forEach { it.awaitDestroyed() }
+    }
+
     fun destroy() {
         playerViewModel.clearPendingPlayback()
         val currentCoordinator = coordinator ?: return
         coordinator = null
         mediaSession?.close()
         mediaSession = null
+        closingCoordinators += currentCoordinator
         currentCoordinator.onCommand(PlayerCommand.Destroy)
     }
 }
@@ -194,6 +206,7 @@ internal fun PlayerWindow(
             )
         }
     }
+    val volumeControlFocus = remember { mutableStateOf(false) }
     var rightArrowKeyHandler by remember {
         mutableStateOf<PlayerRightArrowKeyHandler?>(null)
     }
@@ -204,6 +217,10 @@ internal fun PlayerWindow(
     ) {
         handler?.cancel(suppressUntilKeyUp = suppressUntilKeyUp)
         pressAndHoldSpeedController?.cancelAll()
+    }
+
+    LaunchedEffect(volumeControlFocus.value) {
+        if (volumeControlFocus.value) cancelPlayerInput()
     }
 
     val closePlayerAndCancelHoldSpeed = {
@@ -217,7 +234,12 @@ internal fun PlayerWindow(
         title = windowTitle,
         // Compose focus navigation consumes arrow keys before the bubbling onKeyEvent callback.
         onPreviewKeyEvent = { event ->
-            if (event.key == Key.DirectionRight) {
+            if (volumeControlFocus.value) {
+                if (event.key == Key.DirectionRight && event.type == KeyEventType.KeyUp) {
+                    rightArrowKeyHandler?.onKeyEvent(event)
+                }
+                false
+            } else if (event.key == Key.DirectionRight) {
                 rightArrowKeyHandler?.onKeyEvent(event) ?: false
             } else {
                 val action = playerKeyboardActionForKeyEvent(event)
@@ -327,6 +349,8 @@ internal fun PlayerWindow(
             window.requestFocus()
         }
         CompositionLocalProvider(
+            LocalPlayerSession provides appState,
+            LocalVolumeControlFocus provides volumeControlFocus,
             LocalDesktopAppState provides appState,
             LocalPressAndHoldSpeedController provides pressAndHoldSpeedController,
             // Computed inside this window so it tracks this window's own size.

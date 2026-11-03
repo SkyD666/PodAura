@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.player.component
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
@@ -16,12 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -79,6 +78,8 @@ class SleepTimerUiTest {
                             Surface(Modifier.fillMaxSize()) {
                                 Column {
                                     TopBar(
+                                        enabled = true,
+                                        onMenuInteractionChanged = {},
                                         title = "A long podcast title for a quiet evening",
                                         onExitFullscreen = {},
                                         dialogState = dialogState,
@@ -94,7 +95,11 @@ class SleepTimerUiTest {
                                 if (showDialog) SleepTimerDialog(
                                     sleepTimerState = dialogState.sleepTimerState,
                                     onSelect = timer::set,
-                                    onDismissRequest = { onDialogVisibilityChanged.onSleepTimerDialog(false) },
+                                    onDismissRequest = {
+                                        onDialogVisibilityChanged.onSleepTimerDialog(
+                                            false
+                                        )
+                                    },
                                 )
                             }
                         }
@@ -105,14 +110,21 @@ class SleepTimerUiTest {
                     .assertIsDisplayed()
                 val output = File("build/reports/sleep-timer/panel-$width.png")
                 output.parentFile.mkdirs()
-                output.writeBytes(Image.makeFromBitmap(onNode(isDialog()).captureToImage().asSkiaBitmap())
-                    .encodeToData()!!.bytes)
+                output.writeBytes(
+                    Image.makeFromBitmap(onNode(isDialog()).captureToImage().asSkiaBitmap())
+                        .encodeToData()!!.bytes
+                )
                 onNodeWithText("Playback settings").performScrollTo().performClick()
                 onNodeWithText("Background playback").assertIsDisplayed()
                 onNodeWithText("Back").performClick()
                 onNodeWithText("In 30 minutes").performScrollTo().performClick()
                 onNode(isDialog()).assertDoesNotExist()
-                runOnIdle { assertEquals(SleepTimerOption.AfterMinutes(30), timer.state.value.option) }
+                runOnIdle {
+                    assertEquals(
+                        SleepTimerOption.AfterMinutes(30),
+                        timer.state.value.option
+                    )
+                }
                 val selectedState = runOnIdle { timer.state.value }
                 waitUntil(timeoutMillis = 5_000L) {
                     onAllNodes(hasContentDescription("Sleep timer, 29:59"))
@@ -125,7 +137,8 @@ class SleepTimerUiTest {
                 onNodeWithText("When current media ends").performScrollTo().performClick()
                 runOnIdle { assertEquals(SleepTimerOption.EndOfMedia, timer.state.value.option) }
                 File("build/reports/sleep-timer/status-$width.png").writeBytes(
-                    Image.makeFromBitmap(onRoot().captureToImage().asSkiaBitmap()).encodeToData()!!.bytes,
+                    Image.makeFromBitmap(onRoot().captureToImage().asSkiaBitmap())
+                        .encodeToData()!!.bytes,
                 )
                 onAllNodes(hasContentDescription("Sleep timer, When current media ends"))[0]
                     .performClick()

@@ -20,13 +20,14 @@ import com.skyd.fundation.util.isPhone
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.detectDoubleFingerTransformGestures
 import com.skyd.podaura.model.preference.player.PlayerDoubleTapPreference
-import com.skyd.podaura.ui.component.rememberAudioController
 import com.skyd.podaura.ui.component.rememberBrightnessController
 import com.skyd.podaura.ui.component.rememberSystemBarAreaDetector
 import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.land.controller.state.TransformState
 import com.skyd.podaura.ui.player.land.controller.state.TransformStateCallback
+import com.skyd.podaura.ui.player.volume.adjustTo
+import com.skyd.podaura.ui.player.volume.rememberVolumeController
 import kotlin.math.abs
 
 @Composable
@@ -144,7 +145,7 @@ internal fun Modifier.detectControllerGestures(
     var seekTimePreviewPositionDelta by remember { mutableLongStateOf(0L) }
 
     val brightnessController = rememberBrightnessController()
-    val audioController = rememberAudioController()
+    val volumeController = rememberVolumeController()
     val systemBarAreaDetector = rememberSystemBarAreaDetector()
 
     return pointerInput(Unit) {
@@ -165,8 +166,8 @@ internal fun Modifier.detectControllerGestures(
                     }
 
                     in controllerWidth() * 2 / 3f..controllerWidth().toFloat() -> {
-                        onVolumeRangeChanged(audioController.range)
-                        startVolume = audioController.value
+                        onVolumeRangeChanged(volumeController.range)
+                        startVolume = volumeController.value
                         onVolumeChanged(startVolume)
                         onShowVolume(true)
                     }
@@ -199,9 +200,9 @@ internal fun Modifier.detectControllerGestures(
 
                     in controllerWidth() * 2 / 3f..controllerWidth().toFloat() -> {
                         val newVolume = startVolume - deltaY / controllerHeight() * 1.2f *
-                                audioController.range.run { endInclusive - start }
-                        audioController.value = newVolume
-                        onVolumeChanged(newVolume)
+                                volumeController.range.run { endInclusive - start }
+                        volumeController.adjustTo(newVolume)
+                        onVolumeChanged(volumeController.value)
 
                     }
                 }

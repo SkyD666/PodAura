@@ -668,4 +668,8 @@
     <string name="playlist_reorder_shuffle">關閉隨機播放後可拖曳排序。</string>
     <string name="playlist_move_up">上移</string>
     <string name="playlist_move_down">下移</string>
+    <string name="player_volume">音量</string>
+    <string name="player_mute">靜音</string>
+    <string name="player_unmute">取消靜音</string>
+    <string name="player_muted">靜音</string>
 </resources>

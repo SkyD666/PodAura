@@ -124,6 +124,7 @@ actual class MPV {
 
             Platform.Windows -> {
                 option("ao", "wasapi")
+                option("audio-client-name", "PodAura")
             }
 
             Platform.Linux -> {
@@ -138,6 +139,14 @@ actual class MPV {
         // options afterwards leaves the macOS surface alive but without renderable frames.
         mpvHandle.setEventListener(fanOutEventListener)
         check(mpvHandle.initialize()) { "Failed to initialize mpv" }
+        if (platform == Platform.Windows) {
+            // ISimpleAudioVolume controls shared sessions. Apply after user config is loaded.
+            option("ao", "wasapi")
+            option("audio-exclusive", "no")
+            option("audio-spdif", "")
+            // The volume backend prepares and pins each endpoint before routing audio to it.
+            option("audio-fallback-to-null", "yes")
+        }
         option("save-position-on-quit", "no")
         option("force-window", "no")
         option("idle", "yes")

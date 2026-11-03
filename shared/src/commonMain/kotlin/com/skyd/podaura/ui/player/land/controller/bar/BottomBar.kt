@@ -22,9 +22,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
-import androidx.compose.material.icons.rounded.ClosedCaption
 import androidx.compose.material.icons.rounded.FullscreenExit
-import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
@@ -52,6 +50,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.skyd.fundation.ext.format
+import com.skyd.fundation.util.Platform
+import com.skyd.fundation.util.platform
 import com.skyd.podaura.ext.format
 import com.skyd.podaura.ui.player.LoopMode
 import com.skyd.podaura.ui.player.collectPlayerProgress
@@ -63,6 +63,7 @@ import com.skyd.podaura.ui.player.component.state.PlayState
 import com.skyd.podaura.ui.player.component.state.PlayStateCallback
 import com.skyd.podaura.ui.player.component.state.dialog.OnDialogVisibilityChanged
 import com.skyd.podaura.ui.player.service.PlayerState
+import com.skyd.podaura.ui.player.volume.rememberVolumeController
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
@@ -70,8 +71,6 @@ import podaura.shared.generated.resources.exit_fullscreen
 import podaura.shared.generated.resources.loop_playlist_mode
 import podaura.shared.generated.resources.pause
 import podaura.shared.generated.resources.play
-import podaura.shared.generated.resources.player_audio_track
-import podaura.shared.generated.resources.player_subtitle_track
 import podaura.shared.generated.resources.playlist
 import podaura.shared.generated.resources.shuffle_playlist
 import podaura.shared.generated.resources.skip_next
@@ -88,6 +87,7 @@ internal fun BottomBar(
     playStateCallback: PlayStateCallback,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
     onRestartAutoHideController: () -> Unit,
+    onVolumeInteractionChanged: (Boolean) -> Unit,
     onOpenPlaylist: () -> Unit,
     onExitFullscreen: () -> Unit,
 ) {
@@ -236,20 +236,13 @@ internal fun BottomBar(
                 },
                 contentDescription = stringResource(Res.string.loop_playlist_mode),
             )
-            // Audio track button
-            ControllerIconButton(
-                enabled = enabled(),
-                onClick = { onDialogVisibilityChanged.onAudioTrackDialog(true) },
-                imageVector = Icons.Rounded.MusicNote,
-                contentDescription = stringResource(Res.string.player_audio_track),
-            )
-            // Subtitle track button
-            ControllerIconButton(
-                enabled = enabled(),
-                onClick = { onDialogVisibilityChanged.onSubtitleTrackDialog(true) },
-                imageVector = Icons.Rounded.ClosedCaption,
-                contentDescription = stringResource(Res.string.player_subtitle_track),
-            )
+            if (platform == Platform.Windows || platform == Platform.macOS_Jvm || platform == Platform.macOS_Native) {
+                VolumeButton(
+                    controller = rememberVolumeController(),
+                    enabled = enabled(),
+                    onInteractionChanged = onVolumeInteractionChanged,
+                )
+            }
             // To portrait
             ControllerIconButton(
                 onClick = onExitFullscreen,

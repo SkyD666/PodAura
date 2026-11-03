@@ -668,4 +668,8 @@
     <string name="playlist_reorder_shuffle">並べ替えるにはシャッフルをオフにしてください。</string>
     <string name="playlist_move_up">上に移動</string>
     <string name="playlist_move_down">下に移動</string>
+    <string name="player_volume">音量</string>
+    <string name="player_mute">ミュート</string>
+    <string name="player_unmute">ミュートを解除</string>
+    <string name="player_muted">ミュート中</string>
 </resources>

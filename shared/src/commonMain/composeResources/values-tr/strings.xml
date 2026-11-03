@@ -676,4 +676,8 @@
     <string name="playlist_reorder_shuffle">Kuyruğu yeniden sıralamak için karıştırmayı kapatın.</string>
     <string name="playlist_move_up">Yukarı taşı</string>
     <string name="playlist_move_down">Aşağı taşı</string>
+    <string name="player_volume">Ses düzeyi</string>
+    <string name="player_mute">Sessize al</string>
+    <string name="player_unmute">Sesi aç</string>
+    <string name="player_muted">Sessize alındı</string>
 </resources>

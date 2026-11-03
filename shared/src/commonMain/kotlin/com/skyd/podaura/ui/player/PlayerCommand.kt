@@ -35,6 +35,8 @@ sealed interface PlayerCommand {
     data class VideoOffset(val offset: Offset) : PlayerCommand
     data class AudioDelay(val delayMillis: Long) : PlayerCommand
     data class SubtitleDelay(val delayMillis: Long) : PlayerCommand
+    data class SetVolume(val volume: Float) : PlayerCommand
+    data object ToggleMute : PlayerCommand
     data class SetSpeed(val speed: Float) : PlayerCommand
     data class SetSubtitleTrack(val trackId: Int) : PlayerCommand
     data class SetAudioTrack(val trackId: Int) : PlayerCommand
@@ -108,6 +110,7 @@ sealed interface PlayerEvent {
         val audioTrackId: Int,
         val subtitleTrackId: Int,
     ) : PlayerEvent
+
     data object PlaybackRestart : PlayerEvent
     data class Zoom(val value: Float) : PlayerEvent
     data class VideoOffsetX(val value: Float) : PlayerEvent

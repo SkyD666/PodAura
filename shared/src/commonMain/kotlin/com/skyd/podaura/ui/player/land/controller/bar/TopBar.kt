@@ -3,6 +3,7 @@ package com.skyd.podaura.ui.player.land.controller.bar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,10 +21,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBackIos
 import androidx.compose.material.icons.outlined.PictureInPictureAlt
+import androidx.compose.material.icons.rounded.ClosedCaption
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,17 +53,26 @@ import com.skyd.podaura.ui.player.pip.supportPip
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.back
+import podaura.shared.generated.resources.more
+import podaura.shared.generated.resources.player_audio_track
 import podaura.shared.generated.resources.player_picture_in_picture
+import podaura.shared.generated.resources.player_subtitle_track
 
 
 @Composable
 internal fun TopBar(
     modifier: Modifier = Modifier,
     title: String,
+    enabled: Boolean,
+    onMenuInteractionChanged: (Boolean) -> Unit,
     onExitFullscreen: () -> Unit,
     dialogState: DialogState,
     onDialogVisibilityChanged: OnDialogVisibilityChanged,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val notify by rememberUpdatedState(onMenuInteractionChanged)
+    LaunchedEffect(menuOpen) { notify(menuOpen) }
+    DisposableEffect(Unit) { onDispose { notify(false) } }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -101,6 +123,33 @@ internal fun TopBar(
                 imageVector = Icons.Outlined.PictureInPictureAlt,
                 contentDescription = stringResource(Res.string.player_picture_in_picture),
             )
+        }
+        Box {
+            ControllerIconButton(
+                onClick = { menuOpen = true },
+                imageVector = Icons.Rounded.MoreVert,
+                contentDescription = stringResource(Res.string.more),
+            )
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.player_audio_track)) },
+                    leadingIcon = { Icon(Icons.Rounded.MusicNote, contentDescription = null) },
+                    enabled = enabled,
+                    onClick = {
+                        menuOpen = false
+                        onDialogVisibilityChanged.onAudioTrackDialog(true)
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(Res.string.player_subtitle_track)) },
+                    leadingIcon = { Icon(Icons.Rounded.ClosedCaption, contentDescription = null) },
+                    enabled = enabled,
+                    onClick = {
+                        menuOpen = false
+                        onDialogVisibilityChanged.onSubtitleTrackDialog(true)
+                    },
+                )
+            }
         }
     }
 }

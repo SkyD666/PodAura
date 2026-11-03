@@ -134,6 +134,11 @@ internal class DesktopAppState(
         playerWindowController.close()
     }
 
+    suspend fun shutdown() {
+        windowManager.close(DesktopWindowId.Player)
+        playerWindowController.shutdown()
+    }
+
     override fun destroySession() {
         windowManager.close(DesktopWindowId.Player)
         playerWindowController.destroy()
