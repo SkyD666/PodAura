@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun DayList(
     day: Long,
+    lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
     nestedScrollConnection: NestedScrollConnection? = null,
     onError: (String) -> Unit,
@@ -84,7 +86,6 @@ fun DayList(
                     placeholderPadding = contentPadding,
                 ) {
                     Box {
-                        val lazyListState = rememberLazyListState()
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()

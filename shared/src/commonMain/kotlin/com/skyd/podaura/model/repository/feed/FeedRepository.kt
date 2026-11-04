@@ -28,13 +28,18 @@ import com.skyd.podaura.model.preference.data.delete.KeepUnreadArticlesPreferenc
 import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.model.repository.BaseRepository
 import com.skyd.podaura.model.repository.article.DownloadArticleProtectionResolver
+import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.feed.sheet.IFeedSheetRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -49,7 +54,26 @@ class FeedRepository(
     private val pagingConfig: PagingConfig,
     private val feedSheetRepository: IFeedSheetRepository,
     private val downloadArticleProtectionResolver: DownloadArticleProtectionResolver,
+    private val articleRepo: IArticleRepository,
 ) : BaseRepository(), IFeedRepository, IFeedSheetRepository by feedSheetRepository {
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing = _refreshing.asStateFlow()
+
+    // The repository is shared; only the caller that starts a refresh emits its UI events.
+    suspend fun refreshAll(onStarted: suspend () -> Unit): Boolean {
+        if (!_refreshing.compareAndSet(expect = false, update = true)) return false
+        try {
+            onStarted()
+            articleRepo.refreshArticleList(
+                feedUrls = requestAllFeedList().first().unmutedFeedUrls(),
+                full = false,
+            ).collect()
+            return true
+        } finally {
+            _refreshing.value = false
+        }
+    }
+
     fun allGroupCollapsed(): Flow<Boolean> = combine(
         groupDao.existsExpandedGroup(),
         dataStore.flowOf(FeedDefaultGroupExpandPreference),
@@ -202,6 +226,9 @@ class FeedRepository(
         emit(groupDao.collapseAllGroup(collapse) + 1)
     }.flowOn(Dispatchers.IO)
 }
+
+internal fun List<FeedBean>.unmutedFeedUrls(): List<String> =
+    filterNot { it.mute }.map { it.url }
 
 fun tryDeleteFeedIconFile(path: String?) {
     if (path != null && !path.isHttpOrHttps()) {

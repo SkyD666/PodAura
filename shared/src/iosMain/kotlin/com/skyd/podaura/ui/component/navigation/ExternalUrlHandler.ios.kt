@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation3.runtime.NavKey
-import com.skyd.podaura.ui.notification.iosArticleNotificationRequests
+import com.skyd.podaura.ui.notification.appleArticleNotificationRequests
 import com.skyd.podaura.ui.player.LocalIosPlayerSession
 import com.skyd.podaura.ui.player.PlayerOpenRequest
 import com.skyd.podaura.ui.screen.settings.data.importexport.importopml.ImportOpmlRoute
@@ -41,7 +41,7 @@ actual fun ExternalUrlListener(navBackStack: MutableList<NavKey>) {
         onDispose { ExternalUrlHandler.listener = null }
     }
     LaunchedEffect(navigation) {
-        for (route in iosArticleNotificationRequests) {
+        for (route in appleArticleNotificationRequests) {
             navigation.openPage(route)
         }
     }

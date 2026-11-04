@@ -14,8 +14,8 @@ import com.skyd.podaura.model.repository.feed.rssparser.rss.Item
 import com.skyd.podaura.model.repository.feed.rssparser.rss.Rss
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
-import kotlinx.datetime.LocalTime
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 
@@ -102,12 +102,29 @@ fun Item.toRssMediaBean(articleId: String): RssMediaBean {
         articleId = articleId,
         duration = mediaContent?.duration?.times(1000)
             ?: mediaGroup?.contents?.firstOrNull()?.duration?.times(1000)
-            ?: itunesDuration?.let { LocalTime.tryParse(it)?.toMillisecondOfDay()?.toLong() },
+            ?: itunesDuration?.let(::parsePodcastDurationMillis),
         adult = (mediaRating?.contains("adult", true) ?: itunesExplicit) == true,
         image = mediaThumbnail.firstOrNull()?.url
             ?: itunesImage?.href,
         episode = itunesEpisode,
     )
+}
+
+private val podcastDurationPattern = Regex("""[0-9]+(?::0*[0-5]?[0-9]){0,2}(?:\.[0-9]+)?""")
+
+/** Converts seconds, mm:ss or hh:mm:ss to an ISO duration for the standard parser. */
+internal fun parsePodcastDurationMillis(input: String): Long? {
+    val value = input.trim()
+    if (!podcastDurationPattern.matches(value)) return null
+    // Preserve millisecond truncation before Duration rounds sub-nanosecond fractions.
+    val decimalIndex = value.indexOf('.')
+    val normalized = if (decimalIndex < 0) value else value.take(decimalIndex + 4)
+    val parts = normalized.split(':')
+    val units = listOf("H", "M", "S").takeLast(parts.size)
+    val isoDuration = parts.zip(units).joinToString(separator = "", prefix = "PT") { (part, unit) ->
+        part + unit
+    }
+    return Duration.parseIsoStringOrNull(isoDuration)?.takeIf { it.isFinite() }?.inWholeMilliseconds
 }
 
 fun Item.Category.toArticleCategoryBean(articleId: String): ArticleCategoryBean {

@@ -5,14 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +20,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,8 +27,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeScaffold
-import com.skyd.compone.component.ComponeTopBar
-import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.withoutBottom
 import com.skyd.fundation.ext.toShortDateString
 import com.skyd.fundation.ext.toWeekdayString
@@ -38,33 +34,34 @@ import com.skyd.podaura.ui.component.HorizontalScrollControlBox
 import com.skyd.podaura.ui.component.HorizontalScrollDirection
 import com.skyd.podaura.ui.component.rememberHorizontalScrollControlState
 import com.skyd.podaura.ui.screen.calendar.daylist.DayList
-import com.skyd.podaura.ui.screen.calendar.remember2WeeksList
-import com.skyd.podaura.ui.screen.calendar.rememberCalendarListState
+import com.skyd.podaura.ui.screen.calendar.CalendarTopBar
+import com.skyd.podaura.ui.screen.calendar.CalendarState
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import org.jetbrains.compose.resources.stringResource
-import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.calendar_screen_name
 
 @Composable
-fun LargeCalendarScreen(windowInsets: WindowInsets) {
+internal fun LargeCalendarScreen(
+    state: CalendarState,
+    windowInsets: WindowInsets,
+    snackbarHostState: SnackbarHostState,
+    refreshing: Boolean,
+    onRefreshAllFeeds: () -> Unit,
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val days = remember2WeeksList()
-    val listState = rememberCalendarListState(days)
+    val days = state.days
+    val listState = state.listState
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            ComponeTopBar(
-                style = ComponeTopBarStyle.Small,
-                title = { Text(text = stringResource(Res.string.calendar_screen_name)) },
-                navigationIcon = {},
-                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            CalendarTopBar(
+                windowInsets = windowInsets,
                 scrollBehavior = scrollBehavior,
+                refreshing = refreshing,
+                onRefreshAllFeeds = onRefreshAllFeeds,
             )
         },
         contentWindowInsets = windowInsets
@@ -96,6 +93,7 @@ fun LargeCalendarScreen(windowInsets: WindowInsets) {
                         index = index,
                         day = day,
                         days = days,
+                        dayListState = state.dayListStates.getValue(day),
                         width = singleColumnWidth,
                         onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
                         bottomInsets = innerPadding.calculateBottomPadding()
@@ -111,6 +109,7 @@ private fun SingleColumn(
     index: Int,
     day: LocalDate,
     days: List<LocalDate>,
+    dayListState: LazyListState,
     width: Dp,
     onError: (String) -> Unit,
     bottomInsets: Dp = 0.dp
@@ -145,6 +144,7 @@ private fun SingleColumn(
                 .width(100.dp),
         )
         DayList(
+            lazyListState = dayListState,
             day = dayMillis,
             onError = onError,
             contentPadding = PaddingValues(bottom = bottomInsets),

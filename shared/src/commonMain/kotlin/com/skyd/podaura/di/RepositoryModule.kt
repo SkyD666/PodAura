@@ -142,8 +142,8 @@ val repositoryModule = module {
         FeedSheetRepository(get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedSheetRepository::class)
 
-    factory {
-        FeedRepository(get(), get(), get(), get(), get(), get(), get())
+    single {
+        FeedRepository(get(), get(), get(), get(), get(), get(), get(), get())
     } binds arrayOf(IFeedRepository::class)
 
     factory {

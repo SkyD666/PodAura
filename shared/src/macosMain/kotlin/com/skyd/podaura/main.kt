@@ -8,6 +8,7 @@ import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.model.preference.language.initializePlatformAppLanguage
 import com.skyd.podaura.ui.component.Window
 import com.skyd.podaura.ui.local.LocalMacosMainWindow
+import com.skyd.podaura.ui.notification.PlatformArticleNotification
 import com.skyd.podaura.ui.player.LocalMacosPlayerSession
 import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.MacosPlayerSession
@@ -34,6 +35,7 @@ fun main() {
     initKoin()
     runBlocking { initializePlatformAppLanguage() }
     val nsApplication = NSApplication.sharedApplication()
+    PlatformArticleNotification.initialize()
     nsApplication.setActivationPolicy(NSApplicationActivationPolicy.NSApplicationActivationPolicyRegular)
     onAppStart()
     var mainWindow: NSWindow? = null

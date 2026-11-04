@@ -2,9 +2,7 @@ package com.skyd.podaura.ui.screen.calendar.portrait
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -14,46 +12,44 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeScaffold
-import com.skyd.compone.component.ComponeTopBar
-import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.ext.withoutBottom
 import com.skyd.compone.ext.withoutTop
 import com.skyd.fundation.ext.toShortDateString
 import com.skyd.fundation.ext.toWeekdayString
 import com.skyd.podaura.ui.screen.calendar.daylist.DayList
-import com.skyd.podaura.ui.screen.calendar.remember2WeeksList
-import com.skyd.podaura.ui.screen.calendar.rememberCalendarPagerState
+import com.skyd.podaura.ui.screen.calendar.CalendarTopBar
+import com.skyd.podaura.ui.screen.calendar.CalendarState
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import org.jetbrains.compose.resources.stringResource
-import podaura.shared.generated.resources.Res
-import podaura.shared.generated.resources.calendar_screen_name
 
 
 @Composable
-fun PortraitCalendarScreen(windowInsets: WindowInsets) {
+internal fun PortraitCalendarScreen(
+    state: CalendarState,
+    windowInsets: WindowInsets,
+    snackbarHostState: SnackbarHostState,
+    refreshing: Boolean,
+    onRefreshAllFeeds: () -> Unit,
+) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val days = remember2WeeksList()
-    val pagerState = rememberCalendarPagerState(days)
+    val days = state.days
+    val pagerState = state.pagerState
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            ComponeTopBar(
-                style = ComponeTopBarStyle.Small,
-                title = { Text(text = stringResource(Res.string.calendar_screen_name)) },
-                navigationIcon = {},
-                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+            CalendarTopBar(
+                windowInsets = windowInsets,
                 scrollBehavior = scrollBehavior,
+                refreshing = refreshing,
+                onRefreshAllFeeds = onRefreshAllFeeds,
             )
         },
         contentWindowInsets = windowInsets
@@ -84,6 +80,7 @@ fun PortraitCalendarScreen(windowInsets: WindowInsets) {
             }
             HorizontalPager(state = pagerState, key = { days[it].toEpochDays() }) { index ->
                 DayList(
+                    lazyListState = state.dayListStates.getValue(days[index]),
                     day = days[index].atStartOfDayIn(TimeZone.currentSystemDefault())
                         .toEpochMilliseconds(),
                     contentPadding = innerPaddings.withoutTop(),

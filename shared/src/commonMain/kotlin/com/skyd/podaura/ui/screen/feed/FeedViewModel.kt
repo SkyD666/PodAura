@@ -7,7 +7,6 @@ import com.skyd.podaura.ext.cancellableTask
 import com.skyd.podaura.ext.catchMap
 import com.skyd.podaura.ext.flatMapFirst
 import com.skyd.podaura.ext.startWith
-import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.bean.feed.FeedViewBean
 import com.skyd.podaura.model.repository.article.IArticleRepository
 import com.skyd.podaura.model.repository.feed.FeedRepository
@@ -23,6 +22,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -51,8 +51,11 @@ class FeedViewModel(
             .debugLog("FeedPartialStateChange")
             .sendSingleEvent()
             .scan(initialVS) { vs, change -> change.reduce(vs) }
+            .combine(feedRepo.refreshing) { state, refreshing ->
+                state.copy(refreshAllFeedsInProgress = refreshing)
+            }
             .debugLog("ViewState")
-            .toState(initialVS)
+            .toState(initialVS.copy(refreshAllFeedsInProgress = feedRepo.refreshing.value))
     }
 
     private fun Flow<FeedPartialStateChange>.sendSingleEvent(): Flow<FeedPartialStateChange> {
@@ -166,16 +169,16 @@ class FeedViewModel(
                 }
             },
             filterIsInstance<FeedIntent.RefreshAllFeeds>().flatMapFirst {
-                feedRepo.requestAllFeedList().take(1).flatMapConcat { feeds ->
-                    articleRepo.refreshArticleList(
-                        feedUrls = feeds.unmutedFeedUrls(),
-                        full = false,
-                    )
-                }.map { FeedPartialStateChange.RefreshAllFeeds.Success }
-                    .startWith(FeedPartialStateChange.RefreshAllFeeds.Started)
-                    .catchMap {
-                        FeedPartialStateChange.RefreshAllFeeds.Failed(it.message.toString())
+                flow<FeedPartialStateChange.RefreshAllFeeds> {
+                    val refreshed = feedRepo.refreshAll {
+                        emit(FeedPartialStateChange.RefreshAllFeeds.Started)
                     }
+                    if (refreshed) {
+                        emit(FeedPartialStateChange.RefreshAllFeeds.Success)
+                    }
+                }.catchMap {
+                    FeedPartialStateChange.RefreshAllFeeds.Failed(it.message.toString())
+                }
             },
             filterIsInstance<FeedIntent.CreateGroup>().flatMapConcat { intent ->
                 feedRepo.createGroup(intent.group).map {
@@ -229,9 +232,6 @@ class FeedViewModel(
         )
     }
 }
-
-internal fun List<FeedBean>.unmutedFeedUrls(): List<String> =
-    filterNot { it.mute }.map { it.url }
 
 internal fun Flow<FeedIntent>.refreshGroupFeedChanges(
     refresh: (FeedIntent.RefreshGroupFeed) -> Flow<List<FeedViewBean>>,

@@ -12,7 +12,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.uuid.Uuid
 
-class IosArticleNotificationTest {
+class AppleArticleNotificationTest {
     @Test
     fun eachNotificationRetainsItsOwnArticleBatchInAnOsSerializablePayload() = runBlocking<Unit> {
         val ids = List(5_000) { Uuid.random().toString() }
@@ -41,9 +41,9 @@ class IosArticleNotificationTest {
 
     @Test
     fun notificationNavigationIsBufferedUntilTheUiIsReady() {
-        while (iosArticleNotificationRequests.tryReceive().isSuccess) Unit
+        while (appleArticleNotificationRequests.tryReceive().isSuccess) Unit
         val route = ArticleRoute(articleIds = UuidList(listOf(Uuid.random().toString())))
-        iosArticleNotificationRequests.trySend(route)
-        assertEquals(route, iosArticleNotificationRequests.tryReceive().getOrNull())
+        appleArticleNotificationRequests.trySend(route)
+        assertEquals(route, appleArticleNotificationRequests.tryReceive().getOrNull())
     }
 }

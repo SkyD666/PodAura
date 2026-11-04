@@ -45,6 +45,10 @@ kotlin {
             implementation(libs.kermit)
         }
 
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
+
         jvmMain.dependencies {
             implementation(libs.java.jna)
             implementation(libs.java.jna.platform)
