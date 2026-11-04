@@ -523,6 +523,8 @@
     <string name="media_style_screen_media_item_grid_type_cover_ratio">Grid type cover ratio</string>
     <string name="unlimited">Unlimited</string>
     <string name="behavior_screen_common_category">Common</string>
+    <string name="behavior_screen_default_home_tab">Default home tab</string>
+    <string name="behavior_screen_default_home_tab_description">%1$s. Applies on next launch</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">Load images only on Wi‑Fi</string>
     <string name="history_search_screen_hint">Search history</string>
     <string name="download_copyright_issues_warning">This file may involve copyright issues and is not supported for download!</string>

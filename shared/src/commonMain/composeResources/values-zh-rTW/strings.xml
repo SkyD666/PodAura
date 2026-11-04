@@ -516,6 +516,8 @@
     <string name="media_style_screen_media_item_grid_type_cover_ratio">網格封面比例</string>
     <string name="unlimited">無限制</string>
     <string name="behavior_screen_common_category">一般</string>
+    <string name="behavior_screen_default_home_tab">預設首頁</string>
+    <string name="behavior_screen_default_home_tab_description">%1$s。下次啟動時生效</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">僅在 Wi-Fi 連線時載入圖片</string>
     <string name="history_search_screen_hint">搜尋歷史記錄</string>
     <string name="download_copyright_issues_warning">此檔案可能涉及著作權問題，因此不支援下載。</string>

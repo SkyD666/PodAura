@@ -517,6 +517,8 @@
     <string name="media_style_screen_media_item_grid_type_cover_ratio">Proporcio de kovriloj en la krada aspekto</string>
     <string name="unlimited">Senlima</string>
     <string name="behavior_screen_common_category">Komuna</string>
+    <string name="behavior_screen_default_home_tab">Defaŭlta komenca langeto</string>
+    <string name="behavior_screen_default_home_tab_description">%1$s. Ekvalidos ĉe la sekva starto de la programo</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">Ŝargi bildojn nur per Wi-Fi</string>
     <string name="history_search_screen_hint">Serĉi en la historio</string>
     <string name="download_copyright_issues_warning">Ĉi tiu dosiero eble malobservas kopirajton kaj tial ne povas esti elŝutita.</string>

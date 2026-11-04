@@ -516,6 +516,8 @@
     <string name="media_style_screen_media_item_grid_type_cover_ratio">グリッド表示のカバー比率</string>
     <string name="unlimited">無制限</string>
     <string name="behavior_screen_common_category">共通</string>
+    <string name="behavior_screen_default_home_tab">デフォルトのホームタブ</string>
+    <string name="behavior_screen_default_home_tab_description">%1$s。次回起動時に反映されます</string>
     <string name="behavior_screen_load_net_image_on_wifi_only">Wi-Fi 接続時のみ画像を読み込む</string>
     <string name="history_search_screen_hint">履歴を検索</string>
     <string name="download_copyright_issues_warning">著作権を侵害する可能性があるため、このファイルはダウンロードできません。</string>

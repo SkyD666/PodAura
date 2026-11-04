@@ -16,7 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RssFeed
@@ -85,7 +85,7 @@ import com.skyd.podaura.model.preference.appearance.feed.FeedTopBarTonalElevatio
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
 import com.skyd.podaura.ui.notification.PlatformArticleNotification
-import com.skyd.podaura.ui.screen.calendar.CalendarRoute
+import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.feed.item.Feed1Item
 import com.skyd.podaura.ui.screen.feed.item.Feed1ItemPlaceholder
 import com.skyd.podaura.ui.screen.feed.item.Group1Item
@@ -104,8 +104,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.add
 import podaura.shared.generated.resources.article_delete_batch_result
-import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.collapse_all_groups
+import podaura.shared.generated.resources.download_screen_name
 import podaura.shared.generated.resources.expand_all_groups
 import podaura.shared.generated.resources.feed_screen_all_articles
 import podaura.shared.generated.resources.feed_screen_name
@@ -198,9 +198,9 @@ internal fun FeedList(
                         contentDescription = stringResource(Res.string.feed_screen_search_feed),
                     )
                     ComponeIconButton(
-                        onClick = { globalNavBackStack.add(CalendarRoute) },
-                        imageVector = Icons.Outlined.CalendarMonth,
-                        contentDescription = stringResource(Res.string.calendar_screen_name),
+                        onClick = { globalNavBackStack.add(DownloadRoute()) },
+                        imageVector = Icons.Outlined.Download,
+                        contentDescription = stringResource(Res.string.download_screen_name),
                     )
                     ComponeIconButton(
                         onClick = { openMoreMenu = true },

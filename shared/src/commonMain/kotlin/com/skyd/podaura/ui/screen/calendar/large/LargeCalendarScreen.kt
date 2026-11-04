@@ -5,15 +5,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -39,18 +39,22 @@ import com.skyd.podaura.ui.component.HorizontalScrollDirection
 import com.skyd.podaura.ui.component.rememberHorizontalScrollControlState
 import com.skyd.podaura.ui.screen.calendar.daylist.DayList
 import com.skyd.podaura.ui.screen.calendar.remember2WeeksList
+import com.skyd.podaura.ui.screen.calendar.rememberCalendarListState
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.calendar_screen_name
 
 @Composable
-fun LargeCalendarScreen() {
+fun LargeCalendarScreen(windowInsets: WindowInsets) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val days = remember2WeeksList()
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = days.lastIndex)
+    val listState = rememberCalendarListState(days)
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -58,10 +62,12 @@ fun LargeCalendarScreen() {
             ComponeTopBar(
                 style = ComponeTopBarStyle.Small,
                 title = { Text(text = stringResource(Res.string.calendar_screen_name)) },
+                navigationIcon = {},
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior,
             )
         },
-        contentWindowInsets = WindowInsets.safeDrawing
+        contentWindowInsets = windowInsets
     ) { innerPadding ->
         val density = LocalDensity.current
         val singleColumnWidth = 300.dp
@@ -85,7 +91,7 @@ fun LargeCalendarScreen() {
                 horizontalArrangement = Arrangement.spacedBy(singleColumnSpace),
                 contentPadding = innerPadding.withoutBottom() + PaddingValues(horizontal = singleColumnSpace)
             ) {
-                itemsIndexed(items = days, key = { _, day -> day }) { index, day ->
+                itemsIndexed(items = days, key = { _, day -> day.toEpochDays() }) { index, day ->
                     SingleColumn(
                         index = index,
                         day = day,
@@ -103,12 +109,13 @@ fun LargeCalendarScreen() {
 @Composable
 private fun SingleColumn(
     index: Int,
-    day: Long,
-    days: List<Long>,
+    day: LocalDate,
+    days: List<LocalDate>,
     width: Dp,
     onError: (String) -> Unit,
     bottomInsets: Dp = 0.dp
 ) {
+    val dayMillis = day.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -116,18 +123,18 @@ private fun SingleColumn(
     ) {
         val isToday = index == days.lastIndex
         val titleColor = if (isToday) {
-            MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.primary
         } else {
             Color.Unspecified
         }
         Text(
-            text = day.toShortDateString(),
+            text = dayMillis.toShortDateString(),
             color = titleColor,
             maxLines = 1,
             style = MaterialTheme.typography.headlineMedium,
         )
         Text(
-            text = day.toWeekdayString(),
+            text = dayMillis.toWeekdayString(),
             color = titleColor,
             maxLines = 1,
             style = MaterialTheme.typography.headlineMedium,
@@ -138,7 +145,7 @@ private fun SingleColumn(
                 .width(100.dp),
         )
         DayList(
-            day = days[index],
+            day = dayMillis,
             onError = onError,
             contentPadding = PaddingValues(bottom = bottomInsets),
         )

@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
-import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Widgets
@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -41,48 +42,50 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.skyd.compone.component.navigation.multiplestacks.NavigationState
 import com.skyd.compone.component.navigation.multiplestacks.Navigator
 import com.skyd.compone.component.navigation.multiplestacks.rememberNavigationState
+import com.skyd.podaura.ext.getOrDefault
 import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.preference.appearance.NavigationBarLabelPreference
+import com.skyd.podaura.model.preference.behavior.DefaultHomeTabPreference
 import com.skyd.podaura.model.preference.data.medialib.MediaLibLocationPreference
+import com.skyd.podaura.model.preference.dataStore
 import com.skyd.podaura.ui.component.navigation.PodAuraSerializersModule
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.player.mini.MiniPlayer
+import com.skyd.podaura.ui.screen.calendar.CalendarRoute
+import com.skyd.podaura.ui.screen.calendar.CalendarScreen
 import com.skyd.podaura.ui.screen.feed.FeedRoute
 import com.skyd.podaura.ui.screen.feed.FeedScreen
 import com.skyd.podaura.ui.screen.media.MediaRoute
 import com.skyd.podaura.ui.screen.media.MediaScreen
 import com.skyd.podaura.ui.screen.more.MoreRoute
 import com.skyd.podaura.ui.screen.more.MoreScreen
-import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
-import com.skyd.podaura.ui.screen.playlist.PlaylistScreen
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
+import podaura.shared.generated.resources.calendar_screen_name
 import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.media_screen_name
 import podaura.shared.generated.resources.more_screen_name
-import podaura.shared.generated.resources.playlist
 
 
 @Serializable
 data object MainRoute : NavKey
 
+internal val mainTabRoutes: List<NavKey> = listOf(FeedRoute, CalendarRoute, MediaRoute, MoreRoute)
+
 @Composable
 fun MainScreen() {
     val windowSizeClass = LocalWindowSizeClass.current
     val playerSession = LocalPlayerSession.current
-    val routes = listOf(FeedRoute, PlaylistRoute, MediaRoute, MoreRoute)
-    val navigationState = rememberNavigationState(
-        startRoute = FeedRoute,
-        topLevelRoutes = routes.toSet(),
-        configuration = SavedStateConfiguration { serializersModule = PodAuraSerializersModule }
+    val navigationState = rememberMainNavigationState(
+        defaultHomeTab = remember { dataStore.getOrDefault(DefaultHomeTabPreference) },
     )
-    val navigator = remember { Navigator(navigationState) }
+    val navigator = remember(navigationState) { Navigator(navigationState) }
 
     val navigationBarOrRail: @Composable () -> Unit = {
         NavigationBarOrRail(
-            routes = routes,
+            routes = mainTabRoutes,
             navigationState = navigationState,
             onSelectedChanged = { navigator.navigate(it) },
         )
@@ -120,20 +123,16 @@ fun MainScreen() {
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
-                        fadeOut(animationSpec = tween(170))
                 val entryProvider: (NavKey) -> NavEntry<NavKey> = entryProvider {
                     entry<FeedRoute> { FeedScreen() }
-                    entry<PlaylistRoute> { PlaylistScreen() }
+                    entry<CalendarRoute> { CalendarScreen() }
                     entry<MediaRoute> { MediaScreen(path = MediaLibLocationPreference.current) }
                     entry<MoreRoute> { MoreScreen() }
                 }
-                NavDisplay(
-                    entries = navigationState.toDecoratedEntries(entryProvider),
+                MainTabNavDisplay(
+                    navigationState = navigationState,
+                    entryProvider = entryProvider,
                     modifier = Modifier.weight(1f),
-                    transitionSpec = { contentTransform },
-                    popTransitionSpec = { contentTransform },
-                    predictivePopTransitionSpec = { contentTransform },
                     onBack = { navigator.goBack() },
                 )
                 if (!windowSizeClass.isCompact) {
@@ -148,6 +147,45 @@ fun MainScreen() {
 }
 
 @Composable
+internal fun rememberMainNavigationState(defaultHomeTab: String): NavigationState {
+    // Keep the startup choice stable when settings change or this entry is restored.
+    val initialHomeTab = rememberSaveable { defaultHomeTab }
+    val startRoute: NavKey = when (initialHomeTab) {
+        DefaultHomeTabPreference.CALENDAR -> CalendarRoute
+        DefaultHomeTabPreference.MEDIA -> MediaRoute
+        DefaultHomeTabPreference.MORE -> MoreRoute
+        else -> FeedRoute
+    }
+    return rememberNavigationState(
+        startRoute = startRoute,
+        topLevelRoutes = mainTabRoutes.toSet(),
+        configuration = SavedStateConfiguration { serializersModule = PodAuraSerializersModule },
+    )
+}
+
+@Composable
+internal fun MainTabNavDisplay(
+    navigationState: NavigationState,
+    entryProvider: (NavKey) -> NavEntry<NavKey>,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val entries = navigationState.toDecoratedEntries(entryProvider)
+    val currentStack = navigationState.backStacks.getValue(navigationState.topLevelRoute)
+    val contentTransform = fadeIn(animationSpec = tween(170)) togetherWith
+            fadeOut(animationSpec = tween(170))
+    NavDisplay(
+        // Compone prepends the home stack. Tabs are peers: only the current stack handles Back.
+        entries = entries.takeLast(currentStack.size),
+        modifier = modifier,
+        transitionSpec = { contentTransform },
+        popTransitionSpec = { contentTransform },
+        predictivePopTransitionSpec = { contentTransform },
+        onBack = onBack,
+    )
+}
+
+@Composable
 private fun NavigationBarOrRail(
     routes: List<NavKey>,
     navigationState: NavigationState,
@@ -155,7 +193,7 @@ private fun NavigationBarOrRail(
 ) {
     val items = listOf(
         stringResource(Res.string.feed_screen_name),
-        stringResource(Res.string.playlist),
+        stringResource(Res.string.calendar_screen_name),
         stringResource(Res.string.media_screen_name),
         stringResource(Res.string.more_screen_name),
     )
@@ -163,13 +201,13 @@ private fun NavigationBarOrRail(
         mapOf(
             true to listOf(
                 Icons.Filled.RssFeed,
-                Icons.AutoMirrored.Filled.PlaylistPlay,
+                Icons.Filled.CalendarMonth,
                 Icons.Filled.Movie,
                 Icons.Filled.Widgets
             ),
             false to listOf(
                 Icons.Outlined.RssFeed,
-                Icons.AutoMirrored.Outlined.PlaylistPlay,
+                Icons.Outlined.CalendarMonth,
                 Icons.Outlined.Movie,
                 Icons.Outlined.Widgets
             ),

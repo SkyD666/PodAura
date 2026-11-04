@@ -20,7 +20,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
@@ -56,8 +56,8 @@ import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.model.bean.MoreBean
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
-import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
+import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.settings.SettingsRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import kotlinx.serialization.Serializable
@@ -65,10 +65,10 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.about_screen_name
-import podaura.shared.generated.resources.download_screen_name
 import podaura.shared.generated.resources.history_screen_name
 import podaura.shared.generated.resources.import_export_screen_name
 import podaura.shared.generated.resources.more_screen_name
+import podaura.shared.generated.resources.playlist
 import podaura.shared.generated.resources.settings
 
 
@@ -179,20 +179,20 @@ private suspend fun getMoreBeanList(
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
-            title = getString(Res.string.history_screen_name),
-            icon = Icons.Outlined.History,
+            title = getString(Res.string.playlist),
+            icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
             iconTint = colorScheme.onPrimary,
-            shape = MaterialShapes.Pill,
+            shape = MaterialShapes.Clover8Leaf,
             shapeColor = colorScheme.primary,
-            action = { navBackStack.add(HistoryRoute) },
+            action = { navBackStack.add(PlaylistRoute) },
         ),
         MoreBean(
-            title = getString(Res.string.download_screen_name),
-            icon = Icons.Outlined.Download,
+            title = getString(Res.string.history_screen_name),
+            icon = Icons.Outlined.History,
             iconTint = colorScheme.onSecondary,
-            shape = MaterialShapes.Clover8Leaf,
+            shape = MaterialShapes.Pill,
             shapeColor = colorScheme.secondary,
-            action = { navBackStack.add(DownloadRoute()) },
+            action = { navBackStack.add(HistoryRoute) },
         ),
         MoreBean(
             title = getString(Res.string.import_export_screen_name),

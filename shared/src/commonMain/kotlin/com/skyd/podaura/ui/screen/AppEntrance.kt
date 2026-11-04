@@ -41,8 +41,6 @@ import com.skyd.podaura.ui.screen.about.license.LicenseScreen
 import com.skyd.podaura.ui.screen.about.update.UpdateDialog
 import com.skyd.podaura.ui.screen.article.ArticleRoute
 import com.skyd.podaura.ui.screen.article.ArticleRoute.Companion.ArticleLauncher
-import com.skyd.podaura.ui.screen.calendar.CalendarRoute
-import com.skyd.podaura.ui.screen.calendar.CalendarScreen
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute
 import com.skyd.podaura.ui.screen.download.DownloadDeepLinkRoute.Companion.DownloadDeepLinkLauncher
 import com.skyd.podaura.ui.screen.download.DownloadRoute
@@ -70,6 +68,8 @@ import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute.Companion.MediaSearchLauncher
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute.Companion.SubMediaLauncher
+import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
+import com.skyd.podaura.ui.screen.playlist.PlaylistScreen
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute.Companion.PlaylistMediaListLauncher
 import com.skyd.podaura.ui.screen.read.ReadRoute
@@ -214,7 +214,7 @@ internal fun MainNavHost() {
             entry<ReorderGroupRoute> { ReorderGroupScreen() }
             entry<ReorderFeedRoute> { ReorderFeedLauncher(it) }
             entry<SearchStyleRoute> { SearchStyleScreen() }
-            miniPlayerEntry<CalendarRoute> { CalendarScreen() }
+            miniPlayerEntry<PlaylistRoute> { PlaylistScreen() }
             entry<BehaviorRoute> { BehaviorScreen() }
             entry<AutoDeleteRoute> { AutoDeleteScreen() }
             miniPlayerEntry<HistoryRoute> { HistoryScreen() }

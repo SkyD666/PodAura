@@ -42,7 +42,6 @@ import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.compone.ext.thenIf
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
-import com.skyd.podaura.ext.isCompact
 import com.skyd.podaura.ext.rememberUpdateSemaphore
 import com.skyd.podaura.ext.safeItemKey
 import com.skyd.podaura.ext.vThenP
@@ -55,7 +54,6 @@ import com.skyd.podaura.ui.component.ErrorPlaceholder
 import com.skyd.podaura.ui.component.PagingRefreshStateIndicator
 import com.skyd.podaura.ui.component.dialog.SortDialog
 import com.skyd.podaura.ui.component.dialog.TextFieldDialog
-import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
@@ -79,7 +77,6 @@ data object PlaylistRoute : NavKey
 fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
-    val windowSizeClass = LocalWindowSizeClass.current
     val navBackStack = LocalNavBackStack.current
     val scope = rememberCoroutineScope()
 
@@ -101,7 +98,6 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
             ComponeTopBar(
                 title = { Text(text = stringResource(Res.string.playlist_screen_name)) },
                 scrollBehavior = scrollBehavior,
-                navigationIcon = {},
                 actions = {
                     ComponeIconButton(
                         onClick = { showSortDialog = true },
@@ -109,11 +105,9 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                         contentDescription = stringResource(Res.string.sort),
                     )
                 },
-                windowInsets =
-                    if (windowSizeClass.isCompact)
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-                    else
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.End)
+                windowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                ),
             )
         },
         floatingActionButton = {
@@ -128,11 +122,7 @@ fun PlaylistScreen(viewModel: PlaylistViewModel = koinViewModel()) {
                 )
             }
         },
-        contentWindowInsets =
-            if (windowSizeClass.isCompact)
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
-            else
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+        contentWindowInsets = WindowInsets.safeDrawing,
     ) { innerPadding ->
         when (val listState = uiState.listState) {
             is ListState.Failed -> ErrorPlaceholder(listState.msg, innerPadding)

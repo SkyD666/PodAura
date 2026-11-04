@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.SwipeLeft
 import androidx.compose.material.icons.outlined.SwipeRight
@@ -47,6 +48,7 @@ import com.skyd.compone.component.dialog.ComponeDialog
 import com.skyd.compone.component.menu.CheckableListMenu
 import com.skyd.compone.component.pointerOnBack
 import com.skyd.podaura.model.preference.appearance.media.MediaFileFilterPreference
+import com.skyd.podaura.model.preference.behavior.DefaultHomeTabPreference
 import com.skyd.podaura.model.preference.behavior.LoadNetImageOnWifiOnlyPreference
 import com.skyd.podaura.model.preference.behavior.article.AlwaysShowArticleFilterPreference
 import com.skyd.podaura.model.preference.behavior.article.ArticleSwipeActionPreference
@@ -77,6 +79,8 @@ import podaura.shared.generated.resources.behavior_screen_article_swipe_right_ac
 import podaura.shared.generated.resources.behavior_screen_article_tap_action
 import podaura.shared.generated.resources.behavior_screen_calendar_hide_muted_article
 import podaura.shared.generated.resources.behavior_screen_common_category
+import podaura.shared.generated.resources.behavior_screen_default_home_tab
+import podaura.shared.generated.resources.behavior_screen_default_home_tab_description
 import podaura.shared.generated.resources.behavior_screen_feed_screen_category
 import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_empty_default
 import podaura.shared.generated.resources.behavior_screen_feed_screen_hide_empty_default_description
@@ -104,6 +108,7 @@ fun BehaviorScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
+    var expandDefaultHomeTabMenu by rememberSaveable { mutableStateOf(false) }
     var expandArticleTapActionMenu by rememberSaveable { mutableStateOf(false) }
     var expandArticleSwipeLeftActionMenu by rememberSaveable { mutableStateOf(false) }
     var expandArticleSwipeRightActionMenu by rememberSaveable { mutableStateOf(false) }
@@ -129,6 +134,29 @@ fun BehaviorScreen(
             contentPadding = innerPadding,
         ) {
             group(text = { getString(Res.string.behavior_screen_common_category) }) {
+                item {
+                    BaseSettingsItem(
+                        icon = rememberVectorPainter(Icons.Outlined.Home),
+                        text = stringResource(Res.string.behavior_screen_default_home_tab),
+                        descriptionText = stringResource(
+                            Res.string.behavior_screen_default_home_tab_description,
+                            suspendString(DefaultHomeTabPreference.current) {
+                                DefaultHomeTabPreference.toDisplayName(it)
+                            },
+                        ),
+                        extraContent = {
+                            CheckableListMenu(
+                                expanded = expandDefaultHomeTabMenu,
+                                current = DefaultHomeTabPreference.current,
+                                values = remember { DefaultHomeTabPreference.values.toList() },
+                                displayName = { DefaultHomeTabPreference.toDisplayName(it) },
+                                onChecked = { DefaultHomeTabPreference.put(scope, it) },
+                                onDismissRequest = { expandDefaultHomeTabMenu = false },
+                            )
+                        },
+                        onClick = { expandDefaultHomeTabMenu = true },
+                    )
+                }
                 item {
                     SwitchSettingsItem(
                         imageVector = Icons.Outlined.Wifi,

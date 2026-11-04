@@ -2,11 +2,11 @@ package com.skyd.podaura.ui.screen.calendar.portrait
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -28,19 +28,22 @@ import com.skyd.fundation.ext.toShortDateString
 import com.skyd.fundation.ext.toWeekdayString
 import com.skyd.podaura.ui.screen.calendar.daylist.DayList
 import com.skyd.podaura.ui.screen.calendar.remember2WeeksList
+import com.skyd.podaura.ui.screen.calendar.rememberCalendarPagerState
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.calendar_screen_name
 
 
 @Composable
-fun PortraitCalendarScreen() {
+fun PortraitCalendarScreen(windowInsets: WindowInsets) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val days = remember2WeeksList()
-    val pagerState = rememberPagerState(initialPage = days.lastIndex, pageCount = { days.size })
+    val pagerState = rememberCalendarPagerState(days)
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -48,10 +51,12 @@ fun PortraitCalendarScreen() {
             ComponeTopBar(
                 style = ComponeTopBarStyle.Small,
                 title = { Text(text = stringResource(Res.string.calendar_screen_name)) },
+                navigationIcon = {},
+                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior,
             )
         },
-        contentWindowInsets = WindowInsets.safeDrawing
+        contentWindowInsets = windowInsets
     ) { innerPaddings ->
         Column {
             PrimaryScrollableTabRow(
@@ -62,7 +67,9 @@ fun PortraitCalendarScreen() {
                 edgePadding = 0.dp,
                 minTabWidth = 60.dp,
             ) {
-                days.forEachIndexed { index, day ->
+                days.forEachIndexed { index, date ->
+                    val day = date.atStartOfDayIn(TimeZone.currentSystemDefault())
+                        .toEpochMilliseconds()
                     Tab(
                         selected = pagerState.currentPage == index,
                         onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
@@ -75,9 +82,10 @@ fun PortraitCalendarScreen() {
                     )
                 }
             }
-            HorizontalPager(state = pagerState, key = { days[it] }) { index ->
+            HorizontalPager(state = pagerState, key = { days[it].toEpochDays() }) { index ->
                 DayList(
-                    day = days[index],
+                    day = days[index].atStartOfDayIn(TimeZone.currentSystemDefault())
+                        .toEpochMilliseconds(),
                     contentPadding = innerPaddings.withoutTop(),
                     nestedScrollConnection = scrollBehavior.nestedScrollConnection,
                     onError = { scope.launch { snackbarHostState.showSnackbar(it) } },
