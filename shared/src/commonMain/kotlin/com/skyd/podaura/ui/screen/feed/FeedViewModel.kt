@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.scan
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -44,7 +43,9 @@ class FeedViewModel(
         val initialVS = FeedState.initial()
 
         viewState = merge(
-            intentFlow.filterIsInstance<FeedIntent.Init>().take(1),
+            // The UI's first Init can arrive before the shared intent flow has subscribers.
+            // Start loading from the state pipeline itself, once per ViewModel.
+            flowOf(FeedIntent.Init),
             intentFlow.filterNot { it is FeedIntent.Init }
         )
             .toFeedPartialStateChangeFlow()
