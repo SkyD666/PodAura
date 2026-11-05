@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,6 +97,15 @@ internal fun PlayerQueue(
     )
 
     val currentUrl = playState.path
+    val currentItemVisible by remember(listState, currentUrl) {
+        derivedStateOf {
+            val layout = listState.layoutInfo
+            layout.visibleItemsInfo.any {
+                it.key == currentUrl && it.offset + it.size > layout.viewportStartOffset &&
+                        it.offset < layout.viewportEndOffset
+            }
+        }
+    }
     val currentIndex = playlist.indexOfFirst { it.playlistMediaBean.url == currentUrl }
     LaunchedEffect(queueId, currentUrl, currentIndex, queueState.following) {
         if (currentIndex >= 0 && (!queueState.positioned || (queueState.following && queueState.lastFollowedUrl != currentUrl))) {
@@ -215,7 +225,9 @@ internal fun PlayerQueue(
                             val url = item.playlistMediaBean.url
                             val selected = url in selectedUrls
                             PlaylistMediaItem(
-                                playing = url == currentUrl,
+                                isCurrent = url == currentUrl,
+                                isPlaying = playState.isPlaying && !playState.loading && !playState.idling,
+                                animatePlayback = currentItemVisible,
                                 selected = selected,
                                 data = item,
                                 draggable = !selectMode && !playState.shuffle,

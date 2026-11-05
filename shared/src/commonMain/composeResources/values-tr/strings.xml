@@ -450,6 +450,7 @@
     <string name="shuffle_playlist">Çalma listesini karıştır</string>
     <string name="loop_playlist_mode">Çalma listesi döngü modu</string>
     <string name="playing">Oynatılıyor</string>
+    <string name="player_current_media">Geçerli medya</string>
     <string name="playlist">Çalma listesi</string>
     <string name="read_screen_open_article_screen">Bu akışı görüntüle</string>
     <string name="sort_date">Tarih</string>

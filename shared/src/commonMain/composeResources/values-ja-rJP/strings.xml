@@ -435,6 +435,7 @@
     <string name="shuffle_playlist">プレイリストをシャッフル</string>
     <string name="loop_playlist_mode">プレイリストのループモード</string>
     <string name="playing">再生中</string>
+    <string name="player_current_media">現在のメディア</string>
     <string name="playlist">プレイリスト</string>
     <string name="read_screen_open_article_screen">このフィードを表示</string>
     <string name="sort_date">日付</string>

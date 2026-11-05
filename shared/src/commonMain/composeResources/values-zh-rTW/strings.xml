@@ -449,6 +449,7 @@
     <string name="shuffle_playlist">隨機播放清單</string>
     <string name="loop_playlist_mode">播放清單循環模式</string>
     <string name="playing">播放中</string>
+    <string name="player_current_media">目前曲目</string>
     <string name="playlist">播放清單</string>
     <string name="read_screen_open_article_screen">檢視此訂閱</string>
     <string name="sort_date">日期</string>

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Checkbox
@@ -53,13 +52,14 @@ import org.jetbrains.compose.resources.stringResource
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.history_screen_local_file
 import podaura.shared.generated.resources.media_not_exists
-import podaura.shared.generated.resources.playing
 import podaura.shared.generated.resources.playlist_reorder
 
 @Composable
 fun PlaylistMediaItem(
-    playing: Boolean,
+    isCurrent: Boolean,
     selected: Boolean,
+    isPlaying: Boolean = false,
+    animatePlayback: Boolean = true,
     dragIconModifier: Modifier = Modifier,
     draggable: Boolean = false,
     data: PlaylistMediaWithArticleBean,
@@ -89,7 +89,7 @@ fun PlaylistMediaItem(
                         .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (!playing) {
+                    if (!isCurrent) {
                         Icon(
                             imageVector = Icons.Outlined.MusicNote,
                             contentDescription = null,
@@ -105,18 +105,16 @@ fun PlaylistMediaItem(
                     onError = { imageLoadError = true },
                 )
             }
-            if (playing) {
+            if (isCurrent) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.4f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.PlayArrow,
-                        contentDescription = stringResource(Res.string.playing),
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White,
+                    PlaylistPlaybackIndicator(
+                        isPlaying = isPlaying,
+                        animate = animatePlayback,
                     )
                 }
             }

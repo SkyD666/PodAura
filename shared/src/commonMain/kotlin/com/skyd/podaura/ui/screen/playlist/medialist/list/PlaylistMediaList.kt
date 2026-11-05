@@ -249,7 +249,7 @@ private fun PlaylistMediaList(
                         is PlaylistMediaWithArticleBean -> {
                             val selected = item in uiState.selectedItems
                             PlaylistMediaItem(
-                                playing = item.playlistMediaBean.isSamePlaylistMedia(currentPlay?.playlistMediaBean),
+                                isCurrent = item.playlistMediaBean.isSamePlaylistMedia(currentPlay?.playlistMediaBean),
                                 selected = selected,
                                 data = item,
                                 dragIconModifier = playlistDragHandle(

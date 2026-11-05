@@ -3,15 +3,20 @@ package com.skyd.podaura.ui.player.queue
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipe
@@ -20,6 +25,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performMouseInput
@@ -50,6 +56,8 @@ import kotlinx.coroutines.flow.flowOf
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+import org.jetbrains.skia.Image
+import java.io.File
 
 @OptIn(ExperimentalTestApi::class)
 class PlayerQueueTest {
@@ -65,6 +73,51 @@ class PlayerQueueTest {
     fun tearDown() {
         imageLoader.shutdown()
         stopKoin()
+    }
+
+    @Test
+    fun currentMarkerTracksPlaybackBufferingAndTrackChanges() {
+        for (width in listOf(420, 840)) {
+            runDesktopComposeUiTest(width = width, height = 360) {
+                val items = queueItems(8)
+                var state by mutableStateOf(queueState(items).copy(idling = false))
+                setContent {
+                    MaterialTheme(colorScheme = if (width == 420) lightColorScheme() else darkColorScheme()) {
+                        Surface {
+                            PlayerQueue(
+                                PlayState(!state.paused && state.mediaStarted, false, state),
+                                queueCallbacks,
+                            )
+                        }
+                    }
+                }
+                onAllNodesWithContentDescription("Current media").assertCountEquals(1)
+                mainClock.autoAdvance = false
+                runOnIdle { state = state.copy(paused = false) }
+                mainClock.advanceTimeBy(300)
+                onAllNodesWithContentDescription("Playing").assertCountEquals(1)
+                val output = File("build/reports/playlist-indicator/playing-$width.png")
+                output.parentFile.mkdirs()
+                output.writeBytes(Image.makeFromBitmap(onRoot().captureToImage().asSkiaBitmap()).encodeToData()!!.bytes)
+
+                runOnIdle { state = state.copy(loading = true) }
+                mainClock.advanceTimeBy(200)
+                onAllNodesWithContentDescription("Playing").assertCountEquals(0)
+                onAllNodesWithContentDescription("Current media").assertCountEquals(1)
+                runOnIdle {
+                    state = state.copy(loading = false, path = items[1].playlistMediaBean.url, playlistPosition = 1)
+                }
+                mainClock.advanceTimeBy(300)
+                onAllNodesWithContentDescription("Playing").assertCountEquals(1)
+                onNodeWithContentDescription("Playing").assertIsDisplayed()
+                runOnIdle { state = state.copy(paused = true, mediaStarted = false) }
+                mainClock.advanceTimeBy(200)
+                onAllNodesWithContentDescription("Current media").assertCountEquals(1)
+                File(output.parentFile, "stopped-$width.png").writeBytes(
+                    Image.makeFromBitmap(onRoot().captureToImage().asSkiaBitmap()).encodeToData()!!.bytes,
+                )
+            }
+        }
     }
 
     @Test

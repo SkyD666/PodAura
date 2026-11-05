@@ -450,6 +450,7 @@
     <string name="shuffle_playlist">Miksi la ludliston</string>
     <string name="loop_playlist_mode">Ripetreĝimo de ludlisto</string>
     <string name="playing">Ludante</string>
+    <string name="player_current_media">Nuna aŭdvidaĵo</string>
     <string name="playlist">Ludlisto</string>
     <string name="read_screen_open_article_screen">Vidi ĉi tiun abonfluon</string>
     <string name="sort_date">Dato</string>
