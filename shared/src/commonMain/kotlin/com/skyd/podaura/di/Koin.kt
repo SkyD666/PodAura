@@ -2,6 +2,7 @@ package com.skyd.podaura.di
 
 import com.skyd.downloader.di.downloaderDatabaseModule
 import com.skyd.downloader.di.downloaderModule
+import com.skyd.fundation.di.credentialStoreModule
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
@@ -12,16 +13,16 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
         ioModule,
         databaseModule,
         dataStoreModule,
-        credentialStoreModule,
         fullContentPlatformModule,
         pagingModule,
         repositoryModule,
         viewModelModule,
         downloaderModule,
         downloaderDatabaseModule,
+        sharedApiModule,
+        credentialStoreModule,
     )
 }
 
 expect val dataStoreModule: Module
-expect val credentialStoreModule: Module
 expect val fullContentPlatformModule: Module

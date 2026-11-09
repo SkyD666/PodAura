@@ -17,6 +17,7 @@ import com.skyd.podaura.ui.player.LocalIosPlayerSession
 import com.skyd.podaura.ui.player.LocalPlayerSession
 import com.skyd.podaura.ui.screen.AppEntrance
 import kotlinx.cinterop.cValue
+import org.koin.dsl.KoinAppDeclaration
 import platform.Foundation.NSOperatingSystemVersion
 import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIInterfaceOrientationMask
@@ -53,19 +54,19 @@ internal object IosPlayerChrome {
 private var iosAppInitialized = false
 
 /** Called before launch completes, including launches initiated by a background refresh. */
-fun initializeIosApp() {
+fun initializeIosApp(appDeclaration: KoinAppDeclaration) {
     if (iosAppInitialized) return
     iosAppInitialized = true
     PlatformArticleNotification.initialize()
-    initKoin()
+    initKoin(appDeclaration)
     onAppStart()
     IosArticleNotificationLifecycle.initialize()
     IosRssSync.initialize()
 }
 
 @Suppress("FunctionName", "unused")
-fun MainViewController(): UIViewController {
-    initializeIosApp()
+fun createIosViewController(): UIViewController {
+    check(iosAppInitialized) { "Initialize the app before creating a view controller" }
     val session = IosPlayerSession()
     lateinit var navigation: IosAppNavigationController
     val root = ComposeUIViewController { IosApp(session, navigation) }

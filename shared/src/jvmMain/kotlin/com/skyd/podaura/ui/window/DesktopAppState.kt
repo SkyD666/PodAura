@@ -18,13 +18,13 @@ import com.skyd.podaura.ui.player.coordinator.PlayerCoordinator
 import com.skyd.podaura.ui.player.jumper.PlayDataMode
 import io.github.vinceglb.filekit.PlatformFile
 
-internal sealed interface DesktopWindowId {
+sealed interface DesktopWindowId {
     data object Main : DesktopWindowId
     data object Player : DesktopWindowId
     data class ImagePreview(val image: String) : DesktopWindowId
 }
 
-internal sealed interface DesktopWindowSpec {
+sealed interface DesktopWindowSpec {
     val id: DesktopWindowId
 
     data object Main : DesktopWindowSpec {
@@ -41,7 +41,7 @@ internal sealed interface DesktopWindowSpec {
 }
 
 @Immutable
-internal data class DesktopWindowEntry(
+data class DesktopWindowEntry(
     val spec: DesktopWindowSpec,
     val activationToken: Long,
 ) {
@@ -57,7 +57,7 @@ internal data class DesktopWindowEntry(
  * without creating a duplicate.
  */
 @Stable
-internal class DesktopWindowManager {
+class DesktopWindowManager {
     private val windowEntries = mutableStateListOf(
         DesktopWindowEntry(
             spec = DesktopWindowSpec.Main,
@@ -108,10 +108,10 @@ internal class DesktopWindowManager {
  * Application-lifetime state and business-facing operations for JVM desktop windows.
  */
 @Stable
-internal class DesktopAppState(
+class DesktopAppState internal constructor(
     val windowManager: DesktopWindowManager,
-    val playerWindowController: PlayerWindowController,
-    val playerArticleContextViewModel: PlayerArticleContextViewModel,
+    internal val playerWindowController: PlayerWindowController,
+    internal val playerArticleContextViewModel: PlayerArticleContextViewModel,
     hasAcceptedTerms: (() -> Boolean)? = null,
 ) : PlayerSession {
     private val playerEntry =
@@ -163,7 +163,7 @@ internal val LocalDesktopAppState = staticCompositionLocalOf<DesktopAppState> {
 }
 
 @Composable
-internal fun rememberDesktopAppState(): DesktopAppState {
+fun rememberDesktopAppState(): DesktopAppState {
     // Playback preparation belongs to the application, not a navigation entry.
     val playerViewModel = remember { get<PlayerViewModel>() }
     val playerArticleContextViewModel = remember { get<PlayerArticleContextViewModel>() }

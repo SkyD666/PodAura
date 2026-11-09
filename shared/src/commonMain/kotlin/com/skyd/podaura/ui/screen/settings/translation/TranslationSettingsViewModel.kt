@@ -2,10 +2,10 @@ package com.skyd.podaura.ui.screen.settings.translation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.skyd.fundation.credential.CredentialStorageException
 import com.skyd.podaura.model.bean.translation.TranslationError
 import com.skyd.podaura.model.bean.translation.TranslationProfile
 import com.skyd.podaura.model.bean.translation.TranslationVerificationResult
-import com.skyd.podaura.model.repository.translation.CredentialStorageException
 import com.skyd.podaura.model.repository.translation.TranslationProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

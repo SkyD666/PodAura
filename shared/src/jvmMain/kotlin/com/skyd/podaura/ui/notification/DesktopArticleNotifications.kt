@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 import java.nio.file.Path
 
-internal object DesktopArticleNotifications {
+object DesktopArticleNotifications {
     private const val TAG = "ArticleNotification"
     private val pending = Channel<String>(Channel.UNLIMITED)
     val activations = pending.receiveAsFlow()

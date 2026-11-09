@@ -62,7 +62,7 @@ if ($env:OS -ne "Windows_NT") {
 
 $ProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $GradleWrapper = Join-Path $ProjectRoot "gradlew.bat"
-$MsixPath = Join-Path $ProjectRoot "shared\build\PodAura.msix"
+$MsixPath = Join-Path $ProjectRoot "platform\build\PodAura.msix"
 $Publisher = "CN=A899BB3F-B2EE-4733-BFE7-45715FA85273"
 $PackageIdentityName = "SkyD666.PodAura"
 $ApplicationId = "PodAura"
@@ -496,7 +496,7 @@ function Invoke-SignedMsixBuild {
 
         Push-Location $ProjectRoot
         try {
-            & $GradleWrapper ":shared:createMsix" "--console=plain"
+            & $GradleWrapper ":platform:createMsix" "--console=plain"
             if ($LASTEXITCODE -ne 0) {
                 throw "Gradle MSIX build failed with exit code $LASTEXITCODE."
             }

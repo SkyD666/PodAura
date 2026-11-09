@@ -51,15 +51,15 @@ import kotlinx.coroutines.yield
 import platform.AppKit.NSWindow
 import platform.Foundation.NSMakePoint
 
-internal val LocalMacosPlayerSession = staticCompositionLocalOf<MacosPlayerSession> {
+val LocalMacosPlayerSession = staticCompositionLocalOf<MacosPlayerSession> {
     error("macOS player session is not installed")
 }
 
 /** Application-owned session: closing the video window need not end audio playback. */
-internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : PlayerSession {
+class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : PlayerSession {
     private var playerWindow: ComposeWindow? = null
     private var mediaSession: MacosMediaSession? = null
-    var pictureInPicture by mutableStateOf<MacosPictureInPicture?>(null)
+    internal var pictureInPicture by mutableStateOf<MacosPictureInPicture?>(null)
         private set
     private val viewModel = get<PlayerViewModel>()
     private val articleContext = get<PlayerArticleContextViewModel>()
@@ -85,7 +85,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
         }
     }
 
-    fun open(request: PlayerOpenRequest) {
+    internal fun open(request: PlayerOpenRequest) {
         if (!shuttingDown) entry.open(request)
     }
 
@@ -230,7 +230,7 @@ internal class MacosPlayerSession(private val mainWindow: () -> NSWindow?) : Pla
         playerWindow?.activate()
     }
 
-    fun destroyIfUnused() {
+    internal fun destroyIfUnused() {
         if (!isFullPlayerVisible && pictureInPicture?.keepsSession != true &&
             !dataStore.getOrDefault(BackgroundPlayPreference)
         ) {

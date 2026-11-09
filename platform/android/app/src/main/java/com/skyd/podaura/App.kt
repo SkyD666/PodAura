@@ -3,6 +3,7 @@ package com.skyd.podaura
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.skyd.mvi.mviConfig
+import com.skyd.podaura.app.podnyaAppModule
 import com.skyd.podaura.di.initKoin
 import com.skyd.podaura.di.notificationModule
 import com.skyd.podaura.di.repositoryModule
@@ -27,6 +28,7 @@ class App : Application() {
             androidLogger()
             androidContext(this@App)
             modules(
+                podnyaAppModule,
                 notificationModule,
                 repositoryModule,
                 viewModelModule

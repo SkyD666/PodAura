@@ -40,7 +40,7 @@ actual object PlatformArticleNotification {
     }
 
     /** Install the delegate before AppKit delivers a cold-start notification response. */
-    internal fun initialize() {
+    fun initialize() {
         center
     }
 

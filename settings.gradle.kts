@@ -33,6 +33,9 @@ dependencyResolutionManagement {
 
 include(
     ":shared",
+    ":podnya",
+    ":shared-api",
+    ":platform",
     ":fundation",
     ":htmlrender",
     ":downloader",

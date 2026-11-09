@@ -72,6 +72,7 @@ import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistScreen
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute.Companion.PlaylistMediaListLauncher
+import com.skyd.podaura.ui.screen.podnya.podnyaEntries
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute.Companion.ReadLauncher
 import com.skyd.podaura.ui.screen.search.SearchRoute
@@ -200,6 +201,7 @@ internal fun MainNavHost() {
     MiniPlayerNavDisplay(
         backStack = navBackStack,
         entryProvider = entryProvider {
+            podnyaEntries()
             entry<MainRoute> { MainScreen() }
             miniPlayerEntry<ArticleRoute> { ArticleLauncher(it) }
             entry<LicenseRoute> { LicenseScreen() }

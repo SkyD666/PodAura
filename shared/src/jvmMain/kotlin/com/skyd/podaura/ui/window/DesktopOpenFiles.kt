@@ -14,7 +14,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 
 /** Register before application initialization so Launch Services cold-start events are buffered. */
-internal class DesktopOpenFiles : AutoCloseable {
+class DesktopOpenFiles : AutoCloseable {
     private val pending = Channel<List<PlatformFile>>(Channel.UNLIMITED)
     val requests = pending.receiveAsFlow()
     private var instance: DesktopInstance? = null

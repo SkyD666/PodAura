@@ -1,5 +1,7 @@
 package com.skyd.podaura.model.repository.translation
 
+import com.skyd.fundation.credential.CredentialStorageException
+import com.skyd.fundation.credential.CredentialStore
 import com.skyd.podaura.model.bean.translation.HtmlTranslationRequest
 import com.skyd.podaura.model.bean.translation.TranslationProfile
 import com.skyd.podaura.model.bean.translation.TranslationProviderConfig

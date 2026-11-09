@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
@@ -58,11 +59,14 @@ import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
+import com.skyd.podaura.ui.screen.podnya.PodnyaPages
+import com.skyd.podaura.ui.screen.podnya.PodnyaRoute
 import com.skyd.podaura.ui.screen.settings.SettingsRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.getKoin
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.about_screen_name
 import podaura.shared.generated.resources.history_screen_name
@@ -77,6 +81,8 @@ data object MoreRoute : NavKey
 
 @Composable
 fun MoreScreen() {
+    val koin = getKoin()
+    val podnya = remember(koin) { koin.getOrNull<PodnyaPages>() }
     val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -106,8 +112,8 @@ fun MoreScreen() {
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
         var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
 
-        LaunchedEffect(Unit) {
-            dataList = getMoreBeanList(colorScheme, navBackStack)
+        LaunchedEffect(podnya, colorScheme) {
+            dataList = getMoreBeanList(colorScheme, navBackStack, podnya)
         }
 
         LazyVerticalGrid(
@@ -176,6 +182,7 @@ fun MoreItem(
 private suspend fun getMoreBeanList(
     colorScheme: ColorScheme,
     navBackStack: MutableList<NavKey>,
+    podnya: PodnyaPages?,
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
@@ -218,5 +225,18 @@ private suspend fun getMoreBeanList(
             shapeColor = colorScheme.secondary,
             action = { navBackStack.add(AboutRoute) }
         ),
-    )
+    ).apply {
+        if (podnya?.available == true) {
+            add(
+                0, MoreBean(
+                    title = podnya.title(),
+                    icon = Icons.Outlined.ChatBubbleOutline,
+                    iconTint = colorScheme.onSecondary,
+                    shape = MaterialShapes.Cookie12Sided,
+                    shapeColor = colorScheme.secondary,
+                    action = { navBackStack.add(PodnyaRoute) },
+                )
+            )
+        }
+    }
 }
