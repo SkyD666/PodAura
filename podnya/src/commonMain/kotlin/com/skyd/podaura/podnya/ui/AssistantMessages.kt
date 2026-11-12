@@ -2,28 +2,39 @@ package com.skyd.podaura.podnya.ui
 
 import androidx.compose.runtime.Composable
 import com.skyd.podaura.podnya.core.AssistantError
-import org.jetbrains.compose.resources.stringResource
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_error_authentication
 import com.skyd.podnya.resources.podnya_error_budget_exhausted
+import com.skyd.podnya.resources.podnya_error_configuration_changed
 import com.skyd.podnya.resources.podnya_error_configuration_required
+import com.skyd.podnya.resources.podnya_error_conversation_capacity
+import com.skyd.podnya.resources.podnya_error_conversation_storage
 import com.skyd.podnya.resources.podnya_error_credential_storage_unavailable
 import com.skyd.podnya.resources.podnya_error_disclosure_required
 import com.skyd.podnya.resources.podnya_error_endpoint_or_model
+import com.skyd.podnya.resources.podnya_error_generation_limit
 import com.skyd.podnya.resources.podnya_error_invalid_address
 import com.skyd.podnya.resources.podnya_error_invalid_output
 import com.skyd.podnya.resources.podnya_error_network
 import com.skyd.podnya.resources.podnya_error_quota_exceeded
 import com.skyd.podnya.resources.podnya_error_rate_limit
 import com.skyd.podnya.resources.podnya_error_request_limited
+import com.skyd.podnya.resources.podnya_error_stale_input
 import com.skyd.podnya.resources.podnya_error_stream_interrupted
 import com.skyd.podnya.resources.podnya_error_timeout
 import com.skyd.podnya.resources.podnya_error_tools_unsupported
 import com.skyd.podnya.resources.podnya_error_unavailable
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun podnyaErrorText(error: AssistantError): String = stringResource(
     when (error) {
+        AssistantError.CONFIGURATION_CHANGED -> Res.string.podnya_error_configuration_changed
+        AssistantError.CONVERSATION_STORAGE -> Res.string.podnya_error_conversation_storage
+        AssistantError.CONVERSATION_CAPACITY -> Res.string.podnya_error_conversation_capacity
+        AssistantError.GENERATION_LIMIT -> Res.string.podnya_error_generation_limit
+        AssistantError.STALE_INPUT -> Res.string.podnya_error_stale_input
+
         AssistantError.CONFIGURATION_REQUIRED -> Res.string.podnya_error_configuration_required
         AssistantError.DISCLOSURE_REQUIRED -> Res.string.podnya_error_disclosure_required
         AssistantError.INVALID_ADDRESS -> Res.string.podnya_error_invalid_address

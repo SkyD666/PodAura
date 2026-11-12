@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.runtime
 
-import com.skyd.podaura.podnya.settings.AssistantConnection
+import com.skyd.podaura.podnya.core.AssistantConnection
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockEngineConfig

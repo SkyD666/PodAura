@@ -21,6 +21,13 @@ import kotlinx.coroutines.withContext
 class LocalArticleSearchRepository(
     private val repository: IArticleRepository,
 ) {
+    suspend fun exists(articleId: String): Boolean = readLocally {
+        repository.query(
+            scope = ArticleSearchScope.All,
+            query = ArticleQuery(withinArticleIds = listOf(articleId), limit = 1)
+        ).any { it.articleId == articleId }
+    }
+
     suspend fun search(scope: ArticleSearchScope, query: ArticleQuery): ArticleSearchPage =
         readLocally {
             validateQuery(query)

@@ -1,7 +1,9 @@
 package com.skyd.podaura.app
 
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchAction
+import com.skyd.podaura.podnya.capabilities.articles.ui.rememberArticleHistoryOpener
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchAction
+import com.skyd.podaura.podnya.capabilities.feeds.ui.rememberFeedHistoryOpener
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.di.podnyaModule
 import com.skyd.podaura.podnya.ui.PodnyaChat
@@ -20,14 +22,16 @@ val podnyaAppModule = module {
             available = get<AssistantRuntime>().available,
             title = { getString(Res.string.podnya_name) },
             chat = { callbacks ->
+                val openArticle = rememberArticleHistoryOpener(callbacks.onOpenArticle)
+                val openFeed = rememberFeedHistoryOpener(callbacks.onOpenFeed)
                 PodnyaChat(
                     onBack = callbacks.onBack,
                     onSettings = callbacks.onSettings,
                     onSearch = callbacks.onSearch,
                     onAction = { action ->
                         when (action) {
-                            is ArticleSearchAction.OpenArticle -> callbacks.onOpenArticle(action.articleId)
-                            is FeedSearchAction.OpenFeed -> callbacks.onOpenFeed(action.feedUrl)
+                            is ArticleSearchAction.OpenArticle -> openArticle(action.articleId)
+                            is FeedSearchAction.OpenFeed -> openFeed(action.feedUrl)
                         }
                     },
                     formatDate = callbacks.formatDate,

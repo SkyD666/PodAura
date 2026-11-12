@@ -36,7 +36,7 @@ class FeedSearchRuntimeTest {
         val catalog = Feeds()
         val articles = RecordingCatalog()
         val script = HttpScript(feedCall(), chatCompletion("done"), selection(), chatSse())
-        val events = runtime(script, catalog, articles).run(AssistantTurnRequest("找一下我添加的音乐订阅")).toList()
+        val events = runtime(script, catalog, articles).run(AssistantTurnRequest("找一下我添加的音乐订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         assertTrue(articles.queries.isEmpty())
         assertEquals(2, catalog.queries.size)
@@ -57,7 +57,7 @@ class FeedSearchRuntimeTest {
         val followup = HttpScript(feedCall(), chatCompletion("done"), selection(), chatSse())
         val next = runtime(followup, catalog).run(AssistantTurnRequest("再看看刚才的订阅", history = listOf(
             AssistantHistoryTurn("音乐订阅", "RESULTS", content.historySnapshot())
-        ))).toList()
+        )), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, next.last())
         assertTrue(followup.requests.first().toString().contains("Fresh music feed"))
         assertFalse(followup.requests.toString().contains(URL))
@@ -73,7 +73,7 @@ class FeedSearchRuntimeTest {
             chatCompletion("""{"kind":"RESULTS","text":"","outputs":{"articles":{"articles":[{"articleId":"a","reason":"Matches"}]},"feeds":{"feeds":[{"feedId":"feed-1","reason":"Matches"}]}}}"""),
             chatSse(),
         )
-        val events = runtime(script, feeds, articles).run(AssistantTurnRequest("查找文章和订阅")).toList()
+        val events = runtime(script, feeds, articles).run(AssistantTurnRequest("查找文章和订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         assertEquals(2, articles.queries.size)
         assertEquals(3, feeds.queries.size) // Two admitted searches plus one final recheck.
@@ -85,7 +85,7 @@ class FeedSearchRuntimeTest {
     @Test
     fun forgedIdsGetOneRepairAndNeverBecomeCards() = runTest { withContext(Dispatchers.Default) {
         val script = HttpScript(feedCall(), chatCompletion("done"), selection("not-found"), selection("also-invalid"))
-        val events = runtime(script, Feeds()).run(AssistantTurnRequest("订阅")).toList()
+        val events = runtime(script, Feeds()).run(AssistantTurnRequest("订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(AssistantError.INVALID_OUTPUT), events.last())
         assertEquals(4, script.requests.size)
         assertFalse(events.any { it is AssistantRunEvent.ContentReady })
@@ -95,18 +95,18 @@ class FeedSearchRuntimeTest {
     fun emptySearchesAreNoMatchButDatabaseFailuresAndDeletedFeedsAreNot() = runTest { withContext(Dispatchers.Default) {
         val emptyScript = HttpScript(chatToolCalls("search_feeds", "1" to "{}", "2" to "{}", "3" to "{}"),
             chatCompletion("""{"kind":"NO_MATCH","text":"","outputs":{"feeds":{"feeds":[]}}}"""), chatSse())
-        val events = runtime(emptyScript, Feeds(empty = true)).run(AssistantTurnRequest("订阅")).toList()
+        val events = runtime(emptyScript, Feeds(empty = true)).run(AssistantTurnRequest("订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         val empty = events.filterIsInstance<AssistantRunEvent.ContentReady>().single().content as FeedSearchContent
         assertFalse(empty.hadCandidates)
         assertTrue(empty.feeds.isEmpty())
 
         val failed = runtime(HttpScript(feedCall()), Feeds(fail = true))
-            .run(AssistantTurnRequest("订阅")).toList()
+            .run(AssistantTurnRequest("订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(FeedSearchError.LOCAL_SEARCH), failed.last())
 
         val deleted = runtime(HttpScript(feedCall(), chatCompletion("done"), selection()), Feeds(removeOnRecheck = true))
-            .run(AssistantTurnRequest("订阅")).toList()
+            .run(AssistantTurnRequest("订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(FeedSearchError.RESULTS_CHANGED), deleted.last())
         assertFalse(deleted.any { it is AssistantRunEvent.ContentReady })
     } }
@@ -115,7 +115,7 @@ class FeedSearchRuntimeTest {
     fun malformedArgumentsCountBeforeDecodeAndNeverReadTheDatabase() = runTest { withContext(Dispatchers.Default) {
         val feeds = Feeds()
         val script = HttpScript(chatToolCalls("search_feeds", "1" to "invalid", "2" to "{\"limit\":99}", "3" to "invalid", "4" to "{}"))
-        val events = runtime(script, feeds).run(AssistantTurnRequest("订阅")).toList()
+        val events = runtime(script, feeds).run(AssistantTurnRequest("订阅"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(AssistantError.BUDGET_EXHAUSTED), events.last())
         assertTrue(feeds.queries.isEmpty())
     } }
@@ -142,7 +142,7 @@ class FeedSearchRuntimeTest {
         )
         val runtime = KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(RecordingCatalog()),
             LocalFeedSearchRepository(Feeds())), { astra() }, script::client)
-        val events = runtime.run(AssistantTurnRequest("音乐订阅")).toList()
+        val events = runtime.run(AssistantTurnRequest("音乐订阅"), astra()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         assertTrue(script.paths.all { it == "/v1/responses" })
         assertFalse(script.requests.toString().contains(URL))

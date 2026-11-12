@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModelStore
 import com.skyd.mvi.mviConfig
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.*
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantFailure
@@ -62,7 +62,7 @@ class AssistantSettingsViewModelTest {
         val fixture = createFixture()
         val model = fixture.model
         runCurrent()
-        fixture.session.updateDraft("Keep this draft")
+        fixture.session.editDraft("Keep this draft")
         dispatch(model, AssistantSettingsIntent.SetHasNewKey(true))
         dispatch(model, AssistantSettingsIntent.SetBaseUrl("https://second.example/v1"))
         assertFalse(model.viewState.value.consentAccepted)
@@ -76,13 +76,13 @@ class AssistantSettingsViewModelTest {
         runCurrent()
         assertEquals(AssistantError.CONFIGURATION_REQUIRED, failure(fixture))
         assertEquals("https://first.example/v1/", fixture.repository.snapshot().baseUrl)
-        assertEquals("Keep this draft", fixture.session.state.value.draft)
+        assertEquals("Keep this draft", fixture.session.state.value.selected.draft)
 
         dispatch(model, AssistantSettingsIntent.SetHasNewKey(true))
         dispatch(model, AssistantSettingsIntent.Save("new-service-key"))
         runCurrent()
         assertEquals("https://second.example/v1/", fixture.repository.snapshot().baseUrl)
-        assertEquals("Keep this draft", fixture.session.state.value.draft)
+        assertEquals("Keep this draft", fixture.session.state.value.selected.draft)
         assertFalse(model.viewState.value.toString().contains("new-service-key"))
         assertEquals(0, fixture.assistant.runCalls)
         assertEquals(0, fixture.assistant.verifyCalls)
@@ -92,13 +92,13 @@ class AssistantSettingsViewModelTest {
     fun failedSecureSaveKeepsConversationAndAllowsExplicitSessionOnlyRetry() = runTest {
         val fixture = createFixture()
         runCurrent()
-        fixture.session.updateDraft("Do not lose me")
+        fixture.session.editDraft("Do not lose me")
         fixture.credentials.failWrites = true
         dispatch(fixture.model, AssistantSettingsIntent.SetHasNewKey(true))
         dispatch(fixture.model, AssistantSettingsIntent.Save("rotated-secret"))
         runCurrent()
         assertEquals(AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE, failure(fixture))
-        assertEquals("Do not lose me", fixture.session.state.value.draft)
+        assertEquals("Do not lose me", fixture.session.state.value.selected.draft)
         assertTrue(fixture.repository.snapshot().hasApiKey)
         assertFalse(fixture.repository.snapshot().sessionOnly)
 
@@ -106,7 +106,7 @@ class AssistantSettingsViewModelTest {
         dispatch(fixture.model, AssistantSettingsIntent.Save("rotated-secret"))
         runCurrent()
         assertTrue(fixture.repository.snapshot().sessionOnly)
-        assertEquals("Do not lose me", fixture.session.state.value.draft)
+        assertEquals("Do not lose me", fixture.session.state.value.selected.draft)
         assertFalse(fixture.model.viewState.value.hasNewKey)
         assertIs<AssistantSettingsEvent.Saved>(fixture.events.last())
     }
@@ -156,7 +156,7 @@ class AssistantSettingsViewModelTest {
     fun firstConfigurationPreservesTheQuestionDraftWithoutSendingIt() = runTest {
         val fixture = createFixture(configured = false)
         runCurrent()
-        fixture.session.updateDraft("Find unread articles about Kotlin")
+        fixture.session.editDraft("Find unread articles about Kotlin")
         dispatch(fixture.model, AssistantSettingsIntent.SetBaseUrl("https://first.example/v1"))
         dispatch(fixture.model, AssistantSettingsIntent.SetModelId("saved-model"))
         dispatch(fixture.model, AssistantSettingsIntent.SetConsentAccepted(true))
@@ -166,29 +166,30 @@ class AssistantSettingsViewModelTest {
         runCurrent()
 
         assertTrue(fixture.repository.snapshot().configured)
-        assertEquals("Find unread articles about Kotlin", fixture.session.state.value.draft)
-        assertTrue(fixture.session.state.value.turns.isEmpty())
+        assertEquals("Find unread articles about Kotlin", fixture.session.state.value.selected.draft)
+        assertTrue(fixture.session.state.value.selected.turns.isEmpty())
         assertIs<AssistantSettingsEvent.Saved>(fixture.events.last())
         assertEquals(0, fixture.assistant.runCalls)
         assertEquals(0, fixture.assistant.verifyCalls)
     }
 
     @Test
-    fun keyUpdateClearsCompletedHistoryButKeepsUnsentQuestionWithoutResubmitting() = runTest {
+    fun keyUpdatePreservesCompletedHistoryAndUnsentQuestionWithoutResubmitting() = runTest {
         val fixture = createFixture()
         runCurrent()
-        assertTrue(fixture.session.submit("Previously sent question"))
+        fixture.session.editDraft("Previously sent question")
+        assertTrue(fixture.session.sendDraft(fixture.repository))
         runCurrent()
-        assertEquals(1, fixture.session.state.value.turns.size)
-        fixture.session.updateDraft("My next question")
+        assertEquals(1, fixture.session.state.value.selected.turns.size)
+        fixture.session.editDraft("My next question")
 
         dispatch(fixture.model, AssistantSettingsIntent.SetHasNewKey(true))
         dispatch(fixture.model, AssistantSettingsIntent.Save("rotated-secret"))
         runCurrent()
 
-        assertTrue(fixture.session.state.value.turns.isEmpty())
-        assertEquals("My next question", fixture.session.state.value.draft)
-        assertFalse(fixture.session.state.value.isRunning)
+        assertEquals(1, fixture.session.state.value.selected.turns.size)
+        assertEquals("My next question", fixture.session.state.value.selected.draft)
+        assertFalse(fixture.session.state.value.selected.isRunning)
         assertEquals(1, fixture.assistant.runCalls)
         assertEquals(0, fixture.assistant.verifyCalls)
     }
@@ -197,7 +198,7 @@ class AssistantSettingsViewModelTest {
     fun consecutiveEditsAreReducedBeforeSaveAndDuplicateSaveCannotRaceTheCommit() = runTest {
         val fixture = createFixture(configured = false)
         runCurrent()
-        fixture.session.updateDraft("Keep this question local")
+        fixture.session.editDraft("Keep this question local")
         // No scheduler advancement between intents: the reducer must preserve their order.
         dispatch(fixture.model,
             AssistantSettingsIntent.SetBaseUrl("https://new.example/v1"),
@@ -214,7 +215,7 @@ class AssistantSettingsViewModelTest {
         assertEquals(1, fixture.credentials.writes)
         assertEquals(listOf<AssistantSettingsEvent>(AssistantSettingsEvent.Saved), fixture.events)
         assertEquals(1, fixture.model.viewState.value.savedRevision)
-        assertEquals("Keep this question local", fixture.session.state.value.draft)
+        assertEquals("Keep this question local", fixture.session.state.value.selected.draft)
         assertFalse(fixture.model.viewState.value.dirty)
     }
 
@@ -238,11 +239,11 @@ class AssistantSettingsViewModelTest {
         assertEquals(listOf<AssistantSettingsEvent>(AssistantSettingsEvent.ConnectionSucceeded), fixture.events)
         dispatch(fixture.model, AssistantSettingsIntent.SetModelId("saved-model"))
         assertEquals(1, fixture.events.size)
-        fixture.session.updateDraft("Clear this with the configuration")
+        fixture.session.editDraft("Clear this with the configuration")
         dispatch(fixture.model, AssistantSettingsIntent.Clear, AssistantSettingsIntent.Clear)
         assertEquals(listOf<AssistantSettingsEvent>(AssistantSettingsEvent.ConnectionSucceeded, AssistantSettingsEvent.Cleared), fixture.events)
         assertFalse(fixture.repository.snapshot().configured)
-        assertEquals("", fixture.session.state.value.draft)
+        assertEquals("Clear this with the configuration", fixture.session.state.value.selected.draft)
         assertEquals(null, fixture.model.viewState.value.operation)
     }
 
@@ -250,7 +251,7 @@ class AssistantSettingsViewModelTest {
     fun clearingViewModelDuringSaveFinishesTheLocalCommitAndPreservesUnsentDraft() = runTest {
         val fixture = createFixture()
         runCurrent()
-        fixture.session.updateDraft("Draft survives navigation")
+        fixture.session.editDraft("Draft survives navigation")
         val finishWrite = CompletableDeferred<Unit>()
         fixture.credentials.blockWrites = finishWrite
         dispatch(fixture.model, AssistantSettingsIntent.SetHasNewKey(true), AssistantSettingsIntent.Save("replacement-key"))
@@ -260,7 +261,7 @@ class AssistantSettingsViewModelTest {
         finishWrite.complete(Unit)
         runCurrent()
         assertEquals("replacement-key", fixture.repository.connection().apiKey)
-        assertEquals("Draft survives navigation", fixture.session.state.value.draft)
+        assertEquals("Draft survives navigation", fixture.session.state.value.selected.draft)
         assertTrue(fixture.events.isEmpty())
     }
 
@@ -295,8 +296,8 @@ class AssistantSettingsViewModelTest {
             repository.save("https://first.example/v1", "saved-model", "initial-secret", false, true)
         }
         val assistant = RecordingAssistant()
-        val session = AssistantConversationRepository(assistant, backgroundScope)
-        val model = AssistantSettingsViewModel(repository, assistant, session)
+        val session = AssistantConversationRepository(assistant, repository, scope = backgroundScope)
+        val model = AssistantSettingsViewModel(repository, assistant)
         viewModels.put("settings", model)
         val fixture = Fixture(repository, credentials, assistant, session, model)
         backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -343,7 +344,7 @@ class AssistantSettingsViewModelTest {
         var runCalls = 0
         var waitForCancellation = false
         var verificationCancelled = false
-        override fun run(request: AssistantTurnRequest): Flow<AssistantRunEvent> {
+        override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection): Flow<AssistantRunEvent> {
             runCalls++
             return flowOf(AssistantRunEvent.ReplyDelta("Previous reply"), AssistantRunEvent.Completed)
         }

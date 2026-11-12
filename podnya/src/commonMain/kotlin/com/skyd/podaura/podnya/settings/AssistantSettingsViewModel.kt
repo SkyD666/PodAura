@@ -6,7 +6,6 @@ import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantRuntime
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -31,7 +30,6 @@ import kotlinx.coroutines.withContext
 class AssistantSettingsViewModel(
     private val repository: AssistantSettingsRepository,
     private val assistant: AssistantRuntime,
-    private val session: AssistantConversationRepository,
 ) : AbstractMviViewModel<AssistantSettingsIntent, AssistantSettingsState, AssistantSettingsEvent>() {
     override val viewState: StateFlow<AssistantSettingsState>
     private val operationInputs = Channel<Input>(Channel.UNLIMITED)
@@ -106,15 +104,12 @@ class AssistantSettingsViewModel(
                         if (!draft.sameRecipient && (!draft.hasNewKey || intent.apiKey.isNullOrBlank())) {
                             throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
                         }
-                        // Finish the small local commit and session reset even when this VM is cleared.
+                        // Finish the small local settings commit even when this VM is cleared.
                         val saved = withContext(NonCancellable) {
                             repository.save(
                                 draft.baseUrl, draft.modelId, intent.apiKey,
                                 draft.sessionOnly, draft.consentAccepted
                             )
-                            val unsentDraft = session.state.value.draft
-                            session.newConversation()
-                            session.updateDraft(unsentDraft)
                             repository.snapshot()
                         }
                         AssistantSettingsPartialStateChange.Finished(
@@ -145,7 +140,6 @@ class AssistantSettingsViewModel(
                     startOperation(AssistantSettingsOperation.CLEARING) {
                         val saved = withContext(NonCancellable) {
                             repository.clear()
-                            session.newConversation()
                             repository.snapshot()
                         }
                         AssistantSettingsPartialStateChange.Finished(

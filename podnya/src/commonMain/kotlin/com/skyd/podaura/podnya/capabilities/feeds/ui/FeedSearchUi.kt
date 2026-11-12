@@ -1,12 +1,21 @@
 package com.skyd.podaura.podnya.capabilities.feeds.ui
 
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchAction
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchContent
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchError
+import com.skyd.podaura.podnya.capabilities.feeds.model.repository.LocalFeedSearchRepository
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantFailure
@@ -15,9 +24,14 @@ import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_error_feed_search
 import com.skyd.podnya.resources.podnya_error_feeds_changed
 import com.skyd.podnya.resources.podnya_feed_results
+import com.skyd.podnya.resources.podnya_missing_feeds
 import com.skyd.podnya.resources.podnya_no_matching_feeds
 import com.skyd.podnya.resources.podnya_no_suitable_recommendations
+import com.skyd.podnya.resources.podnya_ok
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 
 fun LazyListScope.feedSearchContent(
     turnId: Long,
@@ -71,4 +85,42 @@ internal object FeedSearchUi : AssistantCapabilityUi {
     @Composable
     override fun failureText(error: AssistantFailure): String? =
         (error as? FeedSearchError)?.let { feedSearchErrorText(it) }
+}
+
+/** Opening an old card checks local existence only; viewing history never re-runs a search. */
+@Composable
+fun rememberFeedHistoryOpener(
+    onOpen: (String) -> Unit,
+    repository: LocalFeedSearchRepository = koinInject()
+): (String) -> Unit {
+    val scope = rememberCoroutineScope()
+    val currentOpen by rememberUpdatedState(onOpen)
+    var missing by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    if (missing || failed) AlertDialog(
+        onDismissRequest = { missing = false; failed = false },
+        text = {
+            Text(
+                if (missing) stringResource(Res.string.podnya_missing_feeds)
+                else feedSearchErrorText(FeedSearchError.LOCAL_SEARCH)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { missing = false; failed = false }) {
+                Text(stringResource(Res.string.podnya_ok))
+            }
+        })
+    return remember(repository, scope) {
+        { id ->
+            scope.launch {
+                try {
+                    if (repository.exists(id)) currentOpen(id) else missing = true
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    failed = true
+                }
+            }
+        }
+    }
 }

@@ -28,7 +28,7 @@ import com.skyd.podaura.podnya.runtime.chatSse as sse
 import com.skyd.podaura.podnya.runtime.chatToolCalls
 import com.skyd.podaura.podnya.runtime.podnyaJson
 import com.skyd.podaura.podnya.runtime.testConnection
-import com.skyd.podaura.podnya.settings.AssistantConnection
+import com.skyd.podaura.podnya.core.AssistantConnection
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.http.HttpStatusCode
@@ -61,7 +61,7 @@ class KoogArticleSearchRuntimeTest {
         val catalog = RecordingCatalog()
         val script = HttpScript(toolCalls("s1" to "{}"), completion("Finished searching."),
             selection("a"), sse())
-        val events = script.assistant(catalog).run(AssistantTurnRequest("Find local articles")).toList()
+        val events = script.assistant(catalog).run(AssistantTurnRequest("Find local articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(2, catalog.queries.size) // One search and one final recheck.
         assertEquals(ArticleSearchScope.All, catalog.scope)
         assertEquals(listOf("a"), catalog.queries.last().withinArticleIds)
@@ -108,7 +108,7 @@ class KoogArticleSearchRuntimeTest {
                     AssistantHistoryTurn("Earlier question", "Earlier reply", historyContent),
                     AssistantHistoryTurn("Other question", "Other reply", foreign),
                 ),
-            )).toList()
+            ), com.skyd.podaura.podnya.runtime.testConnection()).toList()
             assertEquals(AssistantRunEvent.Completed, events.last())
             assertEquals(scope, catalog.scope)
             assertEquals(listOf("a"), catalog.queries.first().withinArticleIds)
@@ -135,7 +135,7 @@ class KoogArticleSearchRuntimeTest {
         }
         val catalog = RecordingCatalog()
         val script = HttpScript()
-        val events = script.assistant(catalog).run(AssistantTurnRequest("Find articles", context)).toList()
+        val events = script.assistant(catalog).run(AssistantTurnRequest("Find articles", context), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(AssistantError.INVALID_OUTPUT), events.last())
         assertTrue(script.requests.isEmpty())
         assertTrue(catalog.queries.isEmpty())
@@ -149,7 +149,7 @@ class KoogArticleSearchRuntimeTest {
             val script = HttpScript(toolCalls("1" to query, "2" to query, "3" to query),
                 selection("a", text = misleading), sse(finishReason = null))
             val catalog = RecordingCatalog()
-            val events = script.assistant(catalog).run(AssistantTurnRequest("找罗大佑的相关文章")).toList()
+            val events = script.assistant(catalog).run(AssistantTurnRequest("找罗大佑的相关文章"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
             val selectionMessages = script.requests[1].getValue("messages").jsonArray.map { it.jsonObject }
             val system = selectionMessages.filter { it["role"] == JsonPrimitive("system") }.joinToString()
             assertTrue(system.contains("Select and rank local articles already retrieved"))
@@ -182,7 +182,7 @@ class KoogArticleSearchRuntimeTest {
         val reasoning = "Internal reasoning required by the compatible service"
         val script = HttpScript(toolCalls("s1" to "{}", reasoning = reasoning), completion("Finished searching."),
             selection("a"), sse())
-        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find local articles")).toList()
+        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find local articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         val assistantMessage = script.requests[1].getValue("messages").jsonArray.map { it.jsonObject }
             .single { it["role"] == JsonPrimitive("assistant") }
         assertEquals(reasoning, assistantMessage.getValue("reasoning_content").jsonPrimitive.content)
@@ -201,7 +201,7 @@ class KoogArticleSearchRuntimeTest {
             toolCalls("bad" to "{", "valid" to "{}", "unknown" to "{\"withinArticleIds\":[\"invented\"]}", "excess" to "{}"),
             selection("a"), sse(),
         )
-        val events = script.assistant(catalog).run(AssistantTurnRequest("Find articles")).toList()
+        val events = script.assistant(catalog).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(2, catalog.queries.size) // One search and one final recheck.
         assertEquals(3, script.requests.size)
         assertEquals(AssistantRunEvent.Completed, events.last())
@@ -217,7 +217,7 @@ class KoogArticleSearchRuntimeTest {
         val catalog = RecordingCatalog()
         val script = HttpScript(toolCalls("a" to "{}", "b" to "{}", "c" to "{}"), selection("a"), sse())
         assertEquals(AssistantRunEvent.Completed,
-            script.assistant(catalog).run(AssistantTurnRequest("Find articles")).toList().last())
+            script.assistant(catalog).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList().last())
         assertEquals(4, catalog.queries.size) // Three searches and one final recheck.
         assertEquals(3, script.requests.size)
     } }
@@ -225,12 +225,12 @@ class KoogArticleSearchRuntimeTest {
     @Test
     fun unknownSelectionGetsOnlyOneRepair() = runTest { withContext(Dispatchers.Default) {
         val repaired = HttpScript(toolCalls("1" to "{}"), completion("done"), selection("invented"), selection("a"), sse())
-        val good = repaired.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles")).toList()
+        val good = repaired.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, good.last())
         assertEquals(5, repaired.requests.size)
         assertTrue(repaired.requests[3].toString().contains("Previous selection was invalid"))
         val invalid = HttpScript(toolCalls("1" to "{}"), completion("done"), selection("invented"), selection("invented"))
-        val failed = invalid.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles")).toList()
+        val failed = invalid.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantError.INVALID_OUTPUT, (failed.last() as AssistantRunEvent.Failed).error)
         assertFalse(failed.any { it is AssistantRunEvent.ContentReady })
         assertEquals(4, invalid.requests.size)
@@ -239,7 +239,7 @@ class KoogArticleSearchRuntimeTest {
     @Test
     fun interruptedSsePreservesValidatedCardsAndNeverCompletes() = runTest { withContext(Dispatchers.Default) {
         val script = HttpScript(toolCalls("1" to "{}"), completion("done"), selection("a"), sse(finishReason = null))
-        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles")).toList()
+        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertTrue(events.any { it is AssistantRunEvent.ContentReady })
         assertTrue(events.any { it is AssistantRunEvent.ReplyDelta })
         assertFalse(events.contains(AssistantRunEvent.Completed))
@@ -249,7 +249,7 @@ class KoogArticleSearchRuntimeTest {
     @Test
     fun authenticationErrorIsSanitizedAndNeverRetried() = runTest { withContext(Dispatchers.Default) {
         val script = HttpScript(HttpReply("secret server response $TEST_KEY", status = HttpStatusCode.Unauthorized))
-        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles")).toList()
+        val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Failed(AssistantError.AUTHENTICATION), events.last())
         assertEquals(1, script.requests.size)
         assertFalse(events.toString().contains(TEST_KEY))
@@ -287,7 +287,7 @@ class KoogArticleSearchRuntimeTest {
                 val script = HttpScript(reply, reply)
                 val catalog = RecordingCatalog()
                 val assistant = script.assistant(catalog)
-                val events = assistant.run(AssistantTurnRequest("Find articles")).toList()
+                val events = assistant.run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
                 assertEquals(AssistantRunEvent.Failed(expected), events.last())
                 assertEquals(1, script.requests.size)
                 val verification = assistant.verify()
@@ -307,7 +307,7 @@ class KoogArticleSearchRuntimeTest {
         listOf(normal.copy(body = normal.body.removeSuffix("data: [DONE]\n\n")),
             normal.copy(body = normal.body + "data: [DONE]\n\n")).forEach { broken ->
             val script = HttpScript(toolCalls("1" to "{}"), completion("done"), selection("a"), broken)
-            val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles")).toList()
+            val events = script.assistant(RecordingCatalog()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
             assertTrue(events.any { it is AssistantRunEvent.ContentReady })
             assertEquals(AssistantError.STREAM_INTERRUPTED, (events.last() as AssistantRunEvent.Failed).error)
         }
@@ -325,7 +325,7 @@ class KoogArticleSearchRuntimeTest {
         }) { followRedirects = false }
         val assistant = KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()), { testConnection() }, { client })
         val events = mutableListOf<AssistantRunEvent>()
-        val job = launch { assistant.run(AssistantTurnRequest("Find articles")).toList(events) }
+        val job = launch { assistant.run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList(events) }
         withTimeout(5_000) { started.await() }
         job.cancelAndJoin()
         withTimeout(5_000) { cancelled.await() }

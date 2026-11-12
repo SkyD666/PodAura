@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
@@ -16,7 +17,6 @@ import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
-import com.skyd.podaura.podnya.settings.AssistantConnection
 import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal class KoogAssistantRuntime(
     private val capabilities: (AssistantTurnRequest) -> List<KoogCapability>,
-    private val connection: suspend () -> AssistantConnection,
+    private val verificationConnection: suspend () -> AssistantConnection,
     private val httpClient: () -> HttpClient,
 ) : AssistantRuntime {
     constructor(
@@ -40,14 +40,18 @@ internal class KoogAssistantRuntime(
 
     override val available: Boolean = true
 
-    override fun run(request: AssistantTurnRequest): Flow<AssistantRunEvent> =
-        assistantRunEvents(request) { event -> executeTurn(request, event) }
+    override fun run(
+        request: AssistantTurnRequest,
+        connection: AssistantConnection
+    ): Flow<AssistantRunEvent> =
+        assistantRunEvents(request) { event -> executeTurn(request, connection, event) }
 
     override suspend fun verify(): AssistantConnectionResult =
-        PodnyaConnectionProbe(connection, httpClient).verify()
+        PodnyaConnectionProbe(verificationConnection, httpClient).verify()
 
     private suspend fun executeTurn(
         request: AssistantTurnRequest,
+        configuration: AssistantConnection,
         event: suspend (AssistantRunEvent) -> Unit,
     ) {
         val active = capabilities(request)
@@ -57,7 +61,6 @@ internal class KoogAssistantRuntime(
             active.flatMap { capability -> capability.tools.map { it.name to capability } }.toMap()
         require(toolOwners.size == active.sumOf { it.tools.size })
         val prompts = AssistantPrompts(request, active)
-        val configuration = connection()
         PodnyaTransport(configuration, httpClient()).use { transport ->
             val executor = BudgetedExecutor(transport.executor)
             var attempts = 0

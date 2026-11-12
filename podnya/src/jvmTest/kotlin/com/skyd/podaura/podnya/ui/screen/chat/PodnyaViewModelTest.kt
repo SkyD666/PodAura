@@ -2,6 +2,10 @@ package com.skyd.podaura.podnya.ui.screen.chat
 
 import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.ConversationStore
+import com.skyd.podaura.podnya.model.repository.InMemoryConversationStore
+import com.skyd.podaura.podnya.model.bean.AssistantSessionState
+import com.skyd.podaura.podnya.core.AssistantError
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -34,170 +38,128 @@ import kotlin.test.assertNull
 
 class PodnyaViewModelTest {
     @Test
-    fun navigationAndViewModelRecreationKeepTheSameGenerationRunning() = runBlocking(Dispatchers.Main.immediate) {
+    fun navigationSwitchAndViewModelRecreationKeepGenerationAndIsolateDrafts() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
-            Fixture().use { fixture ->
-                fixture.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
-                val model = fixture.model
+            Fixture().use { f ->
+                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                val model = f.model
                 model.viewState.first { it.ready }
-                model.processIntent(PodnyaIntent.UpdateDraft("p"))
-                model.processIntent(PodnyaIntent.UpdateDraft("private"))
-                model.processIntent(PodnyaIntent.UpdateDraft("private question"))
-                model.processIntent(PodnyaIntent.Send("editor", 1))
-                model.processIntent(PodnyaIntent.Send("editor", 1))
-                model.viewState.first { it.session.isRunning }
-                fixture.started.await()
-                assertEquals(1, fixture.requests)
-                assertEquals("private question", fixture.lastQuestion)
-                assertEquals("", model.viewState.value.session.draft)
-
-                assertEquals(PodnyaEvent.ClearDraft("editor", 1), model.singleEvent.first())
-                for ((intent, event) in listOf(
-                    PodnyaIntent.OpenSettings to PodnyaEvent.OpenSettings,
-                    PodnyaIntent.OpenSearch to PodnyaEvent.OpenSearch,
-                    PodnyaIntent.Back to PodnyaEvent.Back,
-                )) {
-                    model.processIntent(intent)
-                    assertEquals(event, model.singleEvent.first())
-                    assertEquals(AssistantTurnStatus.RUNNING, fixture.session.state.value.turns.single().status)
-                    assertFalse(fixture.cancelled.isCompleted)
+                val a = model.viewState.value.session.id
+                val config = f.settings.snapshot()
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "p", "editor", 1))
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "private question", "editor", 2))
+                model.processIntent(PodnyaIntent.Send(a, "editor", 2, config.configId, config.revision))
+                f.started.await()
+                assertEquals(PodnyaEvent.ClearDraft(a, "editor", 2), model.singleEvent.first())
+                assertEquals("private question", f.lastQuestion)
+                for ((intent, event) in listOf(PodnyaIntent.OpenSettings to PodnyaEvent.OpenSettings,
+                    PodnyaIntent.OpenSearch to PodnyaEvent.OpenSearch, PodnyaIntent.Back to PodnyaEvent.Back)) {
+                    model.processIntent(intent); assertEquals(event, model.singleEvent.first())
+                    assertFalse(f.cancelled.isCompleted)
                 }
-                assertNull(withTimeoutOrNull(50) { model.singleEvent.first() })
-                fixture.store.clear()
-                yield()
-                assertFalse(fixture.cancelled.isCompleted)
-                fixture.finish.complete(Unit)
-                fixture.session.state.first { it.turns.single().status == AssistantTurnStatus.COMPLETED }
-                val reopened = PodnyaViewModel(fixture.session, fixture.settings)
-                fixture.store.put("reopened", reopened)
-                assertEquals("partial complete", reopened.viewState.value.session.turns.single().reply)
-                assertEquals(1, fixture.requests)
-
-                reopened.processIntent(PodnyaIntent.UpdateDraft("next question"))
-                reopened.viewState.first { it.session.draft == "next question" }
-                reopened.processIntent(PodnyaIntent.NewConversation("editor", 2))
-                reopened.viewState.first { it.session.turns.isEmpty() && it.session.draft.isEmpty() }
-                assertEquals(1, fixture.requests)
-            }
-        }
-    }
-
-    @Test
-    fun mixedIntentBurstKeepsResetDraftSendAndRetryInOrder() = runBlocking(Dispatchers.Main.immediate) {
-        withTimeout(5_000) {
-            Fixture().use { fixture ->
-                fixture.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
-                val model = fixture.model
-                model.viewState.first { it.ready }
-
-                // No waits between commands: separate subscribers must not drain all draft edits
-                // before Send, or process NewConversation after the new request has started.
-                model.processIntent(PodnyaIntent.UpdateDraft("discard this"))
-                model.processIntent(PodnyaIntent.NewConversation("editor", 1))
-                model.processIntent(PodnyaIntent.UpdateDraft("send this"))
-                model.processIntent(PodnyaIntent.Send("editor", 2))
-                model.processIntent(PodnyaIntent.UpdateDraft("next draft"))
-                model.processIntent(PodnyaIntent.OpenSettings)
-
-                assertEquals(PodnyaEvent.ClearDraft("editor", 1), model.singleEvent.first())
-                assertEquals(PodnyaEvent.ClearDraft("editor", 2), model.singleEvent.first())
-                assertEquals(PodnyaEvent.OpenSettings, model.singleEvent.first())
-                fixture.started.await()
-                assertEquals("send this", fixture.lastQuestion)
-                assertEquals("next draft", fixture.session.state.value.draft)
-                assertEquals(1, fixture.requests)
-                assertFalse(fixture.cancelled.isCompleted)
-
-                model.processIntent(PodnyaIntent.Stop)
-                model.processIntent(PodnyaIntent.Retry)
-                model.processIntent(PodnyaIntent.Back)
-                assertEquals(PodnyaEvent.Back, model.singleEvent.first())
-                fixture.cancelled.await()
-                assertEquals(2, fixture.requests)
-                assertEquals("send this", fixture.lastQuestion)
-                assertEquals("next draft", fixture.session.state.value.draft)
-                fixture.finish.complete(Unit)
-                model.viewState.first { it.session.turns.single().status == AssistantTurnStatus.COMPLETED }
-                assertEquals("partial complete", model.viewState.value.session.turns.single().reply)
-            }
-        }
-    }
-
-    @Test
-    fun unconfiguredSendIsIgnoredAndRecreatedViewModelKeepsProcessSession() = runBlocking(Dispatchers.Main.immediate) {
-        withTimeout(5_000) {
-            Fixture().use { fixture ->
-                val model = fixture.model
-                model.viewState.first { it.settings != null }
-                model.processIntent(PodnyaIntent.UpdateDraft("kept draft"))
-                model.viewState.first { it.session.draft == "kept draft" }
-                model.processIntent(PodnyaIntent.Send("editor", 1))
-                // A subsequent navigation event proves the preceding Send intent was processed.
+                model.processIntent(PodnyaIntent.NewConversation)
+                val b = model.viewState.first { it.session.id != a }.session.id
+                model.processIntent(PodnyaIntent.UpdateDraft(b, "B draft", "editor-b", 1))
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "late A draft", "editor", 3))
+                model.viewState.first { it.session.draft == "B draft" }
                 model.processIntent(PodnyaIntent.OpenSearch)
-                assertIs<PodnyaEvent.OpenSearch>(model.singleEvent.first())
-                assertEquals(0, fixture.requests)
+                assertEquals(PodnyaEvent.OpenSearch, model.singleEvent.first())
+                f.store.clear(); yield()
+                assertFalse(f.cancelled.isCompleted)
+                f.finish.complete(Unit)
+                f.session.state.first { it.runningIds.isEmpty() }
+                val reopened = PodnyaViewModel(f.session, f.settings)
+                f.store.put("reopened", reopened)
+                assertEquals("B draft", reopened.viewState.value.session.draft)
+                reopened.processIntent(PodnyaIntent.Select(a))
+                val restored = reopened.viewState.first { it.session.id == a }.session
+                assertEquals("late A draft", restored.draft)
+                assertEquals("partial complete", restored.turns.single().reply)
+                assertEquals(1, f.requests)
+            }
+        }
+    }
+
+    @Test
+    fun laterDraftSurvivesSendCompletionAndExplicitStopTargetsOriginalConversation() = runBlocking(Dispatchers.Main.immediate) {
+        withTimeout(5_000) {
+            Fixture().use { f ->
+                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                val model = f.model
+                model.viewState.first { it.ready }
+                val a = model.viewState.value.session.id
+                val config = f.settings.snapshot()
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "send this", "editor", 1))
+                model.processIntent(PodnyaIntent.Send(a, "editor", 1, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "next draft", "editor", 2))
+                f.started.await()
+                assertEquals(PodnyaEvent.ClearDraft(a, "editor", 1), model.singleEvent.first())
+                model.viewState.first { it.session.draft == "next draft" }
+                assertEquals("send this", f.lastQuestion)
+                model.processIntent(PodnyaIntent.NewConversation)
+                val b = model.viewState.first { it.session.id != a }.session.id
+                model.processIntent(PodnyaIntent.Stop(a))
+                f.cancelled.await()
+                assertEquals(b, model.viewState.value.session.id)
                 assertFalse(model.viewState.value.session.isRunning)
-                fixture.store.clear()
-                val reopened = PodnyaViewModel(fixture.session, fixture.settings)
-                fixture.store.put("reopened", reopened)
-                assertEquals("kept draft", reopened.viewState.value.session.draft)
-                yield()
             }
         }
     }
 
     @Test
-    fun settingsReadFailureDoesNotKillStopOrNavigationIntents() = runBlocking(Dispatchers.Main.immediate) {
+    fun settingsReadFailureDoesNotKillStopOrNavigation() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
-            Fixture().use { fixture ->
-                fixture.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
-                val model = fixture.model
+            Fixture().use { f ->
+                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                val model = f.model
                 model.viewState.first { it.ready }
-                model.processIntent(PodnyaIntent.UpdateDraft("question"))
-                model.processIntent(PodnyaIntent.Send("editor", 1))
-                fixture.started.await()
-                assertIs<PodnyaEvent.ClearDraft>(model.singleEvent.first())
-                fixture.failReads.value = true
+                val a = model.viewState.value.session.id; val config = f.settings.snapshot()
+                model.processIntent(PodnyaIntent.UpdateDraft(a, "question", "editor", 1))
+                model.processIntent(PodnyaIntent.Send(a, "editor", 1, config.configId, config.revision))
+                f.started.await(); assertIs<PodnyaEvent.ClearDraft>(model.singleEvent.first())
+                f.failReads.value = true
                 model.viewState.first { it.settingsFailed }
-                assertFalse(model.viewState.value.ready)
-                model.processIntent(PodnyaIntent.Stop)
-                model.processIntent(PodnyaIntent.Back)
+                model.processIntent(PodnyaIntent.Stop(a)); model.processIntent(PodnyaIntent.Back)
                 assertIs<PodnyaEvent.Back>(model.singleEvent.first())
-                fixture.cancelled.await()
-                assertEquals(AssistantTurnStatus.STOPPED, fixture.session.state.value.turns.single().status)
+                f.cancelled.await()
+                assertEquals(AssistantTurnStatus.STOPPED, f.session.state.value.selected.turns.single().status)
             }
         }
     }
 
     @Test
-    fun capabilityActionKeepsTheRunAndExplicitStopStillCancels() = runBlocking(Dispatchers.Main.immediate) {
+    fun failedStoreCommandReportsItsTargetAndDoesNotTerminateTheIntentPipeline() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
-            Fixture().use { fixture ->
-                fixture.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
-                val model = fixture.model
+            Fixture().use { f ->
+                f.settings.save("https://example.test/v1", "model", "key", true, true)
+                val model = f.model
                 model.viewState.first { it.ready }
-                model.processIntent(PodnyaIntent.UpdateDraft("private question"))
-                model.processIntent(PodnyaIntent.Send("editor", 1))
-                fixture.started.await()
-                assertIs<PodnyaEvent.ClearDraft>(model.singleEvent.first())
-                val action = SampleAction("private-target")
-                model.processIntent(PodnyaIntent.PerformAction(action))
-                assertEquals(PodnyaEvent.Action(action), model.singleEvent.first())
-                assertEquals(AssistantTurnStatus.RUNNING, fixture.session.state.value.turns.single().status)
-                assertFalse(fixture.cancelled.isCompleted)
-                model.processIntent(PodnyaIntent.Stop)
-                fixture.cancelled.await()
-                assertEquals(AssistantTurnStatus.STOPPED, fixture.session.state.value.turns.single().status)
-                assertNull(withTimeoutOrNull(50) { model.singleEvent.first() })
+                val id = model.viewState.value.session.id
+                model.processIntent(PodnyaIntent.UpdateDraft(id, "kept", "editor", 1))
+                model.viewState.first { it.session.draft == "kept" }
+                val config = f.settings.snapshot()
+                f.failConversationWrites = true
+                model.processIntent(PodnyaIntent.Send(id, "editor", 1, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.OpenSearch)
+                val error = assertIs<PodnyaEvent.Rejected>(model.singleEvent.first())
+                assertEquals(id, error.conversationId)
+                assertEquals(AssistantError.CONVERSATION_STORAGE, error.error)
+                assertEquals(PodnyaEvent.OpenSearch, model.singleEvent.first())
+                f.failConversationWrites = false
+                model.processIntent(PodnyaIntent.Rename(id, "still working"))
+                model.viewState.first { it.session.title == "still working" }
+                assertEquals("kept", model.viewState.value.session.draft)
             }
         }
     }
 
     @Test
-    fun loggedPayloadsDoNotContainQuestionOrCapabilityAction() {
-        assertFalse(PodnyaIntent.UpdateDraft("private question").toString().contains("private question"))
-        assertFalse(PodnyaIntent.PerformAction(SampleAction("private-id")).toString().contains("private-id"))
-        assertFalse(PodnyaEvent.Action(SampleAction("private-id")).toString().contains("private-id"))
+    fun loggedPayloadsDoNotContainQuestionTitleOrCapabilityAction() {
+        val id = kotlin.uuid.Uuid.random()
+        assertFalse(PodnyaIntent.UpdateDraft(id, "private question", "editor", 1).toString().contains("private question"))
+        assertFalse(PodnyaIntent.Rename(id, "private title").toString().contains("private title"))
+        assertFalse(PodnyaIntent.PerformAction(id, SampleAction("private-id")).toString().contains("private-id"))
+        assertFalse(PodnyaEvent.Action(id, SampleAction("private-id")).toString().contains("private-id"))
     }
 
     private data class SampleAction(val target: String) : AssistantAction
@@ -224,10 +186,18 @@ class PodnyaViewModelTest {
             override suspend fun get(id: String): String? = error("Session-only fixture")
             override suspend fun delete(id: String) = error("Session-only fixture")
         })
+        var failConversationWrites = false
+        private val memory = InMemoryConversationStore()
+        private val conversationStore = object : ConversationStore by memory {
+            override suspend fun save(conversation: AssistantSessionState) {
+                check(!failConversationWrites) { "synthetic store failure" }
+                memory.save(conversation)
+            }
+        }
         val session = AssistantConversationRepository(object : AssistantRuntime {
             override val available = true
             override suspend fun verify() = AssistantConnectionResult(true)
-            override fun run(request: AssistantTurnRequest) = flow<AssistantRunEvent> {
+            override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flow<AssistantRunEvent> {
                 requests++
                 lastQuestion = request.question
                 emit(AssistantRunEvent.ReplyDelta("partial"))
@@ -241,7 +211,7 @@ class PodnyaViewModelTest {
                     throw cancelledRun
                 }
             }
-        }, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
+        }, settings, store = conversationStore, scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
         val model = PodnyaViewModel(session, settings).also { store.put("model", it) }
         override fun close() { store.clear(); session.close() }
     }

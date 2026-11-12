@@ -20,11 +20,11 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.streaming.StreamFrame
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantLimits
-import com.skyd.podaura.podnya.settings.AssistantConnection
 import com.skyd.podaura.podnya.settings.assistantEndpointPath
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.ConnectTimeoutException

@@ -30,7 +30,7 @@ class ArticleSearchContentTest {
         assertTrue(content.retainedBytes <= AssistantLimits.CONTENT_BYTES)
         assertEquals(listOf("keep-id"), content.answer!!.articles.map { it.article.articleId })
         assertTrue(content.answer.resultsChanged)
-        val candidates = ArticleSearchContent.unranked(listOf(card("keep-id").article, card("large-id", "x".repeat(AssistantLimits.SESSION_BYTES)).article))
+        val candidates = ArticleSearchContent.unranked(listOf(card("keep-id").article, card("large-id", "x".repeat(AssistantLimits.TURN_BYTES)).article))
         assertEquals(listOf("keep-id"), candidates.candidates.map { it.articleId })
         assertTrue(candidates.retainedBytes <= AssistantLimits.CONTENT_BYTES)
     }

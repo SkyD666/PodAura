@@ -6,7 +6,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -26,25 +26,27 @@ class ArticleSearchContextTest {
         val runtime = object : AssistantRuntime {
             override val available = true
             override suspend fun verify() = AssistantConnectionResult(true)
-            override fun run(request: AssistantTurnRequest) = flowOf<AssistantRunEvent>(
+            override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flowOf<AssistantRunEvent>(
                 AssistantRunEvent.Failed(AssistantError.NETWORK),
             ).also { requests += request }
         }
-        val repository = AssistantConversationRepository(runtime, backgroundScope)
+        val settings = conversationSettings()
+        val repository = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
         repository.newConversation(context)
         feeds.clear()
         articles.clear()
         feeds += "different-feed"
         articles += "different-article"
 
-        assertTrue(repository.submit("Find related articles"))
+        repository.editDraft("Find related articles")
+        assertTrue(repository.sendDraft(settings))
         runCurrent()
-        assertTrue(repository.retry())
+        assertTrue(repository.retryLast(settings))
         runCurrent()
 
         assertEquals(2, requests.size)
         requests.forEach { assertEquals(expected, assertIs<ArticleSearchContext>(it.context).scope) }
-        assertEquals(expected, assertIs<ArticleSearchContext>(repository.state.value.context).scope)
-        assertEquals(expected, assertIs<ArticleSearchContext>(repository.state.value.turns.single().context).scope)
+        assertEquals(expected, assertIs<ArticleSearchContext>(repository.state.value.selected.context).scope)
+        assertEquals(expected, assertIs<ArticleSearchContext>(repository.state.value.selected.turns.single().context).scope)
     }
 }

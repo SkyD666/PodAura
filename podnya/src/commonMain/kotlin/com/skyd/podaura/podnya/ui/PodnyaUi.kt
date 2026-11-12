@@ -47,8 +47,15 @@ fun LazyListScope.podnyaContent(
         }
         content.parts.forEach { podnyaContent(turnId, it, showFallbackText, formatDate, onAction) }
     } else {
-        podnyaCapabilityUis.firstOrNull { it.supports(content) }?.run {
-            render(turnId, content, showFallbackText, formatDate, onAction)
+        val ui = podnyaCapabilityUis.firstOrNull { it.supports(content) }
+        if (ui != null) with(ui) { render(turnId, content, showFallbackText, formatDate, onAction) }
+        else item(key = "$turnId-unknown-content") {
+            SelectionContainer {
+                Text(
+                    text = content.historySnapshot()?.summary.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }

@@ -7,6 +7,12 @@ import com.skyd.podaura.podnya.core.AssistantContext
 data class ArticleSearchContext(
     val scope: ArticleSearchScope = ArticleSearchScope.All,
 ) : AssistantContext {
+    override val retainedBytes: Int
+        get() = when (val current = scope) {
+            ArticleSearchScope.All -> 0
+            is ArticleSearchScope.Restricted -> (current.feedUrls + current.articleIds).sumOf { it.encodeToByteArray().size + 32 }
+        }
+
     override fun snapshot(): ArticleSearchContext = copy(
         scope = when (val current = scope) {
             ArticleSearchScope.All -> current

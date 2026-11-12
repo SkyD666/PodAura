@@ -12,6 +12,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 class LocalFeedSearchRepository(private val repository: IFeedRepository) {
+    suspend fun exists(feedUrl: String): Boolean =
+        search(FeedQuery(withinFeedUrls = listOf(feedUrl), limit = 1))
+            .any { it.url == feedUrl }
+
     internal suspend fun search(query: FeedQuery): List<LocalFeed> = withContext(Dispatchers.IO) {
         try {
             require(query.limit in 1..FeedSearchLimits.SEARCH_RESULTS + 1)

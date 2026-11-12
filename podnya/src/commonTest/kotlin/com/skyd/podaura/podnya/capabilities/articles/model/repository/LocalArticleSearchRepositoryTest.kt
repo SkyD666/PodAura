@@ -17,6 +17,20 @@ import kotlin.test.assertTrue
 
 class LocalArticleSearchRepositoryTest {
     @Test
+    fun historyOpenChecksOnlyTheSelectedLocalArticleAndReportsDeletion() = runTest {
+        var exists = true
+        val catalog = RecordingCatalog { query ->
+            assertEquals(listOf("saved-id"), query.withinArticleIds)
+            assertTrue(query.keywords.isEmpty())
+            if (exists) listOf(ArticleRecord("saved-id")) else emptyList()
+        }
+        val source = LocalArticleSearchRepository(catalog)
+        assertTrue(source.exists("saved-id"))
+        exists = false
+        assertEquals(false, source.exists("saved-id"))
+    }
+
+    @Test
     fun moduleOwnsHtmlFormattingSnippetWindowDateAndMoreResults() = runTest {
         val catalog = RecordingCatalog {
             listOf(

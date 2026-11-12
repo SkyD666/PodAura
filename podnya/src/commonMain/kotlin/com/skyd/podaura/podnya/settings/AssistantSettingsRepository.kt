@@ -6,11 +6,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.skyd.fundation.credential.CredentialStorageException
 import com.skyd.fundation.credential.CredentialStore
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +20,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.uuid.Uuid
 
 data class AssistantSettings(
+    val configId: String? = null,
+    val revision: Long = 0,
     val baseUrl: String = "",
     val modelId: String = "",
     val hasApiKey: Boolean = false,
@@ -45,11 +48,6 @@ fun assistantEndpointPath(baseUrl: String, modelId: String): String {
     return if (isAstra && officialHost) "responses" else "chat/completions"
 }
 
-/** Never use a data class for credentials: generated toString/copy would expose the key. */
-class AssistantConnection(val baseUrl: String, val modelId: String, val apiKey: String) {
-    override fun toString(): String = "AssistantConnection([redacted])"
-}
-
 /** One versioned preference outside the application's exported @Preference registry. */
 class AssistantSettingsRepository(
     private val dataStore: DataStore<Preferences>,
@@ -58,6 +56,8 @@ class AssistantSettingsRepository(
     @Serializable
     private data class Stored(
         val version: Int = 1,
+        val configId: String? = null,
+        val revision: Long = 0,
         val baseUrl: String = "",
         val modelId: String = "",
         val credentialId: String? = null,
@@ -76,8 +76,13 @@ class AssistantSettingsRepository(
 
     val settings: Flow<AssistantSettings> =
         combine(dataStore.data, temporaryKey) { preferences, temporary ->
-            val stored = decode(preferences[key])
+            val stored =
+                if (decode(preferences[key]).let { it.baseUrl.isNotEmpty() && it.configId == null }) {
+                    mutex.withLock { identified() }
+                } else decode(preferences[key])
             AssistantSettings(
+                configId = stored.configId,
+                revision = stored.revision,
                 baseUrl = stored.baseUrl,
                 modelId = stored.modelId,
                 hasApiKey = stored.credentialId != null || temporary?.baseUrl == stored.baseUrl,
@@ -121,6 +126,8 @@ class AssistantSettingsRepository(
         val wroteCredential = newCredentialId != null && newCredentialId != previous.credentialId
         if (wroteCredential) credentialStore.put(newCredentialId, secret)
         val stored = Stored(
+            configId = previous.configId ?: Uuid.random().toString(),
+            revision = previous.revision + 1,
             baseUrl = normalized,
             modelId = model,
             credentialId = newCredentialId,
@@ -139,31 +146,52 @@ class AssistantSettingsRepository(
         }
     }
 
-    suspend fun connection(): AssistantConnection = mutex.withLock {
-        val stored = decode(dataStore.data.first()[key])
-        if (stored.baseUrl.isEmpty() || stored.modelId.isEmpty()) {
-            throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
-        }
-        if (stored.consentFor != stored.baseUrl || stored.consentVersion != 1) {
-            throw AssistantException(AssistantError.DISCLOSURE_REQUIRED)
-        }
-        val secret = temporaryKey.value?.takeIf { it.baseUrl == stored.baseUrl }?.value
-            ?: stored.credentialId?.let {
-                try {
-                    credentialStore.get(it)
-                } catch (_: CredentialStorageException) {
-                    throw AssistantException(AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE)
-                }
-            }
-        if (secret.isNullOrBlank()) throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
-        AssistantConnection(normalizeAssistantBaseUrl(stored.baseUrl), stored.modelId, secret)
+    suspend fun connection(): AssistantConnection {
+        val current = snapshot()
+        return resolveConnection(
+            current.configId ?: throw AssistantException(AssistantError.CONFIGURATION_REQUIRED),
+            current.revision
+        )
     }
+
+    suspend fun resolveConnection(configId: String, expectedRevision: Long): AssistantConnection =
+        mutex.withLock {
+            val stored = identified()
+            if (stored.configId != configId || stored.revision != expectedRevision) {
+                throw AssistantException(AssistantError.CONFIGURATION_CHANGED)
+            }
+            if (stored.baseUrl.isEmpty() || stored.modelId.isEmpty()) {
+                throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
+            }
+            if (stored.consentFor != stored.baseUrl || stored.consentVersion != 1) {
+                throw AssistantException(AssistantError.DISCLOSURE_REQUIRED)
+            }
+            val secret = temporaryKey.value?.takeIf { it.baseUrl == stored.baseUrl }?.value
+                ?: stored.credentialId?.let {
+                    try {
+                        credentialStore.get(it)
+                    } catch (_: CredentialStorageException) {
+                        throw AssistantException(AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE)
+                    }
+                }
+            if (secret.isNullOrBlank()) throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
+            AssistantConnection(normalizeAssistantBaseUrl(stored.baseUrl), stored.modelId, secret)
+        }
 
     suspend fun clear() = mutex.withLock {
         val previous = decode(dataStore.data.first()[key])
         dataStore.edit { it.remove(key) }
         temporaryKey.value = null
         previous.credentialId?.let { cleanup(it) }
+    }
+
+    // Migrate the old single configuration in place, without replacing its credentials.
+    private suspend fun identified(): Stored {
+        val current = decode(dataStore.data.first()[key])
+        if (current.baseUrl.isEmpty() || current.configId != null) return current
+        val upgraded = current.copy(configId = Uuid.random().toString(), revision = 1)
+        dataStore.edit { it[key] = json.encodeToString(upgraded) }
+        return upgraded
     }
 
     private fun decode(value: String?): Stored = value?.let {

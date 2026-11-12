@@ -57,6 +57,28 @@ class AssistantSettingsRepositoryTest {
     }
 
     @Test
+    fun configurationIdentitySurvivesEditsAndChangesAfterClearAndOldRevisionsAreRejected() = runTest {
+        val preferences = PreferencesStore()
+        val credentials = Credentials()
+        val repository = AssistantSettingsRepository(preferences, credentials)
+        repository.save("https://example.org/v1", "first", "key-one", false, true)
+        val first = repository.snapshot()
+        repository.save("https://example.org/v1", "second", "key-two", false, true)
+        val second = repository.snapshot()
+        assertEquals(first.configId, second.configId)
+        assertTrue(second.revision > first.revision)
+        assertEquals(AssistantError.CONFIGURATION_CHANGED, assertFailsWith<AssistantException> {
+            repository.resolveConnection(first.configId!!, first.revision)
+        }.error)
+        val fixed = repository.resolveConnection(second.configId!!, second.revision)
+        repository.clear()
+        repository.save("https://example.org/v1", "third", "key-three", false, true)
+        assertTrue(repository.snapshot().configId != second.configId)
+        assertEquals("second", fixed.modelId)
+        assertEquals("key-two", fixed.apiKey)
+    }
+
+    @Test
     fun endpointKeepsTheUsersPrefixAndRejectsCredentialsOrPlaintext() {
         mapOf(
             "https://example.org" to "https://example.org/",

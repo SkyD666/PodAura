@@ -19,7 +19,7 @@ import com.skyd.podaura.podnya.runtime.responsesObject as responseObject
 import com.skyd.podaura.podnya.runtime.responsesReasoning as reasoning
 import com.skyd.podaura.podnya.runtime.responsesReply as response
 import com.skyd.podaura.podnya.runtime.responsesStream as stream
-import com.skyd.podaura.podnya.settings.AssistantConnection
+import com.skyd.podaura.podnya.core.AssistantConnection
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import kotlin.test.Test
@@ -54,7 +54,7 @@ class ArticleSearchResponsesTest {
             val script = HttpScript(response(*original.toTypedArray()), response(message("Search finished.")),
                 selection(text = misleading), stream())
             val catalog = RecordingCatalog()
-            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles")).toList()
+            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
             assertEquals(AssistantRunEvent.Completed, events.last())
             assertEquals(4, script.requests.size)
             assertTrue(script.paths.all { it == "/v1/responses" })
@@ -94,7 +94,7 @@ class ArticleSearchResponsesTest {
             val script = HttpScript(response(call("bad", "not JSON"), call("good"), call("third"), call("excess")),
                 selection(), stream())
             val catalog = RecordingCatalog()
-            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles")).toList()
+            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
             assertEquals(AssistantRunEvent.Completed, events.last())
             assertEquals(3, catalog.queries.size) // Two searches plus final recheck.
             assertEquals(3, script.requests.size)
@@ -114,7 +114,7 @@ class ArticleSearchResponsesTest {
             invalid.forEach { body ->
                 val catalog = RecordingCatalog()
                 val script = HttpScript(HttpReply(JsonObject(body).toString()))
-                val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles")).toList()
+                val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
                 assertEquals(AssistantRunEvent.Failed(AssistantError.INVALID_OUTPUT), events.last())
                 assertTrue(catalog.queries.isEmpty())
                 assertEquals(1, script.requests.size)
@@ -137,7 +137,7 @@ class ArticleSearchResponsesTest {
             )
             invalidStreams.forEach { sse ->
                 val script = HttpScript(response(call("1")), response(message("Search finished.")), selection(), sse)
-                val events = script.assistant(RecordingCatalog(), astra()).run(AssistantTurnRequest("Find articles")).toList()
+                val events = script.assistant(RecordingCatalog(), astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
                 assertTrue(events.any { it is AssistantRunEvent.ContentReady })
                 assertFalse(events.contains(AssistantRunEvent.Completed))
                 assertEquals(AssistantError.STREAM_INTERRUPTED, (events.last() as AssistantRunEvent.Failed).error)
@@ -153,7 +153,7 @@ class ArticleSearchResponsesTest {
             val large = JsonObject(call("1") + ("provider_metadata" to JsonPrimitive("x".repeat(65_536))))
             val script = HttpScript(response(large))
             val catalog = RecordingCatalog()
-            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles")).toList()
+            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
             assertEquals(AssistantRunEvent.Failed(AssistantError.BUDGET_EXHAUSTED), events.last())
             assertEquals(1, script.requests.size)
             assertEquals(1, catalog.queries.size)
@@ -173,7 +173,7 @@ class ArticleSearchResponsesTest {
                 })
             })
             val events = mutableListOf<AssistantRunEvent>()
-            val job = launch { assistant.run(AssistantTurnRequest("Find articles")).toList(events) }
+            val job = launch { assistant.run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList(events) }
             withTimeout(5_000) { entered.await() }
             job.cancelAndJoin()
             assertEquals(1, requests)

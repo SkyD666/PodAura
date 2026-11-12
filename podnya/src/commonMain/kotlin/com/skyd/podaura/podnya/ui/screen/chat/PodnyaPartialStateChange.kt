@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
-import com.skyd.podaura.podnya.model.bean.AssistantSessionState
+import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
 import com.skyd.podaura.podnya.settings.AssistantSettings
 
 internal sealed interface PodnyaPartialStateChange {
@@ -20,8 +20,8 @@ internal sealed interface PodnyaPartialStateChange {
             oldState.copy(settings = null, settingsFailed = true)
     }
 
-    data class Session(val value: AssistantSessionState) : PodnyaPartialStateChange {
-        override fun reduce(oldState: PodnyaState) = oldState.copy(session = value)
+    data class Session(val value: AssistantConversationsState) : PodnyaPartialStateChange {
+        override fun reduce(oldState: PodnyaState) = oldState.copy(conversations = value)
     }
 
     data class Settings(val value: AssistantSettings) : PodnyaPartialStateChange {

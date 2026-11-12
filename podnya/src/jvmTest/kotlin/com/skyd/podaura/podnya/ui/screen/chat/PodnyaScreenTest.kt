@@ -1,5 +1,7 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.InternalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalDensity
@@ -23,6 +26,7 @@ import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.MouseButton
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
@@ -32,9 +36,9 @@ import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
@@ -43,6 +47,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
@@ -55,6 +60,7 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -101,9 +107,9 @@ import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
 import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
+import com.skyd.podnya.resources.*
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_latest
-import com.skyd.podnya.resources.podnya_more
 import com.skyd.podnya.resources.podnya_new_conversation
 import com.skyd.podnya.resources.podnya_open_search
 import com.skyd.podnya.resources.podnya_preparing
@@ -147,7 +153,7 @@ class PodnyaScreenTest {
                     waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
                     onNodeWithTag("podnya_composer").performTextReplacement("找一下音乐订阅")
                     onNodeWithTag("podnya_send").performClick()
-                    waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
+                    waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
                     onNodeWithTag("podnya_messages").performScrollToNode(hasText("音乐与生活"))
                     onNodeWithText("音乐与生活").assertIsDisplayed()
                     capture("${layout.name}-feed-result")
@@ -200,9 +206,9 @@ class PodnyaScreenTest {
                 waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.isRunning }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.isRunning }
                 onNodeWithTag("podnya_composer").performClick().performTextReplacement("Next question")
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == "Next question" }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == "Next question" }
                 runOnIdle { keyboard.show() }
                 capture("phone-keyboard-visible")
 
@@ -223,8 +229,8 @@ class PodnyaScreenTest {
                 onNodeWithTag("podnya_composer").assertIsNotFocused()
                 runOnIdle {
                     assertEquals(0, keyboardHeight)
-                    assertEquals("Next question", fixture.repository.state.value.draft)
-                    assertTrue(fixture.repository.state.value.isRunning)
+                    assertEquals("Next question", fixture.repository.state.value.selected.draft)
+                    assertTrue(fixture.repository.state.value.selected.isRunning)
                     assertFalse(fixture.assistant.cancelled.get())
                 }
                 runOnIdle { backInput.complete() }
@@ -255,7 +261,7 @@ class PodnyaScreenTest {
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
                 waitUntil(timeoutMillis = 5_000) {
-                    fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
+                    fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
                 }
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText(FIRST_TITLE))
                 runOnIdle { keyboard.show() }
@@ -281,16 +287,16 @@ class PodnyaScreenTest {
                 capture("desktop-unconfigured")
                 onNodeWithTag("podnya_send").assertIsNotEnabled()
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == QUESTION }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == QUESTION }
                 capture("desktop-unconfigured-typing")
                 onNodeWithTag("podnya_send").assertIsNotEnabled()
                 assertEquals(0, fixture.assistant.requests.get())
-                clickAction(fixture.settingsLabel, fixture.moreLabel)
+                onNodeWithTag("podnya_settings").assertIsDisplayed().performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.settingsOpened == 1 }
                 assertEquals(1, fixture.settingsOpened)
-                clickAction(fixture.searchLabel, fixture.moreLabel)
-                waitUntil(timeoutMillis = 5_000) { fixture.searchOpened == 1 }
-                assertEquals(1, fixture.searchOpened)
+                onNodeWithTag("podnya_more").assertDoesNotExist()
+                onNodeWithText(fixture.searchLabel).assertDoesNotExist()
+                assertEquals(0, fixture.searchOpened)
             }
         }
 
@@ -313,7 +319,7 @@ class PodnyaScreenTest {
                 if (layout.fontScale > 1f || layout.name == "landscape") capture("${layout.name}-typing")
                 assertComposerFits(layout.width, layout.height)
                 onNodeWithTag("podnya_send").assertIsEnabled().performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
                 capture("${layout.name}-recommendations")
                 assertComposerFits(layout.width, layout.height)
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText(FIRST_TITLE))
@@ -339,15 +345,16 @@ class PodnyaScreenTest {
                 // Deliver an older draft snapshot after the editor has already advanced.
                 runOnIdle {
                     fixture.viewModel.viewModelScope.launch {
-                        fixture.viewModel.processIntent(PodnyaIntent.UpdateDraft("ab"))
+                        val current = fixture.repository.state.value.selected
+                        fixture.viewModel.processIntent(PodnyaIntent.UpdateDraft(current.id, "ab", current.editorId, current.draftRevision - 1))
                     }
                 }
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == "ab" }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == "acb" }
                 onNodeWithTag("podnya_composer")
                     .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("acb")))
                     .assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2)))
                     .performTextInput("x")
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == "acxb" }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == "acxb" }
                 assertEquals(0, fixture.assistant.requests.get())
             }
         }
@@ -364,15 +371,15 @@ class PodnyaScreenTest {
                     pressKey(Key.Enter)
                     keyUp(Key.ShiftLeft)
                 }
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft.contains('\n') }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft.contains('\n') }
                 assertEquals(0, fixture.assistant.requests.get())
                 onNodeWithTag("podnya_composer").performKeyInput { pressKey(Key.Enter) }
                 waitUntil(timeoutMillis = 5_000) {
-                    fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
+                    fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
                 }
                 assertEquals(1, fixture.assistant.requests.get())
                 assertEquals(QUESTION, fixture.assistant.lastQuestion)
-                assertEquals("", fixture.repository.state.value.draft)
+                assertEquals("", fixture.repository.state.value.selected.draft)
             }
         }
 
@@ -384,20 +391,20 @@ class PodnyaScreenTest {
                 waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").assertIsEnabled().performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 1 && fixture.repository.state.value.isRunning }
+                waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 1 && fixture.repository.state.value.selected.isRunning }
                 onNodeWithTag("podnya_stop").assertIsDisplayed().assertIsEnabled()
                 capture("phone-searching")
                 assertComposerFits(390, 844, action = "podnya_stop")
                 onNodeWithTag("podnya_stop").performClick()
                 waitUntil(timeoutMillis = 5_000) {
                     fixture.assistant.cancelled.get() &&
-                        fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.STOPPED
+                        fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.STOPPED
                 }
                 capture("phone-stopped")
                 onNodeWithTag("podnya_send").assertIsNotEnabled()
-                clickAction(fixture.newConversationLabel, fixture.moreLabel)
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.isEmpty() }
-                assertEquals("", fixture.repository.state.value.draft)
+                onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.isEmpty() }
+                assertEquals("", fixture.repository.state.value.selected.draft)
                 assertEquals(1, fixture.assistant.requests.get())
                 capture("phone-new-conversation")
             }
@@ -411,23 +418,30 @@ class PodnyaScreenTest {
                 waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.FAILED }
-                assertEquals(AssistantError.NETWORK, fixture.repository.state.value.turns.single().error)
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.FAILED }
+                assertEquals(AssistantError.NETWORK, fixture.repository.state.value.selected.turns.single().error)
+                val conversationId = fixture.repository.state.value.selected.id
+                onNodeWithTag("podnya_history_$conversationId")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, fixture.historyFailedLabel))
+                onNodeWithText(fixture.historyFailedLabel).assertDoesNotExist()
                 capture("desktop-error-dark")
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText(fixture.retryLabel))
                 onNodeWithText(fixture.retryLabel).assertIsEnabled().performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
                 assertEquals(2, fixture.assistant.requests.get())
-                assertEquals(1, fixture.repository.state.value.turns.size)
+                assertEquals(1, fixture.repository.state.value.selected.turns.size)
+                onNodeWithTag("podnya_history_$conversationId")
+                    .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+                onNodeWithTag("podnya_history_status_$conversationId", useUnmergedTree = true).assertDoesNotExist()
                 capture("desktop-retried-dark")
-                clickAction(fixture.newConversationLabel, fixture.moreLabel)
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.isEmpty() }
-                clickAction(fixture.settingsLabel, fixture.moreLabel)
-                clickAction(fixture.searchLabel, fixture.moreLabel)
+                onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.isEmpty() }
+                onNodeWithTag("podnya_settings").assertIsDisplayed().performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.settingsOpened == 1 }
                 assertEquals(1, fixture.settingsOpened)
-                waitUntil(timeoutMillis = 5_000) { fixture.searchOpened == 1 }
-                assertEquals(1, fixture.searchOpened)
+                onNodeWithTag("podnya_more").assertDoesNotExist()
+                onNodeWithText(fixture.searchLabel).assertDoesNotExist()
+                assertEquals(0, fixture.searchOpened)
             }
         }
 
@@ -442,13 +456,18 @@ class PodnyaScreenTest {
                 repeat(3) { chunk ->
                     fixture.assistant.nextChunk.trySend(Unit)
                     waitUntil(timeoutMillis = 5_000) {
-                        fixture.repository.state.value.turns.lastOrNull()?.reply?.length ==
+                        fixture.repository.state.value.selected.turns.lastOrNull()?.reply?.length ==
                             "请进一步说明希望检索的内容。\n".repeat(15).length * (chunk + 1)
                     }
                     waitForIdle()
                     onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
                 }
                 onNodeWithTag("podnya_messages").performScrollToIndex(0)
+                val questionBounds = onNodeWithText(QUESTION).getUnclippedBoundsInRoot()
+                onNodeWithTag("podnya_history_open").performClick()
+                onNodeWithTag("podnya_history_screen").assertIsDisplayed()
+                onNode(hasClickAction() and hasAnyAncestor(hasTestTag("podnya_history_back"))).performClick()
+                assertEquals(questionBounds, onNodeWithText(QUESTION).getUnclippedBoundsInRoot())
                 onNodeWithText(fixture.latestLabel).assertIsDisplayed().performClick()
                 waitForIdle()
                 onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
@@ -463,20 +482,20 @@ class PodnyaScreenTest {
                 setContent { fixture.Screen() }
                 waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
                 onNodeWithTag("podnya_composer").performTextReplacement("Synthetic request")
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == "Synthetic request" }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == "Synthetic request" }
                 onNodeWithTag("podnya_send").assertIsEnabled().performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.progress == SampleProgress }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.progress == SampleProgress }
                 onNodeWithText(fixture.preparingLabel).assertIsDisplayed()
                 fixture.assistant.nextChunk.trySend(Unit)
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.content is SampleContent }
-                onNodeWithText("Synthetic capability result").assertDoesNotExist()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.content is SampleContent }
+                onNodeWithText("Synthetic capability result").assertIsDisplayed()
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText("Synthetic reply"))
                 onNodeWithText("Synthetic reply").assertIsDisplayed()
-                assertEquals(AssistantTurnStatus.RUNNING, fixture.repository.state.value.turns.single().status)
+                assertEquals(AssistantTurnStatus.RUNNING, fixture.repository.state.value.selected.turns.single().status)
                 assertFalse(fixture.assistant.cancelled.get())
                 onNodeWithTag("podnya_stop").performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.assistant.cancelled.get() }
-                assertEquals(AssistantTurnStatus.STOPPED, fixture.repository.state.value.turns.single().status)
+                assertEquals(AssistantTurnStatus.STOPPED, fixture.repository.state.value.selected.turns.single().status)
                 assertEquals(1, fixture.assistant.requests.get())
             }
         }
@@ -490,20 +509,20 @@ class PodnyaScreenTest {
                 waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.turns.lastOrNull()?.reply == FIRST_DELTA }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.reply == FIRST_DELTA }
                 onNodeWithTag("podnya_composer").performTextReplacement("Next question")
-                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.draft == "Next question" }
-                clickAction(fixture.settingsLabel, fixture.moreLabel)
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft == "Next question" }
+                onNodeWithTag("podnya_settings").assertIsDisplayed().performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.settingsOpened == 1 }
-                assertTrue(fixture.repository.state.value.isRunning)
+                assertTrue(fixture.repository.state.value.selected.isRunning)
 
                 // ON_STOP alone must not cancel a request while the screen is still composed.
                 runOnIdle { fixture.lifecycle.currentState = Lifecycle.State.CREATED }
                 fixture.assistant.nextChunk.trySend(Unit)
                 waitUntil(timeoutMillis = 5_000) {
-                    fixture.repository.state.value.turns.single().reply == FIRST_DELTA + BACKGROUND_DELTA
+                    fixture.repository.state.value.selected.turns.single().reply == FIRST_DELTA + BACKGROUND_DELTA
                 }
-                assertTrue(fixture.repository.state.value.isRunning)
+                assertTrue(fixture.repository.state.value.selected.isRunning)
                 assertFalse(fixture.assistant.cancelled.get())
 
                 // Dispose the screen and its VM, then complete the same repository-owned request.
@@ -513,7 +532,7 @@ class PodnyaScreenTest {
                 runOnIdle { fixture.recreateViewModel() }
                 fixture.assistant.nextChunk.trySend(Unit)
                 waitUntil(timeoutMillis = 5_000) {
-                    fixture.repository.state.value.turns.single().status == AssistantTurnStatus.COMPLETED
+                    fixture.repository.state.value.selected.turns.single().status == AssistantTurnStatus.COMPLETED
                 }
                 assertFalse(fixture.assistant.cancelled.get())
 
@@ -532,8 +551,235 @@ class PodnyaScreenTest {
             }
         }
 
+    @Test
+    fun resizingHistoryPageUsesPersistentWideHistoryAndReturnsToNarrowChat() =
+        runDesktopComposeUiTest(width = 1100, height = 844) {
+            Fixture().use { fixture ->
+                var width by mutableStateOf(390.dp)
+                setContent {
+                    Box(modifier = Modifier.width(width)) {
+                        fixture.Screen(dark = true, fontScale = 1.3f)
+                    }
+                }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement("Saved draft")
+                onNodeWithTag("podnya_history_open").performClick()
+                onNodeWithTag("podnya_history_screen").assertIsDisplayed()
+                capture("phone-history-dark-large-type")
+                runOnIdle { width = 1100.dp }
+                onNodeWithTag("podnya_history_screen").assertDoesNotExist()
+                onNodeWithTag("podnya_history").assertIsDisplayed()
+                onNodeWithTag("podnya_history_open").assertDoesNotExist()
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("Saved draft")))
+                runOnIdle { width = 390.dp }
+                onNodeWithTag("podnya_history").assertDoesNotExist()
+                onNodeWithTag("podnya_history_open").assertIsDisplayed()
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("Saved draft")))
+            }
+        }
+
+    @Test
+    fun phoneHistoryBackRestoresEditorAndKeepsGenerationRunning() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            Fixture(mode = Mode.WAITING).use { fixture ->
+                var pageBacks = 0
+                val backInput = object : NavigationEventInput() {
+                    fun start() = dispatchOnBackStarted(NavigationEvent())
+                    fun cancel() = dispatchOnBackCancelled()
+                    fun complete() = dispatchOnBackCompleted()
+                }
+                setContent {
+                    val dispatcher = checkNotNull(LocalNavigationEventDispatcherOwner.current)
+                        .navigationEventDispatcher
+                    DisposableEffect(dispatcher) {
+                        dispatcher.addInput(backInput)
+                        onDispose { dispatcher.removeInput(backInput) }
+                    }
+                    NavigationBackHandler(
+                        state = rememberNavigationEventState(NavigationEventInfo.None),
+                        isBackEnabled = true,
+                        onBackCompleted = { pageBacks++ }
+                    )
+                    fixture.Screen()
+                }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
+                onNodeWithTag("podnya_send").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.isRunning }
+                onNodeWithTag("podnya_composer").performTextReplacement("Next draft")
+                onNodeWithTag("podnya_composer").performTextInputSelection(TextRange(3))
+                onNodeWithTag("podnya_history_open").performClick()
+                onNodeWithTag("podnya_history_screen").assertIsDisplayed()
+                runOnIdle {
+                    backInput.start()
+                    backInput.cancel()
+                }
+                onNodeWithTag("podnya_history_screen").assertIsDisplayed()
+                runOnIdle { backInput.complete() }
+                onNodeWithTag("podnya_history_screen").assertDoesNotExist()
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("Next draft")))
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(3)))
+                assertEquals(0, pageBacks)
+                assertTrue(fixture.repository.state.value.selected.isRunning)
+                assertFalse(fixture.assistant.cancelled.get())
+
+                onNodeWithTag("podnya_history_open").performClick()
+                onNode(hasClickAction() and hasAnyAncestor(hasTestTag("podnya_history_back"))).performClick()
+                onNodeWithTag("podnya_composer").assertIsDisplayed()
+                onNodeWithTag("podnya_history_open").performClick()
+                onNodeWithTag("podnya_history_screen").performMouseInput {
+                    click(button = MouseButton(3))
+                }
+                onNodeWithTag("podnya_history_screen").assertDoesNotExist()
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("Next draft")))
+                assertEquals(0, pageBacks)
+                onNodeWithTag("podnya_history_open").performClick()
+                val previousId = fixture.repository.state.value.selected.id
+                onNodeWithText(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id != previousId }
+                onNodeWithTag("podnya_history_screen").assertDoesNotExist()
+                onNodeWithTag("podnya_composer").assertIsDisplayed()
+                assertFalse(fixture.assistant.cancelled.get())
+            }
+        }
+
+    @Test
+    fun desktopHistoryStaysVisibleAndRestoresCursorScrollAndDraftAndSupportsRenameDelete() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            Fixture().use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
+                onNodeWithTag("podnya_send").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED }
+                val a = fixture.repository.state.value.selected.id
+                onNodeWithTag("podnya_composer").performTextReplacement("acb")
+                onNodeWithTag("podnya_composer").performTextInputSelection(TextRange(2))
+                onNodeWithTag("podnya_messages").performScrollToIndex(0)
+                val firstBounds = onNode(hasText(QUESTION) and hasAnyAncestor(hasTestTag("podnya_messages"))).getUnclippedBoundsInRoot()
+                onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id != a }
+                val b = fixture.repository.state.value.selected.id
+                onNodeWithTag("podnya_composer").performTextReplacement("B draft")
+                onNodeWithTag("podnya_history_$a").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id == a }
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("acb")))
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2)))
+                assertEquals(firstBounds.top, onNode(hasText(QUESTION) and hasAnyAncestor(hasTestTag("podnya_messages"))).getUnclippedBoundsInRoot().top)
+                onNodeWithTag("podnya_history").assertIsDisplayed()
+                capture("desktop-history-restored")
+                onNodeWithTag("podnya_history_more_$a").performClick()
+                onNodeWithText(fixture.renameLabel).performClick()
+                onNodeWithTag("podnya_rename_input").performTextReplacement("My saved chat")
+                onNodeWithText(fixture.saveLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.title == "My saved chat" }
+                onNodeWithTag("podnya_history_more_$b").performClick()
+                onNodeWithText(fixture.deleteLabel).performClick()
+                capture("desktop-history-delete")
+                onNodeWithTag("podnya_delete_confirm").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.summaries.none { it.id == b } }
+                onNodeWithTag("podnya_history").assertIsDisplayed()
+                onNodeWithTag("podnya_history_open").assertDoesNotExist()
+                onNodeWithContentDescription(fixture.hideHistoryLabel).assertDoesNotExist()
+                onNodeWithText("My saved chat").assertIsDisplayed()
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("acb")))
+            }
+        }
+
+    @Test
+    fun phoneFullScreenHistoryReturnsAfterSelectionAndConfirmsStoppingDeletedConversation() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            Fixture(mode = Mode.WAITING).use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement("A question")
+                onNodeWithTag("podnya_send").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 1 }
+                val a = fixture.repository.state.value.selected.id
+                onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id != a }
+                onNodeWithTag("podnya_composer").performTextReplacement("B draft")
+                onNodeWithTag("podnya_history").assertDoesNotExist()
+                assertTrue(onNodeWithTag("podnya_history_open").getUnclippedBoundsInRoot().left > 195.dp)
+                capture("phone-history-entry")
+                onNodeWithContentDescription(fixture.historyLabel).performClick()
+                onNodeWithTag("podnya_composer").assertDoesNotExist()
+                val historyBounds = onNodeWithTag("podnya_history_screen").getUnclippedBoundsInRoot()
+                assertEquals(0.dp, historyBounds.left)
+                assertEquals(390.dp, historyBounds.right)
+                assertEquals(844.dp, historyBounds.bottom)
+                onNodeWithTag("podnya_history_$a")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, fixture.historyReplyingLabel))
+                onNodeWithTag("podnya_history_status_$a", useUnmergedTree = true).assertIsDisplayed()
+                onNodeWithText(fixture.historyReplyingLabel).assertDoesNotExist()
+                capture("phone-history-full-screen")
+                onNodeWithTag("podnya_history_$a").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id == a }
+                onNodeWithTag("podnya_stop").assertIsDisplayed()
+                assertFalse(fixture.assistant.cancelled.get())
+                onNodeWithContentDescription(fixture.historyLabel).performClick()
+                onNodeWithTag("podnya_history_more_$a").performClick()
+                onNodeWithText(fixture.deleteLabel).performClick()
+                onNodeWithText(fixture.deleteStopLabel).assertIsDisplayed()
+                capture("phone-history-delete-running")
+                assertFalse(fixture.assistant.cancelled.get())
+                onNodeWithTag("podnya_delete_confirm").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.assistant.cancelled.get() && fixture.repository.state.value.summaries.none { it.id == a } }
+                assertEquals("B draft", fixture.repository.state.value.selected.draft)
+            }
+        }
+
+    @Test
+    fun confirmationIdentifiesOriginalConversationAfterSwitchAndLeavesCurrentDraftAlone() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            Fixture().use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement("Original A")
+                onNodeWithTag("podnya_send").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.runningIds.isEmpty() && fixture.assistant.requests.get() == 1 }
+                val a = fixture.repository.state.value.selected.id
+                onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id != a }
+                val b = fixture.repository.state.value.selected.id
+                onNodeWithTag("podnya_composer").performTextReplacement("B draft")
+                onNodeWithTag("podnya_history_$a").performClick()
+                onNodeWithTag("podnya_composer").performTextReplacement("Continue A")
+                val config = runBlocking {
+                    fixture.settings.save("https://other.example/v2", "other-model", "synthetic-key", true, true)
+                    fixture.settings.snapshot()
+                }
+                runOnIdle {
+                    val current = fixture.repository.state.value.selected
+                    fixture.viewModel.viewModelScope.launch {
+                        fixture.viewModel.processIntent(PodnyaIntent.Send(a, current.editorId, current.draftRevision, config.configId, config.revision))
+                        fixture.viewModel.processIntent(PodnyaIntent.Select(b))
+                    }
+                }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id == b }
+                onNodeWithTag("podnya_destination_confirm").assertIsDisplayed()
+                onNodeWithText(fixture.confirmationConversationLabel).assertIsDisplayed()
+                onNodeWithText("Continue A").assertIsDisplayed()
+                capture("desktop-cross-service-confirmation")
+                onNodeWithTag("podnya_destination_confirm").performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 2 && fixture.repository.state.value.runningIds.isEmpty() }
+                assertEquals(b, fixture.repository.state.value.selected.id)
+                onNodeWithTag("podnya_composer").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("B draft")))
+            }
+        }
+
     private fun DesktopComposeUiTest.capture(name: String) {
-        val image = onNode(isRoot() and hasAnyDescendant(hasTestTag("podnya_composer"))).captureToImage()
+        val image = onNode(
+            isRoot() and hasAnyDescendant(
+                hasTestTag("podnya_composer") or hasTestTag("podnya_history_screen")
+            )
+        ).captureToImage()
         File("build/reports/podnya-ui/$name.png").apply {
             parentFile.mkdirs()
             writeBytes(Image.makeFromBitmap(image.asSkiaBitmap()).encodeToData()!!.bytes)
@@ -552,14 +798,6 @@ class PodnyaScreenTest {
         }
     }
 
-    private fun DesktopComposeUiTest.clickAction(label: String, more: String) {
-        val matcher = hasContentDescription(label) or (hasText(label) and hasClickAction())
-        if (onAllNodes(matcher).fetchSemanticsNodes().isEmpty()) {
-            onNodeWithContentDescription(more).performClick()
-        }
-        onAllNodes(matcher)[0].assertIsDisplayed().performClick()
-    }
-
     @Serializable
     private data object TestRoute : NavKey
 
@@ -575,13 +813,12 @@ class PodnyaScreenTest {
 
     private class Fixture(configured: Boolean = true, mode: Mode = Mode.RESULTS) : AutoCloseable {
         val assistant = FakeAssistant(mode)
-        val repository = AssistantConversationRepository(assistant)
         private val preferences = object : DataStore<Preferences> {
             override val data = MutableStateFlow(emptyPreferences())
             override suspend fun updateData(transform: suspend (Preferences) -> Preferences): Preferences =
                 transform(data.value).also { data.value = it }
         }
-        private val settings = AssistantSettingsRepository(preferences, object : CredentialStore {
+        val settings = AssistantSettingsRepository(preferences, object : CredentialStore {
             override suspend fun put(id: String, secret: String) = error("UI tests must not persist credentials")
             override suspend fun get(id: String): String? = error("UI tests must not read credentials")
             override suspend fun delete(id: String) = error("UI tests must not delete credentials")
@@ -592,6 +829,7 @@ class PodnyaScreenTest {
                     sessionOnly = true, consentAccepted = true)
             }
         }
+        val repository = AssistantConversationRepository(assistant, settings)
         var viewModel = PodnyaViewModel(repository, settings)
             private set
         private val store = ViewModelStore().apply { put("podnya", viewModel) }
@@ -614,9 +852,17 @@ class PodnyaScreenTest {
         var searchLabel = ""
         var newConversationLabel = ""
         var retryLabel = ""
-        var moreLabel = ""
         var latestLabel = ""
         var preparingLabel = ""
+        var confirmationConversationLabel = ""
+        var historyLabel = ""
+        var historyReplyingLabel = ""
+        var historyFailedLabel = ""
+        var hideHistoryLabel = ""
+        var renameLabel = ""
+        var deleteLabel = ""
+        var deleteStopLabel = ""
+        var saveLabel = ""
         private val formatArticleDate: (Long) -> String = { millis ->
             formattedDate = millis
             FORMATTED_DATE
@@ -642,9 +888,17 @@ class PodnyaScreenTest {
                     searchLabel = stringResource(Res.string.podnya_open_search)
                     newConversationLabel = stringResource(Res.string.podnya_new_conversation)
                     retryLabel = stringResource(Res.string.podnya_retry)
-                    moreLabel = stringResource(Res.string.podnya_more)
                     latestLabel = stringResource(Res.string.podnya_latest)
                     preparingLabel = stringResource(Res.string.podnya_preparing)
+                    confirmationConversationLabel = stringResource(Res.string.podnya_destination_conversation, "Original A")
+                    historyLabel = stringResource(Res.string.podnya_history)
+                    historyReplyingLabel = stringResource(Res.string.podnya_history_replying)
+                    historyFailedLabel = stringResource(Res.string.podnya_history_failed)
+                    hideHistoryLabel = stringResource(Res.string.podnya_history_hide)
+                    renameLabel = stringResource(Res.string.podnya_rename)
+                    deleteLabel = stringResource(Res.string.podnya_delete)
+                    deleteStopLabel = stringResource(Res.string.podnya_delete_stop)
+                    saveLabel = stringResource(Res.string.podnya_save)
                     Surface {
                         PodnyaScreen(viewModel, formatArticleDate, onBack = {}, onSettings = { settingsOpened++ },
                             onAction = { action ->
@@ -669,7 +923,7 @@ class PodnyaScreenTest {
         val nextChunk = Channel<Unit>(Channel.UNLIMITED)
         @Volatile var lastQuestion: String? = null
         override suspend fun verify() = AssistantConnectionResult(true)
-        override fun run(request: AssistantTurnRequest) = flow {
+        override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flow {
             lastQuestion = request.question
             val attempt = requests.incrementAndGet()
             if (mode == Mode.FEEDS) {
