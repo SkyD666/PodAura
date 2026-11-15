@@ -41,7 +41,9 @@
     <string name="podnya_error_unavailable">当前版本暂不支持播喵，你仍可使用普通搜索。</string>
     <string name="podnya_error_results_changed">部分文章在检索期间发生变化或已被移除；卡片展示剩余已校验的结果。</string>
     <string name="podnya_settings_title">播喵设置</string>
-    <string name="podnya_settings_description">连接支持工具调用、结构化结果和流式回复的模型服务。官方 GPT-6 Astra 使用 Responses，其他配置使用 Chat Completions。</string>
+    <string name="podnya_settings_info">连接说明</string>
+    <string name="podnya_test_cost">测试可能产生费用。</string>
+    <string name="podnya_settings_description">连接支持工具调用、结构化结果和流式回复的模型服务。</string>
     <string name="podnya_base_url">API 服务地址（HTTPS）</string>
     <string name="podnya_endpoint_preview">请求将发送至：%1$s</string>
     <string name="podnya_model_id">模型名称</string>
@@ -50,8 +52,8 @@
     <string name="podnya_api_key_required">请输入此服务地址的密钥。</string>
     <string name="podnya_session_only">仅在本次应用运行期间保留密钥</string>
     <string name="podnya_session_only_description">安全存储不可用时可选择此项；重启后需要重新输入密钥。</string>
-    <string name="podnya_settings_disclosure">检索时，你的问题、最近对话、候选文章标题、来源、订阅名称、静音状态和每段最多 400 字符的文本片段将发送至 %1$s。搜索工具不会发送订阅地址或请求头。聊天仅在本次应用运行期间保留于内存。</string>
-    <string name="podnya_consent">我同意将上述数据发送至此服务</string>
+    <string name="podnya_settings_disclosure">检索时，你的问题、最近对话、候选文章标题、来源、订阅名称、静音状态和每段最多 400 字符的文本片段将发送至 %1$s。搜索工具不会发送订阅地址或请求头。会话历史保存在此设备上。</string>
+    <string name="podnya_consent">允许将问题、对话和检索内容发送至此服务</string>
     <string name="podnya_save">保存</string>
     <string name="podnya_test_saved">测试已保存的配置</string>
     <string name="podnya_test_description">请先保存更改。此项可选测试会向所配置的服务发送少量示例请求，可能产生费用；不会读取你的文章或订阅。</string>
@@ -113,4 +115,18 @@
     <string name="podnya_previous_page">上一页</string>
     <string name="podnya_next_page">下一页</string>
     <string name="podnya_interrupted">回复已中断</string>
+    <string name="podnya_provider">提供商</string>
+    <string name="podnya_custom_provider">自定义</string>
+    <string name="podnya_choose_provider">选择提供商</string>
+    <string name="podnya_protocol">接口类型</string>
+    <string name="podnya_openai_compatible">OpenAI 兼容</string>
+    <string name="podnya_manual_model">手动输入模型 ID</string>
+    <string name="podnya_switch_title">切换配置？</string>
+    <string name="podnya_switch_message">未保存的修改和已输入的 Key 将被清除。</string>
+    <string name="podnya_switch_confirm">切换</string>
+    <string name="podnya_reload">重新读取</string>
+    <string name="podnya_config_newer">此配置由较新版本保存。请更新应用，或清除配置。</string>
+    <string name="podnya_config_unknown_protocol">此配置使用尚不支持的接口类型。请更新应用，或清除配置。</string>
+    <string name="podnya_config_corrupt">无法解析此配置。请重新读取，或清除后重新设置。</string>
+    <string name="podnya_config_storage">无法读取配置，请重新读取以重试。</string>
 </resources>

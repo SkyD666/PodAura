@@ -18,8 +18,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -36,7 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -44,6 +58,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.skyd.compone.component.BackIcon
+import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
@@ -51,17 +66,33 @@ import com.skyd.compone.component.pointerOnBack
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.podnya.core.AssistantError
+import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.assistantEndpointPath
+import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 import com.skyd.podaura.podnya.ui.podnyaErrorText
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_api_key
 import com.skyd.podnya.resources.podnya_api_key_keep
 import com.skyd.podnya.resources.podnya_api_key_required
 import com.skyd.podnya.resources.podnya_base_url
+import com.skyd.podnya.resources.podnya_cancel
+import com.skyd.podnya.resources.podnya_choose_provider
 import com.skyd.podnya.resources.podnya_clear_configuration
+import com.skyd.podnya.resources.podnya_config_corrupt
+import com.skyd.podnya.resources.podnya_config_newer
+import com.skyd.podnya.resources.podnya_config_storage
+import com.skyd.podnya.resources.podnya_config_unknown_protocol
 import com.skyd.podnya.resources.podnya_connection_succeeded
 import com.skyd.podnya.resources.podnya_consent
+import com.skyd.podnya.resources.podnya_custom_provider
 import com.skyd.podnya.resources.podnya_endpoint_preview
+import com.skyd.podnya.resources.podnya_manual_model
 import com.skyd.podnya.resources.podnya_model_id
+import com.skyd.podnya.resources.podnya_ok
+import com.skyd.podnya.resources.podnya_openai_compatible
+import com.skyd.podnya.resources.podnya_protocol
+import com.skyd.podnya.resources.podnya_provider
+import com.skyd.podnya.resources.podnya_reload
 import com.skyd.podnya.resources.podnya_save
 import com.skyd.podnya.resources.podnya_saving
 import com.skyd.podnya.resources.podnya_session_only
@@ -70,8 +101,13 @@ import com.skyd.podnya.resources.podnya_settings_cleared
 import com.skyd.podnya.resources.podnya_settings_description
 import com.skyd.podnya.resources.podnya_settings_disclosure
 import com.skyd.podnya.resources.podnya_settings_failed
+import com.skyd.podnya.resources.podnya_settings_info
 import com.skyd.podnya.resources.podnya_settings_saved
 import com.skyd.podnya.resources.podnya_settings_title
+import com.skyd.podnya.resources.podnya_switch_confirm
+import com.skyd.podnya.resources.podnya_switch_message
+import com.skyd.podnya.resources.podnya_switch_title
+import com.skyd.podnya.resources.podnya_test_cost
 import com.skyd.podnya.resources.podnya_test_description
 import com.skyd.podnya.resources.podnya_test_saved
 import com.skyd.podnya.resources.podnya_testing
@@ -89,17 +125,21 @@ fun AssistantSettingsScreen(
     val dispatch = viewModel.getDispatcher(startWith = null)
     // Never rememberSaveable: neither credentials nor chat belong in saved instance state.
     var apiKey by remember { mutableStateOf("") }
+    var keyRevision by remember { mutableStateOf(state.keyRevision) }
+    var showInfo by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
-    val editable = state.loaded && state.operation == null && state.available
+    val editable = state.editable
     val normalizedBaseUrl = state.normalizedBaseUrl
     val savedText = stringResource(Res.string.podnya_settings_saved)
     val clearedText = stringResource(Res.string.podnya_settings_cleared)
     val connectedText = stringResource(Res.string.podnya_connection_succeeded)
     val failedText = stringResource(Res.string.podnya_settings_failed)
     val errorTexts = AssistantError.entries.associateWith { podnyaErrorText(it) }
-    LaunchedEffect(state.savedRevision) {
-        apiKey = ""
-        dispatch(AssistantSettingsIntent.SetHasNewKey(false))
+    LaunchedEffect(state.keyRevision) {
+        if (keyRevision != state.keyRevision) {
+            apiKey = ""
+            keyRevision = state.keyRevision
+        }
     }
     MviEventListener(viewModel.singleEvent) { event ->
         snackbar.showSnackbar(
@@ -123,158 +163,334 @@ fun AssistantSettingsScreen(
         onDispose {
             apiKey = ""
             viewModel.viewModelScope.launch(Dispatchers.Main.immediate) {
-                viewModel.processIntent(AssistantSettingsIntent.SetHasNewKey(false))
+                viewModel.processIntent(
+                    AssistantSettingsIntent.SetHasNewKey(
+                        value = false,
+                        keyRevision = keyRevision
+                    )
+                )
             }
         }
     }
 
     ComponeScaffold(
-        modifier = Modifier.pointerOnBack(onBack = onBack).imePadding(),
+        modifier = Modifier
+            .testTag("podnya_settings_screen")
+            .pointerOnBack(onBack = onBack)
+            .imePadding(),
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.LargeFlexible,
                 title = { Text(stringResource(Res.string.podnya_settings_title)) },
                 navigationIcon = { BackIcon(onClick = onBack) },
+                actions = {
+                    if (state.saved.baseUrl.isNotBlank() || state.saved.readError != null) {
+                        ComponeIconButton(
+                            onClick = { dispatch(AssistantSettingsIntent.Clear) },
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = stringResource(Res.string.podnya_clear_configuration),
+                            enabled = state.loaded && state.operation == null && state.available,
+                            colors = IconButtonDefaults.iconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
+                            ),
+                        )
+                    }
+                    ComponeIconButton(
+                        onClick = { showInfo = true },
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = stringResource(Res.string.podnya_settings_info),
+                    )
+                },
                 windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
             )
         },
         contentWindowInsets = windowInsets,
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter,
+        ) {
             Column(
                 modifier = Modifier
+                    .testTag("podnya_settings_form")
                     .widthIn(max = 720.dp)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Text(
-                    stringResource(Res.string.podnya_settings_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
                 if (!state.available) {
                     Text(
                         podnyaErrorText(AssistantError.UNAVAILABLE),
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                OutlinedTextField(
-                    value = state.baseUrl,
-                    onValueChange = { value ->
-                        val recipient = runCatching { normalizeAssistantBaseUrl(value) }.getOrNull()
-                        if (recipient == null || recipient != normalizedBaseUrl) {
-                            apiKey = ""
-                            dispatch(AssistantSettingsIntent.SetHasNewKey(false))
-                        }
-                        dispatch(AssistantSettingsIntent.SetBaseUrl(value))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
+                state.saved.readError?.let { error ->
+                    Text(
+                        text = stringResource(
+                            when (error) {
+                                AssistantConfigurationReadError.NEWER_FORMAT -> Res.string.podnya_config_newer
+                                AssistantConfigurationReadError.UNKNOWN_PROTOCOL -> Res.string.podnya_config_unknown_protocol
+                                AssistantConfigurationReadError.CORRUPT -> Res.string.podnya_config_corrupt
+                                AssistantConfigurationReadError.STORAGE -> Res.string.podnya_config_storage
+                            }
+                        ),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    OutlinedButton(onClick = { dispatch(AssistantSettingsIntent.Reload) }) {
+                        Text(stringResource(Res.string.podnya_reload))
+                    }
+                }
+                SettingsChoice(
+                    tag = "podnya_provider",
+                    label = stringResource(Res.string.podnya_provider),
+                    selected = AssistantProviderPresets.find(state.providerId)?.displayName
+                        ?: stringResource(if (state.providerId == null) Res.string.podnya_choose_provider else Res.string.podnya_custom_provider),
+                    options = AssistantProviderPresets.entries.map { it.id to it.displayName } +
+                            (AssistantProviderPresets.CUSTOM to stringResource(Res.string.podnya_custom_provider)),
+                    selectedId = if (state.custom) AssistantProviderPresets.CUSTOM else state.providerId,
                     enabled = editable,
-                    singleLine = true,
-                    label = { Text(stringResource(Res.string.podnya_base_url)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                    isError = state.baseUrl.isNotBlank() && normalizedBaseUrl == null,
-                    supportingText = {
-                        if (normalizedBaseUrl != null) {
-                            Text(
-                                stringResource(
-                                    Res.string.podnya_endpoint_preview,
-                                    normalizedBaseUrl + assistantEndpointPath(
-                                        normalizedBaseUrl,
-                                        state.modelId
+                    onSelect = { dispatch(AssistantSettingsIntent.SelectProvider(it)) },
+                )
+                if (state.providerId != null && state.saved.readError == null) {
+                    if (state.custom) {
+                        OutlinedTextField(
+                            value = state.baseUrl,
+                            onValueChange = { value ->
+                                val recipient = runCatching {
+                                    normalizeAssistantBaseUrl(
+                                        input = value,
+                                        protocol = state.protocol
                                     )
+                                }.getOrNull()
+                                if (recipient == null || recipient != normalizedBaseUrl) {
+                                    apiKey = ""
+                                    dispatch(
+                                        AssistantSettingsIntent.SetHasNewKey(
+                                            value = false,
+                                            keyRevision = keyRevision
+                                        )
+                                    )
+                                }
+                                dispatch(AssistantSettingsIntent.SetBaseUrl(value))
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("podnya_address"),
+                            enabled = editable,
+                            singleLine = true,
+                            label = { Text(stringResource(Res.string.podnya_base_url)) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                            isError = state.baseUrl.isNotBlank() && normalizedBaseUrl == null,
+                            supportingText = if (state.baseUrl.isNotBlank() && normalizedBaseUrl == null) {
+                                { Text(podnyaErrorText(AssistantError.INVALID_ADDRESS)) }
+                            } else {
+                                null
+                            },
+                        )
+                        SettingsChoice(
+                            tag = "podnya_protocol",
+                            label = stringResource(Res.string.podnya_protocol),
+                            selected = protocolLabel(state.protocol),
+                            options = AssistantProtocol.entries.map { it.id to protocolLabel(it) },
+                            selectedId = state.protocol.id,
+                            enabled = editable,
+                            onSelect = { id ->
+                                AssistantProtocol.fromId(id)
+                                    ?.let { dispatch(AssistantSettingsIntent.SelectProtocol(it)) }
+                            },
+                        )
+                    }
+                    OutlinedTextField(
+                        value = if (keyRevision == state.keyRevision) apiKey else "",
+                        onValueChange = {
+                            apiKey = it
+                            keyRevision = state.keyRevision
+                            dispatch(
+                                AssistantSettingsIntent.SetHasNewKey(
+                                    value = it.isNotEmpty(),
+                                    keyRevision = keyRevision
                                 )
                             )
-                        } else if (state.baseUrl.isNotBlank()) {
-                            Text(podnyaErrorText(AssistantError.INVALID_ADDRESS))
-                        }
-                    },
-                )
-                OutlinedTextField(
-                    value = state.modelId,
-                    onValueChange = { dispatch(AssistantSettingsIntent.SetModelId(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = editable,
-                    singleLine = true,
-                    label = { Text(stringResource(Res.string.podnya_model_id)) },
-                )
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = {
-                        apiKey = it
-                        dispatch(AssistantSettingsIntent.SetHasNewKey(it.isNotEmpty()))
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = editable,
-                    singleLine = true,
-                    label = { Text(stringResource(Res.string.podnya_api_key)) },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    supportingText = {
-                        Text(
-                            stringResource(
-                                if (state.sameRecipient && state.saved.hasApiKey) Res.string.podnya_api_key_keep
-                                else Res.string.podnya_api_key_required,
-                            )
-                        )
-                    },
-                )
-                SettingsCheckbox(
-                    checked = state.sessionOnly,
-                    enabled = editable,
-                    onCheckedChange = { dispatch(AssistantSettingsIntent.SetSessionOnly(it)) },
-                    text = stringResource(Res.string.podnya_session_only),
-                    description = stringResource(Res.string.podnya_session_only_description),
-                )
-                if (normalizedBaseUrl != null) {
-                    Text(
-                        stringResource(Res.string.podnya_settings_disclosure, normalizedBaseUrl),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    SettingsCheckbox(
-                        checked = state.consentAccepted,
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("podnya_key"),
                         enabled = editable,
-                        onCheckedChange = { dispatch(AssistantSettingsIntent.SetConsentAccepted(it)) },
-                        text = stringResource(Res.string.podnya_consent),
+                        singleLine = true,
+                        label = { Text(stringResource(Res.string.podnya_api_key)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        supportingText = {
+                            Text(
+                                stringResource(
+                                    if (state.sameRecipient && state.saved.hasApiKey) Res.string.podnya_api_key_keep
+                                    else Res.string.podnya_api_key_required,
+                                )
+                            )
+                        },
                     )
-                }
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Button(
-                        onClick = { dispatch(AssistantSettingsIntent.Save(apiKey.takeIf(String::isNotBlank))) },
-                        enabled = editable && state.dirty,
-                    ) { Text(stringResource(Res.string.podnya_save)) }
-                    OutlinedButton(
-                        onClick = { dispatch(AssistantSettingsIntent.Verify) },
-                        enabled = state.available && state.canVerify,
-                    ) { Text(stringResource(Res.string.podnya_test_saved)) }
-                }
-                when (state.operation) {
-                    AssistantSettingsOperation.TESTING -> Text(stringResource(Res.string.podnya_testing))
-                    AssistantSettingsOperation.SAVING, AssistantSettingsOperation.CLEARING ->
-                        Text(stringResource(Res.string.podnya_saving))
-
-                    null -> Unit
-                }
-                Text(
-                    stringResource(Res.string.podnya_test_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (state.saved.baseUrl.isNotBlank()) {
-                    TextButton(
-                        onClick = { dispatch(AssistantSettingsIntent.Clear) },
-                        enabled = editable
-                    ) {
-                        Text(stringResource(Res.string.podnya_clear_configuration))
+                    val preset = AssistantProviderPresets.find(state.providerId)
+                    if (preset != null) {
+                        val manual = stringResource(Res.string.podnya_manual_model)
+                        SettingsChoice(
+                            tag = "podnya_model_choice",
+                            label = stringResource(Res.string.podnya_model_id),
+                            selected = if (state.manualModel) manual else state.modelId,
+                            options = preset.models.map { it to it } + ("" to manual),
+                            selectedId = if (state.manualModel) "" else state.modelId,
+                            enabled = editable,
+                            onSelect = { id ->
+                                dispatch(AssistantSettingsIntent.SetManualModel(id.isEmpty()))
+                                if (id.isNotEmpty()) dispatch(AssistantSettingsIntent.SetModelId(id))
+                            },
+                        )
                     }
+                    if (preset == null || state.manualModel) {
+                        OutlinedTextField(
+                            value = state.modelId,
+                            onValueChange = { dispatch(AssistantSettingsIntent.SetModelId(it)) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("podnya_model_input"),
+                            enabled = editable,
+                            singleLine = true,
+                            label = { Text(stringResource(Res.string.podnya_model_id)) },
+                        )
+                    }
+                    SettingsCheckbox(
+                        checked = state.sessionOnly,
+                        enabled = editable,
+                        onCheckedChange = { dispatch(AssistantSettingsIntent.SetSessionOnly(it)) },
+                        text = stringResource(Res.string.podnya_session_only),
+                    )
+                    if (normalizedBaseUrl != null) {
+                        SettingsCheckbox(
+                            checked = state.consentAccepted,
+                            enabled = editable,
+                            onCheckedChange = {
+                                dispatch(
+                                    AssistantSettingsIntent.SetConsentAccepted(it)
+                                )
+                            },
+                            text = stringResource(Res.string.podnya_consent),
+                        )
+                    }
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(
+                            onClick = {
+                                dispatch(
+                                    AssistantSettingsIntent.Save(
+                                        apiKey = apiKey.takeIf { keyRevision == state.keyRevision && it.isNotBlank() },
+                                        editRevision = state.editRevision,
+                                        keyRevision = keyRevision,
+                                    )
+                                )
+                            },
+                            enabled = editable && state.dirty,
+                        ) { Text(stringResource(Res.string.podnya_save)) }
+                        OutlinedButton(
+                            onClick = { dispatch(AssistantSettingsIntent.Verify) },
+                            enabled = state.available && state.canVerify,
+                        ) { Text(stringResource(Res.string.podnya_test_saved)) }
+                    }
+                    state.failure?.let { failure ->
+                        Text(
+                            text = failure.error?.let(errorTexts::get) ?: failedText,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    when (state.operation) {
+                        AssistantSettingsOperation.TESTING -> Text(stringResource(Res.string.podnya_testing))
+                        AssistantSettingsOperation.SAVING, AssistantSettingsOperation.CLEARING ->
+                            Text(stringResource(Res.string.podnya_saving))
+
+                        null -> Unit
+                    }
+                    Text(
+                        stringResource(Res.string.podnya_test_cost),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
+    }
+    state.pendingSwitch?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { dispatch(AssistantSettingsIntent.CancelSwitch) },
+            title = { Text(stringResource(Res.string.podnya_switch_title)) },
+            text = { Text(stringResource(Res.string.podnya_switch_message)) },
+            confirmButton = {
+                TextButton(onClick = { dispatch(AssistantSettingsIntent.ConfirmSwitch(pending.editRevision)) }) {
+                    Text(stringResource(Res.string.podnya_switch_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { dispatch(AssistantSettingsIntent.CancelSwitch) }) {
+                    Text(stringResource(Res.string.podnya_cancel))
+                }
+            },
+        )
+    }
+    if (showInfo) {
+        AlertDialog(
+            onDismissRequest = { showInfo = false },
+            icon = { Icon(imageVector = Icons.Outlined.Info, contentDescription = null) },
+            title = { Text(stringResource(Res.string.podnya_settings_info)) },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
+                    Text(stringResource(Res.string.podnya_settings_description))
+                    Text(protocolLabel(state.protocol))
+                    if (normalizedBaseUrl != null) {
+                        Text(
+                            stringResource(
+                                Res.string.podnya_endpoint_preview,
+                                normalizedBaseUrl + assistantEndpointPath(
+                                    baseUrl = normalizedBaseUrl,
+                                    modelId = state.modelId,
+                                    protocol = state.protocol,
+                                ),
+                            )
+                        )
+                        Text(
+                            stringResource(
+                                Res.string.podnya_settings_disclosure,
+                                normalizedBaseUrl
+                            )
+                        )
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(Res.string.podnya_session_only),
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        Text(stringResource(Res.string.podnya_session_only_description))
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(Res.string.podnya_test_saved),
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                        Text(stringResource(Res.string.podnya_test_description))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfo = false }) {
+                    Text(stringResource(Res.string.podnya_ok))
+                }
+            },
+        )
     }
 }
 
@@ -284,13 +500,12 @@ private fun SettingsCheckbox(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     text: String,
-    description: String? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .toggleable(
-                checked,
+                value = checked,
                 enabled = enabled,
                 role = Role.Checkbox,
                 onValueChange = onCheckedChange
@@ -299,13 +514,66 @@ private fun SettingsCheckbox(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(checked = checked, onCheckedChange = null, enabled = enabled)
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(text, style = MaterialTheme.typography.bodyLarge)
-            if (description != null) {
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Text(
+            text = text,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 12.dp),
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun protocolLabel(protocol: AssistantProtocol): String = when (protocol) {
+    AssistantProtocol.OPENAI_COMPATIBLE -> stringResource(Res.string.podnya_openai_compatible)
+    AssistantProtocol.ANTHROPIC_MESSAGES -> "Claude"
+    AssistantProtocol.GEMINI_GENERATE_CONTENT -> "Gemini"
+}
+
+@Composable
+private fun SettingsChoice(
+    tag: String,
+    label: String,
+    selected: String,
+    options: List<Pair<String, String>>,
+    selectedId: String?,
+    enabled: Boolean,
+    onSelect: (String) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { if (enabled) expanded = it }) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(tag)
+                .menuAnchor(
+                    type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                    enabled = enabled
+                ),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded && enabled,
+            onDismissRequest = { expanded = false }) {
+            options.forEach { (id, text) ->
+                DropdownMenuItem(
+                    text = { Text(text) },
+                    modifier = Modifier.semantics { this.selected = id == selectedId },
+                    trailingIcon = {
+                        if (id == selectedId) {
+                            Icon(imageVector = Icons.Outlined.Check, contentDescription = null)
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        onSelect(id)
+                    },
                 )
             }
         }

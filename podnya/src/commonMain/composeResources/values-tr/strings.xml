@@ -41,7 +41,9 @@
     <string name="podnya_error_unavailable">Podnya bu sürümde kullanılamıyor. Normal aramayı kullanmaya devam edebilirsiniz.</string>
     <string name="podnya_error_results_changed">Arama sırasında bazı makaleler değişti veya kaldırıldı. Kartlar kalan doğrulanmış sonuçları gösterir.</string>
     <string name="podnya_settings_title">Podnya ayarları</string>
-    <string name="podnya_settings_description">Araç çağrısını, yapılandırılmış sonuçları ve akış halinde yanıtları destekleyen bir model hizmetine bağlanın. Resmî GPT-6 Astra, Responses kullanır; diğer yapılandırmalar Chat Completions kullanır.</string>
+    <string name="podnya_settings_info">Bağlantı bilgileri</string>
+    <string name="podnya_test_cost">Test ücret oluşturabilir.</string>
+    <string name="podnya_settings_description">Araç çağrısını, yapılandırılmış sonuçları ve akış halinde yanıtları destekleyen bir model hizmetine bağlanın.</string>
     <string name="podnya_base_url">API temel adresi (HTTPS)</string>
     <string name="podnya_endpoint_preview">İsteklerin gönderileceği adres: %1$s</string>
     <string name="podnya_model_id">Model adı</string>
@@ -50,8 +52,8 @@
     <string name="podnya_api_key_required">Bu hizmet adresi için bir anahtar girin.</string>
     <string name="podnya_session_only">Anahtarı yalnızca uygulama kapanana kadar tut</string>
     <string name="podnya_session_only_description">Güvenli depolama kullanılamıyorsa bu seçeneği kullanın. Yeniden başlattıktan sonra anahtarı tekrar girmeniz gerekir.</string>
-    <string name="podnya_settings_disclosure">Arama sırasında sorunuz, son sohbetiniz, aday makalelerin başlıkları, kaynakları, akış adları, sessiz durumu ve her biri en fazla 400 karakterlik metin alıntıları %1$s adresine gönderilir. Arama araçları akış adreslerini ve istek başlıklarını göndermez. Sohbet yalnızca uygulama kapanana kadar bellekte tutulur.</string>
-    <string name="podnya_consent">Bu verilerin bu hizmete gönderilmesini kabul ediyorum</string>
+    <string name="podnya_settings_disclosure">Arama sırasında sorunuz, son sohbetiniz, aday makalelerin başlıkları, kaynakları, akış adları, sessiz durumu ve her biri en fazla 400 karakterlik metin alıntıları %1$s adresine gönderilir. Arama araçları akış adreslerini ve istek başlıklarını göndermez. Sohbet geçmişi bu cihazda saklanır.</string>
+    <string name="podnya_consent">Soruların, sohbetin ve arama içeriğinin bu hizmete gönderilmesini kabul ediyorum</string>
     <string name="podnya_save">Kaydet</string>
     <string name="podnya_test_saved">Kayıtlı yapılandırmayı test et</string>
     <string name="podnya_test_description">Önce değişiklikleri kaydedin. Bu isteğe bağlı test, model hizmetinize birkaç örnek istek gönderir ve ücret oluşturabilir. Makalelerinizi veya akışlarınızı okumaz.</string>
@@ -113,4 +115,18 @@
     <string name="podnya_previous_page">Önceki sayfa</string>
     <string name="podnya_next_page">Sonraki sayfa</string>
     <string name="podnya_interrupted">Yanıt kesintiye uğradı</string>
+    <string name="podnya_provider">Sağlayıcı</string>
+    <string name="podnya_custom_provider">Özel</string>
+    <string name="podnya_choose_provider">Sağlayıcı seçin</string>
+    <string name="podnya_protocol">API türü</string>
+    <string name="podnya_openai_compatible">OpenAI uyumlu</string>
+    <string name="podnya_manual_model">Model kimliği girin</string>
+    <string name="podnya_switch_title">Yapılandırma değiştirilsin mi?</string>
+    <string name="podnya_switch_message">Kaydedilmemiş değişiklikler ve girilen API anahtarı silinecek.</string>
+    <string name="podnya_switch_confirm">Değiştir</string>
+    <string name="podnya_reload">Yeniden yükle</string>
+    <string name="podnya_config_newer">Bu yapılandırma daha yeni bir sürümle kaydedilmiş. Uygulamayı güncelleyin veya yapılandırmayı temizleyin.</string>
+    <string name="podnya_config_unknown_protocol">Bu yapılandırmanın API türü desteklenmiyor. Uygulamayı güncelleyin veya yapılandırmayı temizleyin.</string>
+    <string name="podnya_config_corrupt">Yapılandırma çözümlenemedi. Yeniden yükleyin veya temizleyip yeniden ayarlayın.</string>
+    <string name="podnya_config_storage">Yapılandırma okunamadı. Yeniden yükleyerek tekrar deneyin.</string>
 </resources>

@@ -8,5 +8,6 @@ data class AssistantReplySource(
     val configId: String,
     val revision: Long,
     val baseUrl: String,
-    val modelId: String
+    val modelId: String,
+    val protocol: String? = null,
 )

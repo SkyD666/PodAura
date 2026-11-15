@@ -45,8 +45,12 @@ class PodnyaViewModel(
                     }
                 )
             },
-            settingsRepository.settings.map<_, PodnyaPartialStateChange> {
-                PodnyaPartialStateChange.Settings(it)
+            settingsRepository.settings.map {
+                if (it.readError != null) {
+                    PodnyaPartialStateChange.SettingsUnavailable
+                } else {
+                    PodnyaPartialStateChange.Settings(it)
+                }
             }.catch { failure ->
                 if (failure is CancellationException) throw failure
                 emit(PodnyaPartialStateChange.SettingsUnavailable)

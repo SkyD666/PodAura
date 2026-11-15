@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.runtime
 
+import com.skyd.podaura.podnya.runtime.client.podnyaModel
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.Prompt
 import ai.koog.prompt.dsl.ModerationResult

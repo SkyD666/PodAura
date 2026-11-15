@@ -41,7 +41,9 @@
     <string name="podnya_error_unavailable">Podnya ne disponeblas en ĉi tiu versio. Ordinara serĉo ankoraŭ disponeblas.</string>
     <string name="podnya_error_results_changed">Iuj artikoloj ŝanĝiĝis aŭ estis forigitaj dum la serĉo. La kartoj montras la ceterajn kontrolitajn rezultojn.</string>
     <string name="podnya_settings_title">Agordoj de Podnya</string>
-    <string name="podnya_settings_description">Konektu modelservon kun ilvokoj, strukturitaj rezultoj kaj fluantaj respondoj. La oficiala GPT-6 Astra uzas Responses; aliaj agordoj uzas Chat Completions.</string>
+    <string name="podnya_settings_info">Informoj pri konekto</string>
+    <string name="podnya_test_cost">La testo povas kaŭzi kostojn.</string>
+    <string name="podnya_settings_description">Konektu modelservon kun ilvokoj, strukturitaj rezultoj kaj fluantaj respondoj.</string>
     <string name="podnya_base_url">Baza API-adreso (HTTPS)</string>
     <string name="podnya_endpoint_preview">Petoj estas sendataj al: %1$s</string>
     <string name="podnya_model_id">Modelnomo</string>
@@ -50,8 +52,8 @@
     <string name="podnya_api_key_required">Enigu ŝlosilon por ĉi tiu servadreso.</string>
     <string name="podnya_session_only">Konservi la ŝlosilon nur ĝis la aplikaĵo fermiĝas</string>
     <string name="podnya_session_only_description">Uzu ĉi tiun opcion se sekura konservado ne disponeblas. La ŝlosilo devas esti enigita denove post restartigo.</string>
-    <string name="podnya_settings_disclosure">Dum serĉo, via demando, lastatempa konversacio, titoloj kaj fontoj de kandidataj artikoloj, nomoj kaj silentiga stato de abonfluoj, kaj tekstaj eltiraĵoj de maksimume 400 signoj ĉiu estos sendataj al %1$s. La serĉiloj ne sendas adresojn de abonfluoj aŭ petokapojn. La konversacio restas nur en memoro ĝis la aplikaĵo fermiĝas.</string>
-    <string name="podnya_consent">Mi konsentas sendi ĉi tiujn datumojn al ĉi tiu servo</string>
+    <string name="podnya_settings_disclosure">Dum serĉo, via demando, lastatempa konversacio, titoloj kaj fontoj de kandidataj artikoloj, nomoj kaj silentiga stato de abonfluoj, kaj tekstaj eltiraĵoj de maksimume 400 signoj ĉiu estos sendataj al %1$s. La serĉiloj ne sendas adresojn de abonfluoj aŭ petokapojn. La konversacia historio estas konservata sur ĉi tiu aparato.</string>
+    <string name="podnya_consent">Mi konsentas sendi demandojn, konversacion kaj serĉenhavon al ĉi tiu servo</string>
     <string name="podnya_save">Konservi</string>
     <string name="podnya_test_saved">Testi konservitajn agordojn</string>
     <string name="podnya_test_description">Unue konservu la ŝanĝojn. Ĉi tiu laŭvola testo sendas kelkajn provpetojn al via modelservo kaj povas kaŭzi kostojn. Ĝi neniam legas viajn artikolojn aŭ abonfluojn.</string>
@@ -113,4 +115,18 @@
     <string name="podnya_previous_page">Antaŭa paĝo</string>
     <string name="podnya_next_page">Sekva paĝo</string>
     <string name="podnya_interrupted">Respondo interrompita</string>
+    <string name="podnya_provider">Provizanto</string>
+    <string name="podnya_custom_provider">Propra</string>
+    <string name="podnya_choose_provider">Elektu provizanton</string>
+    <string name="podnya_protocol">API-tipo</string>
+    <string name="podnya_openai_compatible">OpenAI-kongrua</string>
+    <string name="podnya_manual_model">Enigu modelan identigilon</string>
+    <string name="podnya_switch_title">Ĉu ŝanĝi la agordon?</string>
+    <string name="podnya_switch_message">Nekonservitaj ŝanĝoj kaj la enigita API-ŝlosilo estos forigitaj.</string>
+    <string name="podnya_switch_confirm">Ŝanĝi</string>
+    <string name="podnya_reload">Reŝargi</string>
+    <string name="podnya_config_newer">Pli nova versio konservis ĉi tiun agordon. Ĝisdatigu la aplikaĵon aŭ forigu la agordon.</string>
+    <string name="podnya_config_unknown_protocol">La API-tipo de ĉi tiu agordo ne estas subtenata. Ĝisdatigu la aplikaĵon aŭ forigu la agordon.</string>
+    <string name="podnya_config_corrupt">Ne eblas interpreti la agordon. Reŝargu ĝin aŭ forigu ĝin kaj agordu denove.</string>
+    <string name="podnya_config_storage">Ne eblis legi la agordon. Reŝargu por reprovi.</string>
 </resources>

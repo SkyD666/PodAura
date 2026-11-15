@@ -6,6 +6,7 @@ import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantRuntime
+import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -92,12 +93,32 @@ class AssistantSettingsViewModel(
             filterIsInstance<AssistantSettingsIntent.SetHasNewKey>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
+            filterIsInstance<AssistantSettingsIntent.SelectProvider>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.SelectProtocol>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.ConfirmSwitch>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.CancelSwitch>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.SetManualModel>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.Reload>().flatMapConcat {
+                flow { repository.reload() }
+            },
             filterIsInstance<AssistantSettingsIntent.Save>().flatMapConcat { intent ->
                 flow {
                     val draft = viewState.value
-                    if (!draft.loaded || !draft.dirty) return@flow
+                    if (!draft.editable || !draft.dirty || draft.providerId == null ||
+                        intent.editRevision != draft.editRevision || intent.keyRevision != draft.keyRevision
+                    ) return@flow
                     startOperation(AssistantSettingsOperation.SAVING) {
-                        normalizeAssistantBaseUrl(draft.baseUrl)
+                        normalizeAssistantBaseUrl(input = draft.baseUrl, protocol = draft.protocol)
                         if (!draft.sameRecipient && !draft.consentAccepted) {
                             throw AssistantException(AssistantError.DISCLOSURE_REQUIRED)
                         }
@@ -107,10 +128,14 @@ class AssistantSettingsViewModel(
                         // Finish the small local settings commit even when this VM is cleared.
                         val saved = withContext(NonCancellable) {
                             repository.save(
-                                draft.baseUrl, draft.modelId, intent.apiKey,
-                                draft.sessionOnly, draft.consentAccepted
+                                baseUrl = draft.baseUrl,
+                                modelId = draft.modelId,
+                                apiKey = intent.apiKey,
+                                sessionOnly = draft.sessionOnly,
+                                consentAccepted = draft.consentAccepted,
+                                providerId = draft.providerId,
+                                protocol = draft.protocol,
                             )
-                            repository.snapshot()
                         }
                         AssistantSettingsPartialStateChange.Finished(
                             saved = saved,
@@ -136,11 +161,14 @@ class AssistantSettingsViewModel(
             },
             filterIsInstance<AssistantSettingsIntent.Clear>().flatMapConcat {
                 flow {
-                    if (!viewState.value.loaded || viewState.value.saved.baseUrl.isBlank()) return@flow
+                    if (!viewState.value.loaded ||
+                        (viewState.value.saved.baseUrl.isBlank() && viewState.value.saved.readError == null)
+                    ) {
+                        return@flow
+                    }
                     startOperation(AssistantSettingsOperation.CLEARING) {
                         val saved = withContext(NonCancellable) {
                             repository.clear()
-                            repository.snapshot()
                         }
                         AssistantSettingsPartialStateChange.Finished(
                             saved = saved,

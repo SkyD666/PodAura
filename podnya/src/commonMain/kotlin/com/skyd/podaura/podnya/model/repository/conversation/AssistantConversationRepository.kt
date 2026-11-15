@@ -405,6 +405,7 @@ class AssistantConversationRepository(
                             revision = configRevision,
                             baseUrl = connection.baseUrl,
                             modelId = connection.modelId,
+                            protocol = connection.protocol.id,
                         ),
                     )
                     val clear =

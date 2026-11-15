@@ -41,7 +41,9 @@
     <string name="podnya_error_unavailable">目前版本尚不支援播喵，你仍可使用一般搜尋。</string>
     <string name="podnya_error_results_changed">部分文章在搜尋期間已變更或被移除；卡片顯示剩餘且已驗證的結果。</string>
     <string name="podnya_settings_title">播喵設定</string>
-    <string name="podnya_settings_description">連線至支援工具呼叫、結構化結果和串流回覆的模型服務。官方 GPT-6 Astra 使用 Responses，其他設定使用 Chat Completions。</string>
+    <string name="podnya_settings_info">連線說明</string>
+    <string name="podnya_test_cost">測試可能產生費用。</string>
+    <string name="podnya_settings_description">連線至支援工具呼叫、結構化結果和串流回覆的模型服務。</string>
     <string name="podnya_base_url">API 服務網址（HTTPS）</string>
     <string name="podnya_endpoint_preview">請求將傳送至：%1$s</string>
     <string name="podnya_model_id">模型名稱</string>
@@ -50,8 +52,8 @@
     <string name="podnya_api_key_required">請輸入此服務網址的金鑰。</string>
     <string name="podnya_session_only">僅在本次應用程式執行期間保留金鑰</string>
     <string name="podnya_session_only_description">無法使用安全儲存時可選擇此項；重新啟動後需要再次輸入金鑰。</string>
-    <string name="podnya_settings_disclosure">搜尋時，你的問題、最近的對話、候選文章標題、來源、訂閱名稱、靜音狀態，以及每段最多 400 個字元的文字片段將傳送至 %1$s。搜尋工具不會傳送訂閱網址或請求標頭。聊天僅在本次應用程式執行期間保留於記憶體。</string>
-    <string name="podnya_consent">我同意將上述資料傳送至此服務</string>
+    <string name="podnya_settings_disclosure">搜尋時，你的問題、最近的對話、候選文章標題、來源、訂閱名稱、靜音狀態，以及每段最多 400 個字元的文字片段將傳送至 %1$s。搜尋工具不會傳送訂閱網址或請求標頭。對話歷史儲存在此裝置上。</string>
+    <string name="podnya_consent">允許將問題、對話和搜尋內容傳送至此服務</string>
     <string name="podnya_save">儲存</string>
     <string name="podnya_test_saved">測試已儲存的設定</string>
     <string name="podnya_test_description">請先儲存變更。此選用測試會向指定的模型服務傳送少量模擬請求，可能產生費用；不會讀取你的文章或訂閱。</string>
@@ -113,4 +115,18 @@
     <string name="podnya_previous_page">上一頁</string>
     <string name="podnya_next_page">下一頁</string>
     <string name="podnya_interrupted">回覆已中斷</string>
+    <string name="podnya_provider">提供商</string>
+    <string name="podnya_custom_provider">自訂</string>
+    <string name="podnya_choose_provider">選擇提供商</string>
+    <string name="podnya_protocol">介面類型</string>
+    <string name="podnya_openai_compatible">OpenAI 相容</string>
+    <string name="podnya_manual_model">手動輸入模型 ID</string>
+    <string name="podnya_switch_title">切換設定？</string>
+    <string name="podnya_switch_message">未儲存的修改和已輸入的 Key 將被清除。</string>
+    <string name="podnya_switch_confirm">切換</string>
+    <string name="podnya_reload">重新讀取</string>
+    <string name="podnya_config_newer">此設定由較新版本儲存。請更新應用程式，或清除設定。</string>
+    <string name="podnya_config_unknown_protocol">此設定使用尚不支援的介面類型。請更新應用程式，或清除設定。</string>
+    <string name="podnya_config_corrupt">無法解析此設定。請重新讀取，或清除後重新設定。</string>
+    <string name="podnya_config_storage">無法讀取設定，請重新讀取以重試。</string>
 </resources>

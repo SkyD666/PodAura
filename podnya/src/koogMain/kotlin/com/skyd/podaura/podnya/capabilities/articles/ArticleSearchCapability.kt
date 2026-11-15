@@ -42,6 +42,9 @@ Use provided knownIds for history references; search within those IDs again befo
 Snippets are partial. Do not claim complete reading or external fact-checking. The app enforces scope."""
     override val selectionInstructions =
         """Select and rank local articles already retrieved for this turn.
+Match the user's stated breadth: "related to X" does not require an article or episode dedicated entirely to X.
+A roundup with a relevant discussion or song segment qualifies when the supplied title or snippet supports that connection; explain its limited scope in reason instead of rejecting it for not being a special feature.
+Require a dedicated topic only when explicitly requested. Incidental mentions, ambiguous keyword hits and unsupported connections are not sufficient.
 Select only candidate IDs; the app rechecks scope and hard filters. No further model-side verification is needed.
 Return articles with articleId and a nonblank reason of at most 120 characters. At most 20 articles.
 NO_MATCH needs a completed search. It differs from a failed search or unavailable articles."""

@@ -31,6 +31,7 @@ mediamp = "0.5.0"
 jaudiotagger = "3.0.1"
 gradle-msix = "0.3.0"
 koog = "1.3.0"
+koog-google = "1.3.0-beta"
 oshai-logging = "8.0.01"
 
 [libraries]
@@ -104,6 +105,8 @@ codepoints-deluxe = { module = "de.cketti.unicode:kotlin-codepoints-deluxe", ver
 
 koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
 koog-openai-client = { module = "ai.koog:prompt-executor-openai-client", version.ref = "koog" }
+koog-anthropic-client = { module = "ai.koog:prompt-executor-anthropic-client", version.ref = "koog" }
+koog-google-client = { module = "ai.koog:prompt-executor-google-client", version.ref = "koog-google" }
 koog-http-client-ktor = { module = "ai.koog:http-client-ktor", version.ref = "koog" }
 koog-agents-test = { module = "ai.koog:agents-test", version.ref = "koog" }
 kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }

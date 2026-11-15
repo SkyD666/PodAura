@@ -47,7 +47,7 @@ internal class HttpScript(vararg replies: HttpReply) {
 /** MockEngine omits SSECapability; use Ktor's real SSE parser over its scripted byte channel. */
 @OptIn(InternalAPI::class)
 @Suppress("DEPRECATION")
-private class SseMockEngine(handler: MockRequestHandler) : MockEngine(MockEngineConfig().apply { addHandler(handler) }) {
+internal class SseMockEngine(handler: MockRequestHandler) : MockEngine(MockEngineConfig().apply { addHandler(handler) }) {
     override val supportedCapabilities = super.supportedCapabilities + SSECapability
     override suspend fun execute(data: HttpRequestData): HttpResponseData {
         val response = super.execute(data)

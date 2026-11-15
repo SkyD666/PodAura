@@ -38,6 +38,8 @@ Feed IDs are temporary per-turn references, not article IDs. Search again before
 Subscription URLs are kept on the device."""
     override val selectionInstructions =
         """Select relevant subscriptions from this turn's feeds snapshot.
+Match the user's stated breadth: "related to X" does not require a show dedicated entirely to X unless explicitly requested.
+A broader show's relevant coverage may qualify when supported by its title or description; explain that scope in reason. Do not infer unseen episode contents or specialization from incidental mentions or ambiguous keyword hits.
 Return feeds with feedId and a nonblank reason of at most 120 characters. At most 20 subscriptions.
 Use only current candidate IDs. NO_MATCH requires a completed subscription search.
 The app rechecks saved records; no model-side verification or extra tool call is needed."""

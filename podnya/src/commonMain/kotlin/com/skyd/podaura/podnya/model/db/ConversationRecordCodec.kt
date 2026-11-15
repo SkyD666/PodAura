@@ -1,31 +1,52 @@
 package com.skyd.podaura.podnya.model.db
 
-import com.skyd.podaura.podnya.core.*
+import com.skyd.podaura.podnya.core.AssistantAnswerKind
+import com.skyd.podaura.podnya.core.AssistantContent
+import com.skyd.podaura.podnya.core.AssistantContext
+import com.skyd.podaura.podnya.core.AssistantError
+import com.skyd.podaura.podnya.core.AssistantHistoryCodec
+import com.skyd.podaura.podnya.core.CapabilityRecord
+import com.skyd.podaura.podnya.core.UnreadableContent
+import com.skyd.podaura.podnya.core.UnreadableContext
 import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
-import com.skyd.podaura.podnya.model.bean.conversation.*
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantReplySource
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.uuid.Uuid
 
 class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCodec>) {
     private val json = Json { ignoreUnknownKeys = true }
 
     @Serializable
-    private data class Aggregate(val kind: AssistantAnswerKind, val text: String, val parts: List<String>)
+    private data class Aggregate(
+        val kind: AssistantAnswerKind,
+        val text: String,
+        val parts: List<String>
+    )
 
     fun content(value: AssistantContent?): String? = when (value) {
         null -> null
         is UnreadableContent -> value.raw
-        is AssistantReplyContent -> json.encodeToString(CapabilityRecord(
-            capabilityId = "assistant",
-            version = 1,
-            payload = json.encodeToString(Aggregate(
-                kind = value.kind,
-                text = value.text,
-                parts = value.parts.mapNotNull { content(it) },
-            )),
-            fallback = value.text,
-        ))
+        is AssistantReplyContent -> json.encodeToString(
+            CapabilityRecord(
+                capabilityId = "assistant",
+                version = 1,
+                payload = json.encodeToString(
+                    Aggregate(
+                        kind = value.kind,
+                        text = value.text,
+                        parts = value.parts.mapNotNull { content(it) },
+                    )
+                ),
+                fallback = value.text,
+            )
+        )
+
         else -> json.encodeToString(capabilities.firstNotNullOfOrNull { it.encodeContent(value) }
             ?: error("Unregistered conversation content"))
     }
@@ -84,8 +105,10 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
     )
 
     fun decode(value: ConversationRecord): AssistantSessionState {
-        val destinations = runCatching { json.decodeFromString<Set<String>>(value.destinations) }.getOrNull()
-        val position = runCatching { json.decodeFromString<ConversationPosition>(value.position) }.getOrNull()
+        val destinations =
+            runCatching { json.decodeFromString<Set<String>>(value.destinations) }.getOrNull()
+        val position =
+            runCatching { json.decodeFromString<ConversationPosition>(value.position) }.getOrNull()
         return AssistantSessionState(
             id = Uuid.parse(value.conversationId),
             title = value.title,
@@ -126,7 +149,8 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
     )
 
     fun decode(value: ConversationTurnRecord): AssistantSessionTurn {
-        val source = value.source?.let { runCatching { json.decodeFromString<AssistantReplySource>(it) }.getOrNull() }
+        val source =
+            value.source?.let { runCatching { json.decodeFromString<AssistantReplySource>(it) }.getOrNull() }
         val error = value.error?.let { raw ->
             runCatching { AssistantError.valueOf(raw.removePrefix("core:")) }.getOrNull()
                 ?: capabilities.firstNotNullOfOrNull { it.decodeFailure(raw) }
@@ -136,7 +160,11 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
             question = value.question,
             createdAt = value.createdAt,
             source = source,
-            rawSource = value.source.takeIf { source == null },
+            rawSource = value.source?.takeIf { raw ->
+                source == null || json.parseToJsonElement(raw).jsonObject.keys.any {
+                    it !in setOf("configId", "revision", "baseUrl", "modelId", "protocol")
+                }
+            },
             reply = value.reply,
             content = content(value.content),
             context = context(value.context),

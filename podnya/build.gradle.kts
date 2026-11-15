@@ -31,6 +31,8 @@ kotlin {
             dependencies {
                 implementation(libs.koog.agents.core)
                 implementation(libs.koog.openai.client)
+                implementation(libs.koog.anthropic.client)
+                implementation(libs.koog.google.client)
                 implementation(libs.koog.http.client.ktor)
                 implementation(libs.kotlin.logging)
             }

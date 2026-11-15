@@ -41,7 +41,9 @@
     <string name="podnya_error_unavailable">Podnya is unavailable in this version. Regular search is still available.</string>
     <string name="podnya_error_results_changed">Some articles changed or were removed during the search. The cards show the remaining verified results.</string>
     <string name="podnya_settings_title">Podnya settings</string>
-    <string name="podnya_settings_description">Connect a model service with tool calling, structured results, and streaming. Official GPT-6 Astra uses Responses; other configurations use Chat Completions.</string>
+    <string name="podnya_settings_info">Connection information</string>
+    <string name="podnya_test_cost">Testing may incur charges.</string>
+    <string name="podnya_settings_description">Connect a model service with tool calling, structured results, and streaming.</string>
     <string name="podnya_base_url">API Base URL (HTTPS)</string>
     <string name="podnya_endpoint_preview">Requests go to: %1$s</string>
     <string name="podnya_model_id">Model name</string>
@@ -50,8 +52,8 @@
     <string name="podnya_api_key_required">Enter a key for this service address.</string>
     <string name="podnya_session_only">Keep the key only until the app closes</string>
     <string name="podnya_session_only_description">Use this option if secure storage is unavailable. The key must be entered again after restarting.</string>
-    <string name="podnya_settings_disclosure">To search, your question, recent conversation, candidate article titles, sources, subscription names, mute status, and text snippets of up to 400 characters each will be sent to %1$s. Subscription URLs and request headers are not sent by the search tools. Chat stays in memory only until the app closes.</string>
-    <string name="podnya_consent">I agree to send this data to this service</string>
+    <string name="podnya_settings_disclosure">To search, your question, recent conversation, candidate article titles, sources, subscription names, mute status, and text snippets of up to 400 characters each will be sent to %1$s. Subscription URLs and request headers are not sent by the search tools. Chat history is saved on this device.</string>
+    <string name="podnya_consent">I agree to send questions, conversation and search content to this service</string>
     <string name="podnya_save">Save</string>
     <string name="podnya_test_saved">Test saved configuration</string>
     <string name="podnya_test_description">Save changes first. This optional test sends a few synthetic requests to your model service and may incur charges. It never reads your articles or subscriptions.</string>
@@ -113,4 +115,18 @@
     <string name="podnya_previous_page">Previous page</string>
     <string name="podnya_next_page">Next page</string>
     <string name="podnya_interrupted">Reply interrupted</string>
+    <string name="podnya_provider">Provider</string>
+    <string name="podnya_custom_provider">Custom</string>
+    <string name="podnya_choose_provider">Choose a provider</string>
+    <string name="podnya_protocol">API type</string>
+    <string name="podnya_openai_compatible">OpenAI compatible</string>
+    <string name="podnya_manual_model">Enter model ID</string>
+    <string name="podnya_switch_title">Switch configuration?</string>
+    <string name="podnya_switch_message">Unsaved changes and the entered API key will be cleared.</string>
+    <string name="podnya_switch_confirm">Switch</string>
+    <string name="podnya_reload">Reload</string>
+    <string name="podnya_config_newer">This configuration was saved by a newer app. Update the app or clear the configuration.</string>
+    <string name="podnya_config_unknown_protocol">This configuration uses an unsupported API type. Update the app or clear the configuration.</string>
+    <string name="podnya_config_corrupt">This configuration cannot be read. Reload it or clear it to start again.</string>
+    <string name="podnya_config_storage">Could not read the configuration. Reload to try again.</string>
 </resources>
