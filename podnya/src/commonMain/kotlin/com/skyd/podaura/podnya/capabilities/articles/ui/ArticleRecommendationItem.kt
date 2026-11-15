@@ -44,20 +44,24 @@ internal fun ArticleRecommendationItem(
                 article.sourceName.takeIf(String::isNotBlank),
                 article.dateMillis?.let(formatDate),
             ).joinToString(" · ")
-            if (source.isNotBlank()) Text(
-                text = source,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (article.snippet.isNotBlank()) Text(
-                text = article.snippet,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (source.isNotBlank()) {
+                Text(
+                    text = source,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (article.snippet.isNotBlank()) {
+                Text(
+                    text = article.snippet,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (!reason.isNullOrBlank()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Text(text = reason, style = MaterialTheme.typography.bodyMedium)

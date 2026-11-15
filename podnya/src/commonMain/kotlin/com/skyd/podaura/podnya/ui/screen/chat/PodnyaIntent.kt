@@ -2,7 +2,8 @@ package com.skyd.podaura.podnya.ui.screen.chat
 
 import com.skyd.mvi.MviIntent
 import com.skyd.podaura.podnya.core.AssistantAction
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository.Confirmation
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository.Confirmation
 import kotlin.uuid.Uuid
 
 sealed interface PodnyaIntent : MviIntent {
@@ -10,7 +11,9 @@ sealed interface PodnyaIntent : MviIntent {
         val conversationId: Uuid,
         val text: String,
         val editorId: String,
-        val revision: Long
+        val revision: Long,
+        val selectionStart: Int = text.length,
+        val selectionEnd: Int = selectionStart,
     ) : PodnyaIntent {
         override fun toString() = "UpdateDraft($conversationId, [redacted])"
     }
@@ -42,6 +45,16 @@ sealed interface PodnyaIntent : MviIntent {
     data class Delete(val conversationId: Uuid, val stopReplyConfirmed: Boolean) : PodnyaIntent
     data class SelectModel(val conversationId: Uuid, val configId: String) : PodnyaIntent
     data class ConfirmDestination(val confirmation: Confirmation) : PodnyaIntent
+    data object RetrySave : PodnyaIntent
+    data object FlushPending : PodnyaIntent
+    data class ResetContext(val conversationId: Uuid) : PodnyaIntent
+    data class LoadSummaries(val offset: Int) : PodnyaIntent
+    data class LoadWindow(val conversationId: Uuid, val anchor: Long?) : PodnyaIntent
+    data class UpdatePosition(
+        val conversationId: Uuid,
+        val position: ConversationPosition,
+    ) : PodnyaIntent
+
     data object Back : PodnyaIntent
     data object OpenSettings : PodnyaIntent
     data object OpenSearch : PodnyaIntent

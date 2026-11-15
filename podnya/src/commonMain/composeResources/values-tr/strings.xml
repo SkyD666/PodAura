@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">Bu sohbetin model yapılandırması kullanılamıyor. Devam etmek için geçerli yapılandırmayı açıkça seçin.</string>
     <string name="podnya_destination_conversation">Sohbet: %1$s</string>
     <string name="podnya_error_conversation_storage">Sohbet güncellenemedi. Önceden kaydedilen içerik korunuyor. Lütfen yeniden deneyin.</string>
+    <string name="podnya_history_on_device">Geçmiş bu cihazda saklanır.</string>
+    <string name="podnya_storage_loading">Konuşmalar yükleniyor…</string>
+    <string name="podnya_storage_save_failed">Değişiklikler kaydedilemedi. Kaydedilmemiş içerik burada tutuluyor. Göndermeden önce kaydetmeyi yeniden deneyin.</string>
+    <string name="podnya_storage_open_failed">Konuşmalar açılamadı. Kayıtlı geçmişiniz değiştirilmedi.</string>
+    <string name="podnya_storage_occupied">Başka bir Podnya örneği bu geçmişi kullanıyor. Kapatıp yeniden deneyin.</string>
+    <string name="podnya_storage_newer">Bu geçmiş daha yeni bir Podnya sürümü gerektiriyor. Uygulamayı güncelleyin.</string>
+    <string name="podnya_retry_save">Kaydetmeyi yeniden dene</string>
+    <string name="podnya_retry_open">Açmayı yeniden dene</string>
+    <string name="podnya_search_context_required">Bu arama koşulları okunamıyor. Göndermeden önce arama kapsamını yeniden ayarlayın.</string>
+    <string name="podnya_reset_context">Tüm makalelere sıfırla</string>
+    <string name="podnya_content_unreadable">Bu kayıtlı içerik görüntülenemiyor.</string>
+    <string name="podnya_previous_page">Önceki sayfa</string>
+    <string name="podnya_next_page">Sonraki sayfa</string>
+    <string name="podnya_interrupted">Yanıt kesintiye uğradı</string>
 </resources>

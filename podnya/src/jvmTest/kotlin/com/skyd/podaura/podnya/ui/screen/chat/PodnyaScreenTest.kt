@@ -55,6 +55,7 @@ import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.AnnotatedString
@@ -104,8 +105,17 @@ import com.skyd.podaura.podnya.core.AssistantProgress
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
-import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.conversation.ConversationStore
+import com.skyd.podaura.podnya.model.repository.conversation.InMemoryConversationStore
+import com.skyd.podaura.podnya.model.repository.conversation.RoomConversationStore
+import com.skyd.podaura.podnya.model.bean.conversation.*
+import com.skyd.podaura.podnya.model.db.ConversationRecordCodec
+import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
+import com.skyd.podaura.podnya.capabilities.feeds.model.FeedHistoryCodec
+import kotlinx.coroutines.CompletableDeferred
+import java.nio.file.Files
 import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
 import com.skyd.podnya.resources.*
 import com.skyd.podnya.resources.Res
@@ -380,6 +390,110 @@ class PodnyaScreenTest {
                 assertEquals(1, fixture.assistant.requests.get())
                 assertEquals(QUESTION, fixture.assistant.lastQuestion)
                 assertEquals("", fixture.repository.state.value.selected.draft)
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+            }
+        }
+
+    @Test
+    fun numpadEnterSendsAndShiftNumpadEnterInsertsANewLine() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            Fixture().use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performClick().performTextReplacement(QUESTION)
+                onNodeWithTag("podnya_composer").performKeyInput {
+                    keyDown(Key.ShiftLeft)
+                    pressKey(Key.NumPadEnter)
+                    keyUp(Key.ShiftLeft)
+                }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.draft.contains('\n') }
+                assertEquals(0, fixture.assistant.requests.get())
+                onNodeWithTag("podnya_composer").performKeyInput { pressKey(Key.NumPadEnter) }
+                waitUntil(timeoutMillis = 5_000) {
+                    fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
+                }
+                assertEquals(1, fixture.assistant.requests.get())
+                assertEquals(QUESTION, fixture.assistant.lastQuestion)
+                onNodeWithTag("podnya_composer")
+                    .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+                capture("desktop-numpad-send-cleared")
+            }
+        }
+
+    @Test
+    fun acceptanceClearsTheCurrentEditorAfterLoadingAndConversationSwitch() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            val memory = InMemoryConversationStore()
+            val opened = CompletableDeferred<Unit>()
+            val conversationStore = object : ConversationStore by memory {
+                override suspend fun open() { opened.await() }
+            }
+            Fixture(conversationStore = conversationStore).use { fixture ->
+                setContent { fixture.Screen() }
+                onNodeWithTag("podnya_composer").assertDoesNotExist()
+                opened.complete(Unit)
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                repeat(2) { index ->
+                    onNodeWithTag("podnya_composer").performTextReplacement("Question $index")
+                    onNodeWithTag("podnya_send").performClick()
+                    waitUntil(timeoutMillis = 5_000) {
+                        fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
+                    }
+                    onNodeWithTag("podnya_composer")
+                        .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("")))
+                    assertEquals("", fixture.repository.state.value.selected.draft)
+                    if (index == 0) {
+                        val previous = fixture.repository.state.value.selected.id
+                        onNodeWithContentDescription(fixture.newConversationLabel).performClick()
+                        waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.session.id != previous }
+                    }
+                }
+                assertEquals(2, fixture.assistant.requests.get())
+                capture("desktop-button-send-cleared")
+            }
+        }
+
+    @Test
+    fun delayedAcceptanceKeepsNewInputAndSelection() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            val memory = InMemoryConversationStore()
+            val entered = CompletableDeferred<Unit>()
+            val release = CompletableDeferred<Unit>()
+            val conversationStore = object : ConversationStore by memory {
+                override suspend fun commit(
+                    metadata: AssistantSessionState?,
+                    turn: AssistantSessionTurn?,
+                    workspace: ConversationWorkspace?,
+                ) {
+                    if (turn?.status == AssistantTurnStatus.RUNNING) {
+                        entered.complete(Unit)
+                        release.await()
+                    }
+                    memory.commit(metadata = metadata, turn = turn, workspace = workspace)
+                }
+            }
+            Fixture(conversationStore = conversationStore).use { fixture ->
+                try {
+                    setContent { fixture.Screen() }
+                    waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                    onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
+                    onNodeWithTag("podnya_send").performClick()
+                    waitUntil(timeoutMillis = 5_000) { entered.isCompleted }
+                    onNodeWithTag("podnya_composer").performTextReplacement("Next question")
+                    onNodeWithTag("podnya_composer").performTextInputSelection(TextRange(2, 5))
+                    release.complete(Unit)
+                    waitUntil(timeoutMillis = 5_000) {
+                        fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.COMPLETED
+                    }
+                    onNodeWithTag("podnya_composer")
+                        .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("Next question")))
+                        .assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2, 5)))
+                    assertEquals(1, fixture.assistant.requests.get())
+                    capture("phone-accepted-send-keeps-new-input")
+                } finally {
+                    release.complete(Unit)
+                }
             }
         }
 
@@ -488,9 +602,10 @@ class PodnyaScreenTest {
                 onNodeWithText(fixture.preparingLabel).assertIsDisplayed()
                 fixture.assistant.nextChunk.trySend(Unit)
                 waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.content is SampleContent }
-                onNodeWithText("Synthetic capability result").assertIsDisplayed()
+                onNodeWithText("Synthetic capability result", useUnmergedTree = true).assertIsDisplayed()
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText("Synthetic reply"))
                 onNodeWithText("Synthetic reply").assertIsDisplayed()
+                capture("desktop-unknown-capability-streaming")
                 assertEquals(AssistantTurnStatus.RUNNING, fixture.repository.state.value.selected.turns.single().status)
                 assertFalse(fixture.assistant.cancelled.get())
                 onNodeWithTag("podnya_stop").performClick()
@@ -774,10 +889,177 @@ class PodnyaScreenTest {
             }
         }
 
+    @Test
+    fun jumpLatestFromMiddleWindowMustReachActualTail() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            val memory = InMemoryConversationStore()
+            val metadata = AssistantSessionState(
+                position = ConversationPosition(turnId = 72, itemKey = "72-question", offset = 15, followLatest = false),
+            )
+            runBlocking {
+                repeat(120) { index ->
+                    val turn = AssistantSessionTurn(id = index + 1L, question = "Jump question ${index + 1}", reply = "Jump response ${index + 1}", status = AssistantTurnStatus.COMPLETED)
+                    memory.commit(metadata = metadata.copy(lastTurnId = turn.id, lastStatus = turn.status), turn = turn, workspace = ConversationWorkspace(selectedId = metadata.id))
+                }
+            }
+            val windowEntered = CompletableDeferred<Unit>()
+            val releaseWindow = CompletableDeferred<Unit>()
+            var pauseWindow = false
+            val store = object : ConversationStore by memory {
+                override suspend fun window(id: kotlin.uuid.Uuid, anchor: Long?, limit: Int): ConversationWindow {
+                    if (pauseWindow) {
+                        windowEntered.complete(Unit)
+                        releaseWindow.await()
+                    }
+                    return memory.window(id = id, anchor = anchor, limit = limit)
+                }
+            }
+            Fixture(conversationStore = store).use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.conversations.storage == ConversationStorageState.READY }
+                onNodeWithText("Jump question 72").assertIsDisplayed()
+                pauseWindow = true
+                onNodeWithText(fixture.latestLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { windowEntered.isCompleted }
+                waitForIdle()
+                releaseWindow.complete(Unit)
+                waitUntil(timeoutMillis = 5_000) { !fixture.repository.state.value.selected.hasAfter }
+                waitForIdle()
+                capture("desktop-disk-jump-latest")
+                onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
+                assertTrue(fixture.repository.state.value.selected.position.followLatest)
+            }
+        }
+
+    @Test
+    fun diskHistoryRestoresAnchorSelectionAndShowsSaveFailureWithoutLosingInput() =
+        runDesktopComposeUiTest(width = 1100, height = 820) {
+            val directory = Files.createTempDirectory("podnya-ui-disk").toFile()
+            val path = directory.resolve("history.db").path
+            val codec = ConversationRecordCodec(listOf(ArticleHistoryCodec, FeedHistoryCodec))
+            val seed = RoomConversationStore(codec = codec, path = { path })
+            val metadata = AssistantSessionState(
+                title = "Restored long conversation",
+                draft = "restored draft",
+                selectionStart = 2,
+                selectionEnd = 6,
+                position = ConversationPosition(turnId = 72, itemKey = "72-question", offset = 15, followLatest = false),
+            )
+            runBlocking {
+                seed.open()
+                repeat(120) { index ->
+                    val turn = AssistantSessionTurn(id = index + 1L, question = "Saved question ${index + 1}", reply = "Saved response ${index + 1}", status = AssistantTurnStatus.COMPLETED)
+                    seed.commit(metadata = metadata.copy(lastTurnId = turn.id, lastStatus = turn.status), turn = turn, workspace = ConversationWorkspace(selectedId = metadata.id))
+                }
+                seed.close()
+            }
+            val disk = RoomConversationStore(codec = codec, path = { path })
+            var failing = false
+            val store = object : ConversationStore by disk {
+                override suspend fun commit(metadata: AssistantSessionState?, turn: AssistantSessionTurn?, workspace: ConversationWorkspace?) {
+                    check(!failing)
+                    disk.commit(metadata = metadata, turn = turn, workspace = workspace)
+                }
+            }
+            Fixture(conversationStore = store).use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.conversations.storage == ConversationStorageState.READY }
+                onNodeWithText("Saved question 72").assertIsDisplayed()
+                onNodeWithTag("podnya_composer").assert(SemanticsMatcher.expectValue(SemanticsProperties.TextSelectionRange, TextRange(2, 6)))
+                assertEquals(40, fixture.repository.state.value.selected.turns.size)
+                assertEquals(0, fixture.assistant.requests.get())
+                capture("desktop-disk-restored-anchor")
+                val firstLoaded = fixture.repository.state.value.selected.turns.first().id
+                onNodeWithTag("podnya_messages").performScrollToIndex(0)
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.position.turnId == firstLoaded }
+                val beforeBounds = onNodeWithText("Saved question $firstLoaded").getUnclippedBoundsInRoot()
+                runBlocking { fixture.repository.loadWindow(id = metadata.id, anchor = firstLoaded - 10) }
+                waitForIdle()
+                assertEquals(beforeBounds, onNodeWithText("Saved question $firstLoaded").getUnclippedBoundsInRoot())
+                assertTrue(fixture.repository.state.value.selected.turns.first().id < firstLoaded)
+                assertEquals(40, fixture.repository.state.value.selected.turns.size)
+                val nextFirst = fixture.repository.state.value.selected.turns.first().id
+                onNodeWithTag("podnya_messages").performScrollToIndex(0)
+                onNodeWithTag("podnya_messages").performTouchInput { swipeDown() }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.first().id < nextFirst }
+                assertTrue(fixture.repository.state.value.selected.turns.size <= 40)
+                capture("desktop-disk-window-prepended")
+                val lastLoaded = fixture.repository.state.value.selected.turns.last().id
+                onNodeWithTag("podnya_messages").performScrollToIndex(fixture.repository.state.value.selected.turns.size * 2 - 10)
+                onNodeWithTag("podnya_messages").performTouchInput { swipeUp() }
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.last().id > lastLoaded }
+                assertTrue(fixture.repository.state.value.selected.turns.size <= 40)
+                capture("desktop-disk-window-appended")
+                failing = true
+                onNodeWithTag("podnya_composer").performTextReplacement("keep this unsaved draft")
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.conversations.storage == ConversationStorageState.SAVE_FAILED }
+                onNodeWithTag("podnya_storage_notice", useUnmergedTree = true).assertIsDisplayed()
+                onNodeWithTag("podnya_send").assertIsNotEnabled()
+                capture("desktop-disk-save-failed")
+                failing = false
+                onNodeWithText(fixture.retrySaveLabel).performClick()
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.storage == ConversationStorageState.READY }
+                assertEquals("keep this unsaved draft", runBlocking { disk.metadata(metadata.id)!!.draft })
+                assertEquals(0, fixture.assistant.requests.get())
+                runBlocking { fixture.repository.flushPending() }
+            }
+            runBlocking { disk.close() }
+            directory.deleteRecursively()
+        }
+
+    @Test
+    fun disappearedCardAndMissingTurnFallBackToReadableNearbyQuestions() {
+        for (missingTurn in listOf(false, true)) {
+            runDesktopComposeUiTest(width = 390, height = 844) {
+                val memory = InMemoryConversationStore()
+                val metadata = AssistantSessionState(
+                    draft = "kept draft",
+                    position = ConversationPosition(turnId = 20, itemKey = "20-article-deleted-card", offset = 0, followLatest = false),
+                )
+                runBlocking {
+                    for (id in 1L..60L) {
+                        if (missingTurn && id == 20L) continue
+                        val turn = AssistantSessionTurn(id = id, question = "Fallback question $id", status = AssistantTurnStatus.COMPLETED)
+                        memory.commit(metadata = metadata.copy(lastTurnId = id, lastStatus = turn.status), turn = turn, workspace = ConversationWorkspace(selectedId = metadata.id))
+                    }
+                }
+                Fixture(conversationStore = memory).use { fixture ->
+                    setContent { fixture.Screen() }
+                    waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.conversations.storage == ConversationStorageState.READY }
+                    onNodeWithText("Fallback question ${if (missingTurn) 19 else 20}").assertIsDisplayed()
+                    assertEquals(0, fixture.assistant.requests.get())
+                    capture(if (missingTurn) "phone-missing-turn-fallback" else "phone-missing-card-fallback")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun loadingAndOccupiedStorageHaveVisibleRecoveryStates() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            val gate = CompletableDeferred<Unit>()
+            val memory = InMemoryConversationStore()
+            val store = object : ConversationStore by memory {
+                override suspend fun open() {
+                    gate.await()
+                    throw ConversationStorageException(ConversationStorageState.OCCUPIED)
+                }
+            }
+            Fixture(conversationStore = store).use { fixture ->
+                setContent { fixture.Screen(dark = true, fontScale = 1.3f) }
+                onNodeWithTag("podnya_storage_notice", useUnmergedTree = true).assertIsDisplayed()
+                capture("phone-storage-loading")
+                gate.complete(Unit)
+                waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.storage == ConversationStorageState.OCCUPIED }
+                capture("phone-storage-occupied")
+                assertEquals(0, fixture.assistant.requests.get())
+            }
+        }
+
     private fun DesktopComposeUiTest.capture(name: String) {
         val image = onNode(
             isRoot() and hasAnyDescendant(
-                hasTestTag("podnya_composer") or hasTestTag("podnya_history_screen")
+                hasTestTag("podnya_composer") or hasTestTag("podnya_history_screen") or hasTestTag("podnya_storage_notice")
             )
         ).captureToImage()
         File("build/reports/podnya-ui/$name.png").apply {
@@ -811,7 +1093,11 @@ class PodnyaScreenTest {
 
     private data object SampleProgress : AssistantProgress
 
-    private class Fixture(configured: Boolean = true, mode: Mode = Mode.RESULTS) : AutoCloseable {
+    private class Fixture(
+        configured: Boolean = true,
+        mode: Mode = Mode.RESULTS,
+        conversationStore: ConversationStore = InMemoryConversationStore(),
+    ) : AutoCloseable {
         val assistant = FakeAssistant(mode)
         private val preferences = object : DataStore<Preferences> {
             override val data = MutableStateFlow(emptyPreferences())
@@ -829,7 +1115,7 @@ class PodnyaScreenTest {
                     sessionOnly = true, consentAccepted = true)
             }
         }
-        val repository = AssistantConversationRepository(assistant, settings)
+        val repository = AssistantConversationRepository(assistant = assistant, settings = settings, store = conversationStore)
         var viewModel = PodnyaViewModel(repository, settings)
             private set
         private val store = ViewModelStore().apply { put("podnya", viewModel) }
@@ -863,6 +1149,7 @@ class PodnyaScreenTest {
         var deleteLabel = ""
         var deleteStopLabel = ""
         var saveLabel = ""
+        var retrySaveLabel = ""
         private val formatArticleDate: (Long) -> String = { millis ->
             formattedDate = millis
             FORMATTED_DATE
@@ -899,6 +1186,7 @@ class PodnyaScreenTest {
                     deleteLabel = stringResource(Res.string.podnya_delete)
                     deleteStopLabel = stringResource(Res.string.podnya_delete_stop)
                     saveLabel = stringResource(Res.string.podnya_save)
+                    retrySaveLabel = stringResource(Res.string.podnya_retry_save)
                     Surface {
                         PodnyaScreen(viewModel, formatArticleDate, onBack = {}, onSettings = { settingsOpened++ },
                             onAction = { action ->
@@ -912,7 +1200,7 @@ class PodnyaScreenTest {
 
         override fun close() {
             store.clear()
-            repository.close()
+            runBlocking { repository.close().join() }
         }
     }
 

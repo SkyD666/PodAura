@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
-import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationsState
 import com.skyd.podaura.podnya.settings.AssistantSettings
 
 internal sealed interface PodnyaPartialStateChange {

@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">此会话的模型配置已不可用。请明确选择当前配置后继续。</string>
     <string name="podnya_destination_conversation">会话：%1$s</string>
     <string name="podnya_error_conversation_storage">无法更新会话。已保存的内容仍然保留，请重试。</string>
+    <string name="podnya_history_on_device">历史保存在此设备上。</string>
+    <string name="podnya_storage_loading">正在加载会话…</string>
+    <string name="podnya_storage_save_failed">保存失败，未保存的内容仍保留在此处。请重试保存后再发送。</string>
+    <string name="podnya_storage_open_failed">无法打开会话，已保存的历史未被替换。</string>
+    <string name="podnya_storage_occupied">另一个播喵实例正在使用此历史。请关闭它后重试。</string>
+    <string name="podnya_storage_newer">此历史需要更新版本的播喵。请升级应用后打开。</string>
+    <string name="podnya_retry_save">重试保存</string>
+    <string name="podnya_retry_open">重试打开</string>
+    <string name="podnya_search_context_required">无法读取这些搜索条件，请重新设置搜索范围后发送。</string>
+    <string name="podnya_reset_context">重设为全部文章</string>
+    <string name="podnya_content_unreadable">无法显示此已保存的内容。</string>
+    <string name="podnya_previous_page">上一页</string>
+    <string name="podnya_next_page">下一页</string>
+    <string name="podnya_interrupted">回复已中断</string>
 </resources>

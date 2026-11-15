@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,9 +31,13 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.podnya.core.AssistantAction
+import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantLimits
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository.Confirmation
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionState
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationStorageState
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository.Confirmation
 import kotlin.uuid.Uuid
 
 @Composable
@@ -49,15 +53,10 @@ fun PodnyaScreen(
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val state = uiState.session
     val dispatch = viewModel.getDispatcher(viewModel, startWith = null)
-    val editors = remember { mutableMapOf<Uuid, ConversationEditor>() }
-    val editor = remember(state.id) {
-        editors.getOrPut(state.id) {
-            ConversationEditor(
-                draft = state.draft,
-                editorId = state.editorId,
-                draftRevision = state.draftRevision
-            )
-        }
+    val editor = remember(
+        state.id, uiState.conversations.storage == ConversationStorageState.LOADING
+    ) {
+        ConversationEditor(state)
     }
     var followLatest by editor.followLatest
     var input by editor.input
@@ -65,9 +64,6 @@ fun PodnyaScreen(
     var inputRevision by editor.revision
     var confirmation by remember { mutableStateOf<Confirmation?>(null) }
     var error by remember { mutableStateOf<AssistantFailure?>(null) }
-    LaunchedEffect(uiState.conversations.summaries.map { it.id }, state.id) {
-        editors.keys.retainAll(uiState.conversations.summaries.map { it.id }.toSet() + state.id)
-    }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -88,22 +84,22 @@ fun PodnyaScreen(
         onBackCompleted = ::hideKeyboard,
     )
 
-    MviEventListener(viewModel.singleEvent) { event ->
+    // MviEventListener keeps its first callback; resolve the current editor on every event.
+    val onEvent by rememberUpdatedState(newValue = { event: PodnyaEvent ->
         when (event) {
-            is PodnyaEvent.ClearDraft -> editors[event.conversationId]?.let { target ->
-                if (event.editorId == target.id && event.revision == target.revision.value) {
-                    target.input.value = TextFieldValue("")
-                }
-            }
-
-            is PodnyaEvent.DraftRejected -> editors[event.conversationId]?.let { target ->
-                if (target.id == event.editorId && target.revision.value == event.revision) {
-                    target.input.value = TextFieldValue(event.draft, TextRange(event.draft.length))
+            is PodnyaEvent.ClearDraft -> {
+                if (event.conversationId == state.id &&
+                    event.editorId == editor.id &&
+                    event.revision == editor.revision.value
+                ) {
+                    editor.input.value = TextFieldValue("")
                 }
             }
 
             is PodnyaEvent.Rejected -> {
-                error = event.error
+                if (event.error != AssistantError.CONVERSATION_STORAGE) {
+                    error = event.error
+                }
             }
 
             is PodnyaEvent.ConfirmDestination -> {
@@ -115,18 +111,31 @@ fun PodnyaScreen(
             PodnyaEvent.OpenSearch -> onSearch()
             is PodnyaEvent.Action -> onAction(event.action)
         }
-    }
+    })
+    MviEventListener(viewModel.singleEvent) { event -> onEvent(event) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_START) {
         // Reconcile background acceptance only on resume, never from older input echoes.
         val draft = viewModel.viewState.value.session.draft
         if (input.text != draft) {
-            input = TextFieldValue(draft, TextRange(draft.length))
+            input = TextFieldValue(draft, TextRange(state.selectionStart, state.selectionEnd))
             inputRevision = viewModel.viewState.value.session.draftRevision
         }
     }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        dispatch(PodnyaIntent.FlushPending)
+    }
     fun send() {
         followLatest = true
+        dispatch(
+            PodnyaIntent.UpdatePosition(
+                conversationId = state.id,
+                position = ConversationPosition()
+            )
+        )
+        if (state.hasAfter) {
+            dispatch(PodnyaIntent.LoadWindow(conversationId = state.id, anchor = null))
+        }
         dispatch(
             PodnyaIntent.Send(
                 conversationId = state.id,
@@ -169,45 +178,56 @@ fun PodnyaScreen(
                 .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            PodnyaMessageList(
-                uiState = uiState,
-                listState = editor.list,
-                followLatest = followLatest,
-                onFollowLatest = { followLatest = it },
-                keyboardVisible = keyboardVisible,
-                onHideKeyboard = ::hideKeyboard,
-                formatDate = formatDate,
-                dispatch = dispatch,
-                modifier = Modifier.weight(1f),
-            )
-            PodnyaInputArea(
-                uiState = uiState,
-                input = input,
-                onInput = { next ->
-                    if (next.text.length <= AssistantLimits.INPUT_CHARS) {
-                        input = next
-                        inputRevision++
-                        dispatch(
-                            PodnyaIntent.UpdateDraft(
-                                conversationId = state.id,
-                                text = next.text,
-                                editorId = editorId,
-                                revision = inputRevision
+            ConversationStorageNotice(state = uiState, dispatch = dispatch)
+            if (uiState.conversations.storage in setOf(
+                    ConversationStorageState.READY,
+                    ConversationStorageState.SAVE_FAILED,
+                )
+            ) {
+                PodnyaMessageList(
+                    uiState = uiState,
+                    listState = editor.list,
+                    followLatest = followLatest,
+                    onFollowLatest = { followLatest = it },
+                    keyboardVisible = keyboardVisible,
+                    onHideKeyboard = ::hideKeyboard,
+                    formatDate = formatDate,
+                    dispatch = dispatch,
+                    modifier = Modifier.weight(1f),
+                )
+                PodnyaInputArea(
+                    uiState = uiState,
+                    input = input,
+                    onInput = { next ->
+                        if (next.text.length <= AssistantLimits.INPUT_CHARS) {
+                            input = next
+                            inputRevision++
+                            dispatch(
+                                PodnyaIntent.UpdateDraft(
+                                    conversationId = state.id,
+                                    text = next.text,
+                                    editorId = editorId,
+                                    revision = inputRevision,
+                                    selectionStart = next.selection.start,
+                                    selectionEnd = next.selection.end,
+                                )
                             )
-                        )
-                    }
-                },
-                onSend = ::send,
-                dispatch = dispatch,
-            )
+                        }
+                    },
+                    onSend = ::send,
+                    dispatch = dispatch,
+                )
+            }
         }
     }
 }
 
-private class ConversationEditor(draft: String, editorId: String, draftRevision: Long) {
-    val id = editorId.ifEmpty { Uuid.random().toString() }
-    val input = mutableStateOf(TextFieldValue(draft, TextRange(draft.length)))
-    val revision = mutableStateOf(draftRevision)
+private class ConversationEditor(state: AssistantSessionState) {
+    val id = state.editorId.ifEmpty { Uuid.random().toString() }
+    val input = mutableStateOf(
+        TextFieldValue(state.draft, TextRange(state.selectionStart, state.selectionEnd))
+    )
+    val revision = mutableStateOf(state.draftRevision)
     val list = LazyListState()
-    val followLatest = mutableStateOf(true)
+    val followLatest = mutableStateOf(state.position.followLatest)
 }

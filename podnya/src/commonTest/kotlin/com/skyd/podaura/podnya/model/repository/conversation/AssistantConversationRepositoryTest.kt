@@ -1,7 +1,8 @@
-package com.skyd.podaura.podnya.model.repository
+package com.skyd.podaura.podnya.model.repository.conversation
 
 import com.skyd.podaura.podnya.core.*
 import com.skyd.podaura.podnya.model.bean.*
+import com.skyd.podaura.podnya.model.bean.conversation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -84,7 +85,6 @@ class AssistantConversationRepositoryTest {
         assertNull(store.get(ids.first()))
         assertEquals(2, runtime.requests.size)
         assertTrue(repo.state.value.runningIds.isEmpty())
-        assertEquals(0, repo.state.value.reservedBytes)
     }
 
     @Test fun deletionDropsLateEventsAndStopKeepsPartialReplyAndRetryUsesSameTurn() = runTest {
@@ -107,7 +107,6 @@ class AssistantConversationRepositoryTest {
         assertNull(store.get(a))
         assertEquals("B", repo.state.value.selected.draft)
         assertTrue(repo.state.value.runningIds.isEmpty())
-        assertEquals(0, repo.state.value.reservedBytes)
     }
 
     @Test fun failuresRetryInPlaceAndUnterminatedFlowsFailAndOversizedCardsAreRejected() = runTest {
@@ -129,42 +128,37 @@ class AssistantConversationRepositoryTest {
         repo.editDraft("oversized"); repo.sendDraft(settings); runCurrent()
         assertEquals(AssistantError.BUDGET_EXHAUSTED, repo.state.value.selected.turns.last().error)
         assertNull(repo.state.value.selected.turns.last().content)
-        assertEquals(0, repo.state.value.reservedBytes)
     }
 
     @Test fun visibleHistoryIsNeverTrimmedWhileModelHistoryKeepsSixTurnsAndByteBudget() = runTest {
         val runtime = Runtime { _, _ -> emit(AssistantRunEvent.ContentReady(Content(30_000, "喵".repeat(10_000)))); emit(AssistantRunEvent.Completed) }
         val settings = conversationSettings(); val repo = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
         repeat(60) { repo.editDraft("question $it"); assertTrue(repo.sendDraft(settings)); runCurrent() }
-        assertEquals(60, repo.state.value.selected.turns.size)
+        assertEquals(40, repo.state.value.selected.turns.size)
+        repo.loadWindow(id = repo.state.value.selected.id, anchor = 1)
         assertEquals("question 0", repo.state.value.selected.turns.first().question)
         assertEquals(listOf("question 57", "question 58"), runtime.requests.last().history.map { it.question })
+        repo.editDraft("from an old reading window")
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
+        assertEquals(listOf("question 58", "question 59"), runtime.requests.last().history.map { it.question })
         assertTrue(Json.encodeToString(runtime.requests.last().history).encodeToByteArray().size < AssistantLimits.PROMPT_BYTES)
     }
 
-    @Test fun reservationsProtectConcurrentRepliesAndCapacityRejectsWithoutEvictionThenDeleteReleasesSpace() = runTest {
-        val gate = Channel<Unit>(Channel.UNLIMITED)
-        var wait = false
+    @Test fun historyCanExceedTheFormerByteBudgetWithoutEviction() = runTest {
         val runtime = Runtime { _, _ ->
-            if (wait) gate.receive()
             emit(AssistantRunEvent.ContentReady(Content(AssistantLimits.CONTENT_BYTES)))
             emit(AssistantRunEvent.Completed)
         }
-        val settings = conversationSettings(); val store = InMemoryConversationStore()
-        val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
-        repeat(14) { repo.editDraft("q $it"); assertTrue(repo.sendDraft(settings)); runCurrent() }
-        val historyId = repo.state.value.selected.id
-        wait = true
-        repeat(2) { repo.newConversation(); repo.editDraft("concurrent $it"); assertTrue(repo.sendDraft(settings)); runCurrent() }
-        assertTrue(repo.state.value.capacityWarning)
-        repo.newConversation(); repo.editDraft("no space")
-        assertFalse(repo.sendDraft(settings))
-        assertEquals("no space", repo.state.value.selected.draft)
-        repeat(2) { gate.send(Unit) }; runCurrent()
-        assertEquals(14, store.get(historyId)!!.turns.size)
-        assertEquals(0, repo.state.value.reservedBytes)
-        repo.delete(historyId)
-        assertTrue(repo.sendDraft(settings)); gate.send(Unit); runCurrent()
+        val settings = conversationSettings()
+        val store = InMemoryConversationStore()
+        val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope)
+        repeat(25) {
+            repo.editDraft("question $it")
+            assertTrue(repo.sendDraft(settings))
+            runCurrent()
+        }
+        assertEquals(25, store.tail(id = repo.state.value.selected.id, limit = 100).size)
     }
 
     @Test fun titlesDraftsModelReferencesAndEmptyEditorReuseStayIsolated() = runTest {
@@ -187,17 +181,21 @@ class AssistantConversationRepositoryTest {
         assertNull(store.get(a))
     }
 
-    @Test fun retainedCountLimitAllowsOneBlankEditorAndNeverSilentlyDeletesHistory() = runTest {
-        val settings = conversationSettings(); val store = InMemoryConversationStore()
-        val repo = AssistantConversationRepository(Runtime { _, _ -> }, settings, store, backgroundScope)
-        repeat(100) { repo.newConversation(); repo.editDraft("draft $it") }
+    @Test fun summariesArePagedBeyondTheFormerCountLimitAndReuseOneBlank() = runTest {
+        val settings = conversationSettings()
+        val store = InMemoryConversationStore()
+        val repo = AssistantConversationRepository(assistant = Runtime { _, _ -> }, settings = settings, store = store, scope = backgroundScope)
+        repeat(120) {
+            repo.newConversation()
+            repo.editDraft("draft $it")
+        }
         val blank = repo.newConversation()
         assertEquals(blank, repo.newConversation())
-        assertFalse(repo.updateDraft(blank, "overflow", "editor", 1))
-        assertEquals(100, repo.state.value.summaries.size)
-        assertEquals(101, store.observeSummaries().first().size)
-        repo.delete(repo.state.value.summaries.first().id)
-        assertTrue(repo.updateDraft(blank, "now fits", "editor", 2))
+        assertEquals(120, store.summaries(offset = 0, limit = 200).size)
+        assertTrue(repo.state.value.summaries.size <= 50)
+        repo.loadSummaries(100)
+        assertEquals(20, repo.state.value.summaries.size)
+        assertFalse(repo.state.value.hasMoreSummaries)
     }
 
     @Test fun connectionSnapshotsAreIndependentAndConfigurationClearDoesNotEraseHistoryOrCancelRuns() = runTest {
@@ -286,38 +284,20 @@ class AssistantConversationRepositoryTest {
         assertEquals("new input during resolution", repo.state.value.selected.draft)
         assertEquals(AssistantError.STALE_INPUT, (notices.last() as AssistantConversationRepository.Notice.Rejected).error)
         assertTrue(repo.state.value.runningIds.isEmpty())
-        assertEquals(0, repo.state.value.reservedBytes)
     }
 
-    @Test fun rejectedDraftGrowthKeepsEditorVersionUsableAfterCapacityIsFreed() = runTest {
+    @Test fun draftInputLimitRetainsThePreviousDraft() = runTest {
         val settings = conversationSettings()
-        val store = InMemoryConversationStore()
-        val repo = AssistantConversationRepository(Runtime { _, _ -> emit(AssistantRunEvent.Completed) }, settings, store, backgroundScope)
+        val repo = AssistantConversationRepository(assistant = Runtime { _, _ -> }, settings = settings, scope = backgroundScope)
         repo.editDraft("kept")
         val current = repo.state.value.selected
-        // Seed valid bounded turns just below the global budget, without thousands of input edits.
-        val empty = AssistantSessionState(turns = List(17) { AssistantSessionTurn(it.toLong(), "", status = AssistantTurnStatus.COMPLETED) })
-        var remaining = AssistantLimits.CONVERSATION_BYTES - current.retainedBytes - empty.retainedBytes - 1
-        val filler = empty.copy(turns = empty.turns.map { turn ->
-            val size = minOf(remaining, AssistantLimits.CONTENT_BYTES.toLong()).toInt()
-            remaining -= size
-            turn.copy(content = Content(size))
-        })
-        assertEquals(0, remaining)
-        store.save(filler)
-        assertFalse(repo.updateDraft(current.id, "larger draft", current.editorId, current.draftRevision + 1))
-        assertEquals("kept", store.get(current.id)!!.draft)
-        assertEquals(current.draftRevision + 1, store.get(current.id)!!.draftRevision)
-        repo.delete(filler.id)
-        val config = settings.snapshot()
-        assertTrue(repo.submit(current.id, current.editorId, current.draftRevision + 1, config.configId, config.revision))
-        runCurrent()
-        assertEquals("kept", repo.state.value.selected.turns.single().question)
+        assertFalse(repo.updateDraft(id = current.id, text = "x".repeat(AssistantLimits.INPUT_CHARS + 1), editorId = current.editorId, revision = current.draftRevision + 1))
+        assertEquals("kept", repo.state.value.selected.draft)
     }
 
-    @Test fun preparingConversationRetainsItsCountSlotWhenTheDraftIsCleared() = runTest {
-        var block = false
+    @Test fun preparingConversationIsNotReusedWhenDraftIsCleared() = runTest {
         val release = CompletableDeferred<Unit>()
+        var block = false
         val credentials = object : ConversationCredentials() {
             override suspend fun get(id: String): String? {
                 if (block) release.await()
@@ -325,45 +305,48 @@ class AssistantConversationRepositoryTest {
             }
         }
         val settings = conversationSettings(credentials)
-        val store = InMemoryConversationStore()
-        val repo = AssistantConversationRepository(Runtime { _, _ -> emit(AssistantRunEvent.Completed) }, settings, store, backgroundScope)
-        repeat(100) { repo.newConversation(); repo.editDraft("draft $it") }
-        val a = repo.state.value.selected.id
+        val repo = AssistantConversationRepository(assistant = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }, settings = settings, scope = backgroundScope)
+        repo.editDraft("pending")
+        val id = repo.state.value.selected.id
         block = true
-        assertTrue(repo.sendDraft(settings)); runCurrent()
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
         repo.editDraft("")
-        assertEquals(100, repo.state.value.summaries.size)
-        val blank = repo.newConversation()
-        assertFalse(repo.updateDraft(blank, "must not fit", "new-editor", 1))
-        release.complete(Unit); runCurrent()
-        assertEquals(100, store.observeSummaries().first().count { it.retained })
-        assertEquals(1, store.get(a)!!.turns.size)
+        assertNotEquals(id, repo.newConversation())
+        release.complete(Unit)
+        runCurrent()
+        repo.select(id)
+        assertEquals("pending", repo.state.value.selected.turns.single().question)
     }
 
-    @Test fun storeFailuresDoNotLeakAnUninitializedJobOrTerminalCapacity() = runTest {
+    @Test fun admissionFailurePreservesDraftAndBlocksSendsUntilSaveRetry() = runTest {
         val memory = InMemoryConversationStore()
         var failNext = false
         val store = object : ConversationStore by memory {
-            override suspend fun save(conversation: AssistantSessionState) {
-                if (failNext) { failNext = false; error("synthetic write failure") }
-                memory.save(conversation)
+            override suspend fun commit(metadata: AssistantSessionState?, turn: AssistantSessionTurn?, workspace: ConversationWorkspace?) {
+                if (failNext) {
+                    failNext = false
+                    error("synthetic write failure")
+                }
+                memory.commit(metadata = metadata, turn = turn, workspace = workspace)
             }
         }
-        val finish = CompletableDeferred<Unit>()
+        val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }
         val settings = conversationSettings()
-        val repo = AssistantConversationRepository(Runtime { _, _ -> finish.await(); emit(AssistantRunEvent.Completed) }, settings, store, backgroundScope)
+        val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope)
         repo.editDraft("kept")
         failNext = true
-        assertEquals(AssistantError.CONVERSATION_STORAGE, assertFailsWith<AssistantException> { repo.sendDraft(settings) }.error)
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
+        assertTrue(runtime.requests.isEmpty())
+        assertEquals("kept", repo.state.value.selected.draft)
         assertTrue(repo.state.value.runningIds.isEmpty())
-        assertEquals(0, repo.state.value.reservedBytes)
-        assertTrue(repo.sendDraft(settings)); runCurrent()
-        failNext = true
-        finish.complete(Unit); runCurrent()
-        assertTrue(repo.state.value.runningIds.isEmpty())
-        assertEquals(0, repo.state.value.reservedBytes)
-        assertEquals(AssistantTurnStatus.FAILED, repo.state.value.selected.turns.single().status)
-        assertEquals(AssistantError.CONVERSATION_STORAGE, repo.state.value.selected.turns.single().error)
+        assertFalse(repo.sendDraft(settings))
+        repo.retrySave()
+        assertTrue(runtime.requests.isEmpty())
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
+        assertEquals(1, runtime.requests.size)
     }
 
     @Test fun continuousStoreFailuresCannotPreventStopOrFinallyFromReleasingResources() = runTest {
@@ -371,9 +354,9 @@ class AssistantConversationRepositoryTest {
             var failing = false
             val memory = InMemoryConversationStore()
             val store = object : ConversationStore by memory {
-                override suspend fun save(conversation: AssistantSessionState) {
+                override suspend fun commit(metadata: AssistantSessionState?, turn: AssistantSessionTurn?, workspace: ConversationWorkspace?) {
                     check(!failing) { "synthetic persistent write failure" }
-                    memory.save(conversation)
+                    memory.commit(metadata = metadata, turn = turn, workspace = workspace)
                 }
             }
             val finish = CompletableDeferred<Unit>()
@@ -389,28 +372,32 @@ class AssistantConversationRepositoryTest {
             repo.editDraft("question"); repo.sendDraft(settings); runCurrent()
             val id = repo.state.value.selected.id
             failing = true
-            if (stop) assertFailsWith<AssistantException> { repo.stop(id) } else finish.complete(Unit)
+            if (stop) repo.stop(id) else finish.complete(Unit)
             runCurrent()
             assertTrue(cancelled.isCompleted)
             assertTrue(repo.state.value.runningIds.isEmpty())
-            assertEquals(0, repo.state.value.reservedBytes)
+            assertEquals("saved partial", repo.state.value.selected.turns.single().reply)
+            assertEquals(ConversationStorageState.SAVE_FAILED, repo.state.value.storage)
+            failing = false
+            repo.retrySave()
             assertEquals("saved partial", memory.get(id)!!.turns.single().reply)
             assertTrue(notices.filterIsInstance<AssistantConversationRepository.Notice.Rejected>()
                 .any { it.error == AssistantError.CONVERSATION_STORAGE })
         }
     }
 
-    @Test fun storeSummariesAndDetailsObserveTheSameSavedRecordAndDeletion() = runTest {
-        val store = InMemoryConversationStore(); val initial = AssistantSessionState(draft = "one")
-        store.save(initial)
-        assertEquals(initial, store.observe(initial.id).first())
-        assertEquals(initial.retainedBytes, store.observeSummaries().first().single().retainedBytes)
-        val changed = initial.copy(title = "title", turns = listOf(AssistantSessionTurn(1, "question")))
-        store.save(changed)
-        assertEquals(changed, store.get(initial.id))
-        assertEquals("title", store.observeSummaries().first().single().title)
-        assertEquals(AssistantTurnStatus.RUNNING, store.observeSummaries().first().single().status)
-        store.delete(initial.id)
-        assertNull(store.observe(initial.id).first()); assertTrue(store.observeSummaries().first().isEmpty())
+    @Test fun storeSummaryAndTurnCommitAndDeleteTogether() = runTest {
+        val store = InMemoryConversationStore()
+        val turn = AssistantSessionTurn(id = 1, question = "question")
+        val metadata = AssistantSessionState(title = "title", lastTurnId = 1, lastStatus = turn.status)
+        store.commit(metadata = metadata, turn = turn)
+        assertEquals("title", store.summaries(offset = 0, limit = 10).single().title)
+        assertEquals(AssistantTurnStatus.RUNNING, store.summaries(offset = 0, limit = 10).single().status)
+        assertEquals(turn, store.tail(id = metadata.id, limit = 1).single())
+        store.delete(id = metadata.id, workspace = ConversationWorkspace())
+        assertNull(store.metadata(metadata.id))
+        assertTrue(store.tail(id = metadata.id, limit = 1).isEmpty())
     }
+
+
 }

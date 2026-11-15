@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.model.bean
+package com.skyd.podaura.podnya.model.bean.conversation
 
 import com.skyd.fundation.ext.currentTimeMillis
 import com.skyd.podaura.podnya.core.AssistantContent
@@ -19,10 +19,7 @@ data class AssistantSessionTurn(
     val context: AssistantContext = AssistantContext.Empty,
     val progress: AssistantProgress? = AssistantPhase.PREPARING,
     val status: AssistantTurnStatus = AssistantTurnStatus.RUNNING,
+    val rawSource: String? = null,
+    val rawError: String? = null,
     val error: AssistantFailure? = null,
-) {
-    val retainedBytes: Long = question.encodeToByteArray().size.toLong() +
-            reply.encodeToByteArray().size + (content?.retainedBytes ?: 0) + context.retainedBytes +
-            (source?.baseUrl?.encodeToByteArray()?.size ?: 0) +
-            (source?.modelId?.encodeToByteArray()?.size ?: 0) + 256
-}
+)

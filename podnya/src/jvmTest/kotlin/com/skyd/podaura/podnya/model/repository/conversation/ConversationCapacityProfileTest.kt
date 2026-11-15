@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.model.repository
+package com.skyd.podaura.podnya.model.repository.conversation
 
 import com.skyd.podaura.podnya.core.*
 import kotlinx.coroutines.*
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 /** Diagnostic measurements, not timing thresholds: verify near-budget concurrent streaming. */
 class ConversationCapacityProfileTest {
-    @Test fun nearBudgetHistoryAndThreeStreamsKeepAllContentWithBoundedReservations() = runBlocking {
+    @Test fun largeCardsAndThreeStreamsKeepAllContent() = runBlocking {
         val owner = CoroutineScope(coroutineContext + SupervisorJob())
         val gate = CompletableDeferred<Unit>()
         var streaming = false
@@ -49,12 +49,8 @@ class ConversationCapacityProfileTest {
             System.gc()
             val heap = ManagementFactory.getMemoryMXBean().heapMemoryUsage.used
             assertEquals(4, repo.state.value.summaries.size)
-            assertTrue(repo.state.value.usedBytes > 29L * 1024 * 1024)
-            assertTrue(repo.state.value.usedBytes <= AssistantLimits.CONVERSATION_BYTES)
-            assertEquals(0, repo.state.value.reservedBytes)
             assertEquals(AssistantLimits.REPLY_CHARS, repo.state.value.selected.turns.single().reply.length)
             val report = "15 retained bounded cards, 3 concurrent streams, 2400 deltas\n" +
-                "Estimated content: ${repo.state.value.usedBytes} bytes\n" +
                 "Streaming elapsed: $millis ms\n" +
                 "Current-thread allocations during streaming: $allocated bytes\n" +
                 "JVM heap after GC: $heap bytes (before streaming: $before bytes)\n" +

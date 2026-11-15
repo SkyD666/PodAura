@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.ui.screen.chat
+package com.skyd.podaura.podnya.ui.screen.chat.history
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -32,8 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.podnya.core.AssistantLimits
-import com.skyd.podaura.podnya.model.bean.AssistantConversationSummary
-import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationSummary
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationsState
+import com.skyd.podaura.podnya.ui.screen.chat.PodnyaIntent
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_cancel
 import com.skyd.podnya.resources.podnya_conversation_title
@@ -43,8 +44,10 @@ import com.skyd.podnya.resources.podnya_delete_running
 import com.skyd.podnya.resources.podnya_delete_stop
 import com.skyd.podnya.resources.podnya_history
 import com.skyd.podnya.resources.podnya_history_empty
-import com.skyd.podnya.resources.podnya_memory_only
+import com.skyd.podnya.resources.podnya_history_on_device
 import com.skyd.podnya.resources.podnya_new_conversation
+import com.skyd.podnya.resources.podnya_next_page
+import com.skyd.podnya.resources.podnya_previous_page
 import com.skyd.podnya.resources.podnya_rename
 import com.skyd.podnya.resources.podnya_save
 import org.jetbrains.compose.resources.stringResource
@@ -137,8 +140,24 @@ internal fun ConversationHistoryPane(
                     )
                 }
             }
+            if (state.summaryOffset > 0) {
+                TextButton(onClick = {
+                    dispatch(
+                        PodnyaIntent.LoadSummaries(
+                            (state.summaryOffset - 50).coerceAtLeast(0)
+                        )
+                    )
+                }) {
+                    Text(stringResource(Res.string.podnya_previous_page))
+                }
+            }
+            if (state.hasMoreSummaries) {
+                TextButton(onClick = { dispatch(PodnyaIntent.LoadSummaries(state.summaryOffset + 50)) }) {
+                    Text(stringResource(Res.string.podnya_next_page))
+                }
+            }
             Text(
-                text = stringResource(Res.string.podnya_memory_only),
+                text = stringResource(Res.string.podnya_history_on_device),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)

@@ -1,10 +1,10 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
-import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
-import com.skyd.podaura.podnya.model.repository.ConversationStore
-import com.skyd.podaura.podnya.model.repository.InMemoryConversationStore
-import com.skyd.podaura.podnya.model.bean.AssistantSessionState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.conversation.ConversationStore
+import com.skyd.podaura.podnya.model.repository.conversation.InMemoryConversationStore
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionState
 import com.skyd.podaura.podnya.core.AssistantError
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -32,6 +32,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
@@ -141,11 +142,14 @@ class PodnyaViewModelTest {
                 f.failConversationWrites = true
                 model.processIntent(PodnyaIntent.Send(id, "editor", 1, config.configId, config.revision))
                 model.processIntent(PodnyaIntent.OpenSearch)
-                val error = assertIs<PodnyaEvent.Rejected>(model.singleEvent.first())
+                val events = listOf(model.singleEvent.first(), model.singleEvent.first())
+                val error = events.filterIsInstance<PodnyaEvent.Rejected>().single()
                 assertEquals(id, error.conversationId)
                 assertEquals(AssistantError.CONVERSATION_STORAGE, error.error)
-                assertEquals(PodnyaEvent.OpenSearch, model.singleEvent.first())
+                assertTrue(events.contains(PodnyaEvent.OpenSearch))
                 f.failConversationWrites = false
+                model.processIntent(PodnyaIntent.RetrySave)
+                model.viewState.first { it.ready }
                 model.processIntent(PodnyaIntent.Rename(id, "still working"))
                 model.viewState.first { it.session.title == "still working" }
                 assertEquals("kept", model.viewState.value.session.draft)
@@ -189,9 +193,9 @@ class PodnyaViewModelTest {
         var failConversationWrites = false
         private val memory = InMemoryConversationStore()
         private val conversationStore = object : ConversationStore by memory {
-            override suspend fun save(conversation: AssistantSessionState) {
+            override suspend fun commit(metadata: AssistantSessionState?, turn: com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn?, workspace: com.skyd.podaura.podnya.model.bean.conversation.ConversationWorkspace?) {
                 check(!failConversationWrites) { "synthetic store failure" }
-                memory.save(conversation)
+                memory.commit(metadata = metadata, turn = turn, workspace = workspace)
             }
         }
         val session = AssistantConversationRepository(object : AssistantRuntime {

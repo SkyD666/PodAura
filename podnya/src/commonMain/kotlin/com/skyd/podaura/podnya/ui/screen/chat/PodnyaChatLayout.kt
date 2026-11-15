@@ -33,7 +33,9 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.pointerOnBack
-import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationsState
+import com.skyd.podaura.podnya.ui.screen.chat.history.ConversationHistoryPane
+import com.skyd.podaura.podnya.ui.screen.chat.history.PodnyaHistoryScreen
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_history
 import com.skyd.podnya.resources.podnya_name

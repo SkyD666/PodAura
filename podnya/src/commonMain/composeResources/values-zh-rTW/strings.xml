@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">此對話的模型設定已無法使用。請明確選擇目前設定後繼續。</string>
     <string name="podnya_destination_conversation">對話：%1$s</string>
     <string name="podnya_error_conversation_storage">無法更新對話。已儲存的內容仍然保留，請重試。</string>
+    <string name="podnya_history_on_device">歷史儲存在此裝置上。</string>
+    <string name="podnya_storage_loading">正在載入對話…</string>
+    <string name="podnya_storage_save_failed">儲存失敗，未儲存的內容仍保留於此。請重試儲存後再傳送。</string>
+    <string name="podnya_storage_open_failed">無法開啟對話，已儲存的歷史未被取代。</string>
+    <string name="podnya_storage_occupied">另一個播喵執行個體正在使用此歷史。請關閉它後重試。</string>
+    <string name="podnya_storage_newer">此歷史需要更新版本的播喵。請升級應用程式後開啟。</string>
+    <string name="podnya_retry_save">重試儲存</string>
+    <string name="podnya_retry_open">重試開啟</string>
+    <string name="podnya_search_context_required">無法讀取這些搜尋條件，請重新設定搜尋範圍後傳送。</string>
+    <string name="podnya_reset_context">重設為全部文章</string>
+    <string name="podnya_content_unreadable">無法顯示此已儲存的內容。</string>
+    <string name="podnya_previous_page">上一頁</string>
+    <string name="podnya_next_page">下一頁</string>
+    <string name="podnya_interrupted">回覆已中斷</string>
 </resources>

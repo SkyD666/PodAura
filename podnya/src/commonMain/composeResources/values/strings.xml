@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">This conversation’s model configuration is unavailable. Select the current configuration explicitly to continue.</string>
     <string name="podnya_destination_conversation">Conversation: %1$s</string>
     <string name="podnya_error_conversation_storage">Could not update the conversation. Previously saved content is retained. Please try again.</string>
+    <string name="podnya_history_on_device">History is saved on this device.</string>
+    <string name="podnya_storage_loading">Loading conversations…</string>
+    <string name="podnya_storage_save_failed">Changes could not be saved. Your unsaved content is kept here. Retry saving before sending.</string>
+    <string name="podnya_storage_open_failed">Conversations could not be opened. Your saved history has not been replaced.</string>
+    <string name="podnya_storage_occupied">Another Podnya instance is using this history. Close it, then retry.</string>
+    <string name="podnya_storage_newer">This history needs a newer version of Podnya. Update the app to open it.</string>
+    <string name="podnya_retry_save">Retry saving</string>
+    <string name="podnya_retry_open">Retry opening</string>
+    <string name="podnya_search_context_required">These search conditions cannot be read. Set the search scope again before sending.</string>
+    <string name="podnya_reset_context">Reset to all articles</string>
+    <string name="podnya_content_unreadable">This saved content cannot be displayed.</string>
+    <string name="podnya_previous_page">Previous page</string>
+    <string name="podnya_next_page">Next page</string>
+    <string name="podnya_interrupted">Reply interrupted</string>
 </resources>

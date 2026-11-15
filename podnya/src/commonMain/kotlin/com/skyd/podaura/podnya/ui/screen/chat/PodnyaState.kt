@@ -1,7 +1,9 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
 import com.skyd.mvi.MviViewState
-import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
+import com.skyd.podaura.podnya.core.UnreadableContext
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationsState
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationStorageState
 import com.skyd.podaura.podnya.settings.AssistantSettings
 
 data class PodnyaState(
@@ -12,8 +14,15 @@ data class PodnyaState(
 ) : MviViewState {
     val session get() = conversations.selected
     val running get() = session.id in conversations.runningIds
-    val modelAvailable get() = session.modelConfigId == null || session.modelConfigId == settings?.configId
-    val ready: Boolean get() = available && modelAvailable && settings?.let { it.configured && it.consentAccepted } == true
+    val modelAvailable
+        get() = (session.modelConfigId == null && session.lastTurnId == 0L) ||
+                (session.modelConfigId != null && session.modelConfigId == settings?.configId)
+    val ready: Boolean
+        get() = conversations.storage == ConversationStorageState.READY &&
+                session.context !is UnreadableContext &&
+                available &&
+                modelAvailable &&
+                settings?.let { it.configured && it.consentAccepted } == true
 
     companion object {
         fun initial(conversations: AssistantConversationsState, available: Boolean) =

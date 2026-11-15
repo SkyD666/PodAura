@@ -10,8 +10,9 @@ import com.skyd.podaura.podnya.core.AssistantProgress
 /** Feature UI stays separate from runtime, repositories and session state. */
 internal interface AssistantCapabilityUi {
     fun supports(content: AssistantContent): Boolean
+    fun itemKeys(turnId: String, content: AssistantContent, showFallbackText: Boolean): List<String>
     fun LazyListScope.render(
-        turnId: Long, content: AssistantContent, showFallbackText: Boolean,
+        turnId: String, content: AssistantContent, showFallbackText: Boolean,
         formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
     )
 

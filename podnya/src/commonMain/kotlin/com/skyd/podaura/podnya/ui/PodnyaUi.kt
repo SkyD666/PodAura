@@ -11,9 +11,11 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantProgress
+import com.skyd.podaura.podnya.core.UnreadableContent
 import com.skyd.podaura.podnya.di.podnyaCapabilityUis
 import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
 import com.skyd.podnya.resources.Res
+import com.skyd.podnya.resources.podnya_content_unreadable
 import com.skyd.podnya.resources.podnya_preparing
 import com.skyd.podnya.resources.podnya_processing
 import com.skyd.podnya.resources.podnya_reply_streaming
@@ -40,22 +42,69 @@ fun podnyaFailureText(error: AssistantFailure): String {
 fun LazyListScope.podnyaContent(
     turnId: Long, content: AssistantContent, showFallbackText: Boolean,
     formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
+    keyPrefix: String = turnId.toString(),
 ) {
     if (content is AssistantReplyContent) {
-        if (showFallbackText && content.text.isNotBlank()) item(key = "$turnId-reply-summary") {
+        if (showFallbackText && content.text.isNotBlank()) item(key = "$keyPrefix-reply-summary") {
             SelectionContainer { Text(content.text, style = MaterialTheme.typography.bodyLarge) }
         }
-        content.parts.forEach { podnyaContent(turnId, it, showFallbackText, formatDate, onAction) }
+        content.parts.forEachIndexed { index, part ->
+            podnyaContent(
+                turnId = turnId,
+                content = part,
+                showFallbackText = showFallbackText,
+                formatDate = formatDate,
+                onAction = onAction,
+                keyPrefix = "$keyPrefix-part-$index",
+            )
+        }
     } else {
         val ui = podnyaCapabilityUis.firstOrNull { it.supports(content) }
-        if (ui != null) with(ui) { render(turnId, content, showFallbackText, formatDate, onAction) }
-        else item(key = "$turnId-unknown-content") {
-            SelectionContainer {
-                Text(
-                    text = content.historySnapshot()?.summary.orEmpty(),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+        if (ui != null) with(ui) {
+            render(
+                turnId = keyPrefix,
+                content = content,
+                showFallbackText = showFallbackText,
+                formatDate = formatDate,
+                onAction = onAction
+            )
+        } else {
+            item(key = "$keyPrefix-unknown-content") {
+                SelectionContainer {
+                    Text(
+                        text = (content as? UnreadableContent)?.fallback?.ifBlank {
+                            stringResource(Res.string.podnya_content_unreadable)
+                        } ?: content.historySnapshot()?.summary.orEmpty(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }
 }
+
+internal fun podnyaContentKeys(
+    turnId: Long,
+    content: AssistantContent,
+    showFallbackText: Boolean,
+    keyPrefix: String = turnId.toString()
+): List<String> =
+    if (content is AssistantReplyContent) {
+        buildList {
+            if (showFallbackText && content.text.isNotBlank()) add("$keyPrefix-reply-summary")
+            content.parts.forEachIndexed { index, part ->
+                addAll(
+                    podnyaContentKeys(
+                        turnId = turnId,
+                        content = part,
+                        showFallbackText = showFallbackText,
+                        keyPrefix = "$keyPrefix-part-$index"
+                    )
+                )
+            }
+        }
+    } else {
+        podnyaCapabilityUis.firstOrNull { it.supports(content) }
+            ?.itemKeys(turnId = keyPrefix, content = content, showFallbackText = showFallbackText)
+            ?: listOf("$keyPrefix-unknown-content")
+    }

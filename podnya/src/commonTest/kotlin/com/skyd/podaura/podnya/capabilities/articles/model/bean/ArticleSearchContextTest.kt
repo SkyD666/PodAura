@@ -6,7 +6,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
-import com.skyd.podaura.podnya.model.repository.*
+import com.skyd.podaura.podnya.model.repository.conversation.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest

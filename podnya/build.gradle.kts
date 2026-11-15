@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room3)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -45,6 +47,8 @@ kotlin {
         named("androidHostTest") { dependsOn(koogTest) }
 
         commonMain.dependencies {
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.sqlite.bundled)
             implementation(libs.jetbrains.compose.runtime)
             implementation(libs.jetbrains.compose.foundation)
             implementation(libs.jetbrains.compose.ui)
@@ -105,4 +109,14 @@ kotlin {
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.skyd.podnya.resources"
+}
+
+dependencies {
+    listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64", "kspMacosArm64").forEach {
+        add(it, libs.androidx.room3.compiler)
+    }
+}
+
+room3 {
+    schemaDirectory("$projectDir/schemas")
 }

@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">この会話のモデル設定は利用できません。現在の設定を明示的に選択して続行してください。</string>
     <string name="podnya_destination_conversation">会話：%1$s</string>
     <string name="podnya_error_conversation_storage">会話を更新できませんでした。保存済みの内容は保持されています。再試行してください。</string>
+    <string name="podnya_history_on_device">履歴はこのデバイスに保存されます。</string>
+    <string name="podnya_storage_loading">会話を読み込み中…</string>
+    <string name="podnya_storage_save_failed">保存できませんでした。未保存の内容はここに保持されています。保存を再試行してから送信してください。</string>
+    <string name="podnya_storage_open_failed">会話を開けませんでした。保存済みの履歴は置き換えられていません。</string>
+    <string name="podnya_storage_occupied">別の Podnya がこの履歴を使用中です。終了してから再試行してください。</string>
+    <string name="podnya_storage_newer">この履歴には新しいバージョンの Podnya が必要です。アプリを更新してください。</string>
+    <string name="podnya_retry_save">保存を再試行</string>
+    <string name="podnya_retry_open">読み込みを再試行</string>
+    <string name="podnya_search_context_required">検索条件を読み取れません。検索範囲を設定し直してください。</string>
+    <string name="podnya_reset_context">すべての記事にリセット</string>
+    <string name="podnya_content_unreadable">この保存済みコンテンツを表示できません。</string>
+    <string name="podnya_previous_page">前のページ</string>
+    <string name="podnya_next_page">次のページ</string>
+    <string name="podnya_interrupted">返信が中断されました</string>
 </resources>

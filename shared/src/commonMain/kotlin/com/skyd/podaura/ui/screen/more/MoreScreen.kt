@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
-import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
@@ -45,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,6 +60,7 @@ import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.podnya.PodnyaPages
+import com.skyd.podaura.ui.screen.podnya.PodnyaIcon
 import com.skyd.podaura.ui.screen.podnya.PodnyaRoute
 import com.skyd.podaura.ui.screen.settings.SettingsRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
@@ -153,14 +154,16 @@ fun MoreItem(
             Box(
                 modifier = Modifier
                     .padding(5.dp)
+                    .size(67.dp)
+                    .clip(data.shape.toShape())
                     .background(
                         color = data.shapeColor,
                         shape = data.shape.toShape(),
-                    )
-                    .padding(16.dp)
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    modifier = Modifier.size(35.dp),
+                    modifier = Modifier.size(if (data.icon === PodnyaIcon) 40.dp else 35.dp),
                     imageVector = data.icon,
                     contentDescription = null,
                     tint = data.iconTint
@@ -230,9 +233,9 @@ private suspend fun getMoreBeanList(
             add(
                 0, MoreBean(
                     title = podnya.title(),
-                    icon = Icons.Outlined.ChatBubbleOutline,
+                    icon = PodnyaIcon,
                     iconTint = colorScheme.onSecondary,
-                    shape = MaterialShapes.Cookie12Sided,
+                    shape = MaterialShapes.Circle,
                     shapeColor = colorScheme.secondary,
                     action = { navBackStack.add(PodnyaRoute) },
                 )

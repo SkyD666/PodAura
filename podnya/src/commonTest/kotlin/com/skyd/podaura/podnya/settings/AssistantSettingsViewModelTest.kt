@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModelStore
 import com.skyd.mvi.mviConfig
-import com.skyd.podaura.podnya.model.repository.*
+import com.skyd.podaura.podnya.model.repository.conversation.*
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantFailure

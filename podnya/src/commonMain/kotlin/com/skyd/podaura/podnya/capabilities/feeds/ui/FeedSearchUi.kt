@@ -34,7 +34,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 fun LazyListScope.feedSearchContent(
-    turnId: Long,
+    turnId: String,
     content: FeedSearchContent,
     onAction: (FeedSearchAction) -> Unit
 ) {
@@ -77,8 +77,21 @@ fun feedSearchErrorText(error: FeedSearchError): String = stringResource(
 
 internal object FeedSearchUi : AssistantCapabilityUi {
     override fun supports(content: AssistantContent) = content is FeedSearchContent
+    override fun itemKeys(
+        turnId: String,
+        content: AssistantContent,
+        showFallbackText: Boolean
+    ): List<String> = buildList {
+        val value = content as FeedSearchContent
+        add("$turnId-feed-summary")
+        if (value.resultsChanged) {
+            add("$turnId-feeds-changed")
+        }
+        value.feeds.forEach { add("$turnId-feed-${it.feed.feedId}") }
+    }
+
     override fun LazyListScope.render(
-        turnId: Long, content: AssistantContent, showFallbackText: Boolean,
+        turnId: String, content: AssistantContent, showFallbackText: Boolean,
         formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
     ) = feedSearchContent(turnId, content as FeedSearchContent, onAction)
 

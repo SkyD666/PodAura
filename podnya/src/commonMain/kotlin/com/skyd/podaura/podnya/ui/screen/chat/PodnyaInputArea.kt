@@ -52,7 +52,6 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.ui.podnyaErrorText
 import com.skyd.podnya.resources.Res
-import com.skyd.podnya.resources.podnya_capacity_warning
 import com.skyd.podnya.resources.podnya_composer_hint
 import com.skyd.podnya.resources.podnya_model_unavailable
 import com.skyd.podnya.resources.podnya_select_current_model
@@ -81,7 +80,10 @@ internal fun PodnyaInputArea(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (uiState.available && (settings != null || uiState.settingsFailed) && !ready) {
+        if (uiState.available &&
+            (settings != null || uiState.settingsFailed) &&
+            (uiState.settingsFailed || !uiState.modelAvailable || settings?.configured != true || !settings.consentAccepted)
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,13 +105,6 @@ internal fun PodnyaInputArea(
                     contentDescription = stringResource(Res.string.podnya_settings_title)
                 )
             }
-        }
-        if (uiState.conversations.capacityWarning) {
-            Text(
-                text = stringResource(Res.string.podnya_capacity_warning),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
         }
         if (!uiState.modelAvailable && settings?.configured == true) {
             TextButton(
@@ -168,7 +163,8 @@ private fun MessageInputBox(
                     .semantics { contentDescription = hint }
                     .onFocusChanged { focused = it.isFocused }
                     .onPreviewKeyEvent { event ->
-                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter &&
+                        if (event.type == KeyEventType.KeyDown &&
+                            (event.key == Key.Enter || event.key == Key.NumPadEnter) &&
                             !event.isShiftPressed && input.composition == null
                         ) {
                             if (ready && !running && input.text.isNotBlank()) onSend()

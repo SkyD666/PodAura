@@ -99,4 +99,18 @@
     <string name="podnya_model_unavailable">La modela agordo de ĉi tiu konversacio ne disponeblas. Eksplicite elektu la nunan agordon por daŭrigi.</string>
     <string name="podnya_destination_conversation">Konversacio: %1$s</string>
     <string name="podnya_error_conversation_storage">Ne eblis ĝisdatigi la konversacion. Antaŭe konservita enhavo restas. Bonvolu reprovi.</string>
+    <string name="podnya_history_on_device">La historio estas konservata sur ĉi tiu aparato.</string>
+    <string name="podnya_storage_loading">Ŝargante konversaciojn…</string>
+    <string name="podnya_storage_save_failed">Ne eblis konservi la ŝanĝojn. La nekonservita enhavo restas ĉi tie. Reprovu konservi antaŭ ol sendi.</string>
+    <string name="podnya_storage_open_failed">Ne eblis malfermi la konversaciojn. Via konservita historio ne estis anstataŭigita.</string>
+    <string name="podnya_storage_occupied">Alia ekzemplero de Podnya uzas ĉi tiun historion. Fermu ĝin kaj reprovu.</string>
+    <string name="podnya_storage_newer">Ĉi tiu historio bezonas pli novan version de Podnya. Ĝisdatigu la aplikaĵon.</string>
+    <string name="podnya_retry_save">Reprovi konservadon</string>
+    <string name="podnya_retry_open">Reprovi malfermon</string>
+    <string name="podnya_search_context_required">Ne eblas legi ĉi tiujn serĉkondiĉojn. Agordu denove la serĉamplekson antaŭ ol sendi.</string>
+    <string name="podnya_reset_context">Restarigi al ĉiuj artikoloj</string>
+    <string name="podnya_content_unreadable">Ne eblas montri ĉi tiun konservitan enhavon.</string>
+    <string name="podnya_previous_page">Antaŭa paĝo</string>
+    <string name="podnya_next_page">Sekva paĝo</string>
+    <string name="podnya_interrupted">Respondo interrompita</string>
 </resources>

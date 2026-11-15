@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.ui.screen.chat
+package com.skyd.podaura.podnya.ui.screen.chat.history
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -33,12 +33,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.compone.component.ComponeTooltipBox
-import com.skyd.podaura.podnya.model.bean.AssistantConversationSummary
-import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationSummary
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_delete
 import com.skyd.podnya.resources.podnya_history_failed
@@ -78,7 +78,7 @@ internal fun ConversationHistoryItem(
     ) {
         Row(
             modifier = Modifier
-                .heightIn(min = 52.dp)
+                .heightIn(min = 48.dp)
                 .padding(start = 12.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -90,7 +90,7 @@ internal fun ConversationHistoryItem(
                 fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(top = 10.dp, bottom = 10.dp, end = 8.dp)
+                    .padding(top = 6.dp, bottom = 6.dp, end = 8.dp)
             )
             if (status != null) {
                 ComponeTooltipBox(

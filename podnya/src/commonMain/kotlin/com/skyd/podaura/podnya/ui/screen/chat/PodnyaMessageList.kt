@@ -35,8 +35,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,20 +50,23 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.podnya.core.AssistantError
-import com.skyd.podaura.podnya.model.bean.AssistantSessionTurn
-import com.skyd.podaura.podnya.model.bean.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
 import com.skyd.podaura.podnya.ui.PodnyaWelcome
 import com.skyd.podaura.podnya.ui.podnyaContent
+import com.skyd.podaura.podnya.ui.podnyaContentKeys
 import com.skyd.podaura.podnya.ui.podnyaErrorText
 import com.skyd.podaura.podnya.ui.podnyaFailureText
 import com.skyd.podaura.podnya.ui.podnyaProgressText
 import com.skyd.podnya.resources.Res
+import com.skyd.podnya.resources.podnya_interrupted
 import com.skyd.podnya.resources.podnya_latest
 import com.skyd.podnya.resources.podnya_name
 import com.skyd.podnya.resources.podnya_open_search
 import com.skyd.podnya.resources.podnya_retry
 import com.skyd.podnya.resources.podnya_stopped
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -79,17 +84,111 @@ internal fun PodnyaMessageList(
     val state = uiState.session
     val settings = uiState.settings
     val ready = uiState.ready
-    val coroutineScope = rememberCoroutineScope()
     val atEnd by remember(listState) { derivedStateOf { !listState.canScrollForward } }
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress to !listState.canScrollForward }
-            .collect { (scrolling, end) -> if (scrolling) onFollowLatest(end) }
-    }
-    LaunchedEffect(state.id, state.turns) {
-        if (followLatest && state.turns.isNotEmpty()) {
-            snapshotFlow { listState.layoutInfo.totalItemsCount }.collect { count ->
-                if (count > 0) listState.scrollToItem(count - 1)
+    val keys = remember(state.turns) {
+        buildList {
+            state.turns.forEach { turn ->
+                add("${turn.id}-question")
+                add("${turn.id}-reply")
+                turn.content?.let {
+                    addAll(
+                        podnyaContentKeys(
+                            turnId = turn.id,
+                            content = it,
+                            showFallbackText = turn.reply.isEmpty() && turn.status != AssistantTurnStatus.RUNNING,
+                        )
+                    )
+                }
+                if (turn.error != null || turn.status in setOf(
+                        AssistantTurnStatus.STOPPED,
+                        AssistantTurnStatus.INTERRUPTED
+                    )
+                ) {
+                    add("${turn.id}-status")
+                }
             }
+            if (state.turns.isNotEmpty()) add("conversation-end")
+        }
+    }
+    var restored by remember(
+        state.id,
+        uiState.conversations.windowRevision
+    ) { mutableStateOf(false) }
+    val currentState by rememberUpdatedState(state)
+    val currentFollow by rememberUpdatedState(followLatest)
+    LaunchedEffect(state.id, uiState.conversations.windowRevision) {
+        try {
+            if (keys.isNotEmpty()) {
+                snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it == keys.size }
+                val position = state.position
+                val nearest =
+                    state.turns.minByOrNull { kotlin.math.abs(it.id - (position.turnId ?: it.id)) }
+                val target = keys.indexOf(position.itemKey).takeIf { it >= 0 }
+                    ?: keys.indexOf("${nearest?.id}-question").coerceAtLeast(0)
+                listState.scrollToItem(
+                    index = if (followLatest && !state.hasAfter) keys.lastIndex else target,
+                    scrollOffset = if (followLatest) 0 else position.offset.coerceAtLeast(0),
+                )
+            }
+        } finally {
+            // A user gesture may cancel scrollToItem while a window is being restored.
+            // Continue observing their position and loading subsequent windows in that case.
+            restored = true
+        }
+    }
+    LaunchedEffect(listState, restored) {
+        if (!restored) return@LaunchedEffect
+        snapshotFlow {
+            Triple(
+                listState.firstVisibleItemIndex,
+                listState.firstVisibleItemScrollOffset,
+                listState.isScrollInProgress
+            )
+        }.collect { (_, offset, scrolling) ->
+            val key = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.key as? String
+                ?: return@collect
+            val turnId = key.substringBefore('-').toLongOrNull()
+                ?: currentState.turns.lastOrNull()?.id
+            val end = !listState.canScrollForward && !currentState.hasAfter
+            if (scrolling) onFollowLatest(end)
+            dispatch(
+                PodnyaIntent.UpdatePosition(
+                    conversationId = currentState.id,
+                    position = ConversationPosition(
+                        turnId = turnId,
+                        itemKey = key,
+                        offset = offset,
+                        followLatest = if (scrolling) end else currentFollow
+                    ),
+                )
+            )
+            if (scrolling && turnId != null) {
+                val first = currentState.turns.firstOrNull()?.id ?: turnId
+                val last = currentState.turns.lastOrNull()?.id ?: turnId
+                val lastVisibleTurn = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.key
+                    ?.toString()?.substringBefore('-')?.toLongOrNull() ?: last
+                if (currentState.hasBefore && turnId <= first + 3) {
+                    dispatch(
+                        PodnyaIntent.LoadWindow(
+                            conversationId = currentState.id,
+                            anchor = (turnId - 10).coerceAtLeast(1)
+                        )
+                    )
+                } else if (currentState.hasAfter && lastVisibleTurn >= last - 3) {
+                    dispatch(
+                        PodnyaIntent.LoadWindow(
+                            conversationId = currentState.id,
+                            anchor = lastVisibleTurn + 10
+                        )
+                    )
+                }
+            }
+        }
+    }
+    LaunchedEffect(state.id, state.turns, restored, followLatest) {
+        if (restored && followLatest && !state.hasAfter && keys.isNotEmpty()) {
+            snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it == keys.size }
+            listState.scrollToItem(keys.lastIndex)
         }
     }
     Box(
@@ -171,11 +270,15 @@ internal fun PodnyaMessageList(
                             }
                         )
                     }
-                    if (turn.error != null || turn.status == AssistantTurnStatus.STOPPED) {
+                    if (turn.error != null || turn.status in setOf(
+                            AssistantTurnStatus.STOPPED,
+                            AssistantTurnStatus.INTERRUPTED
+                        )
+                    ) {
                         item(key = "${turn.id}-status") {
                             AssistantTurnNotice(
                                 turn = turn,
-                                canRetry = turn.id == state.turns.lastOrNull()?.id && !uiState.running,
+                                canRetry = turn.id == state.lastTurnId && !uiState.running,
                                 ready = ready,
                                 onRetry = {
                                     dispatch(
@@ -205,14 +308,22 @@ internal fun PodnyaMessageList(
                 }
             }
         }
-        if (!atEnd && state.turns.isNotEmpty()) {
+        if ((!atEnd || state.hasAfter) && state.turns.isNotEmpty()) {
             FilledTonalButton(
                 onClick = {
                     onFollowLatest(true)
-                    val last = listState.layoutInfo.totalItemsCount - 1
-                    if (last >= 0) coroutineScope.launch {
-                        listState.animateScrollToItem(last)
-                    }
+                    dispatch(
+                        PodnyaIntent.UpdatePosition(
+                            conversationId = state.id,
+                            position = ConversationPosition()
+                        )
+                    )
+                    if (state.hasAfter) dispatch(
+                        PodnyaIntent.LoadWindow(
+                            conversationId = state.id,
+                            anchor = null
+                        )
+                    )
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -243,7 +354,9 @@ private fun AssistantReply(turn: AssistantSessionTurn) {
                 Icon(
                     imageVector = Icons.Outlined.Lightbulb,
                     contentDescription = null,
-                    modifier = Modifier.padding(8.dp).size(18.dp),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(18.dp),
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
@@ -319,7 +432,7 @@ private fun AssistantTurnNotice(
                 )
                 Text(
                     text = turn.error?.let { podnyaFailureText(it) }
-                        ?: stringResource(Res.string.podnya_stopped),
+                        ?: stringResource(if (turn.status == AssistantTurnStatus.INTERRUPTED) Res.string.podnya_interrupted else Res.string.podnya_stopped),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )

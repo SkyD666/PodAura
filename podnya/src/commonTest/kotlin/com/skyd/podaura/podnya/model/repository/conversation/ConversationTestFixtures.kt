@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.model.repository
+package com.skyd.podaura.podnya.model.repository.conversation
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -36,3 +36,7 @@ internal suspend fun AssistantConversationRepository.retryLast(settings: Assista
     val config = settings.snapshot()
     return submit(current.id, current.editorId, current.draftRevision, config.configId, config.revision, current.turns.last().id)
 }
+
+/** Test-only full read, never used by production or UI. */
+internal suspend fun ConversationStore.get(id: kotlin.uuid.Uuid): com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionState? =
+    metadata(id)?.copy(turns = tail(id = id, limit = 10_000))

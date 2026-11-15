@@ -1,6 +1,9 @@
-package com.skyd.podaura.podnya.model.bean
+package com.skyd.podaura.podnya.model.bean.conversation
+
+import kotlinx.serialization.Serializable
 
 /** Actual non-secret origin of this reply; immutable even after settings change. */
+@Serializable
 data class AssistantReplySource(
     val configId: String,
     val revision: Long,

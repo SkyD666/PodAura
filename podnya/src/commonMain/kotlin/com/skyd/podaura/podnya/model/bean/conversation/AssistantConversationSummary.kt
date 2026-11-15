@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.model.bean
+package com.skyd.podaura.podnya.model.bean.conversation
 
 import kotlin.uuid.Uuid
 
@@ -9,7 +9,6 @@ data class AssistantConversationSummary(
     val activityAt: Long,
     val status: AssistantTurnStatus?,
     val retained: Boolean,
-    val retainedBytes: Long,
 )
 
 internal fun AssistantSessionState.summary() = AssistantConversationSummary(
@@ -17,7 +16,6 @@ internal fun AssistantSessionState.summary() = AssistantConversationSummary(
     title = title,
     createdAt = createdAt,
     activityAt = activityAt,
-    status = turns.lastOrNull()?.status,
+    status = lastStatus,
     retained = retained,
-    retainedBytes = retainedBytes,
 )

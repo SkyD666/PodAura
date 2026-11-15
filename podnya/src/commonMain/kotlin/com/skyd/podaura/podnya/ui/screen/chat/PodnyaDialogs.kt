@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.podnya.core.AssistantFailure
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository.Confirmation
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository.Confirmation
 import com.skyd.podaura.podnya.ui.podnyaFailureText
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_cancel

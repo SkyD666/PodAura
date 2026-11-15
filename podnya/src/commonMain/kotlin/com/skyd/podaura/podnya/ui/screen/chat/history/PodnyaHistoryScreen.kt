@@ -1,4 +1,4 @@
-package com.skyd.podaura.podnya.ui.screen.chat
+package com.skyd.podaura.podnya.ui.screen.chat.history
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,7 +20,8 @@ import com.skyd.compone.component.BackIcon
 import com.skyd.compone.component.ComponeTopBar
 import com.skyd.compone.component.ComponeTopBarStyle
 import com.skyd.compone.component.pointerOnBack
-import com.skyd.podaura.podnya.model.bean.AssistantConversationsState
+import com.skyd.podaura.podnya.model.bean.conversation.AssistantConversationsState
+import com.skyd.podaura.podnya.ui.screen.chat.PodnyaIntent
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_history
 import org.jetbrains.compose.resources.stringResource

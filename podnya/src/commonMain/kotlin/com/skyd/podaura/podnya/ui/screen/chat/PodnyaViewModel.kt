@@ -3,7 +3,7 @@ package com.skyd.podaura.podnya.ui.screen.chat
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
-import com.skyd.podaura.podnya.model.repository.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
 import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -31,13 +31,6 @@ class PodnyaViewModel(
             repository.notices.map { notice ->
                 PodnyaPartialStateChange.Notify(
                     when (notice) {
-                        is AssistantConversationRepository.Notice.DraftRejected -> PodnyaEvent.DraftRejected(
-                            notice.conversationId,
-                            notice.editorId,
-                            notice.revision,
-                            notice.draft
-                        )
-
                         is AssistantConversationRepository.Notice.Accepted -> PodnyaEvent.ClearDraft(
                             notice.conversationId,
                             notice.editorId,
@@ -99,12 +92,38 @@ class PodnyaViewModel(
 
     private fun Flow<PodnyaIntent>.toPodnyaPartialStateChangeFlow(): Flow<PodnyaPartialStateChange> {
         return merge(
+            filterIsInstance<PodnyaIntent.RetrySave>().map {
+                repository.retrySave()
+                PodnyaPartialStateChange.CommandCompleted
+            },
+            filterIsInstance<PodnyaIntent.FlushPending>().map {
+                repository.flushPending()
+                PodnyaPartialStateChange.CommandCompleted
+            },
+            filterIsInstance<PodnyaIntent.ResetContext>().map {
+                repository.resetContext(it.conversationId)
+                PodnyaPartialStateChange.CommandCompleted
+            },
+            filterIsInstance<PodnyaIntent.LoadSummaries>().map {
+                repository.loadSummaries(it.offset)
+                PodnyaPartialStateChange.CommandCompleted
+            },
+            filterIsInstance<PodnyaIntent.LoadWindow>().map {
+                repository.loadWindow(id = it.conversationId, anchor = it.anchor)
+                PodnyaPartialStateChange.CommandCompleted
+            },
+            filterIsInstance<PodnyaIntent.UpdatePosition>().map {
+                repository.updatePosition(id = it.conversationId, position = it.position)
+                PodnyaPartialStateChange.CommandCompleted
+            },
             filterIsInstance<PodnyaIntent.UpdateDraft>().map { intent ->
                 repository.updateDraft(
                     id = intent.conversationId,
                     text = intent.text,
                     editorId = intent.editorId,
-                    revision = intent.revision
+                    revision = intent.revision,
+                    selectionStart = intent.selectionStart,
+                    selectionEnd = intent.selectionEnd,
                 )
                 PodnyaPartialStateChange.CommandCompleted
             },

@@ -23,6 +23,11 @@ class ArticleSearchContent private constructor(
     }
 
     companion object {
+        internal fun restore(
+            answer: ValidatedAssistantAnswer?,
+            candidates: List<AssistantArticle>,
+        ) = ArticleSearchContent(answer = answer, candidates = candidates)
+
         const val CAPABILITY_ID = "articles"
 
         fun recommendations(answer: ValidatedAssistantAnswer): ArticleSearchContent {

@@ -7,7 +7,6 @@ import com.skyd.podnya.resources.podnya_error_authentication
 import com.skyd.podnya.resources.podnya_error_budget_exhausted
 import com.skyd.podnya.resources.podnya_error_configuration_changed
 import com.skyd.podnya.resources.podnya_error_configuration_required
-import com.skyd.podnya.resources.podnya_error_conversation_capacity
 import com.skyd.podnya.resources.podnya_error_conversation_storage
 import com.skyd.podnya.resources.podnya_error_credential_storage_unavailable
 import com.skyd.podnya.resources.podnya_error_disclosure_required
@@ -24,6 +23,7 @@ import com.skyd.podnya.resources.podnya_error_stream_interrupted
 import com.skyd.podnya.resources.podnya_error_timeout
 import com.skyd.podnya.resources.podnya_error_tools_unsupported
 import com.skyd.podnya.resources.podnya_error_unavailable
+import com.skyd.podnya.resources.podnya_search_context_required
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -31,7 +31,7 @@ fun podnyaErrorText(error: AssistantError): String = stringResource(
     when (error) {
         AssistantError.CONFIGURATION_CHANGED -> Res.string.podnya_error_configuration_changed
         AssistantError.CONVERSATION_STORAGE -> Res.string.podnya_error_conversation_storage
-        AssistantError.CONVERSATION_CAPACITY -> Res.string.podnya_error_conversation_capacity
+        AssistantError.SEARCH_CONTEXT_REQUIRED -> Res.string.podnya_search_context_required
         AssistantError.GENERATION_LIMIT -> Res.string.podnya_error_generation_limit
         AssistantError.STALE_INPUT -> Res.string.podnya_error_stale_input
 

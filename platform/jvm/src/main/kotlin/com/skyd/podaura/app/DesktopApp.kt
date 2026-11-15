@@ -30,9 +30,10 @@ import com.skyd.podaura.util.CrashHandler
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.dsl.KoinAppDeclaration
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal fun runDesktopApp(args: Array<String>, appDeclaration: KoinAppDeclaration) {
-    initKoin(appDeclaration)
+    val koinApplication = initKoin(appDeclaration)
     if (platform == Platform.macOS_Jvm) {
         runBlocking { initializePlatformAppLanguage() }
         // AWT reads this at startup; rootPane client properties do not affect native dialogs.
@@ -40,12 +41,22 @@ internal fun runDesktopApp(args: Array<String>, appDeclaration: KoinAppDeclarati
         DesktopArticleNotifications.initialize()
     }
     val openFiles = DesktopOpenFiles()
-    val shutdownHook = Thread({ openFiles.close() }, "PodAura activation cleanup")
+    val closed = AtomicBoolean()
+    val cleanup = {
+        if (closed.compareAndSet(false, true)) {
+            try {
+                openFiles.close()
+            } finally {
+                koinApplication.close()
+            }
+        }
+    }
+    val shutdownHook = Thread(cleanup, "PodAura application cleanup")
     Runtime.getRuntime().addShutdownHook(shutdownHook)
     try {
         if (openFiles.start(args)) runDesktopApplication(openFiles)
     } finally {
-        openFiles.close()
+        cleanup()
         Runtime.getRuntime().removeShutdownHook(shutdownHook)
     }
 }

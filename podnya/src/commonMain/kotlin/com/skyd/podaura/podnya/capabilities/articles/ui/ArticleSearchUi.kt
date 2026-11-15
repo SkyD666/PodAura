@@ -42,7 +42,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 fun LazyListScope.articleSearchContent(
-    turnId: Long,
+    turnId: String,
     content: ArticleSearchContent,
     showFallbackText: Boolean,
     formatDate: (Long) -> String,
@@ -85,8 +85,8 @@ fun LazyListScope.articleSearchContent(
             modifier = Modifier.padding(top = 4.dp)
         )
     }
-    recommendations.forEachIndexed { index, recommendation ->
-        item(key = "$turnId-article-$index") {
+    recommendations.forEach { recommendation ->
+        item(key = "$turnId-article-${recommendation.article.articleId}") {
             ArticleRecommendationItem(recommendation.article, recommendation.reason, formatDate) {
                 onAction(ArticleSearchAction.OpenArticle(recommendation.article.articleId))
             }
@@ -99,8 +99,8 @@ fun LazyListScope.articleSearchContent(
                 style = MaterialTheme.typography.labelLarge
             )
         }
-        content.candidates.forEachIndexed { index, article ->
-            item(key = "$turnId-candidate-$index") {
+        content.candidates.forEach { article ->
+            item(key = "$turnId-candidate-${article.articleId}") {
                 ArticleRecommendationItem(
                     article,
                     null,
@@ -113,8 +113,27 @@ fun LazyListScope.articleSearchContent(
 
 internal object ArticleSearchUi : AssistantCapabilityUi {
     override fun supports(content: AssistantContent) = content is ArticleSearchContent
+    override fun itemKeys(
+        turnId: String,
+        content: AssistantContent,
+        showFallbackText: Boolean
+    ): List<String> = buildList {
+        val value = content as ArticleSearchContent
+        val answer = value.answer
+        if ((showFallbackText && !answer?.text.isNullOrEmpty())
+            || answer?.kind == AssistantAnswerKind.NO_MATCH
+            || answer?.resultsChanged == true
+        ) {
+            add("$turnId-article-summary")
+        }
+        if (!answer?.articles.isNullOrEmpty()) add("$turnId-recommendations")
+        answer?.articles?.forEach { add("$turnId-article-${it.article.articleId}") }
+        if (value.candidates.isNotEmpty()) add("$turnId-fallback")
+        value.candidates.forEach { add("$turnId-candidate-${it.articleId}") }
+    }
+
     override fun LazyListScope.render(
-        turnId: Long, content: AssistantContent, showFallbackText: Boolean,
+        turnId: String, content: AssistantContent, showFallbackText: Boolean,
         formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
     ) = articleSearchContent(
         turnId,
