@@ -1,17 +1,16 @@
-PodAura, an all-in-one Podcast tool for RSS subscription and updates, media downloads and playback.
-PodAura utilizes the MVI architecture and fully adopts the Material You design style. All pages are developed using Jetpack Compose.
-<h3>💡 Features</h3>
-* <strong>Subscribe to RSS</strong>, Update RSS, <strong>Read</strong> RSS
-* <strong>Automatically update RSS</strong> subscriptions
-* <strong>Download enclosures</strong> (enclosure tags) in RSS articles
-* <strong>Automated</strong> podcast <strong>media downloads</strong>
-* <strong>Play media enclosures or downloaded videos</strong>
-* Support variable playback <strong>speed</strong>, setup <strong>audio track</strong>, <strong>subtitle track</strong>, etc
-* <strong>Double-finger</strong> gesture to <strong>rotate and zoom</strong> video, <strong>long press</strong> to speed up playback
-* <strong>Swipe</strong> on the video to <strong>control volume</strong>, <strong>brightness</strong>, and <strong>playback position</strong>
-* <strong>Searching</strong> existing <strong>RSS subscription content</strong>
-* <strong>Play other videos on the phone</strong>
-* Support <strong>custom MPV player</strong>
-* Support <strong>import and export</strong> subscriptions via <strong>OPML</strong>
-* Support <strong>dark mode</strong>
-* ......
+PodAura brings podcasts, RSS reading, and audio/video playback together.
+
+<b>Features</b>
+<ul>
+<li>Organize RSS feeds into groups, search articles, and refresh automatically.</li>
+<li>Play podcast episodes and local audio or video files.</li>
+<li>Download episodes automatically or in bulk for offline playback.</li>
+<li>Keep listening with background playback, a mini player, and Picture-in-Picture.</li>
+<li>Adjust playback speed, choose audio and subtitle tracks, and set a sleep timer.</li>
+<li>Create playlists and reorder your playback queue.</li>
+<li>Browse and play episodes by date in the calendar.</li>
+<li>Read full articles and translate them using your own translation API key.</li>
+<li>Manage read status, favorites, and playlists in bulk.</li>
+<li>Customize notifications by feed and group.</li>
+<li>Import and export subscriptions with OPML.</li>
+</ul>

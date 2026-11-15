@@ -1,17 +1,16 @@
-PodAura，一個集 RSS 訂閱與更新、媒體下載與播放為一體的播客應用程式。
-使用 MVI 架構，完全採用 Material You 設計風格。使用 Jetpack Compose 開發。  
-<h3>💡 主要功能</h3>
-* <strong>訂閱</strong> RSS、<strong>更新</strong> RSS、<strong>閱讀</strong> RSS
-* <strong>自動更新 RSS 訂閱</strong>
-* <strong>下載</strong> RSS 文章中的附件（enclosure 標籤）
-* <strong>自動播客媒體下載</strong>
-* <strong>播放</strong>已下載的<strong>影片檔案</strong>
-* <strong>更改播放速度</strong>，設定<strong>音軌</strong>、<strong>字幕軌</strong>等
-* <strong>雙指旋轉縮放影片畫面</strong>、<strong>長按</strong>影片<strong>倍速播放</strong>
-* <strong>滑動</strong>調整<strong>音量</strong>、<strong>螢幕亮度和播放位置</strong>
-* 支援<strong>搜尋已獲取的 RSS 訂閱或文章</strong>
-* <strong>播放</strong>手機中的<strong>其他影片</strong>
-* 支援<strong>自訂 MPV</strong> 播放器
-* 支援透過 <strong>OPML 匯入和匯出</strong>訂閱
-* 支援<strong>深色模式</strong>
-* ......
+PodAura，整合 Podcast 收聽、RSS 閱讀和影音播放。
+
+<b>主要功能</b>
+<ul>
+<li>訂閱 RSS，分組管理、搜尋文章並自動更新。</li>
+<li>播放 Podcast 節目和本機影音檔案。</li>
+<li>自動或批次下載節目，隨時離線播放。</li>
+<li>支援背景播放、迷你播放器和子母畫面。</li>
+<li>調整播放速度、選擇音軌和字幕，設定睡眠計時器。</li>
+<li>建立播放清單，自由調整播放佇列順序。</li>
+<li>透過日曆按日期瀏覽和播放節目。</li>
+<li>閱讀完整文章，使用自行提供的翻譯服務 API key 翻譯內容。</li>
+<li>批次管理已讀狀態、收藏和播放清單。</li>
+<li>依訂閱和群組自訂更新通知。</li>
+<li>透過 OPML 匯入和匯出訂閱。</li>
+</ul>

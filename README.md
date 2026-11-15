@@ -57,22 +57,18 @@
 
 ## 💡 Features
 
-1. **Subscribe to RSS**, Update RSS, **Read** RSS
-2. **Automatically update RSS** subscriptions
-3. **Download** enclosures (enclosure tags) in RSS articles
-4. **Automatically download** podcast media
-5. **Play media enclosures or downloaded videos**
-6. Support variable playback **speed**, setup **audio track**, **subtitle track**, etc
-7. **Double-finger** gesture to **rotate and zoom** video, **long press** to speed up playback
-8. **Swipe** on the video to **control volume**, **brightness**, and **playback position**
-9. **Searching** existing **RSS subscription content**
-10. **Play other videos on the phone**
-11. Support **custom MPV player**
-12. Support **custom playlists**
-13. Support Android **Picture in Picture**
-14. Support **import and export** subscriptions via **OPML**
-15. Support **dark mode**
-16. ......
+- **Cross-platform:** Available on Android, iOS, Windows, and macOS.
+- **RSS subscriptions:** Organize feeds into groups, search articles, and refresh automatically.
+- **Audio and video:** Play podcast episodes and local media files.
+- **Offline playback:** Download episodes in bulk, with automatic downloads on Android.
+- **Playback controls:** Adjust speed, choose audio and subtitle tracks, and set a sleep timer.
+- **Keep listening:** Background playback, a mini player, and Picture-in-Picture where supported.
+- **Playlists:** Create playlists and reorder your playback queue.
+- **Calendar:** Browse and play episodes by date.
+- **Article reading:** Read full articles and translate them using your own translation API key.
+- **Bulk actions:** Manage read status, favorites, downloads, and playlists together.
+- **Notifications:** Customize alerts by feed and group.
+- **OPML:** Import and export your subscriptions.
 
 ## 🌏 Translation
 

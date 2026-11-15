@@ -1,1 +1,1 @@
-All-in-one Android podcast app for RSS, media dl & play
+Podcasts and RSS: listen, read, and download for offline playback
