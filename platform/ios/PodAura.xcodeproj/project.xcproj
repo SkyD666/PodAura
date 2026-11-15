@@ -50,6 +50,8 @@
           "shell": "/bin/sh",
           "script": [
             "set -e",
+            ": \"${MARKETING_VERSION:?Build with the PodAura scheme to load versionForIos}\"",
+            "test \"$MARKETING_VERSION\" = \"$(sed -n 's/^versionForIos=//p' \"$SRCROOT/../../gradle.properties\" | tr -d '\\r')\"",
             "export PATH=\"/opt/homebrew/bin:/opt/homebrew/sbin:$PATH\"",
             "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then",
             "  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"",

@@ -34,7 +34,7 @@ jobs:
                              Android_x86_64_GitHub,
                              Android_x86_GitHub,
                              Android_universal_GitHub,
-                             Android_universal_mapping ]
+                             Android_mapping ]
           - os: macos-26
             target-platform: JVM macOS arm64
             build-command: |
@@ -97,8 +97,8 @@ jobs:
       - name: Read Artifact Version
         shell: bash
         env:
-          VERSION_FILE: ${{ matrix.target-platform == 'iOS arm64' && 'platform/ios/Configuration/Config.xcconfig' || 'gradle.properties' }}
-          VERSION_PROPERTY: ${{ matrix.target-platform == 'Android' && 'versionName' || matrix.target-platform == 'iOS arm64' && 'MARKETING_VERSION' || 'versionForDesktop' }}
+          VERSION_FILE: gradle.properties
+          VERSION_PROPERTY: ${{ matrix.target-platform == 'Android' && 'versionName' || matrix.target-platform == 'iOS arm64' && 'versionForIos' || 'versionForDesktop' }}
         run: |
           ARTIFACT_VERSION=$(sed -n "s/^${VERSION_PROPERTY}=//p" "$VERSION_FILE" | tr -d '\r')
           test -n "$ARTIFACT_VERSION"
