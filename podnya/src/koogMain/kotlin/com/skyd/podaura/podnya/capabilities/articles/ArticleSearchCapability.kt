@@ -17,6 +17,7 @@ import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.runtime.CapabilityResult
 import com.skyd.podaura.podnya.runtime.KoogCapability
 import com.skyd.podaura.podnya.runtime.podnyaJson
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -30,21 +31,23 @@ internal class ArticleSearchCapability private constructor(
     private val source: LocalArticleSearchRepository,
     private val tool: SearchArticlesTool,
 ) : KoogCapability {
+    private val logger = KotlinLogging.logger("com.skyd.podaura.podnya.ArticleSearchCapability")
     override val id = ArticleSearchContent.CAPABILITY_ID
     override val tools = listOf(tool)
     override val failure get() = tool.localFailure
     override val selectionSchema = JsonStructure.create<ArticleSelection>().schema.schema
     override val instructions =
-        """Use search_articles to find or recheck local articles and episodes.
+        """Use search_articles to find or recheck local articles and podcast episodes.
+For podcasts about a topic, search episode content using topic keywords.
 Translate requested dates using today's date and time zone. Article dateMillis is Unix milliseconds (UTC).
 Preserve the first query's time/read/favorite/within/exclude conditions when trying synonyms.
 Use provided knownIds for history references; search within those IDs again before recommending them.
 Snippets are partial. Do not claim complete reading or external fact-checking. The app enforces scope."""
     override val selectionInstructions =
         """Select and rank local articles already retrieved for this turn.
-Match the user's stated breadth: "related to X" does not require an article or episode dedicated entirely to X.
-A roundup with a relevant discussion or song segment qualifies when the supplied title or snippet supports that connection; explain its limited scope in reason instead of rejecting it for not being a special feature.
-Require a dedicated topic only when explicitly requested. Incidental mentions, ambiguous keyword hits and unsupported connections are not sufficient.
+Match the requested scope: relevant discussions or song segments qualify; require a dedicated topic only if asked.
+For "contains X" or "mentions X", an explicit subject mention in either the title or snippet is enough.
+Return podcast episodes as articles. Explain limited coverage in reason; reject ambiguous hits and unsupported connections.
 Select only candidate IDs; the app rechecks scope and hard filters. No further model-side verification is needed.
 Return articles with articleId and a nonblank reason of at most 120 characters. At most 20 articles.
 NO_MATCH needs a completed search. It differs from a failed search or unavailable articles."""
@@ -85,6 +88,10 @@ NO_MATCH needs a completed search. It differs from a failed search or unavailabl
             tool.evidence,
             tool.successfulSearches
         )
+        logger.debug {
+            "Article selection: searches=${tool.successfulSearches}, candidates=${tool.evidence.size}, " +
+                    "selected=${selection.articles.size}, validated=${answer.articles.size}"
+        }
         val content = ArticleSearchContent.recommendations(answer)
         val reply = buildJsonObject {
             put("successfulSearches", tool.successfulSearches)

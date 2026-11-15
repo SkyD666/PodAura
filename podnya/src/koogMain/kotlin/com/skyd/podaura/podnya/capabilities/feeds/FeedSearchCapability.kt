@@ -32,6 +32,7 @@ internal class FeedSearchCapability private constructor(private val source: Loca
     override val selectionSchema = JsonStructure.create<FeedSelection>().schema.schema
     override val instructions =
         """Use search_feeds for subscriptions/podcasts already saved in the app.
+Use search_articles for episode topics; show metadata cannot rule out matching episodes.
 Search titles, nicknames and descriptions, preserving muted filters when trying synonyms.
 Empty keywords lists saved subscriptions. This capability cannot discover online feeds or add subscriptions.
 Feed IDs are temporary per-turn references, not article IDs. Search again before recommending history items.

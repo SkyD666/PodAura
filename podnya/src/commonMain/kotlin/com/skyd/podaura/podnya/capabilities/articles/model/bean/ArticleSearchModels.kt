@@ -22,7 +22,6 @@ data class ArticleSearchQuery(
     /** Null adds no ID filter; an empty list means no articles. */
     val withinArticleIds: List<String>? = null,
     val excludeArticleIds: List<String> = emptyList(),
-    val limit: Int = 20,
 )
 
 /** Articles found by one search; hasMore means more matches exist beyond this page. */

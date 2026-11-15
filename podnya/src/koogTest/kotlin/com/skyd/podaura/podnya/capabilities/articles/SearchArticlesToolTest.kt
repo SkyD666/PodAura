@@ -3,6 +3,7 @@ package com.skyd.podaura.podnya.capabilities.articles
 import com.skyd.podaura.podnya.runtime.podnyaJson
 import ai.koog.prompt.message.MessagePart
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchQuery
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
 import com.skyd.podaura.api.model.bean.ArticleSearchScope
 import com.skyd.podaura.api.model.repository.IArticleRepository
 import com.skyd.podaura.api.model.bean.ArticleRecord
@@ -17,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SearchArticlesToolTest {
     @Test
@@ -53,7 +55,7 @@ class SearchArticlesToolTest {
         ).forEach { assertFailsWith<IllegalArgumentException> { tool.resolve(it) } }
         val second = first.copy(keywords = listOf("Multiplatform"), withinArticleIds = listOf("a"))
         tool.execute(second)
-        assertEquals(catalog.queries.last().copy(limit = second.limit), tool.evidence.getValue("a").query)
+        assertEquals(catalog.queries.last().copy(limit = ArticleSearchLimits.SEARCH_RESULTS), tool.evidence.getValue("a").query)
         assertEquals("Multiplatform", tool.records.last().query.keywords.single())
         assertEquals(listOf("a"), tool.records.last().resultIds)
         assertEquals(scope, catalog.scope)
@@ -67,10 +69,44 @@ class SearchArticlesToolTest {
         listOf(
             ArticleSearchQuery(keywords = List(7) { "term" }),
             ArticleSearchQuery(keywords = listOf("x".repeat(81))),
-            ArticleSearchQuery(limit = 0),
             ArticleSearchQuery(publishedFrom = "2026-01-02", publishedBefore = "2026-01-02"),
             ArticleSearchQuery(excludeArticleIds = List(61) { "a" }),
         ).forEach { assertFailsWith<IllegalArgumentException> { tool.resolve(it) } }
+    }
+
+    @Test
+    fun searchKeepsLaterCandidatesAndSupportsAnotherPage() = runTest {
+        val catalog = object : IArticleRepository {
+            override suspend fun query(scope: ArticleSearchScope, query: ArticleQuery): List<ArticleRecord> {
+                assertEquals(ArticleSearchLimits.SEARCH_RESULTS + 1, query.limit)
+                return (1..25).map { index ->
+                    ArticleRecord(
+                        articleId = "a$index",
+                        title = if (index == 18) "Beyond retrospective" else "Episode $index",
+                        description = "Beyond",
+                    )
+                }.filter { it.articleId !in query.excludeArticleIds }.take(query.limit)
+            }
+        }
+        val tool = SearchArticlesTool(
+            source = LocalArticleSearchRepository(catalog),
+            scope = ArticleSearchScope.All,
+            timeZone = TimeZone.UTC,
+            historyIds = emptySet(),
+        )
+        val first = tool.execute(ArticleSearchQuery(keywords = listOf("Beyond"))).page!!
+        assertEquals((1..20).map { "a$it" }, first.items.map { it.articleId })
+        assertTrue(first.hasMore)
+        assertEquals("Beyond retrospective", tool.evidence.getValue("a18").hit.title)
+        val next = tool.execute(
+            ArticleSearchQuery(
+                keywords = listOf("Beyond"),
+                excludeArticleIds = first.items.map { it.articleId },
+            )
+        ).page!!
+        assertEquals((21..25).map { "a$it" }, next.items.map { it.articleId })
+        assertEquals(25, tool.evidence.size)
+        assertEquals(false, next.hasMore)
     }
 }
 
