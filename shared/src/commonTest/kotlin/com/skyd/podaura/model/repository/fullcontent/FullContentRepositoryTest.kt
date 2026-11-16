@@ -245,6 +245,70 @@ class FullContentRepositoryTest {
     }
 
     @Test
+    fun fetchesDomainsResolvedToProxyFakeIpAddresses() = runTest {
+        for (secondOctet in 18..19) {
+            val client = HttpClient(MockEngine {
+                respond(
+                    content = "<article><p>Full article reached through the system proxy.</p></article>",
+                    headers = headersOf(HttpHeaders.ContentType, "text/html"),
+                )
+            })
+            try {
+                val result = repository(
+                    client = client,
+                    resolver = HostAddressResolver {
+                        listOf(byteArrayOf(198.toByte(), secondOctet.toByte(), 0, 22))
+                    },
+                ).fetch("https://example.com/article")
+
+                assertContains(result.html, "Full article reached through the system proxy")
+            } finally {
+                client.close()
+            }
+        }
+    }
+
+    @Test
+    fun rejectsDirectProxyRangeAddressesBeforeSendingRequest() = runTest {
+        val client = HttpClient(MockEngine { error("Literal proxy-range IP must not be requested") })
+        try {
+            for (secondOctet in 18..19) {
+                val failure = runCatching {
+                    repository(
+                        client = client,
+                        resolver = HostAddressResolver {
+                            listOf(byteArrayOf(198.toByte(), secondOctet.toByte(), 0, 22))
+                        },
+                    ).fetch("http://198.$secondOctet.0.22/article")
+                }.exceptionOrNull()
+
+                assertIs<FullContentException>(failure)
+            }
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
+    fun rejectsProxyDnsResultsContainingPrivateAddresses() = runTest {
+        val client = HttpClient(MockEngine { error("Mixed private DNS target must not be requested") })
+        try {
+            val failure = runCatching {
+                repository(
+                    client = client,
+                    resolver = HostAddressResolver {
+                        listOf(byteArrayOf(198.toByte(), 18, 0, 22), byteArrayOf(192.toByte(), 168.toByte(), 1, 1))
+                    },
+                ).fetch("https://example.com/article")
+            }.exceptionOrNull()
+
+            assertIs<FullContentException>(failure)
+        } finally {
+            client.close()
+        }
+    }
+
+    @Test
     fun rejectsPrivateAddressBeforeSendingRequest() = runTest {
         var requestCount = 0
         val client = HttpClient(MockEngine {

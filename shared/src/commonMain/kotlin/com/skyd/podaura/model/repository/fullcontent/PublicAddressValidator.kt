@@ -1,6 +1,7 @@
 package com.skyd.podaura.model.repository.fullcontent
 
 import io.ktor.http.Url
+import io.ktor.http.hostIsIp
 
 internal fun interface HostAddressResolver {
     suspend fun resolve(host: String): List<ByteArray>
@@ -25,12 +26,21 @@ internal class PublicAddressValidator(
         val addresses = runCatching { resolver.resolve(parsed.host) }.getOrElse {
             throw FullContentException("Unable to resolve article host", it)
         }
-        if (addresses.isEmpty() || addresses.any { !it.isPublicAddress() }) {
+        // TUN proxies can resolve public domains to synthetic 198.18.0.0/15 addresses.
+        // Let the system route those domain requests, but still reject literal IP targets.
+        val allowProxyDns = !hostIsIp(parsed.host) && ':' !in parsed.host
+        if (addresses.isEmpty() || addresses.any {
+                !it.isPublicAddress() && !(allowProxyDns && it.isProxyDnsAddress())
+            }
+        ) {
             throw FullContentException("Article URL resolves to a non-public address")
         }
         return parsed
     }
 }
+
+private fun ByteArray.isProxyDnsAddress(): Boolean =
+    size == 4 && this[0] == 198.toByte() && this[1].toInt() in 18..19
 
 private fun ByteArray.isPublicAddress(): Boolean = when (size) {
     4 -> isPublicIpv4()
@@ -66,7 +76,7 @@ private fun ByteArray.isPublicIpv6(): Boolean {
     if (first == 0xFF) return false
 
     val ipv4Mapped = take(10).all { it == 0.toByte() } &&
-        this[10] == 0xFF.toByte() && this[11] == 0xFF.toByte()
+            this[10] == 0xFF.toByte() && this[11] == 0xFF.toByte()
     if (ipv4Mapped) return copyOfRange(12, 16).isPublicIpv4()
 
     // Unspecified, IPv4-compatible, discard-only and documentation prefixes are not public targets.
