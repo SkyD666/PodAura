@@ -573,11 +573,12 @@ class PodnyaScreenTest {
                     fixture.assistant.nextChunk.trySend(Unit)
                     waitUntil(timeoutMillis = 5_000) {
                         fixture.repository.state.value.selected.turns.lastOrNull()?.reply?.length ==
-                            "请进一步说明希望检索的内容。\n".repeat(15).length * (chunk + 1)
+                            LONG_REPLY_CHUNK.length * (chunk + 1)
                     }
                     waitForIdle()
                     onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
                 }
+                onNodeWithTag("podnya_messages").performTouchInput { swipeDown() }
                 onNodeWithTag("podnya_messages").performScrollToIndex(0)
                 val questionBounds = onNodeWithText(QUESTION).getUnclippedBoundsInRoot()
                 onNodeWithTag("podnya_history_open").performClick()
@@ -588,6 +589,39 @@ class PodnyaScreenTest {
                 waitForIdle()
                 onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
                 capture("phone-long-reply")
+            }
+        }
+
+    @Test
+    fun scrollingUpDuringMarkdownStreamingKeepsTheReadingPosition() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            Fixture(mode = Mode.LONG_REPLY).use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                onNodeWithTag("podnya_composer").performTextReplacement("**用户消息**")
+                onNodeWithTag("podnya_send").performClick()
+                repeat(2) { chunk ->
+                    fixture.assistant.nextChunk.trySend(Unit)
+                    waitUntil(timeoutMillis = 5_000) {
+                        onAllNodes(hasText("检索说明")).fetchSemanticsNodes().size == chunk + 1
+                    }
+                    waitForIdle()
+                    onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
+                }
+                onNodeWithTag("podnya_messages").performTouchInput { swipeDown() }
+                onNodeWithTag("podnya_messages").performScrollToIndex(0)
+                waitUntil { onAllNodes(hasText("用户消息")).fetchSemanticsNodes().size == 1 }
+                val position = onNodeWithText("用户消息").getUnclippedBoundsInRoot()
+                fixture.assistant.nextChunk.trySend(Unit)
+                waitUntil(timeoutMillis = 5_000) {
+                    onAllNodes(hasText("检索说明")).fetchSemanticsNodes().size == 3
+                }
+                assertEquals(position, onNodeWithText("用户消息").getUnclippedBoundsInRoot())
+                assertEquals("**用户消息**", fixture.repository.state.value.selected.turns.single().question)
+                onNodeWithText(fixture.latestLabel).performClick()
+                waitForIdle()
+                onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
+                capture("phone-markdown-follow-latest")
             }
         }
 
@@ -1281,7 +1315,7 @@ class PodnyaScreenTest {
                 ))))
                 repeat(3) {
                     nextChunk.receive()
-                    emit(AssistantRunEvent.ReplyDelta("请进一步说明希望检索的内容。\n".repeat(15)))
+                    emit(AssistantRunEvent.ReplyDelta(LONG_REPLY_CHUNK))
                 }
                 emit(AssistantRunEvent.Completed)
                 return@flow
@@ -1317,6 +1351,7 @@ class PodnyaScreenTest {
         const val FIRST_TITLE = "罗大佑：用一首歌记住一座城"
         const val ARTICLE_DATE = 1_700_000_000_000L
         const val FORMATTED_DATE = "Formatted date"
+        val LONG_REPLY_CHUNK = "### 检索说明\n\n" + "- 请进一步说明希望检索的 **内容**。\n".repeat(15) + "\n"
         const val FIRST_DELTA = "First part. "
         const val BACKGROUND_DELTA = "Continued in background. "
         const val RESULT_REPLY = "找到两篇与罗大佑相关的内容。一篇聊创作与城市记忆，另一篇从专辑出发，你可以挑感兴趣的继续读。"

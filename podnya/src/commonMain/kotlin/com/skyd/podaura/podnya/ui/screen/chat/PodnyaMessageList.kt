@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -33,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -40,6 +40,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -51,6 +55,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
+import com.skyd.podaura.podnya.ui.PodnyaMarkdown
 import com.skyd.podaura.podnya.ui.PodnyaWelcome
 import com.skyd.podaura.podnya.ui.podnyaContent
 import com.skyd.podaura.podnya.ui.podnyaContentKeys
@@ -114,6 +119,17 @@ internal fun PodnyaMessageList(
     ) { mutableStateOf(false) }
     val currentState by rememberUpdatedState(state)
     val currentFollow by rememberUpdatedState(followLatest)
+    val currentOnFollowLatest by rememberUpdatedState(onFollowLatest)
+    val userScroll = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                if (source == NestedScrollSource.UserInput && available.y > 0f) {
+                    currentOnFollowLatest(false)
+                }
+                return Offset.Zero
+            }
+        }
+    }
     LaunchedEffect(state.id, uiState.conversations.windowRevision) {
         try {
             if (keys.isNotEmpty()) {
@@ -148,7 +164,7 @@ internal fun PodnyaMessageList(
             val turnId = key.substringBefore('-').toLongOrNull()
                 ?: currentState.turns.lastOrNull()?.id
             val end = !listState.canScrollForward && !currentState.hasAfter
-            if (scrolling) onFollowLatest(end)
+            if (scrolling && end) onFollowLatest(true)
             dispatch(
                 PodnyaIntent.UpdatePosition(
                     conversationId = currentState.id,
@@ -156,7 +172,7 @@ internal fun PodnyaMessageList(
                         turnId = turnId,
                         itemKey = key,
                         offset = offset,
-                        followLatest = if (scrolling) end else currentFollow
+                        followLatest = currentFollow
                     ),
                 )
             )
@@ -185,8 +201,20 @@ internal fun PodnyaMessageList(
     }
     LaunchedEffect(state.id, state.turns, restored, followLatest) {
         if (restored && followLatest && !state.hasAfter && keys.isNotEmpty()) {
-            snapshotFlow { listState.layoutInfo.totalItemsCount }.first { it == keys.size }
-            listState.scrollToItem(keys.lastIndex)
+            // Parsing finishes after the raw-text update. Observe measured content as well so
+            // the tail stays visible when an asynchronously rendered block changes height.
+            snapshotFlow {
+                val layout = listState.layoutInfo
+                Triple(
+                    layout.totalItemsCount,
+                    layout.visibleItemsInfo.map { Triple(it.key, it.offset, it.size) },
+                    listState.isScrollInProgress,
+                )
+            }.collect { (count, _, scrolling) ->
+                if (currentFollow && count == keys.size && !scrolling && listState.canScrollForward) {
+                    listState.scrollToItem(keys.lastIndex)
+                }
+            }
         }
     }
     Box(
@@ -206,102 +234,103 @@ internal fun PodnyaMessageList(
                 }
             },
     ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .widthIn(max = 840.dp)
-                .fillMaxSize()
-                .align(Alignment.TopCenter)
-                .testTag("podnya_messages"),
-            contentPadding = PaddingValues(
-                horizontal = 20.dp,
-                vertical = 20.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (!uiState.available) {
-                item {
-                    Text(podnyaErrorText(error = AssistantError.UNAVAILABLE))
-                    TextButton(onClick = { dispatch(PodnyaIntent.OpenSearch) }) {
-                        Text(stringResource(Res.string.podnya_open_search))
+        key(state.id) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .widthIn(max = 840.dp)
+                    .fillMaxSize()
+                    .nestedScroll(userScroll)
+                    .align(Alignment.TopCenter)
+                    .testTag("podnya_messages"),
+                contentPadding = PaddingValues(
+                    horizontal = 20.dp,
+                    vertical = 20.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                if (!uiState.available) {
+                    item {
+                        Text(podnyaErrorText(error = AssistantError.UNAVAILABLE))
+                        TextButton(onClick = { dispatch(PodnyaIntent.OpenSearch) }) {
+                            Text(stringResource(Res.string.podnya_open_search))
+                        }
                     }
-                }
-            } else {
-                if (state.turns.isEmpty()) {
-                    item { PodnyaWelcome() }
-                }
-                state.turns.forEach { turn ->
-                    item(key = "${turn.id}-question") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 12.dp, bottom = 8.dp),
-                            contentAlignment = Alignment.CenterEnd
-                        ) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                shape = MaterialTheme.shapes.large,
-                                modifier = Modifier.widthIn(max = 620.dp),
+                } else {
+                    if (state.turns.isEmpty()) {
+                        item { PodnyaWelcome() }
+                    }
+                    state.turns.forEach { turn ->
+                        item(key = "${turn.id}-question") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp, bottom = 8.dp),
+                                contentAlignment = Alignment.CenterEnd
                             ) {
-                                SelectionContainer {
-                                    Text(
+                                Surface(
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    shape = MaterialTheme.shapes.large,
+                                    modifier = Modifier.widthIn(max = 620.dp),
+                                ) {
+                                    PodnyaMarkdown(
                                         text = turn.question,
                                         modifier = Modifier.padding(
                                             horizontal = 18.dp,
-                                            vertical = 12.dp
+                                            vertical = 12.dp,
                                         ),
-                                        style = MaterialTheme.typography.bodyLarge
                                     )
                                 }
                             }
                         }
-                    }
-                    item(key = "${turn.id}-reply") { AssistantReply(turn) }
-                    turn.content?.let { turnContent ->
-                        podnyaContent(
-                            turn.id, turnContent,
-                            showFallbackText = turn.reply.isEmpty() && turn.status != AssistantTurnStatus.RUNNING,
-                            formatDate = formatDate,
-                            onAction = {
-                                dispatch(PodnyaIntent.PerformAction(state.id, it))
-                            }
-                        )
-                    }
-                    if (turn.error != null || turn.status in setOf(
-                            AssistantTurnStatus.STOPPED,
-                            AssistantTurnStatus.INTERRUPTED
-                        )
-                    ) {
-                        item(key = "${turn.id}-status") {
-                            AssistantTurnNotice(
-                                turn = turn,
-                                canRetry = turn.id == state.lastTurnId && !uiState.running,
-                                ready = ready,
-                                onRetry = {
-                                    dispatch(
-                                        PodnyaIntent.Retry(
-                                            conversationId = state.id,
-                                            turnId = turn.id,
-                                            editorId = state.editorId,
-                                            revision = state.draftRevision,
-                                            configId = settings?.configId,
-                                            configRevision = settings?.revision ?: 0
-                                        )
-                                    )
-                                },
+                        item(key = "${turn.id}-reply") { AssistantReply(turn) }
+                        turn.content?.let { turnContent ->
+                            podnyaContent(
+                                turnId = turn.id,
+                                content = turnContent,
+                                showFallbackText = turn.reply.isEmpty() && turn.status != AssistantTurnStatus.RUNNING,
+                                formatDate = formatDate,
+                                onAction = {
+                                    dispatch(PodnyaIntent.PerformAction(state.id, it))
+                                }
                             )
                         }
+                        if (turn.error != null || turn.status in setOf(
+                                AssistantTurnStatus.STOPPED,
+                                AssistantTurnStatus.INTERRUPTED
+                            )
+                        ) {
+                            item(key = "${turn.id}-status") {
+                                AssistantTurnNotice(
+                                    turn = turn,
+                                    canRetry = turn.id == state.lastTurnId && !uiState.running,
+                                    ready = ready,
+                                    onRetry = {
+                                        dispatch(
+                                            PodnyaIntent.Retry(
+                                                conversationId = state.id,
+                                                turnId = turn.id,
+                                                editorId = state.editorId,
+                                                revision = state.draftRevision,
+                                                configId = settings?.configId,
+                                                configRevision = settings?.revision ?: 0
+                                            )
+                                        )
+                                    },
+                                )
+                            }
+                        }
                     }
-                }
-                // A separate tail keeps oversized streaming replies scrollable to their end.
-                if (state.turns.isNotEmpty()) {
-                    item(key = "conversation-end") {
-                        Spacer(
-                            modifier = Modifier
-                                .size(1.dp)
-                                .testTag("podnya_conversation_end")
-                        )
+                    // A separate tail keeps oversized streaming replies scrollable to their end.
+                    if (state.turns.isNotEmpty()) {
+                        item(key = "conversation-end") {
+                            Spacer(
+                                modifier = Modifier
+                                    .size(1.dp)
+                                    .testTag("podnya_conversation_end")
+                            )
+                        }
                     }
                 }
             }
@@ -384,9 +413,7 @@ private fun AssistantReply(turn: AssistantSessionTurn) {
             }
         }
         if (turn.reply.isNotEmpty()) {
-            SelectionContainer {
-                Text(text = turn.reply, style = MaterialTheme.typography.bodyLarge)
-            }
+            PodnyaMarkdown(text = turn.reply)
         }
     }
 }

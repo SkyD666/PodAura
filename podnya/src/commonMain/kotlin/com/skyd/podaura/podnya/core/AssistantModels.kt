@@ -78,7 +78,12 @@ data class AssistantConnectionResult(val success: Boolean, val error: AssistantF
 
 object AssistantLimits {
     const val INPUT_CHARS = 2_000
-    const val REPLY_CHARS = 800
+    const val REPLY_CHARS = 8_000
+    const val HISTORY_REPLY_CHARS = 800
+
+    // Independent provider token budget, with room for non-ASCII text and structured outputs.
+    // Tokens are not characters; provider truncation must still fail protocol validation.
+    const val OUTPUT_TOKENS = 16_384
     const val HISTORY_TURNS = 6
     const val TOOL_CALLS = 3
     const val RESULT_ITEMS = 20

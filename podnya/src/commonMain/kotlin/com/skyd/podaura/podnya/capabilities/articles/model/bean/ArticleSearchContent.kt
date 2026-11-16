@@ -16,9 +16,9 @@ class ArticleSearchContent private constructor(
 
     override fun historySnapshot(): AssistantHistorySnapshot? = answer?.let {
         AssistantHistorySnapshot(
-            CAPABILITY_ID,
-            it.text.ifBlank { it.kind.name },
-            Json.encodeToString(it.articles)
+            capabilityId = CAPABILITY_ID,
+            summary = it.text.ifBlank { it.kind.name }.take(AssistantLimits.HISTORY_REPLY_CHARS),
+            payload = Json.encodeToString(it.articles)
         )
     }
 

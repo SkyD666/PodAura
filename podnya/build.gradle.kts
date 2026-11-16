@@ -70,6 +70,7 @@ kotlin {
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
             implementation(libs.ksoup)
+            implementation(libs.markdown.m3)
             implementation(projects.fundation)
             implementation(projects.sharedApi)
         }

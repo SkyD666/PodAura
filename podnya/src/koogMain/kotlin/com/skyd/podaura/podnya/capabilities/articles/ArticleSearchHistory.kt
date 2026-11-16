@@ -27,7 +27,7 @@ internal fun articleSearchHistory(history: List<AssistantHistoryTurn>): List<Art
         remaining -= articles.size
         ArticleHistoryTurn(
             question = turn.question.take(AssistantLimits.INPUT_CHARS),
-            reply = turn.reply.take(AssistantLimits.REPLY_CHARS), articles = articles
+            reply = turn.reply.take(AssistantLimits.HISTORY_REPLY_CHARS), articles = articles
         )
     }.asReversed()
 }

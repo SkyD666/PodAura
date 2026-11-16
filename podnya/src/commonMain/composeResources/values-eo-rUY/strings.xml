@@ -129,4 +129,5 @@
     <string name="podnya_config_unknown_protocol">La API-tipo de ĉi tiu agordo ne estas subtenata. Ĝisdatigu la aplikaĵon aŭ forigu la agordon.</string>
     <string name="podnya_config_corrupt">Ne eblas interpreti la agordon. Reŝargu ĝin aŭ forigu ĝin kaj agordu denove.</string>
     <string name="podnya_config_storage">Ne eblis legi la agordon. Reŝargu por reprovi.</string>
+    <string name="podnya_copy_code">Kopii kodon</string>
 </resources>

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +28,7 @@ import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantProgress
 import com.skyd.podaura.podnya.ui.AssistantCapabilityUi
+import com.skyd.podaura.podnya.ui.PodnyaMarkdown
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_missing_articles
 import com.skyd.podnya.resources.podnya_no_matching_articles
@@ -53,8 +53,8 @@ fun LazyListScope.articleSearchContent(
     if (fallbackText.isNotEmpty() || answer?.kind == AssistantAnswerKind.NO_MATCH || answer?.resultsChanged == true) {
         item(key = "$turnId-article-summary") {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (fallbackText.isNotEmpty()) SelectionContainer {
-                    Text(fallbackText, style = MaterialTheme.typography.bodyLarge)
+                if (fallbackText.isNotEmpty()) {
+                    PodnyaMarkdown(text = fallbackText)
                 }
                 if (answer?.kind == AssistantAnswerKind.NO_MATCH) {
                     Text(

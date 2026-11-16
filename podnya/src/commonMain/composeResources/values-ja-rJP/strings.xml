@@ -129,4 +129,5 @@
     <string name="podnya_config_unknown_protocol">未対応の API の種類です。アプリを更新するか、設定を消去してください。</string>
     <string name="podnya_config_corrupt">設定を解析できません。再読み込みするか、消去して設定し直してください。</string>
     <string name="podnya_config_storage">設定を読み込めませんでした。再読み込みしてください。</string>
+    <string name="podnya_copy_code">コードをコピー</string>
 </resources>

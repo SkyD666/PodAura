@@ -18,6 +18,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.flow.toList
+import com.skyd.podaura.podnya.core.AssistantLimits
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantConnection
@@ -63,6 +66,14 @@ class PodnyaNativeProtocolTest {
                 val events = runtime.run(request = AssistantTurnRequest("Find something"), connection = script.connection).toList()
                 assertEquals(AssistantRunEvent.Completed, events.last())
                 assertEquals(3, script.requests.size)
+                script.requests.drop(1).forEach { request ->
+                    val tokens = if (script.protocol == AssistantProtocol.ANTHROPIC_MESSAGES) {
+                        request["max_tokens"]
+                    } else {
+                        request["generationConfig"]?.jsonObject?.get("maxOutputTokens")
+                    }
+                    assertEquals(AssistantLimits.OUTPUT_TOKENS, tokens?.jsonPrimitive?.int)
+                }
             } }.awaitAll()
         }
     }

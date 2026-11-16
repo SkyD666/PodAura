@@ -67,7 +67,14 @@ internal class BudgetedExecutor(private val delegate: PromptExecutor) : PromptEx
                     prompt = prompt,
                     model = model,
                     tools = tools
-                )
+                ).also { response ->
+                    // Structured parsing must not accept valid-looking JSON from a truncated response.
+                    if (response.finishReason in
+                        setOf("length", "content_filter", "max_tokens", "MAX_TOKENS")
+                    ) {
+                        throw AssistantException(AssistantError.INVALID_OUTPUT)
+                    }
+                }
             }
                 ?: throw AssistantException(AssistantError.TIMEOUT)
         } catch (cancelled: CancellationException) {

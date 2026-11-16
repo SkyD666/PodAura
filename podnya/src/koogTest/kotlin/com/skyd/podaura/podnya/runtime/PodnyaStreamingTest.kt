@@ -3,6 +3,7 @@ package com.skyd.podaura.podnya.runtime
 import com.skyd.podaura.podnya.core.AssistantFailure
 import ai.koog.prompt.streaming.StreamFrame
 import com.skyd.podaura.podnya.core.AssistantError
+import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.core.AssistantException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.awaitCancellation
@@ -48,9 +49,24 @@ class PodnyaStreamingTest {
     fun overlongTextRetainsTheBoundedPrefixAndSignalsInterruption() = runTest {
         var text = ""
         assertFailsWith<AssistantException> {
-            collectReply(flowOf(StreamFrame.TextDelta("x".repeat(900)))) { text += it }
+            collectReply(flowOf(StreamFrame.TextDelta("x".repeat(AssistantLimits.REPLY_CHARS + 1)))) { text += it }
         }
-        assertEquals(800, text.length)
+        assertEquals(8_000, text.length)
+    }
+
+    @Test
+    fun exactMarkdownBoundaryCompletesAndMarkersCountTowardsLimit() = runTest {
+        val markdown = "**" + "喵".repeat(7_996) + "**"
+        var received = ""
+        collectReply(
+            flowOf(
+                StreamFrame.TextDelta(markdown),
+                StreamFrame.TextComplete(markdown),
+                StreamFrame.End("stop"),
+            )
+        ) { received += it }
+        assertEquals(markdown, received)
+        assertEquals(8_000, received.length)
     }
 
     @Test

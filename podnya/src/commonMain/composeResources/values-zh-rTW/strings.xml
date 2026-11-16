@@ -129,4 +129,5 @@
     <string name="podnya_config_unknown_protocol">此設定使用尚不支援的介面類型。請更新應用程式，或清除設定。</string>
     <string name="podnya_config_corrupt">無法解析此設定。請重新讀取，或清除後重新設定。</string>
     <string name="podnya_config_storage">無法讀取設定，請重新讀取以重試。</string>
+    <string name="podnya_copy_code">複製程式碼</string>
 </resources>

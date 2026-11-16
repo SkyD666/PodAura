@@ -3,6 +3,7 @@ package com.skyd.podaura.podnya.model.bean
 import com.skyd.podaura.podnya.core.AssistantAnswerKind
 import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantHistorySnapshot
+import com.skyd.podaura.podnya.core.AssistantLimits
 import kotlinx.serialization.json.Json
 
 /** One reply can contain outputs from several capabilities, or plain clarification text. */
@@ -15,9 +16,9 @@ class AssistantReplyContent(
         parts.sumOf { it.retainedBytes } + text.encodeToByteArray().size + 128
 
     override fun historySnapshot() = AssistantHistorySnapshot(
-        "assistant",
-        text.ifBlank { kind.name },
-        Json.encodeToString(parts.mapNotNull { it.historySnapshot() })
+        capabilityId = "assistant",
+        summary = text.ifBlank { kind.name }.take(AssistantLimits.HISTORY_REPLY_CHARS),
+        payload = Json.encodeToString(parts.mapNotNull { it.historySnapshot() })
     )
 }
 

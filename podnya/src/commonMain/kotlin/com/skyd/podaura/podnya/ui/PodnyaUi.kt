@@ -1,9 +1,7 @@
 package com.skyd.podaura.podnya.ui
 
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantContent
@@ -45,8 +43,10 @@ fun LazyListScope.podnyaContent(
     keyPrefix: String = turnId.toString(),
 ) {
     if (content is AssistantReplyContent) {
-        if (showFallbackText && content.text.isNotBlank()) item(key = "$keyPrefix-reply-summary") {
-            SelectionContainer { Text(content.text, style = MaterialTheme.typography.bodyLarge) }
+        if (showFallbackText && content.text.isNotBlank()) {
+            item(key = "$keyPrefix-reply-summary") {
+                PodnyaMarkdown(text = content.text)
+            }
         }
         content.parts.forEachIndexed { index, part ->
             podnyaContent(
@@ -70,14 +70,12 @@ fun LazyListScope.podnyaContent(
             )
         } else {
             item(key = "$keyPrefix-unknown-content") {
-                SelectionContainer {
-                    Text(
-                        text = (content as? UnreadableContent)?.fallback?.ifBlank {
-                            stringResource(Res.string.podnya_content_unreadable)
-                        } ?: content.historySnapshot()?.summary.orEmpty(),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                PodnyaMarkdown(
+                    text = (content as? UnreadableContent)?.fallback?.ifBlank {
+                        stringResource(Res.string.podnya_content_unreadable)
+                    } ?: content.historySnapshot()?.summary.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

@@ -29,11 +29,17 @@ internal class ConversationGeneration {
                 turn.copy(content = event.content)
             }
 
-            is AssistantRunEvent.ReplyDelta -> turn.copy(
-                reply = (turn.reply + event.text.take(AssistantLimits.REPLY_CHARS))
-                    .take(AssistantLimits.REPLY_CHARS),
-                progress = AssistantPhase.STREAMING,
-            )
+            is AssistantRunEvent.ReplyDelta -> {
+                val remaining = (AssistantLimits.REPLY_CHARS - turn.reply.length).coerceAtLeast(0)
+                val overflow = event.text.length > remaining
+                if (overflow) valid = false
+                turn.copy(
+                    reply = turn.reply + event.text.take(remaining),
+                    status = if (overflow) AssistantTurnStatus.FAILED else turn.status,
+                    error = if (overflow) AssistantError.STREAM_INTERRUPTED else turn.error,
+                    progress = if (overflow) null else AssistantPhase.STREAMING,
+                )
+            }
 
             AssistantRunEvent.Completed -> turn.copy(
                 status = AssistantTurnStatus.COMPLETED,
@@ -66,13 +72,13 @@ internal class ConversationGeneration {
                     when {
                         snapshot != null -> AssistantHistoryTurn(
                             question = turn.question,
-                            reply = snapshot.summary,
+                            reply = snapshot.summary.take(AssistantLimits.HISTORY_REPLY_CHARS),
                             content = snapshot
                         )
 
                         turn.status == AssistantTurnStatus.COMPLETED -> AssistantHistoryTurn(
                             question = turn.question,
-                            reply = turn.reply
+                            reply = turn.reply.take(AssistantLimits.HISTORY_REPLY_CHARS)
                         )
 
                         else -> null
