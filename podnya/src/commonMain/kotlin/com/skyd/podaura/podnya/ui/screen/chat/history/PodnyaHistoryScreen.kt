@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -33,6 +35,7 @@ internal fun PodnyaHistoryScreen(
     onBack: () -> Unit,
     windowInsets: WindowInsets,
 ) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         isBackEnabled = true,
@@ -48,6 +51,7 @@ internal fun PodnyaHistoryScreen(
         topBar = {
             ComponeTopBar(
                 style = ComponeTopBarStyle.Small,
+                scrollBehavior = scrollBehavior,
                 title = { Text(stringResource(Res.string.podnya_history)) },
                 navigationIcon = {
                     Box(modifier = Modifier.testTag("podnya_history_back")) {
@@ -58,16 +62,18 @@ internal fun PodnyaHistoryScreen(
             )
         },
         contentWindowInsets = windowInsets,
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color.Transparent
     ) { innerPadding ->
         ConversationHistoryPane(
             state = conversations,
             dispatch = dispatch,
             modifier = Modifier
                 .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding),
             showTitle = false,
+            containerColor = Color.Transparent,
             onSelected = onBack
         )
     }

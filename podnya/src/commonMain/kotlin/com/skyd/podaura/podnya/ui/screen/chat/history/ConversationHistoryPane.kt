@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.skyd.podaura.podnya.core.AssistantLimits
@@ -57,6 +58,7 @@ internal fun ConversationHistoryPane(
     state: AssistantConversationsState,
     dispatch: (PodnyaIntent) -> Unit,
     modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     showTitle: Boolean = true,
     onSelected: () -> Unit = {},
 ) {
@@ -66,7 +68,7 @@ internal fun ConversationHistoryPane(
         modifier = modifier
             .fillMaxHeight()
             .testTag("podnya_history"),
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        color = containerColor
     ) {
         Column {
             if (showTitle) {

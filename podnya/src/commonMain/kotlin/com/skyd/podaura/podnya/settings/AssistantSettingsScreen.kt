@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -71,6 +73,11 @@ import com.skyd.podaura.podnya.core.assistantEndpointPath
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 import com.skyd.podaura.podnya.ui.podnyaErrorText
 import com.skyd.podnya.resources.Res
+import com.skyd.podnya.resources.ic_model_claude
+import com.skyd.podnya.resources.ic_model_deepseek
+import com.skyd.podnya.resources.ic_model_gemini
+import com.skyd.podnya.resources.ic_model_grok
+import com.skyd.podnya.resources.ic_model_openai
 import com.skyd.podnya.resources.podnya_api_key
 import com.skyd.podnya.resources.podnya_api_key_keep
 import com.skyd.podnya.resources.podnya_api_key_required
@@ -111,6 +118,7 @@ import com.skyd.podnya.resources.podnya_test_cost
 import com.skyd.podnya.resources.podnya_test_description
 import com.skyd.podnya.resources.podnya_test_saved
 import com.skyd.podnya.resources.podnya_testing
+import org.jetbrains.compose.resources.painterResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -253,6 +261,7 @@ fun AssistantSettingsScreen(
                             (AssistantProviderPresets.CUSTOM to stringResource(Res.string.podnya_custom_provider)),
                     selectedId = if (state.custom) AssistantProviderPresets.CUSTOM else state.providerId,
                     enabled = editable,
+                    optionIcon = { ProviderIcon(it) },
                     onSelect = { dispatch(AssistantSettingsIntent.SelectProvider(it)) },
                 )
                 if (state.providerId != null && state.saved.readError == null) {
@@ -532,6 +541,23 @@ private fun protocolLabel(protocol: AssistantProtocol): String = when (protocol)
 }
 
 @Composable
+private fun ProviderIcon(providerId: String) {
+    val icon = when (providerId) {
+        "openai" -> Res.drawable.ic_model_openai
+        "deepseek" -> Res.drawable.ic_model_deepseek
+        "claude" -> Res.drawable.ic_model_claude
+        "gemini" -> Res.drawable.ic_model_gemini
+        "grok" -> Res.drawable.ic_model_grok
+        else -> null
+    }
+    if (icon != null) {
+        Icon(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+    } else {
+        Icon(imageVector = Icons.Outlined.Tune, contentDescription = null, modifier = Modifier.size(24.dp))
+    }
+}
+
+@Composable
 private fun SettingsChoice(
     tag: String,
     label: String,
@@ -539,6 +565,7 @@ private fun SettingsChoice(
     options: List<Pair<String, String>>,
     selectedId: String?,
     enabled: Boolean,
+    optionIcon: (@Composable (String) -> Unit)? = null,
     onSelect: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -549,6 +576,11 @@ private fun SettingsChoice(
             readOnly = true,
             enabled = enabled,
             label = { Text(label) },
+            leadingIcon = if (optionIcon != null && selectedId != null) {
+                { optionIcon(selectedId) }
+            } else {
+                null
+            },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -564,6 +596,11 @@ private fun SettingsChoice(
             options.forEach { (id, text) ->
                 DropdownMenuItem(
                     text = { Text(text) },
+                    leadingIcon = if (optionIcon != null) {
+                        { optionIcon(id) }
+                    } else {
+                        null
+                    },
                     modifier = Modifier.semantics { this.selected = id == selectedId },
                     trailingIcon = {
                         if (id == selectedId) {

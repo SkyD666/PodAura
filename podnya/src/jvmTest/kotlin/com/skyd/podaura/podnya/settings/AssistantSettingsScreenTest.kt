@@ -113,6 +113,7 @@ class AssistantSettingsScreenTest {
                     capture("${layout.name}-empty")
                     onNodeWithTag("podnya_key").assertDoesNotExist()
                     onNodeWithTag("podnya_provider").performClick()
+                    capture(name = "${layout.name}-provider-menu", dialogTitle = "Claude")
                     onNodeWithText("Claude").performClick()
                     waitUntil { fixture.model.viewState.value.providerId == "claude" }
                     onNodeWithTag("podnya_address").assertDoesNotExist()

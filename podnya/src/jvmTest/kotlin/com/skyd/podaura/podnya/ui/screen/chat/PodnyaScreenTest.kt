@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asSkiaBitmap
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalPlatformWindowInsets
@@ -41,6 +42,7 @@ import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -663,6 +665,36 @@ class PodnyaScreenTest {
                 onNodeWithTag("podnya_messages").performScrollToNode(hasText(FIRST_TITLE))
                 onNodeWithText(FIRST_TITLE).assertIsDisplayed()
                 assertEquals(1, fixture.assistant.requests.get())
+            }
+        }
+
+    @Test
+    fun phoneHistoryTopBarChangesColorOnScrollAndResetsAtTop() =
+        runDesktopComposeUiTest(width = 390, height = 844) {
+            Fixture().use { fixture ->
+                setContent { fixture.Screen() }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+                runBlocking {
+                    repeat(20) { index ->
+                        fixture.repository.updateDraft(
+                            id = fixture.repository.state.value.selected.id,
+                            text = "Conversation $index",
+                            editorId = "history-scroll-test",
+                            revision = index.toLong()
+                        )
+                        fixture.repository.newConversation()
+                    }
+                }
+                onNodeWithTag("podnya_history_open").performClick()
+                val screen = onNodeWithTag("podnya_history_screen")
+                val initialColor = screen.captureToImage().toPixelMap()[380, 30]
+                val list = onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("podnya_history")))
+                list.performTouchInput { swipeUp() }
+                assertTrue(screen.captureToImage().toPixelMap()[380, 30] != initialColor)
+                capture("phone-history-scrolled")
+                repeat(4) { list.performTouchInput { swipeDown() } }
+                assertEquals(initialColor, screen.captureToImage().toPixelMap()[380, 30])
+                capture("phone-history-scroll-reset")
             }
         }
 
