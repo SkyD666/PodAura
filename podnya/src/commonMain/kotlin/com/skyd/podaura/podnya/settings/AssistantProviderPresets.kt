@@ -23,7 +23,7 @@ object AssistantProviderPresets {
             displayName = "OpenAI",
             baseUrl = "https://api.openai.com/v1/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = listOf("gpt-6.1-sol", "gpt-6-luna", "gpt-6-astra"),
+            models = listOf("gpt-6.1-sol", "gpt-6-luna", "gpt-6-astra", "gpt-6.1-terra"),
             defaultModelId = "gpt-6.1-sol",
         ),
         AssistantProviderPreset(

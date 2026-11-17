@@ -30,7 +30,7 @@ fun assistantEndpointPath(
         AssistantProtocol.OPENAI_COMPATIBLE -> Unit
     }
     val model = modelId.trim()
-    val requiresResponses = listOf("gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna").any {
+    val requiresResponses = listOf("gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna", "gpt-6.1-terra").any {
         model == it || model.startsWith("$it-")
     }
     val officialHost = runCatching {

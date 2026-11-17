@@ -47,18 +47,33 @@ import kotlinx.serialization.json.put
 
 class ArticleSearchResponsesTest {
     @Test
-    fun officialAstraPreservesToolExchangeAndPhaseWhileStreamingOnlyReplyText() = runTest {
+    fun officialAstraPreservesToolExchangeAndPhaseWhileStreamingOnlyReplyText() =
+        verifyToolExchangeAndStreaming(astra())
+
+    @Test
+    fun officialTerraPreservesToolExchangeAndPhaseWhileStreamingOnlyReplyText() =
+        verifyToolExchangeAndStreaming(
+            AssistantConnection(
+                baseUrl = "https://api.openai.com/v1/",
+                modelId = "gpt-6.1-terra",
+                apiKey = TEST_KEY,
+            )
+        )
+
+    private fun verifyToolExchangeAndStreaming(connection: AssistantConnection) = runTest {
         withContext(Dispatchers.Default) {
             val original = listOf(reasoning(), message("I will search.", "commentary"), call("s1"))
             val misleading = "Search is closed; the candidates have not been verified."
             val script = HttpScript(response(*original.toTypedArray()), response(message("Search finished.")),
                 selection(text = misleading), stream())
             val catalog = RecordingCatalog()
-            val events = script.assistant(catalog, astra()).run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.astra()).toList()
+            val events = script.assistant(catalog = catalog, connection = connection)
+                .run(AssistantTurnRequest("Find articles"), connection).toList()
             assertEquals(AssistantRunEvent.Completed, events.last())
             assertEquals(4, script.requests.size)
             assertTrue(script.paths.all { it == "/v1/responses" })
             script.requests.forEach {
+                assertEquals(JsonPrimitive(connection.modelId), it["model"])
                 assertEquals(JsonPrimitive(false), it["store"])
                 assertEquals("low", it["reasoning"]!!.jsonObject["effort"]!!.jsonPrimitive.content)
                 assertTrue("reasoning.encrypted_content" in it["include"].toString())

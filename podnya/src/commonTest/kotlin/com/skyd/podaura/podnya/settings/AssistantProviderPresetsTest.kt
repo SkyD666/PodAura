@@ -40,9 +40,14 @@ class AssistantProviderPresetsTest {
 
     @Test
     fun currentOpenAiToolModelsUseResponsesOnlyAtTheOfficialService() {
-        for (model in AssistantProviderPresets.find("openai")!!.models) {
+        val preset = AssistantProviderPresets.find("openai")!!
+        assertEquals("gpt-6.1-sol", preset.defaultModelId)
+        assertTrue("gpt-6.1-terra" in preset.models)
+        for (model in preset.models) {
             assertEquals("responses", assistantEndpointPath(baseUrl = "https://api.openai.com/v1/", modelId = model))
             assertEquals("chat/completions", assistantEndpointPath(baseUrl = "https://gateway.example/v1/", modelId = model))
+            assertEquals("responses", assistantEndpointPath(baseUrl = preset.baseUrl, modelId = " $model-test-snapshot "))
+            assertEquals("chat/completions", assistantEndpointPath(baseUrl = "https://api.openai.com.example.org/v1/", modelId = model))
         }
     }
 }
