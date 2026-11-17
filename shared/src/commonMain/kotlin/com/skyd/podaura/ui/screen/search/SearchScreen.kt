@@ -4,12 +4,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -18,18 +22,24 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,11 +47,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
@@ -54,6 +69,7 @@ import com.skyd.compone.component.ComponeScaffold
 import com.skyd.compone.component.SearchBarInputField
 import com.skyd.compone.component.dialog.WaitingDialog
 import com.skyd.compone.ext.plus
+import com.skyd.compone.ext.withoutTop
 import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.ext.safeItemKey
@@ -77,7 +93,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.article_delete_protected_by_download
+import podaura.shared.generated.resources.article_screen_name
 import podaura.shared.generated.resources.clear_input_text
+import podaura.shared.generated.resources.feed_screen_name
 import podaura.shared.generated.resources.search_screen_hint
 import podaura.shared.generated.resources.to_top
 
@@ -123,30 +141,38 @@ fun SearchScreen(
     val uiState by viewModel.viewState.collectAsStateWithLifecycle()
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    val searchResultListState = rememberLazyGridState()
+    val pagerState = rememberPagerState(
+        initialPage = if (searchRoute is SearchRoute.Article) 1 else 0,
+        pageCount = { 2 },
+    )
+    val feedListState = rememberLazyGridState()
+    val articleListState = rememberLazyGridState()
+    val searchResultListState = if (pagerState.currentPage == 0) feedListState else articleListState
     var fabHeight by remember { mutableStateOf(0.dp) }
-    var fabWidth by remember { mutableStateOf(0.dp) }
 
     var searchFieldValueState by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(text = "", selection = TextRange(0)))
     }
 
-    val dispatch = viewModel.getDispatcher(
-        startWith = when (searchRoute) {
-            SearchRoute.Feed -> SearchIntent.ListenSearchFeed
-            is SearchRoute.Article -> SearchIntent.ListenSearchArticle(
-                feedUrls = searchRoute.feedUrls,
-                groupIds = searchRoute.groupIds,
-                articleIds = searchRoute.articleIds,
+    val dispatch = viewModel.getDispatcher(startWith = null)
+    LaunchedEffect(viewModel, searchRoute) {
+        dispatch(SearchIntent.UpdateQuery(query = searchFieldValueState.text))
+        dispatch(SearchIntent.ListenSearchFeed)
+        val articleRoute = searchRoute as? SearchRoute.Article
+        dispatch(
+            SearchIntent.ListenSearchArticle(
+                feedUrls = articleRoute?.feedUrls.orEmpty(),
+                groupIds = articleRoute?.groupIds.orEmpty(),
+                articleIds = articleRoute?.articleIds.orEmpty(),
             )
-        }
-    )
+        )
+    }
 
     ComponeScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = remember {
+                visible = remember(searchResultListState) {
                     derivedStateOf { searchResultListState.firstVisibleItemIndex > 2 }
                 }.value,
                 enter = fadeIn(),
@@ -154,8 +180,7 @@ fun SearchScreen(
             ) {
                 ComponeFloatingActionButton(
                     onClick = { scope.launch { searchResultListState.animateScrollToItem(0) } },
-                    onSizeWithSinglePaddingChanged = { width, height ->
-                        fabWidth = width
+                    onSizeWithSinglePaddingChanged = { _, height ->
                         fabHeight = height
                     },
                     contentDescription = stringResource(Res.string.to_top),
@@ -197,7 +222,7 @@ fun SearchScreen(
                         }
                     }
                 )
-                HorizontalDivider()
+                SearchTabs(pagerState = pagerState)
             }
         },
         contentWindowInsets = windowInsets,
@@ -207,26 +232,67 @@ fun SearchScreen(
         ),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) { innerPaddings ->
-        when (val searchResultState = uiState.searchResultState) {
-            is SearchResultState.Failed -> ErrorPlaceholder(
-                modifier = Modifier.sizeIn(maxHeight = 200.dp),
-                text = searchResultState.msg,
-                contentPadding = innerPaddings
-            )
+        HorizontalPager(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = innerPaddings.calculateTopPadding()),
+            state = pagerState,
+            verticalAlignment = Alignment.Top,
+        ) { page ->
+            if (page == 0) {
+                SearchResultContent(
+                    searchResultState = uiState.feedSearchResultState,
+                    listState = feedListState,
+                    contentPadding = innerPaddings.withoutTop(),
+                    fabHeight = fabHeight,
+                ) { result ->
+                    feedItems(
+                        result = result,
+                        onEdit = { dispatch(SearchIntent.OnEditFeedDialog(it.feed.url)) },
+                    )
+                }
+            } else {
+                SearchResultContent(
+                    searchResultState = uiState.articleSearchResultState,
+                    listState = articleListState,
+                    contentPadding = innerPaddings.withoutTop(),
+                    fabHeight = fabHeight,
+                ) { result ->
+                    articleItems(
+                        result = result,
+                        onFavorite = { articleWithFeed, favorite ->
+                            dispatch(
+                                SearchIntent.Favorite(
+                                    articleId = articleWithFeed.articleWithEnclosure.article.articleId,
+                                    favorite = favorite,
+                                )
+                            )
+                        },
+                        onRead = { articleWithFeed, read ->
+                            dispatch(
+                                SearchIntent.Read(
+                                    articleId = articleWithFeed.articleWithEnclosure.article.articleId,
+                                    read = read,
+                                )
+                            )
+                        },
+                        onDelete = { articleWithFeed ->
+                            dispatch(
+                                SearchIntent.Delete(articleWithFeed.articleWithEnclosure.article.articleId)
+                            )
+                        },
+                        onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
+                        onEditFeedSheet = { dispatch(SearchIntent.OnEditFeedDialog(it)) },
+                    )
+                }
+            }
+        }
 
-            SearchResultState.Init,
-            SearchResultState.Loading -> CircularProgressPlaceholder(contentPadding = innerPaddings)
-
-            is SearchResultState.Success -> SuccessContent(
+        uiState.editFeedUrl?.let { editFeedUrl ->
+            EditFeedSheet(
+                feedUrl = editFeedUrl,
+                onDismissRequest = { dispatch(SearchIntent.OnEditFeedDialog(null)) },
                 snackbarHostState = snackbarHostState,
-                searchResultState = searchResultState,
-                editFeedUrl = uiState.editFeedUrl,
-                searchResultListState = searchResultListState,
-                searchRoute = searchRoute,
-                dispatch = dispatch,
-                innerPaddings = innerPaddings,
-                fabHeight = fabHeight,
-                onMessage = { scope.launch { snackbarHostState.showSnackbar(it) } },
             )
         }
 
@@ -253,71 +319,73 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SuccessContent(
-    snackbarHostState: SnackbarHostState,
-    searchResultState: SearchResultState.Success,
-    editFeedUrl: String?,
-    searchResultListState: LazyGridState,
-    searchRoute: SearchRoute,
-    dispatch: (SearchIntent) -> Unit,
-    innerPaddings: PaddingValues,
-    fabHeight: Dp,
-    onMessage: (String) -> Unit,
+internal fun SearchTabs(
+    pagerState: PagerState,
+    modifier: Modifier = Modifier,
 ) {
-    val result = searchResultState.result.collectAsLazyPagingItems()
-    PagingRefreshStateIndicator(
-        lazyPagingItems = result,
-        placeholderPadding = innerPaddings,
+    val scope = rememberCoroutineScope()
+    PrimaryTabRow(
+        // Article cards keep their swipe actions; the tab row always offers page swiping.
+        modifier = modifier.scrollable(
+            state = pagerState,
+            orientation = Orientation.Horizontal,
+            reverseDirection = LocalLayoutDirection.current == LayoutDirection.Ltr,
+            flingBehavior = PagerDefaults.flingBehavior(state = pagerState),
+        ),
+        selectedTabIndex = pagerState.currentPage,
+        containerColor = Color.Transparent,
     ) {
-        SearchResultList(
-            listState = searchResultListState,
-            contentPadding = innerPaddings + PaddingValues(
-                top = 4.dp,
-                bottom = 4.dp + fabHeight
-            ),
-        ) {
-            @Suppress("UNCHECKED_CAST")
-            when (searchRoute) {
-                SearchRoute.Feed -> feedItems(
-                    result = result as LazyPagingItems<FeedViewBean>,
-                    onEdit = { dispatch(SearchIntent.OnEditFeedDialog(it.feed.url)) },
-                )
-
-                is SearchRoute.Article -> articleItems(
-                    result = result as LazyPagingItems<ArticleWithFeed>,
-                    onFavorite = { articleWithFeed, favorite ->
-                        dispatch(
-                            SearchIntent.Favorite(
-                                articleId = articleWithFeed.articleWithEnclosure.article.articleId,
-                                favorite = favorite,
-                            )
-                        )
-                    },
-                    onRead = { articleWithFeed, read ->
-                        dispatch(
-                            SearchIntent.Read(
-                                articleId = articleWithFeed.articleWithEnclosure.article.articleId,
-                                read = read,
-                            )
-                        )
-                    },
-                    onDelete = { articleWithFeed ->
-                        dispatch(
-                            SearchIntent.Delete(articleWithFeed.articleWithEnclosure.article.articleId)
-                        )
-                    },
-                    onMessage = onMessage,
-                    onEditFeedSheet = { dispatch(SearchIntent.OnEditFeedDialog(it)) },
-                )
-            }
-        }
-
-        if (editFeedUrl != null) {
-            EditFeedSheet(
-                feedUrl = editFeedUrl,
-                onDismissRequest = { dispatch(SearchIntent.OnEditFeedDialog(null)) },
-                snackbarHostState = snackbarHostState
+        listOf(
+            stringResource(Res.string.feed_screen_name),
+            stringResource(Res.string.article_screen_name),
+        ).forEachIndexed { index, title ->
+            Tab(
+                selected = pagerState.currentPage == index,
+                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                text = {
+                    Text(
+                        text = title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
             )
+        }
+    }
+}
+
+@Composable
+private fun <T : Any> SearchResultContent(
+    searchResultState: SearchResultState<T>,
+    listState: LazyGridState,
+    contentPadding: PaddingValues,
+    fabHeight: Dp,
+    items: LazyGridScope.(LazyPagingItems<T>) -> Unit,
+) {
+    when (searchResultState) {
+        is SearchResultState.Failed -> ErrorPlaceholder(
+            modifier = Modifier.sizeIn(maxHeight = 200.dp),
+            text = searchResultState.msg,
+            contentPadding = contentPadding,
+        )
+
+        SearchResultState.Init,
+        SearchResultState.Loading -> CircularProgressPlaceholder(contentPadding = contentPadding)
+
+        is SearchResultState.Success -> {
+            val result = searchResultState.result.collectAsLazyPagingItems()
+            PagingRefreshStateIndicator(
+                lazyPagingItems = result,
+                placeholderPadding = contentPadding,
+            ) {
+                SearchResultList(
+                    listState = listState,
+                    contentPadding = contentPadding + PaddingValues(
+                        top = 4.dp,
+                        bottom = 4.dp + fabHeight,
+                    ),
+                ) { items(result) }
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 package com.skyd.podaura.ui.screen.search
 
-import androidx.paging.PagingData
 import com.skyd.podaura.model.bean.article.ArticleDeleteResult
-import kotlinx.coroutines.flow.Flow
+import com.skyd.podaura.model.bean.article.ArticleWithFeed
+import com.skyd.podaura.model.bean.feed.FeedViewBean
 
 
 internal sealed interface SearchPartialStateChange {
@@ -14,26 +14,16 @@ internal sealed interface SearchPartialStateChange {
         }
     }
 
-    sealed interface SearchResult : SearchPartialStateChange {
-        override fun reduce(oldState: SearchState): SearchState {
-            return when (this) {
-                is Success -> oldState.copy(
-                    searchResultState = SearchResultState.Success(result = result),
-                )
+    data class FeedSearchResult(
+        val state: SearchResultState<FeedViewBean>,
+    ) : SearchPartialStateChange {
+        override fun reduce(oldState: SearchState) = oldState.copy(feedSearchResultState = state)
+    }
 
-                is Failed -> oldState.copy(
-                    searchResultState = SearchResultState.Failed(msg = msg),
-                )
-
-                Loading -> oldState.copy(
-                    searchResultState = SearchResultState.Loading,
-                )
-            }
-        }
-
-        data class Success(val result: Flow<PagingData<Any>>) : SearchResult
-        data class Failed(val msg: String) : SearchResult
-        data object Loading : SearchResult
+    data class ArticleSearchResult(
+        val state: SearchResultState<ArticleWithFeed>,
+    ) : SearchPartialStateChange {
+        override fun reduce(oldState: SearchState) = oldState.copy(articleSearchResultState = state)
     }
 
     sealed interface FavoriteArticle : SearchPartialStateChange {

@@ -1,7 +1,6 @@
 package com.skyd.podaura.ui.screen.search
 
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.ext.catchMap
@@ -72,21 +71,29 @@ class SearchViewModel(
         return merge(
             filterIsInstance<SearchIntent.ListenSearchFeed>().flatMapConcat {
                 flowOf(searchRepo.listenSearchFeed().cachedIn(viewModelScope)).map {
-                    @Suppress("UNCHECKED_CAST")
-                    SearchPartialStateChange.SearchResult.Success(result = it as Flow<PagingData<Any>>)
-                }.startWith(SearchPartialStateChange.SearchResult.Loading)
-                    .catchMap { SearchPartialStateChange.SearchResult.Failed(it.message.toString()) }
+                    SearchPartialStateChange.FeedSearchResult(SearchResultState.Success(result = it))
+                }.startWith(SearchPartialStateChange.FeedSearchResult(SearchResultState.Loading))
+                    .catchMap {
+                        SearchPartialStateChange.FeedSearchResult(
+                            SearchResultState.Failed(msg = it.message.toString())
+                        )
+                    }
             },
             filterIsInstance<SearchIntent.ListenSearchArticle>().flatMapConcat { intent ->
                 flowOf(
                     searchRepo.listenSearchArticle(
-                        intent.feedUrls, intent.groupIds, intent.articleIds,
+                        feedUrls = intent.feedUrls,
+                        groupIds = intent.groupIds,
+                        articleIds = intent.articleIds,
                     ).cachedIn(viewModelScope)
                 ).map {
-                    @Suppress("UNCHECKED_CAST")
-                    SearchPartialStateChange.SearchResult.Success(result = it as Flow<PagingData<Any>>)
-                }.startWith(SearchPartialStateChange.SearchResult.Loading)
-                    .catchMap { SearchPartialStateChange.SearchResult.Failed(it.message.toString()) }
+                    SearchPartialStateChange.ArticleSearchResult(SearchResultState.Success(result = it))
+                }.startWith(SearchPartialStateChange.ArticleSearchResult(SearchResultState.Loading))
+                    .catchMap {
+                        SearchPartialStateChange.ArticleSearchResult(
+                            SearchResultState.Failed(msg = it.message.toString())
+                        )
+                    }
             },
             filterIsInstance<SearchIntent.UpdateQuery>().flatMapConcat { intent ->
                 flowOf(searchRepo.updateQuery(intent.query)).map {
