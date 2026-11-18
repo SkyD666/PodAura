@@ -130,4 +130,7 @@
     <string name="podnya_config_corrupt">設定を解析できません。再読み込みするか、消去して設定し直してください。</string>
     <string name="podnya_config_storage">設定を読み込めませんでした。再読み込みしてください。</string>
     <string name="podnya_copy_code">コードをコピー</string>
+    <string name="podnya_reasoning_effort">推論レベル</string>
+    <string name="podnya_reasoning_wait">返信と接続テストには最大 10 分かかります。待機中はキャンセルできます。</string>
+    <string name="podnya_reasoning_reset">この接続では推論レベルを選択できないため、選択を解除しました。対応モデルに戻すと low になります。</string>
 </resources>

@@ -69,6 +69,7 @@ import com.skyd.mvi.MviEventListener
 import com.skyd.mvi.getDispatcher
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.assistantEndpointPath
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 import com.skyd.podaura.podnya.ui.podnyaErrorText
@@ -99,6 +100,9 @@ import com.skyd.podnya.resources.podnya_ok
 import com.skyd.podnya.resources.podnya_openai_compatible
 import com.skyd.podnya.resources.podnya_protocol
 import com.skyd.podnya.resources.podnya_provider
+import com.skyd.podnya.resources.podnya_reasoning_effort
+import com.skyd.podnya.resources.podnya_reasoning_reset
+import com.skyd.podnya.resources.podnya_reasoning_wait
 import com.skyd.podnya.resources.podnya_reload
 import com.skyd.podnya.resources.podnya_save
 import com.skyd.podnya.resources.podnya_saving
@@ -118,9 +122,9 @@ import com.skyd.podnya.resources.podnya_test_cost
 import com.skyd.podnya.resources.podnya_test_description
 import com.skyd.podnya.resources.podnya_test_saved
 import com.skyd.podnya.resources.podnya_testing
-import org.jetbrains.compose.resources.painterResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -370,6 +374,35 @@ fun AssistantSettingsScreen(
                             label = { Text(stringResource(Res.string.podnya_model_id)) },
                         )
                     }
+                    if (state.supportsReasoningEffort) {
+                        SettingsChoice(
+                            tag = "podnya_reasoning_effort",
+                            label = stringResource(Res.string.podnya_reasoning_effort),
+                            selected = state.reasoningEffort.id,
+                            options = AssistantReasoningEffort.entries.map { it.id to it.id },
+                            selectedId = state.reasoningEffort.id,
+                            enabled = editable,
+                            onSelect = { id ->
+                                AssistantReasoningEffort.fromId(id)?.let {
+                                    dispatch(AssistantSettingsIntent.SetReasoningEffort(it))
+                                }
+                            },
+                        )
+                        if (state.reasoningEffort != AssistantReasoningEffort.LOW) {
+                            Text(
+                                text = stringResource(Res.string.podnya_reasoning_wait),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    if (state.reasoningEffortReset) {
+                        Text(
+                            text = stringResource(Res.string.podnya_reasoning_reset),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     SettingsCheckbox(
                         checked = state.sessionOnly,
                         enabled = editable,
@@ -551,9 +584,17 @@ private fun ProviderIcon(providerId: String) {
         else -> null
     }
     if (icon != null) {
-        Icon(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(24.dp))
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)
+        )
     } else {
-        Icon(imageVector = Icons.Outlined.Tune, contentDescription = null, modifier = Modifier.size(24.dp))
+        Icon(
+            imageVector = Icons.Outlined.Tune,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 

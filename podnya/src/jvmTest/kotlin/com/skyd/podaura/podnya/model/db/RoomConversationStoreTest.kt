@@ -63,7 +63,13 @@ class RoomConversationStoreTest {
             question = "Original question",
             reply = "Partial reply",
             context = context,
-            source = AssistantReplySource(configId = "model-config", revision = 5, baseUrl = "https://model.example/prefix/", modelId = "model"),
+            source = AssistantReplySource(
+                configId = "model-config",
+                revision = 5,
+                baseUrl = "https://api.openai.com/v1/",
+                modelId = "gpt-6.1-terra",
+                reasoningEffort = "max",
+            ),
             content = AssistantReplyContent(parts = listOf(articleContent, feeds), kind = AssistantAnswerKind.RESULTS, text = "Combined"),
         )
         val first = RoomConversationStore(codec = codec, path = { path })

@@ -43,8 +43,17 @@ internal class KoogAssistantRuntime(
     override fun run(
         request: AssistantTurnRequest,
         connection: AssistantConnection
-    ): Flow<AssistantRunEvent> =
-        assistantRunEvents(request) { event -> executeTurn(request, connection, event) }
+    ): Flow<AssistantRunEvent> {
+        val timeouts = PodnyaTimeouts.forConnection(connection)
+        return assistantRunEvents(request = request, timeouts = timeouts) { event ->
+            executeTurn(
+                request = request,
+                configuration = connection,
+                timeouts = timeouts,
+                event = event
+            )
+        }
+    }
 
     override suspend fun verify(): AssistantConnectionResult =
         PodnyaConnectionProbe(verificationConnection, httpClient).verify()
@@ -52,6 +61,7 @@ internal class KoogAssistantRuntime(
     private suspend fun executeTurn(
         request: AssistantTurnRequest,
         configuration: AssistantConnection,
+        timeouts: PodnyaTimeouts,
         event: suspend (AssistantRunEvent) -> Unit,
     ) {
         val active = capabilities(request)
@@ -61,8 +71,12 @@ internal class KoogAssistantRuntime(
             active.flatMap { capability -> capability.tools.map { it.name to capability } }.toMap()
         require(toolOwners.size == active.sumOf { it.tools.size })
         val prompts = AssistantPrompts(request, active)
-        PodnyaTransport(configuration, httpClient()).use { transport ->
-            val executor = BudgetedExecutor(transport.executor)
+        PodnyaTransport(
+            connection = configuration,
+            baseClient = httpClient(),
+            timeouts = timeouts
+        ).use { transport ->
+            val executor = BudgetedExecutor(delegate = transport.executor, timeouts = timeouts)
             var attempts = 0
             var completedCalls = 0
             val graph = strategy<String, ValidatedAssistantReply>("podnya") {
@@ -161,9 +175,10 @@ internal class KoogAssistantRuntime(
             event(AssistantRunEvent.ContentReady(validated.content()))
             event(AssistantRunEvent.Progress(AssistantPhase.STREAMING))
             collectReply(
-                executor.executeStreaming(
+                frames = executor.executeStreaming(
                     prompt = prompts.reply(validated), model = transport.model, tools = emptyList(),
-                )
+                ),
+                timeouts = timeouts,
             ) { event(AssistantRunEvent.ReplyDelta(it)) }
         }
     }

@@ -84,6 +84,9 @@ class AssistantSettingsViewModel(
             filterIsInstance<AssistantSettingsIntent.SetModelId>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
+            filterIsInstance<AssistantSettingsIntent.SetReasoningEffort>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
             filterIsInstance<AssistantSettingsIntent.SetSessionOnly>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
@@ -135,6 +138,7 @@ class AssistantSettingsViewModel(
                                 consentAccepted = draft.consentAccepted,
                                 providerId = draft.providerId,
                                 protocol = draft.protocol,
+                                reasoningEffort = draft.reasoningEffort,
                             )
                         }
                         AssistantSettingsPartialStateChange.Finished(

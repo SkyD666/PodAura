@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.runtime
 
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
 import io.ktor.client.HttpClient
@@ -27,33 +28,45 @@ class PodnyaConnectionProbeTest {
     @Test
     fun officialTerraProbeUsesResponsesForToolsStructuredOutputAndStreaming() = runTest {
         withContext(Dispatchers.Default) {
-            val connection = AssistantConnection(
-                baseUrl = "https://api.openai.com/v1/",
-                modelId = "gpt-6.1-terra",
-                apiKey = TEST_KEY,
-            )
-            val script = HttpScript(
-                responsesReply(responsesReasoning(), responsesCall("1", VALUE)),
-                responsesReply(responsesMessage("Received.")),
-                responsesReply(responsesMessage(VALUE)),
-                responsesStream(),
-            )
-            val result = PodnyaConnectionProbe(
-                connection = { connection },
-                httpClient = script::client,
-            ).verify()
-            assertTrue(result.success)
-            assertEquals(4, script.requests.size)
-            assertTrue(script.paths.all { it == "/v1/responses" })
-            script.requests.forEach {
-                assertEquals(JsonPrimitive(connection.modelId), it["model"])
-                assertEquals("low", it.getValue("reasoning").jsonObject.getValue("effort").jsonPrimitive.content)
+            for (effort in AssistantReasoningEffort.entries) {
+                val connection = AssistantConnection(
+                    baseUrl = "https://api.openai.com/v1/",
+                    modelId = "gpt-6.1-terra",
+                    apiKey = TEST_KEY,
+                    reasoningEffort = effort,
+                )
+                val script = HttpScript(
+                    responsesReply(responsesReasoning(), responsesCall("1", VALUE)),
+                    responsesReply(responsesMessage("Received.")),
+                    responsesReply(responsesMessage(VALUE)),
+                    responsesStream(),
+                )
+                val result = PodnyaConnectionProbe(
+                    connection = { connection },
+                    httpClient = script::client,
+                ).verify()
+                assertTrue(result.success)
+                assertEquals(4, script.requests.size)
+                val expected = PodnyaTimeouts.forConnection(connection)
+                script.timeouts.forEach { timeout ->
+                    assertEquals(expected.connectMillis, timeout!!.connectTimeoutMillis)
+                    assertEquals(expected.idleMillis, timeout.socketTimeoutMillis)
+                }
+                // Ktor SSE disables its request timer; collectReply and the outer turn bound it.
+                script.timeouts.take(3).forEach { timeout ->
+                    assertEquals(expected.requestMillis, timeout!!.requestTimeoutMillis)
+                }
+                assertTrue(script.paths.all { it == "/v1/responses" })
+                script.requests.forEach {
+                    assertEquals(JsonPrimitive(connection.modelId), it["model"])
+                    assertEquals(effort.id, it.getValue("reasoning").jsonObject.getValue("effort").jsonPrimitive.content)
+                }
+                val toolResult = script.requests[1].getValue("input").jsonArray.map { it.jsonObject }
+                    .single { it["type"] == JsonPrimitive("function_call_output") }
+                assertEquals(JsonPrimitive("1"), toolResult["call_id"])
+                assertEquals(JsonPrimitive(VALUE), toolResult["output"])
+                assertEquals(JsonPrimitive(true), script.requests.last()["stream"])
             }
-            val toolResult = script.requests[1].getValue("input").jsonArray.map { it.jsonObject }
-                .single { it["type"] == JsonPrimitive("function_call_output") }
-            assertEquals(JsonPrimitive("1"), toolResult["call_id"])
-            assertEquals(JsonPrimitive(VALUE), toolResult["output"])
-            assertEquals(JsonPrimitive(true), script.requests.last()["stream"])
         }
     }
 

@@ -25,6 +25,48 @@ class AssistantConversationRepositoryTest {
         override fun historySnapshot() = AssistantHistorySnapshot("test", "summary", payload)
     }
 
+    @Test
+    fun effortIsFixedForRunningRepliesAndRetryRecordsTheCurrentSelection() = runTest {
+        val release = Channel<Unit>(Channel.UNLIMITED)
+        val runtime = Runtime { _, _ ->
+            release.receive()
+            emit(AssistantRunEvent.Failed(AssistantError.NETWORK))
+        }
+        val settings = conversationSettings()
+        suspend fun saveEffort(effort: AssistantReasoningEffort) {
+            settings.save(
+                baseUrl = "https://api.openai.com/v1/",
+                modelId = "gpt-6.1-terra",
+                apiKey = "test-key",
+                sessionOnly = false,
+                consentAccepted = true,
+                reasoningEffort = effort,
+            )
+        }
+        saveEffort(AssistantReasoningEffort.MEDIUM)
+        val repo = AssistantConversationRepository(assistant = runtime, settings = settings, scope = backgroundScope)
+        repo.editDraft("Question")
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
+        val turnId = repo.state.value.selected.turns.single().id
+        saveEffort(AssistantReasoningEffort.MAX)
+        assertEquals(AssistantReasoningEffort.MEDIUM, runtime.connections.single().reasoningEffort)
+        assertEquals("medium", repo.state.value.selected.turns.single().source!!.reasoningEffort)
+        release.send(Unit)
+        runCurrent()
+        assertTrue(repo.retryLast(settings))
+        runCurrent()
+        assertEquals(turnId, repo.state.value.selected.turns.single().id)
+        assertEquals(AssistantReasoningEffort.MAX, runtime.connections.last().reasoningEffort)
+        assertEquals("max", repo.state.value.selected.turns.single().source!!.reasoningEffort)
+        release.send(Unit)
+        runCurrent()
+        repo.editDraft("Next question")
+        assertTrue(repo.sendDraft(settings))
+        runCurrent()
+        assertEquals("max", repo.state.value.selected.turns.last().source!!.reasoningEffort)
+    }
+
     @Test fun threeConcurrentRepliesSurviveSwitchAndNewAndRejectFourthWithoutQueueing() = runTest {
         val finish = Channel<Unit>(Channel.UNLIMITED)
         val runtime = Runtime { _, _ -> emit(AssistantRunEvent.ReplyDelta("partial")); finish.receive(); emit(AssistantRunEvent.Completed) }

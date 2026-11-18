@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.fundation.credential.CredentialStore
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
@@ -98,6 +99,43 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class, InternalComposeUiApi::class)
 class AssistantSettingsScreenTest {
+    @Test
+    fun reasoningChoiceShowsFiveLevelsAndClearsWhenTheModelBecomesUnsupported() {
+        for (layout in listOf(
+            Layout(name = "effort-wide", width = 1100, height = 820),
+            Layout(name = "effort-narrow", width = 390, height = 844, dark = true, fontScale = 1.5f),
+        )) {
+            runDesktopComposeUiTest(width = layout.width, height = layout.height) {
+                Fixture().use { fixture ->
+                    setContent { fixture.Screen(layout) }
+                    waitUntil { fixture.model.viewState.value.loaded }
+                    onNodeWithTag("podnya_provider").performClick()
+                    onNodeWithText("OpenAI").performClick()
+                    onNodeWithTag("podnya_settings_form").performScrollToNode(hasTestTag("podnya_reasoning_effort"))
+                    onNodeWithTag("podnya_reasoning_effort").performClick()
+                    onNodeWithText("none").assertDoesNotExist()
+                    for (id in listOf("medium", "high", "xhigh", "max")) {
+                        onNodeWithText(id).assertIsDisplayed()
+                    }
+                    capture(name = "${layout.name}-menu", dialogTitle = "max")
+                    onNodeWithText("max").performClick()
+                    waitUntil { fixture.model.viewState.value.reasoningEffort == AssistantReasoningEffort.MAX }
+                    capture("${layout.name}-selected")
+                    onNodeWithTag("podnya_settings_form").performScrollToNode(hasTestTag("podnya_model_choice"))
+                    onNodeWithTag("podnya_model_choice").performClick()
+                    onNodeWithText(fixture.manual).performClick()
+                    onNodeWithTag("podnya_model_input").performTextReplacement("unknown-model")
+                    onNodeWithTag("podnya_reasoning_effort").assertDoesNotExist()
+                    waitUntil { fixture.model.viewState.value.reasoningEffortReset }
+                    capture("${layout.name}-reset")
+                    onNodeWithTag("podnya_model_input").performTextReplacement("gpt-6.1-terra")
+                    waitUntil { fixture.model.viewState.value.supportsReasoningEffort }
+                    assertEquals(AssistantReasoningEffort.LOW, fixture.model.viewState.value.reasoningEffort)
+                }
+            }
+        }
+    }
+
     @Test
     fun providerFormsRenderAcrossWidthsThemesAndLargeText() {
         for (layout in listOf(

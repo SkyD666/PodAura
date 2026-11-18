@@ -130,4 +130,7 @@
     <string name="podnya_config_corrupt">Ne eblas interpreti la agordon. Reŝargu ĝin aŭ forigu ĝin kaj agordu denove.</string>
     <string name="podnya_config_storage">Ne eblis legi la agordon. Reŝargu por reprovi.</string>
     <string name="podnya_copy_code">Kopii kodon</string>
+    <string name="podnya_reasoning_effort">Rezonada nivelo</string>
+    <string name="podnya_reasoning_wait">Respondoj kaj konektotestoj povas daŭri ĝis 10 minutoj. Vi povas nuligi dum la atendado.</string>
+    <string name="podnya_reasoning_reset">Ĉi tiu konekto ne subtenas elekton de rezonada nivelo. La elekto estis forigita; subtenataj modeloj rekomencos je low.</string>
 </resources>

@@ -2,7 +2,9 @@ package com.skyd.podaura.podnya.settings
 
 import com.skyd.mvi.MviViewState
 import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
+import com.skyd.podaura.podnya.core.supportsAssistantReasoningEffort
 
 enum class AssistantSettingsOperation { SAVING, TESTING, CLEARING }
 
@@ -18,6 +20,8 @@ data class AssistantSettingsState(
     val saved: AssistantSettings = AssistantSettings(),
     val baseUrl: String = "",
     val modelId: String = "",
+    val reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
+    val reasoningEffortReset: Boolean = false,
     val sessionOnly: Boolean = false,
     val consentAccepted: Boolean = false,
     val hasNewKey: Boolean = false,
@@ -45,7 +49,14 @@ data class AssistantSettingsState(
         get() = (normalizedBaseUrl
             ?: baseUrl.trim()) != saved.baseUrl || modelId.trim() != saved.modelId ||
                 providerId != AssistantProviderPresets.selection(saved) || protocol != saved.protocol ||
+                reasoningEffort != saved.reasoningEffort ||
                 sessionOnly != saved.sessionOnly || consentAccepted != saved.consentAccepted || hasNewKey
+    val supportsReasoningEffort: Boolean
+        get() = supportsAssistantReasoningEffort(
+            baseUrl = normalizedBaseUrl ?: "",
+            modelId = modelId,
+            protocol = protocol,
+        )
     val editable: Boolean get() = loaded && operation == null && saved.readError == null && available
     val custom: Boolean get() = providerId != null && AssistantProviderPresets.find(providerId) == null
     val canVerify: Boolean

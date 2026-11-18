@@ -6,7 +6,12 @@ class AssistantConnection(
     val modelId: String,
     val apiKey: String,
     val protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
+    reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
 ) {
+    val reasoningEffort: AssistantReasoningEffort? = reasoningEffort.takeIf {
+        supportsAssistantReasoningEffort(baseUrl = baseUrl, modelId = modelId, protocol = protocol)
+    }
+
     override fun toString(): String = "AssistantConnection([redacted])"
 }
 

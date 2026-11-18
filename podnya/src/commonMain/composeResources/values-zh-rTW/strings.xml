@@ -130,4 +130,7 @@
     <string name="podnya_config_corrupt">無法解析此設定。請重新讀取，或清除後重新設定。</string>
     <string name="podnya_config_storage">無法讀取設定，請重新讀取以重試。</string>
     <string name="podnya_copy_code">複製程式碼</string>
+    <string name="podnya_reasoning_effort">推理檔位</string>
+    <string name="podnya_reasoning_wait">回覆和連線測試最長等待 10 分鐘，等待期間可以取消。</string>
+    <string name="podnya_reasoning_reset">目前連線不支援選擇推理檔位，已清除選擇；切回支援的模型時預設使用 low。</string>
 </resources>

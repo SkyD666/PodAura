@@ -2,6 +2,7 @@ package com.skyd.podaura.podnya.settings
 
 import com.skyd.mvi.MviIntent
 import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 
 sealed interface AssistantSettingsIntent : MviIntent {
     data class SetBaseUrl(val value: String) : AssistantSettingsIntent {
@@ -13,6 +14,7 @@ sealed interface AssistantSettingsIntent : MviIntent {
     }
 
     data class SetSessionOnly(val value: Boolean) : AssistantSettingsIntent
+    data class SetReasoningEffort(val value: AssistantReasoningEffort) : AssistantSettingsIntent
     data class SetConsentAccepted(val value: Boolean) : AssistantSettingsIntent
     data class SetHasNewKey(val value: Boolean, val keyRevision: Long) : AssistantSettingsIntent
 

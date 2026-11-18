@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.lifecycle.ViewModelStore
 import com.skyd.mvi.mviConfig
 import com.skyd.podaura.podnya.model.repository.conversation.*
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
@@ -366,6 +367,57 @@ class AssistantSettingsViewModelTest {
         assertTrue(model.viewState.value.hasNewKey)
         dispatch(model, save(model, "second-input"))
         assertEquals("second-input", fixture.repository.connection().apiKey)
+    }
+
+    @Test
+    fun effortEditsSaveInOrderPreserveCompatibleModelsAndResetUnsupportedConnections() = runTest {
+        val fixture = createFixture(configured = false)
+        val model = fixture.model
+        runCurrent()
+        fixture.repository.save(
+            baseUrl = "https://api.openai.com/v1/",
+            modelId = "gpt-6.1-sol",
+            apiKey = "secret",
+            sessionOnly = false,
+            consentAccepted = true,
+        )
+        runCurrent()
+        val initial = model.viewState.value
+        assertTrue(initial.canVerify)
+        dispatch(
+            model,
+            AssistantSettingsIntent.SetReasoningEffort(AssistantReasoningEffort.MAX),
+            AssistantSettingsIntent.Save(
+                apiKey = null,
+                editRevision = initial.editRevision + 1,
+                keyRevision = initial.keyRevision,
+            ),
+        )
+        assertEquals(AssistantReasoningEffort.MAX, fixture.repository.connection().reasoningEffort)
+        assertFalse(model.viewState.value.dirty)
+        assertTrue(model.viewState.value.canVerify)
+        val writes = fixture.credentials.writes
+        val staleSave = save(model, null)
+        dispatch(model, AssistantSettingsIntent.SetReasoningEffort(AssistantReasoningEffort.HIGH))
+        assertTrue(model.viewState.value.dirty)
+        assertFalse(model.viewState.value.canVerify)
+        dispatch(model, staleSave, AssistantSettingsIntent.Verify)
+        assertEquals(AssistantReasoningEffort.MAX, fixture.repository.connection().reasoningEffort)
+        assertEquals(0, fixture.assistant.verifyCalls)
+        dispatch(model, AssistantSettingsIntent.SetModelId("gpt-6.1-terra-snapshot"))
+        assertEquals(AssistantReasoningEffort.HIGH, model.viewState.value.reasoningEffort)
+        dispatch(model, AssistantSettingsIntent.SetModelId("unknown-model"))
+        assertFalse(model.viewState.value.supportsReasoningEffort)
+        assertTrue(model.viewState.value.reasoningEffortReset)
+        assertEquals(AssistantReasoningEffort.LOW, model.viewState.value.reasoningEffort)
+        dispatch(model, AssistantSettingsIntent.SetReasoningEffort(AssistantReasoningEffort.MAX))
+        assertEquals(AssistantReasoningEffort.LOW, model.viewState.value.reasoningEffort)
+        dispatch(model, AssistantSettingsIntent.SetModelId("gpt-6.1-sol"))
+        assertTrue(model.viewState.value.supportsReasoningEffort)
+        assertFalse(model.viewState.value.reasoningEffortReset)
+        dispatch(model, save(model, null))
+        assertEquals(AssistantReasoningEffort.LOW, fixture.repository.connection().reasoningEffort)
+        assertEquals(writes, fixture.credentials.writes)
     }
 
     private fun newKey(model: AssistantSettingsViewModel) = AssistantSettingsIntent.SetHasNewKey(

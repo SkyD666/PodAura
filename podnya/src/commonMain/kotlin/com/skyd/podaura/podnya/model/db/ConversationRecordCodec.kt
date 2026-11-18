@@ -162,7 +162,14 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
             source = source,
             rawSource = value.source?.takeIf { raw ->
                 source == null || json.parseToJsonElement(raw).jsonObject.keys.any {
-                    it !in setOf("configId", "revision", "baseUrl", "modelId", "protocol")
+                    it !in setOf(
+                        "configId",
+                        "revision",
+                        "baseUrl",
+                        "modelId",
+                        "protocol",
+                        "reasoningEffort"
+                    )
                 }
             },
             reply = value.reply,

@@ -6,6 +6,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.runtime.client.AnthropicStreamGuard
 import com.skyd.podaura.podnya.runtime.client.GeminiStreamGuard
 import com.skyd.podaura.podnya.runtime.client.PodnyaAnthropicExchange
@@ -24,7 +25,7 @@ internal expect fun createPodnyaHttpClient(): HttpClient
 /** Add application budgets and protocol validation around Koog's dedicated HTTP client. */
 internal class PodnyaHttpFactory(
     baseClient: HttpClient,
-    private val responses: Boolean = false,
+    private val reasoningEffort: AssistantReasoningEffort? = null,
     private val protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
     private val gemini: PodnyaGeminiExchange? = null,
 ) :
@@ -58,7 +59,7 @@ internal class PodnyaHttpFactory(
                 json = json,
             ),
             json = json,
-            responses = if (responses) PodnyaResponses() else null,
+            responses = reasoningEffort?.let(::PodnyaResponses),
             anthropic = if (protocol == AssistantProtocol.ANTHROPIC_MESSAGES) PodnyaAnthropicExchange() else null,
             gemini = gemini,
         ).also { owned = it }

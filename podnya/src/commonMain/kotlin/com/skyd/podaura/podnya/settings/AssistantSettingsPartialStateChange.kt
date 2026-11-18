@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.settings
 
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 
 internal sealed interface AssistantSettingsPartialStateChange {
@@ -85,6 +86,11 @@ internal sealed interface AssistantSettingsPartialStateChange {
                 }
 
                 is AssistantSettingsIntent.SetModelId -> oldState.copy(modelId = intent.value)
+                is AssistantSettingsIntent.SetReasoningEffort -> {
+                    if (!oldState.supportsReasoningEffort) return oldState
+                    oldState.copy(reasoningEffort = intent.value, reasoningEffortReset = false)
+                }
+
                 is AssistantSettingsIntent.SetManualModel -> oldState.copy(manualModel = intent.value)
                 is AssistantSettingsIntent.SetSessionOnly -> oldState.copy(sessionOnly = intent.value)
                 is AssistantSettingsIntent.SetConsentAccepted ->
@@ -93,7 +99,7 @@ internal sealed interface AssistantSettingsPartialStateChange {
                 is AssistantSettingsIntent.SetHasNewKey -> oldState.copy(hasNewKey = intent.value)
                 else -> return oldState
             }
-            return edited.copy(
+            return edited.normalizeReasoningEffort(oldState).copy(
                 editRevision = oldState.editRevision + 1,
                 pendingSwitch = null,
                 failure = null
@@ -138,8 +144,18 @@ private fun AssistantSettingsState.applySwitch(target: AssistantProviderSwitch):
         editRevision = editRevision + 1,
         pendingSwitch = null,
         failure = null,
-    )
+    ).normalizeReasoningEffort(this)
 }
+
+private fun AssistantSettingsState.normalizeReasoningEffort(previous: AssistantSettingsState): AssistantSettingsState =
+    if (supportsReasoningEffort != previous.supportsReasoningEffort) {
+        copy(
+            reasoningEffort = AssistantReasoningEffort.LOW,
+            reasoningEffortReset = !supportsReasoningEffort,
+        )
+    } else {
+        this
+    }
 
 private fun AssistantSettingsState.withSaved(saved: AssistantSettings): AssistantSettingsState {
     val provider = AssistantProviderPresets.selection(saved)
@@ -147,6 +163,8 @@ private fun AssistantSettingsState.withSaved(saved: AssistantSettings): Assistan
         saved = saved,
         baseUrl = saved.baseUrl,
         modelId = saved.modelId,
+        reasoningEffort = saved.reasoningEffort,
+        reasoningEffortReset = false,
         providerId = provider,
         protocol = saved.protocol,
         manualModel = saved.modelId !in AssistantProviderPresets.find(provider)?.models.orEmpty(),

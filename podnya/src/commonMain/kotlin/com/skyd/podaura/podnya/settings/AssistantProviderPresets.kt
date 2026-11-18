@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.settings
 
+import com.skyd.podaura.podnya.core.AssistantModelIds
 import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 
@@ -10,7 +11,7 @@ data class AssistantProviderPreset(
     val baseUrl: String,
     val protocol: AssistantProtocol,
     val models: List<String>,
-    val defaultModelId: String,
+    val defaultModelId: String = models.first(),
 )
 
 object AssistantProviderPresets {
@@ -23,40 +24,35 @@ object AssistantProviderPresets {
             displayName = "OpenAI",
             baseUrl = "https://api.openai.com/v1/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = listOf("gpt-6.1-sol", "gpt-6-luna", "gpt-6-astra", "gpt-6.1-terra"),
-            defaultModelId = "gpt-6.1-sol",
+            models = AssistantModelIds.openAiResponses,
         ),
         AssistantProviderPreset(
             id = "deepseek",
             displayName = "DeepSeek",
             baseUrl = "https://api.deepseek.com/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = listOf("deepseek-flash", "deepseek-v4-pro"),
-            defaultModelId = "deepseek-flash",
+            models = AssistantModelIds.deepSeek,
         ),
         AssistantProviderPreset(
             id = "claude",
             displayName = "Claude",
             baseUrl = "https://api.anthropic.com/v1/",
             protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
-            models = listOf("claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"),
-            defaultModelId = "claude-sonnet-5-5",
+            models = AssistantModelIds.claude,
         ),
         AssistantProviderPreset(
             id = "gemini",
             displayName = "Gemini",
             baseUrl = "https://generativelanguage.googleapis.com/v1beta/",
             protocol = AssistantProtocol.GEMINI_GENERATE_CONTENT,
-            models = listOf("gemini-4-hydrogen", "gemini-3.8-flash"),
-            defaultModelId = "gemini-4-hydrogen",
+            models = AssistantModelIds.gemini,
         ),
         AssistantProviderPreset(
             id = "grok",
             displayName = "Grok",
             baseUrl = "https://api.x.ai/v1/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = listOf("grok-4.7"),
-            defaultModelId = "grok-4.7",
+            models = AssistantModelIds.grok,
         ),
     )
 

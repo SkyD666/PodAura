@@ -26,7 +26,7 @@ class PodnyaRequestBudgetTest {
             bodies += request.body.toByteArray().decodeToString()
             respond("{}")
         })
-        val client = PodnyaHttpFactory(baseClient = base, responses = false).create(
+        val client = PodnyaHttpFactory(baseClient = base).create(
             clientName = "budget-test", baseUrl = "https://example.test/v1/",
             headers = emptyMap(), queryParameters = emptyMap(),
             requestTimeoutMillis = 1000, connectTimeoutMillis = 1000, socketTimeoutMillis = 1000,

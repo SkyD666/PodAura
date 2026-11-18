@@ -388,7 +388,10 @@ private fun AssistantReply(turn: AssistantSessionTurn) {
                 )
                 turn.source?.let { source ->
                     Text(
-                        text = source.modelId,
+                        text = listOfNotNull(
+                            source.modelId,
+                            source.reasoningEffort
+                        ).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

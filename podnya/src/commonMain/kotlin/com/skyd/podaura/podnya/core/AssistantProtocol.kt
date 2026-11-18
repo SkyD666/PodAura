@@ -29,14 +29,33 @@ fun assistantEndpointPath(
 
         AssistantProtocol.OPENAI_COMPATIBLE -> Unit
     }
+    return if (supportsAssistantReasoningEffort(
+            baseUrl = baseUrl,
+            modelId = modelId,
+            protocol = protocol
+        )
+    ) {
+        "responses"
+    } else {
+        "chat/completions"
+    }
+}
+
+/** Shared by routing, settings and the immutable connection; never infer support from a brand. */
+fun supportsAssistantReasoningEffort(
+    baseUrl: String,
+    modelId: String,
+    protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
+): Boolean {
+    if (protocol != AssistantProtocol.OPENAI_COMPATIBLE) return false
     val model = modelId.trim()
-    val requiresResponses = listOf("gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna", "gpt-6.1-terra").any {
-        model == it || model.startsWith("$it-")
+    val requiresResponses = AssistantModelIds.openAiResponses.any { id ->
+        model == id || model.startsWith("$id-")
     }
     val officialHost = runCatching {
         Url(baseUrl).host.equals("api.openai.com", ignoreCase = true)
     }.getOrDefault(false)
-    return if (requiresResponses && officialHost) "responses" else "chat/completions"
+    return requiresResponses && officialHost
 }
 
 /** API prefixes belong to the configured address; never invent a version prefix. */

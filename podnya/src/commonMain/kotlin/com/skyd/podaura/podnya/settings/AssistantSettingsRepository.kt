@@ -10,8 +10,10 @@ import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantProtocol
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.assistantEndpointPath
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
+import com.skyd.podaura.podnya.core.supportsAssistantReasoningEffort
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +42,7 @@ data class AssistantSettings(
     val consentAccepted: Boolean = false,
     val providerId: String? = null,
     val protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
+    val reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
     val readError: AssistantConfigurationReadError? = null,
 ) {
     val configured: Boolean get() = readError == null && baseUrl.isNotBlank() && modelId.isNotBlank() && hasApiKey
@@ -65,6 +68,7 @@ class AssistantSettingsRepository(
         val consentVersion: Int = 0,
         val providerId: String? = null,
         val protocol: String? = null,
+        val reasoningEffort: String? = null,
     )
 
     private val key = stringPreferencesKey("podnya.configuration.v1")
@@ -117,6 +121,8 @@ class AssistantSettingsRepository(
             consentAccepted = baseUrl.isNotBlank() && consentFor == baseUrl && consentVersion == 1,
             providerId = providerId,
             protocol = protocol,
+            reasoningEffort = reasoningEffort?.let(AssistantReasoningEffort::fromId)
+                ?: AssistantReasoningEffort.LOW,
         )
     }
 
@@ -131,6 +137,7 @@ class AssistantSettingsRepository(
         consentAccepted: Boolean,
         providerId: String? = null,
         protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
+        reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
     ) = mutex.withLock {
         val normalized = normalizeAssistantBaseUrl(input = baseUrl, protocol = protocol)
         val model = modelId.trim()
@@ -159,9 +166,16 @@ class AssistantSettingsRepository(
         val wroteCredential = newCredentialId != null && newCredentialId != previous.credentialId
         if (wroteCredential) credentialStore.put(newCredentialId, secret)
         val stored = Stored(
-            version = 2,
+            version = 3,
             providerId = providerId,
             protocol = protocol.id,
+            reasoningEffort = reasoningEffort.id.takeIf {
+                supportsAssistantReasoningEffort(
+                    baseUrl = normalized,
+                    modelId = model,
+                    protocol = protocol
+                )
+            },
             configId = previous.configId ?: Uuid.random().toString(),
             revision = previous.revision + 1,
             baseUrl = normalized,
@@ -224,6 +238,8 @@ class AssistantSettingsRepository(
                 modelId = stored.modelId,
                 apiKey = secret,
                 protocol = protocol,
+                reasoningEffort = stored.reasoningEffort?.let(AssistantReasoningEffort::fromId)
+                    ?: AssistantReasoningEffort.LOW,
             )
         }
 
@@ -267,15 +283,28 @@ class AssistantSettingsRepository(
                 objectValue.getValue("version").jsonPrimitive.intOrNull
                     ?: throw ConfigurationReadException(AssistantConfigurationReadError.CORRUPT)
             } else 1
-            if (version > 2) throw ConfigurationReadException(AssistantConfigurationReadError.NEWER_FORMAT)
-            if (version !in 1..2) throw ConfigurationReadException(AssistantConfigurationReadError.CORRUPT)
+            if (version > 3) throw ConfigurationReadException(AssistantConfigurationReadError.NEWER_FORMAT)
+            if (version !in 1..3) throw ConfigurationReadException(AssistantConfigurationReadError.CORRUPT)
             val stored = json.decodeFromString<Stored>(value)
             val protocol = stored.connectionProtocol()
+            val supported = supportsAssistantReasoningEffort(
+                baseUrl = stored.baseUrl,
+                modelId = stored.modelId,
+                protocol = protocol,
+            )
+            val validEffort = if (supported) {
+                stored.reasoningEffort?.let(AssistantReasoningEffort::fromId) != null
+            } else {
+                stored.reasoningEffort == null
+            }
+            if (version == 3 && !validEffort) {
+                throw ConfigurationReadException(AssistantConfigurationReadError.CORRUPT)
+            }
             if (stored.baseUrl.isBlank() || stored.modelId.isBlank() || stored.revision < 0 ||
                 stored.modelId.length > 200 || stored.modelId.any(Char::isISOControl)
             ) throw ConfigurationReadException(AssistantConfigurationReadError.CORRUPT)
             normalizeAssistantBaseUrl(input = stored.baseUrl, protocol = protocol)
-            return stored
+            return if (version < 3) stored.copy(reasoningEffort = null) else stored
         } catch (failure: ConfigurationReadException) {
             throw failure
         } catch (_: Exception) {

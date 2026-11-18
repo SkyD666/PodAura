@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.skyd.fundation.credential.CredentialStore
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.assistantEndpointPath
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
@@ -42,12 +43,79 @@ class AssistantConfigurationFormatTest {
     }
 
     @Test
+    fun legacyEffortDefaultsToLowAndEveryLevelSurvivesReopeningWithoutReplacingCredentials() = runTest {
+        for (version in 1..2) {
+            val raw = """{"version":$version,"protocol":"openai-compatible","configId":"stable","revision":7,"baseUrl":"https://api.openai.com/v1/","modelId":"gpt-6.1-terra","credentialId":"key","consentFor":"https://api.openai.com/v1/","consentVersion":1}"""
+            val store = Store().apply { values.value = mutablePreferencesOf(key to raw) }
+            val credentials = Credentials().apply { values["key"] = "secret" }
+            val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+            val original = repository.connection()
+            assertEquals(AssistantReasoningEffort.LOW, original.reasoningEffort)
+            assertEquals(raw, store.values.value[key])
+            for (effort in AssistantReasoningEffort.entries) {
+                val before = repository.snapshot()
+                repository.save(
+                    baseUrl = before.baseUrl,
+                    modelId = before.modelId,
+                    apiKey = null,
+                    sessionOnly = false,
+                    consentAccepted = true,
+                    reasoningEffort = effort,
+                )
+                val reopened = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+                assertEquals(effort, reopened.connection().reasoningEffort)
+                assertEquals(effort, reopened.snapshot().reasoningEffort)
+                assertEquals("stable", reopened.snapshot().configId)
+                assertEquals(before.revision + 1, reopened.snapshot().revision)
+                assertEquals(mapOf("key" to "secret"), credentials.values)
+                assertTrue(store.values.value[key]!!.contains("\"version\":3"))
+            }
+            assertEquals(AssistantReasoningEffort.LOW, original.reasoningEffort)
+        }
+    }
+
+    @Test
+    fun unknownModelsAndGatewaysDoNotPersistOrApplyEffort() = runTest {
+        for ((url, model) in listOf(
+            "https://gateway.example/v1/" to "gpt-6.1-terra",
+            "https://api.openai.com/v1/" to "unknown-model",
+            "https://api.openai.com.evil.example/v1/" to "gpt-6.1-terra",
+        )) {
+            val store = Store()
+            val repository = AssistantSettingsRepository(dataStore = store, credentialStore = Credentials())
+            repository.save(
+                baseUrl = url,
+                modelId = model,
+                apiKey = "secret",
+                sessionOnly = false,
+                consentAccepted = true,
+                reasoningEffort = AssistantReasoningEffort.MAX,
+            )
+            assertNull(repository.connection().reasoningEffort)
+            assertEquals(AssistantReasoningEffort.LOW, repository.snapshot().reasoningEffort)
+            assertFalse(store.values.value[key]!!.contains("max"))
+        }
+    }
+
+    @Test
+    fun invalidV3EffortNeverSilentlyDowngradesOrOverwritesConfiguration() = runTest {
+        for (effort in listOf("null", "\"none\"", "\"future\"", "42")) {
+            val raw = """{"version":3,"protocol":"openai-compatible","baseUrl":"https://api.openai.com/v1/","modelId":"gpt-6.1-sol","reasoningEffort":$effort}"""
+            val store = Store().apply { values.value = mutablePreferencesOf(key to raw) }
+            val repository = AssistantSettingsRepository(dataStore = store, credentialStore = Credentials())
+            assertEquals(AssistantConfigurationReadError.CORRUPT, repository.snapshot().readError)
+            assertFails { repository.connection() }
+            assertEquals(raw, store.values.value[key])
+        }
+    }
+
+    @Test
     fun unreadableConfigurationsRemainIntactAndCannotBeOverwrittenBySave() = runTest {
         val samples = mapOf(
             "{bad" to AssistantConfigurationReadError.CORRUPT,
             "{}" to AssistantConfigurationReadError.CORRUPT,
             """{"version":"oops"}""" to AssistantConfigurationReadError.CORRUPT,
-            """{"version":3,"future":"preserve"}""" to AssistantConfigurationReadError.NEWER_FORMAT,
+            """{"version":4,"future":"preserve"}""" to AssistantConfigurationReadError.NEWER_FORMAT,
             """{"version":2,"baseUrl":"https://example.org/v1/","modelId":"model","protocol":"future"}""" to AssistantConfigurationReadError.UNKNOWN_PROTOCOL,
             """{"version":2,"baseUrl":"https://example.org/v1/","modelId":"model"}""" to AssistantConfigurationReadError.UNKNOWN_PROTOCOL,
         )
@@ -75,7 +143,7 @@ class AssistantConfigurationFormatTest {
     }
 
     @Test
-    fun v1RemainsCompatibleAndV2RetainsCustomAndUnknownProviderIds() = runTest {
+    fun v1RemainsCompatibleAndV3RetainsCustomAndUnknownProviderIds() = runTest {
         val raw = """{"version":1,"configId":"stable","revision":7,"baseUrl":"https://api.anthropic.com/v1/","modelId":"old-manual-model","credentialId":"key","consentFor":"https://api.anthropic.com/v1/","consentVersion":1}"""
         val store = Store().apply { values.value = mutablePreferencesOf(key to raw) }
         val credentials = Credentials().apply { values["key"] = "secret" }
@@ -91,7 +159,7 @@ class AssistantConfigurationFormatTest {
             assertEquals(provider, saved.providerId)
             assertEquals("stable", saved.configId)
             assertEquals("old-manual-model", saved.modelId)
-            assertTrue(store.values.value[key]!!.contains("\"version\":2"))
+            assertTrue(store.values.value[key]!!.contains("\"version\":3"))
         }
         assertEquals(9, repository.snapshot().revision)
     }

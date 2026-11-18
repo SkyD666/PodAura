@@ -18,6 +18,7 @@ import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.runtime.PodnyaHttpFactory
+import com.skyd.podaura.podnya.runtime.PodnyaTimeouts
 import com.skyd.podaura.podnya.runtime.normalizeResponsesFrames
 import kotlinx.coroutines.flow.Flow
 import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
@@ -36,6 +37,7 @@ internal fun podnyaOpenAiClient(
     connection: AssistantConnection,
     httpFactory: PodnyaHttpFactory,
     responses: Boolean,
+    timeouts: PodnyaTimeouts,
 ): OpenAILLMClient = object : OpenAILLMClient(
     apiKey = connection.apiKey,
     settings = OpenAIClientSettings(
@@ -43,9 +45,9 @@ internal fun podnyaOpenAiClient(
         chatCompletionsPath = "chat/completions",
         responsesAPIPath = "responses",
         timeoutConfig = ConnectionTimeoutConfig(
-            requestTimeoutMillis = 45_000,
-            connectTimeoutMillis = 15_000,
-            socketTimeoutMillis = 15_000,
+            requestTimeoutMillis = timeouts.requestMillis,
+            connectTimeoutMillis = timeouts.connectMillis,
+            socketTimeoutMillis = timeouts.idleMillis,
         ),
     ),
     httpClientFactory = httpFactory,

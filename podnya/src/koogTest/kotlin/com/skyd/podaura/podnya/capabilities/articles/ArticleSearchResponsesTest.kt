@@ -19,6 +19,7 @@ import com.skyd.podaura.podnya.runtime.responsesObject as responseObject
 import com.skyd.podaura.podnya.runtime.responsesReasoning as reasoning
 import com.skyd.podaura.podnya.runtime.responsesReply as response
 import com.skyd.podaura.podnya.runtime.responsesStream as stream
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantConnection
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -57,6 +58,7 @@ class ArticleSearchResponsesTest {
                 baseUrl = "https://api.openai.com/v1/",
                 modelId = "gpt-6.1-terra",
                 apiKey = TEST_KEY,
+                reasoningEffort = AssistantReasoningEffort.MAX,
             )
         )
 
@@ -75,7 +77,7 @@ class ArticleSearchResponsesTest {
             script.requests.forEach {
                 assertEquals(JsonPrimitive(connection.modelId), it["model"])
                 assertEquals(JsonPrimitive(false), it["store"])
-                assertEquals("low", it["reasoning"]!!.jsonObject["effort"]!!.jsonPrimitive.content)
+                assertEquals(connection.reasoningEffort!!.id, it["reasoning"]!!.jsonObject["effort"]!!.jsonPrimitive.content)
                 assertTrue("reasoning.encrypted_content" in it["include"].toString())
                 assertFalse(it.containsKey("temperature") || it.containsKey("top_p") || it.containsKey("previous_response_id"))
                 (it["tools"] as? JsonArray)?.forEach { tool -> assertEquals(JsonPrimitive(false), tool.jsonObject["strict"]) }

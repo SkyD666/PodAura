@@ -32,7 +32,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 internal val podnyaJson = Json { encodeDefaults = true }
 
@@ -42,7 +41,10 @@ internal fun promptBytes(prompt: Prompt, tools: List<ToolDescriptor> = emptyList
             podnyaJson.encodeToString(tools.map { it.toString() }).encodeToByteArray().size
 
 /** Count the actual executor boundary, including manual structured output and streaming. */
-internal class BudgetedExecutor(private val delegate: PromptExecutor) : PromptExecutor() {
+internal class BudgetedExecutor(
+    private val delegate: PromptExecutor,
+    private val timeouts: PodnyaTimeouts = PodnyaTimeouts(),
+) : PromptExecutor() {
     var calls = 0
         private set
 
@@ -62,7 +64,7 @@ internal class BudgetedExecutor(private val delegate: PromptExecutor) : PromptEx
     ): Message.Assistant {
         admit(prompt, tools)
         return try {
-            withTimeoutOrNull(45_000.milliseconds) {
+            withTimeoutOrNull(timeouts.requestMillis.milliseconds) {
                 delegate.execute(
                     prompt = prompt,
                     model = model,
@@ -154,12 +156,16 @@ private fun requestLimitError(body: String?): AssistantFailure {
 
 /** No TextComplete replay, reasoning, tool payloads, or synthesized typing events. */
 @OptIn(FlowPreview::class)
-internal suspend fun collectReply(frames: Flow<StreamFrame>, delta: suspend (String) -> Unit) {
-    val finished = withTimeoutOrNull(45_000.milliseconds) {
+internal suspend fun collectReply(
+    frames: Flow<StreamFrame>,
+    timeouts: PodnyaTimeouts = PodnyaTimeouts(),
+    delta: suspend (String) -> Unit,
+) {
+    val finished = withTimeoutOrNull(timeouts.requestMillis.milliseconds) {
         coroutineScope {
             val firstText = CompletableDeferred<Unit>()
             val watchdog = launch {
-                if (withTimeoutOrNull(15_000.milliseconds) { firstText.await() } == null) {
+                if (withTimeoutOrNull(timeouts.idleMillis.milliseconds) { firstText.await() } == null) {
                     throw AssistantException(AssistantError.STREAM_INTERRUPTED)
                 }
             }
@@ -167,7 +173,7 @@ internal suspend fun collectReply(frames: Flow<StreamFrame>, delta: suspend (Str
             var complete = false
             var ended = false
             try {
-                frames.timeout(15.seconds).collect { frame ->
+                frames.timeout(timeouts.idleMillis.milliseconds).collect { frame ->
                     if (ended) throw AssistantException(AssistantError.STREAM_INTERRUPTED)
                     when (frame) {
                         is StreamFrame.TextDelta -> {

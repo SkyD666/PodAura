@@ -130,4 +130,7 @@
     <string name="podnya_config_corrupt">This configuration cannot be read. Reload it or clear it to start again.</string>
     <string name="podnya_config_storage">Could not read the configuration. Reload to try again.</string>
     <string name="podnya_copy_code">Copy code</string>
+    <string name="podnya_reasoning_effort">Reasoning effort</string>
+    <string name="podnya_reasoning_wait">Replies and connection tests can take up to 10 minutes. You can cancel while waiting.</string>
+    <string name="podnya_reasoning_reset">Reasoning effort is unavailable for this connection. The selection was cleared; supported models will start at low.</string>
 </resources>

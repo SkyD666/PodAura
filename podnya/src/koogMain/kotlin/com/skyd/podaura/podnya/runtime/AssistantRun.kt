@@ -20,12 +20,13 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 internal fun assistantRunEvents(
     request: AssistantTurnRequest,
+    timeouts: PodnyaTimeouts = PodnyaTimeouts(),
     execute: suspend (event: suspend (AssistantRunEvent) -> Unit) -> Unit,
 ): Flow<AssistantRunEvent> = channelFlow {
     var published = false
     try {
         send(AssistantRunEvent.Progress(AssistantPhase.PREPARING))
-        val finished = withTimeoutOrNull(AssistantLimits.TURN_TIMEOUT_MILLIS.milliseconds) {
+        val finished = withTimeoutOrNull(timeouts.turnMillis.milliseconds) {
             if (request.question.isBlank() || request.question.length > AssistantLimits.INPUT_CHARS) {
                 throw AssistantException(AssistantError.INVALID_OUTPUT)
             }

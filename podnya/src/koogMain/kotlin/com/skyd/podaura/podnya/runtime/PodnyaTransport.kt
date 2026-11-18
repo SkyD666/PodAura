@@ -1,10 +1,5 @@
 package com.skyd.podaura.podnya.runtime
 
-import com.skyd.podaura.podnya.runtime.client.PodnyaGeminiExchange
-import com.skyd.podaura.podnya.runtime.client.podnyaAnthropicClient
-import com.skyd.podaura.podnya.runtime.client.podnyaGeminiClient
-import com.skyd.podaura.podnya.runtime.client.podnyaModel
-import com.skyd.podaura.podnya.runtime.client.podnyaOpenAiClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -13,13 +8,19 @@ import ai.koog.prompt.llm.LLModel
 import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.assistantEndpointPath
+import com.skyd.podaura.podnya.runtime.client.PodnyaGeminiExchange
+import com.skyd.podaura.podnya.runtime.client.podnyaAnthropicClient
+import com.skyd.podaura.podnya.runtime.client.podnyaGeminiClient
+import com.skyd.podaura.podnya.runtime.client.podnyaModel
+import com.skyd.podaura.podnya.runtime.client.podnyaOpenAiClient
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.cancel
 
 /** Owns both the factory's configured client copy and the original engine-owning client. */
 internal class PodnyaTransport(
     connection: AssistantConnection,
-    private val baseClient: HttpClient
+    private val baseClient: HttpClient,
+    timeouts: PodnyaTimeouts = PodnyaTimeouts.forConnection(connection),
 ) : AutoCloseable {
     private val responses = assistantEndpointPath(
         baseUrl = connection.baseUrl,
@@ -30,7 +31,7 @@ internal class PodnyaTransport(
         if (connection.protocol == AssistantProtocol.GEMINI_GENERATE_CONTENT) PodnyaGeminiExchange() else null
     private val httpFactory = PodnyaHttpFactory(
         baseClient = baseClient,
-        responses = responses,
+        reasoningEffort = connection.reasoningEffort,
         protocol = connection.protocol,
         gemini = gemini,
     )
@@ -63,7 +64,10 @@ internal class PodnyaTransport(
 
             val client = when (connection.protocol) {
                 AssistantProtocol.OPENAI_COMPATIBLE -> podnyaOpenAiClient(
-                    connection = connection, httpFactory = httpFactory, responses = responses,
+                    connection = connection,
+                    httpFactory = httpFactory,
+                    responses = responses,
+                    timeouts = timeouts,
                 )
 
                 AssistantProtocol.ANTHROPIC_MESSAGES -> podnyaAnthropicClient(

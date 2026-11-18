@@ -406,6 +406,7 @@ class AssistantConversationRepository(
                             baseUrl = connection.baseUrl,
                             modelId = connection.modelId,
                             protocol = connection.protocol.id,
+                            reasoningEffort = connection.reasoningEffort?.id,
                         ),
                     )
                     val clear =

@@ -130,4 +130,7 @@
     <string name="podnya_config_corrupt">Yapılandırma çözümlenemedi. Yeniden yükleyin veya temizleyip yeniden ayarlayın.</string>
     <string name="podnya_config_storage">Yapılandırma okunamadı. Yeniden yükleyerek tekrar deneyin.</string>
     <string name="podnya_copy_code">Kodu kopyala</string>
+    <string name="podnya_reasoning_effort">Akıl yürütme düzeyi</string>
+    <string name="podnya_reasoning_wait">Yanıtlar ve bağlantı testleri 10 dakikaya kadar sürebilir. Beklerken iptal edebilirsiniz.</string>
+    <string name="podnya_reasoning_reset">Bu bağlantıda akıl yürütme düzeyi seçilemez. Seçim temizlendi; desteklenen modellere dönüldüğünde low kullanılır.</string>
 </resources>

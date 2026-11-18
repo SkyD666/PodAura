@@ -5,6 +5,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantLimits
+import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.JsonArray
@@ -17,7 +18,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /** Per-transport state; only this turn's tool exchanges are retained, never chat history. */
-internal class PodnyaResponses {
+internal class PodnyaResponses(private val reasoningEffort: AssistantReasoningEffort) {
     private data class Exchange(val output: JsonArray, val projected: List<JsonObject>)
 
     private val exchanges = mutableListOf<Exchange>()
@@ -50,7 +51,7 @@ internal class PodnyaResponses {
             put("input", JsonArray(input))
             put("store", JsonPrimitive(false))
             put("include", buildJsonArray { add(JsonPrimitive("reasoning.encrypted_content")) })
-            put("reasoning", buildJsonObject { put("effort", "low") })
+            put("reasoning", buildJsonObject { put("effort", reasoningEffort.id) })
             remove("temperature")
             remove("top_p")
             remove("top_logprobs")

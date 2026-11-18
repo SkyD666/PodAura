@@ -27,9 +27,17 @@ internal class PodnyaConnectionProbe(
     private val httpClient: () -> HttpClient = ::createPodnyaHttpClient,
 ) {
     suspend fun verify(): AssistantConnectionResult = try {
-        val completed = withTimeoutOrNull(AssistantLimits.TURN_TIMEOUT_MILLIS.milliseconds) {
-            PodnyaTransport(connection(), httpClient()).use { transport ->
-                val executor = BudgetedExecutor(transport.executor)
+        val fixed =
+            withTimeoutOrNull(AssistantLimits.TURN_TIMEOUT_MILLIS.milliseconds) { connection() }
+                ?: throw AssistantException(AssistantError.TIMEOUT)
+        val timeouts = PodnyaTimeouts.forConnection(fixed)
+        val completed = withTimeoutOrNull(timeouts.turnMillis.milliseconds) {
+            PodnyaTransport(
+                connection = fixed,
+                baseClient = httpClient(),
+                timeouts = timeouts
+            ).use { transport ->
+                val executor = BudgetedExecutor(delegate = transport.executor, timeouts = timeouts)
                 val tool = EchoTool()
                 val tools = listOf(tool.descriptor)
                 var conversation = prompt("podnya-connection-tool") {
@@ -139,13 +147,14 @@ internal class PodnyaConnectionProbe(
                 }
                 if (!structured) throw AssistantException(AssistantError.INVALID_OUTPUT)
                 collectReply(
-                    executor.executeStreaming(
+                    frames = executor.executeStreaming(
                         prompt = prompt("podnya-connection-stream") {
                             system("This is a synthetic connection test. Reply briefly in plain text without tools.")
                             user("Reply OK.")
                         },
                         model = transport.model, tools = emptyList(),
-                    )
+                    ),
+                    timeouts = timeouts,
                 ) {}
             }
             true

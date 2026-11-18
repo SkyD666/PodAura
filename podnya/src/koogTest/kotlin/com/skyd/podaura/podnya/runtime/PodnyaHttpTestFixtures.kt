@@ -1,6 +1,8 @@
 package com.skyd.podaura.podnya.runtime
 
 import com.skyd.podaura.podnya.core.AssistantConnection
+import io.ktor.client.plugins.HttpTimeoutCapability
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockEngineConfig
@@ -34,9 +36,11 @@ internal class HttpScript(vararg replies: HttpReply) {
     private val replies = ArrayDeque(replies.toList())
     val requests = mutableListOf<JsonObject>()
     val paths = mutableListOf<String>()
+    val timeouts = mutableListOf<HttpTimeoutConfig?>()
     fun client() = HttpClient(SseMockEngine { request ->
             assertEquals("Bearer $TEST_KEY", request.headers[HttpHeaders.Authorization])
             paths += request.url.encodedPath
+            timeouts += request.getCapabilityOrNull(HttpTimeoutCapability)
             requests += podnyaJson.parseToJsonElement(request.body.toByteArray().decodeToString()).jsonObject
             val next = replies.removeFirst()
             respond(next.body, next.status, headersOf(HttpHeaders.ContentType,
