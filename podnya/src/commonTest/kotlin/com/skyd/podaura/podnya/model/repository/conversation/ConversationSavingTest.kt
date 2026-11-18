@@ -17,7 +17,7 @@ class ConversationSavingTest {
             calls++
             for (event in events) emit(event)
         }
-        override suspend fun verify() = AssistantConnectionResult(true)
+        override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
     }
 
     @Test
@@ -41,7 +41,7 @@ class ConversationSavingTest {
         }
         val id = repo.state.value.selected.id
         assertEquals("draft 26", memory.metadata(id)!!.draft)
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         val acceptedWrites = turnWrites
         repeat(40) {
@@ -79,7 +79,7 @@ class ConversationSavingTest {
         val notices = mutableListOf<AssistantConversationRepository.Notice>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repo.notices.toList(notices) }
         repo.editDraft("original")
-        repo.sendDraft(settings)
+        repo.sendDraft()
         runCurrent()
         assertTrue(writing.isCompleted)
         assertEquals(0, runtime.calls)
@@ -111,7 +111,7 @@ class ConversationSavingTest {
         val settings = conversationSettings()
         val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope, saveClock = { testScheduler.currentTime })
         repo.editDraft("question")
-        repo.sendDraft(settings)
+        repo.sendDraft()
         runCurrent()
         runtime.events.send(AssistantRunEvent.ReplyDelta("unsaved partial"))
         runCurrent()
@@ -123,7 +123,7 @@ class ConversationSavingTest {
         assertTrue(repo.state.value.runningIds.isEmpty())
         assertEquals("unsaved draft", repo.state.value.selected.draft)
         assertEquals("unsaved partial", repo.state.value.selected.turns.single().reply)
-        assertFalse(repo.sendDraft(settings))
+        assertFalse(repo.sendDraft())
         repo.retrySave()
         assertEquals(ConversationStorageState.SAVE_FAILED, repo.state.value.storage)
         fail = false
@@ -153,7 +153,7 @@ class ConversationSavingTest {
         val settings = conversationSettings()
         val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope)
         repo.editDraft("question")
-        repo.sendDraft(settings)
+        repo.sendDraft()
         runCurrent()
         runtime.events.send(AssistantRunEvent.ReplyDelta("one"))
         runCurrent()

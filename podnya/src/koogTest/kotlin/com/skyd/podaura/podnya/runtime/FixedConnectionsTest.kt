@@ -32,7 +32,7 @@ class FixedConnectionsTest {
             scripts.mapIndexed { index, script -> async {
                 val runtime = KoogAssistantRuntime(
                     testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()),
-                    { error("Run must never read the current global configuration") }, script::client,
+                    script::client,
                 )
                 assertEquals(AssistantRunEvent.Completed,
                     runtime.run(AssistantTurnRequest("Find something"), connections[index]).toList().last())

@@ -47,7 +47,7 @@ class PodnyaConnectionProbeTest {
                 ).verify()
                 assertTrue(result.success)
                 assertEquals(4, script.requests.size)
-                val expected = PodnyaTimeouts.forConnection(connection)
+                val expected = connection.timeouts
                 script.timeouts.forEach { timeout ->
                     assertEquals(expected.connectMillis, timeout!!.connectTimeoutMillis)
                     assertEquals(expected.idleMillis, timeout.socketTimeoutMillis)

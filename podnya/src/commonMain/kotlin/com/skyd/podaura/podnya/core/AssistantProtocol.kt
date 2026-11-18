@@ -46,17 +46,8 @@ fun supportsAssistantReasoningEffort(
     baseUrl: String,
     modelId: String,
     protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
-): Boolean {
-    if (protocol != AssistantProtocol.OPENAI_COMPATIBLE) return false
-    val model = modelId.trim()
-    val requiresResponses = AssistantModelIds.openAiResponses.any { id ->
-        model == id || model.startsWith("$id-")
-    }
-    val officialHost = runCatching {
-        Url(baseUrl).host.equals("api.openai.com", ignoreCase = true)
-    }.getOrDefault(false)
-    return requiresResponses && officialHost
-}
+): Boolean = AssistantModelCatalog.policy(baseUrl = baseUrl, modelId = modelId, protocol = protocol)
+    ?.supportsReasoningEffort == true
 
 /** API prefixes belong to the configured address; never invent a version prefix. */
 fun normalizeAssistantBaseUrl(

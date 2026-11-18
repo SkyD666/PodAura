@@ -51,15 +51,14 @@ class AssistantConfigurationFormatTest {
             val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
             val original = repository.connection()
             assertEquals(AssistantReasoningEffort.LOW, original.reasoningEffort)
-            assertEquals(raw, store.values.value[key])
+            assertTrue(store.values.value[key]!!.contains("\"version\":4"))
             for (effort in AssistantReasoningEffort.entries) {
                 val before = repository.snapshot()
                 repository.save(
+                    editing = before,
                     baseUrl = before.baseUrl,
                     modelId = before.modelId,
                     apiKey = null,
-                    sessionOnly = false,
-                    consentAccepted = true,
                     reasoningEffort = effort,
                 )
                 val reopened = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
@@ -68,7 +67,7 @@ class AssistantConfigurationFormatTest {
                 assertEquals("stable", reopened.snapshot().configId)
                 assertEquals(before.revision + 1, reopened.snapshot().revision)
                 assertEquals(mapOf("key" to "secret"), credentials.values)
-                assertTrue(store.values.value[key]!!.contains("\"version\":3"))
+                assertTrue(store.values.value[key]!!.contains("\"version\":4"))
             }
             assertEquals(AssistantReasoningEffort.LOW, original.reasoningEffort)
         }
@@ -87,8 +86,6 @@ class AssistantConfigurationFormatTest {
                 baseUrl = url,
                 modelId = model,
                 apiKey = "secret",
-                sessionOnly = false,
-                consentAccepted = true,
                 reasoningEffort = AssistantReasoningEffort.MAX,
             )
             assertNull(repository.connection().reasoningEffort)
@@ -115,7 +112,7 @@ class AssistantConfigurationFormatTest {
             "{bad" to AssistantConfigurationReadError.CORRUPT,
             "{}" to AssistantConfigurationReadError.CORRUPT,
             """{"version":"oops"}""" to AssistantConfigurationReadError.CORRUPT,
-            """{"version":4,"future":"preserve"}""" to AssistantConfigurationReadError.NEWER_FORMAT,
+            """{"version":5,"future":"preserve"}""" to AssistantConfigurationReadError.NEWER_FORMAT,
             """{"version":2,"baseUrl":"https://example.org/v1/","modelId":"model","protocol":"future"}""" to AssistantConfigurationReadError.UNKNOWN_PROTOCOL,
             """{"version":2,"baseUrl":"https://example.org/v1/","modelId":"model"}""" to AssistantConfigurationReadError.UNKNOWN_PROTOCOL,
         )
@@ -129,80 +126,99 @@ class AssistantConfigurationFormatTest {
             assertFails {
                 repository.save(
                     baseUrl = "https://new.example/v1/", modelId = "model", apiKey = "secret",
-                    sessionOnly = false, consentAccepted = true,
                 )
             }
             repository.reload()
             assertEquals(error, repository.snapshot().readError)
             assertEquals(raw, store.values.value[key])
             assertTrue(credentials.values.isEmpty())
-            repository.clear()
+            repository.clearUnreadable()
             assertNull(repository.snapshot().readError)
             assertNull(store.values.value[key])
         }
     }
 
     @Test
-    fun v1RemainsCompatibleAndV3RetainsCustomAndUnknownProviderIds() = runTest {
+    fun migrationRetainsCustomAndUnknownProviderIds() = runTest {
         val raw = """{"version":1,"configId":"stable","revision":7,"baseUrl":"https://api.anthropic.com/v1/","modelId":"old-manual-model","credentialId":"key","consentFor":"https://api.anthropic.com/v1/","consentVersion":1}"""
         val store = Store().apply { values.value = mutablePreferencesOf(key to raw) }
         val credentials = Credentials().apply { values["key"] = "secret" }
         val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
         assertEquals(AssistantProtocol.OPENAI_COMPATIBLE, repository.connection().protocol)
-        assertEquals(raw, store.values.value[key])
+        assertTrue(store.values.value[key]!!.contains("\"version\":4"))
         for (provider in listOf("custom", "future-provider")) {
             repository.save(
                 baseUrl = "https://api.anthropic.com/v1/", modelId = "old-manual-model", apiKey = null,
-                sessionOnly = false, consentAccepted = true, providerId = provider,
+                editing = repository.snapshot(), providerId = provider,
             )
             val saved = repository.snapshot()
             assertEquals(provider, saved.providerId)
             assertEquals("stable", saved.configId)
             assertEquals("old-manual-model", saved.modelId)
-            assertTrue(store.values.value[key]!!.contains("\"version\":3"))
+            assertTrue(store.values.value[key]!!.contains("\"version\":4"))
         }
         assertEquals(9, repository.snapshot().revision)
     }
 
     @Test
     fun protocolChangesRequireNewKeyAndFailedCommitPreservesPreviousConnection() = runTest {
-        for (sessionOnly in listOf(false, true)) {
-            val store = Store()
-            val credentials = Credentials()
-            val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+        val store = Store()
+        val credentials = Credentials()
+        val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+        repository.save(
+            baseUrl = "https://example.org/v1", modelId = "model", apiKey = "old",
+        )
+        val fixed = repository.connection()
+        assertFails {
             repository.save(
-                baseUrl = "https://example.org/v1", modelId = "model", apiKey = "old",
-                sessionOnly = sessionOnly, consentAccepted = true,
-            )
-            val fixed = repository.connection()
-            assertFails {
-                repository.save(
-                    baseUrl = "https://example.org/v1", modelId = "model", apiKey = null,
-                    sessionOnly = sessionOnly, consentAccepted = true,
-                    protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
-                )
-            }
-            store.failWrite = true
-            assertFails {
-                repository.save(
-                    baseUrl = "https://example.org/v1", modelId = "model", apiKey = "new",
-                    sessionOnly = sessionOnly, consentAccepted = true,
-                    protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
-                )
-            }
-            assertEquals("old", repository.connection().apiKey)
-            assertFalse(credentials.values.containsValue("new"))
-            store.failWrite = false
-            repository.save(
-                baseUrl = "https://example.org/v1", modelId = "model", apiKey = "new",
-                sessionOnly = sessionOnly, consentAccepted = true,
+                editing = repository.snapshot(),
+                baseUrl = "https://example.org/v1", modelId = "model", apiKey = null,
+
                 protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
             )
-            assertEquals(AssistantProtocol.ANTHROPIC_MESSAGES, repository.connection().protocol)
-            repository.clear()
-            assertEquals("old", fixed.apiKey)
-            assertEquals(AssistantProtocol.OPENAI_COMPATIBLE, fixed.protocol)
         }
+        store.failWrite = true
+        assertFails {
+            repository.save(
+                editing = repository.snapshot(),
+                baseUrl = "https://example.org/v1", modelId = "model", apiKey = "new",
+
+                protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
+            )
+        }
+        assertEquals("old", repository.connection().apiKey)
+        assertFalse(credentials.values.containsValue("new"))
+        store.failWrite = false
+        repository.save(
+            editing = repository.snapshot(),
+            baseUrl = "https://example.org/v1", modelId = "model", apiKey = "new",
+
+            protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
+        )
+        assertEquals(AssistantProtocol.ANTHROPIC_MESSAGES, repository.connection().protocol)
+        repository.delete(id = repository.snapshot().configId!!, replacementId = null)
+        assertEquals("old", fixed.apiKey)
+        assertEquals(AssistantProtocol.OPENAI_COMPATIBLE, fixed.protocol)
+    }
+
+    @Test
+    fun legacyTemporaryKeyRequiresOnePersistentKeyAfterUpgrade() = runTest {
+        val raw = """{"version":3,"protocol":"openai-compatible","baseUrl":"https://example.org/","modelId":"legacy"}"""
+        val store = Store().apply { values.value = mutablePreferencesOf(key to raw) }
+        val credentials = Credentials()
+        val repository = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+        val migrated = repository.snapshot()
+        assertEquals("legacy", migrated.name)
+        assertFalse(migrated.hasApiKey)
+        repository.save(
+            baseUrl = migrated.baseUrl,
+            modelId = migrated.modelId,
+            apiKey = "persistent",
+            editing = migrated,
+        )
+        val restarted = AssistantSettingsRepository(dataStore = store, credentialStore = credentials)
+        assertEquals(migrated.configId, restarted.snapshot().configId)
+        assertEquals("persistent", restarted.connection().apiKey)
     }
 
     @Test

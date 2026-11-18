@@ -71,25 +71,11 @@ class AssistantConversationRepository(
     private val pending = ConversationPendingChanges(saveClock)
     private val runs = mutableMapOf<Uuid, ConversationGeneration>()
 
-    data class Confirmation(
-        val conversationId: Uuid,
-        val editorId: String,
-        val revision: Long,
-        val configId: String,
-        val configRevision: Long,
-        val destination: String,
-        val question: String,
-        val retryTurnId: Long? = null,
-    ) {
-        override fun toString() = "Confirmation($conversationId, [redacted])"
-    }
-
     sealed interface Notice {
         data class Rejected(val conversationId: Uuid, val error: AssistantFailure) : Notice
         data class Accepted(val conversationId: Uuid, val editorId: String, val revision: Long) :
             Notice
 
-        data class ConfirmDestination(val confirmation: Confirmation) : Notice
     }
 
     init {
@@ -123,7 +109,7 @@ class AssistantConversationRepository(
                 ?: store.summaries(offset = 0, limit = 1).firstOrNull()
                     ?.let { store.metadata(it.id) }
                 ?: store.blank()
-                ?: state.value.selected.copy(modelConfigId = workspace.lastModelId)
+                ?: state.value.selected
             workspace = workspace.copy(selectedId = selected.id)
             store.commit(metadata = selected, workspace = workspace)
             initialized = true
@@ -236,7 +222,6 @@ class AssistantConversationRepository(
             ?: readStorage { store.blank() }?.takeUnless { it.id in state.value.runningIds }
         val next = (blank ?: AssistantSessionState()).copy(
             context = (context ?: current.context).snapshot(),
-            modelConfigId = workspace.lastModelId,
         )
         val nextWorkspace = workspace.copy(selectedId = next.id)
         if (commit(next, workspaceUpdate = nextWorkspace)) {
@@ -254,26 +239,6 @@ class AssistantConversationRepository(
             manuallyNamed = true
         )
         if (next.title.isNotEmpty() && commit(next)) refreshSummaries()
-    }
-
-    suspend fun selectModel(id: Uuid, configId: String) {
-        val config = settings.snapshot()
-        writes.withLock {
-            if (!ready()) return@withLock
-            val current = metadata(id) ?: return@withLock
-            if (config.configId != configId || !config.configured) {
-                reject(id, AssistantError.CONFIGURATION_REQUIRED)
-                return@withLock
-            }
-            val nextWorkspace = workspace.copy(lastModelId = configId)
-            if (commit(
-                    metadata = current.copy(modelConfigId = configId),
-                    workspaceUpdate = nextWorkspace
-                )
-            ) {
-                workspace = nextWorkspace
-            }
-        }
     }
 
     suspend fun resetContext(id: Uuid) = writes.withLock {
@@ -294,7 +259,7 @@ class AssistantConversationRepository(
             } else workspace.selectedId
             val replacement = if (selected == null) {
                 store.blank()?.takeUnless { it.id == id || it.id in state.value.runningIds }
-                    ?: AssistantSessionState(modelConfigId = workspace.lastModelId)
+                    ?: AssistantSessionState()
             } else null
             val nextWorkspace = workspace.copy(selectedId = selected ?: replacement!!.id)
             withContext(NonCancellable) {
@@ -329,10 +294,7 @@ class AssistantConversationRepository(
         id: Uuid,
         editorId: String,
         revision: Long,
-        configId: String?,
-        configRevision: Long,
         retryTurnId: Long? = null,
-        confirmation: Confirmation? = null,
     ): Boolean = writes.withLock {
         if (!ready()) return@withLock reject(id, AssistantError.CONVERSATION_STORAGE)
         val current = metadata(id) ?: return@withLock false
@@ -354,17 +316,13 @@ class AssistantConversationRepository(
         }
         val question = retry?.question ?: current.draft.trim()
         if (question.isBlank() || question.length > AssistantLimits.INPUT_CHARS) return@withLock false
-        if (current.lastTurnId > 0 && current.modelConfigId == null) {
-            return@withLock reject(id, AssistantError.CONFIGURATION_REQUIRED)
-        }
-        val model = current.modelConfigId ?: configId
-        if (model == null || model != configId) {
-            return@withLock reject(id, AssistantError.CONFIGURATION_REQUIRED)
-        }
         val context = (retry?.context ?: current.context).snapshot()
         if (context is UnreadableContext) {
             return@withLock reject(id, AssistantError.SEARCH_CONTEXT_REQUIRED)
         }
+        val profile = settings.snapshot()
+        val configId =
+            profile.configId ?: return@withLock reject(id, AssistantError.CONFIGURATION_REQUIRED)
         val run = ConversationGeneration()
         stateMutex.withLock {
             runs[id] = run
@@ -373,36 +331,21 @@ class AssistantConversationRepository(
         run.job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 val connection =
-                    settings.resolveConnection(configId = model, expectedRevision = configRevision)
+                    settings.resolveConnection(
+                        configId = configId,
+                        expectedRevision = profile.revision
+                    )
                 val accepted = writes.withLock {
                     val latest = metadata(id) ?: return@withLock false
                     if (!stateMutex.withLock { run.valid && runs[id] === run } || !ready()) return@withLock false
-                    if (latest.modelConfigId != current.modelConfigId || (confirmation != null &&
-                                (latest.editorId != editorId || latest.draftRevision != revision))
-                    ) {
-                        return@withLock reject(id, AssistantError.STALE_INPUT)
-                    }
-                    val ticket = Confirmation(
-                        conversationId = id,
-                        editorId = editorId,
-                        revision = revision,
-                        configId = model,
-                        configRevision = configRevision,
-                        destination = connection.baseUrl,
-                        question = question,
-                        retryTurnId = retryTurnId,
-                    )
-                    if (latest.lastTurnId > 0 && connection.baseUrl !in latest.destinations && confirmation != ticket) {
-                        notifications.tryEmit(Notice.ConfirmDestination(ticket))
-                        return@withLock false
-                    }
                     val turn = AssistantSessionTurn(
                         id = retry?.id ?: (latest.lastTurnId + 1),
                         question = question,
                         context = context,
                         source = AssistantReplySource(
-                            configId = model,
-                            revision = configRevision,
+                            configId = configId,
+                            profileName = profile.name,
+                            revision = profile.revision,
                             baseUrl = connection.baseUrl,
                             modelId = connection.modelId,
                             protocol = connection.protocol.id,
@@ -420,23 +363,11 @@ class AssistantConversationRepository(
                         } else {
                             latest.title
                         },
-                        modelConfigId = model,
-                        destinations = latest.destinations + connection.baseUrl,
-                        rawDestinations = null,
                         lastTurnId = turn.id,
                         lastStatus = turn.status,
                         activityAt = now(),
                     )
-                    val nextWorkspace = workspace.copy(lastModelId = model)
-                    if (!commit(
-                            metadata = next,
-                            turn = turn,
-                            workspaceUpdate = nextWorkspace
-                        )
-                    ) {
-                        return@withLock false
-                    }
-                    workspace = nextWorkspace
+                    if (!commit(metadata = next, turn = turn)) return@withLock false
                     stateMutex.withLock { run.turn = turn }
                     if (retry == null) {
                         notifications.tryEmit(

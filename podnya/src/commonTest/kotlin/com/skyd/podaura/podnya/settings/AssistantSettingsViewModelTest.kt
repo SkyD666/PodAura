@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.settings
 
+import com.skyd.podaura.podnya.core.AssistantConnection
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -60,20 +61,15 @@ class AssistantSettingsViewModelTest {
     }
 
     @Test
-    fun changedRecipientRequiresFreshConsentAndKeyWithoutDiscardingSavedConfiguration() = runTest {
+    fun changedRecipientRequiresFreshKeyWithoutDiscardingSavedConfiguration() = runTest {
         val fixture = createFixture()
         val model = fixture.model
         runCurrent()
         fixture.session.editDraft("Keep this draft")
         dispatch(model, newKey(model))
         dispatch(model, AssistantSettingsIntent.SetBaseUrl("https://second.example/v1"))
-        assertFalse(model.viewState.value.consentAccepted)
         assertFalse(model.viewState.value.hasNewKey)
 
-        dispatch(model, save(model, "old-input-key"))
-        runCurrent()
-        assertEquals(AssistantError.DISCLOSURE_REQUIRED, failure(fixture))
-        dispatch(model, AssistantSettingsIntent.SetConsentAccepted(true))
         dispatch(model, save(model, "old-input-key"))
         runCurrent()
         assertEquals(AssistantError.CONFIGURATION_REQUIRED, failure(fixture))
@@ -91,7 +87,7 @@ class AssistantSettingsViewModelTest {
     }
 
     @Test
-    fun failedSecureSaveKeepsConversationAndAllowsExplicitSessionOnlyRetry() = runTest {
+    fun failedSecureSaveKeepsConversationAndAllowsRetry() = runTest {
         val fixture = createFixture()
         runCurrent()
         fixture.session.editDraft("Do not lose me")
@@ -102,12 +98,10 @@ class AssistantSettingsViewModelTest {
         assertEquals(AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE, failure(fixture))
         assertEquals("Do not lose me", fixture.session.state.value.selected.draft)
         assertTrue(fixture.repository.snapshot().hasApiKey)
-        assertFalse(fixture.repository.snapshot().sessionOnly)
 
-        dispatch(fixture.model, AssistantSettingsIntent.SetSessionOnly(true))
+        fixture.credentials.failWrites = false
         dispatch(fixture.model, save(fixture.model, "rotated-secret"))
         runCurrent()
-        assertTrue(fixture.repository.snapshot().sessionOnly)
         assertEquals("Do not lose me", fixture.session.state.value.selected.draft)
         assertFalse(fixture.model.viewState.value.hasNewKey)
         assertIs<AssistantSettingsEvent.Saved>(fixture.events.last())
@@ -138,15 +132,13 @@ class AssistantSettingsViewModelTest {
     }
 
     @Test
-    fun canonicalEndpointEditsPreserveRecipientWhileInvalidEditsRevokeConsent() = runTest {
+    fun canonicalEndpointEditsPreserveRecipientWhileInvalidEditsDropTheDraftKey() = runTest {
         val fixture = createFixture()
         runCurrent()
         dispatch(fixture.model, AssistantSettingsIntent.SetBaseUrl("https://first.example/v1/chat/completions"))
-        assertTrue(fixture.model.viewState.value.consentAccepted)
         assertFalse(fixture.model.viewState.value.dirty)
         dispatch(fixture.model, newKey(fixture.model))
         dispatch(fixture.model, AssistantSettingsIntent.SetBaseUrl("http://first.example/v1"))
-        assertFalse(fixture.model.viewState.value.consentAccepted)
         assertFalse(fixture.model.viewState.value.hasNewKey)
         assertEquals(null, fixture.model.viewState.value.normalizedBaseUrl)
         dispatch(fixture.model, save(fixture.model, null))
@@ -162,7 +154,6 @@ class AssistantSettingsViewModelTest {
         fixture.session.editDraft("Find unread articles about Kotlin")
         dispatch(fixture.model, AssistantSettingsIntent.SetBaseUrl("https://first.example/v1"))
         dispatch(fixture.model, AssistantSettingsIntent.SetModelId("saved-model"))
-        dispatch(fixture.model, AssistantSettingsIntent.SetConsentAccepted(true))
         dispatch(fixture.model, newKey(fixture.model))
 
         dispatch(fixture.model, save(fixture.model, "initial-secret"))
@@ -181,7 +172,7 @@ class AssistantSettingsViewModelTest {
         val fixture = createFixture()
         runCurrent()
         fixture.session.editDraft("Previously sent question")
-        assertTrue(fixture.session.sendDraft(fixture.repository))
+        assertTrue(fixture.session.sendDraft())
         runCurrent()
         assertEquals(1, fixture.session.state.value.selected.turns.size)
         fixture.session.editDraft("My next question")
@@ -208,10 +199,9 @@ class AssistantSettingsViewModelTest {
         dispatch(fixture.model,
             AssistantSettingsIntent.SetBaseUrl("https://new.example/v1"),
             AssistantSettingsIntent.SetModelId("new-model"),
-            AssistantSettingsIntent.SetConsentAccepted(true),
             AssistantSettingsIntent.SetHasNewKey(value = true, keyRevision = initial.keyRevision + 1),
-            AssistantSettingsIntent.Save(apiKey = "first-key", editRevision = initial.editRevision + 4, keyRevision = initial.keyRevision + 1),
-            AssistantSettingsIntent.Save(apiKey = "must-not-overwrite", editRevision = initial.editRevision + 4, keyRevision = initial.keyRevision + 1),
+            AssistantSettingsIntent.Save(apiKey = "first-key", editRevision = initial.editRevision + 3, keyRevision = initial.keyRevision + 1),
+            AssistantSettingsIntent.Save(apiKey = "must-not-overwrite", editRevision = initial.editRevision + 3, keyRevision = initial.keyRevision + 1),
         )
         val saved = fixture.repository.connection()
         assertEquals("https://new.example/v1/", saved.baseUrl)
@@ -245,7 +235,8 @@ class AssistantSettingsViewModelTest {
         dispatch(fixture.model, AssistantSettingsIntent.SetModelId("saved-model"))
         assertEquals(1, fixture.events.size)
         fixture.session.editDraft("Clear this with the configuration")
-        dispatch(fixture.model, AssistantSettingsIntent.Clear, AssistantSettingsIntent.Clear)
+        val clear = AssistantSettingsIntent.Clear(profileId = fixture.repository.snapshot().configId)
+        dispatch(fixture.model, clear, clear)
         assertEquals(listOf<AssistantSettingsEvent>(AssistantSettingsEvent.ConnectionSucceeded, AssistantSettingsEvent.Cleared), fixture.events)
         assertFalse(fixture.repository.snapshot().configured)
         assertEquals("Clear this with the configuration", fixture.session.state.value.selected.draft)
@@ -281,7 +272,7 @@ class AssistantSettingsViewModelTest {
         val model = "private-model-name"
         val secret = "synthetic-private-api-key"
         val descriptions = listOf(
-            AssistantSettingsIntent.SetBaseUrl(address), AssistantSettingsIntent.SetModelId(model),
+            AssistantSettingsIntent.SetName(model), AssistantSettingsIntent.SetBaseUrl(address), AssistantSettingsIntent.SetModelId(model),
             AssistantSettingsIntent.Save(apiKey = secret, editRevision = 0, keyRevision = 0),
             AssistantSettingsState(saved = AssistantSettings(baseUrl = address, modelId = model), baseUrl = address, modelId = model),
         ).joinToString()
@@ -302,24 +293,11 @@ class AssistantSettingsViewModelTest {
         val before = model.viewState.value
         val lateSave = save(model, "old-key")
         dispatch(model, AssistantSettingsIntent.SelectProvider("claude"))
-        assertEquals("openai", model.viewState.value.providerId)
-        dispatch(model, AssistantSettingsIntent.CancelSwitch)
-        assertTrue(model.viewState.value.hasNewKey)
-        dispatch(model, AssistantSettingsIntent.SelectProvider("claude"))
-        val ticket = model.viewState.value.pendingSwitch!!
-        dispatch(model, AssistantSettingsIntent.SetModelId("edited-after-confirmation"))
-        dispatch(model, AssistantSettingsIntent.ConfirmSwitch(ticket.editRevision))
-        assertEquals("edited-after-confirmation", model.viewState.value.modelId)
-        assertEquals("openai", model.viewState.value.providerId)
-        dispatch(model, AssistantSettingsIntent.SelectProvider("claude"))
-        dispatch(model, AssistantSettingsIntent.ConfirmSwitch(model.viewState.value.pendingSwitch!!.editRevision))
         assertEquals(AssistantProtocol.ANTHROPIC_MESSAGES, model.viewState.value.protocol)
         assertFalse(model.viewState.value.hasNewKey)
-        assertFalse(model.viewState.value.consentAccepted)
         dispatch(model, AssistantSettingsIntent.SetHasNewKey(value = true, keyRevision = before.keyRevision), lateSave)
         assertFalse(model.viewState.value.hasNewKey)
         assertEquals(saved, fixture.repository.snapshot())
-        dispatch(model, AssistantSettingsIntent.SetConsentAccepted(true))
         dispatch(model, newKey(model))
         dispatch(model, save(model, "new-key"))
         assertEquals("new-key", fixture.repository.connection().apiKey)
@@ -336,7 +314,6 @@ class AssistantSettingsViewModelTest {
         assertFalse(model.viewState.value.dirty)
         fixture.repository.save(
             baseUrl = "https://api.anthropic.com/v1/", modelId = "old-manual-model", apiKey = "saved-key",
-            sessionOnly = false, consentAccepted = true,
         )
         runCurrent()
         assertEquals("claude", model.viewState.value.providerId)
@@ -347,7 +324,6 @@ class AssistantSettingsViewModelTest {
         assertEquals(AssistantProtocol.OPENAI_COMPATIBLE, fixture.repository.connection().protocol)
         val previous = model.viewState.value
         dispatch(model, AssistantSettingsIntent.SelectProvider(AssistantProviderPresets.CUSTOM))
-        dispatch(model, AssistantSettingsIntent.ConfirmSwitch(model.viewState.value.pendingSwitch!!.editRevision))
         assertEquals(previous.baseUrl, model.viewState.value.baseUrl)
         assertEquals(previous.modelId, model.viewState.value.modelId)
         assertEquals(previous.protocol, model.viewState.value.protocol)
@@ -378,8 +354,6 @@ class AssistantSettingsViewModelTest {
             baseUrl = "https://api.openai.com/v1/",
             modelId = "gpt-6.1-sol",
             apiKey = "secret",
-            sessionOnly = false,
-            consentAccepted = true,
         )
         runCurrent()
         val initial = model.viewState.value
@@ -420,6 +394,91 @@ class AssistantSettingsViewModelTest {
         assertEquals(writes, fixture.credentials.writes)
     }
 
+    @Test
+    fun testingAnInactiveProfileUsesItsConnectionAndKeepsGlobalSelection() = runTest {
+        val fixture = createFixture()
+        runCurrent()
+        val active = fixture.repository.snapshot()
+        val backup = fixture.repository.save(
+            baseUrl = "https://second.example",
+            modelId = "backup-model",
+            name = "Backup",
+            apiKey = "backup-key",
+        )
+        runCurrent()
+        dispatch(fixture.model, AssistantSettingsIntent.EditProfile(backup.configId))
+        dispatch(fixture.model, AssistantSettingsIntent.Verify)
+        assertEquals("backup-model", fixture.assistant.verifiedModel)
+        assertEquals(active, fixture.repository.snapshot())
+    }
+
+    @Test
+    fun deletingDuringVerificationReconcilesTheEditorAndRejectsStaleDelete() = runTest {
+        val fixture = createFixture()
+        runCurrent()
+        val original = fixture.repository.snapshot()
+        val backup = fixture.repository.save(baseUrl = original.baseUrl, modelId = "backup", apiKey = "backup")
+        fixture.assistant.waitForCancellation = true
+        dispatch(fixture.model, AssistantSettingsIntent.Verify)
+        fixture.repository.delete(id = requireNotNull(original.configId), replacementId = backup.configId)
+        runCurrent()
+        dispatch(fixture.model, AssistantSettingsIntent.CancelVerification)
+        assertEquals(backup, fixture.model.viewState.value.saved)
+        dispatch(fixture.model, AssistantSettingsIntent.Clear(profileId = original.configId))
+        assertEquals(backup, fixture.repository.snapshot())
+    }
+
+    @Test
+    fun conflictingEditorCanReloadLatestVersionBeforeRetrying() = runTest {
+        val fixture = createFixture()
+        runCurrent()
+        val model = fixture.model
+        dispatch(model, AssistantSettingsIntent.SetName("Local draft"))
+        val original = fixture.repository.snapshot()
+        val external = fixture.repository.save(
+            baseUrl = original.baseUrl,
+            modelId = "external-model",
+            apiKey = null,
+            editing = original,
+        )
+        runCurrent()
+        assertTrue(model.viewState.value.hasEditConflict)
+        assertEquals("Local draft", model.viewState.value.name)
+        dispatch(model, AssistantSettingsIntent.DiscardConflictingEdits)
+        assertEquals(external, model.viewState.value.saved)
+        dispatch(model, AssistantSettingsIntent.SetName("Work"))
+        dispatch(model, save(model, null))
+        assertEquals("Work", fixture.repository.snapshot().name)
+        assertEquals("external-model", fixture.repository.snapshot().modelId)
+    }
+
+    @Test
+    fun lateVerificationDoesNotReportSuccessForAnotherProfile() = runTest {
+        val fixture = createFixture()
+        runCurrent()
+        val gate = CompletableDeferred<Unit>()
+        fixture.assistant.verificationGate = gate
+        dispatch(fixture.model, AssistantSettingsIntent.Verify)
+        fixture.repository.delete(id = requireNotNull(fixture.repository.snapshot().configId), replacementId = null)
+        gate.complete(Unit)
+        runCurrent()
+        assertTrue(fixture.events.isEmpty())
+        assertFalse(fixture.model.viewState.value.saved.configured)
+    }
+
+    @Test
+    fun selectingTheSameEditorPreservesItsNameAndPendingKey() = runTest {
+        val fixture = createFixture()
+        runCurrent()
+        val model = fixture.model
+        dispatch(model, AssistantSettingsIntent.EditProfile(model.viewState.value.saved.configId))
+        dispatch(model, AssistantSettingsIntent.SetName("Work"), newKey(model))
+        val draft = model.viewState.value
+        dispatch(model, AssistantSettingsIntent.EditProfile(draft.saved.configId))
+        dispatch(model, AssistantSettingsIntent.SelectProvider(AssistantProviderPresets.CUSTOM))
+        assertEquals(draft, model.viewState.value)
+    }
+
     private fun newKey(model: AssistantSettingsViewModel) = AssistantSettingsIntent.SetHasNewKey(
         value = true, keyRevision = model.viewState.value.keyRevision,
     )
@@ -442,7 +501,7 @@ class AssistantSettingsViewModelTest {
         val credentials = MemoryCredentials()
         val repository = AssistantSettingsRepository(MemoryPreferences(), credentials)
         if (configured) {
-            repository.save("https://first.example/v1", "saved-model", "initial-secret", false, true)
+            repository.save(baseUrl = "https://first.example/v1", modelId = "saved-model", apiKey = "initial-secret")
         }
         val assistant = RecordingAssistant()
         val session = AssistantConversationRepository(assistant, repository, scope = backgroundScope)
@@ -489,6 +548,8 @@ class AssistantSettingsViewModelTest {
 
     private class RecordingAssistant : AssistantRuntime {
         override val available = true
+        var verifiedModel: String? = null
+        var verificationGate: CompletableDeferred<Unit>? = null
         var verifyCalls = 0
         var runCalls = 0
         var waitForCancellation = false
@@ -497,8 +558,10 @@ class AssistantSettingsViewModelTest {
             runCalls++
             return flowOf(AssistantRunEvent.ReplyDelta("Previous reply"), AssistantRunEvent.Completed)
         }
-        override suspend fun verify(): AssistantConnectionResult {
+        override suspend fun verify(connection: suspend () -> AssistantConnection): AssistantConnectionResult {
+            verifiedModel = connection().modelId
             verifyCalls++
+            verificationGate?.await()
             if (waitForCancellation) {
                 try { awaitCancellation() }
                 finally { verificationCancelled = true }

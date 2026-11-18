@@ -11,8 +11,10 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantError
+import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.AssistantReasoningEffort
 import com.skyd.podaura.podnya.core.AssistantRunEvent
+import com.skyd.podaura.podnya.core.AssistantTimeouts
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.runtime.client.podnyaModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,14 +39,12 @@ class PodnyaReasoningTimeoutTest {
     private val model = podnyaModel("gpt-6.1-terra")
     private val prompt = prompt("test") { user("Question") }
 
-    private fun timeouts(effort: AssistantReasoningEffort) = PodnyaTimeouts.forConnection(
-        AssistantConnection(
-            baseUrl = "https://api.openai.com/v1/",
-            modelId = model.id,
-            apiKey = TEST_KEY,
-            reasoningEffort = effort,
-        )
-    )
+    private fun timeouts(effort: AssistantReasoningEffort) = AssistantConnection(
+        baseUrl = "https://api.openai.com/v1/",
+        modelId = model.id,
+        apiKey = TEST_KEY,
+        reasoningEffort = effort,
+    ).timeouts
 
     @Test
     fun probeConfigurationResolutionRemainsBoundedBeforeCreatingAClient() = runTest {
@@ -80,6 +80,51 @@ class PodnyaReasoningTimeoutTest {
             }.toList()
             assertEquals(AssistantRunEvent.Completed, events.last())
             assertEquals(listOf("OK"), events.filterIsInstance<AssistantRunEvent.ReplyDelta>().map { it.text })
+        }
+    }
+
+    @Test
+    fun compatibleGatewaysDoNotInheritATimeoutFromAModelNameOrUnsupportedEffort() {
+        for (baseUrl in listOf("https://gateway.example/v1/", "https://generativelanguage.googleapis.com.example/v1/")) {
+            for (modelId in listOf(model.id, "gemini-3.8-flash", "new-model")) {
+                val connection = AssistantConnection(
+                    baseUrl = baseUrl,
+                    modelId = modelId,
+                    apiKey = TEST_KEY,
+                    reasoningEffort = AssistantReasoningEffort.MAX,
+                )
+                assertEquals(AssistantTimeouts.STANDARD, connection.timeouts)
+            }
+        }
+    }
+
+    @Test
+    fun geminiCanFinishASlowRequestAndThenWaitForTheFirstStreamedText() = runTest {
+        val connections = listOf(
+            AssistantConnection(
+                baseUrl = "https://example.test/v1beta/",
+                modelId = "custom-model",
+                apiKey = TEST_KEY,
+                protocol = AssistantProtocol.GEMINI_GENERATE_CONTENT,
+            ),
+            AssistantConnection(
+                baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/",
+                modelId = "gemini-3.8-flash",
+                apiKey = TEST_KEY,
+            ),
+        )
+        for (connection in connections) {
+            val timeouts = connection.timeouts
+            val executor = BudgetedExecutor(delegate = SlowExecutor(55_000), timeouts = timeouts)
+            val events = assistantRunEvents(request = request, timeouts = timeouts) { event ->
+                executor.execute(prompt = prompt, model = model, tools = emptyList())
+                collectReply(
+                    frames = executor.executeStreaming(prompt = prompt, model = model, tools = emptyList()),
+                    timeouts = timeouts,
+                ) { event(AssistantRunEvent.ReplyDelta(it)) }
+            }.toList()
+            assertEquals(AssistantRunEvent.Completed, events.last())
+            assertTrue(AssistantRunEvent.ReplyDelta("OK") in events)
         }
     }
 

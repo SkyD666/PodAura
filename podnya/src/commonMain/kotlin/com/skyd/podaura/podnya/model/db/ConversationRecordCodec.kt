@@ -168,7 +168,8 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
                         "baseUrl",
                         "modelId",
                         "protocol",
-                        "reasoningEffort"
+                        "reasoningEffort",
+                        "profileName",
                     )
                 }
             },

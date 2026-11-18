@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.api.model.bean.ArticleSearchScope
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
@@ -25,7 +26,7 @@ class ArticleSearchContextTest {
         val requests = mutableListOf<AssistantTurnRequest>()
         val runtime = object : AssistantRuntime {
             override val available = true
-            override suspend fun verify() = AssistantConnectionResult(true)
+            override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
             override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flowOf<AssistantRunEvent>(
                 AssistantRunEvent.Failed(AssistantError.NETWORK),
             ).also { requests += request }
@@ -39,9 +40,9 @@ class ArticleSearchContextTest {
         articles += "different-article"
 
         repository.editDraft("Find related articles")
-        assertTrue(repository.sendDraft(settings))
+        assertTrue(repository.sendDraft())
         runCurrent()
-        assertTrue(repository.retryLast(settings))
+        assertTrue(repository.retryLast())
         runCurrent()
 
         assertEquals(2, requests.size)

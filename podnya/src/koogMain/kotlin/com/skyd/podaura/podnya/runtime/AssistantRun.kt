@@ -3,6 +3,7 @@ package com.skyd.podaura.podnya.runtime
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantLimits
+import com.skyd.podaura.podnya.core.AssistantTimeouts
 import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
@@ -20,7 +21,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 internal fun assistantRunEvents(
     request: AssistantTurnRequest,
-    timeouts: PodnyaTimeouts = PodnyaTimeouts(),
+    timeouts: AssistantTimeouts = AssistantTimeouts.STANDARD,
     execute: suspend (event: suspend (AssistantRunEvent) -> Unit) -> Unit,
 ): Flow<AssistantRunEvent> = channelFlow {
     var published = false

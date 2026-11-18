@@ -18,7 +18,7 @@ class AssistantConversationRepositoryTest {
         override fun run(request: AssistantTurnRequest, connection: AssistantConnection) = flow {
             requests += request; connections += connection; block(request, connection)
         }
-        override suspend fun verify() = AssistantConnectionResult(true)
+        override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
     }
     private data class Content(val size: Int, val payload: String = "checked") : AssistantContent {
         override val retainedBytes = size
@@ -38,15 +38,14 @@ class AssistantConversationRepositoryTest {
                 baseUrl = "https://api.openai.com/v1/",
                 modelId = "gpt-6.1-terra",
                 apiKey = "test-key",
-                sessionOnly = false,
-                consentAccepted = true,
+                editing = settings.snapshot(),
                 reasoningEffort = effort,
             )
         }
         saveEffort(AssistantReasoningEffort.MEDIUM)
         val repo = AssistantConversationRepository(assistant = runtime, settings = settings, scope = backgroundScope)
         repo.editDraft("Question")
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         val turnId = repo.state.value.selected.turns.single().id
         saveEffort(AssistantReasoningEffort.MAX)
@@ -54,7 +53,7 @@ class AssistantConversationRepositoryTest {
         assertEquals("medium", repo.state.value.selected.turns.single().source!!.reasoningEffort)
         release.send(Unit)
         runCurrent()
-        assertTrue(repo.retryLast(settings))
+        assertTrue(repo.retryLast())
         runCurrent()
         assertEquals(turnId, repo.state.value.selected.turns.single().id)
         assertEquals(AssistantReasoningEffort.MAX, runtime.connections.last().reasoningEffort)
@@ -62,7 +61,7 @@ class AssistantConversationRepositoryTest {
         release.send(Unit)
         runCurrent()
         repo.editDraft("Next question")
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         assertEquals("max", repo.state.value.selected.turns.last().source!!.reasoningEffort)
     }
@@ -75,12 +74,15 @@ class AssistantConversationRepositoryTest {
         val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
         val ids = (1..3).map {
             val id = repo.newConversation()
-            repo.editDraft("question $it"); assertTrue(repo.sendDraft(settings)); runCurrent(); id
+            repo.editDraft("question $it")
+            assertTrue(repo.sendDraft())
+            runCurrent()
+            id
         }
         assertEquals(3, repo.state.value.runningIds.size)
         val fourth = repo.newConversation()
         repo.editDraft("keep fourth")
-        assertFalse(repo.sendDraft(settings))
+        assertFalse(repo.sendDraft())
         assertEquals("keep fourth", repo.state.value.selected.draft)
         assertEquals(3, runtime.requests.size)
         repo.select(ids.first())
@@ -88,7 +90,8 @@ class AssistantConversationRepositoryTest {
         finish.send(Unit); runCurrent()
         assertEquals(2, repo.state.value.runningIds.size)
         repo.select(fourth)
-        assertTrue(repo.sendDraft(settings)); runCurrent()
+        assertTrue(repo.sendDraft())
+        runCurrent()
         assertEquals(4, runtime.requests.size)
         assertEquals(3, repo.state.value.runningIds.size)
         assertTrue(ids.all { store.get(it)?.turns?.size == 1 })
@@ -107,12 +110,11 @@ class AssistantConversationRepositoryTest {
         val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }
         val store = InMemoryConversationStore()
         val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
-        val config = settings.snapshot()
         blockReads = true
         val ids = (1..3).map {
             val id = repo.newConversation(); repo.editDraft("q $it")
             val c = repo.state.value.selected
-            assertTrue(repo.submit(id, c.editorId, c.draftRevision, config.configId, config.revision))
+            assertTrue(repo.submit(id = id, editorId = c.editorId, revision = c.draftRevision))
             runCurrent(); id
         }
         assertEquals(3, repo.state.value.runningIds.size)
@@ -122,7 +124,7 @@ class AssistantConversationRepositoryTest {
         assertNull(store.get(ids.first()))
         val next = repo.newConversation(); repo.editDraft("next")
         val c = repo.state.value.selected
-        assertFalse(repo.submit(next, c.editorId, c.draftRevision, config.configId, config.revision))
+        assertFalse(repo.submit(id = next, editorId = c.editorId, revision = c.draftRevision))
         releaseRead.complete(Unit); runCurrent()
         assertNull(store.get(ids.first()))
         assertEquals(2, runtime.requests.size)
@@ -137,11 +139,13 @@ class AssistantConversationRepositoryTest {
         }
         val settings = conversationSettings(); val store = InMemoryConversationStore()
         val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
-        repo.editDraft("A"); repo.sendDraft(settings); runCurrent()
+        repo.editDraft("A")
+        repo.sendDraft()
+        runCurrent()
         val a = repo.state.value.selected.id
         repo.stop(a)
         assertEquals(AssistantTurnStatus.STOPPED, repo.state.value.selected.turns.single().status)
-        assertFalse(repo.retryLast(settings))
+        assertFalse(repo.retryLast())
         assertEquals("partial", repo.state.value.selected.turns.single().reply)
         repo.delete(a, true)
         repo.editDraft("B")
@@ -160,14 +164,21 @@ class AssistantConversationRepositoryTest {
             else -> emit(AssistantRunEvent.ContentReady(Content(AssistantLimits.CONTENT_BYTES + 1)))
         } }
         val settings = conversationSettings(); val repo = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
-        repo.editDraft("retry me"); repo.sendDraft(settings); runCurrent()
+        repo.editDraft("retry me")
+        repo.sendDraft()
+        runCurrent()
         val id = repo.state.value.selected.turns.single().id
-        assertTrue(repo.retryLast(settings)); runCurrent()
+        assertTrue(repo.retryLast())
+        runCurrent()
         assertEquals(id, repo.state.value.selected.turns.single().id)
         assertEquals("fixed", repo.state.value.selected.turns.single().reply)
-        repo.editDraft("interrupt"); repo.sendDraft(settings); runCurrent()
+        repo.editDraft("interrupt")
+        repo.sendDraft()
+        runCurrent()
         assertEquals(AssistantError.STREAM_INTERRUPTED, repo.state.value.selected.turns.last().error)
-        repo.editDraft("oversized"); repo.sendDraft(settings); runCurrent()
+        repo.editDraft("oversized")
+        repo.sendDraft()
+        runCurrent()
         assertEquals(AssistantError.BUDGET_EXHAUSTED, repo.state.value.selected.turns.last().error)
         assertNull(repo.state.value.selected.turns.last().content)
     }
@@ -175,13 +186,17 @@ class AssistantConversationRepositoryTest {
     @Test fun visibleHistoryIsNeverTrimmedWhileModelHistoryKeepsSixTurnsAndByteBudget() = runTest {
         val runtime = Runtime { _, _ -> emit(AssistantRunEvent.ContentReady(Content(30_000, "喵".repeat(10_000)))); emit(AssistantRunEvent.Completed) }
         val settings = conversationSettings(); val repo = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
-        repeat(60) { repo.editDraft("question $it"); assertTrue(repo.sendDraft(settings)); runCurrent() }
+        repeat(60) {
+            repo.editDraft("question $it")
+            assertTrue(repo.sendDraft())
+            runCurrent()
+        }
         assertEquals(40, repo.state.value.selected.turns.size)
         repo.loadWindow(id = repo.state.value.selected.id, anchor = 1)
         assertEquals("question 0", repo.state.value.selected.turns.first().question)
         assertEquals(listOf("question 57", "question 58"), runtime.requests.last().history.map { it.question })
         repo.editDraft("from an old reading window")
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         assertEquals(listOf("question 58", "question 59"), runtime.requests.last().history.map { it.question })
         assertTrue(Json.encodeToString(runtime.requests.last().history).encodeToByteArray().size < AssistantLimits.PROMPT_BYTES)
@@ -197,18 +212,20 @@ class AssistantConversationRepositoryTest {
         val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope)
         repeat(25) {
             repo.editDraft("question $it")
-            assertTrue(repo.sendDraft(settings))
+            assertTrue(repo.sendDraft())
             runCurrent()
         }
         assertEquals(25, store.tail(id = repo.state.value.selected.id, limit = 100).size)
     }
 
-    @Test fun titlesDraftsModelReferencesAndEmptyEditorReuseStayIsolated() = runTest {
+    @Test fun titlesDraftsAndEmptyEditorReuseStayIsolated() = runTest {
         val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }
         val settings = conversationSettings(); val store = InMemoryConversationStore()
         val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
         val a = repo.newConversation(); assertEquals(a, repo.newConversation())
-        repo.editDraft("first title"); repo.sendDraft(settings); runCurrent()
+        repo.editDraft("first title")
+        repo.sendDraft()
+        runCurrent()
         assertEquals("first title", repo.state.value.selected.title)
         repo.rename(a, "manual"); repo.editDraft("saved A")
         val b = repo.newConversation(); repo.editDraft("saved B")
@@ -216,9 +233,11 @@ class AssistantConversationRepositoryTest {
         assertEquals("saved B", repo.state.value.selected.draft)
         repo.select(a); assertEquals("manual", repo.state.value.selected.title)
         assertEquals("late A", repo.state.value.selected.draft)
-        repo.sendDraft(settings); runCurrent(); assertEquals("manual", repo.state.value.selected.title)
+        repo.sendDraft()
+        runCurrent()
+        assertEquals("manual", repo.state.value.selected.title)
         repo.select(b); assertEquals("saved B", repo.state.value.selected.draft)
-        assertEquals(settings.snapshot().configId, repo.state.value.selected.modelConfigId)
+        assertNull(repo.state.value.selected.modelConfigId)
         repo.delete(a); assertFalse(repo.updateDraft(a, "resurrection", "old", 100))
         assertNull(store.get(a))
     }
@@ -245,11 +264,19 @@ class AssistantConversationRepositoryTest {
         val runtime = Runtime { _, _ -> gate.receive(); emit(AssistantRunEvent.Completed) }
         val settings = conversationSettings(); val store = InMemoryConversationStore()
         val repo = AssistantConversationRepository(runtime, settings, store, backgroundScope)
-        repo.editDraft("A"); repo.sendDraft(settings); runCurrent(); val a = repo.state.value.selected.id
-        settings.save("https://second.example/prefix", "second-model", "second-key", false, true)
-        repo.newConversation(); repo.editDraft("B"); repo.sendDraft(settings); runCurrent(); val b = repo.state.value.selected.id
+        repo.editDraft("A")
+        repo.sendDraft()
+        runCurrent()
+        val a = repo.state.value.selected.id
+        settings.save(baseUrl = "https://second.example/prefix", modelId = "second-model", apiKey = "second-key", editing = settings.snapshot())
+        repo.newConversation()
+        repo.editDraft("B")
+        repo.sendDraft()
+        runCurrent()
+        val b = repo.state.value.selected.id
         repo.editDraft("B draft")
-        settings.clear(); runCurrent()
+        settings.delete(id = settings.snapshot().configId!!, replacementId = null)
+        runCurrent()
         assertEquals(listOf("https://first.example/v1/", "https://second.example/prefix/"), runtime.connections.map { it.baseUrl })
         assertEquals(listOf("first-model", "second-model"), runtime.connections.map { it.modelId })
         assertEquals(listOf("test-key", "second-key"), runtime.connections.map { it.apiKey })
@@ -259,73 +286,34 @@ class AssistantConversationRepositoryTest {
         assertEquals("first-model", store.get(a)!!.turns.single().source!!.modelId)
         assertEquals("second-model", store.get(b)!!.turns.single().source!!.modelId)
         assertFalse(repo.state.value.toString().contains("second-key"))
-        settings.save("https://third.example", "new", "new-key", false, true)
-        assertFalse(repo.sendDraft(settings)) // deleted config IDs must not silently rebind
-        repo.selectModel(b, settings.snapshot().configId!!)
-        assertEquals(settings.snapshot().configId, repo.state.value.selected.modelConfigId)
-        assertEquals(1, repo.state.value.selected.turns.size)
-    }
-
-    @Test fun destinationConfirmationBindsConversationInputConfigRevisionAndFullServiceAddress() = runTest {
-        val settings = conversationSettings(); val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }
-        val repo = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
-        val notices = mutableListOf<AssistantConversationRepository.Notice>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repo.notices.toList(notices) }
-        repo.editDraft("old history"); repo.sendDraft(settings); runCurrent()
-        val a = repo.state.value.selected.id
-        settings.save("https://first.example/other", "new-model", "key", false, true)
-        repo.editDraft("continue"); repo.sendDraft(settings); runCurrent()
-        val ticket = (notices.last() as AssistantConversationRepository.Notice.ConfirmDestination).confirmation
-        assertTrue(repo.state.value.runningIds.isEmpty()); assertEquals("continue", repo.state.value.selected.draft)
-        repo.editDraft("changed")
-        assertFalse(repo.submit(a, ticket.editorId, ticket.revision, ticket.configId, ticket.configRevision, confirmation = ticket))
-        repo.sendDraft(settings); runCurrent()
-        val fresh = (notices.last() as AssistantConversationRepository.Notice.ConfirmDestination).confirmation
-        repo.newConversation(); repo.editDraft("B draft")
-        assertTrue(repo.submit(a, fresh.editorId, fresh.revision, fresh.configId, fresh.configRevision, confirmation = fresh)); runCurrent()
-        assertEquals("B draft", repo.state.value.selected.draft)
-        assertEquals(2, runtime.requests.size)
-        repo.select(a)
-        settings.save("https://first.example/other/", "another-model", "rotated", false, true)
-        repo.editDraft("same destination"); repo.sendDraft(settings); runCurrent()
-        assertEquals(3, runtime.requests.size)
-        val staleConfig = settings.snapshot()
-        settings.save("https://first.example/third", "another-model", "third", false, true)
-        repo.editDraft("stale config")
-        val current = repo.state.value.selected
-        repo.submit(a, current.editorId, current.draftRevision, staleConfig.configId, staleConfig.revision); runCurrent()
-        assertEquals(3, runtime.requests.size)
-        assertEquals(AssistantError.CONFIGURATION_CHANGED, (notices.last() as AssistantConversationRepository.Notice.Rejected).error)
-        assertEquals("stale config", repo.state.value.selected.draft)
-    }
-
-    @Test fun editingWhileConfirmedConnectionIsResolvingInvalidatesTheConfirmation() = runTest {
-        val release = CompletableDeferred<Unit>()
-        var blocked = false
-        val credentials = object : ConversationCredentials() {
-            override suspend fun get(id: String): String? {
-                if (blocked) release.await()
-                return super.get(id)
-            }
-        }
-        val settings = conversationSettings(credentials)
-        val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Completed) }
-        val repo = AssistantConversationRepository(runtime, settings, scope = backgroundScope)
-        val notices = mutableListOf<AssistantConversationRepository.Notice>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repo.notices.toList(notices) }
-        repo.editDraft("history"); repo.sendDraft(settings); runCurrent()
-        settings.save("https://other.example", "model", "key", false, true)
-        repo.editDraft("confirmed input"); repo.sendDraft(settings); runCurrent()
-        val ticket = (notices.last() as AssistantConversationRepository.Notice.ConfirmDestination).confirmation
-        blocked = true
-        repo.submit(ticket.conversationId, ticket.editorId, ticket.revision, ticket.configId, ticket.configRevision, confirmation = ticket)
+        settings.save(baseUrl = "https://third.example", modelId = "new", apiKey = "new-key")
+        assertTrue(repo.sendDraft())
         runCurrent()
-        repo.editDraft("new input during resolution")
-        release.complete(Unit); runCurrent()
-        assertEquals(1, runtime.requests.size)
-        assertEquals("new input during resolution", repo.state.value.selected.draft)
-        assertEquals(AssistantError.STALE_INPUT, (notices.last() as AssistantConversationRepository.Notice.Rejected).error)
-        assertTrue(repo.state.value.runningIds.isEmpty())
+        assertEquals("new", runtime.connections.last().modelId)
+        assertEquals("second-model", store.get(b)!!.turns.first().source!!.profileName)
+    }
+
+    @Test
+    fun retryUsesTheActiveProfileAndKeepsTheOriginalQuestion() = runTest {
+        val settings = conversationSettings()
+        val runtime = Runtime { _, _ -> emit(AssistantRunEvent.Failed(AssistantError.NETWORK)) }
+        val repo = AssistantConversationRepository(assistant = runtime, settings = settings, scope = backgroundScope)
+        repo.editDraft("original question")
+        repo.sendDraft()
+        runCurrent()
+        settings.save(
+            baseUrl = "https://second.example",
+            modelId = "backup-model",
+            apiKey = "backup-key",
+            name = "Backup",
+            activate = true,
+        )
+        repo.retryLast()
+        runCurrent()
+        val turn = repo.state.value.selected.turns.single()
+        assertEquals("original question", turn.question)
+        assertEquals("Backup", turn.source?.profileName)
+        assertEquals("backup-key", runtime.connections.last().apiKey)
     }
 
     @Test fun draftInputLimitRetainsThePreviousDraft() = runTest {
@@ -351,7 +339,7 @@ class AssistantConversationRepositoryTest {
         repo.editDraft("pending")
         val id = repo.state.value.selected.id
         block = true
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         repo.editDraft("")
         assertNotEquals(id, repo.newConversation())
@@ -378,15 +366,15 @@ class AssistantConversationRepositoryTest {
         val repo = AssistantConversationRepository(assistant = runtime, settings = settings, store = store, scope = backgroundScope)
         repo.editDraft("kept")
         failNext = true
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         assertTrue(runtime.requests.isEmpty())
         assertEquals("kept", repo.state.value.selected.draft)
         assertTrue(repo.state.value.runningIds.isEmpty())
-        assertFalse(repo.sendDraft(settings))
+        assertFalse(repo.sendDraft())
         repo.retrySave()
         assertTrue(runtime.requests.isEmpty())
-        assertTrue(repo.sendDraft(settings))
+        assertTrue(repo.sendDraft())
         runCurrent()
         assertEquals(1, runtime.requests.size)
     }
@@ -411,7 +399,9 @@ class AssistantConversationRepositoryTest {
             }, settings, store, backgroundScope)
             val notices = mutableListOf<AssistantConversationRepository.Notice>()
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repo.notices.toList(notices) }
-            repo.editDraft("question"); repo.sendDraft(settings); runCurrent()
+            repo.editDraft("question")
+            repo.sendDraft()
+            runCurrent()
             val id = repo.state.value.selected.id
             failing = true
             if (stop) repo.stop(id) else finish.complete(Unit)

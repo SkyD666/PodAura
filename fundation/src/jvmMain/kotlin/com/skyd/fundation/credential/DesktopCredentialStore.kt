@@ -14,6 +14,7 @@ class DesktopCredentialStore : CredentialStore {
         if (secret.isBlank()) throw CredentialStorageException()
         when (operatingSystem) {
             OperatingSystem.MacOS -> MacOsKeychain.put(id, secret)
+            OperatingSystem.Windows -> WindowsCredentialStore.put(id, secret)
 
             OperatingSystem.Linux -> runCommand(
                 command = listOf(
@@ -31,6 +32,7 @@ class DesktopCredentialStore : CredentialStore {
     override suspend fun get(id: String): String? = withContext(Dispatchers.IO) {
         val result = when (operatingSystem) {
             OperatingSystem.MacOS -> return@withContext MacOsKeychain.get(id)
+            OperatingSystem.Windows -> return@withContext WindowsCredentialStore.get(id)
 
             OperatingSystem.Linux -> runCommand(
                 listOf("secret-tool", "lookup", "service", SERVICE, "account", id),
@@ -45,6 +47,7 @@ class DesktopCredentialStore : CredentialStore {
     override suspend fun delete(id: String) = withContext(Dispatchers.IO) {
         when (operatingSystem) {
             OperatingSystem.MacOS -> MacOsKeychain.delete(id)
+            OperatingSystem.Windows -> WindowsCredentialStore.delete(id)
 
             OperatingSystem.Linux -> runCommand(
                 listOf("secret-tool", "clear", "service", SERVICE, "account", id),
@@ -87,6 +90,7 @@ class DesktopCredentialStore : CredentialStore {
     private val operatingSystem: OperatingSystem
         get() = System.getProperty("os.name").lowercase().let { name ->
             when {
+                name.startsWith("windows") -> OperatingSystem.Windows
                 name.contains("mac") -> OperatingSystem.MacOS
                 name.contains("nix") || name.contains("nux") || name.contains("aix") ->
                     OperatingSystem.Linux
@@ -95,7 +99,7 @@ class DesktopCredentialStore : CredentialStore {
             }
         }
 
-    private enum class OperatingSystem { MacOS, Linux, Unsupported }
+    private enum class OperatingSystem { Windows, MacOS, Linux, Unsupported }
 
     private companion object {
         const val SERVICE = "com.skyd.podaura.translation"

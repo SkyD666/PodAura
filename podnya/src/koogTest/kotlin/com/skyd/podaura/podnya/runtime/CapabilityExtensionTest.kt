@@ -40,7 +40,7 @@ class CapabilityExtensionTest {
             chatToolCalls("prepare_volume", "v" to "{\"level\":40}"), chatCompletion("Prepared"),
             chatCompletion("""{"kind":"RESULTS","text":"","outputs":{"volume":{"level":40}}}"""), chatSse(),
         )
-        val runtime = KoogAssistantRuntime({ listOf(capability) }, { testConnection() }, script::client)
+        val runtime = KoogAssistantRuntime({ listOf(capability) }, script::client)
         val events = runtime.run(AssistantTurnRequest("Set volume to 40"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         val content = events.filterIsInstance<AssistantRunEvent.ContentReady>().single().content as VolumeProposal

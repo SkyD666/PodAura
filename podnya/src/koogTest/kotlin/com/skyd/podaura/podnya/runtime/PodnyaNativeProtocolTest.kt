@@ -7,6 +7,8 @@ import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.core.assistantEndpointPath
 import io.ktor.client.plugins.api.createClientPlugin
+import io.ktor.client.plugins.HttpTimeoutCapability
+import io.ktor.client.plugins.HttpTimeoutConfig
 import io.ktor.client.engine.mock.MockEngine
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
@@ -60,12 +62,21 @@ class PodnyaNativeProtocolTest {
             scripts.map { script -> async {
                 val runtime = KoogAssistantRuntime(
                     capabilities = testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()),
-                    verificationConnection = { error("Never reread global configuration during a run") },
+
                     httpClient = script::client,
                 )
                 val events = runtime.run(request = AssistantTurnRequest("Find something"), connection = script.connection).toList()
                 assertEquals(AssistantRunEvent.Completed, events.last())
                 assertEquals(3, script.requests.size)
+                val expected = script.connection.timeouts
+                for (timeout in script.timeouts) {
+                    assertEquals(expected.connectMillis, timeout.connectTimeoutMillis)
+                    assertEquals(expected.idleMillis, timeout.socketTimeoutMillis)
+                }
+                // Ktor SSE leaves its request deadline to collectReply.
+                for (timeout in script.timeouts.dropLast(1)) {
+                    assertEquals(expected.requestMillis, timeout.requestTimeoutMillis)
+                }
                 script.requests.drop(1).forEach { request ->
                     val tokens = if (script.protocol == AssistantProtocol.ANTHROPIC_MESSAGES) {
                         request["max_tokens"]
@@ -285,11 +296,13 @@ private class NativeScript(val protocol: AssistantProtocol, replies: List<HttpRe
     private val pending = ArrayDeque(replies)
     val requests = mutableListOf<JsonObject>()
     val paths = mutableListOf<String>()
+    val timeouts = mutableListOf<HttpTimeoutConfig>()
     val connection = AssistantConnection(
         baseUrl = if (protocol == AssistantProtocol.ANTHROPIC_MESSAGES) "https://example.test/gateway/v1/" else "https://example.test/gateway/v1beta/",
         modelId = "native-model", apiKey = TEST_KEY, protocol = protocol,
     )
     fun client() = HttpClient(SseMockEngine { request ->
+        timeouts += requireNotNull(request.getCapabilityOrNull(HttpTimeoutCapability))
         assertFalse(request.url.toString().contains(TEST_KEY))
         if (protocol == AssistantProtocol.ANTHROPIC_MESSAGES) {
             assertEquals(TEST_KEY, request.headers["x-api-key"])

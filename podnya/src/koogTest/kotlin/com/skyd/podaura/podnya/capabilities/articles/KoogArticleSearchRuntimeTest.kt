@@ -290,7 +290,7 @@ class KoogArticleSearchRuntimeTest {
                 val events = assistant.run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList()
                 assertEquals(AssistantRunEvent.Failed(expected), events.last())
                 assertEquals(1, script.requests.size)
-                val verification = assistant.verify()
+                val verification = assistant.verify { testConnection() }
                 assertFalse(verification.success)
                 assertEquals(expected, verification.error)
                 assertEquals(2, script.requests.size)
@@ -323,7 +323,7 @@ class KoogArticleSearchRuntimeTest {
             started.complete(Unit)
             try { awaitCancellation() } finally { cancelled.complete(Unit) }
         }) { followRedirects = false }
-        val assistant = KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()), { testConnection() }, { client })
+        val assistant = KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()), { client })
         val events = mutableListOf<AssistantRunEvent>()
         val job = launch { assistant.run(AssistantTurnRequest("Find articles"), com.skyd.podaura.podnya.runtime.testConnection()).toList(events) }
         withTimeout(5_000) { started.await() }
@@ -334,8 +334,8 @@ class KoogArticleSearchRuntimeTest {
     } }
 }
 
-internal fun HttpScript.assistant(catalog: RecordingCatalog, connection: AssistantConnection = testConnection()) =
-    KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(catalog), emptyFeedSource()), { connection }, ::client)
+internal fun HttpScript.assistant(catalog: RecordingCatalog) =
+    KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(catalog), emptyFeedSource()), ::client)
 
 private fun toolCalls(vararg calls: Pair<String, String>, reasoning: String? = null) =
     chatToolCalls("search_articles", *calls, reasoning = reasoning)

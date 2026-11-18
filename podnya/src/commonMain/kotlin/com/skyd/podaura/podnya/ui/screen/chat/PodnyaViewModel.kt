@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.scan
 
 class PodnyaViewModel(
     private val repository: AssistantConversationRepository,
-    settingsRepository: AssistantSettingsRepository,
+    private val settingsRepository: AssistantSettingsRepository,
 ) : AbstractMviViewModel<PodnyaIntent, PodnyaState, PodnyaEvent>() {
     override val viewState: StateFlow<PodnyaState>
 
@@ -39,13 +39,10 @@ class PodnyaViewModel(
 
                         is AssistantConversationRepository.Notice.Rejected ->
                             PodnyaEvent.Rejected(notice.conversationId, notice.error)
-
-                        is AssistantConversationRepository.Notice.ConfirmDestination ->
-                            PodnyaEvent.ConfirmDestination(notice.confirmation)
                     }
                 )
             },
-            settingsRepository.settings.map {
+            settingsRepository.profiles.map {
                 if (it.readError != null) {
                     PodnyaPartialStateChange.SettingsUnavailable
                 } else {
@@ -66,9 +63,7 @@ class PodnyaViewModel(
                     is PodnyaIntent.Select -> intent.conversationId
                     is PodnyaIntent.Rename -> intent.conversationId
                     is PodnyaIntent.Delete -> intent.conversationId
-                    is PodnyaIntent.SelectModel -> intent.conversationId
                     is PodnyaIntent.PerformAction -> intent.conversationId
-                    is PodnyaIntent.ConfirmDestination -> intent.confirmation.conversationId
                     else -> repository.state.value.selected.id
                 }
                 flowOf(intent).toPodnyaPartialStateChangeFlow().catch { failure ->
@@ -77,8 +72,10 @@ class PodnyaViewModel(
                         PodnyaPartialStateChange.Notify(
                             PodnyaEvent.Rejected(
                                 conversationId = target,
-                                error = (failure as? AssistantException)?.error
-                                    ?: AssistantError.CONVERSATION_STORAGE
+                                error = (failure as? AssistantException)?.error ?: when (intent) {
+                                    is PodnyaIntent.SelectModel -> AssistantError.CONFIGURATION_STORAGE
+                                    else -> AssistantError.CONVERSATION_STORAGE
+                                }
                             )
                         )
                     )
@@ -136,8 +133,6 @@ class PodnyaViewModel(
                     id = intent.conversationId,
                     editorId = intent.editorId,
                     revision = intent.revision,
-                    configId = intent.configId,
-                    configRevision = intent.configRevision
                 )
                 PodnyaPartialStateChange.CommandCompleted
             },
@@ -146,8 +141,6 @@ class PodnyaViewModel(
                     id = intent.conversationId,
                     editorId = intent.editorId,
                     revision = intent.revision,
-                    configId = intent.configId,
-                    configRevision = intent.configRevision,
                     retryTurnId = intent.turnId
                 )
                 PodnyaPartialStateChange.CommandCompleted
@@ -173,20 +166,7 @@ class PodnyaViewModel(
                 PodnyaPartialStateChange.CommandCompleted
             },
             filterIsInstance<PodnyaIntent.SelectModel>().map {
-                repository.selectModel(it.conversationId, it.configId)
-                PodnyaPartialStateChange.CommandCompleted
-            },
-            filterIsInstance<PodnyaIntent.ConfirmDestination>().map {
-                val c = it.confirmation
-                repository.submit(
-                    id = c.conversationId,
-                    editorId = c.editorId,
-                    revision = c.revision,
-                    configId = c.configId,
-                    configRevision = c.configRevision,
-                    retryTurnId = c.retryTurnId,
-                    confirmation = c
-                )
+                settingsRepository.select(it.configId)
                 PodnyaPartialStateChange.CommandCompleted
             },
             filterIsInstance<PodnyaIntent.Back>().map {

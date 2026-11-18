@@ -41,7 +41,7 @@ class AssistantSettingsRepositoryTest {
     }
 
     @Test
-    fun articleOnlyConsentNeedsUpdatingWithoutLosingTheSavedConfiguration() = runTest {
+    fun legacyConfigurationCanSendImmediatelyWithItsSavedKey() = runTest {
         val preferences = PreferencesStore()
         val credentials = Credentials().apply { values["saved-key"] = "secret" }
         preferences.data.value = androidx.datastore.preferences.core.mutablePreferencesOf(
@@ -50,10 +50,6 @@ class AssistantSettingsRepositoryTest {
         )
         val repository = AssistantSettingsRepository(preferences, credentials)
         assertTrue(repository.snapshot().configured)
-        assertFalse(repository.snapshot().consentAccepted)
-        assertEquals(AssistantError.DISCLOSURE_REQUIRED, assertFailsWith<AssistantException> { repository.connection() }.error)
-        repository.save("https://example.org/v1/", "model", null, false, true)
-        assertTrue(repository.snapshot().consentAccepted)
         assertEquals("secret", repository.connection().apiKey)
         assertEquals(1, credentials.values.size)
     }
@@ -63,9 +59,9 @@ class AssistantSettingsRepositoryTest {
         val preferences = PreferencesStore()
         val credentials = Credentials()
         val repository = AssistantSettingsRepository(preferences, credentials)
-        repository.save("https://example.org/v1", "first", "key-one", false, true)
+        repository.save(baseUrl = "https://example.org/v1", modelId = "first", apiKey = "key-one")
         val first = repository.snapshot()
-        repository.save("https://example.org/v1", "second", "key-two", false, true)
+        repository.save(baseUrl = "https://example.org/v1", modelId = "second", apiKey = "key-two", editing = first)
         val second = repository.snapshot()
         assertEquals(first.configId, second.configId)
         assertTrue(second.revision > first.revision)
@@ -73,8 +69,8 @@ class AssistantSettingsRepositoryTest {
             repository.resolveConnection(first.configId!!, first.revision)
         }.error)
         val fixed = repository.resolveConnection(second.configId!!, second.revision)
-        repository.clear()
-        repository.save("https://example.org/v1", "third", "key-three", false, true)
+        repository.delete(id = second.configId, replacementId = null)
+        repository.save(baseUrl = "https://example.org/v1", modelId = "third", apiKey = "key-three")
         assertTrue(repository.snapshot().configId != second.configId)
         assertEquals("second", fixed.modelId)
         assertEquals("key-two", fixed.apiKey)
@@ -108,10 +104,10 @@ class AssistantSettingsRepositoryTest {
         val preferences = PreferencesStore()
         val credentials = Credentials()
         val repository = AssistantSettingsRepository(preferences, credentials)
-        repository.save("https://example.org/v1", "model", "secret-one", false, true)
+        repository.save(baseUrl = "https://example.org/v1", modelId = "model", apiKey = "secret-one")
         preferences.failWrite = true
         assertFailsWith<IllegalStateException> {
-            repository.save("https://example.org/v1", "model", "secret-two", false, true)
+            repository.save(baseUrl = "https://example.org/v1", modelId = "model", apiKey = "secret-two")
         }
         assertEquals("secret-one", repository.connection().apiKey)
         assertEquals(listOf("secret-one"), credentials.values.values.toList())
@@ -123,7 +119,7 @@ class AssistantSettingsRepositoryTest {
     fun inaccessibleSavedKeyHasAStorageErrorRatherThanANetworkError() = runTest {
         val credentials = Credentials()
         val repository = AssistantSettingsRepository(PreferencesStore(), credentials)
-        repository.save("https://example.org/v1", "model", "secret", false, true)
+        repository.save(baseUrl = "https://example.org/v1", modelId = "model", apiKey = "secret")
         credentials.available = false
         assertEquals(AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE, assertFailsWith<AssistantException> {
             repository.connection()
@@ -131,23 +127,48 @@ class AssistantSettingsRepositoryTest {
     }
 
     @Test
-    fun newRecipientNeverInheritsAKeyOrConsentAndTemporaryKeysDoNotSurviveRestart() = runTest {
+    fun editingWithoutAReplacementKeyRequiresTheStoredKeyToStillExist() = runTest {
+        val credentials = Credentials()
+        val repository = AssistantSettingsRepository(PreferencesStore(), credentials)
+        val original = repository.save(baseUrl = "https://example.org", modelId = "model", apiKey = "secret")
+        credentials.values.clear()
+        val failure = assertFailsWith<AssistantException> {
+            repository.save(baseUrl = original.baseUrl, modelId = "edited", apiKey = null, editing = original)
+        }
+        assertEquals(AssistantError.CONFIGURATION_REQUIRED, failure.error)
+        assertEquals(original, repository.snapshot())
+    }
+
+    @Test
+    fun keysOverTheInputLimitHaveALengthError() = runTest {
+        val repository = AssistantSettingsRepository(PreferencesStore(), Credentials())
+        val failure = assertFailsWith<AssistantException> {
+            repository.save(baseUrl = "https://example.org", modelId = "model", apiKey = "x".repeat(8193))
+        }
+        assertEquals(AssistantError.CREDENTIAL_TOO_LONG, failure.error)
+        assertFalse(repository.snapshot().configured)
+    }
+
+    @Test
+    fun savedProfilesKeepTheirOwnKeysAndSelectionAcrossRestarts() = runTest {
         val preferences = PreferencesStore()
-        val credentials = Credentials().apply { available = false }
+        val credentials = Credentials()
         val repository = AssistantSettingsRepository(preferences, credentials)
-        assertFailsWith<CredentialStorageException> {
-            repository.save("https://first.example", "model", "temporary", false, true)
-        }
-        repository.save("https://first.example", "model", "temporary", true, true)
-        assertTrue(repository.snapshot().sessionOnly)
-        assertEquals("temporary", repository.connection().apiKey)
+        val first = repository.save(baseUrl = "https://same.example", modelId = "model", apiKey = "first", name = "Work")
+        val second = repository.save(baseUrl = "https://same.example", modelId = "model", apiKey = "second", name = "Home")
+        assertEquals(first.configId, repository.snapshot().configId)
+        repository.select(requireNotNull(second.configId))
         assertFailsWith<AssistantException> {
-            repository.save("https://second.example", "model", null, true, true)
+            repository.delete(id = requireNotNull(first.configId), replacementId = second.configId)
         }
-        repository.save("https://second.example", "model", "second", true, false)
-        assertEquals(AssistantError.DISCLOSURE_REQUIRED, assertFailsWith<AssistantException> { repository.connection() }.error)
         val restarted = AssistantSettingsRepository(preferences, credentials)
-        assertFalse(restarted.snapshot().hasApiKey)
-        assertTrue(credentials.values.isEmpty())
+        assertEquals("Home", restarted.snapshot().name)
+        assertEquals("second", restarted.connection().apiKey)
+        assertFailsWith<AssistantException> {
+            restarted.delete(id = second.configId, replacementId = null)
+        }
+        restarted.delete(id = second.configId, replacementId = first.configId)
+        assertEquals("first", restarted.connection().apiKey)
+        assertEquals(listOf("first"), credentials.values.values.toList())
     }
 }

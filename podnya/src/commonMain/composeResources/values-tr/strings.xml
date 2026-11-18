@@ -24,7 +24,8 @@
     <string name="podnya_error_configuration_required">Göndermeden önce ayarlarda bir hizmet, model ve API anahtarı yapılandırın.</string>
     <string name="podnya_error_disclosure_required">Göndermeden önce ayarlardaki veri paylaşımı açıklamasını inceleyin ve verilerin belirtilen hizmete gönderilmesini kabul edin.</string>
     <string name="podnya_error_invalid_address">Kullanıcı adı, parola, sorgu veya parça tanımlayıcısı içermeyen bir HTTPS hizmet adresi girin.</string>
-    <string name="podnya_error_credential_storage_unavailable">Güvenli anahtar depolaması kullanılamıyor. “Anahtarı yalnızca uygulama kapanana kadar tut” seçeneğini seçip yeniden kaydedin.</string>
+    <string name="podnya_error_credential_too_long">API anahtarı en fazla 8192 karakter olabilir. Windows ayrıca 2560 UTF-8 bayt sınırı uygular.</string>
+    <string name="podnya_error_credential_storage_unavailable">Güvenli anahtar deposu kullanılamıyor. Sistem kimlik bilgisi deposunu kontrol edip yeniden deneyin.</string>
     <string name="podnya_error_authentication">Hizmet API anahtarını reddetti. Ayarlardan kontrol edin.</string>
     <string name="podnya_error_endpoint_or_model">Uç nokta veya model kullanılamıyor. Kayıtlı adresi ve model adını kontrol edin.</string>
     <string name="podnya_error_rate_limit">Hizmetin istek veya token hız sınırına ulaşıldı. Bir süre bekleyip tekrar deneyin.</string>
@@ -50,10 +51,7 @@
     <string name="podnya_api_key">API anahtarı</string>
     <string name="podnya_api_key_keep">Bu adres için kayıtlı anahtarı korumak istiyorsanız boş bırakın.</string>
     <string name="podnya_api_key_required">Bu hizmet adresi için bir anahtar girin.</string>
-    <string name="podnya_session_only">Anahtarı yalnızca uygulama kapanana kadar tut</string>
-    <string name="podnya_session_only_description">Güvenli depolama kullanılamıyorsa bu seçeneği kullanın. Yeniden başlattıktan sonra anahtarı tekrar girmeniz gerekir.</string>
     <string name="podnya_settings_disclosure">Arama sırasında sorunuz, son sohbetiniz, aday makalelerin başlıkları, kaynakları, akış adları, sessiz durumu ve her biri en fazla 400 karakterlik metin alıntıları %1$s adresine gönderilir. Arama araçları akış adreslerini ve istek başlıklarını göndermez. Sohbet geçmişi bu cihazda saklanır.</string>
-    <string name="podnya_consent">Soruların, sohbetin ve arama içeriğinin bu hizmete gönderilmesini kabul ediyorum</string>
     <string name="podnya_save">Kaydet</string>
     <string name="podnya_test_saved">Kayıtlı yapılandırmayı test et</string>
     <string name="podnya_test_description">Önce değişiklikleri kaydedin. Bu isteğe bağlı test, model hizmetinize birkaç örnek istek gönderir ve ücret oluşturabilir. Makalelerinizi veya akışlarınızı okumaz.</string>
@@ -87,19 +85,14 @@
     <string name="podnya_delete_stop">Sohbeti sil ve yanıtı durdur</string>
     <string name="podnya_history_replying">Yanıtlanıyor…</string>
     <string name="podnya_history_failed">Yanıt başarısız</string>
-    <string name="podnya_destination_title">Geçmiş başka bir hizmete gönderilsin mi?</string>
-    <string name="podnya_destination_message">Bu sohbetin bağlamı %1$s adresine gönderilecek. Devam edilsin mi?</string>
     <string name="podnya_ok">Tamam</string>
     <string name="podnya_capacity_warning">Sohbet alanı 100 sohbet veya tahmini 32 MiB içerik sınırına yaklaşıyor (gerçek yığın belleği kullanımı değildir). Yer açmak için gereksiz sohbetleri silin.</string>
-    <string name="podnya_select_current_model">Geçerli yapılandırmayı kullan: %1$s</string>
     <string name="podnya_error_configuration_changed">Model yapılandırması değişti. Kontrol edip yeniden gönderin.</string>
     <string name="podnya_error_conversation_capacity">Sohbet alanı dolu (100 sohbet veya tahmini 32 MiB içerik). Yer açmak için bir sohbeti silin. Kaydedilmiş geçmiş ve taslak korundu.</string>
     <string name="podnya_error_generation_limit">Her sohbette bir tane olmak üzere aynı anda en fazla 3 yanıt üretilebilir. Bekleyin veya bir yanıtı durdurup yeniden gönderin. Taslağınız korundu.</string>
     <string name="podnya_error_stale_input">Girdi veya model seçimi değişti. Bu sohbeti kontrol edip yeniden gönderin.</string>
     <string name="podnya_missing_articles">Bu makale silindi. Kaydedilmiş öneri bu sohbette kalır.</string>
     <string name="podnya_missing_feeds">Bu abonelik silindi. Kaydedilmiş öneri bu sohbette kalır.</string>
-    <string name="podnya_model_unavailable">Bu sohbetin model yapılandırması kullanılamıyor. Devam etmek için geçerli yapılandırmayı açıkça seçin.</string>
-    <string name="podnya_destination_conversation">Sohbet: %1$s</string>
     <string name="podnya_error_conversation_storage">Sohbet güncellenemedi. Önceden kaydedilen içerik korunuyor. Lütfen yeniden deneyin.</string>
     <string name="podnya_history_on_device">Geçmiş bu cihazda saklanır.</string>
     <string name="podnya_storage_loading">Konuşmalar yükleniyor…</string>
@@ -121,9 +114,6 @@
     <string name="podnya_protocol">API türü</string>
     <string name="podnya_openai_compatible">OpenAI uyumlu</string>
     <string name="podnya_manual_model">Model kimliği girin</string>
-    <string name="podnya_switch_title">Yapılandırma değiştirilsin mi?</string>
-    <string name="podnya_switch_message">Kaydedilmemiş değişiklikler ve girilen API anahtarı silinecek.</string>
-    <string name="podnya_switch_confirm">Değiştir</string>
     <string name="podnya_reload">Yeniden yükle</string>
     <string name="podnya_config_newer">Bu yapılandırma daha yeni bir sürümle kaydedilmiş. Uygulamayı güncelleyin veya yapılandırmayı temizleyin.</string>
     <string name="podnya_config_unknown_protocol">Bu yapılandırmanın API türü desteklenmiyor. Uygulamayı güncelleyin veya yapılandırmayı temizleyin.</string>
@@ -133,4 +123,16 @@
     <string name="podnya_reasoning_effort">Akıl yürütme düzeyi</string>
     <string name="podnya_reasoning_wait">Yanıtlar ve bağlantı testleri 10 dakikaya kadar sürebilir. Beklerken iptal edebilirsiniz.</string>
     <string name="podnya_reasoning_reset">Bu bağlantıda akıl yürütme düzeyi seçilemez. Seçim temizlendi; desteklenen modellere dönüldüğünde low kullanılır.</string>
+    <string name="podnya_profiles">Model profilleri</string>
+    <string name="podnya_add_profile">Model profili ekle</string>
+    <string name="podnya_profile_name">Profil adı</string>
+    <string name="podnya_save_and_use">Kaydet ve kullan</string>
+    <string name="podnya_delete_replacement">Sil ve şu profile geç…</string>
+    <string name="podnya_reload_conflicting_profile">Yerel değişiklikleri at ve güncellenen profili yükle</string>
+    <string name="podnya_edit_profile">Model profilini düzenle</string>
+    <string name="podnya_edit_named_profile">%1$s profilini düzenle</string>
+    <string name="podnya_no_profiles">Henüz model profili yok</string>
+    <string name="podnya_create_profile">Profil oluştur</string>
+    <string name="podnya_save_changes">Değişiklikleri kaydet</string>
+    <string name="podnya_create_and_use">Oluştur ve kullan</string>
 </resources>

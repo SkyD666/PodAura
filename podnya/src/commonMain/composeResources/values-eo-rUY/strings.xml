@@ -24,7 +24,8 @@
     <string name="podnya_error_configuration_required">Antaŭ ol sendi, agordu servon, modelon kaj API-ŝlosilon en la agordoj.</string>
     <string name="podnya_error_disclosure_required">Antaŭ ol sendi, legu la klarigon pri datumtranssendo en la agordoj kaj konsentu sendi datumojn al la elektita servo.</string>
     <string name="podnya_error_invalid_address">Enigu HTTPS-servadreson sen uzantnomo, pasvorto, demandoparametroj aŭ fragmento.</string>
-    <string name="podnya_error_credential_storage_unavailable">Sekura ŝlosilkonservado ne disponeblas. Elektu “Konservi la ŝlosilon nur ĝis la aplikaĵo fermiĝas” kaj konservu denove.</string>
+    <string name="podnya_error_credential_too_long">API-ŝlosilo rajtas enhavi ĝis 8192 signojn. En Windows validas ankaŭ limo de 2560 UTF-8-bajtoj.</string>
+    <string name="podnya_error_credential_storage_unavailable">Sekura ŝlosilkonservado ne disponeblas. Kontrolu la sisteman akreditaĵan konservejon kaj reprovu.</string>
     <string name="podnya_error_authentication">La servo malakceptis la API-ŝlosilon. Kontrolu ĝin en la agordoj.</string>
     <string name="podnya_error_endpoint_or_model">La finpunkto aŭ modelo ne disponeblas. Kontrolu la konservitan adreson kaj modelnomon.</string>
     <string name="podnya_error_rate_limit">La limo de la servo por petoj aŭ ĵetonoj en difinita tempo estis atingita. Atendu kaj reprovu.</string>
@@ -50,10 +51,7 @@
     <string name="podnya_api_key">API-ŝlosilo</string>
     <string name="podnya_api_key_keep">Lasu malplena por konservi la jam konservitan ŝlosilon por ĉi tiu adreso.</string>
     <string name="podnya_api_key_required">Enigu ŝlosilon por ĉi tiu servadreso.</string>
-    <string name="podnya_session_only">Konservi la ŝlosilon nur ĝis la aplikaĵo fermiĝas</string>
-    <string name="podnya_session_only_description">Uzu ĉi tiun opcion se sekura konservado ne disponeblas. La ŝlosilo devas esti enigita denove post restartigo.</string>
     <string name="podnya_settings_disclosure">Dum serĉo, via demando, lastatempa konversacio, titoloj kaj fontoj de kandidataj artikoloj, nomoj kaj silentiga stato de abonfluoj, kaj tekstaj eltiraĵoj de maksimume 400 signoj ĉiu estos sendataj al %1$s. La serĉiloj ne sendas adresojn de abonfluoj aŭ petokapojn. La konversacia historio estas konservata sur ĉi tiu aparato.</string>
-    <string name="podnya_consent">Mi konsentas sendi demandojn, konversacion kaj serĉenhavon al ĉi tiu servo</string>
     <string name="podnya_save">Konservi</string>
     <string name="podnya_test_saved">Testi konservitajn agordojn</string>
     <string name="podnya_test_description">Unue konservu la ŝanĝojn. Ĉi tiu laŭvola testo sendas kelkajn provpetojn al via modelservo kaj povas kaŭzi kostojn. Ĝi neniam legas viajn artikolojn aŭ abonfluojn.</string>
@@ -87,19 +85,14 @@
     <string name="podnya_delete_stop">Forigi konversacion kaj haltigi respondon</string>
     <string name="podnya_history_replying">Respondante…</string>
     <string name="podnya_history_failed">Respondo malsukcesis</string>
-    <string name="podnya_destination_title">Ĉu sendi historion al alia servo?</string>
-    <string name="podnya_destination_message">La kunteksto de ĉi tiu konversacio estos sendita al %1$s. Ĉu daŭrigi?</string>
     <string name="podnya_ok">Bone</string>
     <string name="podnya_capacity_warning">La konversacia memoro proksimiĝas al 100 konversacioj aŭ la taksita enhavlimo de 32 MiB (ne la reala uzo de dinamika memoro). Forigu nenecesajn konversaciojn.</string>
-    <string name="podnya_select_current_model">Uzi nunan agordon: %1$s</string>
     <string name="podnya_error_configuration_changed">La modela agordo ŝanĝiĝis. Kontrolu ĝin kaj sendu denove.</string>
     <string name="podnya_error_conversation_capacity">La konversacia memoro estas plena (100 konversacioj aŭ taksitaj 32 MiB). Forigu konversacion. La konservitaj historio kaj malneto restas.</string>
     <string name="podnya_error_generation_limit">Maksimume 3 respondoj povas ruli samtempe, po unu en ĉiu konversacio. Atendu aŭ haltigu respondon kaj sendu denove. Via malneto restas.</string>
     <string name="podnya_error_stale_input">La enigo aŭ modela elekto ŝanĝiĝis. Kontrolu ĉi tiun konversacion kaj sendu denove.</string>
     <string name="podnya_missing_articles">Ĉi tiu artikolo estis forigita. La konservita rekomendo restas en la konversacio.</string>
     <string name="podnya_missing_feeds">Ĉi tiu abono estis forigita. La konservita rekomendo restas en la konversacio.</string>
-    <string name="podnya_model_unavailable">La modela agordo de ĉi tiu konversacio ne disponeblas. Eksplicite elektu la nunan agordon por daŭrigi.</string>
-    <string name="podnya_destination_conversation">Konversacio: %1$s</string>
     <string name="podnya_error_conversation_storage">Ne eblis ĝisdatigi la konversacion. Antaŭe konservita enhavo restas. Bonvolu reprovi.</string>
     <string name="podnya_history_on_device">La historio estas konservata sur ĉi tiu aparato.</string>
     <string name="podnya_storage_loading">Ŝargante konversaciojn…</string>
@@ -121,9 +114,6 @@
     <string name="podnya_protocol">API-tipo</string>
     <string name="podnya_openai_compatible">OpenAI-kongrua</string>
     <string name="podnya_manual_model">Enigu modelan identigilon</string>
-    <string name="podnya_switch_title">Ĉu ŝanĝi la agordon?</string>
-    <string name="podnya_switch_message">Nekonservitaj ŝanĝoj kaj la enigita API-ŝlosilo estos forigitaj.</string>
-    <string name="podnya_switch_confirm">Ŝanĝi</string>
     <string name="podnya_reload">Reŝargi</string>
     <string name="podnya_config_newer">Pli nova versio konservis ĉi tiun agordon. Ĝisdatigu la aplikaĵon aŭ forigu la agordon.</string>
     <string name="podnya_config_unknown_protocol">La API-tipo de ĉi tiu agordo ne estas subtenata. Ĝisdatigu la aplikaĵon aŭ forigu la agordon.</string>
@@ -133,4 +123,16 @@
     <string name="podnya_reasoning_effort">Rezonada nivelo</string>
     <string name="podnya_reasoning_wait">Respondoj kaj konektotestoj povas daŭri ĝis 10 minutoj. Vi povas nuligi dum la atendado.</string>
     <string name="podnya_reasoning_reset">Ĉi tiu konekto ne subtenas elekton de rezonada nivelo. La elekto estis forigita; subtenataj modeloj rekomencos je low.</string>
+    <string name="podnya_profiles">Modelaj profiloj</string>
+    <string name="podnya_add_profile">Aldoni modelan profilon</string>
+    <string name="podnya_profile_name">Profilnomo</string>
+    <string name="podnya_save_and_use">Konservi kaj uzi</string>
+    <string name="podnya_delete_replacement">Forigi kaj ŝanĝi al…</string>
+    <string name="podnya_reload_conflicting_profile">Forĵeti la lokajn ŝanĝojn kaj ŝargi la ĝisdatigitan profilon</string>
+    <string name="podnya_edit_profile">Redakti modelan profilon</string>
+    <string name="podnya_edit_named_profile">Redakti la profilon %1$s</string>
+    <string name="podnya_no_profiles">Ankoraŭ ne estas modelaj profiloj</string>
+    <string name="podnya_create_profile">Krei profilon</string>
+    <string name="podnya_save_changes">Konservi ŝanĝojn</string>
+    <string name="podnya_create_and_use">Krei kaj uzi</string>
 </resources>

@@ -2,17 +2,21 @@ package com.skyd.podaura.podnya.ui.screen.chat
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,11 +54,11 @@ import com.skyd.fundation.util.isJvm
 import com.skyd.fundation.util.platform
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantLimits
+import com.skyd.podaura.podnya.settings.AssistantProfiles
 import com.skyd.podaura.podnya.ui.podnyaErrorText
 import com.skyd.podnya.resources.Res
+import com.skyd.podnya.resources.podnya_add_profile
 import com.skyd.podnya.resources.podnya_composer_hint
-import com.skyd.podnya.resources.podnya_model_unavailable
-import com.skyd.podnya.resources.podnya_select_current_model
 import com.skyd.podnya.resources.podnya_send
 import com.skyd.podnya.resources.podnya_send_shortcut
 import com.skyd.podnya.resources.podnya_settings_read_failed
@@ -71,7 +75,7 @@ internal fun PodnyaInputArea(
     dispatch: (PodnyaIntent) -> Unit,
 ) {
     val state = uiState.session
-    val settings = uiState.settings
+    val settings = uiState.profiles?.active
     val ready = uiState.ready
     Column(
         modifier = Modifier
@@ -82,7 +86,7 @@ internal fun PodnyaInputArea(
     ) {
         if (uiState.available &&
             (settings != null || uiState.settingsFailed) &&
-            (uiState.settingsFailed || !uiState.modelAvailable || settings?.configured != true || !settings.consentAccepted)
+            (uiState.settingsFailed || settings?.configured != true)
         ) {
             Row(
                 modifier = Modifier
@@ -93,8 +97,7 @@ internal fun PodnyaInputArea(
             ) {
                 Text(
                     text = if (uiState.settingsFailed) stringResource(Res.string.podnya_settings_read_failed)
-                    else if (!uiState.modelAvailable) stringResource(Res.string.podnya_model_unavailable)
-                    else podnyaErrorText(if (settings?.configured == true) AssistantError.DISCLOSURE_REQUIRED else AssistantError.CONFIGURATION_REQUIRED),
+                    else podnyaErrorText(AssistantError.CONFIGURATION_REQUIRED),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -106,27 +109,17 @@ internal fun PodnyaInputArea(
                 )
             }
         }
-        if (!uiState.modelAvailable && settings?.configured == true) {
-            TextButton(
-                onClick = {
-                    settings.configId?.let {
-                        dispatch(PodnyaIntent.SelectModel(state.id, it))
-                    }
-                }
-            ) {
-                Text(
-                    stringResource(
-                        resource = Res.string.podnya_select_current_model,
-                        settings.modelId
-                    )
-                )
-            }
-        }
         MessageInputBox(
             input = input,
             onInput = onInput,
             ready = ready,
             running = uiState.running,
+            profileMenu = {
+                val profiles = uiState.profiles
+                if (profiles != null && uiState.available) {
+                    ProfileMenu(profiles = profiles, dispatch = dispatch)
+                }
+            },
             onSend = onSend,
             onStop = { dispatch(PodnyaIntent.Stop(state.id)) },
         )
@@ -141,6 +134,7 @@ private fun MessageInputBox(
     running: Boolean,
     onSend: () -> Unit,
     onStop: () -> Unit,
+    profileMenu: @Composable () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
     val hint = stringResource(Res.string.podnya_composer_hint)
@@ -188,17 +182,21 @@ private fun MessageInputBox(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (platform.isJvm) {
-                    Text(
-                        stringResource(Res.string.podnya_send_shortcut),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                } else {
-                    Spacer(Modifier.weight(1f))
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    profileMenu()
+                    if (platform.isJvm) {
+                        Text(
+                            text = stringResource(Res.string.podnya_send_shortcut),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
                 if (input.text.length >= AssistantLimits.INPUT_CHARS * 9 / 10) {
                     Text(
@@ -225,6 +223,45 @@ private fun MessageInputBox(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileMenu(profiles: AssistantProfiles, dispatch: (PodnyaIntent) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.widthIn(max = 180.dp)) {
+        TextButton(modifier = Modifier.testTag("podnya_profile_menu"), onClick = {
+            if (profiles.profiles.isEmpty()) {
+                dispatch(PodnyaIntent.OpenSettings)
+            } else {
+                expanded = true
+            }
+        }) {
+            Text(
+                text = profiles.label(profiles.active)
+                    .ifEmpty { stringResource(Res.string.podnya_add_profile) },
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Icon(imageVector = Icons.Outlined.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            profiles.profiles.forEach { profile ->
+                DropdownMenuItem(
+                    text = { Text(profiles.label(profile)) },
+                    trailingIcon = {
+                        if (profile.configId == profiles.activeProfileId) {
+                            Icon(imageVector = Icons.Outlined.Check, contentDescription = null)
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        dispatch(PodnyaIntent.SelectModel(requireNotNull(profile.configId)))
+                    },
+                )
             }
         }
     }

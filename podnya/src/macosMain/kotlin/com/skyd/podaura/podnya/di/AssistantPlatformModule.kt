@@ -16,7 +16,7 @@ actual val assistantPlatformModule = module {
             override fun run(request: AssistantTurnRequest, connection: AssistantConnection) =
                 flowOf(AssistantRunEvent.Failed(AssistantError.UNAVAILABLE))
 
-            override suspend fun verify() =
+            override suspend fun verify(connection: suspend () -> AssistantConnection) =
                 AssistantConnectionResult(false, AssistantError.UNAVAILABLE)
         }
     }

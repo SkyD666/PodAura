@@ -24,7 +24,8 @@
     <string name="podnya_error_configuration_required">Configure a service, model, and API key in settings before sending.</string>
     <string name="podnya_error_disclosure_required">Review the data disclosure and agree to the configured recipient in settings before sending.</string>
     <string name="podnya_error_invalid_address">Enter an HTTPS service address without a username, password, query, or fragment.</string>
-    <string name="podnya_error_credential_storage_unavailable">Secure key storage is unavailable. Choose “Keep the key only until the app closes” and save again.</string>
+    <string name="podnya_error_credential_too_long">API keys are limited to 8192 characters. Windows Credential Manager also limits keys to 2560 UTF-8 bytes.</string>
+    <string name="podnya_error_credential_storage_unavailable">Secure key storage is unavailable. Check your system credential store and try again.</string>
     <string name="podnya_error_authentication">The service rejected the API key. Check it in settings.</string>
     <string name="podnya_error_endpoint_or_model">The endpoint or model is unavailable. Check the saved address and model name.</string>
     <string name="podnya_error_rate_limit">The service request or token rate limit was reached. Wait and retry.</string>
@@ -50,10 +51,7 @@
     <string name="podnya_api_key">API key</string>
     <string name="podnya_api_key_keep">Leave blank to keep the saved key for this address.</string>
     <string name="podnya_api_key_required">Enter a key for this service address.</string>
-    <string name="podnya_session_only">Keep the key only until the app closes</string>
-    <string name="podnya_session_only_description">Use this option if secure storage is unavailable. The key must be entered again after restarting.</string>
     <string name="podnya_settings_disclosure">To search, your question, recent conversation, candidate article titles, sources, subscription names, mute status, and text snippets of up to 400 characters each will be sent to %1$s. Subscription URLs and request headers are not sent by the search tools. Chat history is saved on this device.</string>
-    <string name="podnya_consent">I agree to send questions, conversation and search content to this service</string>
     <string name="podnya_save">Save</string>
     <string name="podnya_test_saved">Test saved configuration</string>
     <string name="podnya_test_description">Save changes first. This optional test sends a few synthetic requests to your model service and may incur charges. It never reads your articles or subscriptions.</string>
@@ -87,19 +85,14 @@
     <string name="podnya_delete_stop">Delete conversation and stop reply</string>
     <string name="podnya_history_replying">Replying…</string>
     <string name="podnya_history_failed">Reply failed</string>
-    <string name="podnya_destination_title">Send history to another service?</string>
-    <string name="podnya_destination_message">This conversation will send its context to %1$s. Continue?</string>
     <string name="podnya_ok">OK</string>
     <string name="podnya_capacity_warning">Conversation storage is nearing 100 conversations or its estimated 32 MiB content budget (not actual heap memory). Delete unneeded conversations to free space.</string>
-    <string name="podnya_select_current_model">Use current configuration: %1$s</string>
     <string name="podnya_error_configuration_changed">The model configuration changed. Review it and send again.</string>
     <string name="podnya_error_conversation_capacity">Conversation storage is full (100 conversations or an estimated 32 MiB of content). Delete a conversation to make room. Your saved history and draft were kept.</string>
     <string name="podnya_error_generation_limit">Up to 3 replies can run at once, with one per conversation. Wait or stop a reply, then send again. Your draft was kept.</string>
     <string name="podnya_error_stale_input">The input or model selection changed. Review this conversation and send again.</string>
     <string name="podnya_missing_articles">This article has been deleted. Its saved recommendation remains in this conversation.</string>
     <string name="podnya_missing_feeds">This subscription has been deleted. Its saved recommendation remains in this conversation.</string>
-    <string name="podnya_model_unavailable">This conversation’s model configuration is unavailable. Select the current configuration explicitly to continue.</string>
-    <string name="podnya_destination_conversation">Conversation: %1$s</string>
     <string name="podnya_error_conversation_storage">Could not update the conversation. Previously saved content is retained. Please try again.</string>
     <string name="podnya_history_on_device">History is saved on this device.</string>
     <string name="podnya_storage_loading">Loading conversations…</string>
@@ -121,9 +114,6 @@
     <string name="podnya_protocol">API type</string>
     <string name="podnya_openai_compatible">OpenAI compatible</string>
     <string name="podnya_manual_model">Enter model ID</string>
-    <string name="podnya_switch_title">Switch configuration?</string>
-    <string name="podnya_switch_message">Unsaved changes and the entered API key will be cleared.</string>
-    <string name="podnya_switch_confirm">Switch</string>
     <string name="podnya_reload">Reload</string>
     <string name="podnya_config_newer">This configuration was saved by a newer app. Update the app or clear the configuration.</string>
     <string name="podnya_config_unknown_protocol">This configuration uses an unsupported API type. Update the app or clear the configuration.</string>
@@ -133,4 +123,16 @@
     <string name="podnya_reasoning_effort">Reasoning effort</string>
     <string name="podnya_reasoning_wait">Replies and connection tests can take up to 10 minutes. You can cancel while waiting.</string>
     <string name="podnya_reasoning_reset">Reasoning effort is unavailable for this connection. The selection was cleared; supported models will start at low.</string>
+    <string name="podnya_profiles">Model profiles</string>
+    <string name="podnya_add_profile">Add model profile</string>
+    <string name="podnya_profile_name">Profile name</string>
+    <string name="podnya_save_and_use">Save and use</string>
+    <string name="podnya_delete_replacement">Delete and switch to…</string>
+    <string name="podnya_reload_conflicting_profile">Discard local edits and load the updated profile</string>
+    <string name="podnya_edit_profile">Edit model profile</string>
+    <string name="podnya_edit_named_profile">Edit %1$s</string>
+    <string name="podnya_no_profiles">No model profiles yet</string>
+    <string name="podnya_create_profile">Create profile</string>
+    <string name="podnya_save_changes">Save changes</string>
+    <string name="podnya_create_and_use">Create and use</string>
 </resources>

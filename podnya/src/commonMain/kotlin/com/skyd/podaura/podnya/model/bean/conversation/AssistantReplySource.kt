@@ -11,4 +11,5 @@ data class AssistantReplySource(
     val modelId: String,
     val protocol: String? = null,
     val reasoningEffort: String? = null,
+    val profileName: String? = null,
 )

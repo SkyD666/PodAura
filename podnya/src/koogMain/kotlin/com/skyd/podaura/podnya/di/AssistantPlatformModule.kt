@@ -14,8 +14,11 @@ actual val assistantPlatformModule = module {
     single<AssistantRuntime> {
         val articles = get<LocalArticleSearchRepository>()
         val feeds = get<LocalFeedSearchRepository>()
-        KoogAssistantRuntime(settings = get(), capabilities = { request ->
-            listOfNotNull(ArticleSearchCapability.create(articles, request), FeedSearchCapability.create(feeds, request))
+        KoogAssistantRuntime(capabilities = { request ->
+            listOfNotNull(
+                ArticleSearchCapability.create(articles, request),
+                FeedSearchCapability.create(feeds, request)
+            )
         })
     }
 }

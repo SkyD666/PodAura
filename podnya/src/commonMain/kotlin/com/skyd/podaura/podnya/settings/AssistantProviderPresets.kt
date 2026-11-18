@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.settings
 
-import com.skyd.podaura.podnya.core.AssistantModelIds
+import com.skyd.podaura.podnya.core.AssistantModelCatalog
 import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.normalizeAssistantBaseUrl
 
@@ -24,35 +24,35 @@ object AssistantProviderPresets {
             displayName = "OpenAI",
             baseUrl = "https://api.openai.com/v1/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = AssistantModelIds.openAiResponses,
+            models = AssistantModelCatalog.openAiResponses,
         ),
         AssistantProviderPreset(
             id = "deepseek",
             displayName = "DeepSeek",
             baseUrl = "https://api.deepseek.com/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = AssistantModelIds.deepSeek,
+            models = AssistantModelCatalog.deepSeek,
         ),
         AssistantProviderPreset(
             id = "claude",
             displayName = "Claude",
             baseUrl = "https://api.anthropic.com/v1/",
             protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
-            models = AssistantModelIds.claude,
+            models = AssistantModelCatalog.claude,
         ),
         AssistantProviderPreset(
             id = "gemini",
             displayName = "Gemini",
             baseUrl = "https://generativelanguage.googleapis.com/v1beta/",
             protocol = AssistantProtocol.GEMINI_GENERATE_CONTENT,
-            models = AssistantModelIds.gemini,
+            models = AssistantModelCatalog.gemini,
         ),
         AssistantProviderPreset(
             id = "grok",
             displayName = "Grok",
             baseUrl = "https://api.x.ai/v1/",
             protocol = AssistantProtocol.OPENAI_COMPATIBLE,
-            models = AssistantModelIds.grok,
+            models = AssistantModelCatalog.grok,
         ),
     )
 

@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.settings
 
+import kotlinx.coroutines.runBlocking
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
@@ -20,16 +21,17 @@ import androidx.compose.ui.platform.PlatformWindowInsets
 import androidx.compose.ui.platform.PlatformInsets
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
-import com.skyd.podnya.resources.podnya_test_cost
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -42,6 +44,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -75,22 +78,21 @@ import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podnya.resources.Res
-import com.skyd.podnya.resources.podnya_cancel
-import com.skyd.podnya.resources.podnya_consent
+import com.skyd.podnya.resources.podnya_edit_named_profile
+import com.skyd.podnya.resources.podnya_save_and_use
 import com.skyd.podnya.resources.podnya_custom_provider
 import com.skyd.podnya.resources.podnya_manual_model
 import com.skyd.podnya.resources.podnya_reload
-import com.skyd.podnya.resources.podnya_save
-import com.skyd.podnya.resources.podnya_switch_confirm
+import com.skyd.podnya.resources.podnya_create_and_use
 import com.skyd.podnya.resources.podnya_test_saved
 import com.skyd.podnya.resources.podnya_settings_info
 import com.skyd.podnya.resources.podnya_settings_description
-import com.skyd.podnya.resources.podnya_switch_title
 import com.skyd.podnya.resources.podnya_ok
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.skia.Image
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -109,6 +111,7 @@ class AssistantSettingsScreenTest {
                 Fixture().use { fixture ->
                     setContent { fixture.Screen(layout) }
                     waitUntil { fixture.model.viewState.value.loaded }
+                    onNodeWithTag("podnya_add_profile").performClick()
                     onNodeWithTag("podnya_provider").performClick()
                     onNodeWithText("OpenAI").performClick()
                     onNodeWithTag("podnya_settings_form").performScrollToNode(hasTestTag("podnya_reasoning_effort"))
@@ -150,6 +153,7 @@ class AssistantSettingsScreenTest {
                     waitUntil { fixture.model.viewState.value.loaded }
                     capture("${layout.name}-empty")
                     onNodeWithTag("podnya_key").assertDoesNotExist()
+                    onNodeWithTag("podnya_add_profile").performClick()
                     onNodeWithTag("podnya_provider").performClick()
                     capture(name = "${layout.name}-provider-menu", dialogTitle = "Claude")
                     onNodeWithText("Claude").performClick()
@@ -164,24 +168,112 @@ class AssistantSettingsScreenTest {
                     capture("${layout.name}-manual")
                     onNodeWithTag("podnya_provider").performClick()
                     onNodeWithText(fixture.custom).performClick()
-                    waitUntil { fixture.model.viewState.value.pendingSwitch != null }
-                    capture(name = "${layout.name}-confirmation", dialogTitle = fixture.switchTitle)
-                    onNodeWithText(fixture.cancel).performClick()
-                    assertEquals("manual-model", fixture.model.viewState.value.modelId)
-                    onNodeWithTag("podnya_provider").performClick()
-                    onNodeWithText(fixture.custom).performClick()
-                    onNodeWithText(fixture.confirm).performClick()
                     waitUntil { fixture.model.viewState.value.custom }
                     onNodeWithTag("podnya_address").assertIsDisplayed()
                     onNodeWithTag("podnya_protocol").assertIsDisplayed()
                     capture("${layout.name}-custom")
-                    onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.cost))
+                    onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.save))
                     onNodeWithText(fixture.save).assertIsDisplayed()
                     capture("${layout.name}-bottom")
                 }
             }
         }
     }
+
+    @Test
+    fun tappingARowSelectsItsSavedKeyAndTappingThePencilEditsIndependently() = runDesktopComposeUiTest(width = 600, height = 880) {
+        Fixture().use { fixture ->
+            runBlocking {
+                fixture.repository.save(baseUrl = "https://work.example", modelId = "work", apiKey = "work")
+                fixture.repository.save(baseUrl = "https://home.example", modelId = "home", apiKey = "home")
+            }
+            setContent { fixture.Screen(Layout(name = "profiles", width = 600, height = 880)) }
+            waitUntil { fixture.model.viewState.value.loaded }
+            capture("saved-profiles")
+            onNodeWithText("work").assertIsSelected()
+            onNodeWithText("home").assertIsNotSelected().performTouchInput { click() }
+            waitUntil { fixture.model.viewState.value.profiles.active.name == "home" }
+            onNodeWithText("home").assertIsSelected()
+            onNodeWithText("work").assertIsNotSelected()
+            assertEquals("home", runBlocking { fixture.repository.connection().apiKey })
+            editButton("work").performTouchInput { click() }
+            onNodeWithTag("podnya_key").assertExists()
+            assertEquals("work", fixture.model.viewState.value.saved.name)
+            assertEquals("home", runBlocking { fixture.repository.connection().apiKey })
+            onNodeWithTag("podnya_key").performTextReplacement("replacement")
+            onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.use))
+            onNodeWithText(fixture.use).performClick()
+            waitUntil { fixture.model.viewState.value.profiles.active.name == "work" }
+            assertEquals("replacement", runBlocking { fixture.repository.connection().apiKey })
+        }
+    }
+
+    @Test
+    fun addingAndCancellingSlideTheEditorAndListInFromOppositeSides() =
+        runDesktopComposeUiTest(width = 600, height = 880) {
+            Fixture().use { fixture ->
+                setContent { fixture.Screen(Layout(name = "transition", width = 600, height = 880)) }
+                val list = onNodeWithTag("podnya_profiles_list")
+                val editor = onNodeWithTag("podnya_settings_form")
+                val bounds = list.getUnclippedBoundsInRoot()
+                mainClock.autoAdvance = false
+                onNodeWithTag("podnya_add_profile").performClick()
+                waitUntil { fixture.model.viewState.value.editing }
+                mainClock.advanceTimeBy(96)
+                val enteringEditor = editor.getUnclippedBoundsInRoot()
+                assertTrue(enteringEditor.left > bounds.left && enteringEditor.left < bounds.right)
+                mainClock.autoAdvance = true
+                list.assertDoesNotExist()
+                assertEquals(bounds.left, editor.getUnclippedBoundsInRoot().left)
+                onNodeWithTag("podnya_provider").performClick()
+                onNodeWithText("Claude").performClick()
+                editor.performScrollToNode(hasTestTag("podnya_cancel_editor"))
+                mainClock.autoAdvance = false
+                onNodeWithTag("podnya_cancel_editor").performClick()
+                waitUntil { !fixture.model.viewState.value.editing }
+                mainClock.advanceTimeBy(96)
+                val returningList = list.getUnclippedBoundsInRoot()
+                assertTrue(returningList.left < bounds.left && returningList.right > bounds.left)
+                mainClock.autoAdvance = true
+                editor.assertDoesNotExist()
+                assertEquals(bounds.left, list.getUnclippedBoundsInRoot().left)
+            }
+        }
+
+    @Test
+    fun cancelDiscardsAnEditAndAddingABackupKeepsTheActiveProfile() =
+        runDesktopComposeUiTest(width = 500, height = 840) {
+            Fixture().use { fixture ->
+                val work = runBlocking {
+                    fixture.repository.save(
+                        baseUrl = "https://work.example",
+                        modelId = "work-model",
+                        apiKey = "work-key",
+                        name = "Work",
+                    )
+                }
+                setContent { fixture.Screen(Layout(name = "add-backup", width = 500, height = 840)) }
+                editButton("Work").performClick()
+                onNodeWithTag("podnya_profile_name").performTextReplacement("Unsaved")
+                onNodeWithTag("podnya_key").performTextReplacement("unsaved-key")
+                onNodeWithTag("podnya_settings_form").performScrollToNode(hasTestTag("podnya_cancel_editor"))
+                onNodeWithTag("podnya_cancel_editor").performClick()
+                onNodeWithText("Work").assertIsDisplayed()
+                onNodeWithTag("podnya_add_profile").performClick()
+                onNodeWithTag("podnya_key").assertDoesNotExist()
+                onNodeWithTag("podnya_provider").performClick()
+                onNodeWithText("Claude").performClick()
+                onNodeWithTag("podnya_profile_name").performTextReplacement("Personal")
+                onNodeWithTag("podnya_key").performTextReplacement("personal-key")
+                onNodeWithTag("podnya_settings_form").performScrollToNode(hasTestTag("podnya_save_profile"))
+                onNodeWithTag("podnya_save_profile").performClick()
+                onNodeWithText("Personal").assertIsDisplayed()
+                onNodeWithText("Work").assertIsDisplayed()
+                onNodeWithTag("podnya_provider").assertDoesNotExist()
+                assertEquals(work, runBlocking { fixture.repository.snapshot() })
+                assertEquals("work-key", runBlocking { fixture.repository.connection().apiKey })
+            }
+        }
 
     @Test
     fun providerInfoShowsTheActualEndpointForEveryPreset() {
@@ -197,6 +289,7 @@ class AssistantSettingsScreenTest {
                 Fixture().use { fixture ->
                     setContent { fixture.Screen(Layout(name = "info", width = 450, height = 850)) }
                     waitUntil { fixture.model.viewState.value.loaded }
+                    onNodeWithTag("podnya_add_profile").performClick()
                     onNodeWithTag("podnya_provider").performClick()
                     onNodeWithText(provider).performClick()
                     onNodeWithContentDescription(fixture.info).performClick()
@@ -226,6 +319,7 @@ class AssistantSettingsScreenTest {
                     }
                 }
                 waitUntil { fixture.model.viewState.value.loaded }
+                onNodeWithTag("podnya_add_profile").performClick()
                 onNodeWithTag("podnya_provider").performClick()
                 onNodeWithText(fixture.custom).performClick()
                 onNodeWithTag("podnya_protocol").performClick()
@@ -241,10 +335,10 @@ class AssistantSettingsScreenTest {
                 capture("keyboard-key")
                 onNodeWithTag("podnya_key").performKeyInput { pressKey(Key.Tab) }
                 onNodeWithTag("podnya_key").assertIsNotFocused()
-                onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.cost))
+                onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.save))
                 onNodeWithText(fixture.save).assertIsDisplayed()
-                onNodeWithText(fixture.verify).assertIsDisplayed()
-                assertTrue(onNodeWithText(fixture.verify).getUnclippedBoundsInRoot().bottom.value <= 544)
+                onNodeWithText(fixture.verify).assertDoesNotExist()
+                assertTrue(onNodeWithText(fixture.save).getUnclippedBoundsInRoot().bottom.value <= 544)
                 capture("keyboard-bottom")
                 assertTrue(fixture.model.viewState.value.hasNewKey)
             }
@@ -257,12 +351,12 @@ class AssistantSettingsScreenTest {
             Fixture().use { fixture ->
                 setContent { fixture.Screen(Layout(name = "failure", width = 450, height = 850)) }
                 waitUntil { fixture.model.viewState.value.loaded }
+                onNodeWithTag("podnya_add_profile").performClick()
                 onNodeWithTag("podnya_provider").performClick()
                 onNodeWithText("OpenAI").performClick()
                 onNodeWithTag("podnya_key").performTextReplacement("synthetic-ui-key")
                 onNodeWithTag("podnya_key").performKeyInput { pressKey(Key.Tab) }
-                onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.consent))
-                onNodeWithText(fixture.consent).performClick()
+                onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.save))
                 fixture.preferences.failWrite = true
                 onNodeWithText(fixture.save).performClick()
                 waitUntil { fixture.model.viewState.value.failure != null }
@@ -273,6 +367,9 @@ class AssistantSettingsScreenTest {
                 onNodeWithText(fixture.save).performClick()
                 waitUntil { fixture.model.viewState.value.saved.configured && fixture.model.viewState.value.operation == null }
                 assertFalse(fixture.model.viewState.value.hasNewKey)
+                onNodeWithTag("podnya_profiles_list").assertExists()
+                editButton(fixture.model.viewState.value.saved.name).performClick()
+                onNodeWithTag("podnya_settings_form").performScrollToNode(hasText(fixture.verify))
                 onNodeWithText(fixture.verify).performClick()
                 waitUntil { fixture.model.viewState.value.failure?.error == AssistantError.AUTHENTICATION }
                 capture("test-failed")
@@ -292,6 +389,7 @@ class AssistantSettingsScreenTest {
                 )
                 onNodeWithText(fixture.reload).performClick()
                 waitUntil { fixture.model.viewState.value.saved.readError == null }
+                editButton("old-model").performClick()
                 assertEquals("old-model", fixture.model.viewState.value.modelId)
                 onNodeWithTag("podnya_model_input").assertIsDisplayed()
                 capture("legacy-recovered")
@@ -301,6 +399,10 @@ class AssistantSettingsScreenTest {
             }
         }
     }
+
+    private fun DesktopComposeUiTest.editButton(profile: String) = onNodeWithContentDescription(
+        runBlocking { getString(Res.string.podnya_edit_named_profile, profile) },
+    )
 
     private fun DesktopComposeUiTest.capture(name: String, dialogTitle: String? = null) {
         val node = if (dialogTitle != null) {
@@ -345,7 +447,7 @@ class AssistantSettingsScreenTest {
     private class Fixture(raw: String? = null) : AutoCloseable {
         val preferences = PreferencesStore(raw)
         private val keys = mutableMapOf<String, String>()
-        private val repository = AssistantSettingsRepository(
+        val repository = AssistantSettingsRepository(
             dataStore = preferences,
             credentialStore = object : CredentialStore {
                 override suspend fun put(id: String, secret: String) { keys[id] = secret }
@@ -358,7 +460,7 @@ class AssistantSettingsScreenTest {
             assistant = object : AssistantRuntime {
                 override val available = true
                 override fun run(request: AssistantTurnRequest, connection: AssistantConnection) = emptyFlow<AssistantRunEvent>()
-                override suspend fun verify() = AssistantConnectionResult(success = false, error = AssistantError.AUTHENTICATION)
+                override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(success = false, error = AssistantError.AUTHENTICATION)
             },
         )
         private val store = ViewModelStore().apply { put("settings", model) }
@@ -367,17 +469,13 @@ class AssistantSettingsScreenTest {
         }
         var custom = ""
         var manual = ""
-        var confirm = ""
-        var cancel = ""
         var save = ""
-        var consent = ""
+        var use = ""
         var verify = ""
         var reload = ""
-        var cost = ""
         var info = ""
         var description = ""
         var ok = ""
-        var switchTitle = ""
 
         @Composable
         fun Screen(layout: Layout) {
@@ -397,17 +495,13 @@ class AssistantSettingsScreenTest {
                 MaterialTheme(colorScheme = if (layout.dark) darkColorScheme() else lightColorScheme()) {
                     custom = stringResource(Res.string.podnya_custom_provider)
                     manual = stringResource(Res.string.podnya_manual_model)
-                    confirm = stringResource(Res.string.podnya_switch_confirm)
-                    cancel = stringResource(Res.string.podnya_cancel)
-                    save = stringResource(Res.string.podnya_save)
-                    consent = stringResource(Res.string.podnya_consent)
+                    save = stringResource(Res.string.podnya_create_and_use)
+                    use = stringResource(Res.string.podnya_save_and_use)
                     verify = stringResource(Res.string.podnya_test_saved)
                     reload = stringResource(Res.string.podnya_reload)
-                    cost = stringResource(Res.string.podnya_test_cost)
                     info = stringResource(Res.string.podnya_settings_info)
                     description = stringResource(Res.string.podnya_settings_description)
                     ok = stringResource(Res.string.podnya_ok)
-                    switchTitle = stringResource(Res.string.podnya_switch_title)
                     Surface { AssistantSettingsScreen(onBack = {}, viewModel = model, windowInsets = WindowInsets(0)) }
                 }
             }

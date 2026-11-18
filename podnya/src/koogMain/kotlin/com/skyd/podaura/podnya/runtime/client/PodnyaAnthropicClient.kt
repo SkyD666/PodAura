@@ -22,17 +22,14 @@ internal fun podnyaAnthropicClient(
     connection: AssistantConnection,
     httpFactory: PodnyaHttpFactory,
     model: LLModel,
+    timeoutConfig: ConnectionTimeoutConfig,
 ): AnthropicLLMClient = object : AnthropicLLMClient(
     apiKey = connection.apiKey,
     settings = AnthropicClientSettings(
         modelVersionsMap = mapOf(model to connection.modelId),
         baseUrl = connection.baseUrl,
         messagesPath = "messages",
-        timeoutConfig = ConnectionTimeoutConfig(
-            requestTimeoutMillis = 45_000,
-            connectTimeoutMillis = 15_000,
-            socketTimeoutMillis = 15_000,
-        ),
+        timeoutConfig = timeoutConfig,
     ),
     httpClientFactory = httpFactory,
 ) {

@@ -1,5 +1,7 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
+import com.skyd.podaura.podnya.model.repository.conversation.ConversationCredentials
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
 import com.skyd.podaura.podnya.model.repository.conversation.ConversationStore
@@ -42,14 +44,13 @@ class PodnyaViewModelTest {
     fun navigationSwitchAndViewModelRecreationKeepGenerationAndIsolateDrafts() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
             Fixture().use { f ->
-                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                f.settings.save(baseUrl = "https://example.test/v1", modelId = "model", apiKey = "synthetic-key")
                 val model = f.model
                 model.viewState.first { it.ready }
                 val a = model.viewState.value.session.id
-                val config = f.settings.snapshot()
                 model.processIntent(PodnyaIntent.UpdateDraft(a, "p", "editor", 1))
                 model.processIntent(PodnyaIntent.UpdateDraft(a, "private question", "editor", 2))
-                model.processIntent(PodnyaIntent.Send(a, "editor", 2, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.Send(conversationId = a, editorId = "editor", revision = 2))
                 f.started.await()
                 assertEquals(PodnyaEvent.ClearDraft(a, "editor", 2), model.singleEvent.first())
                 assertEquals("private question", f.lastQuestion)
@@ -85,13 +86,12 @@ class PodnyaViewModelTest {
     fun laterDraftSurvivesSendCompletionAndExplicitStopTargetsOriginalConversation() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
             Fixture().use { f ->
-                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                f.settings.save(baseUrl = "https://example.test/v1", modelId = "model", apiKey = "synthetic-key")
                 val model = f.model
                 model.viewState.first { it.ready }
                 val a = model.viewState.value.session.id
-                val config = f.settings.snapshot()
                 model.processIntent(PodnyaIntent.UpdateDraft(a, "send this", "editor", 1))
-                model.processIntent(PodnyaIntent.Send(a, "editor", 1, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.Send(conversationId = a, editorId = "editor", revision = 1))
                 model.processIntent(PodnyaIntent.UpdateDraft(a, "next draft", "editor", 2))
                 f.started.await()
                 assertEquals(PodnyaEvent.ClearDraft(a, "editor", 1), model.singleEvent.first())
@@ -111,12 +111,12 @@ class PodnyaViewModelTest {
     fun settingsReadFailureDoesNotKillStopOrNavigation() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
             Fixture().use { f ->
-                f.settings.save("https://example.test/v1", "model", "synthetic-key", true, true)
+                f.settings.save(baseUrl = "https://example.test/v1", modelId = "model", apiKey = "synthetic-key")
                 val model = f.model
                 model.viewState.first { it.ready }
-                val a = model.viewState.value.session.id; val config = f.settings.snapshot()
+                val a = model.viewState.value.session.id
                 model.processIntent(PodnyaIntent.UpdateDraft(a, "question", "editor", 1))
-                model.processIntent(PodnyaIntent.Send(a, "editor", 1, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.Send(conversationId = a, editorId = "editor", revision = 1))
                 f.started.await(); assertIs<PodnyaEvent.ClearDraft>(model.singleEvent.first())
                 f.failReads.value = true
                 model.viewState.first { it.settingsFailed }
@@ -132,15 +132,14 @@ class PodnyaViewModelTest {
     fun failedStoreCommandReportsItsTargetAndDoesNotTerminateTheIntentPipeline() = runBlocking(Dispatchers.Main.immediate) {
         withTimeout(5_000) {
             Fixture().use { f ->
-                f.settings.save("https://example.test/v1", "model", "key", true, true)
+                f.settings.save(baseUrl = "https://example.test/v1", modelId = "model", apiKey = "key")
                 val model = f.model
                 model.viewState.first { it.ready }
                 val id = model.viewState.value.session.id
                 model.processIntent(PodnyaIntent.UpdateDraft(id, "kept", "editor", 1))
                 model.viewState.first { it.session.draft == "kept" }
-                val config = f.settings.snapshot()
                 f.failConversationWrites = true
-                model.processIntent(PodnyaIntent.Send(id, "editor", 1, config.configId, config.revision))
+                model.processIntent(PodnyaIntent.Send(conversationId = id, editorId = "editor", revision = 1))
                 model.processIntent(PodnyaIntent.OpenSearch)
                 val events = listOf(model.singleEvent.first(), model.singleEvent.first())
                 val error = events.filterIsInstance<PodnyaEvent.Rejected>().single()
@@ -185,11 +184,7 @@ class PodnyaViewModelTest {
             override suspend fun updateData(transform: suspend (Preferences) -> Preferences) =
                 transform(stored.value).also { stored.value = it }
         }
-        val settings = AssistantSettingsRepository(preferences, object : CredentialStore {
-            override suspend fun put(id: String, secret: String) = error("Session-only fixture")
-            override suspend fun get(id: String): String? = error("Session-only fixture")
-            override suspend fun delete(id: String) = error("Session-only fixture")
-        })
+        val settings = AssistantSettingsRepository(preferences, ConversationCredentials())
         var failConversationWrites = false
         private val memory = InMemoryConversationStore()
         private val conversationStore = object : ConversationStore by memory {
@@ -200,7 +195,7 @@ class PodnyaViewModelTest {
         }
         val session = AssistantConversationRepository(object : AssistantRuntime {
             override val available = true
-            override suspend fun verify() = AssistantConnectionResult(true)
+            override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
             override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flow<AssistantRunEvent> {
                 requests++
                 lastQuestion = request.question

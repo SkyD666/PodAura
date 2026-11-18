@@ -12,6 +12,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantLimits
+import com.skyd.podaura.podnya.core.AssistantTimeouts
 import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -43,7 +44,7 @@ internal fun promptBytes(prompt: Prompt, tools: List<ToolDescriptor> = emptyList
 /** Count the actual executor boundary, including manual structured output and streaming. */
 internal class BudgetedExecutor(
     private val delegate: PromptExecutor,
-    private val timeouts: PodnyaTimeouts = PodnyaTimeouts(),
+    private val timeouts: AssistantTimeouts = AssistantTimeouts.STANDARD,
 ) : PromptExecutor() {
     var calls = 0
         private set
@@ -158,7 +159,7 @@ private fun requestLimitError(body: String?): AssistantFailure {
 @OptIn(FlowPreview::class)
 internal suspend fun collectReply(
     frames: Flow<StreamFrame>,
-    timeouts: PodnyaTimeouts = PodnyaTimeouts(),
+    timeouts: AssistantTimeouts = AssistantTimeouts.STANDARD,
     delta: suspend (String) -> Unit,
 ) {
     val finished = withTimeoutOrNull(timeouts.requestMillis.milliseconds) {

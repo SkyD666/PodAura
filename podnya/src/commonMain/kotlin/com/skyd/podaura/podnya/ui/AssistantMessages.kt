@@ -9,6 +9,7 @@ import com.skyd.podnya.resources.podnya_error_configuration_changed
 import com.skyd.podnya.resources.podnya_error_configuration_required
 import com.skyd.podnya.resources.podnya_error_conversation_storage
 import com.skyd.podnya.resources.podnya_error_credential_storage_unavailable
+import com.skyd.podnya.resources.podnya_error_credential_too_long
 import com.skyd.podnya.resources.podnya_error_disclosure_required
 import com.skyd.podnya.resources.podnya_error_endpoint_or_model
 import com.skyd.podnya.resources.podnya_error_generation_limit
@@ -24,11 +25,13 @@ import com.skyd.podnya.resources.podnya_error_timeout
 import com.skyd.podnya.resources.podnya_error_tools_unsupported
 import com.skyd.podnya.resources.podnya_error_unavailable
 import com.skyd.podnya.resources.podnya_search_context_required
+import com.skyd.podnya.resources.podnya_settings_failed
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun podnyaErrorText(error: AssistantError): String = stringResource(
     when (error) {
+        AssistantError.CONFIGURATION_STORAGE -> Res.string.podnya_settings_failed
         AssistantError.CONFIGURATION_CHANGED -> Res.string.podnya_error_configuration_changed
         AssistantError.CONVERSATION_STORAGE -> Res.string.podnya_error_conversation_storage
         AssistantError.SEARCH_CONTEXT_REQUIRED -> Res.string.podnya_search_context_required
@@ -38,6 +41,7 @@ fun podnyaErrorText(error: AssistantError): String = stringResource(
         AssistantError.CONFIGURATION_REQUIRED -> Res.string.podnya_error_configuration_required
         AssistantError.DISCLOSURE_REQUIRED -> Res.string.podnya_error_disclosure_required
         AssistantError.INVALID_ADDRESS -> Res.string.podnya_error_invalid_address
+        AssistantError.CREDENTIAL_TOO_LONG -> Res.string.podnya_error_credential_too_long
         AssistantError.CREDENTIAL_STORAGE_UNAVAILABLE -> Res.string.podnya_error_credential_storage_unavailable
         AssistantError.AUTHENTICATION -> Res.string.podnya_error_authentication
         AssistantError.ENDPOINT_OR_MODEL -> Res.string.podnya_error_endpoint_or_model

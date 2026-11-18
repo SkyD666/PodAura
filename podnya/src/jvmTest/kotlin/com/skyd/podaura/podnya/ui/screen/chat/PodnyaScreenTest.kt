@@ -1,5 +1,7 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
+import com.skyd.podaura.podnya.model.repository.conversation.ConversationCredentials
+import com.skyd.podaura.podnya.core.AssistantConnection
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
@@ -291,11 +293,33 @@ class PodnyaScreenTest {
         }
 
     @Test
+    fun longProfileAndCharacterCounterLeaveRoomForSendOnNarrowScreens() =
+        runDesktopComposeUiTest(width = 320, height = 720) {
+            Fixture().use { fixture ->
+                runBlocking {
+                    val active = fixture.settings.snapshot()
+                    fixture.settings.save(
+                        baseUrl = active.baseUrl,
+                        modelId = active.modelId,
+                        apiKey = null,
+                        editing = active,
+                        name = "Long profile name ".repeat(8),
+                    )
+                }
+                setContent { fixture.Screen(fontScale = 1.5f) }
+                waitUntil { fixture.viewModel.viewState.value.ready }
+                onNodeWithTag("podnya_composer").performTextReplacement("q".repeat(1800))
+                val bounds = onNodeWithTag("podnya_send").getUnclippedBoundsInRoot()
+                assertTrue(bounds.right - bounds.left >= 48.dp)
+            }
+        }
+
+    @Test
     fun unconfiguredScreenKeepsInputEditableAndSendDisabled() =
         runDesktopComposeUiTest(width = 1100, height = 820) {
             Fixture(configured = false).use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings != null }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles != null }
                 capture("desktop-unconfigured")
                 onNodeWithTag("podnya_send").assertIsNotEnabled()
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
@@ -325,7 +349,7 @@ class PodnyaScreenTest {
         for (layout in cases) runDesktopComposeUiTest(width = layout.width, height = layout.height) {
             Fixture().use { fixture ->
                 setContent { fixture.Screen(layout.dark, layout.fontScale) }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 capture("${layout.name}-empty")
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 if (layout.fontScale > 1f || layout.name == "landscape") capture("${layout.name}-typing")
@@ -351,7 +375,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 1100, height = 820) {
             Fixture().use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performClick().performTextReplacement("acb")
                 onNodeWithTag("podnya_composer").performTextInputSelection(TextRange(2))
                 // Deliver an older draft snapshot after the editor has already advanced.
@@ -376,7 +400,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 1100, height = 820) {
             Fixture().use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performClick().performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_composer").performKeyInput {
                     keyDown(Key.ShiftLeft)
@@ -504,7 +528,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 390, height = 844) {
             Fixture(mode = Mode.WAITING).use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").assertIsEnabled().performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 1 && fixture.repository.state.value.selected.isRunning }
@@ -531,7 +555,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 1100, height = 820) {
             Fixture(mode = Mode.FAIL_FIRST).use { fixture ->
                 setContent { fixture.Screen(dark = true) }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.turns.lastOrNull()?.status == AssistantTurnStatus.FAILED }
@@ -566,7 +590,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 390, height = 844) {
             Fixture(mode = Mode.LONG_REPLY).use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement(QUESTION)
                 onNodeWithTag("podnya_send").performClick()
                 repeat(3) { chunk ->
@@ -597,7 +621,7 @@ class PodnyaScreenTest {
         runDesktopComposeUiTest(width = 390, height = 844) {
             Fixture(mode = Mode.LONG_REPLY).use { fixture ->
                 setContent { fixture.Screen() }
-                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.settings?.configured == true }
+                waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.profiles?.active?.configured == true }
                 onNodeWithTag("podnya_composer").performTextReplacement("**用户消息**")
                 onNodeWithTag("podnya_send").performClick()
                 repeat(2) { chunk ->
@@ -917,7 +941,7 @@ class PodnyaScreenTest {
         }
 
     @Test
-    fun confirmationIdentifiesOriginalConversationAfterSwitchAndLeavesCurrentDraftAlone() =
+    fun selectingProfileUsesItInExistingConversationAndPreservesOtherDraft() =
         runDesktopComposeUiTest(width = 1100, height = 820) {
             Fixture().use { fixture ->
                 setContent { fixture.Screen() }
@@ -932,23 +956,19 @@ class PodnyaScreenTest {
                 onNodeWithTag("podnya_composer").performTextReplacement("B draft")
                 onNodeWithTag("podnya_history_$a").performClick()
                 onNodeWithTag("podnya_composer").performTextReplacement("Continue A")
-                val config = runBlocking {
-                    fixture.settings.save("https://other.example/v2", "other-model", "synthetic-key", true, true)
-                    fixture.settings.snapshot()
+                runBlocking {
+                    fixture.settings.save(baseUrl = "https://other.example/v2", modelId = "other-model", apiKey = "synthetic-key")
                 }
+                onNodeWithTag("podnya_profile_menu").performClick()
+                onNodeWithText("other-model").performClick()
                 runOnIdle {
                     val current = fixture.repository.state.value.selected
                     fixture.viewModel.viewModelScope.launch {
-                        fixture.viewModel.processIntent(PodnyaIntent.Send(a, current.editorId, current.draftRevision, config.configId, config.revision))
+                        fixture.viewModel.processIntent(PodnyaIntent.Send(conversationId = a, editorId = current.editorId, revision = current.draftRevision))
                         fixture.viewModel.processIntent(PodnyaIntent.Select(b))
                     }
                 }
                 waitUntil(timeoutMillis = 5_000) { fixture.repository.state.value.selected.id == b }
-                onNodeWithTag("podnya_destination_confirm").assertIsDisplayed()
-                onNodeWithText(fixture.confirmationConversationLabel).assertIsDisplayed()
-                onNodeWithText("Continue A").assertIsDisplayed()
-                capture("desktop-cross-service-confirmation")
-                onNodeWithTag("podnya_destination_confirm").performClick()
                 waitUntil(timeoutMillis = 5_000) { fixture.assistant.requests.get() == 2 && fixture.repository.state.value.runningIds.isEmpty() }
                 assertEquals(b, fixture.repository.state.value.selected.id)
                 onNodeWithTag("podnya_composer").assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, AnnotatedString("B draft")))
@@ -1170,15 +1190,11 @@ class PodnyaScreenTest {
             override suspend fun updateData(transform: suspend (Preferences) -> Preferences): Preferences =
                 transform(data.value).also { data.value = it }
         }
-        val settings = AssistantSettingsRepository(preferences, object : CredentialStore {
-            override suspend fun put(id: String, secret: String) = error("UI tests must not persist credentials")
-            override suspend fun get(id: String): String? = error("UI tests must not read credentials")
-            override suspend fun delete(id: String) = error("UI tests must not delete credentials")
-        })
+        val settings = AssistantSettingsRepository(preferences, ConversationCredentials())
         init {
             if (configured) runBlocking {
                 settings.save("https://example.test/v1/", "preview-model", "synthetic-ui-key",
-                    sessionOnly = true, consentAccepted = true)
+                    )
             }
         }
         val repository = AssistantConversationRepository(assistant = assistant, settings = settings, store = conversationStore)
@@ -1206,7 +1222,6 @@ class PodnyaScreenTest {
         var retryLabel = ""
         var latestLabel = ""
         var preparingLabel = ""
-        var confirmationConversationLabel = ""
         var historyLabel = ""
         var historyReplyingLabel = ""
         var historyFailedLabel = ""
@@ -1243,7 +1258,6 @@ class PodnyaScreenTest {
                     retryLabel = stringResource(Res.string.podnya_retry)
                     latestLabel = stringResource(Res.string.podnya_latest)
                     preparingLabel = stringResource(Res.string.podnya_preparing)
-                    confirmationConversationLabel = stringResource(Res.string.podnya_destination_conversation, "Original A")
                     historyLabel = stringResource(Res.string.podnya_history)
                     historyReplyingLabel = stringResource(Res.string.podnya_history_replying)
                     historyFailedLabel = stringResource(Res.string.podnya_history_failed)
@@ -1276,7 +1290,7 @@ class PodnyaScreenTest {
         val cancelled = AtomicBoolean()
         val nextChunk = Channel<Unit>(Channel.UNLIMITED)
         @Volatile var lastQuestion: String? = null
-        override suspend fun verify() = AssistantConnectionResult(true)
+        override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
         override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flow {
             lastQuestion = request.question
             val attempt = requests.incrementAndGet()

@@ -25,17 +25,14 @@ internal fun podnyaGeminiClient(
     connection: AssistantConnection,
     httpFactory: PodnyaHttpFactory,
     exchange: PodnyaGeminiExchange,
+    timeoutConfig: ConnectionTimeoutConfig,
 ): GoogleLLMClient {
     return object : GoogleLLMClient(
         apiKey = connection.apiKey,
         settings = GoogleClientSettings(
             baseUrl = connection.baseUrl,
             defaultPath = "models",
-            timeoutConfig = ConnectionTimeoutConfig(
-                requestTimeoutMillis = 45_000,
-                connectTimeoutMillis = 15_000,
-                socketTimeoutMillis = 15_000,
-            ),
+            timeoutConfig = timeoutConfig,
         ),
         httpClientFactory = httpFactory,
     ) {

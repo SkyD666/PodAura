@@ -30,12 +30,11 @@ internal class PodnyaConnectionProbe(
         val fixed =
             withTimeoutOrNull(AssistantLimits.TURN_TIMEOUT_MILLIS.milliseconds) { connection() }
                 ?: throw AssistantException(AssistantError.TIMEOUT)
-        val timeouts = PodnyaTimeouts.forConnection(fixed)
+        val timeouts = fixed.timeouts
         val completed = withTimeoutOrNull(timeouts.turnMillis.milliseconds) {
             PodnyaTransport(
                 connection = fixed,
                 baseClient = httpClient(),
-                timeouts = timeouts
             ).use { transport ->
                 val executor = BudgetedExecutor(delegate = transport.executor, timeouts = timeouts)
                 val tool = EchoTool()

@@ -6,4 +6,8 @@ interface CredentialStore {
     suspend fun delete(id: String)
 }
 
-class CredentialStorageException : Exception("Secure credential storage is unavailable")
+open class CredentialStorageException(message: String = "Secure credential storage is unavailable") :
+    Exception(message)
+
+class CredentialTooLongException :
+    CredentialStorageException("Credential exceeds system storage limit")

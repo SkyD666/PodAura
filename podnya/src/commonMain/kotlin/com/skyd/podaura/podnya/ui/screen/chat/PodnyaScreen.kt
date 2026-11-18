@@ -37,7 +37,6 @@ import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionState
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationStorageState
-import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository.Confirmation
 import kotlin.uuid.Uuid
 
 @Composable
@@ -62,7 +61,6 @@ fun PodnyaScreen(
     var input by editor.input
     val editorId = editor.id
     var inputRevision by editor.revision
-    var confirmation by remember { mutableStateOf<Confirmation?>(null) }
     var error by remember { mutableStateOf<AssistantFailure?>(null) }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -102,10 +100,6 @@ fun PodnyaScreen(
                 }
             }
 
-            is PodnyaEvent.ConfirmDestination -> {
-                confirmation = event.confirmation
-            }
-
             PodnyaEvent.Back -> onBack()
             PodnyaEvent.OpenSettings -> onSettings()
             PodnyaEvent.OpenSearch -> onSearch()
@@ -141,22 +135,13 @@ fun PodnyaScreen(
                 conversationId = state.id,
                 editorId = editorId,
                 revision = inputRevision,
-                configId = uiState.settings?.configId,
-                configRevision = uiState.settings?.revision ?: 0
-            )
+
+                )
         )
     }
 
     PodnyaDialogs(
-        confirmation = confirmation,
-        conversationTitle = uiState.conversations.summaries
-            .firstOrNull { it.id == confirmation?.conversationId }?.title,
         error = error,
-        onConfirm = { target ->
-            dispatch(PodnyaIntent.ConfirmDestination(target))
-            confirmation = null
-        },
-        onDismissConfirmation = { confirmation = null },
         onDismissError = { error = null },
     )
     PodnyaChatLayout(

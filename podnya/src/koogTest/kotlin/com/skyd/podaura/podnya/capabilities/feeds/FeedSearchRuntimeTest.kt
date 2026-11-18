@@ -141,7 +141,7 @@ class FeedSearchRuntimeTest {
             responsesStream(),
         )
         val runtime = KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(RecordingCatalog()),
-            LocalFeedSearchRepository(Feeds())), { astra() }, script::client)
+            LocalFeedSearchRepository(Feeds())), script::client)
         val events = runtime.run(AssistantTurnRequest("音乐订阅"), astra()).toList()
         assertEquals(AssistantRunEvent.Completed, events.last())
         assertTrue(script.paths.all { it == "/v1/responses" })
@@ -150,7 +150,7 @@ class FeedSearchRuntimeTest {
 
     private fun runtime(script: HttpScript, feeds: Feeds, articles: RecordingCatalog = RecordingCatalog()) =
         KoogAssistantRuntime(testCapabilities(LocalArticleSearchRepository(articles), LocalFeedSearchRepository(feeds)),
-            { testConnection() }, script::client)
+            script::client)
 
     private fun feedCall() = chatToolCalls("search_feeds", "f" to "{\"keywords\":[\"music\"]}")
     private fun selection(id: String = "feed-1") = chatCompletion(

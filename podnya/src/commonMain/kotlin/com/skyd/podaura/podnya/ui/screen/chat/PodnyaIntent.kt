@@ -3,7 +3,6 @@ package com.skyd.podaura.podnya.ui.screen.chat
 import com.skyd.mvi.MviIntent
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
-import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository.Confirmation
 import kotlin.uuid.Uuid
 
 sealed interface PodnyaIntent : MviIntent {
@@ -22,8 +21,6 @@ sealed interface PodnyaIntent : MviIntent {
         val conversationId: Uuid,
         val editorId: String,
         val revision: Long,
-        val configId: String?,
-        val configRevision: Long
     ) : PodnyaIntent
 
     data class Retry(
@@ -31,8 +28,6 @@ sealed interface PodnyaIntent : MviIntent {
         val turnId: Long,
         val editorId: String,
         val revision: Long,
-        val configId: String?,
-        val configRevision: Long
     ) : PodnyaIntent
 
     data class Stop(val conversationId: Uuid) : PodnyaIntent
@@ -43,8 +38,7 @@ sealed interface PodnyaIntent : MviIntent {
     }
 
     data class Delete(val conversationId: Uuid, val stopReplyConfirmed: Boolean) : PodnyaIntent
-    data class SelectModel(val conversationId: Uuid, val configId: String) : PodnyaIntent
-    data class ConfirmDestination(val confirmation: Confirmation) : PodnyaIntent
+    data class SelectModel(val configId: String) : PodnyaIntent
     data object RetrySave : PodnyaIntent
     data object FlushPending : PodnyaIntent
     data class ResetContext(val conversationId: Uuid) : PodnyaIntent

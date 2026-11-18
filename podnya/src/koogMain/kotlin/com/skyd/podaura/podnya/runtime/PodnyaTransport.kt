@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.runtime
 
+import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -20,7 +21,6 @@ import kotlinx.coroutines.cancel
 internal class PodnyaTransport(
     connection: AssistantConnection,
     private val baseClient: HttpClient,
-    timeouts: PodnyaTimeouts = PodnyaTimeouts.forConnection(connection),
 ) : AutoCloseable {
     private val responses = assistantEndpointPath(
         baseUrl = connection.baseUrl,
@@ -62,22 +62,31 @@ internal class PodnyaTransport(
                 )
             }
 
+            val timeoutConfig = ConnectionTimeoutConfig(
+                requestTimeoutMillis = connection.timeouts.requestMillis,
+                connectTimeoutMillis = connection.timeouts.connectMillis,
+                socketTimeoutMillis = connection.timeouts.idleMillis,
+            )
             val client = when (connection.protocol) {
                 AssistantProtocol.OPENAI_COMPATIBLE -> podnyaOpenAiClient(
                     connection = connection,
                     httpFactory = httpFactory,
                     responses = responses,
-                    timeouts = timeouts,
+                    timeoutConfig = timeoutConfig,
                 )
 
                 AssistantProtocol.ANTHROPIC_MESSAGES -> podnyaAnthropicClient(
-                    connection = connection, httpFactory = httpFactory, model = model,
+                    connection = connection,
+                    httpFactory = httpFactory,
+                    model = model,
+                    timeoutConfig = timeoutConfig,
                 )
 
                 AssistantProtocol.GEMINI_GENERATE_CONTENT -> podnyaGeminiClient(
                     connection = connection,
                     httpFactory = httpFactory,
                     exchange = requireNotNull(gemini),
+                    timeoutConfig = timeoutConfig,
                 )
             }
             try {

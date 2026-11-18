@@ -16,7 +16,7 @@ class ConversationTransactionRegressionTest {
         override fun run(request: AssistantTurnRequest, connection: AssistantConnection) = flow {
             for (event in events) emit(event)
         }
-        override suspend fun verify() = AssistantConnectionResult(true)
+        override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
     }
 
     @Test
@@ -55,7 +55,7 @@ class ConversationTransactionRegressionTest {
             }
         }
         repo.editDraft("question")
-        repo.sendDraft(settings)
+        repo.sendDraft()
         runCurrent()
         runtime.events.send(AssistantRunEvent.ReplyDelta("partial"))
         runCurrent()

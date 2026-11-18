@@ -17,7 +17,6 @@ import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
-import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
@@ -26,14 +25,8 @@ import kotlinx.coroutines.flow.Flow
 
 internal class KoogAssistantRuntime(
     private val capabilities: (AssistantTurnRequest) -> List<KoogCapability>,
-    private val verificationConnection: suspend () -> AssistantConnection,
-    private val httpClient: () -> HttpClient,
+    private val httpClient: () -> HttpClient = ::createPodnyaHttpClient,
 ) : AssistantRuntime {
-    constructor(
-        settings: AssistantSettingsRepository,
-        capabilities: (AssistantTurnRequest) -> List<KoogCapability>
-    ) : this(capabilities, settings::connection, ::createPodnyaHttpClient)
-
     init {
         initializePodnyaLogging()
     }
@@ -44,24 +37,21 @@ internal class KoogAssistantRuntime(
         request: AssistantTurnRequest,
         connection: AssistantConnection
     ): Flow<AssistantRunEvent> {
-        val timeouts = PodnyaTimeouts.forConnection(connection)
-        return assistantRunEvents(request = request, timeouts = timeouts) { event ->
+        return assistantRunEvents(request = request, timeouts = connection.timeouts) { event ->
             executeTurn(
                 request = request,
                 configuration = connection,
-                timeouts = timeouts,
                 event = event
             )
         }
     }
 
-    override suspend fun verify(): AssistantConnectionResult =
-        PodnyaConnectionProbe(verificationConnection, httpClient).verify()
+    override suspend fun verify(connection: suspend () -> AssistantConnection): AssistantConnectionResult =
+        PodnyaConnectionProbe(connection = connection, httpClient = httpClient).verify()
 
     private suspend fun executeTurn(
         request: AssistantTurnRequest,
         configuration: AssistantConnection,
-        timeouts: PodnyaTimeouts,
         event: suspend (AssistantRunEvent) -> Unit,
     ) {
         val active = capabilities(request)
@@ -74,9 +64,8 @@ internal class KoogAssistantRuntime(
         PodnyaTransport(
             connection = configuration,
             baseClient = httpClient(),
-            timeouts = timeouts
         ).use { transport ->
-            val executor = BudgetedExecutor(delegate = transport.executor, timeouts = timeouts)
+            val executor = BudgetedExecutor(delegate = transport.executor, timeouts = configuration.timeouts)
             var attempts = 0
             var completedCalls = 0
             val graph = strategy<String, ValidatedAssistantReply>("podnya") {
@@ -178,7 +167,7 @@ internal class KoogAssistantRuntime(
                 frames = executor.executeStreaming(
                     prompt = prompts.reply(validated), model = transport.model, tools = emptyList(),
                 ),
-                timeouts = timeouts,
+                timeouts = configuration.timeouts,
             ) { event(AssistantRunEvent.ReplyDelta(it)) }
         }
     }

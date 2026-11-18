@@ -85,7 +85,6 @@ internal fun PodnyaMessageList(
     modifier: Modifier = Modifier,
 ) {
     val state = uiState.session
-    val settings = uiState.settings
     val ready = uiState.ready
     val atEnd by remember(listState) { derivedStateOf { !listState.canScrollForward } }
     val keys = remember(state.turns) {
@@ -313,8 +312,6 @@ internal fun PodnyaMessageList(
                                                 turnId = turn.id,
                                                 editorId = state.editorId,
                                                 revision = state.draftRevision,
-                                                configId = settings?.configId,
-                                                configRevision = settings?.revision ?: 0
                                             )
                                         )
                                     },
@@ -389,7 +386,7 @@ private fun AssistantReply(turn: AssistantSessionTurn) {
                 turn.source?.let { source ->
                     Text(
                         text = listOfNotNull(
-                            source.modelId,
+                            source.profileName?.let { "$it · ${source.modelId}" } ?: source.modelId,
                             source.reasoningEffort
                         ).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall,

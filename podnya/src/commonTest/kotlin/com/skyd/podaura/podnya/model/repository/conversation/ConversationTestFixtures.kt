@@ -20,21 +20,24 @@ internal open class ConversationCredentials : CredentialStore {
 }
 internal suspend fun conversationSettings(credentials: CredentialStore = ConversationCredentials()) =
     AssistantSettingsRepository(MemoryConversationPreferences(), credentials).also {
-        it.save("https://first.example/v1", "first-model", "test-key", false, true)
+        it.save(baseUrl = "https://first.example/v1", modelId = "first-model", apiKey = "test-key")
     }
 internal suspend fun AssistantConversationRepository.editDraft(text: String) {
     val current = state.value.selected
     updateDraft(current.id, text, "test-editor", current.draftRevision + 1)
 }
-internal suspend fun AssistantConversationRepository.sendDraft(settings: AssistantSettingsRepository): Boolean {
+internal suspend fun AssistantConversationRepository.sendDraft(): Boolean {
     val current = state.value.selected
-    val config = settings.snapshot()
-    return submit(current.id, current.editorId, current.draftRevision, config.configId, config.revision)
+    return submit(id = current.id, editorId = current.editorId, revision = current.draftRevision)
 }
-internal suspend fun AssistantConversationRepository.retryLast(settings: AssistantSettingsRepository): Boolean {
+internal suspend fun AssistantConversationRepository.retryLast(): Boolean {
     val current = state.value.selected
-    val config = settings.snapshot()
-    return submit(current.id, current.editorId, current.draftRevision, config.configId, config.revision, current.turns.last().id)
+    return submit(
+        id = current.id,
+        editorId = current.editorId,
+        revision = current.draftRevision,
+        retryTurnId = current.turns.last().id,
+    )
 }
 
 /** Test-only full read, never used by production or UI. */

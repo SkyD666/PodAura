@@ -11,19 +11,19 @@ enum class AssistantSettingsOperation { SAVING, TESTING, CLEARING }
 data class AssistantProviderSwitch(
     val providerId: String,
     val protocol: AssistantProtocol? = null,
-    val editRevision: Long,
 )
 
 /** Credentials live only in the screen and the repository, never in view state. */
 data class AssistantSettingsState(
     val available: Boolean = false,
+    val editing: Boolean = false,
     val saved: AssistantSettings = AssistantSettings(),
     val baseUrl: String = "",
     val modelId: String = "",
     val reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
     val reasoningEffortReset: Boolean = false,
-    val sessionOnly: Boolean = false,
-    val consentAccepted: Boolean = false,
+    val profiles: AssistantProfiles = AssistantProfiles(),
+    val name: String = "",
     val hasNewKey: Boolean = false,
     val loaded: Boolean = false,
     val operation: AssistantSettingsOperation? = null,
@@ -33,9 +33,10 @@ data class AssistantSettingsState(
     val manualModel: Boolean = false,
     val editRevision: Long = 0,
     val keyRevision: Long = 0,
-    val pendingSwitch: AssistantProviderSwitch? = null,
     val failure: AssistantSettingsEvent.Failed? = null,
 ) : MviViewState {
+    val latestSaved: AssistantSettings? get() = profiles.profiles.find { it.configId == saved.configId }
+    val hasEditConflict: Boolean get() = latestSaved?.revision?.let { it != saved.revision } == true
     val normalizedBaseUrl: String?
         get() = runCatching {
             normalizeAssistantBaseUrl(
@@ -50,7 +51,7 @@ data class AssistantSettingsState(
             ?: baseUrl.trim()) != saved.baseUrl || modelId.trim() != saved.modelId ||
                 providerId != AssistantProviderPresets.selection(saved) || protocol != saved.protocol ||
                 reasoningEffort != saved.reasoningEffort ||
-                sessionOnly != saved.sessionOnly || consentAccepted != saved.consentAccepted || hasNewKey
+                name != saved.name || hasNewKey
     val supportsReasoningEffort: Boolean
         get() = supportsAssistantReasoningEffort(
             baseUrl = normalizedBaseUrl ?: "",
@@ -59,8 +60,11 @@ data class AssistantSettingsState(
         )
     val editable: Boolean get() = loaded && operation == null && saved.readError == null && available
     val custom: Boolean get() = providerId != null && AssistantProviderPresets.find(providerId) == null
+    val canSave: Boolean
+        get() = editable && dirty && !hasEditConflict && providerId != null && normalizedBaseUrl != null &&
+                modelId.isNotBlank() && (hasNewKey || (sameRecipient && saved.hasApiKey))
     val canVerify: Boolean
-        get() = loaded && operation == null && !dirty && saved.configured && saved.consentAccepted
+        get() = loaded && operation == null && !dirty && saved.configured
 
     override fun toString() = "AssistantSettingsState(loaded=$loaded, operation=$operation, " +
             "hasNewKey=$hasNewKey, savedRevision=$savedRevision)"

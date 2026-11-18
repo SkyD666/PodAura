@@ -2,6 +2,7 @@ package com.skyd.podaura.podnya.settings
 
 import androidx.lifecycle.viewModelScope
 import com.skyd.fundation.credential.CredentialStorageException
+import com.skyd.fundation.credential.CredentialTooLongException
 import com.skyd.mvi.AbstractMviViewModel
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -42,7 +44,7 @@ class AssistantSettingsViewModel(
         // viewState, including several edits and Save delivered in a single main-thread turn.
         viewState = merge(
             intentFlow.map { Input.Intent(it) },
-            repository.settings.map<AssistantSettings, Input> {
+            repository.profiles.map<AssistantProfiles, Input> {
                 Input.Change(AssistantSettingsPartialStateChange.Observed(it))
             }.catch { failure ->
                 if (failure is CancellationException) throw failure
@@ -58,7 +60,15 @@ class AssistantSettingsViewModel(
         ).flatMapConcat { input ->
             when (input) {
                 is Input.Intent -> flowOf(input.value).toSettingsPartialStateChangeFlow()
-                is Input.Change -> flowOf(input.value)
+                is Input.Change -> {
+                    val change = input.value
+                    if (change is AssistantSettingsPartialStateChange.Finished) {
+                        flowOf(change.forProfiles(viewState.value.profiles))
+                    } else {
+                        flowOf(change)
+                    }
+                }
+
                 is Input.StartOperation -> flow { input.job.start() }
             }
         }.sendSingleEvent()
@@ -87,11 +97,32 @@ class AssistantSettingsViewModel(
             filterIsInstance<AssistantSettingsIntent.SetReasoningEffort>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
-            filterIsInstance<AssistantSettingsIntent.SetSessionOnly>().map {
+            filterIsInstance<AssistantSettingsIntent.SetName>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
-            filterIsInstance<AssistantSettingsIntent.SetConsentAccepted>().map {
+            filterIsInstance<AssistantSettingsIntent.CloseEditor>().map {
+                if (viewState.value.operation == AssistantSettingsOperation.TESTING) operationJob?.cancel()
                 AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.EditProfile>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.SelectProfile>().transform { intent ->
+                if (viewState.value.editable && !viewState.value.editing) {
+                    try {
+                        repository.select(intent.id)
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (failure: Exception) {
+                        val error = (failure as? AssistantException)?.error
+                            ?: AssistantError.CONFIGURATION_STORAGE
+                        emit(
+                            AssistantSettingsPartialStateChange.Report(
+                                AssistantSettingsEvent.Failed(error)
+                            )
+                        )
+                    }
+                }
             },
             filterIsInstance<AssistantSettingsIntent.SetHasNewKey>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
@@ -102,13 +133,10 @@ class AssistantSettingsViewModel(
             filterIsInstance<AssistantSettingsIntent.SelectProtocol>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
-            filterIsInstance<AssistantSettingsIntent.ConfirmSwitch>().map {
-                AssistantSettingsPartialStateChange.Edit(it)
-            },
-            filterIsInstance<AssistantSettingsIntent.CancelSwitch>().map {
-                AssistantSettingsPartialStateChange.Edit(it)
-            },
             filterIsInstance<AssistantSettingsIntent.SetManualModel>().map {
+                AssistantSettingsPartialStateChange.Edit(it)
+            },
+            filterIsInstance<AssistantSettingsIntent.DiscardConflictingEdits>().map {
                 AssistantSettingsPartialStateChange.Edit(it)
             },
             filterIsInstance<AssistantSettingsIntent.Reload>().flatMapConcat {
@@ -122,9 +150,6 @@ class AssistantSettingsViewModel(
                     ) return@flow
                     startOperation(AssistantSettingsOperation.SAVING) {
                         normalizeAssistantBaseUrl(input = draft.baseUrl, protocol = draft.protocol)
-                        if (!draft.sameRecipient && !draft.consentAccepted) {
-                            throw AssistantException(AssistantError.DISCLOSURE_REQUIRED)
-                        }
                         if (!draft.sameRecipient && (!draft.hasNewKey || intent.apiKey.isNullOrBlank())) {
                             throw AssistantException(AssistantError.CONFIGURATION_REQUIRED)
                         }
@@ -134,8 +159,9 @@ class AssistantSettingsViewModel(
                                 baseUrl = draft.baseUrl,
                                 modelId = draft.modelId,
                                 apiKey = intent.apiKey,
-                                sessionOnly = draft.sessionOnly,
-                                consentAccepted = draft.consentAccepted,
+                                editing = draft.saved,
+                                name = draft.name,
+                                activate = intent.activate,
                                 providerId = draft.providerId,
                                 protocol = draft.protocol,
                                 reasoningEffort = draft.reasoningEffort,
@@ -150,9 +176,18 @@ class AssistantSettingsViewModel(
             },
             filterIsInstance<AssistantSettingsIntent.Verify>().flatMapConcat {
                 flow {
-                    if (!viewState.value.canVerify) return@flow
-                    startOperation(AssistantSettingsOperation.TESTING) {
-                        val result = assistant.verify()
+                    val draft = viewState.value
+                    if (!draft.canVerify) return@flow
+                    startOperation(
+                        operation = AssistantSettingsOperation.TESTING,
+                        testedProfile = draft.saved
+                    ) {
+                        val result = assistant.verify {
+                            repository.resolveConnection(
+                                configId = requireNotNull(draft.saved.configId),
+                                expectedRevision = draft.saved.revision,
+                            )
+                        }
                         AssistantSettingsPartialStateChange.Finished(
                             event = if (result.success) {
                                 AssistantSettingsEvent.ConnectionSucceeded
@@ -163,16 +198,23 @@ class AssistantSettingsViewModel(
                     }
                 }
             },
-            filterIsInstance<AssistantSettingsIntent.Clear>().flatMapConcat {
+            filterIsInstance<AssistantSettingsIntent.Clear>().flatMapConcat { intent ->
                 flow {
                     if (!viewState.value.loaded ||
                         (viewState.value.saved.baseUrl.isBlank() && viewState.value.saved.readError == null)
                     ) {
                         return@flow
                     }
+                    val id = intent.profileId
+                    if (id != viewState.value.saved.configId) return@flow
                     startOperation(AssistantSettingsOperation.CLEARING) {
                         val saved = withContext(NonCancellable) {
-                            repository.clear()
+                            if (id == null) {
+                                repository.clearUnreadable()
+                                AssistantSettings()
+                            } else {
+                                repository.delete(id = id, replacementId = intent.replacementId)
+                            }
                         }
                         AssistantSettingsPartialStateChange.Finished(
                             saved = saved,
@@ -191,6 +233,7 @@ class AssistantSettingsViewModel(
 
     private suspend fun FlowCollector<AssistantSettingsPartialStateChange>.startOperation(
         operation: AssistantSettingsOperation,
+        testedProfile: AssistantSettings? = null,
         block: suspend () -> AssistantSettingsPartialStateChange.Finished,
     ) {
         if (viewState.value.operation != null || operationJob != null) return
@@ -213,6 +256,10 @@ class AssistantSettingsViewModel(
                 result = AssistantSettingsPartialStateChange.Finished(
                     event = AssistantSettingsEvent.Failed(failure.error)
                 )
+            } catch (_: CredentialTooLongException) {
+                result = AssistantSettingsPartialStateChange.Finished(
+                    event = AssistantSettingsEvent.Failed(AssistantError.CREDENTIAL_TOO_LONG)
+                )
             } catch (_: CredentialStorageException) {
                 result = AssistantSettingsPartialStateChange.Finished(
                     event = AssistantSettingsEvent.Failed(
@@ -231,7 +278,7 @@ class AssistantSettingsViewModel(
             if (operationJob === job) operationJob = null
             // Also runs when cancellation happens before the lazy coroutine enters its body.
             // After VM disposal the closed channel drops this terminal change.
-            operationInputs.trySend(Input.Change(result))
+            operationInputs.trySend(Input.Change(result.copy(testedProfile = testedProfile)))
         }
         // Process already queued edits/cancellation before starting the operation.
         operationInputs.trySend(Input.StartOperation(job))

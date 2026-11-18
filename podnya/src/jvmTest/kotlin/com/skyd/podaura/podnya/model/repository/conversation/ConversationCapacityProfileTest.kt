@@ -18,7 +18,7 @@ class ConversationCapacityProfileTest {
         var started = 0
         val runtime = object : AssistantRuntime {
             override val available = true
-            override suspend fun verify() = AssistantConnectionResult(true)
+            override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
             override fun run(request: AssistantTurnRequest, connection: AssistantConnection) = flow {
                 if (streaming) { if (++started == 3) gate.complete(Unit); gate.await() }
                 emit(AssistantRunEvent.ContentReady(LargeContent("喵".repeat(AssistantLimits.CONTENT_BYTES / 3))))
@@ -32,7 +32,8 @@ class ConversationCapacityProfileTest {
         val repo = AssistantConversationRepository(runtime, settings, scope = owner)
         try {
             repeat(12) {
-                repo.editDraft("retained $it"); assertTrue(repo.sendDraft(settings))
+                repo.editDraft("retained $it")
+                assertTrue(repo.sendDraft())
                 repo.state.first { it.runningIds.isEmpty() }
             }
             System.gc()
@@ -42,7 +43,11 @@ class ConversationCapacityProfileTest {
             val allocatedBefore = allocations.getThreadAllocatedBytes(threadId)
             val start = System.nanoTime()
             streaming = true
-            repeat(3) { repo.newConversation(); repo.editDraft("stream $it"); assertTrue(repo.sendDraft(settings)) }
+            repeat(3) {
+                repo.newConversation()
+                repo.editDraft("stream $it")
+                assertTrue(repo.sendDraft())
+            }
             repo.state.first { it.runningIds.isEmpty() }
             val millis = (System.nanoTime() - start) / 1_000_000
             val allocated = allocations.getThreadAllocatedBytes(threadId) - allocatedBefore

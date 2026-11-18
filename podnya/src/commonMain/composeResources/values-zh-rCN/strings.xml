@@ -24,7 +24,8 @@
     <string name="podnya_error_configuration_required">请先在设置中配置服务、模型和 API 密钥，再发送问题。</string>
     <string name="podnya_error_disclosure_required">请先在设置中阅读数据发送说明，并同意向指定服务发送数据。</string>
     <string name="podnya_error_invalid_address">请输入 HTTPS 服务地址，且不要包含用户名、密码、查询参数或片段。</string>
-    <string name="podnya_error_credential_storage_unavailable">安全密钥存储不可用。请勾选“仅在本次应用运行期间保留密钥”后重新保存。</string>
+    <string name="podnya_error_credential_too_long">Key 最长为 8192 个字符。在 Windows 上还须满足 2560 个 UTF-8 字节的上限。</string>
+    <string name="podnya_error_credential_storage_unavailable">安全密钥存储不可用。请检查系统凭据存储后重试。</string>
     <string name="podnya_error_authentication">服务拒绝了 API 密钥，请前往设置检查。</string>
     <string name="podnya_error_endpoint_or_model">服务端点或模型不可用，请检查已保存的地址和模型名称。</string>
     <string name="podnya_error_rate_limit">服务的请求次数或 Token 用量触及速率限制，请稍后重试。</string>
@@ -50,10 +51,7 @@
     <string name="podnya_api_key">API 密钥</string>
     <string name="podnya_api_key_keep">留空可保留此地址已保存的密钥。</string>
     <string name="podnya_api_key_required">请输入此服务地址的密钥。</string>
-    <string name="podnya_session_only">仅在本次应用运行期间保留密钥</string>
-    <string name="podnya_session_only_description">安全存储不可用时可选择此项；重启后需要重新输入密钥。</string>
     <string name="podnya_settings_disclosure">检索时，你的问题、最近对话、候选文章标题、来源、订阅名称、静音状态和每段最多 400 字符的文本片段将发送至 %1$s。搜索工具不会发送订阅地址或请求头。会话历史保存在此设备上。</string>
-    <string name="podnya_consent">允许将问题、对话和检索内容发送至此服务</string>
     <string name="podnya_save">保存</string>
     <string name="podnya_test_saved">测试已保存的配置</string>
     <string name="podnya_test_description">请先保存更改。此项可选测试会向所配置的服务发送少量示例请求，可能产生费用；不会读取你的文章或订阅。</string>
@@ -87,19 +85,14 @@
     <string name="podnya_delete_stop">删除会话并停止回复</string>
     <string name="podnya_history_replying">正在回复…</string>
     <string name="podnya_history_failed">回复失败</string>
-    <string name="podnya_destination_title">将历史发送至另一服务？</string>
-    <string name="podnya_destination_message">此会话将向 %1$s 发送上下文。是否继续？</string>
     <string name="podnya_ok">确定</string>
     <string name="podnya_capacity_warning">会话存储接近 100 个会话或估算 32 MiB 内容预算上限（不等同于实际堆内存）。可删除不需要的会话释放空间。</string>
-    <string name="podnya_select_current_model">使用当前配置：%1$s</string>
     <string name="podnya_error_configuration_changed">模型配置已变化。请检查后重新发送。</string>
     <string name="podnya_error_conversation_capacity">会话容量已满（最多 100 个会话或估算 32 MiB 内容）。请删除会话后重试。已保存的历史和草稿均已保留。</string>
     <string name="podnya_error_generation_limit">最多同时生成 3 条回复，每个会话限一条。请等待或停止回复后重试。草稿已保留。</string>
     <string name="podnya_error_stale_input">输入或模型选择已变化。请检查此会话后重新发送。</string>
     <string name="podnya_missing_articles">此文章已删除。会话中仍保留当时的推荐内容。</string>
     <string name="podnya_missing_feeds">此订阅已删除。会话中仍保留当时的推荐内容。</string>
-    <string name="podnya_model_unavailable">此会话的模型配置已不可用。请明确选择当前配置后继续。</string>
-    <string name="podnya_destination_conversation">会话：%1$s</string>
     <string name="podnya_error_conversation_storage">无法更新会话。已保存的内容仍然保留，请重试。</string>
     <string name="podnya_history_on_device">历史保存在此设备上。</string>
     <string name="podnya_storage_loading">正在加载会话…</string>
@@ -121,9 +114,6 @@
     <string name="podnya_protocol">接口类型</string>
     <string name="podnya_openai_compatible">OpenAI 兼容</string>
     <string name="podnya_manual_model">手动输入模型 ID</string>
-    <string name="podnya_switch_title">切换配置？</string>
-    <string name="podnya_switch_message">未保存的修改和已输入的 Key 将被清除。</string>
-    <string name="podnya_switch_confirm">切换</string>
     <string name="podnya_reload">重新读取</string>
     <string name="podnya_config_newer">此配置由较新版本保存。请更新应用，或清除配置。</string>
     <string name="podnya_config_unknown_protocol">此配置使用尚不支持的接口类型。请更新应用，或清除配置。</string>
@@ -133,4 +123,16 @@
     <string name="podnya_reasoning_effort">推理档位</string>
     <string name="podnya_reasoning_wait">回复和连接测试最长等待 10 分钟，等待期间可以取消。</string>
     <string name="podnya_reasoning_reset">当前连接不支持选择推理档位，已清除选择；切回支持的模型时默认使用 low。</string>
+    <string name="podnya_profiles">模型配置</string>
+    <string name="podnya_add_profile">添加模型配置</string>
+    <string name="podnya_profile_name">配置名称</string>
+    <string name="podnya_save_and_use">保存并使用</string>
+    <string name="podnya_delete_replacement">删除后切换到…</string>
+    <string name="podnya_reload_conflicting_profile">放弃本页修改并载入已更新的配置</string>
+    <string name="podnya_edit_profile">编辑模型配置</string>
+    <string name="podnya_edit_named_profile">编辑「%1$s」</string>
+    <string name="podnya_no_profiles">还没有模型配置</string>
+    <string name="podnya_create_profile">创建配置</string>
+    <string name="podnya_save_changes">保存修改</string>
+    <string name="podnya_create_and_use">创建并使用</string>
 </resources>

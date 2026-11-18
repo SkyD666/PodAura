@@ -8,9 +8,9 @@ class AssistantConnection(
     val protocol: AssistantProtocol = AssistantProtocol.OPENAI_COMPATIBLE,
     reasoningEffort: AssistantReasoningEffort = AssistantReasoningEffort.LOW,
 ) {
-    val reasoningEffort: AssistantReasoningEffort? = reasoningEffort.takeIf {
-        supportsAssistantReasoningEffort(baseUrl = baseUrl, modelId = modelId, protocol = protocol)
-    }
+    private val policy = AssistantModelCatalog.policy(baseUrl = baseUrl, modelId = modelId, protocol = protocol)
+    val reasoningEffort: AssistantReasoningEffort? = reasoningEffort.takeIf { policy?.supportsReasoningEffort == true }
+    internal val timeouts = this.reasoningEffort?.timeoutOverride ?: policy?.timeouts ?: AssistantTimeouts.STANDARD
 
     override fun toString(): String = "AssistantConnection([redacted])"
 }

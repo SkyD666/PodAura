@@ -20,6 +20,7 @@ class ConversationProtocolSourceTest {
                 baseUrl = "https://api.openai.com/v1/",
                 modelId = "gpt-6.1-terra",
                 reasoningEffort = effort,
+                profileName = "Work",
             )
             val record = codec.encode(
                 id = id,
