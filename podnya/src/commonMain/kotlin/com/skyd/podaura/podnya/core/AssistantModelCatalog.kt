@@ -4,10 +4,22 @@ import io.ktor.http.Url
 
 internal object AssistantModelCatalog {
     // Picker order, with each provider's default first.
-    val openAiResponses = listOf("gpt-6.1-sol", "gpt-6-luna", "gpt-6-astra", "gpt-6.1-terra")
+    val openAiResponses = listOf(
+        "gpt-6.2-astra",
+        "gpt-6.2-sol",
+        "gpt-6-astra",
+        "gpt-6.1-sol",
+        "gpt-6.1-terra",
+        "gpt-6-luna",
+    )
     val deepSeek = listOf("deepseek-flash", "deepseek-v4-pro")
     val claude = listOf("claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5")
-    val gemini = listOf("gemini-4-hydrogen", "gemini-3.8-flash")
+    val gemini = listOf(
+        "gemini-4-hydrogen",
+        "gemini-4-carbon",
+        "gemini-4-argon",
+        "gemini-3.8-flash",
+    )
     val grok = listOf("grok-4.7")
 
     class ModelPolicy(

@@ -4,6 +4,7 @@ import com.skyd.podaura.podnya.core.AssistantProtocol
 import com.skyd.podaura.podnya.core.assistantEndpointPath
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AssistantProviderPresetsTest {
@@ -39,9 +40,26 @@ class AssistantProviderPresetsTest {
     }
 
     @Test
+    fun geminiModelsUseTheirSelectedIdInTheGenerateContentEndpoint() {
+        val preset = AssistantProviderPresets.find("gemini")!!
+        assertFalse("gemini-3.5-flash" in preset.models)
+        for (model in listOf("gemini-4-carbon", "gemini-4-argon")) {
+            assertTrue(model in preset.models, model)
+            val path = assistantEndpointPath(
+                baseUrl = preset.baseUrl,
+                modelId = model,
+                protocol = preset.protocol,
+            )
+            assertEquals("models/$model:generateContent", path)
+        }
+    }
+
+    @Test
     fun currentOpenAiToolModelsUseResponsesOnlyAtTheOfficialService() {
         val preset = AssistantProviderPresets.find("openai")!!
         assertEquals("gpt-6.1-sol", preset.defaultModelId)
+        assertTrue("gpt-6.2-astra" in preset.models)
+        assertTrue("gpt-6.2-sol" in preset.models)
         assertTrue("gpt-6.1-terra" in preset.models)
         for (model in preset.models) {
             assertEquals("responses", assistantEndpointPath(baseUrl = "https://api.openai.com/v1/", modelId = model))
