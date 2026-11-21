@@ -1,4 +1,4 @@
-package com.skyd.podaura.api.model.bean
+package com.skyd.podaura.api.model.bean.article
 
 /** Unprocessed local metadata. Callers decide how much text to show or process. */
 data class ArticleRecord(

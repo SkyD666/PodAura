@@ -22,6 +22,10 @@ import kotlin.uuid.Uuid
 class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCodec>) {
     private val json = Json { ignoreUnknownKeys = true }
 
+    // CapabilityRecord starts with its serialized ID; the prefix works with Android's platform SQLite.
+    internal fun contentPrefix(capabilityId: String): String =
+        "{\"capabilityId\":${json.encodeToString(capabilityId)},"
+
     @Serializable
     private data class Aggregate(
         val kind: AssistantAnswerKind,

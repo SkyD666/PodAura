@@ -1,8 +1,8 @@
 package com.skyd.podaura.podnya.capabilities.feeds
 
 import ai.koog.prompt.message.MessagePart
-import com.skyd.podaura.api.model.bean.FeedQuery
-import com.skyd.podaura.api.model.bean.FeedRecord
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
+import com.skyd.podaura.api.model.bean.feed.FeedRecord
 import com.skyd.podaura.api.model.repository.IFeedRepository
 import com.skyd.podaura.podnya.capabilities.articles.RecordingCatalog
 import com.skyd.podaura.podnya.capabilities.articles.model.repository.LocalArticleSearchRepository

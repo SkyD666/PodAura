@@ -3,8 +3,8 @@ package com.skyd.podaura.podnya.capabilities.articles
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.typeToken
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchError
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchPage

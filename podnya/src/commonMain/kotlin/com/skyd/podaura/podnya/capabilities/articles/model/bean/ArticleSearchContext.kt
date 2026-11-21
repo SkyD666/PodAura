@@ -1,12 +1,12 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
-import com.skyd.podaura.podnya.core.AssistantContext
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
+import com.skyd.podaura.podnya.capabilities.ArticleTargetContext
 
 /** Article execution context; tools and data sources receive only its search scope. */
 data class ArticleSearchContext(
-    val scope: ArticleSearchScope = ArticleSearchScope.All,
-) : AssistantContext {
+    override val scope: ArticleSearchScope = ArticleSearchScope.All,
+) : ArticleTargetContext {
     override val retainedBytes: Int
         get() = when (val current = scope) {
             ArticleSearchScope.All -> 0

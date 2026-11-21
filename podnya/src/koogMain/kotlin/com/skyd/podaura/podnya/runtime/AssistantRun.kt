@@ -3,9 +3,9 @@ package com.skyd.podaura.podnya.runtime
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantLimits
-import com.skyd.podaura.podnya.core.AssistantTimeouts
 import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantRunEvent
+import com.skyd.podaura.podnya.core.AssistantTimeouts
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
@@ -33,8 +33,11 @@ internal fun assistantRunEvents(
             }
             execute { event ->
                 if (event is AssistantRunEvent.ContentReady ||
+                    event is AssistantRunEvent.Handoff ||
                     event is AssistantRunEvent.ReplyDelta && event.text.isNotEmpty()
-                ) published = true
+                ) {
+                    published = true
+                }
                 send(event)
             }
             true

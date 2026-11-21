@@ -57,14 +57,12 @@ internal class KoogAssistantRuntime(
         val active = capabilities(request)
         if (active.isEmpty()) throw AssistantException(AssistantError.INVALID_OUTPUT)
         require(active.map { it.id }.distinct().size == active.size)
-        active.forEach { it.lookupTool?.prepare() }
-        active.firstNotNullOfOrNull { it.lookupTool?.resolveExact() }?.let { reply ->
-            publishDirectReply(reply = reply, event = event)
-            return
-        }
-        val toolOwners =
-            active.flatMap { capability -> capability.tools.map { it.name to capability } }.toMap()
-        require(toolOwners.size == active.sumOf { it.tools.size })
+        active.forEach { it.prepare() }
+        val lookups = active.mapNotNull { it.lookupTool }
+        lookups.forEach { it.prepare() }
+        val registeredTools = active.flatMap { owner -> owner.tools.map { it to owner } }
+        val toolOwners = registeredTools.associate { (tool, owner) -> tool.name to owner }
+        require(toolOwners.size == registeredTools.size)
         val prompts = AssistantPrompts(request, active)
         PodnyaTransport(
             connection = configuration,
@@ -176,12 +174,20 @@ internal class KoogAssistantRuntime(
                     prompt = prompts.snapshot(), model = transport.model, maxAgentIterations = 24,
                 ),
                 strategy = graph,
-                toolRegistry = ToolRegistry { active.flatMap { it.tools }.forEach { tool(it) } },
+                toolRegistry = ToolRegistry {
+                    registeredTools.forEach { (registered, _) ->
+                        tool(registered)
+                    }
+                },
             )
             val validated = try {
                 agent.run(request.question)
             } finally {
                 agent.close()
+            }
+            validated.results.values.singleOrNull()?.handoff?.let { handoff ->
+                event(AssistantRunEvent.Handoff(handoff))
+                return@use
             }
             if (validated.results.isEmpty()) {
                 publishDirectReply(reply = validated, event = event)

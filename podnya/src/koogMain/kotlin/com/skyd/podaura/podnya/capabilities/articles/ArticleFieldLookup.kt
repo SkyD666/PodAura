@@ -3,8 +3,8 @@ package com.skyd.podaura.podnya.capabilities.articles
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.typeToken
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleField
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReference
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReferences
@@ -38,7 +38,6 @@ internal class ArticleFieldLookup(
     private val source: LocalArticleSearchRepository,
     private val scope: ArticleSearchScope,
     private val references: ArticleReferences,
-    private val question: String,
 ) : Tool<ArticleFieldRequest, String>(
     argsType = typeToken<ArticleFieldRequest>(),
     resultType = typeToken<String>(),
@@ -47,6 +46,10 @@ internal class ArticleFieldLookup(
 Resolve each title and each display-list position in the current request independently against the lookup items. When both are given, they must refer to the same item. If any reference is missing or ambiguous, or the references point to different items, pass null for articleId so the app can ask the user. An episode's number is part of its identity; list positions come from the recommendation order. Use selectedId only for a clear implicit reference with needsSelection false.
 Set articleField to TITLE, SOURCE (feed or podcast name), DATE (publication), or UNSUPPORTED for other fields. Use KEEP when the user only identifies an item for a pending field, and null if the requested field is unclear. Include the known field even when asking the user to choose the item.""",
 ), ReplyLookupTool {
+    override val instructions =
+        "Use lookup_article_field alone for one previously recommended item's title, source or publication date. " +
+                "For a clarification about which recommendation, call it with the requested field and a null articleId to preserve the field."
+
     override var reply: ValidatedAssistantReply? = null
         private set
     var failure: AssistantFailure? = null
@@ -101,30 +104,6 @@ Set articleField to TITLE, SOURCE (feed or podcast name), DATE (publication), or
 
     private fun IndexedValue<ArticleReference>.choiceLabel() =
         "${index + 1}. ${value.title.trim()}".trimEnd()
-
-    override suspend fun resolveExact(): ValidatedAssistantReply? {
-        if (!references.needsSelection) return null
-        val input = question.trim()
-        val number = input.toIntOrNull()?.takeIf { it.toString() == input }
-        // Interpret the original display before filtering: an expired #2 cannot turn into a title match for "2".
-        val numbered = choicesFrom(items).filter {
-            number == it.index + 1 || input.equals(it.choiceLabel(), ignoreCase = true)
-        }
-        val titled = items.filter { (_, item) ->
-            input.equals(item.title.trim(), ignoreCase = true) ||
-                    input.equals(item.displayedTitle?.trim(), ignoreCase = true)
-        }
-        val matches = (numbered + titled).distinct()
-        if (matches.isEmpty() && number == null) return null
-        val visibleMatches = matches.filter { it in authorized }
-        return resolve(
-            selected = visibleMatches.singleOrNull()?.value?.takeIf { matches.size == 1 },
-            field = LookupField.KEEP,
-            choices = visibleMatches.takeIf { it.size > 1 }?.sortedBy { it.index } ?: choicesFrom(
-                authorized
-            ),
-        )
-    }
 
     fun admit(call: MessagePart.Tool.Call): MessagePart.Tool.Result? {
         val args = try {

@@ -140,4 +140,20 @@
     <string name="podnya_article_reference_unavailable">This article is unavailable in the current search scope.</string>
     <string name="podnya_article_choose_field">Which field would you like: the title, the podcast name, or the publication date?</string>
     <string name="podnya_article_field_unsupported">I can look up the title, podcast name, and publication date of a recommended item.</string>
+    <string name="podnya_download_choose">Choose a download for %1$s</string>
+    <string name="podnya_download_choices_on_origin">The attachment options are in the original download message above.</string>
+    <string name="podnya_download_clarification_required">Which item, subscription, or range should I download? %1$s</string>
+    <string name="podnya_download_failed">%1$d downloads could not be added.</string>
+    <string name="podnya_download_file_link_required">Send a direct link to the file.</string>
+    <string name="podnya_download_limit">Matched %1$d downloads. This batch can add %2$d more. No downloads were added. Narrow the request and try again.</string>
+    <string name="podnya_download_link_check_failed">Could not verify the file link. Check the address and send it again.</string>
+    <string name="podnya_download_missing_attachment">No attachments for %1$s.</string>
+    <string name="podnya_download_no_match">No local articles match this download request.</string>
+    <string name="podnya_download_open">View downloads</string>
+    <string name="podnya_download_refresh">Check submission status</string>
+    <string name="podnya_download_result">Added %1$d · Already in downloads %2$d · Failed %3$d</string>
+    <string name="podnya_download_stale_choice">The available downloads changed. Choose from the current options or ask again.</string>
+    <string name="podnya_download_submitting">Adding to downloads…</string>
+    <string name="podnya_download_unavailable_article">Could not verify the article %1$s.</string>
+    <string name="podnya_download_unconfirmed">No download receipt is available for this submission.</string>
 </resources>

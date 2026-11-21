@@ -1,7 +1,7 @@
 package com.skyd.podaura.podnya.runtime
 
-import com.skyd.podaura.api.model.bean.FeedQuery
-import com.skyd.podaura.api.model.bean.FeedRecord
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
+import com.skyd.podaura.api.model.bean.feed.FeedRecord
 import com.skyd.podaura.api.model.repository.IFeedRepository
 import com.skyd.podaura.podnya.capabilities.articles.ArticleSearchCapability
 import com.skyd.podaura.podnya.capabilities.articles.model.repository.LocalArticleSearchRepository

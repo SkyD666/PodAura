@@ -179,9 +179,16 @@ class PodnyaViewModel(
                 PodnyaPartialStateChange.Notify(PodnyaEvent.OpenSearch)
             },
             filterIsInstance<PodnyaIntent.PerformAction>().map { intent ->
-                PodnyaPartialStateChange.Notify(
-                    PodnyaEvent.Action(intent.conversationId, intent.action)
-                )
+                if (repository.performAction(id = intent.conversationId, action = intent.action)) {
+                    PodnyaPartialStateChange.CommandCompleted
+                } else {
+                    PodnyaPartialStateChange.Notify(
+                        PodnyaEvent.Action(
+                            conversationId = intent.conversationId,
+                            action = intent.action
+                        )
+                    )
+                }
             },
         )
     }

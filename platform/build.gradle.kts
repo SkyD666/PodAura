@@ -54,6 +54,7 @@ kotlin {
                 implementation(projects.shared)
                 implementation(projects.podnya)
                 implementation(projects.fundation)
+                implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.jetbrains.compose.ui)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.skyd666.compone)
@@ -82,8 +83,8 @@ kotlin {
             kotlin.srcDir("jvm/src/test/kotlin")
             resources.srcDir("jvm/src/test/resources")
             dependencies {
+                implementation(libs.jetbrains.compose.ui.test.junit4)
                 implementation(projects.sharedApi)
-                implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)

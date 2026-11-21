@@ -75,7 +75,7 @@ internal class ConversationPendingChanges(private val clock: () -> Long) {
         if (latest != null && latest.version != captured?.version) {
             changes[writing.id] = latest.copy(
                 metadata = merged,
-                turn = latest.turn?.takeUnless { it == turn },
+                turn = latest.turn?.takeUnless { it == turn || it == captured?.turn },
             )
         } else {
             changes.remove(writing.id)

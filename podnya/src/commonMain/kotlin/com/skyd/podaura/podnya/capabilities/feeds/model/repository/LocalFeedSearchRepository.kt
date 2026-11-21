@@ -1,8 +1,9 @@
 package com.skyd.podaura.podnya.capabilities.feeds.model.repository
 
 import com.fleeksoft.ksoup.Ksoup
-import com.skyd.podaura.api.model.bean.FeedQuery
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
 import com.skyd.podaura.api.model.repository.IFeedRepository
+import com.skyd.podaura.podnya.capabilities.displayTitle
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchError
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchLimits
 import com.skyd.podaura.podnya.core.AssistantException
@@ -24,8 +25,7 @@ class LocalFeedSearchRepository(private val repository: IFeedRepository) {
                 fun String.plain(limit: Int) = Ksoup.parse(take(16_384)).text().take(limit)
                 LocalFeed(
                     record.url,
-                    (record.nickname?.takeIf(String::isNotBlank) ?: record.title).orEmpty()
-                        .plain(200),
+                    record.displayTitle(),
                     (record.customDescription?.takeIf(String::isNotBlank) ?: record.description)
                         .orEmpty().plain(FeedSearchLimits.DESCRIPTION_CHARS),
                     record.muted,

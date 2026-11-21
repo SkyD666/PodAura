@@ -64,7 +64,13 @@ class SelectedArticleDownloader internal constructor(
             val enclosure = articleWithEnclosure.enclosures.firstOrNull()
             if (enclosure == null) {
                 noEnclosure++
-                onProgress(BatchProgress(selectedIds.size, skippedCount = noEnclosure + existing.size, failedCount = failed.size))
+                onProgress(
+                    BatchProgress(
+                        selectedIds.size,
+                        skippedCount = noEnclosure + existing.size,
+                        failedCount = failed.size
+                    )
+                )
                 continue
             }
             try {
@@ -81,7 +87,13 @@ class SelectedArticleDownloader internal constructor(
             } catch (_: Exception) {
                 failed += article.articleId
             }
-            onProgress(BatchProgress(selectedIds.size, skippedCount = noEnclosure + existing.size, failedCount = failed.size))
+            onProgress(
+                BatchProgress(
+                    totalCount = selectedIds.size,
+                    skippedCount = noEnclosure + existing.size,
+                    failedCount = failed.size
+                )
+            )
         }
         return SelectedDownloadPlan(downloads, existing, noEnclosure, failed)
     }
@@ -95,8 +107,15 @@ class SelectedArticleDownloader internal constructor(
         val queued = mutableSetOf<Pair<String, String>>()
         val failed = plan.failedIds.toMutableSet()
         var existing = 0
-        val total = plan.downloads.size + plan.existingDownloads.size + plan.noEnclosureCount + plan.failedIds.size
-        onProgress(BatchProgress(total, skippedCount = plan.noEnclosureCount, failedCount = failed.size))
+        val total =
+            plan.downloads.size + plan.existingDownloads.size + plan.noEnclosureCount + plan.failedIds.size
+        onProgress(
+            BatchProgress(
+                totalCount = total,
+                skippedCount = plan.noEnclosureCount,
+                failedCount = failed.size
+            )
+        )
         for (download in plan.downloads + plan.existingDownloads) {
             currentCoroutineContext().ensureActive()
             try {
@@ -113,7 +132,14 @@ class SelectedArticleDownloader internal constructor(
             } catch (_: Exception) {
                 failed += download.source.articleId
             }
-            onProgress(BatchProgress(total, queued.size, existing + plan.noEnclosureCount, failed.size))
+            onProgress(
+                BatchProgress(
+                    totalCount = total,
+                    successCount = queued.size,
+                    skippedCount = existing + plan.noEnclosureCount,
+                    failedCount = failed.size
+                )
+            )
         }
         return SelectedDownloadResult(queued.size, existing, plan.noEnclosureCount, failed)
     }
@@ -128,7 +154,7 @@ class SelectedArticleDownloader internal constructor(
         fun create(starter: DownloadStarter) = SelectedArticleDownloader(
             getTasks = { get<IDownloadManager>().getAllDownloadTasks() },
             fileExists = { PlatformFile(PlatformFile(it.path), it.fileName).exists() },
-            directory = { url, source -> starter.downloadDirectory(url, source) },
+            directory = ::downloadDirectory,
             enqueue = {
                 starter.download(url = it.url, type = it.type, articleDownloadSource = it.source)
             },

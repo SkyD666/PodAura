@@ -1,9 +1,9 @@
 package com.skyd.podaura.model.repository.feed
 
 import androidx.room3.RoomRawQuery
-import com.skyd.podaura.api.model.bean.FeedQuery
-import com.skyd.podaura.api.model.bean.FeedRecord
 import com.skyd.podaura.api.model.bean.KeywordMatch
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
+import com.skyd.podaura.api.model.bean.feed.FeedRecord
 import com.skyd.podaura.api.model.repository.IFeedRepository
 import com.skyd.podaura.model.bean.feed.FEED_TABLE_NAME
 import com.skyd.podaura.model.bean.feed.FeedBean

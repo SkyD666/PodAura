@@ -33,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -46,6 +47,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -55,6 +57,7 @@ import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
+import com.skyd.podaura.podnya.ui.LocalCapabilityUis
 import com.skyd.podaura.podnya.ui.PodnyaMarkdown
 import com.skyd.podaura.podnya.ui.PodnyaReplyText
 import com.skyd.podaura.podnya.ui.PodnyaWelcome
@@ -87,8 +90,10 @@ internal fun PodnyaMessageList(
 ) {
     val state = uiState.session
     val ready = uiState.ready
+    val lastTurn = state.turns.lastOrNull()
     val atEnd by remember(listState) { derivedStateOf { !listState.canScrollForward } }
-    val keys = remember(state.turns) {
+    val uis = LocalCapabilityUis.current
+    val keys = remember(state.turns, uis) {
         buildList {
             state.turns.forEach { turn ->
                 add("${turn.id}-question")
@@ -96,6 +101,7 @@ internal fun PodnyaMessageList(
                 turn.content?.let {
                     addAll(
                         podnyaContentKeys(
+                            uis = uis,
                             turnId = turn.id,
                             content = it,
                             showFallbackText = turn.reply.isEmpty() && turn.status != AssistantTurnStatus.RUNNING,
@@ -113,6 +119,17 @@ internal fun PodnyaMessageList(
             if (state.turns.isNotEmpty()) add("conversation-end")
         }
     }
+    val replyEndIndex = if (lastTurn?.content != null &&
+        (lastTurn.status == AssistantTurnStatus.RUNNING || lastTurn.reply.isNotEmpty())
+    ) {
+        (keys.indexOf("${lastTurn.id}-reply") + 1).takeIf { index ->
+            index < keys.lastIndex && keys[index] != "${lastTurn.id}-status"
+        }
+    } else {
+        null
+    }
+    var jumpToEnd by remember(state.id) { mutableStateOf(false) }
+    var latestButtonHeight by remember { mutableIntStateOf(0) }
     var restored by remember(
         state.id,
         uiState.conversations.windowRevision
@@ -120,10 +137,11 @@ internal fun PodnyaMessageList(
     val currentState by rememberUpdatedState(state)
     val currentFollow by rememberUpdatedState(followLatest)
     val currentOnFollowLatest by rememberUpdatedState(onFollowLatest)
-    val userScroll = remember {
+    val userScroll = remember(state.id) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (source == NestedScrollSource.UserInput && available.y > 0f) {
+                    jumpToEnd = false
                     currentOnFollowLatest(false)
                 }
                 return Offset.Zero
@@ -139,9 +157,12 @@ internal fun PodnyaMessageList(
                     state.turns.minByOrNull { kotlin.math.abs(it.id - (position.turnId ?: it.id)) }
                 val target = keys.indexOf(position.itemKey).takeIf { it >= 0 }
                     ?: keys.indexOf("${nearest?.id}-question").coerceAtLeast(0)
+                val restoreToEnd = followLatest && !state.hasAfter &&
+                        (jumpToEnd || replyEndIndex == null ||
+                                (position.itemKey == null && lastTurn?.status != AssistantTurnStatus.RUNNING))
                 listState.scrollToItem(
-                    index = if (followLatest && !state.hasAfter) keys.lastIndex else target,
-                    scrollOffset = if (followLatest) 0 else position.offset.coerceAtLeast(0),
+                    index = if (restoreToEnd) keys.lastIndex else target,
+                    scrollOffset = if (restoreToEnd) 0 else position.offset.coerceAtLeast(0),
                 )
             }
         } finally {
@@ -199,20 +220,27 @@ internal fun PodnyaMessageList(
             }
         }
     }
-    LaunchedEffect(state.id, state.turns, restored, followLatest) {
+    LaunchedEffect(state.id, state.turns, restored, followLatest, jumpToEnd) {
         if (restored && followLatest && !state.hasAfter && keys.isNotEmpty()) {
-            // Parsing finishes after the raw-text update. Observe measured content as well so
-            // the tail stays visible when an asynchronously rendered block changes height.
+            // Markdown can grow after its text changes, so follow the measured reply.
             snapshotFlow {
-                val layout = listState.layoutInfo
-                Triple(
-                    layout.totalItemsCount,
-                    layout.visibleItemsInfo.map { Triple(it.key, it.offset, it.size) },
-                    listState.isScrollInProgress,
-                )
-            }.collect { (count, _, scrolling) ->
-                if (currentFollow && count == keys.size && !scrolling && listState.canScrollForward) {
-                    listState.scrollToItem(keys.lastIndex)
+                Triple(listState.layoutInfo, listState.isScrollInProgress, latestButtonHeight)
+            }.collect { (layout, scrolling, buttonHeight) ->
+                if (!currentFollow || layout.totalItemsCount != keys.size || scrolling) return@collect
+                if (jumpToEnd || replyEndIndex == null) {
+                    if (listState.canScrollForward) listState.scrollToItem(keys.lastIndex)
+                    jumpToEnd = false
+                } else if (listState.canScrollForward) {
+                    // Keep the first result below the reply, even if the cards arrive before the text.
+                    val lastVisible = layout.visibleItemsInfo.lastOrNull() ?: return@collect
+                    val replyEnd = layout.visibleItemsInfo.firstOrNull { it.index == replyEndIndex }
+                    val readingEnd =
+                        layout.viewportEndOffset - maxOf(layout.afterContentPadding, buttonHeight)
+                    if (readingEnd > 0 && (lastVisible.index < replyEndIndex ||
+                                (replyEnd != null && replyEnd.offset > readingEnd))
+                    ) {
+                        listState.scrollToItem(index = replyEndIndex, scrollOffset = -readingEnd)
+                    }
                 }
             }
         }
@@ -272,7 +300,9 @@ internal fun PodnyaMessageList(
                                     color = MaterialTheme.colorScheme.secondaryContainer,
                                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                                     shape = MaterialTheme.shapes.large,
-                                    modifier = Modifier.widthIn(max = 620.dp),
+                                    modifier = Modifier
+                                        .widthIn(max = 620.dp)
+                                        .testTag("podnya_user_message_${turn.id}"),
                                 ) {
                                     PodnyaMarkdown(
                                         text = turn.question,
@@ -280,6 +310,7 @@ internal fun PodnyaMessageList(
                                             horizontal = 18.dp,
                                             vertical = 12.dp,
                                         ),
+                                        fillWidth = false,
                                     )
                                 }
                             }
@@ -287,6 +318,7 @@ internal fun PodnyaMessageList(
                         item(key = "${turn.id}-reply") { AssistantReply(turn) }
                         turn.content?.let { turnContent ->
                             podnyaContent(
+                                uis = uis,
                                 turnId = turn.id,
                                 content = turnContent,
                                 showFallbackText = turn.reply.isEmpty() && turn.status != AssistantTurnStatus.RUNNING,
@@ -336,6 +368,7 @@ internal fun PodnyaMessageList(
         if ((!atEnd || state.hasAfter) && state.turns.isNotEmpty()) {
             FilledTonalButton(
                 onClick = {
+                    jumpToEnd = true
                     onFollowLatest(true)
                     dispatch(
                         PodnyaIntent.UpdatePosition(
@@ -352,6 +385,7 @@ internal fun PodnyaMessageList(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
+                    .onSizeChanged { latestButtonHeight = it.height }
                     .padding(bottom = 12.dp),
             ) {
                 Icon(

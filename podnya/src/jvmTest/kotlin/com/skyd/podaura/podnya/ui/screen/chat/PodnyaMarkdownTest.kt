@@ -3,6 +3,7 @@ package com.skyd.podaura.podnya.ui.screen.chat
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -15,63 +16,63 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asSkiaBitmap
-import androidx.compose.ui.platform.asAwtTransferable
-import java.awt.datatransfer.DataFlavor
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
+import androidx.compose.ui.platform.asAwtTransferable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.DesktopComposeUiTest
-import androidx.compose.ui.test.getUnclippedBoundsInRoot
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.test.performSemanticsAction
-import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.pressKey
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isRoot
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.hasAnyDescendant
-import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.skyd.compone.ext.getText
-import com.skyd.podaura.podnya.ui.PodnyaMarkdown
-import com.mikepenz.markdown.model.parseMarkdown
 import com.mikepenz.markdown.model.State
-import androidx.compose.foundation.lazy.LazyColumn
-import com.skyd.podaura.podnya.ui.podnyaContent
+import com.mikepenz.markdown.model.parseMarkdown
+import com.skyd.compone.ext.getText
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ValidatedAssistantAnswer
+import com.skyd.podaura.podnya.capabilities.articles.ui.ArticleSearchUi
 import com.skyd.podaura.podnya.core.AssistantAnswerKind
 import com.skyd.podaura.podnya.core.UnreadableContent
 import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
-import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
-import com.skyd.podaura.podnya.capabilities.articles.model.bean.ValidatedAssistantAnswer
-import kotlin.time.measureTime
-import kotlin.test.assertIs
+import com.skyd.podaura.podnya.ui.PodnyaMarkdown
+import com.skyd.podaura.podnya.ui.podnyaContent
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_copy_code
+import java.awt.datatransfer.DataFlavor
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.skia.Image
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.measureTime
 
 @OptIn(ExperimentalTestApi::class)
 class PodnyaMarkdownTest {
@@ -168,6 +169,7 @@ class PodnyaMarkdownTest {
                         Surface {
                             LazyColumn {
                                 podnyaContent(
+                                    uis = listOf(ArticleSearchUi),
                                     turnId = 1,
                                     content = AssistantReplyContent(
                                         parts = emptyList(),
@@ -179,6 +181,7 @@ class PodnyaMarkdownTest {
                                     onAction = {},
                                 )
                                 podnyaContent(
+                                    uis = listOf(ArticleSearchUi),
                                     turnId = 2,
                                     content = UnreadableContent(raw = "{}", fallback = "# Generic fallback"),
                                     showFallbackText = true,
@@ -186,6 +189,7 @@ class PodnyaMarkdownTest {
                                     onAction = {},
                                 )
                                 podnyaContent(
+                                    uis = listOf(ArticleSearchUi),
                                     turnId = 3,
                                     content = ArticleSearchContent.recommendations(ValidatedAssistantAnswer(
                                         kind = AssistantAnswerKind.CLARIFICATION,

@@ -7,6 +7,7 @@ import com.skyd.podaura.podnya.core.AssistantException
 import com.skyd.podaura.podnya.core.AssistantHistoryTurn
 import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.core.AssistantPhase
+import com.skyd.podaura.podnya.core.AssistantRequestEvidence
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
@@ -19,10 +20,12 @@ internal class ConversationGeneration {
     var job: Job? = null
     var turn: AssistantSessionTurn? = null
     var valid = true
+    var handoffAccepted = false
 
     fun update(event: AssistantRunEvent): AssistantSessionTurn? {
         val turn = turn?.takeIf { it.status == AssistantTurnStatus.RUNNING } ?: return null
         val next = when (event) {
+            is AssistantRunEvent.Handoff -> return null
             is AssistantRunEvent.Progress -> turn.copy(progress = event.progress)
             is AssistantRunEvent.ContentReady -> {
                 checkContent(event.content)
@@ -63,14 +66,17 @@ internal class ConversationGeneration {
     fun request(
         turns: List<AssistantSessionTurn>,
         question: String,
-        context: AssistantContext
+        context: AssistantContext,
+        evidence: List<AssistantRequestEvidence> = emptyList(),
     ): AssistantTurnRequest {
         var latestContent: AssistantContent? = null
         var history =
             turns.filter { it.id != turn?.id && it.status != AssistantTurnStatus.RUNNING }
                 .mapNotNull { turn ->
                     val snapshot = turn.content?.promptHistorySnapshot()
-                    if (snapshot != null || turn.status == AssistantTurnStatus.COMPLETED) {
+                    if (turn.content?.keepsPreviousLocalSnapshot != true &&
+                        (snapshot != null || turn.status == AssistantTurnStatus.COMPLETED)
+                    ) {
                         latestContent = turn.content
                     }
                     when {
@@ -99,6 +105,7 @@ internal class ConversationGeneration {
             context = context,
             history = history,
             latestLocalSnapshot = latestContent?.historySnapshot(),
+            evidence = evidence,
         )
     }
 

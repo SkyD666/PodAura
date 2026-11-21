@@ -1,8 +1,8 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
 import com.fleeksoft.ksoup.Ksoup
-import com.skyd.podaura.api.model.bean.ArticleQuery
 import com.skyd.podaura.api.model.bean.KeywordMatch
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantAnswerKind
 import com.skyd.podaura.podnya.core.AssistantFailure

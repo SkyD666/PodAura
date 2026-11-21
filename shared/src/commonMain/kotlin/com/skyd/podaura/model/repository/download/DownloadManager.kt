@@ -5,6 +5,7 @@ import com.skyd.downloader.Downloader
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.DownloadConstraints
+import com.skyd.downloader.download.DownloadFailureCode
 import com.skyd.fundation.di.get
 import com.skyd.fundation.di.inject
 import com.skyd.podaura.model.db.dao.ArticleDao
@@ -77,6 +78,7 @@ class DownloadManager private constructor() : IDownloadManager, KoinComponent {
         createTime = createTime,
         failureReason = failureReason,
         articleDownloadSource = metadata.decodeArticleDownloadSource(),
+        failureCode = DownloadFailureCode.entries.firstOrNull { it.name == failureCode },
     )
 
     private suspend fun handleCompletion(entity: DownloadEntity) {

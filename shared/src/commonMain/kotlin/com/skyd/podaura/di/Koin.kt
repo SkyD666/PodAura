@@ -19,7 +19,6 @@ fun initKoin(appDeclaration: KoinAppDeclaration = {}) = startKoin {
         viewModelModule,
         downloaderModule,
         downloaderDatabaseModule,
-        sharedApiModule,
         credentialStoreModule,
     )
 }

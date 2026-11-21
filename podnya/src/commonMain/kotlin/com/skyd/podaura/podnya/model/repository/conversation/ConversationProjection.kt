@@ -7,6 +7,7 @@ import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationStorageState
 import com.skyd.podaura.podnya.model.bean.conversation.summary
+import kotlin.uuid.Uuid
 
 /** Pure projections: no mutable cache, database access or task ownership. */
 internal fun AssistantConversationsState.withConversation(
@@ -39,6 +40,15 @@ internal fun AssistantConversationsState.withConversation(
             )
             .take(50)
     return copy(selected = selectedSession, summaries = updatedSummaries)
+}
+
+internal fun AssistantConversationsState.withUpdatedTurns(
+    id: Uuid,
+    updates: List<AssistantSessionTurn>,
+): AssistantConversationsState {
+    if (selected.id != id) return this
+    val byId = updates.associateBy { it.id }
+    return copy(selected = selected.copy(turns = selected.turns.map { byId[it.id] ?: it }))
 }
 
 internal fun AssistantConversationsState.withPending(

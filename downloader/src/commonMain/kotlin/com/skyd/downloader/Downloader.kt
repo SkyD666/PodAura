@@ -1,12 +1,12 @@
 package com.skyd.downloader
 
-import com.skyd.downloader.db.DownloadDao
+import com.skyd.downloader.db.DownloadDatabase
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.download.DownloadConstraints
 import com.skyd.downloader.download.DownloadManager
+import com.skyd.downloader.download.cleanCompletedDownloadFiles
+import com.skyd.downloader.download.downloadTaskFiles
 import com.skyd.downloader.util.FileUtil
-import io.ktor.http.URLProtocol
-import io.ktor.http.Url
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -14,10 +14,13 @@ import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
 class Downloader internal constructor(
-    private val downloadDao: DownloadDao,
+    database: DownloadDatabase,
     private val downloadManager: DownloadManager,
 ) {
+    private val downloadDao = database.downloadDao()
     private val commandMutex = Mutex()
+    private val batches =
+        DownloadBatchQueue(database = database, schedule = downloadManager::schedule)
 
     suspend fun download(
         url: String,
@@ -26,28 +29,11 @@ class Downloader internal constructor(
         metadata: String? = null,
         constraints: DownloadConstraints = DownloadConstraints(),
     ): String = commandMutex.withLock {
-        val parsedUrl = runCatching { Url(url) }.getOrElse {
-            throw IllegalArgumentException("Invalid download URL")
-        }
-        require(parsedUrl.protocol == URLProtocol.HTTP || parsedUrl.protocol == URLProtocol.HTTPS) {
-            "Only HTTP and HTTPS downloads are supported"
-        }
-        val explicitFileName = fileName?.let(FileUtil::sanitizeFileName)
-        val resolvedFileName = explicitFileName ?: FileUtil.getFileNameFromUrl(url)
-        val requestedFileName = explicitFileName.orEmpty()
-        FileUtil.validateTarget(path, resolvedFileName)
-
-        val sourceTask = downloadDao.findBySourceAndTarget(
-            url = url,
-            path = path,
-            requestedFileName = requestedFileName,
-        )
-        val existing = if (sourceTask != null) {
-            sourceTask
-        } else {
-            val destinationOwner = downloadDao.findByDestination(path, resolvedFileName)
-            if (destinationOwner != null && destinationOwner.url != url) {
-                throw IllegalStateException("Another download already owns the target file")
+        val target = DownloadTarget.resolve(url = url, path = path, fileName = fileName)
+        val existing = target.findSource(downloadDao) ?: run {
+            val destinationOwner = downloadDao.findByDestination(path, target.fileName)
+            check(destinationOwner == null || destinationOwner.url == url) {
+                "Another download already owns the target file"
             }
             destinationOwner
         }
@@ -74,27 +60,35 @@ class Downloader internal constructor(
             requireUnmetered = constraints.requireUnmetered,
             requiresCharging = constraints.requiresCharging,
             requiresBatteryNotLow = constraints.requiresBatteryNotLow,
+            requireFileResponse = false,
         )?.also { downloadDao.update(it) }
-            ?: DownloadEntity(
-                id = Uuid.random().toString(),
-                url = url,
-                path = path,
-                fileName = resolvedFileName,
-                requestedFileName = requestedFileName,
-                fileNameResolved = explicitFileName != null,
-                timeQueued = now,
-                status = Status.Queued.name,
+            ?: target.queuedEntity(
+                now = now,
                 attemptId = attemptId,
-                createTime = now,
-                updatedTime = now,
                 metadata = metadata,
-                requireUnmetered = constraints.requireUnmetered,
-                requiresCharging = constraints.requiresCharging,
-                requiresBatteryNotLow = constraints.requiresBatteryNotLow,
+                constraints = constraints,
             ).also { downloadDao.insert(it) }
         downloadManager.schedule(entity)
         entity.id
     }
+
+    /** Each submission ID can be committed once. Follow-up submissions share the batch quota. */
+    suspend fun enqueueBatch(
+        batchId: String,
+        submissionId: String,
+        items: List<DownloadBatchItem>,
+        failedKeys: Set<String> = emptySet(),
+    ): DownloadBatchReceipt = commandMutex.withLock {
+        batches.enqueue(
+            batchId = batchId,
+            submissionId = submissionId,
+            items = items,
+            failedKeys = failedKeys
+        )
+    }
+
+    suspend fun getBatchReceipt(batchId: String, submissionId: String): DownloadBatchReceipt? =
+        batches.receipt(batchId = batchId, submissionId = submissionId)
 
     fun observeDownloads(): Flow<List<DownloadEntity>> = downloadDao.getAllEntityFlow()
 
@@ -110,16 +104,14 @@ class Downloader internal constructor(
 
     suspend fun pause(id: String) = commandMutex.withLock {
         val entity = downloadDao.find(id) ?: return@withLock
-        if (!entity.status.isActiveDownloadStatus()) return@withLock
-        downloadDao.update(
-            entity.copy(
-                status = Status.Paused.name,
-                attemptId = "",
-                speedInBytePerMs = 0f,
-                updatedTime = now(),
-            )
-        )
-        downloadManager.cancel(id)
+        if (downloadDao.pauseActive(
+                id = id,
+                attemptId = entity.attemptId,
+                updatedTime = now()
+            ) > 0
+        ) {
+            downloadManager.cancel(id)
+        }
     }
 
     suspend fun resume(id: String) = restart(id)
@@ -127,24 +119,18 @@ class Downloader internal constructor(
     suspend fun retry(id: String) = restart(id)
 
     suspend fun cancel(id: String) = commandMutex.withLock {
-        val entity = downloadDao.find(id) ?: return@withLock
-        downloadDao.update(
-            entity.copy(
-                status = Status.Cancelled.name,
-                attemptId = "",
-                speedInBytePerMs = 0f,
-                updatedTime = now(),
-            )
-        )
+        if (downloadDao.find(id) == null) return@withLock
+        downloadDao.markCancelled(id = id, updatedTime = now())
         downloadManager.cancel(id)
-        FileUtil.deletePartIfExists(entity.path, entity.fileName)
+        val entity = downloadDao.find(id) ?: return@withLock
+        downloadTaskFiles(entity = entity, dao = downloadDao).discardCancelled()
     }
 
     suspend fun delete(id: String, deleteFile: Boolean) = commandMutex.withLock {
-        val entity = downloadDao.find(id) ?: return@withLock
+        if (downloadDao.find(id) == null) return@withLock
         downloadManager.cancel(id)
-        FileUtil.deletePartIfExists(entity.path, entity.fileName)
-        if (deleteFile) FileUtil.deleteFinalIfExists(entity.path, entity.fileName)
+        val entity = downloadDao.find(id) ?: return@withLock
+        downloadTaskFiles(entity = entity, dao = downloadDao).delete(deleteFile)
         downloadDao.remove(id)
     }
 
@@ -152,8 +138,9 @@ class Downloader internal constructor(
         downloadDao.markCompletionHandled(id, now())
     }
 
-    suspend fun initialize() {
+    suspend fun initialize() = commandMutex.withLock {
         downloadManager.reconcile()
+        cleanCompletedDownloadFiles(downloadDao)
     }
 
     private suspend fun restart(id: String) = commandMutex.withLock {

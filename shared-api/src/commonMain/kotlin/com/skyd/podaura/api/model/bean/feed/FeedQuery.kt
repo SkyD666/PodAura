@@ -1,4 +1,6 @@
-package com.skyd.podaura.api.model.bean
+package com.skyd.podaura.api.model.bean.feed
+
+import com.skyd.podaura.api.model.bean.KeywordMatch
 
 /** Filters for subscriptions already saved in the app. An empty URL list matches nothing. */
 data class FeedQuery(

@@ -7,8 +7,6 @@ import com.skyd.compone.component.BackInvoker
 import com.skyd.compone.component.navigation.LocalNavBackStack
 import com.skyd.podaura.ext.toDateTimeString
 import com.skyd.podaura.ui.player.mini.miniPlayerEntry
-import com.skyd.podaura.ui.screen.article.ArticleRoute
-import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -39,9 +37,16 @@ private fun PodnyaEntry() {
         PodnyaChatCallbacks(
             onBack = BackInvoker(),
             onSettings = { backStack.add(AssistantSettingsRoute) },
-            onSearch = { backStack.add(SearchRoute.Article(emptyList(), emptyList(), emptyList())) },
-            onOpenArticle = { articleId -> backStack.add(ReadRoute(articleId)) },
-            onOpenFeed = { feedUrl -> backStack.add(ArticleRoute(feedUrls = listOf(feedUrl))) },
+            onSearch = {
+                backStack.add(
+                    SearchRoute.Article(
+                        feedUrls = emptyList(),
+                        groupIds = emptyList(),
+                        articleIds = emptyList()
+                    )
+                )
+            },
+            navigate = { backStack.add(it) },
             formatDate = { millis -> millis.toDateTimeString() },
         ),
     )

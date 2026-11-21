@@ -4,11 +4,11 @@ import com.skyd.podaura.podnya.runtime.podnyaJson
 import ai.koog.prompt.message.MessagePart
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchQuery
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.api.model.repository.IArticleRepository
-import com.skyd.podaura.api.model.bean.ArticleRecord
+import com.skyd.podaura.api.model.bean.article.ArticleRecord
 import com.skyd.podaura.podnya.capabilities.articles.model.repository.LocalArticleSearchRepository
-import com.skyd.podaura.api.model.bean.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

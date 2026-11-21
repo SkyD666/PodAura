@@ -8,7 +8,7 @@ import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantProgress
 
 /** Feature UI stays separate from runtime, repositories and session state. */
-internal interface AssistantCapabilityUi {
+interface AssistantCapabilityUi {
     fun supports(content: AssistantContent): Boolean
     fun itemKeys(turnId: String, content: AssistantContent, showFallbackText: Boolean): List<String>
     fun LazyListScope.render(

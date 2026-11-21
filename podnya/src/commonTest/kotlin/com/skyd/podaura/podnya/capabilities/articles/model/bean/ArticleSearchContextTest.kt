@@ -1,7 +1,7 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
 import com.skyd.podaura.podnya.core.AssistantConnection
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantError
 import com.skyd.podaura.podnya.core.AssistantRunEvent
@@ -11,12 +11,26 @@ import com.skyd.podaura.podnya.model.repository.conversation.*
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ArticleSearchContextTest {
+    @Test
+    fun savedArticleScopesKeepTheirOriginalTypeNames() {
+        val scopes = mapOf(
+            """{"type":"com.skyd.podaura.api.model.bean.ArticleSearchScope.All"}""" to ArticleSearchScope.All,
+            """{"type":"com.skyd.podaura.api.model.bean.ArticleSearchScope.Restricted","articleIds":["a"]}""" to
+                    ArticleSearchScope.Restricted(articleIds = setOf("a")),
+        )
+        for ((saved, scope) in scopes) {
+            assertEquals(scope, Json.decodeFromString<ArticleSearchScope>(saved))
+            assertEquals(saved, Json.encodeToString<ArticleSearchScope>(scope))
+        }
+    }
+
     @Test
     fun conversationAndRetryKeepTheOriginalScopeWhenSelectionsChange() = runTest {
         val feeds = mutableSetOf("feed-a", "feed-b")

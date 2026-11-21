@@ -28,6 +28,7 @@ internal class AssistantPrompts(
         repair: Boolean = false,
         lookupAvailable: Boolean = true
     ): Prompt {
+        val includeLookup = !final && lookupAvailable
         val history = request.history.takeLast(AssistantLimits.HISTORY_TURNS)
         val budget = AssistantLimits.PROMPT_BYTES - 8_192
         val detailLimits = listOf(
@@ -39,7 +40,7 @@ internal class AssistantPrompts(
             val evidence = podnyaJson.encodeToString(
                 JsonObject(
                     capabilities.associate { capability ->
-                        val snapshot = if (!final && lookupAvailable) {
+                        val snapshot = if (includeLookup) {
                             capability.toolSnapshot(
                                 textLimit = textLimit,
                                 lookupTitleLimit = lookupTitleLimit
@@ -60,7 +61,11 @@ internal class AssistantPrompts(
                     system(
                         (if (final) SELECTION_PROMPT else TOOL_PROMPT) +
                                 "\nToday is $date in ${zone.id}.\n" + capabilities.joinToString("\n\n") {
-                            "Capability ${it.id}:\n" + if (final) it.selectionInstructions else it.instructions
+                            val instructions =
+                                if (final) it.selectionInstructions else it.instructions
+                            val lookup = it.lookupTool?.instructions?.takeIf { includeLookup }
+                            listOfNotNull("Capability ${it.id}:", instructions, lookup)
+                                .joinToString("\n")
                         })
                     history.takeLast(historyCount).forEach { turn ->
                         user(turn.question.take(AssistantLimits.INPUT_CHARS))

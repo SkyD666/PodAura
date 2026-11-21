@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.path
 import io.ktor.http.decodeURLPart
 
 internal object FileUtil {
-    private const val MAX_FILE_NAME_LENGTH = 240
+    const val MAX_FILE_NAME_LENGTH = 240
 
     fun partFile(parent: PlatformFile, fileName: String): PlatformFile = parent / "$fileName.part"
 

@@ -44,8 +44,23 @@ class InMemoryConversationStore : ConversationStore {
             .drop(offset).take(limit).toList()
     }
 
-    override suspend fun tail(id: Uuid, limit: Int) = mutex.withLock {
-        records[id]?.turns.orEmpty().takeLast(limit)
+    override suspend fun tail(id: Uuid, limit: Int, throughTurnId: Long) = mutex.withLock {
+        records[id]?.turns.orEmpty().takeWhile { it.id <= throughTurnId }.takeLast(limit)
+    }
+
+    override suspend fun turn(id: Uuid, turnId: Long) = mutex.withLock {
+        records[id]?.turns?.firstOrNull { it.id == turnId }
+    }
+
+    override suspend fun recentCapabilityTurns(
+        id: Uuid,
+        capabilityId: String,
+        beforeTurnId: Long,
+        limit: Int
+    ) = mutex.withLock {
+        records[id]?.turns.orEmpty().filter {
+            it.id < beforeTurnId && it.content?.historySnapshot()?.capabilityId == capabilityId
+        }.takeLast(limit)
     }
 
     override suspend fun window(id: Uuid, anchor: Long?, limit: Int): ConversationWindow =
@@ -88,6 +103,17 @@ class InMemoryConversationStore : ConversationStore {
         records.remove(id)
         replacement?.let { records[it.id] = it.copy(turns = emptyList()) }
         selection = workspace
+    }
+
+    override suspend fun commitTurns(
+        id: Uuid,
+        turns: List<AssistantSessionTurn>,
+        metadata: AssistantSessionState?,
+    ) = mutex.withLock {
+        val current = records[id]
+        val updated = (current?.turns.orEmpty() + turns).associateBy { it.id }
+        records[id] = (metadata ?: checkNotNull(current))
+            .copy(turns = updated.values.sortedBy { it.id })
     }
 
     override suspend fun close() = Unit

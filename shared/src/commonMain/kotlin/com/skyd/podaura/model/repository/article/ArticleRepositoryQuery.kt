@@ -1,9 +1,9 @@
 package com.skyd.podaura.model.repository.article
 
 import androidx.room3.RoomRawQuery
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
 import com.skyd.podaura.api.model.bean.KeywordMatch
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.api.model.repository.ArticleSearchFieldsDisabledException
 import com.skyd.podaura.config.allSearchDomain
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME

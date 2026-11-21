@@ -48,7 +48,7 @@ internal class ValidatedAssistantReply(
     val reference: AssistantContent? = null,
 ) {
     fun content(): AssistantContent {
-        val parts = results.values.map { it.content }
+        val parts = results.values.mapNotNull { it.content }
         return parts.singleOrNull() ?: AssistantReplyContent(
             parts = parts, kind = kind, text = text, reference = reference,
         )
@@ -129,7 +129,7 @@ internal suspend fun validateOutput(
         results.values.any { it.itemCount !in 0..AssistantLimits.RESULT_ITEMS } || count > AssistantLimits.RESULT_ITEMS ||
                 (selection.kind == AssistantAnswerKind.RESULTS && count == 0) ||
                 (selection.kind == AssistantAnswerKind.NO_MATCH && count != 0)
-    if (invalidCount) {
+    if (invalidCount || results.size != 1 && results.values.any { it.handoff != null }) {
         throw AssistantException(AssistantError.INVALID_OUTPUT)
     }
     return ValidatedAssistantReply(kind = selection.kind, text = "", results = results)

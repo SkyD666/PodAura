@@ -1,10 +1,9 @@
 package com.skyd.podaura.podnya.ui.screen.chat
 
-import com.skyd.podaura.podnya.model.repository.conversation.ConversationCredentials
-import com.skyd.podaura.podnya.core.AssistantConnection
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
@@ -42,9 +41,9 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -89,6 +88,9 @@ import com.skyd.compone.component.navigation.newNavBackStack
 import com.skyd.compone.local.LocalWindowController
 import com.skyd.compone.local.WindowController
 import com.skyd.fundation.credential.CredentialStore
+import com.skyd.podaura.api.model.bean.download.AssistantDownloadTarget
+import com.skyd.podaura.api.model.repository.IAssistantDownloadRepository
+import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchAction
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchPhase
@@ -96,11 +98,25 @@ import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchPro
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.AssistantArticle
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.RecommendedArticle
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ValidatedAssistantAnswer
+import com.skyd.podaura.podnya.capabilities.articles.ui.ArticleSearchUi
+import com.skyd.podaura.podnya.capabilities.downloads.DownloadConversation
+import com.skyd.podaura.podnya.capabilities.downloads.DownloadUi
+import com.skyd.podaura.podnya.capabilities.downloads.OpenDownloads
+import com.skyd.podaura.podnya.capabilities.downloads.TestAssistantDownloadQueue
+import com.skyd.podaura.podnya.capabilities.downloads.model.DownloadChoice
+import com.skyd.podaura.podnya.capabilities.downloads.model.DownloadContent
+import com.skyd.podaura.podnya.capabilities.downloads.model.DownloadIssue
+import com.skyd.podaura.podnya.capabilities.downloads.model.DownloadIssueKind
+import com.skyd.podaura.podnya.capabilities.downloads.model.DownloadOption
+import com.skyd.podaura.podnya.capabilities.downloads.selection.ValidatedDownloadPlan
+import com.skyd.podaura.podnya.capabilities.feeds.model.FeedHistoryCodec
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.AssistantFeed
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchAction
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchContent
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.RecommendedFeed
+import com.skyd.podaura.podnya.capabilities.feeds.ui.FeedSearchUi
 import com.skyd.podaura.podnya.core.AssistantAnswerKind
+import com.skyd.podaura.podnya.core.AssistantConnection
 import com.skyd.podaura.podnya.core.AssistantConnectionResult
 import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantError
@@ -109,20 +125,21 @@ import com.skyd.podaura.podnya.core.AssistantProgress
 import com.skyd.podaura.podnya.core.AssistantRunEvent
 import com.skyd.podaura.podnya.core.AssistantRuntime
 import com.skyd.podaura.podnya.core.AssistantTurnRequest
+import com.skyd.podaura.podnya.model.bean.conversation.*
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
+import com.skyd.podaura.podnya.model.db.ConversationRecordCodec
 import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
+import com.skyd.podaura.podnya.model.repository.conversation.ConversationCredentials
 import com.skyd.podaura.podnya.model.repository.conversation.ConversationStore
 import com.skyd.podaura.podnya.model.repository.conversation.InMemoryConversationStore
 import com.skyd.podaura.podnya.model.repository.conversation.RoomConversationStore
-import com.skyd.podaura.podnya.model.bean.conversation.*
-import com.skyd.podaura.podnya.model.db.ConversationRecordCodec
-import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
-import com.skyd.podaura.podnya.capabilities.feeds.model.FeedHistoryCodec
-import kotlinx.coroutines.CompletableDeferred
-import java.nio.file.Files
 import com.skyd.podaura.podnya.settings.AssistantSettingsRepository
+import com.skyd.podaura.podnya.ui.LocalCapabilityUis
 import com.skyd.podnya.resources.*
 import com.skyd.podnya.resources.Res
+import com.skyd.podnya.resources.podnya_download_missing_attachment
+import com.skyd.podnya.resources.podnya_download_open
+import com.skyd.podnya.resources.podnya_download_result
 import com.skyd.podnya.resources.podnya_latest
 import com.skyd.podnya.resources.podnya_new_conversation
 import com.skyd.podnya.resources.podnya_open_search
@@ -130,13 +147,11 @@ import com.skyd.podnya.resources.podnya_preparing
 import com.skyd.podnya.resources.podnya_retry
 import com.skyd.podnya.resources.podnya_settings_title
 import java.io.File
+import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -148,10 +163,94 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.skia.Image
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** Real screen/session fixtures; captures can be compared before and after UI changes. */
 @OptIn(ExperimentalTestApi::class)
 class PodnyaScreenTest {
+    @Test
+    fun userMessageBubblesFitTheirContentAndWrapAtTheWidthLimit() {
+        val messages = listOf(
+            "你好",
+            "请推荐一档关于音乐的播客",
+            "I am looking for a podcast that explores how music changes across generations. "
+                .repeat(4).trimEnd(),
+        )
+        val session = AssistantSessionState(
+            turns = messages.mapIndexed { index, text ->
+                AssistantSessionTurn(
+                    id = index + 1L,
+                    question = "**$text**",
+                    status = AssistantTurnStatus.COMPLETED,
+                )
+            },
+        )
+        val state = PodnyaState.initial(
+            conversations = AssistantConversationsState(selected = session),
+            available = true,
+        )
+
+        for ((width, maxBubbleWidth) in listOf(390 to 350.dp, 1100 to 620.dp)) {
+            runDesktopComposeUiTest(width = width, height = 844) {
+                setContent {
+                    CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                        MaterialTheme {
+                            PodnyaMessageList(
+                                uiState = state,
+                                listState = rememberLazyListState(),
+                                followLatest = false,
+                                onFollowLatest = {},
+                                keyboardVisible = false,
+                                onHideKeyboard = {},
+                                formatDate = { "" },
+                                dispatch = {},
+                            )
+                        }
+                    }
+                }
+                waitUntil(timeoutMillis = 5_000) {
+                    messages.all { onAllNodes(hasText(it)).fetchSemanticsNodes().size == 1 }
+                }
+                val short = onNodeWithTag("podnya_user_message_1").getUnclippedBoundsInRoot()
+                val medium = onNodeWithTag("podnya_user_message_2").getUnclippedBoundsInRoot()
+                val long = onNodeWithTag("podnya_user_message_3").getUnclippedBoundsInRoot()
+                assertTrue(short.left > medium.left && medium.left > long.left)
+                assertEquals(maxBubbleWidth, long.right - long.left)
+                assertTrue(long.bottom - long.top > medium.bottom - medium.top)
+                assertEquals(long.right, short.right)
+                assertEquals(long.right, medium.right)
+            }
+        }
+    }
+
+    @Test
+    fun chatDownloadShowsReceiptAndOpensDownloads() = runDesktopComposeUiTest(width = 390, height = 844) {
+        Fixture(mode = Mode.DOWNLOAD, downloads = TestAssistantDownloadQueue()).use { fixture ->
+            setContent { fixture.Screen() }
+            waitUntil(timeoutMillis = 5_000) { fixture.viewModel.viewState.value.ready }
+            onNodeWithTag("podnya_composer").performTextReplacement("Download these episodes")
+            onNodeWithTag("podnya_send").performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                val content = fixture.repository.state.value.selected.turns.lastOrNull()?.content as? DownloadContent
+                content?.submissions?.singleOrNull()?.receipt?.added == 1
+            }
+            onNodeWithTag("podnya_messages").performScrollToNode(hasText(fixture.downloadReceiptLabel))
+            onNodeWithText(fixture.downloadReceiptLabel).assertIsDisplayed()
+            onNodeWithText(fixture.downloadMissingLabel).assertIsDisplayed()
+            onNodeWithText("1. MP3 · 64 kbps").performClick()
+            waitUntil(timeoutMillis = 5_000) {
+                val content = fixture.repository.state.value.selected.turns.lastOrNull()?.content as? DownloadContent
+                content?.submissions?.count { it.receipt?.added == 1 } == 2
+            }
+            onNodeWithTag("podnya_messages").performScrollToNode(hasText(fixture.openDownloadsLabel))
+            onNodeWithText(fixture.openDownloadsLabel).performClick()
+            waitUntil(timeoutMillis = 5_000) { fixture.downloadsOpened == 1 }
+        }
+    }
+
     @Test
     fun subscriptionCardShowsLocalContentAndOpensTheFeed() {
         val layouts = listOf(
@@ -617,6 +716,80 @@ class PodnyaScreenTest {
         }
 
     @Test
+    fun streamedReplyStaysInViewWhenRecommendationsArriveFirst() =
+        runDesktopComposeUiTest(width = 390, height = 600) {
+            val question = "Find subscriptions about music"
+            val opening = "I found these subscriptions in your library."
+            val ending = "Start with the first recommendation."
+            var turn by mutableStateOf(AssistantSessionTurn(id = 1, question = question))
+            var followLatest by mutableStateOf(true)
+            val session = AssistantSessionState()
+            var latestLabel = ""
+            setContent {
+                CompositionLocalProvider(LocalCapabilityUis provides listOf(FeedSearchUi)) {
+                    MaterialTheme {
+                        latestLabel = stringResource(Res.string.podnya_latest)
+                        PodnyaMessageList(
+                            uiState = PodnyaState.initial(
+                                conversations = AssistantConversationsState(
+                                    selected = session.copy(turns = listOf(turn)),
+                                ),
+                                available = true,
+                            ),
+                            listState = rememberLazyListState(),
+                            followLatest = followLatest,
+                            onFollowLatest = { followLatest = it },
+                            keyboardVisible = false,
+                            onHideKeyboard = {},
+                            formatDate = { "" },
+                            dispatch = {},
+                        )
+                    }
+                }
+            }
+
+            val questionNode = onNodeWithText(question).assertIsDisplayed()
+            val questionTop = questionNode.getUnclippedBoundsInRoot().top
+            runOnIdle {
+                turn = turn.copy(content = FeedSearchContent(
+                    feeds = List(8) { index ->
+                        RecommendedFeed(
+                            feed = AssistantFeed(
+                                feedId = "feed-$index",
+                                title = "Music feed $index",
+                                description = "",
+                                muted = false,
+                            ),
+                            reason = "A discussion about music across generations.",
+                            feedUrl = "https://example.test/feeds/$index",
+                        )
+                    },
+                    hadCandidates = true,
+                ))
+            }
+            questionNode.assertIsDisplayed()
+            assertEquals(questionTop, questionNode.getUnclippedBoundsInRoot().top)
+            runOnIdle { turn = turn.copy(reply = "**$opening**") }
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodes(hasText(opening)).fetchSemanticsNodes().size == 1
+            }
+            onNodeWithText(opening).assertIsDisplayed()
+
+            runOnIdle { turn = turn.copy(reply = "${turn.reply}\n\n${LONG_REPLY_CHUNK}\n\n**$ending**") }
+            waitUntil(timeoutMillis = 5_000) {
+                onAllNodes(hasText(ending)).fetchSemanticsNodes().size == 1
+            }
+            val endingNode = onNodeWithText(ending).assertIsDisplayed()
+            val latest = onNodeWithText(latestLabel).assertIsDisplayed()
+            assertTrue(endingNode.getUnclippedBoundsInRoot().bottom <= latest.getUnclippedBoundsInRoot().top)
+
+            runOnIdle { turn = turn.copy(status = AssistantTurnStatus.COMPLETED) }
+            endingNode.assertIsDisplayed()
+            latest.performClick()
+            onNodeWithTag("podnya_conversation_end").assertIsDisplayed()
+        }
+
+    @Test
     fun scrollingUpDuringMarkdownStreamingKeepsTheReadingPosition() =
         runDesktopComposeUiTest(width = 390, height = 844) {
             Fixture(mode = Mode.LONG_REPLY).use { fixture ->
@@ -669,8 +842,10 @@ class PodnyaScreenTest {
                 assertEquals(AssistantTurnStatus.RUNNING, fixture.repository.state.value.selected.turns.single().status)
                 assertFalse(fixture.assistant.cancelled.get())
                 onNodeWithTag("podnya_stop").performClick()
-                waitUntil(timeoutMillis = 5_000) { fixture.assistant.cancelled.get() }
-                assertEquals(AssistantTurnStatus.STOPPED, fixture.repository.state.value.selected.turns.single().status)
+                waitUntil(timeoutMillis = 5_000) {
+                    fixture.assistant.cancelled.get() &&
+                            fixture.repository.state.value.selected.turns.single().status == AssistantTurnStatus.STOPPED
+                }
                 assertEquals(1, fixture.assistant.requests.get())
             }
         }
@@ -1170,7 +1345,7 @@ class PodnyaScreenTest {
     private data object TestRoute : NavKey
 
     private data class Layout(val name: String, val width: Int, val height: Int, val dark: Boolean = false, val fontScale: Float = 1f)
-    private enum class Mode { FEEDS, RESULTS, WAITING, FAIL_FIRST, LONG_REPLY, OTHER_CAPABILITY, BACKGROUND_REPLY }
+    private enum class Mode { FEEDS, RESULTS, WAITING, FAIL_FIRST, LONG_REPLY, OTHER_CAPABILITY, BACKGROUND_REPLY, DOWNLOAD }
 
     private data class SampleContent(val label: String) : AssistantContent {
         override val retainedBytes = label.encodeToByteArray().size
@@ -1183,6 +1358,7 @@ class PodnyaScreenTest {
         configured: Boolean = true,
         mode: Mode = Mode.RESULTS,
         conversationStore: ConversationStore = InMemoryConversationStore(),
+        downloads: IAssistantDownloadRepository? = null,
     ) : AutoCloseable {
         val assistant = FakeAssistant(mode)
         private val preferences = object : DataStore<Preferences> {
@@ -1197,7 +1373,12 @@ class PodnyaScreenTest {
                     )
             }
         }
-        val repository = AssistantConversationRepository(assistant = assistant, settings = settings, store = conversationStore)
+        val repository = AssistantConversationRepository(
+            assistant = assistant,
+            settings = settings,
+            capabilities = listOfNotNull(downloads?.let { DownloadConversation(it) }),
+            store = conversationStore,
+        )
         var viewModel = PodnyaViewModel(repository, settings)
             private set
         private val store = ViewModelStore().apply { put("podnya", viewModel) }
@@ -1213,6 +1394,10 @@ class PodnyaScreenTest {
         }
         var settingsOpened = 0
         var searchOpened = 0
+        var downloadsOpened = 0
+        var openDownloadsLabel = ""
+        var downloadReceiptLabel = ""
+        var downloadMissingLabel = ""
         var openedArticle: String? = null
         var openedFeed: String? = null
         var formattedDate: Long? = null
@@ -1246,6 +1431,7 @@ class PodnyaScreenTest {
                 }, TestRoute,
             )
             CompositionLocalProvider(
+                LocalCapabilityUis provides listOf(ArticleSearchUi, FeedSearchUi, DownloadUi),
                 LocalLifecycleOwner provides owner,
                 LocalDensity provides Density(1f, fontScale),
                 LocalNavBackStack provides newNavBackStack(backStack, parent = null),
@@ -1267,11 +1453,15 @@ class PodnyaScreenTest {
                     deleteStopLabel = stringResource(Res.string.podnya_delete_stop)
                     saveLabel = stringResource(Res.string.podnya_save)
                     retrySaveLabel = stringResource(Res.string.podnya_retry_save)
+                    openDownloadsLabel = stringResource(Res.string.podnya_download_open)
+                    downloadReceiptLabel = stringResource(Res.string.podnya_download_result, 1, 0, 0)
+                    downloadMissingLabel = stringResource(Res.string.podnya_download_missing_attachment, "No enclosure")
                     Surface {
                         PodnyaScreen(viewModel, formatArticleDate, onBack = {}, onSettings = { settingsOpened++ },
                             onAction = { action ->
                                 if (action is ArticleSearchAction.OpenArticle) openedArticle = action.articleId
                                 if (action is FeedSearchAction.OpenFeed) openedFeed = action.feedUrl
+                                if (action == OpenDownloads) downloadsOpened++
                             }, onSearch = { searchOpened++ }, windowInsets = WindowInsets(0))
                     }
                 }
@@ -1294,6 +1484,29 @@ class PodnyaScreenTest {
         override fun run(request: AssistantTurnRequest, connection: com.skyd.podaura.podnya.core.AssistantConnection) = flow {
             lastQuestion = request.question
             val attempt = requests.incrementAndGet()
+            if (mode == Mode.DOWNLOAD) {
+                emit(AssistantRunEvent.Handoff(ValidatedDownloadPlan(
+                    targets = listOf(AssistantDownloadTarget.DirectLink("https://example.test/episode.mp3")),
+                    choices = listOf(DownloadChoice(
+                        id = "version",
+                        title = "Two versions",
+                        options = listOf(
+                            DownloadOption(
+                                id = "1",
+                                title = "MP3 · 64 kbps",
+                                targets = listOf(AssistantDownloadTarget.Attachment(articleId = "two", url = "https://example.test/low.mp3")),
+                            ),
+                            DownloadOption(
+                                id = "2",
+                                title = "MP3 · 128 kbps",
+                                targets = listOf(AssistantDownloadTarget.Attachment(articleId = "two", url = "https://example.test/high.mp3")),
+                            ),
+                        ),
+                    )),
+                    issues = listOf(DownloadIssue(title = "No enclosure", kind = DownloadIssueKind.MISSING_ATTACHMENT)),
+                )))
+                return@flow
+            }
             if (mode == Mode.FEEDS) {
                 emit(AssistantRunEvent.ContentReady(FeedSearchContent(listOf(RecommendedFeed(
                     AssistantFeed("feed-1", "音乐与生活", "聊聊音乐、城市与创作背后的故事。", true),

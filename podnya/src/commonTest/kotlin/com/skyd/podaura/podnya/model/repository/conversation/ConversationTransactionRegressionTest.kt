@@ -1,6 +1,7 @@
 package com.skyd.podaura.podnya.model.repository.conversation
 
 import com.skyd.podaura.podnya.core.*
+import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
 import com.skyd.podaura.podnya.model.bean.conversation.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -17,6 +18,89 @@ class ConversationTransactionRegressionTest {
             for (event in events) emit(event)
         }
         override suspend fun verify(connection: suspend () -> AssistantConnection) = AssistantConnectionResult(true)
+    }
+
+    @Test
+    fun aCapabilityCanEditEarlierRepliesWhenCompletingAHandoff() = runTest {
+        val editReplies = object : AssistantHandoff {}
+        val reply = AssistantReplyContent(parts = emptyList(), kind = AssistantAnswerKind.RESULTS, text = "Updated")
+        val capability = object : ConversationCapability {
+            override suspend fun accept(handoff: AssistantHandoff, admission: ConversationAdmission): Boolean {
+                if (handoff !== editReplies) return false
+                val earlier = admission.conversation.recentTurns(limit = 2, throughTurnId = admission.turn.id - 1)
+                return admission.commit(content = reply, updatedTurns = earlier.map { it.copy(reply = "Updated") })
+            }
+        }
+        val runtime = Runtime()
+        val store = InMemoryConversationStore()
+        val repo = AssistantConversationRepository(
+            assistant = runtime,
+            settings = conversationSettings(),
+            capabilities = listOf(capability),
+            store = store,
+            scope = backgroundScope,
+        )
+        val events = listOf(AssistantRunEvent.Completed, AssistantRunEvent.Completed, AssistantRunEvent.Handoff(editReplies))
+        for ((index, event) in events.withIndex()) {
+            runtime.events.send(event)
+            repo.editDraft("Turn ${index + 1}")
+            assertTrue(repo.sendDraft())
+            runCurrent()
+        }
+        val selected = repo.state.value.selected
+        assertEquals(listOf("Updated", "Updated"), selected.turns.dropLast(1).map { it.reply })
+        assertEquals(reply, selected.turns.last().content)
+        assertEquals(selected.turns, store.tail(id = selected.id, limit = 3))
+    }
+
+    @Test
+    fun closeWaitsForWorkStartedByACustomRetry() = runTest {
+        val release = CompletableDeferred<Unit>()
+        val memory = InMemoryConversationStore()
+        var storeClosed = false
+        val store = object : ConversationStore by memory {
+            override suspend fun close() {
+                storeClosed = true
+            }
+        }
+        val capability = object : ConversationCapability {
+            override suspend fun restore(conversation: ConversationAccess, turn: AssistantSessionTurn) =
+                turn.copy(reply = "Recovered reply")
+
+            override suspend fun retry(conversation: ConversationAccess, turn: AssistantSessionTurn): Boolean {
+                assertEquals(AssistantTurnStatus.COMPLETED, turn.status)
+                assertEquals("Recovered reply", turn.reply)
+                conversation.scope.launch {
+                    release.await()
+                    conversation.write { conversation.updateTurns(listOf(turn.copy(reply = "Retried locally"))) }
+                }
+                return true
+            }
+        }
+        val runtime = Runtime()
+        val repo = AssistantConversationRepository(
+            assistant = runtime,
+            settings = conversationSettings(),
+            capabilities = listOf(capability),
+            store = store,
+            scope = backgroundScope,
+        )
+        repo.editDraft("Retry locally")
+        assertTrue(repo.sendDraft())
+        runCurrent()
+        assertFalse(repo.retryLast())
+        runtime.events.send(AssistantRunEvent.Completed)
+        runCurrent()
+        assertEquals("", memory.tail(id = repo.state.value.selected.id, limit = 1).single().reply)
+        assertTrue(repo.retryLast())
+        val closing = repo.close()
+        runCurrent()
+        assertFalse(storeClosed)
+        assertFalse(repo.retryLast())
+        release.complete(Unit)
+        closing.join()
+        assertTrue(storeClosed)
+        assertEquals("Retried locally", memory.tail(id = repo.state.value.selected.id, limit = 1).single().reply)
     }
 
     @Test

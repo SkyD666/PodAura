@@ -1,7 +1,7 @@
 package com.skyd.podaura.podnya.capabilities.feeds.model.bean
 
-import com.skyd.podaura.api.model.bean.FeedQuery
 import com.skyd.podaura.api.model.bean.KeywordMatch
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantFailure
 import kotlinx.serialization.Serializable

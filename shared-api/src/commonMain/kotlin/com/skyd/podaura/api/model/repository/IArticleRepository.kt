@@ -1,8 +1,8 @@
 package com.skyd.podaura.api.model.repository
 
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleRecord
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleRecord
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 
 /** Read-only article storage supplied by the host app. Returns raw fields so each caller can prepare the text it needs. */
 interface IArticleRepository {

@@ -51,6 +51,7 @@
     <string name="download_screen_name">Download task</string>
     <string name="download_pause">Pause</string>
     <string name="download_error_paused">Error</string>
+    <string name="download_direct_file_link_required">Provide a direct file link</string>
     <string name="download_click_to_seeding">Seed</string>
     <string name="download_initializing">Initializing…</string>
     <string name="download_completed">Completed</string>

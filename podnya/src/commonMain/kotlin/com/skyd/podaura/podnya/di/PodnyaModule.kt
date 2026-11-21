@@ -1,9 +1,5 @@
 package com.skyd.podaura.podnya.di
 
-import com.skyd.podaura.podnya.capabilities.articles.di.articleSearchModule
-import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
-import com.skyd.podaura.podnya.capabilities.feeds.model.FeedHistoryCodec
-import com.skyd.podaura.podnya.capabilities.feeds.model.repository.LocalFeedSearchRepository
 import com.skyd.podaura.podnya.model.db.ConversationRecordCodec
 import com.skyd.podaura.podnya.model.repository.conversation.AssistantConversationRepository
 import com.skyd.podaura.podnya.model.repository.conversation.ConversationStore
@@ -20,21 +16,17 @@ import org.koin.dsl.onClose
 import kotlin.time.Duration.Companion.milliseconds
 
 val podnyaModule = module {
-    includes(assistantPlatformModule, articleSearchModule)
-    single { LocalFeedSearchRepository(get()) }
+    includes(assistantPlatformModule)
     single { AssistantSettingsRepository(get(), get()) }
-    single<ConversationStore> {
-        RoomConversationStore(
-            ConversationRecordCodec(
-                listOf(
-                    ArticleHistoryCodec,
-                    FeedHistoryCodec
-                )
-            )
-        )
-    }
+    single { ConversationRecordCodec(getAll()) }
+    single<ConversationStore> { RoomConversationStore(get()) }
     single {
-        AssistantConversationRepository(assistant = get(), settings = get(), store = get())
+        AssistantConversationRepository(
+            assistant = get(),
+            settings = get(),
+            capabilities = getAll(),
+            store = get(),
+        )
     }.onClose { repository ->
         // Koin only closes instances that were actually created. Desktop shutdown awaits this
         // best-effort flush; periodic saves remain the protection against forced termination.

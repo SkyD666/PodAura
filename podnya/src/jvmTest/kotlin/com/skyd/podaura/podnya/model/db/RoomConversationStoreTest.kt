@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.model.db
 
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.*
 import com.skyd.podaura.podnya.capabilities.feeds.model.FeedHistoryCodec
@@ -131,16 +131,69 @@ class RoomConversationStoreTest {
             assertTrue(window.hasBefore && window.hasAfter)
             assertTrue(window.turns.any { it.id == 75L })
             assertEquals((145L..150L).toList(), store.tail(id = id, limit = 6).map { it.id })
+            assertEquals((70L..75L).toList(), store.tail(id = id, limit = 6, throughTurnId = 75L).map { it.id })
             val dao = database!!.conversationDao()
             val original = dao.metadata(id.toString())!!
+            val originalTurn = dao.turn(id = id.toString(), turnId = 75)!!
             assertFails {
                 dao.commit(
                     metadata = original.copy(title = "Should roll back"),
-                    turn = ConversationTurnRecord(conversationId = Uuid.random().toString(), turnId = 1, question = "invalid FK", createdAt = 0),
+                    turns = listOf(
+                        originalTurn.copy(question = "Should roll back"),
+                        ConversationTurnRecord(
+                            conversationId = Uuid.random().toString(),
+                            turnId = 1,
+                            question = "invalid FK",
+                            createdAt = 0,
+                        ),
+                    ),
                     workspace = null,
                 )
             }
             assertEquals(original, dao.metadata(id.toString()))
+            assertEquals(originalTurn, dao.turn(id = id.toString(), turnId = 75))
+        } finally {
+            store.close()
+            directory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun recentCapabilityTurnsSkipMalformedAndUnrelatedRecordsAndLimitMatches() = runBlocking {
+        val directory = Files.createTempDirectory("podnya-room-capability").toFile()
+        val path = directory.resolve("history.db").path
+        val store = RoomConversationStore(codec = codec, path = { path })
+        val metadata = AssistantSessionState()
+        fun record(capabilityId: String): String = Json.encodeToString(CapabilityRecord(
+            capabilityId = capabilityId,
+            version = 1,
+            payload = "{}",
+            fallback = "",
+        ))
+        try {
+            store.open()
+            store.commit(metadata = metadata)
+            store.commitTurns(
+                id = metadata.id,
+                turns = listOf(record("example"), record("other"), record("example"), "{invalid", null)
+                    .mapIndexed { index, raw ->
+                        AssistantSessionTurn(
+                            id = index + 1L,
+                            question = "Question $index",
+                            content = raw?.let { UnreadableContent(raw = it, fallback = "") },
+                        )
+                    },
+            )
+            assertEquals(listOf(1L, 3L), store.recentCapabilityTurns(
+                id = metadata.id,
+                capabilityId = "example",
+                limit = 2,
+            ).map { it.id })
+            assertEquals(listOf(3L), store.recentCapabilityTurns(
+                id = metadata.id,
+                capabilityId = "example",
+                limit = 1,
+            ).map { it.id })
         } finally {
             store.close()
             directory.deleteRecursively()

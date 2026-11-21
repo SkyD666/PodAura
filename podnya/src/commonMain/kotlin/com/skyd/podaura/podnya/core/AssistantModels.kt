@@ -17,6 +17,9 @@ interface AssistantContent {
     val retainedBytes: Int
     fun historySnapshot(): AssistantHistorySnapshot?
 
+    /** Keep earlier local evidence when displaying this reply. */
+    val keepsPreviousLocalSnapshot: Boolean get() = false
+
     /** Compact history used when budgeting and building model requests. */
     fun promptHistorySnapshot(): AssistantHistorySnapshot? = historySnapshot()
 }
@@ -39,12 +42,19 @@ data class AssistantHistoryTurn(
     val content: AssistantHistorySnapshot? = null,
 )
 
+/** Capability-owned local facts supplied by the application for this turn. */
+interface AssistantRequestEvidence
+
+/** A validated capability result for application-owned work. */
+interface AssistantHandoff
+
 data class AssistantTurnRequest(
     val question: String,
     val context: AssistantContext = AssistantContext.Empty,
     val history: List<AssistantHistoryTurn> = emptyList(),
     /** Complete evidence from the most recent eligible turn, reserved for local capability checks. */
     val latestLocalSnapshot: AssistantHistorySnapshot? = null,
+    val evidence: List<AssistantRequestEvidence> = emptyList(),
 )
 
 interface AssistantProgress
@@ -73,6 +83,7 @@ class AssistantException(val error: AssistantFailure) : Exception(error.toString
 sealed interface AssistantRunEvent {
     data class Progress(val progress: AssistantProgress) : AssistantRunEvent
     data class ContentReady(val content: AssistantContent) : AssistantRunEvent
+    data class Handoff(val handoff: AssistantHandoff) : AssistantRunEvent
     data class ReplyDelta(val text: String) : AssistantRunEvent
     data object Completed : AssistantRunEvent
     data class Failed(val error: AssistantFailure, val content: AssistantContent? = null) :

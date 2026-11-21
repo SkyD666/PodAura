@@ -11,8 +11,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +39,7 @@ internal fun PodnyaMarkdown(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
+    fillWidth: Boolean = true,
 ) {
     // The library conflates full snapshots and parses on Dispatchers.Default without blanking
     // the previous result. Each message owns its parser; no persisted AST or shared mutable cache.
@@ -55,7 +56,7 @@ internal fun PodnyaMarkdown(
     SelectionContainer(modifier = modifier) {
         Markdown(
             state = parsed,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
             colors = markdownColor(text = LocalContentColor.current),
             typography = markdownTypography(
                 h1 = MaterialTheme.typography.headlineMedium,

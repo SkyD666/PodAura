@@ -140,4 +140,20 @@
     <string name="podnya_article_reference_unavailable">在目前的搜尋範圍內找不到這篇文章。</string>
     <string name="podnya_article_choose_field">你想查的是標題、Podcast 名稱，還是發布日期？</string>
     <string name="podnya_article_field_unsupported">我可以查詢這則推薦的標題、Podcast 名稱和發布日期。</string>
+    <string name="podnya_download_choose">選擇要下載的附件 · %1$s</string>
+    <string name="podnya_download_choices_on_origin">附件選項已新增到上方的原始下載訊息。</string>
+    <string name="podnya_download_clarification_required">請說明要下載的項目、訂閱或範圍。%1$s</string>
+    <string name="podnya_download_failed">有 %1$d 項未能加入下載佇列。</string>
+    <string name="podnya_download_file_link_required">請傳送檔案的直接連結。</string>
+    <string name="podnya_download_limit">符合條件的下載有 %1$d 項，本批次最多還能新增 %2$d 項。本次未新增下載，請縮小範圍後再試。</string>
+    <string name="podnya_download_link_check_failed">無法驗證檔案連結，請檢查網址後重新傳送。</string>
+    <string name="podnya_download_missing_attachment">「%1$s」沒有附件。</string>
+    <string name="podnya_download_no_match">沒有符合本次下載條件的本機文章。</string>
+    <string name="podnya_download_open">查看下載</string>
+    <string name="podnya_download_refresh">查看提交狀態</string>
+    <string name="podnya_download_result">新增 %1$d 項 · 已有 %2$d 項 · 加入失敗 %3$d 項</string>
+    <string name="podnya_download_stale_choice">可下載的選項已變更，請選擇目前的選項或重新提出下載要求。</string>
+    <string name="podnya_download_submitting">正在加入下載佇列…</string>
+    <string name="podnya_download_unavailable_article">無法驗證文章「%1$s」。</string>
+    <string name="podnya_download_unconfirmed">暫未查到本次提交的下載結果。</string>
 </resources>

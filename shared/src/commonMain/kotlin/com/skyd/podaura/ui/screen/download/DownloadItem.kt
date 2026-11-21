@@ -39,6 +39,7 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.compone.ext.thenIf
 import com.skyd.downloader.Status
+import com.skyd.downloader.download.DownloadFailureCode
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.download.ArticleDownloadInfoBean
 import com.skyd.podaura.model.download.DownloadInfoBean
@@ -53,6 +54,7 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.delete
 import podaura.shared.generated.resources.download
 import podaura.shared.generated.resources.download_completed
+import podaura.shared.generated.resources.download_direct_file_link_required
 import podaura.shared.generated.resources.download_download_payload_rate
 import podaura.shared.generated.resources.download_error_paused
 import podaura.shared.generated.resources.download_initializing
@@ -75,7 +77,7 @@ fun DownloadItem(
     var pauseButtonEnabled by rememberSaveable { mutableStateOf(true) }
     var cancelButtonEnabled by rememberSaveable { mutableStateOf(true) }
 
-    LaunchedEffect(data.status) {
+    LaunchedEffect(data.status, data.failureCode) {
         when (data.status) {
             Status.Downloading -> {
                 pauseButtonEnabled = true
@@ -89,7 +91,13 @@ fun DownloadItem(
                 pauseButtonIcon = Icons.Outlined.Refresh
                 pauseButtonContentDescription =
                     getString(podaura.downloader.generated.resources.Res.string.download_retry)
-                description = getString(Res.string.download_error_paused)
+                description = getString(
+                    if (data.failureCode == DownloadFailureCode.Webpage) {
+                        Res.string.download_direct_file_link_required
+                    } else {
+                        Res.string.download_error_paused
+                    },
+                )
             }
 
             Status.Cancelled -> {

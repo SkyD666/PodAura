@@ -2,8 +2,8 @@ package com.skyd.podaura.model.repository.feed
 
 import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.skyd.podaura.api.model.bean.FeedQuery
 import com.skyd.podaura.api.model.bean.KeywordMatch
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
 import com.skyd.podaura.model.bean.feed.FeedBean
 import com.skyd.podaura.model.db.AppDatabase
 import com.skyd.podaura.model.db.instance

@@ -5,6 +5,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantError
@@ -12,7 +13,6 @@ import com.skyd.podaura.podnya.core.AssistantFailure
 import com.skyd.podaura.podnya.core.AssistantPhase
 import com.skyd.podaura.podnya.core.AssistantProgress
 import com.skyd.podaura.podnya.core.UnreadableContent
-import com.skyd.podaura.podnya.di.podnyaCapabilityUis
 import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_content_unreadable
@@ -21,9 +21,11 @@ import com.skyd.podnya.resources.podnya_processing
 import com.skyd.podnya.resources.podnya_reply_streaming
 import org.jetbrains.compose.resources.stringResource
 
+internal val LocalCapabilityUis = staticCompositionLocalOf { emptyList<AssistantCapabilityUi>() }
+
 @Composable
 fun podnyaProgressText(progress: AssistantProgress?): String {
-    for (ui in podnyaCapabilityUis) ui.progressText(progress)?.let { return it }
+    for (ui in LocalCapabilityUis.current) ui.progressText(progress)?.let { return it }
     return stringResource(
         when (progress) {
             AssistantPhase.STREAMING -> Res.string.podnya_reply_streaming
@@ -35,7 +37,7 @@ fun podnyaProgressText(progress: AssistantProgress?): String {
 
 @Composable
 fun podnyaFailureText(error: AssistantFailure): String {
-    for (ui in podnyaCapabilityUis) ui.failureText(error)?.let { return it }
+    for (ui in LocalCapabilityUis.current) ui.failureText(error)?.let { return it }
     return podnyaErrorText(error as? AssistantError ?: AssistantError.INVALID_OUTPUT)
 }
 
@@ -51,6 +53,7 @@ internal fun PodnyaReplyText(text: String, content: AssistantContent?) {
 fun LazyListScope.podnyaContent(
     turnId: Long, content: AssistantContent, showFallbackText: Boolean,
     formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
+    uis: List<AssistantCapabilityUi>,
     keyPrefix: String = turnId.toString(),
 ) {
     if (content is AssistantReplyContent) {
@@ -66,19 +69,22 @@ fun LazyListScope.podnyaContent(
                 showFallbackText = showFallbackText,
                 formatDate = formatDate,
                 onAction = onAction,
+                uis = uis,
                 keyPrefix = "$keyPrefix-part-$index",
             )
         }
     } else {
-        val ui = podnyaCapabilityUis.firstOrNull { it.supports(content) }
-        if (ui != null) with(ui) {
-            render(
-                turnId = keyPrefix,
-                content = content,
-                showFallbackText = showFallbackText,
-                formatDate = formatDate,
-                onAction = onAction
-            )
+        val ui = uis.firstOrNull { it.supports(content) }
+        if (ui != null) {
+            with(ui) {
+                render(
+                    turnId = keyPrefix,
+                    content = content,
+                    showFallbackText = showFallbackText,
+                    formatDate = formatDate,
+                    onAction = onAction,
+                )
+            }
         } else {
             item(key = "$keyPrefix-unknown-content") {
                 PodnyaMarkdown(
@@ -96,6 +102,7 @@ internal fun podnyaContentKeys(
     turnId: Long,
     content: AssistantContent,
     showFallbackText: Boolean,
+    uis: List<AssistantCapabilityUi>,
     keyPrefix: String = turnId.toString()
 ): List<String> =
     if (content is AssistantReplyContent) {
@@ -107,13 +114,14 @@ internal fun podnyaContentKeys(
                         turnId = turnId,
                         content = part,
                         showFallbackText = showFallbackText,
+                        uis = uis,
                         keyPrefix = "$keyPrefix-part-$index"
                     )
                 )
             }
         }
     } else {
-        podnyaCapabilityUis.firstOrNull { it.supports(content) }
+        uis.firstOrNull { it.supports(content) }
             ?.itemKeys(turnId = keyPrefix, content = content, showFallbackText = showFallbackText)
             ?: listOf("$keyPrefix-unknown-content")
     }

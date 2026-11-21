@@ -16,6 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class DownloadTransferEngineTest {
     @Test
@@ -109,6 +110,86 @@ class DownloadTransferEngineTest {
             assertEquals(DownloadFailureCode.InsecureRedirect, failure.code)
         } finally {
             client.close()
+        }
+    }
+
+    @Test
+    fun directLinksValidateTheActualBodyBeforeWritingAndPreserveAcceptedBytes() = runTest {
+        val directory = Files.createTempDirectory("downloader-direct-link-test")
+        val contents = listOf(
+            "plain login" to "text/html; charset=UTF-8",
+            "\uFEFF <!-- site -->\n<!DOCTYPE HTML><video>" to "application/octet-stream",
+            "binary data ".repeat(70) to "application/octet-stream",
+            "<html>deliberate attachment</html>" to "text/html",
+            "<html>ordinary attachment</html>" to "text/html",
+        )
+        val client = HttpClient(MockEngine { request ->
+            val index = request.url.segments.last().substringBefore('.').toInt()
+            val (body, mime) = contents[index]
+            respond(
+                content = body,
+                headers = headersOf(
+                    HttpHeaders.ContentType to listOf(mime),
+                    HttpHeaders.ContentDisposition to if (index == 3) {
+                        listOf("attachment; filename=archive.html")
+                    } else {
+                        emptyList()
+                    },
+                ),
+            )
+        })
+        try {
+            val engine = DownloadTransferEngine(client)
+            for ((index, content) in contents.withIndex()) {
+                val name = "$index.mp3"
+                val download = entity(directory.toString()).copy(
+                    url = "https://example.com/$name",
+                    fileName = name,
+                    requireFileResponse = index < 4,
+                    batchId = "direct".takeIf { index < 4 },
+                )
+                if (index < 2) {
+                    val failure = assertFailsWith<DownloadFailure> {
+                        engine.transfer(entity = download, onResponse = { name }, onProgress = {})
+                    }
+                    assertEquals(DownloadFailureCode.Webpage, failure.code)
+                    assertFalse(failure.retryable)
+                    assertFalse(directory.resolve(name).exists())
+                    assertFalse(directory.resolve("$name.part").exists())
+                } else {
+                    engine.transfer(entity = download, onResponse = { name }, onProgress = {})
+                    assertEquals(content.first, directory.resolve(name).readText())
+                }
+            }
+        } finally {
+            client.close()
+            directory.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun batchTransferPreservesAFileThatAppearsAfterClaimingTheDestination() = runTest {
+        val directory = Files.createTempDirectory("downloader-collision-test")
+        val target = directory.resolve("episode.mp3")
+        val client = HttpClient(MockEngine { respond("new bytes") })
+        try {
+            val task = entity(directory.toString()).copy(batchId = "batch")
+            val failure = assertFailsWith<DownloadFailure> {
+                DownloadTransferEngine(client).transfer(
+                    entity = task,
+                    files = BatchDownloadFiles(entity = task, savePublication = { _, _ -> }),
+                    onResponse = { "episode.mp3" },
+                    onProgress = {
+                        if (it.downloadedBytes > 0) target.writeText("user file")
+                    },
+                )
+            }
+            assertEquals(DownloadFailureCode.Storage, failure.code)
+            assertTrue(target.exists())
+            assertEquals("user file", target.readText())
+        } finally {
+            client.close()
+            directory.toFile().deleteRecursively()
         }
     }
 

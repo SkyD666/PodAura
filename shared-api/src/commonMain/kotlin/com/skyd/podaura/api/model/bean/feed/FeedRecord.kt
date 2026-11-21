@@ -1,4 +1,4 @@
-package com.skyd.podaura.api.model.bean
+package com.skyd.podaura.api.model.bean.feed
 
 /** Public subscription details. Request headers and other credentials are never included. */
 data class FeedRecord(

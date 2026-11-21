@@ -1,8 +1,8 @@
 package com.skyd.podaura.podnya.capabilities.articles
 
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleRecord
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleRecord
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.api.model.repository.IArticleRepository
 import com.skyd.podaura.podnya.capabilities.articles.model.ArticleHistoryCodec
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleField
@@ -47,6 +47,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -144,18 +146,16 @@ class ArticleFieldLookupTest {
     private suspend fun runLookup(question: String, json: String, history: AssistantHistoryTurn) =
         runLookup(request(question, history), lookupScript(json))
 
-    private suspend fun runDirect(question: String, history: AssistantHistoryTurn): AssistantReplyContent =
-        runDirect(request(question, history))
-
-    private suspend fun runDirect(
+    private suspend fun select(
         request: AssistantTurnRequest,
+        articleId: String?,
         catalog: LocalArticleSearchRepository = source,
     ): AssistantReplyContent {
-        val runtime = KoogAssistantRuntime(
-            capabilities = testCapabilities(catalog, emptyFeedSource()),
-            httpClient = { error("An exact choice should complete without an HTTP client") },
-        )
-        return content(runtime.run(request = request, connection = astra()).toList())
+        val arguments = buildJsonObject {
+            articleId?.let { put("articleId", it) }
+            put("articleField", "KEEP")
+        }
+        return content(runLookup(request = request, script = lookupScript(arguments.toString()), catalog = catalog))
     }
 
     private fun content(events: List<AssistantRunEvent>): AssistantReplyContent {
@@ -213,7 +213,7 @@ class ArticleFieldLookupTest {
             assertTrue(pending.needsSelection)
             assertTrue(queries.isEmpty())
 
-            val source = runDirect(question = "2", history = restored(question, clarification))
+            val source = select(request("2", restored(question, clarification)), "b")
             assertEquals("Fresh podcast", source.text)
             val selected = assertIs<ArticleReferences>(source.reference)
             assertEquals("b", selected.selectedId)
@@ -242,17 +242,17 @@ class ArticleFieldLookupTest {
     fun pendingChoicesAcceptThePrintedNumberCompleteTitleAndCopiedEntry() = runTest {
         withContext(Dispatchers.Default) {
             val history = pending("Alpha", "Beta (2)", "Gamma", choiceIds = listOf("b", "c"))
-            val notShown = runDirect(question = "1", history = history)
+            val notShown = select(request("1", history), null)
             assertEquals(AssistantAnswerKind.CLARIFICATION, notShown.kind)
             assertTrue(queries.isEmpty())
             for (question in listOf("2", "Beta (2)", "2. Beta (2)")) {
-                val answer = runDirect(question = question, history = history)
+                val answer = select(request(question, history), "b")
                 assertEquals(date, answer.text, question)
                 assertEquals("b", assertIs<ArticleReferences>(answer.reference).selectedId)
             }
-            val copied = runDirect(question = "2. Beta  ", history = pending("Alpha", "Beta  "))
+            val copied = select(request("2. Beta  ", pending("Alpha", "Beta  ")), "b")
             assertEquals(date, copied.text)
-            val untitled = runDirect(question = "2.", history = pending("Alpha", ""))
+            val untitled = select(request("2.", pending("Alpha", "")), "b")
             assertEquals(date, untitled.text)
             assertEquals(List(5) { "b" }, queries.map { it.withinArticleIds?.single() })
         }
@@ -261,11 +261,11 @@ class ArticleFieldLookupTest {
     @Test
     fun duplicateTitlesAndConflictingNumericTitlesAskForAChoiceWithoutReading() = runTest {
         withContext(Dispatchers.Default) {
-            val duplicates = runDirect(question = "Same title", history = pending("Same title", "Same title"))
-            val numericTitle = runDirect(question = "2", history = pending("2", "Beta"))
-            val numericTitleOutsideChoices = runDirect(
-                question = "2",
-                history = pending("2", "Beta", "Gamma", choiceIds = listOf("b", "c")),
+            val duplicates = select(request("Same title", pending("Same title", "Same title")), null)
+            val numericTitle = select(request("2", pending("2", "Beta")), null)
+            val numericTitleOutsideChoices = select(
+                request = request("2", pending("2", "Beta", "Gamma", choiceIds = listOf("b", "c"))),
+                articleId = null,
             )
             for (answer in listOf(duplicates, numericTitle, numericTitleOutsideChoices)) {
                 val references = assertIs<ArticleReferences>(answer.reference)
@@ -274,7 +274,7 @@ class ArticleFieldLookupTest {
                 assertTrue(references.needsSelection)
             }
             assertTrue(queries.isEmpty())
-            assertEquals(date, runDirect(question = "2. Beta", history = restored("2", numericTitle)).text)
+            assertEquals(date, select(request("2. Beta", restored("2", numericTitle)), "b").text)
             assertEquals(listOf("b"), queries.single().withinArticleIds)
         }
     }
@@ -282,7 +282,7 @@ class ArticleFieldLookupTest {
     @Test
     fun copiedEntrySelectsTheItemAndAsksForTheFieldLocally() = runTest {
         withContext(Dispatchers.Default) {
-            val answer = runDirect(question = "2. Beta", history = pending("Alpha", "Beta", pendingField = null))
+            val answer = select(request("2. Beta", pending("Alpha", "Beta", pendingField = null)), "b")
             val references = assertIs<ArticleReferences>(answer.reference)
             assertEquals(AssistantAnswerKind.CLARIFICATION, answer.kind)
             assertEquals("b", references.selectedId)
@@ -297,7 +297,7 @@ class ArticleFieldLookupTest {
         withContext(Dispatchers.Default) {
             val waiting = pending("2", "Beta", "Gamma", choiceIds = listOf("b", "c"))
             val restricted = ArticleSearchContext(ArticleSearchScope.Restricted(articleIds = setOf("a")))
-            val answer = runDirect(request("2", waiting).copy(context = restricted))
+            val answer = select(request("2", waiting).copy(context = restricted), "b")
 
             assertEquals(AssistantAnswerKind.CLARIFICATION, answer.kind)
             val references = assertIs<ArticleReferences>(answer.reference)
@@ -309,15 +309,15 @@ class ArticleFieldLookupTest {
     }
 
     @Test
-    fun noAuthorizedChoicesEndsClarificationForBothLookupPaths() = runTest {
+    fun noAuthorizedChoicesEndsClarificationForBothWordings() = runTest {
         withContext(Dispatchers.Default) {
             val waiting = pending("Alpha", "Beta", choiceIds = listOf("b"))
             val restricted = ArticleSearchContext(ArticleSearchScope.Restricted(articleIds = setOf("retired")))
-            val exact = runDirect(request("2", waiting).copy(context = restricted))
+            val numbered = select(request("2", waiting).copy(context = restricted), "b")
             val prose = request("The second recommendation", waiting).copy(context = restricted)
             val model = content(runLookup(prose, lookupScript("""{"articleId":"b","articleField":"KEEP"}""")))
 
-            for (answer in listOf(exact, model)) {
+            for (answer in listOf(numbered, model)) {
                 assertEquals(AssistantAnswerKind.NO_MATCH, answer.kind)
                 val references = assertIs<ArticleReferences>(answer.reference)
                 assertFalse(references.needsSelection)
@@ -444,11 +444,7 @@ class ArticleFieldLookupTest {
                 context = ArticleSearchContext(scope),
             )
             assertFalse(generated.history.single().content!!.payload.contains(fullTitle))
-            val runtime = KoogAssistantRuntime(
-                capabilities = testCapabilities(source, emptyFeedSource()),
-                httpClient = { error("The complete local title should resolve before HTTP") },
-            )
-            val answer = content(runtime.run(request = generated, connection = astra()).toList())
+            val answer = select(request = generated, articleId = "b")
             assertEquals(date, answer.text)
             assertEquals(listOf("b"), queries.single().withinArticleIds)
         }
@@ -552,7 +548,7 @@ class ArticleFieldLookupTest {
             })
             val waiting = pending("Alpha", "Beta", "Gamma", choiceIds = listOf("b", "c"))
             val restricted = ArticleSearchContext(feedScope)
-            val invalid = runDirect(request("99", waiting).copy(context = restricted), catalog)
+            val invalid = select(request = request("99", waiting).copy(context = restricted), articleId = null, catalog = catalog)
             assertEquals(AssistantAnswerKind.CLARIFICATION, invalid.kind)
             assertTrue(invalid.text.contains("2. Beta"))
             assertFalse(invalid.text.contains("Gamma"))
@@ -560,13 +556,13 @@ class ArticleFieldLookupTest {
             assertEquals(listOf("a", "b", "c"), reads.single().withinArticleIds)
 
             val waitingForField = pending("Alpha", "Beta", "Gamma", pendingField = null)
-            val retiredTitle = runDirect(request("Gamma", waitingForField).copy(context = restricted), catalog)
+            val retiredTitle = select(request = request("Gamma", waitingForField).copy(context = restricted), articleId = "c", catalog = catalog)
             assertEquals(AssistantAnswerKind.CLARIFICATION, retiredTitle.kind)
             assertNull(assertIs<ArticleReferences>(retiredTitle.reference).selectedId)
             assertFalse(retiredTitle.text.contains("Gamma"))
             assertEquals(2, reads.size)
 
-            val allowed = runDirect(request("2", waiting).copy(context = restricted), catalog)
+            val allowed = select(request = request("2", waiting).copy(context = restricted), articleId = "b", catalog = catalog)
             assertEquals(date, allowed.text)
             assertEquals(List(3) { ArticleSearchLimits.SEARCH_RESULTS } + 1, reads.map { it.limit })
             assertEquals(listOf("b"), reads.last().withinArticleIds)

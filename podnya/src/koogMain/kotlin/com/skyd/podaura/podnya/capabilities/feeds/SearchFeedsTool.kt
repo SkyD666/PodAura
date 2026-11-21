@@ -3,7 +3,7 @@ package com.skyd.podaura.podnya.capabilities.feeds
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.MessagePart
 import ai.koog.serialization.typeToken
-import com.skyd.podaura.api.model.bean.FeedQuery
+import com.skyd.podaura.api.model.bean.feed.FeedQuery
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.AssistantFeed
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchError
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchEvidence

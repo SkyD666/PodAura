@@ -3,6 +3,7 @@ package com.skyd.downloader.download
 import co.touchlab.kermit.Logger
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadDao
+import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.util.FileUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -31,48 +32,17 @@ internal class DownloadExecutor(
         }
 
         try {
-            val result = transferEngine.transfer(
+            val files = downloadTaskFiles(entity = initial, dao = downloadDao)
+            val totalBytes = files.recover { response ->
+                claimFileName(entity = initial, response = response, files = files)
+            } ?: transferEngine.transfer(
                 entity = initial,
+                files = files,
                 onResponse = { response ->
                     val current = downloadDao.find(id)
                         ?.takeIf { it.attemptId == attemptId }
                         ?: throw CancellationException("Download attempt is no longer current")
-                    val resolvedName = if (current.fileNameResolved) {
-                        current.fileName
-                    } else {
-                        FileUtil.sanitizeFileName(
-                            response.suggestedFileName
-                                ?: FileUtil.getFileNameFromUrl(response.finalUrl)
-                        )
-                    }
-                    FileUtil.validateTarget(current.path, resolvedName)
-                    if (
-                        downloadDao.claimResponseMetadata(
-                            id = id,
-                            attemptId = attemptId,
-                            path = current.path,
-                            fileName = resolvedName,
-                            eTag = response.eTag,
-                            lastModified = response.lastModified,
-                            finalUrl = response.finalUrl,
-                            totalBytes = response.totalBytes,
-                            updatedTime = now(),
-                        ) == 0
-                    ) {
-                        val latest = downloadDao.find(id)
-                        if (latest?.attemptId == attemptId &&
-                            (latest.status == Status.Started.name ||
-                                    latest.status == Status.Downloading.name)
-                        ) {
-                            throw DownloadFailure(
-                                DownloadFailureCode.DestinationConflict,
-                                "Another download already owns the target file",
-                                retryable = false,
-                            )
-                        }
-                        throw CancellationException("Download attempt is no longer current")
-                    }
-                    resolvedName
+                    claimFileName(entity = current, response = response, files = files)
                 },
                 onProgress = { progress ->
                     if (
@@ -89,11 +59,12 @@ internal class DownloadExecutor(
                     }
                     onProgress(progress)
                 },
-            )
-            if (downloadDao.markSuccess(id, attemptId, result.totalBytes, now()) == 0) {
+            ).totalBytes
+            if (downloadDao.markSuccess(id, attemptId, totalBytes, now()) == 0) {
                 return@withPermit DownloadExecutionResult.Ignored
             }
-            DownloadExecutionResult.Success(result.totalBytes)
+            files.finish()
+            DownloadExecutionResult.Success(totalBytes)
         } catch (error: CancellationException) {
             withContext(NonCancellable) {
                 downloadDao.markInterruptedQueued(id, attemptId, now())
@@ -116,8 +87,52 @@ internal class DownloadExecutor(
         }
     }
 
+    private suspend fun claimFileName(
+        entity: DownloadEntity,
+        response: TransferResponseMetadata,
+        files: DownloadTaskFiles,
+    ): String {
+        val resolvedName = if (entity.fileNameResolved) {
+            entity.fileName
+        } else {
+            FileUtil.sanitizeFileName(
+                response.suggestedFileName ?: FileUtil.getFileNameFromUrl(response.finalUrl)
+            )
+        }
+        val claimed = files.claimDestination(
+            fileName = resolvedName,
+            resuming = response.resuming
+        ) { fileName ->
+            FileUtil.validateTarget(entity.path, fileName)
+            downloadDao.claimResponseMetadata(
+                id = entity.id,
+                attemptId = entity.attemptId,
+                path = entity.path,
+                fileName = fileName,
+                eTag = response.eTag,
+                lastModified = response.lastModified,
+                finalUrl = response.finalUrl,
+                totalBytes = response.totalBytes,
+                updatedTime = now(),
+            ) > 0
+        }
+
+        if (claimed != null) return claimed
+        val latest = downloadDao.find(entity.id)
+        if (latest?.attemptId == entity.attemptId &&
+            (latest.status == Status.Started.name || latest.status == Status.Downloading.name)
+        ) {
+            throw DownloadFailure(
+                code = DownloadFailureCode.DestinationConflict,
+                message = "Another download already owns the target file",
+                retryable = false,
+            )
+        }
+        throw CancellationException("Download attempt is no longer current")
+    }
+
     private suspend fun handleFailure(
-        entity: com.skyd.downloader.db.DownloadEntity,
+        entity: DownloadEntity,
         attemptId: String,
         failure: DownloadFailure,
     ): DownloadExecutionResult {

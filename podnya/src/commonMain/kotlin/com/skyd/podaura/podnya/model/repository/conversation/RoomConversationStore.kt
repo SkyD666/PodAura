@@ -87,10 +87,25 @@ class RoomConversationStore(
             )
         }
 
-    override suspend fun tail(id: Uuid, limit: Int) =
-        dao.before(id = id.toString(), anchor = Long.MAX_VALUE, limit = limit)
+    override suspend fun tail(id: Uuid, limit: Int, throughTurnId: Long) =
+        dao.before(id = id.toString(), anchor = throughTurnId, limit = limit)
             .asReversed()
             .map(codec::decode)
+
+    override suspend fun turn(id: Uuid, turnId: Long) =
+        dao.turn(id = id.toString(), turnId = turnId)?.let(codec::decode)
+
+    override suspend fun recentCapabilityTurns(
+        id: Uuid,
+        capabilityId: String,
+        beforeTurnId: Long,
+        limit: Int
+    ) = dao.recentCapabilityTurns(
+        id = id.toString(),
+        recordPrefix = codec.contentPrefix(capabilityId),
+        beforeTurnId = beforeTurnId,
+        limit = limit,
+    ).asReversed().map(codec::decode)
 
     override suspend fun window(id: Uuid, anchor: Long?, limit: Int): ConversationWindow {
         require(limit in 2..100)
@@ -121,7 +136,7 @@ class RoomConversationStore(
         require(turn == null || metadata != null)
         dao.commit(
             metadata = metadata?.let(codec::encode),
-            turn = turn?.let { codec.encode(id = metadata!!.id, value = it) },
+            turns = listOfNotNull(turn?.let { codec.encode(id = metadata!!.id, value = it) }),
             workspace = workspace?.record(),
         )
     }
@@ -134,6 +149,16 @@ class RoomConversationStore(
         id = id.toString(),
         workspace = workspace.record(),
         replacement = replacement?.let(codec::encode)
+    )
+
+    override suspend fun commitTurns(
+        id: Uuid,
+        turns: List<AssistantSessionTurn>,
+        metadata: AssistantSessionState?,
+    ) = dao.commit(
+        metadata = metadata?.let(codec::encode),
+        turns = turns.map { codec.encode(id = id, value = it) },
+        workspace = null,
     )
 
     override suspend fun close() = withContext(Dispatchers.IO) {

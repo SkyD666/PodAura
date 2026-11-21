@@ -7,8 +7,36 @@ import com.skyd.podaura.podnya.capabilities.articles.model.bean.AssistantArticle
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.RecommendedArticle
 import com.skyd.podaura.podnya.core.AssistantHistoryTurn
 import com.skyd.podaura.podnya.core.AssistantLimits
+import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import com.skyd.podaura.podnya.model.bean.forCapability
 import kotlinx.serialization.Serializable
+
+internal data class ArticleHistoryEvidence(
+    val recentTitles: Map<String, String>,
+    val rememberedTitles: Map<String, String>,
+    val focusedId: String?,
+)
+
+internal fun latestArticleReferences(request: AssistantTurnRequest): ArticleReferences? =
+    ArticleReferences.from(
+        (request.latestLocalSnapshot ?: request.history.lastOrNull()?.content)
+            .forCapability(ArticleSearchContent.CAPABILITY_ID),
+    )
+
+internal fun articleHistoryEvidence(
+    latest: ArticleReferences?,
+    history: List<ArticleHistoryTurn>,
+): ArticleHistoryEvidence {
+    val recent = latest?.items.orEmpty().associate { it.id to it.title }
+    val remembered = (recent.toList() + history.asReversed().flatMap { turn ->
+        turn.articles.map { it.article.articleId to it.article.title }
+    }).distinctBy { it.first }.toMap()
+    return ArticleHistoryEvidence(
+        recentTitles = recent,
+        rememberedTitles = remembered,
+        focusedId = latest?.selectedId,
+    )
+}
 
 /** Read only article history and keep its text and article count within the limits. */
 internal fun articleSearchHistory(history: List<AssistantHistoryTurn>): List<ArticleHistoryTurn> {

@@ -1,6 +1,6 @@
 package com.skyd.podaura.podnya.capabilities.articles.model
 
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReferences
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContext

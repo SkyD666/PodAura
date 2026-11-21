@@ -10,6 +10,7 @@ import com.skyd.podaura.podnya.model.db.ConversationRecord.Companion.CREATED_AT_
 import com.skyd.podaura.podnya.model.db.ConversationRecord.Companion.LAST_STATUS_COLUMN
 import com.skyd.podaura.podnya.model.db.ConversationRecord.Companion.RETAINED_COLUMN
 import com.skyd.podaura.podnya.model.db.ConversationRecord.Companion.TITLE_COLUMN
+import com.skyd.podaura.podnya.model.db.ConversationTurnRecord.Companion.CONTENT_COLUMN
 import com.skyd.podaura.podnya.model.db.ConversationTurnRecord.Companion.ERROR_COLUMN
 import com.skyd.podaura.podnya.model.db.ConversationTurnRecord.Companion.STATUS_COLUMN
 import com.skyd.podaura.podnya.model.db.ConversationTurnRecord.Companion.TURN_ID_COLUMN
@@ -44,6 +45,24 @@ abstract class ConversationDao {
     @Query("SELECT * FROM $CONVERSATION_TURN_TABLE_NAME WHERE $CONVERSATION_ID_COLUMN = :id AND $TURN_ID_COLUMN > :anchor ORDER BY $TURN_ID_COLUMN ASC LIMIT :limit")
     abstract suspend fun after(id: String, anchor: Long, limit: Int): List<ConversationTurnRecord>
 
+    @Query("SELECT * FROM $CONVERSATION_TURN_TABLE_NAME WHERE $CONVERSATION_ID_COLUMN = :id AND $TURN_ID_COLUMN = :turnId")
+    abstract suspend fun turn(id: String, turnId: Long): ConversationTurnRecord?
+
+    @Query(
+        """
+        SELECT * FROM $CONVERSATION_TURN_TABLE_NAME
+        WHERE $CONVERSATION_ID_COLUMN = :id AND $TURN_ID_COLUMN < :beforeTurnId
+            AND substr($CONTENT_COLUMN, 1, length(:recordPrefix)) = :recordPrefix
+        ORDER BY $TURN_ID_COLUMN DESC LIMIT :limit
+    """
+    )
+    abstract suspend fun recentCapabilityTurns(
+        id: String,
+        recordPrefix: String,
+        beforeTurnId: Long,
+        limit: Int,
+    ): List<ConversationTurnRecord>
+
     @Upsert
     abstract suspend fun putMetadata(record: ConversationRecord)
 
@@ -72,11 +91,11 @@ abstract class ConversationDao {
     @Transaction
     open suspend fun commit(
         metadata: ConversationRecord?,
-        turn: ConversationTurnRecord?,
+        turns: List<ConversationTurnRecord>,
         workspace: ConversationWorkspaceRecord?,
     ) {
         metadata?.let { putMetadata(it) }
-        turn?.let { putTurn(it) }
+        turns.forEach { putTurn(it) }
         workspace?.let { putWorkspace(it) }
     }
 

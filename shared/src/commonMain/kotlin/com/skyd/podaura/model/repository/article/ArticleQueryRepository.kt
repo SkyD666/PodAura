@@ -1,8 +1,8 @@
 package com.skyd.podaura.model.repository.article
 
-import com.skyd.podaura.api.model.bean.ArticleQuery
-import com.skyd.podaura.api.model.bean.ArticleRecord
-import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.bean.article.ArticleQuery
+import com.skyd.podaura.api.model.bean.article.ArticleRecord
+import com.skyd.podaura.api.model.bean.article.ArticleSearchScope
 import com.skyd.podaura.api.model.repository.IArticleRepository
 import com.skyd.podaura.config.allSearchDomain
 import com.skyd.podaura.model.bean.article.ARTICLE_TABLE_NAME
