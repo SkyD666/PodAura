@@ -22,13 +22,24 @@ internal interface KoogCapability {
     val selectionSchema: JsonObject
     val failure: AssistantFailure?
 
+    val lookupTool: ReplyLookupTool? get() = null
+
     /** Check raw arguments before Koog decodes them. The runtime owns the shared call budget. */
     fun admit(call: MessagePart.Tool.Call): MessagePart.Tool.Result?
     fun snapshot(textLimit: Int): JsonElement
+    fun toolSnapshot(textLimit: Int, lookupTitleLimit: Int): JsonElement = snapshot(textLimit)
     fun history(snapshot: AssistantHistorySnapshot, textLimit: Int): JsonElement?
 
     /** Check model output against this turn's evidence; produce trusted UI data and reply facts. */
     suspend fun validate(kind: AssistantAnswerKind, output: JsonObject): CapabilityResult
+}
+
+/** A standalone lookup can publish its locally checked result immediately. */
+internal interface ReplyLookupTool {
+    val name: String
+    val reply: ValidatedAssistantReply?
+    suspend fun resolveExact(): ValidatedAssistantReply? = null
+    suspend fun prepare() = Unit
 }
 
 internal class CapabilityResult(

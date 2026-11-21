@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">Krei profilon</string>
     <string name="podnya_save_changes">Konservi ŝanĝojn</string>
     <string name="podnya_create_and_use">Krei kaj uzi</string>
+    <string name="podnya_article_field_choose">Kiun rekomendon vi celas? Skribu la listnumeron (ekzemple 1 aŭ 2) aŭ la titolon.</string>
+    <string name="podnya_article_field_missing">La loka rikordo ne enhavas tiun informon.</string>
+    <string name="podnya_article_reference_unavailable">La artikolo ne troviĝas en la nuna serĉamplekso.</string>
+    <string name="podnya_article_choose_field">Ĉu vi volas la titolon, la nomon de la podkasto aŭ la publikigdaton?</string>
+    <string name="podnya_article_field_unsupported">Mi povas serĉi la titolon, la nomon de la podkasto kaj la publikigdaton de la rekomendo.</string>
 </resources>

@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">建立設定</string>
     <string name="podnya_save_changes">儲存變更</string>
     <string name="podnya_create_and_use">建立並使用</string>
+    <string name="podnya_article_field_choose">你指的是哪一則推薦？請輸入清單序號（例如 1 或 2）或標題。</string>
+    <string name="podnya_article_field_missing">本機記錄中沒有這項資訊。</string>
+    <string name="podnya_article_reference_unavailable">在目前的搜尋範圍內找不到這篇文章。</string>
+    <string name="podnya_article_choose_field">你想查的是標題、Podcast 名稱，還是發布日期？</string>
+    <string name="podnya_article_field_unsupported">我可以查詢這則推薦的標題、Podcast 名稱和發布日期。</string>
 </resources>

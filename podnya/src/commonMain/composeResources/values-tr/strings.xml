@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">Profil oluştur</string>
     <string name="podnya_save_changes">Değişiklikleri kaydet</string>
     <string name="podnya_create_and_use">Oluştur ve kullan</string>
+    <string name="podnya_article_field_choose">Hangi öneriyi kastediyorsunuz? Liste numarasını (örneğin 1 veya 2) ya da başlığını yazın.</string>
+    <string name="podnya_article_field_missing">Yerel kayıtta bu bilgi yok.</string>
+    <string name="podnya_article_reference_unavailable">Makale geçerli arama kapsamında bulunamadı.</string>
+    <string name="podnya_article_choose_field">Başlığı, podcast adını veya yayın tarihini mi öğrenmek istiyorsunuz?</string>
+    <string name="podnya_article_field_unsupported">Önerinin başlığını, podcast adını ve yayın tarihini bulabilirim.</string>
 </resources>

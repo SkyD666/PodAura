@@ -10,12 +10,14 @@ import com.skyd.podaura.podnya.core.AssistantTurnRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PodnyaMarkdownBudgetTest {
@@ -47,6 +49,21 @@ class PodnyaMarkdownBudgetTest {
         assertEquals(AssistantError.INVALID_OUTPUT, assertFailsWith<AssistantException> {
             validateOutput(selection = valid.copy(text = valid.text + "x"), capabilities = emptyList())
         }.error)
+    }
+
+    @Test
+    fun directExplanationCannotPublishResultsOrInvalidText() {
+        val valid = AssistantOutput(kind = AssistantAnswerKind.UNSUPPORTED, text = "x".repeat(AssistantLimits.REPLY_CHARS))
+        assertEquals(valid.text, parseDirectExplanation(podnyaJson.encodeToString(valid))?.text)
+        for (invalid in listOf(
+            valid.copy(text = " "),
+            valid.copy(text = valid.text + "x"),
+            valid.copy(kind = AssistantAnswerKind.RESULTS),
+            valid.copy(kind = AssistantAnswerKind.NO_MATCH),
+            valid.copy(outputs = mapOf("articles" to JsonObject(emptyMap()))),
+        )) {
+            assertNull(parseDirectExplanation(podnyaJson.encodeToString(invalid)))
+        }
     }
 
     @Test

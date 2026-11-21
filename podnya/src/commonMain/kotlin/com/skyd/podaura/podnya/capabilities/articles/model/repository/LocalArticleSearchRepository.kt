@@ -10,6 +10,7 @@ import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchErr
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchPage
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.AssistantArticle
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.normalizeArticleTitle
 import com.skyd.podaura.podnya.core.AssistantException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,13 @@ class LocalArticleSearchRepository(
             scope = ArticleSearchScope.All,
             query = ArticleQuery(withinArticleIds = listOf(articleId), limit = 1)
         ).any { it.articleId == articleId }
+    }
+
+    suspend fun record(scope: ArticleSearchScope, articleId: String): ArticleRecord? = readLocally {
+        repository.query(
+            scope = scope,
+            query = ArticleQuery(withinArticleIds = listOf(articleId), limit = 1),
+        ).singleOrNull { it.articleId == articleId }
     }
 
     suspend fun search(scope: ArticleSearchScope, query: ArticleQuery): ArticleSearchPage =
@@ -79,7 +87,7 @@ class LocalArticleSearchRepository(
         currentCoroutineContext().ensureActive()
         return AssistantArticle(
             articleId = articleId,
-            title = title.orEmpty().take(4096).readable().take(200),
+            title = normalizeArticleTitle(title).take(200),
             sourceName = (sourceNickname ?: sourceTitle).orEmpty().take(4096).readable().take(100),
             dateMillis = dateMillis,
             snippet = plain.drop(start).take(ArticleSearchLimits.SNIPPET_CHARS),

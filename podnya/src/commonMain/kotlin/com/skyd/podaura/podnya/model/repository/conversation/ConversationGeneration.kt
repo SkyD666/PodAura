@@ -65,10 +65,14 @@ internal class ConversationGeneration {
         question: String,
         context: AssistantContext
     ): AssistantTurnRequest {
+        var latestContent: AssistantContent? = null
         var history =
             turns.filter { it.id != turn?.id && it.status != AssistantTurnStatus.RUNNING }
                 .mapNotNull { turn ->
-                    val snapshot = turn.content?.historySnapshot()
+                    val snapshot = turn.content?.promptHistorySnapshot()
+                    if (snapshot != null || turn.status == AssistantTurnStatus.COMPLETED) {
+                        latestContent = turn.content
+                    }
                     when {
                         snapshot != null -> AssistantHistoryTurn(
                             question = turn.question,
@@ -90,7 +94,12 @@ internal class ConversationGeneration {
         ) {
             history = history.drop(1)
         }
-        return AssistantTurnRequest(question = question, context = context, history = history)
+        return AssistantTurnRequest(
+            question = question,
+            context = context,
+            history = history,
+            latestLocalSnapshot = latestContent?.historySnapshot(),
+        )
     }
 
     private fun checkContent(content: AssistantContent) {

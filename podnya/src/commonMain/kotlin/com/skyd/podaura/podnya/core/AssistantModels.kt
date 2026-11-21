@@ -16,9 +16,12 @@ interface AssistantContext {
 interface AssistantContent {
     val retainedBytes: Int
     fun historySnapshot(): AssistantHistorySnapshot?
+
+    /** Compact history used when budgeting and building model requests. */
+    fun promptHistorySnapshot(): AssistantHistorySnapshot? = historySnapshot()
 }
 
-/** Model context only, NOT a future disk format. Disk records must preserve full capability
+/** In-memory capability history. Disk records must preserve full capability
  * cards/navigation/context with versioned payloads and readable fallback text. Unknown search
  * contexts must require explicit replacement; interrupted runs restore as stopped, never resend.
  */
@@ -40,6 +43,8 @@ data class AssistantTurnRequest(
     val question: String,
     val context: AssistantContext = AssistantContext.Empty,
     val history: List<AssistantHistoryTurn> = emptyList(),
+    /** Complete evidence from the most recent eligible turn, reserved for local capability checks. */
+    val latestLocalSnapshot: AssistantHistorySnapshot? = null,
 )
 
 interface AssistantProgress

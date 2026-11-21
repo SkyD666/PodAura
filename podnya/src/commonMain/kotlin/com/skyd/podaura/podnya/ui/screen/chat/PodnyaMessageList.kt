@@ -56,6 +56,7 @@ import com.skyd.podaura.podnya.model.bean.conversation.AssistantSessionTurn
 import com.skyd.podaura.podnya.model.bean.conversation.AssistantTurnStatus
 import com.skyd.podaura.podnya.model.bean.conversation.ConversationPosition
 import com.skyd.podaura.podnya.ui.PodnyaMarkdown
+import com.skyd.podaura.podnya.ui.PodnyaReplyText
 import com.skyd.podaura.podnya.ui.PodnyaWelcome
 import com.skyd.podaura.podnya.ui.podnyaContent
 import com.skyd.podaura.podnya.ui.podnyaContentKeys
@@ -413,7 +414,7 @@ private fun AssistantReply(turn: AssistantSessionTurn) {
             }
         }
         if (turn.reply.isNotEmpty()) {
-            PodnyaMarkdown(text = turn.reply)
+            PodnyaReplyText(text = turn.reply, content = turn.content)
         }
     }
 }

@@ -4,6 +4,7 @@ import ai.koog.prompt.message.MessagePart
 import ai.koog.prompt.structure.json.JsonStructure
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedRecommendation
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchContent
+import com.skyd.podaura.podnya.capabilities.feeds.model.bean.FeedSearchLimits
 import com.skyd.podaura.podnya.capabilities.feeds.model.bean.RecommendedFeed
 import com.skyd.podaura.podnya.capabilities.feeds.model.repository.FeedSearchResultValidator
 import com.skyd.podaura.podnya.capabilities.feeds.model.repository.LocalFeedSearchRepository
@@ -31,19 +32,10 @@ internal class FeedSearchCapability private constructor(private val source: Loca
     override val failure get() = tool.localFailure
     override val selectionSchema = JsonStructure.create<FeedSelection>().schema.schema
     override val instructions =
-        """Use search_feeds for subscriptions/podcasts already saved in the app.
-Use search_articles for episode topics; show metadata cannot rule out matching episodes.
-Search titles, nicknames and descriptions, preserving muted filters when trying synonyms.
-Empty keywords lists saved subscriptions. This capability cannot discover online feeds or add subscriptions.
-Feed IDs are temporary per-turn references, not article IDs. Search again before recommending history items.
-Subscription URLs are kept on the device."""
+        """Use search_feeds for saved subscriptions. Use search_articles for topics within episodes. Show metadata alone cannot rule out matching episodes."""
     override val selectionInstructions =
-        """Select relevant subscriptions from this turn's feeds snapshot.
-Match the user's stated breadth: "related to X" does not require a show dedicated entirely to X unless explicitly requested.
-A broader show's relevant coverage may qualify when supported by its title or description; explain that scope in reason. Do not infer unseen episode contents or specialization from incidental mentions or ambiguous keyword hits.
-Return feeds with feedId and a nonblank reason of at most 120 characters. At most 20 subscriptions.
-Use only current candidate IDs. NO_MATCH requires a completed subscription search.
-The app rechecks saved records; no model-side verification or extra tool call is needed."""
+        """Select saved subscriptions whose title or description supports the user's requested breadth. Distinguish relevant coverage from a show's main focus.
+Return feeds with this turn's feedId and a nonblank reason of at most ${FeedSearchLimits.REASON_CHARS} characters."""
 
     override fun admit(call: MessagePart.Tool.Call) = tool.admit(call)
 

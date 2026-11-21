@@ -1,7 +1,9 @@
 package com.skyd.podaura.podnya.capabilities.articles
 
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReferences
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.AssistantArticle
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.RecommendedArticle
 import com.skyd.podaura.podnya.core.AssistantHistoryTurn
 import com.skyd.podaura.podnya.core.AssistantLimits
@@ -10,11 +12,28 @@ import kotlinx.serialization.Serializable
 
 /** Read only article history and keep its text and article count within the limits. */
 internal fun articleSearchHistory(history: List<AssistantHistoryTurn>): List<ArticleHistoryTurn> {
-    var remaining = ArticleSearchLimits.CANDIDATES
+    val seenIds = mutableSetOf<String>()
     return history.takeLast(AssistantLimits.HISTORY_TURNS).asReversed().map { turn ->
-        val articles = ArticleSearchContent.historyArticles(turn.content.forCapability(ArticleSearchContent.CAPABILITY_ID))
-            .take(remaining.coerceAtMost(ArticleSearchLimits.RECOMMENDATIONS))
+        val snapshot = turn.content.forCapability(ArticleSearchContent.CAPABILITY_ID)
+        val remembered = if (snapshot?.payload?.startsWith("{") == true) {
+            ArticleReferences.from(snapshot)?.items.orEmpty().map {
+                RecommendedArticle(
+                    article = AssistantArticle(
+                        articleId = it.id,
+                        title = it.title,
+                        sourceName = "",
+                        snippet = "",
+                    ),
+                    reason = "",
+                )
+            }
+        } else {
+            ArticleSearchContent.historyArticles(snapshot)
+        }
+        val articles = remembered
+            .take(ArticleSearchLimits.RECOMMENDATIONS)
             .filter { it.article.articleId.isNotBlank() && it.article.articleId.length <= 256 }
+            .filter { seenIds.size < ArticleSearchLimits.CANDIDATES && seenIds.add(it.article.articleId) }
             .map {
                 it.copy(
                     article = it.article.copy(
@@ -24,7 +43,6 @@ internal fun articleSearchHistory(history: List<AssistantHistoryTurn>): List<Art
                     ), reason = it.reason.take(ArticleSearchLimits.REASON_CHARS)
                 )
             }
-        remaining -= articles.size
         ArticleHistoryTurn(
             question = turn.question.take(AssistantLimits.INPUT_CHARS),
             reply = turn.reply.take(AssistantLimits.HISTORY_REPLY_CHARS), articles = articles

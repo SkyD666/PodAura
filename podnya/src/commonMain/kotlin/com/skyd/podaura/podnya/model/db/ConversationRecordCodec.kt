@@ -26,7 +26,8 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
     private data class Aggregate(
         val kind: AssistantAnswerKind,
         val text: String,
-        val parts: List<String>
+        val parts: List<String>,
+        val reference: String? = null,
     )
 
     fun content(value: AssistantContent?): String? = when (value) {
@@ -41,6 +42,7 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
                         kind = value.kind,
                         text = value.text,
                         parts = value.parts.mapNotNull { content(it) },
+                        reference = content(value.reference),
                     )
                 ),
                 fallback = value.text,
@@ -62,6 +64,7 @@ class ConversationRecordCodec(private val capabilities: List<AssistantHistoryCod
                     parts = aggregate.parts.mapNotNull { content(it) },
                     kind = aggregate.kind,
                     text = aggregate.text,
+                    reference = content(aggregate.reference),
                 )
             } else {
                 capabilities.first { it.capabilityId == record.capabilityId }.decodeContent(record)

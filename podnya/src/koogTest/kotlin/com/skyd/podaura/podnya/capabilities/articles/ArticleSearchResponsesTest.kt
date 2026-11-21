@@ -1,5 +1,12 @@
 package com.skyd.podaura.podnya.capabilities.articles
 
+import com.skyd.podaura.api.model.bean.ArticleQuery
+import com.skyd.podaura.api.model.bean.ArticleRecord
+import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.api.model.repository.IArticleRepository
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReference
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReferences
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchLimits
 import com.skyd.podaura.podnya.capabilities.articles.model.repository.LocalArticleSearchRepository
 import com.skyd.podaura.podnya.runtime.emptyFeedSource
 import com.skyd.podaura.podnya.core.AssistantError
@@ -48,6 +55,90 @@ import kotlinx.serialization.json.put
 
 class ArticleSearchResponsesTest {
     @Test
+    fun responsesReturnsTheFirstClarificationWithoutPublishingReasoning() = runTest {
+        withContext(Dispatchers.Default) {
+            val reply = """{"kind":"CLARIFICATION","text":"Which topic?","outputs":{}}"""
+            val script = HttpScript(response(reasoning(), message(reply)))
+            val events = script.assistant(RecordingCatalog())
+                .run(request = AssistantTurnRequest("Find articles"), connection = astra()).toList()
+
+            assertEquals(listOf("/v1/responses"), script.paths)
+            assertEquals(listOf(AssistantRunEvent.ReplyDelta("Which topic?")), events.filterIsInstance<AssistantRunEvent.ReplyDelta>())
+            assertEquals(AssistantRunEvent.Completed, events.last())
+        }
+    }
+
+    @Test
+    fun aClarificationAfterSearchingUsesTheCheckedTextWithoutAnotherRequest() = runTest {
+        withContext(Dispatchers.Default) {
+            val clarification = """{"kind":"CLARIFICATION","text":"Which subscription?","outputs":{}}"""
+            val script = HttpScript(response(call("s1")), response(message("Finished searching.")), response(message(clarification)))
+            val events = script.assistant(RecordingCatalog())
+                .run(request = AssistantTurnRequest("Find articles"), connection = astra()).toList()
+            assertEquals(3, script.requests.size)
+            assertEquals(listOf(AssistantRunEvent.ReplyDelta("Which subscription?")), events.filterIsInstance<AssistantRunEvent.ReplyDelta>())
+            assertEquals(AssistantRunEvent.Completed, events.last())
+        }
+    }
+
+    @Test
+    fun rankingFitsAllCandidatesWithoutThePreviousLookupSnapshot() = runTest {
+        withContext(Dispatchers.Default) {
+            val batches = (1..3).associate { batch ->
+                batch.toString() to List(ArticleSearchLimits.SEARCH_RESULTS) { index ->
+                    ArticleRecord(
+                        articleId = "new-$batch-$index",
+                        title = "候".repeat(200),
+                        sourceTitle = "源".repeat(20),
+                    )
+                }
+            }
+            val source = LocalArticleSearchRepository(object : IArticleRepository {
+                override suspend fun query(scope: ArticleSearchScope, query: ArticleQuery): List<ArticleRecord> {
+                    val ids = query.withinArticleIds ?: return batches.getValue(query.keywords.single())
+                    return batches.values.flatten().filter { it.articleId in ids }.take(query.limit)
+                }
+            })
+            val previous = ArticleReferences(
+                items = List(ArticleSearchLimits.RECOMMENDATIONS) { index ->
+                    ArticleReference(id = "old-$index", title = "旧".repeat(200))
+                }
+            )
+            val calls = batches.keys.map { batch -> call(id = "s$batch", arguments = """{"keywords":["$batch"]}""") }
+            val script = HttpScript(response(*calls.toTypedArray()), selection(id = "new-1-0"), stream())
+            val runtime = KoogAssistantRuntime(
+                capabilities = testCapabilities(articles = source, feeds = emptyFeedSource()),
+                httpClient = script::client,
+            )
+            val events = runtime.run(
+                request = AssistantTurnRequest(
+                    question = "Find more articles",
+                    latestLocalSnapshot = previous.historySnapshot(),
+                ),
+                connection = astra(),
+            ).toList()
+
+            assertEquals(AssistantRunEvent.Completed, events.last(), "requests: ${script.paths}")
+            assertEquals(3, script.requests.size)
+
+            fun articleSnapshot(request: JsonObject): JsonObject {
+                val snapshot = request.getValue("input").jsonArray
+                    .map { it.jsonObject }
+                    .filter { it["role"] == JsonPrimitive("user") }
+                    .flatMap { it.getValue("content").jsonArray }
+                    .map { it.jsonObject.getValue("text").jsonPrimitive.content }
+                    .single { it.startsWith("App capability snapshots:") }
+                return podnyaJson.parseToJsonElement(snapshot.substringAfter('\n')).jsonObject.getValue("articles").jsonObject
+            }
+            val tools = articleSnapshot(script.requests.first())
+            val ranking = articleSnapshot(script.requests[1])
+            assertEquals(ArticleSearchLimits.RECOMMENDATIONS, tools.getValue("lookup").jsonObject.getValue("items").jsonArray.size)
+            assertFalse("lookup" in ranking)
+            assertEquals(ArticleSearchLimits.CANDIDATES, ranking.getValue("candidates").jsonArray.size)
+        }
+    }
+
+    @Test
     fun officialAstraPreservesToolExchangeAndPhaseWhileStreamingOnlyReplyText() =
         verifyToolExchangeAndStreaming(astra())
 
@@ -64,7 +155,8 @@ class ArticleSearchResponsesTest {
 
     private fun verifyToolExchangeAndStreaming(connection: AssistantConnection) = runTest {
         withContext(Dispatchers.Default) {
-            val original = listOf(reasoning(), message("I will search.", "commentary"), call("s1"))
+            val explanation = """{"kind":"CLARIFICATION","text":"Which topic?","outputs":{}}"""
+            val original = listOf(reasoning(), message(text = explanation, phase = "commentary"), call("s1"))
             val misleading = "Search is closed; the candidates have not been verified."
             val script = HttpScript(response(*original.toTypedArray()), response(message("Search finished.")),
                 selection(text = misleading), stream())

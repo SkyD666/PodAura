@@ -1,5 +1,6 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
+import com.fleeksoft.ksoup.Ksoup
 import com.skyd.podaura.api.model.bean.ArticleQuery
 import com.skyd.podaura.api.model.bean.KeywordMatch
 import com.skyd.podaura.podnya.core.AssistantAction
@@ -93,9 +94,13 @@ sealed interface ArticleSearchAction : AssistantAction {
 
 /** Per-request limits for search calls, article counts and text length. */
 object ArticleSearchLimits {
+    const val TITLE_INPUT_CHARS = 4096
     const val SEARCH_RESULTS = 20
     const val CANDIDATES = 60
     const val RECOMMENDATIONS = 20
     const val SNIPPET_CHARS = 400
     const val REASON_CHARS = 120
 }
+
+internal fun normalizeArticleTitle(title: String?): String =
+    Ksoup.parse(html = title.orEmpty().take(ArticleSearchLimits.TITLE_INPUT_CHARS)).text()

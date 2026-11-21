@@ -10,6 +10,7 @@ import com.skyd.podaura.podnya.core.AssistantLimits
 import com.skyd.podaura.podnya.model.bean.AssistantReplyContent
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -22,16 +23,35 @@ internal data class AssistantOutput(
     val kind: AssistantAnswerKind,
     val text: String,
     val outputs: Map<String, JsonObject> = emptyMap(),
-)
+) {
+    val isExplanation: Boolean
+        get() = kind == AssistantAnswerKind.CLARIFICATION || kind == AssistantAnswerKind.UNSUPPORTED
+
+    fun explanationOrNull(): ValidatedAssistantReply? {
+        if (!isExplanation || outputs.isNotEmpty() || text.isBlank() || text.length > AssistantLimits.REPLY_CHARS) {
+            return null
+        }
+        return ValidatedAssistantReply(kind = kind, text = text, results = emptyMap())
+    }
+}
+
+internal fun parseDirectExplanation(text: String): ValidatedAssistantReply? = try {
+    podnyaJson.decodeFromString<AssistantOutput>(text).explanationOrNull()
+} catch (_: SerializationException) {
+    null
+}
 
 internal class ValidatedAssistantReply(
     val kind: AssistantAnswerKind,
     val text: String,
     val results: Map<String, CapabilityResult>,
+    val reference: AssistantContent? = null,
 ) {
     fun content(): AssistantContent {
         val parts = results.values.map { it.content }
-        return parts.singleOrNull() ?: AssistantReplyContent(parts, kind, text)
+        return parts.singleOrNull() ?: AssistantReplyContent(
+            parts = parts, kind = kind, text = text, reference = reference,
+        )
     }
 }
 
@@ -84,11 +104,12 @@ internal suspend fun validateOutput(
     selection: AssistantOutput,
     capabilities: List<KoogCapability>,
 ): ValidatedAssistantReply {
-    val explanation =
-        selection.kind == AssistantAnswerKind.CLARIFICATION || selection.kind == AssistantAnswerKind.UNSUPPORTED
+    if (selection.isExplanation) {
+        return selection.explanationOrNull()
+            ?: throw AssistantException(AssistantError.INVALID_OUTPUT)
+    }
     val invalid = selection.text.length > AssistantLimits.REPLY_CHARS ||
-            (explanation && (selection.text.isBlank() || selection.outputs.isNotEmpty())) ||
-            (!explanation && selection.outputs.isEmpty()) ||
+            selection.outputs.isEmpty() ||
             selection.outputs.keys.any { id -> capabilities.none { it.id == id } }
     if (invalid) throw AssistantException(AssistantError.INVALID_OUTPUT)
 
@@ -111,5 +132,5 @@ internal suspend fun validateOutput(
     if (invalidCount) {
         throw AssistantException(AssistantError.INVALID_OUTPUT)
     }
-    return ValidatedAssistantReply(selection.kind, if (explanation) selection.text else "", results)
+    return ValidatedAssistantReply(kind = selection.kind, text = "", results = results)
 }

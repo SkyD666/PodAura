@@ -1,7 +1,9 @@
 package com.skyd.podaura.podnya.ui
 
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.skyd.podaura.podnya.core.AssistantAction
 import com.skyd.podaura.podnya.core.AssistantContent
@@ -37,6 +39,15 @@ fun podnyaFailureText(error: AssistantFailure): String {
     return podnyaErrorText(error as? AssistantError ?: AssistantError.INVALID_OUTPUT)
 }
 
+@Composable
+internal fun PodnyaReplyText(text: String, content: AssistantContent?) {
+    if (content is AssistantReplyContent && content.reference != null) {
+        SelectionContainer { Text(text) }
+    } else {
+        PodnyaMarkdown(text = text)
+    }
+}
+
 fun LazyListScope.podnyaContent(
     turnId: Long, content: AssistantContent, showFallbackText: Boolean,
     formatDate: (Long) -> String, onAction: (AssistantAction) -> Unit,
@@ -45,7 +56,7 @@ fun LazyListScope.podnyaContent(
     if (content is AssistantReplyContent) {
         if (showFallbackText && content.text.isNotBlank()) {
             item(key = "$keyPrefix-reply-summary") {
-                PodnyaMarkdown(text = content.text)
+                PodnyaReplyText(text = content.text, content = content)
             }
         }
         content.parts.forEachIndexed { index, part ->

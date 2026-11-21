@@ -46,16 +46,37 @@ import kotlin.test.assertTrue
 
 class PodnyaNativeProtocolTest {
     @Test
+    fun geminiReturnsAnExplanationInOneRequestAndKeepsThoughtsPrivate() = nativeTest {
+        val answer = """{"kind":"UNSUPPORTED","text":"I can help you find podcasts.","outputs":{}}"""
+        val parts = """[{"text":"private","thought":true},{"text":${podnyaJson.encodeToString(answer)}}]"""
+        val script = NativeScript(
+            protocol = AssistantProtocol.GEMINI_GENERATE_CONTENT,
+            replies = listOf(HttpReply(gemini(parts))),
+        )
+        val runtime = KoogAssistantRuntime(
+            capabilities = testCapabilities(LocalArticleSearchRepository(RecordingCatalog()), emptyFeedSource()),
+            httpClient = script::client,
+        )
+        val events = runtime.run(request = AssistantTurnRequest("Order lunch"), connection = script.connection).toList()
+        assertEquals(listOf("/gateway/v1beta/models/native-model:generateContent"), script.paths)
+        assertEquals(
+            listOf(AssistantRunEvent.ReplyDelta("I can help you find podcasts.")),
+            events.filterIsInstance<AssistantRunEvent.ReplyDelta>(),
+        )
+        assertEquals(AssistantRunEvent.Completed, events.last())
+    }
+
+    @Test
     fun nativeRunsUseIndependentFixedConnectionsAndTheSameTransportAsProbes() = nativeTest {
         val clarification = """{"kind":"CLARIFICATION","text":"What topic?","outputs":{}}"""
         val scripts = listOf(
             NativeScript(
                 protocol = AssistantProtocol.ANTHROPIC_MESSAGES,
-                replies = listOf(HttpReply(claudeText("Need detail")), HttpReply(claudeText(clarification)), HttpReply(body = claudeStream(), sse = true)),
+                replies = listOf(HttpReply(claudeText("Need detail")), HttpReply(claudeText(clarification))),
             ),
             NativeScript(
                 protocol = AssistantProtocol.GEMINI_GENERATE_CONTENT,
-                replies = listOf(HttpReply(geminiText("Need detail")), HttpReply(geminiText(clarification)), HttpReply(body = geminiStream(), sse = true)),
+                replies = listOf(HttpReply(geminiText("Need detail")), HttpReply(geminiText(clarification))),
             ),
         )
         coroutineScope {
@@ -67,14 +88,12 @@ class PodnyaNativeProtocolTest {
                 )
                 val events = runtime.run(request = AssistantTurnRequest("Find something"), connection = script.connection).toList()
                 assertEquals(AssistantRunEvent.Completed, events.last())
-                assertEquals(3, script.requests.size)
+                assertEquals(listOf(AssistantRunEvent.ReplyDelta("What topic?")), events.filterIsInstance<AssistantRunEvent.ReplyDelta>())
+                assertEquals(2, script.requests.size)
                 val expected = script.connection.timeouts
                 for (timeout in script.timeouts) {
                     assertEquals(expected.connectMillis, timeout.connectTimeoutMillis)
                     assertEquals(expected.idleMillis, timeout.socketTimeoutMillis)
-                }
-                // Ktor SSE leaves its request deadline to collectReply.
-                for (timeout in script.timeouts.dropLast(1)) {
                     assertEquals(expected.requestMillis, timeout.requestTimeoutMillis)
                 }
                 script.requests.drop(1).forEach { request ->
@@ -292,7 +311,7 @@ class PodnyaNativeProtocolTest {
     }
 }
 
-private class NativeScript(val protocol: AssistantProtocol, replies: List<HttpReply>) {
+internal class NativeScript(val protocol: AssistantProtocol, replies: List<HttpReply>) {
     private val pending = ArrayDeque(replies)
     val requests = mutableListOf<JsonObject>()
     val paths = mutableListOf<String>()
@@ -323,7 +342,7 @@ private class NativeScript(val protocol: AssistantProtocol, replies: List<HttpRe
 private fun claude(content: String, reason: String = "end_turn") =
     """{"id":"message","type":"message","role":"assistant","model":"native-model","content":$content,"stop_reason":"$reason","usage":{"input_tokens":1,"output_tokens":1}}"""
 private fun claudeText(text: String) = claude("""[{"type":"text","text":${podnyaJson.encodeToString(text)}}]""")
-private fun gemini(parts: String, reason: String = "STOP") =
+internal fun gemini(parts: String, reason: String = "STOP") =
     """{"candidates":[{"content":{"role":"model","parts":$parts},"finishReason":"$reason","index":0}]}"""
 private fun geminiText(text: String) = gemini("""[{"text":${podnyaJson.encodeToString(text)}}]""")
 private fun event(raw: String) = "data: $raw\n\n"

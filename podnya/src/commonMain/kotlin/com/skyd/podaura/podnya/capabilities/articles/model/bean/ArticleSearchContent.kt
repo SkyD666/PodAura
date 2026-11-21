@@ -1,9 +1,9 @@
 package com.skyd.podaura.podnya.capabilities.articles.model.bean
 
+import com.skyd.podaura.podnya.capabilities.articles.model.articleHistoryJson
 import com.skyd.podaura.podnya.core.AssistantContent
 import com.skyd.podaura.podnya.core.AssistantHistorySnapshot
 import com.skyd.podaura.podnya.core.AssistantLimits
-import kotlinx.serialization.json.Json
 
 /** Only this capability knows how to bound, remember and render article results. */
 class ArticleSearchContent private constructor(
@@ -18,7 +18,7 @@ class ArticleSearchContent private constructor(
         AssistantHistorySnapshot(
             capabilityId = CAPABILITY_ID,
             summary = it.text.ifBlank { it.kind.name }.take(AssistantLimits.HISTORY_REPLY_CHARS),
-            payload = Json.encodeToString(it.articles)
+            payload = articleHistoryJson.encodeToString(it.articles)
         )
     }
 
@@ -64,8 +64,9 @@ class ArticleSearchContent private constructor(
 
         fun historyArticles(snapshot: AssistantHistorySnapshot?): List<RecommendedArticle> =
             if (snapshot?.capabilityId != CAPABILITY_ID) emptyList()
-            else runCatching { Json.decodeFromString<List<RecommendedArticle>>(snapshot.payload) }
-                .getOrDefault(emptyList())
+            else runCatching {
+                articleHistoryJson.decodeFromString<List<RecommendedArticle>>(snapshot.payload)
+            }.getOrDefault(emptyList())
 
         private fun AssistantArticle.bounded() =
             copy(snippet = snippet.take(ArticleSearchLimits.SNIPPET_CHARS))

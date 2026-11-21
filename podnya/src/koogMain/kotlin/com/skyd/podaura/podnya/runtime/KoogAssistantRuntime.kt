@@ -57,6 +57,11 @@ internal class KoogAssistantRuntime(
         val active = capabilities(request)
         if (active.isEmpty()) throw AssistantException(AssistantError.INVALID_OUTPUT)
         require(active.map { it.id }.distinct().size == active.size)
+        active.forEach { it.lookupTool?.prepare() }
+        active.firstNotNullOfOrNull { it.lookupTool?.resolveExact() }?.let { reply ->
+            publishDirectReply(reply = reply, event = event)
+            return
+        }
         val toolOwners =
             active.flatMap { capability -> capability.tools.map { it.name to capability } }.toMap()
         require(toolOwners.size == active.sumOf { it.tools.size })
@@ -65,18 +70,19 @@ internal class KoogAssistantRuntime(
             connection = configuration,
             baseClient = httpClient(),
         ).use { transport ->
-            val executor = BudgetedExecutor(delegate = transport.executor, timeouts = configuration.timeouts)
+            val executor =
+                BudgetedExecutor(delegate = transport.executor, timeouts = configuration.timeouts)
             var attempts = 0
             var completedCalls = 0
             val graph = strategy<String, ValidatedAssistantReply>("podnya") {
-                val useTools by node<String, Unit> {
+                val useTools by node<String, ValidatedAssistantReply?> {
                     while (attempts < AssistantLimits.TOOL_CALLS) {
                         event(
                             AssistantRunEvent.Progress(AssistantPhase.PROCESSING)
                         )
                         val response = llm.writeSession {
                             if (promptBytes(prompt, tools) > AssistantLimits.PROMPT_BYTES - 8_192) {
-                                rewritePrompt { prompts.snapshot() }
+                                rewritePrompt { prompts.snapshot(lookupAvailable = completedCalls == 0) }
                             }
                             requestLLM()
                         }
@@ -84,13 +90,26 @@ internal class KoogAssistantRuntime(
                             throw AssistantException(AssistantError.INVALID_OUTPUT)
                         }
                         val calls = response.parts.filterIsInstance<MessagePart.Tool.Call>()
-                        if (calls.isEmpty()) break
+                        if (calls.isEmpty()) {
+                            val finished = response.finishReason == "stop" ||
+                                    response.finishReason.equals("completed", ignoreCase = true)
+                            if (attempts == 0 && finished) {
+                                return@node parseDirectExplanation(response.textContent())
+                            }
+                            break
+                        }
+                        val lookup = calls.singleOrNull()
+                            ?.takeIf { completedCalls == 0 }
+                            ?.let { call -> toolOwners[call.tool]?.lookupTool?.takeIf { it.name == call.tool } }
                         val results = calls.map { call ->
                             // Share one budget across all tools, before decoding any arguments.
                             attempts++
                             val error = when {
                                 attempts > AssistantLimits.TOOL_CALLS -> "TOOL_BUDGET_EXHAUSTED"
                                 call.tool !in toolOwners -> "UNKNOWN_TOOL"
+                                lookup == null && toolOwners[call.tool]?.lookupTool?.name == call.tool ->
+                                    "STANDALONE_LOOKUP_REQUIRED"
+
                                 else -> null
                             }
                             val result = if (error != null) MessagePart.Tool.Result(
@@ -106,12 +125,15 @@ internal class KoogAssistantRuntime(
                         }
                         active.firstNotNullOfOrNull { it.failure }
                             ?.let { throw AssistantException(it) }
+                        lookup?.reply?.let { return@node it }
                     }
                     if (attempts >= AssistantLimits.TOOL_CALLS && completedCalls == 0) {
                         throw AssistantException(AssistantError.BUDGET_EXHAUSTED)
                     }
+                    null
                 }
-                val buildReply by node<Unit, ValidatedAssistantReply> {
+                val buildReply by node<ValidatedAssistantReply?, ValidatedAssistantReply> { directReply ->
+                    if (directReply != null) return@node directReply
                     event(
                         AssistantRunEvent.Progress(
                             AssistantPhase.PROCESSING
@@ -161,6 +183,10 @@ internal class KoogAssistantRuntime(
             } finally {
                 agent.close()
             }
+            if (validated.results.isEmpty()) {
+                publishDirectReply(reply = validated, event = event)
+                return@use
+            }
             event(AssistantRunEvent.ContentReady(validated.content()))
             event(AssistantRunEvent.Progress(AssistantPhase.STREAMING))
             collectReply(
@@ -170,5 +196,13 @@ internal class KoogAssistantRuntime(
                 timeouts = configuration.timeouts,
             ) { event(AssistantRunEvent.ReplyDelta(it)) }
         }
+    }
+
+    private suspend fun publishDirectReply(
+        reply: ValidatedAssistantReply,
+        event: suspend (AssistantRunEvent) -> Unit,
+    ) {
+        event(AssistantRunEvent.ContentReady(reply.content()))
+        event(AssistantRunEvent.ReplyDelta(reply.text))
     }
 }

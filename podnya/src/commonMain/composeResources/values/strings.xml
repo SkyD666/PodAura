@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">Create profile</string>
     <string name="podnya_save_changes">Save changes</string>
     <string name="podnya_create_and_use">Create and use</string>
+    <string name="podnya_article_field_choose">Give the list number (for example, 1 or 2) or the title of the recommendation you mean.</string>
+    <string name="podnya_article_field_missing">The local record does not include that information.</string>
+    <string name="podnya_article_reference_unavailable">This article is unavailable in the current search scope.</string>
+    <string name="podnya_article_choose_field">Which field would you like: the title, the podcast name, or the publication date?</string>
+    <string name="podnya_article_field_unsupported">I can look up the title, podcast name, and publication date of a recommended item.</string>
 </resources>

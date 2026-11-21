@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">创建配置</string>
     <string name="podnya_save_changes">保存修改</string>
     <string name="podnya_create_and_use">创建并使用</string>
+    <string name="podnya_article_field_choose">你指的是哪一条推荐？请输入列表序号（例如 1 或 2）或标题。</string>
+    <string name="podnya_article_field_missing">本地记录里没有这项信息。</string>
+    <string name="podnya_article_reference_unavailable">在当前搜索范围内找不到这篇文章。</string>
+    <string name="podnya_article_choose_field">你想查的是标题、播客名，还是发布日期？</string>
+    <string name="podnya_article_field_unsupported">我可以查这条推荐的标题、播客名和发布日期。</string>
 </resources>

@@ -20,11 +20,9 @@ class FixedConnectionsTest {
     @Test
     fun parallelRunsUseExplicitConnectionsWithoutReadingTheVerificationConfiguration() = runTest {
         withContext(Dispatchers.Default) {
-            val scripts = List(2) { HttpScript(
-                chatCompletion("Need more detail"),
-                chatCompletion("""{"kind":"CLARIFICATION","text":"What topic?","outputs":{}}"""),
-                chatSse(),
-            ) }
+            val scripts = List(2) {
+                HttpScript(chatCompletion("""{"kind":"CLARIFICATION","text":"What topic?","outputs":{}}"""))
+            }
             val connections = listOf(
                 AssistantConnection("https://first.example/one/", "first-model", TEST_KEY),
                 AssistantConnection("https://second.example/two/", "second-model", TEST_KEY),
@@ -38,7 +36,7 @@ class FixedConnectionsTest {
                     runtime.run(AssistantTurnRequest("Find something"), connections[index]).toList().last())
             } }.awaitAll()
             scripts.forEachIndexed { index, script ->
-                assertEquals(3, script.requests.size)
+                assertEquals(1, script.requests.size)
                 assertTrue(script.paths.all { it == (if (index == 0) "/one/" else "/two/") + "chat/completions" })
                 assertTrue(script.requests.all { it["model"]?.jsonPrimitive?.content == connections[index].modelId })
             }

@@ -135,4 +135,9 @@
     <string name="podnya_create_profile">設定を作成</string>
     <string name="podnya_save_changes">変更を保存</string>
     <string name="podnya_create_and_use">作成して使用</string>
+    <string name="podnya_article_field_choose">どのおすすめですか？一覧の番号（例：1、2）かタイトルを入力してください。</string>
+    <string name="podnya_article_field_missing">ローカルの記録にその情報はありません。</string>
+    <string name="podnya_article_reference_unavailable">現在の検索範囲ではこの記事が見つかりません。</string>
+    <string name="podnya_article_choose_field">タイトル、番組名、公開日のどれを知りたいですか？</string>
+    <string name="podnya_article_field_unsupported">おすすめのタイトル、番組名、公開日を確認できます。</string>
 </resources>

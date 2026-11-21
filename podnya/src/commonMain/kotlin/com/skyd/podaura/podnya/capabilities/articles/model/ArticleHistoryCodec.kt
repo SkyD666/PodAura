@@ -1,6 +1,7 @@
 package com.skyd.podaura.podnya.capabilities.articles.model
 
 import com.skyd.podaura.api.model.bean.ArticleSearchScope
+import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleReferences
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContent
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchContext
 import com.skyd.podaura.podnya.capabilities.articles.model.bean.ArticleSearchError
@@ -16,9 +17,10 @@ import com.skyd.podaura.podnya.core.CapabilityRecord
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+internal val articleHistoryJson = Json { ignoreUnknownKeys = true }
+
 object ArticleHistoryCodec : AssistantHistoryCodec {
     override val capabilityId = ArticleSearchContent.CAPABILITY_ID
-    private val json = Json { ignoreUnknownKeys = true }
 
     @Serializable
     private data class Content(
@@ -46,12 +48,20 @@ object ArticleHistoryCodec : AssistantHistoryCodec {
         } else null
 
     override fun encodeContent(content: AssistantContent): CapabilityRecord? {
+        if (content is ArticleReferences) {
+            return CapabilityRecord(
+                capabilityId = capabilityId,
+                version = 2,
+                payload = articleHistoryJson.encodeToString(content),
+                fallback = "",
+            )
+        }
         if (content !is ArticleSearchContent) return null
         val answer = content.answer
         return CapabilityRecord(
             capabilityId = capabilityId,
             version = 1,
-            payload = json.encodeToString(
+            payload = articleHistoryJson.encodeToString(
                 Content(
                     kind = answer?.kind,
                     text = answer?.text.orEmpty(),
@@ -69,8 +79,11 @@ object ArticleHistoryCodec : AssistantHistoryCodec {
     }
 
     override fun decodeContent(record: CapabilityRecord): AssistantContent {
+        if (record.version == 2) {
+            return articleHistoryJson.decodeFromString<ArticleReferences>(record.payload)
+        }
         require(record.version == 1)
-        val value = json.decodeFromString<Content>(record.payload)
+        val value = articleHistoryJson.decodeFromString<Content>(record.payload)
         return ArticleSearchContent.restore(
             answer = value.kind?.let {
                 ValidatedAssistantAnswer(
@@ -91,7 +104,7 @@ object ArticleHistoryCodec : AssistantHistoryCodec {
         return CapabilityRecord(
             capabilityId = capabilityId,
             version = 1,
-            payload = json.encodeToString(
+            payload = articleHistoryJson.encodeToString(
                 Context(
                     restricted = scope is ArticleSearchScope.Restricted,
                     feedUrls = (scope as? ArticleSearchScope.Restricted)?.feedUrls.orEmpty(),
@@ -104,7 +117,7 @@ object ArticleHistoryCodec : AssistantHistoryCodec {
 
     override fun decodeContext(record: CapabilityRecord): AssistantContext {
         require(record.version == 1)
-        val value = json.decodeFromString<Context>(record.payload)
+        val value = articleHistoryJson.decodeFromString<Context>(record.payload)
         return ArticleSearchContext(
             scope = if (value.restricted) {
                 ArticleSearchScope.Restricted(
