@@ -189,29 +189,32 @@ class DownloadCapabilityTest {
     }
 
     @Test
-    fun modelCanPickOneOfTwoIdenticallyTypedFilesAfterSearch() = runTest {
+    fun sameRequestCanDownloadEitherAudioFileSelectedByTheModel() = runTest {
         val episode = episode("a", audio("short"), audio("full"), attachment("notes.pdf", "application/pdf"))
         val repository = Downloads(listOf(episode))
-        val selection = DownloadSelection(articleIds = listOf("a"), attachmentIds = listOf("file-2"))
-        val script = HttpScript(
-            chatToolCalls("search_articles", "search" to """{"keywords":["example"]}"""),
-            chatToolCalls("list_download_attachments", "list" to """{"articleId":"a"}"""),
-            chatCompletion("Ready"),
-            selected(selection),
-        )
-        val request = AssistantTurnRequest(question = "Download the full recording")
-        val plan = scriptedRun(script = script, repository = repository, request = request).plan()
-        assertEquals(listOf(AssistantDownloadTarget.Attachment(articleId = "a", url = audio("full").url)), plan.targets)
-        assertTrue(plan.choices.isEmpty())
-        assertTrue("full.mp3" in script.requests.last().toString())
-        assertTrue("Audio" in script.requests.last().toString())
-        assertTrue("file-2" in script.requests.last().toString())
+        val request = AssistantTurnRequest(question = "Download either the short or the full recording")
+        fun selectFile(id: String) = selected(DownloadSelection(articleIds = listOf("a"), attachmentIds = listOf(id)))
+
+        for ((id, name) in listOf("file-1" to "short", "file-2" to "full")) {
+            val script = HttpScript(
+                chatToolCalls("search_articles", "search" to """{"keywords":["example"]}"""),
+                chatToolCalls("list_download_attachments", "list" to """{"articleId":"a"}"""),
+                chatCompletion("Ready"),
+                selectFile(id),
+            )
+            val plan = scriptedRun(script = script, repository = repository, request = request).plan()
+            val expected = AssistantDownloadTarget.Attachment(articleId = "a", url = audio(name).url)
+            assertEquals(listOf(expected), plan.targets)
+            assertTrue(plan.choices.isEmpty())
+            val prompt = script.requests.last().toString()
+            assertTrue("$name.mp3" in prompt && id in prompt && "Audio" in prompt)
+        }
 
         val forged = HttpScript(
             chatToolCalls("search_articles", "search" to """{"keywords":["example"]}"""),
             chatCompletion("Ready"),
-            selected(selection),
-            selected(selection),
+            selectFile("file-2"),
+            selectFile("file-2"),
         )
         val events = scriptedRun(script = forged, repository = repository, request = request)
         assertTrue(events.none { it is AssistantRunEvent.Handoff })
