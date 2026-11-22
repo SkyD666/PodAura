@@ -8,6 +8,7 @@ import com.skyd.podaura.podnya.settings.AssistantSettingsScreen
 import com.skyd.podaura.podnya.ui.screen.chat.PodnyaScreen
 import org.koin.compose.getKoin
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.uuid.Uuid
 
 /** Page content with host actions as callbacks; navigation and route types stay outside Podnya. */
 @Composable
@@ -15,7 +16,7 @@ fun PodnyaChat(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
-    onAction: (AssistantAction) -> Unit,
+    onAction: (conversationId: Uuid, action: AssistantAction) -> Unit,
     formatDate: (Long) -> String,
 ) {
     val koin = getKoin()

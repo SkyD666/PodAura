@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.download
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -70,6 +72,7 @@ fun DownloadItem(
     onRetry: (DownloadInfoBean) -> Unit,
     onDelete: (DownloadInfoBean) -> Unit,
     onPlay: ((DownloadInfoBean) -> Unit)? = null,
+    highlighted: Boolean = false,
 ) {
     var description by remember { mutableStateOf(blockString(Res.string.download_initializing)) }
     var pauseButtonIcon by remember { mutableStateOf(Icons.Outlined.Pause) }
@@ -139,6 +142,7 @@ fun DownloadItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(if (highlighted) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
             .thenIf(canPlay) {
                 clickable(onClickLabel = playLabel) { onPlay?.invoke(data) }
             }

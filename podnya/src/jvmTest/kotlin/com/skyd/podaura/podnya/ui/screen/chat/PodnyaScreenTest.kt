@@ -247,7 +247,12 @@ class PodnyaScreenTest {
             }
             onNodeWithTag("podnya_messages").performScrollToNode(hasText(fixture.openDownloadsLabel))
             onNodeWithText(fixture.openDownloadsLabel).performClick()
-            waitUntil(timeoutMillis = 5_000) { fixture.downloadsOpened == 1 }
+            waitUntil(timeoutMillis = 5_000) { fixture.openedDownloads != null }
+            val turnId = fixture.repository.state.value.selected.turns.single().id
+            assertEquals(
+                OpenDownloads(originTurnId = turnId, submissionIds = listOf("turn:$turnId", "option:version:1")),
+                fixture.openedDownloads,
+            )
         }
     }
 
@@ -1394,7 +1399,7 @@ class PodnyaScreenTest {
         }
         var settingsOpened = 0
         var searchOpened = 0
-        var downloadsOpened = 0
+        var openedDownloads: OpenDownloads? = null
         var openDownloadsLabel = ""
         var downloadReceiptLabel = ""
         var downloadMissingLabel = ""
@@ -1457,12 +1462,19 @@ class PodnyaScreenTest {
                     downloadReceiptLabel = stringResource(Res.string.podnya_download_result, 1, 0, 0)
                     downloadMissingLabel = stringResource(Res.string.podnya_download_missing_attachment, "No enclosure")
                     Surface {
-                        PodnyaScreen(viewModel, formatArticleDate, onBack = {}, onSettings = { settingsOpened++ },
-                            onAction = { action ->
+                        PodnyaScreen(
+                            viewModel = viewModel,
+                            formatDate = formatArticleDate,
+                            onBack = {},
+                            onSettings = { settingsOpened++ },
+                            onAction = { _, action ->
                                 if (action is ArticleSearchAction.OpenArticle) openedArticle = action.articleId
                                 if (action is FeedSearchAction.OpenFeed) openedFeed = action.feedUrl
-                                if (action == OpenDownloads) downloadsOpened++
-                            }, onSearch = { searchOpened++ }, windowInsets = WindowInsets(0))
+                                if (action is OpenDownloads) openedDownloads = action
+                            },
+                            onSearch = { searchOpened++ },
+                            windowInsets = WindowInsets(0),
+                        )
                     }
                 }
             }

@@ -45,7 +45,7 @@ fun PodnyaScreen(
     formatDate: (Long) -> String,
     onBack: () -> Unit,
     onSettings: () -> Unit,
-    onAction: (AssistantAction) -> Unit,
+    onAction: (conversationId: Uuid, action: AssistantAction) -> Unit,
     onSearch: () -> Unit,
     windowInsets: WindowInsets = WindowInsets.safeDrawing,
 ) {
@@ -103,7 +103,9 @@ fun PodnyaScreen(
             PodnyaEvent.Back -> onBack()
             PodnyaEvent.OpenSettings -> onSettings()
             PodnyaEvent.OpenSearch -> onSearch()
-            is PodnyaEvent.Action -> onAction(event.action)
+            is PodnyaEvent.Action -> {
+                if (event.conversationId == state.id) onAction(event.conversationId, event.action)
+            }
         }
     })
     MviEventListener(viewModel.singleEvent) { event -> onEvent(event) }

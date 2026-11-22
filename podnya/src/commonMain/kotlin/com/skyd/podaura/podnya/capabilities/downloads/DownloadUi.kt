@@ -76,7 +76,14 @@ internal object DownloadUi : AssistantCapabilityUi {
                     )
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = { onAction(OpenDownloads) }) {
+                    TextButton(onClick = {
+                        onAction(
+                            OpenDownloads(
+                                originTurnId = content.originTurnId ?: messageId,
+                                submissionIds = content.submissions.map { it.id },
+                            )
+                        )
+                    }) {
                         Text(stringResource(Res.string.podnya_download_open))
                     }
                     if (content.submissions.any { it.receipt == null }) {

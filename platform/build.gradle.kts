@@ -52,6 +52,7 @@ kotlin {
             resources.srcDir("common/src/main/resources")
             dependencies {
                 implementation(projects.shared)
+                implementation(projects.sharedApi)
                 implementation(projects.podnya)
                 implementation(projects.fundation)
                 implementation(libs.androidx.navigation3.runtime)

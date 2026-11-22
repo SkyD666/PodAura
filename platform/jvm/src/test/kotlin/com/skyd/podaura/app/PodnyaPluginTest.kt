@@ -1,10 +1,14 @@
 package com.skyd.podaura.app
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.window.Dialog
 import androidx.navigation3.runtime.NavKey
 import com.skyd.podaura.api.model.repository.IArticleRepository
 import com.skyd.podaura.api.model.repository.IAssistantDownloadRepository
@@ -24,7 +28,6 @@ import com.skyd.podaura.podnya.model.db.ConversationRecordCodec
 import com.skyd.podaura.podnya.ui.AssistantCapabilityUi
 import com.skyd.podaura.podnya.ui.podnyaContent
 import com.skyd.podaura.ui.screen.article.ArticleRoute
-import com.skyd.podaura.ui.screen.download.DownloadRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.podnya.resources.Res
 import com.skyd.podnya.resources.podnya_download_open
@@ -44,6 +47,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalTestApi::class)
 class PodnyaPluginTest {
@@ -68,12 +72,18 @@ class PodnyaPluginTest {
     @Test
     fun removingAndRestoringOneRegistrationChangesCardsActionsAndHistoryTogether() {
         var saved = download
-        for (plugins in listOf(builtInPodnyaPlugins, builtInPodnyaPlugins - downloadPlugin, builtInPodnyaPlugins.reversed())) {
+        val testDownloadPlugin = createDownloadPlugin { request, dismiss ->
+            Dialog(onDismissRequest = dismiss) {
+                BasicText(text = request.batchId, modifier = Modifier.clickable(onClick = dismiss))
+            }
+        }
+        val installed = builtInPodnyaPlugins.map { if (it === downloadPlugin) testDownloadPlugin else it }
+        for (plugins in listOf(installed, installed - testDownloadPlugin, installed.reversed())) {
             val app = initKoin { modules(podnyaAppModule(plugins)) }
             try {
                 app.koin.declare<IArticleRepository>(TestArticles)
                 app.koin.declare<IFeedRepository>(TestFeeds)
-                val enabled = downloadPlugin in plugins
+                val enabled = testDownloadPlugin in plugins
                 if (enabled) {
                     app.koin.declare<IAssistantDownloadRepository>(TestDownloads())
                 } else {
@@ -88,11 +98,13 @@ class PodnyaPluginTest {
                     assertEquals(download, saved)
                 }
                 val uis = app.koin.getAll<AssistantCapabilityUi>()
+                val scope = app.koin.createScope<PodnyaPluginTest>("plugin-test")
                 val open = runBlocking { getString(Res.string.podnya_download_open) }
                 runDesktopComposeUiTest(width = 700, height = 850) {
                     val routes = mutableListOf<NavKey>()
+                    val conversationId = Uuid.random()
                     setContent {
-                        val onAction = plugins.bindNavigation { routes.add(it) }
+                        val onAction = plugins.bindNavigation(scope) { routes.add(it) }
                         LazyColumn {
                             contents.forEachIndexed { index, content ->
                                 podnyaContent(
@@ -100,7 +112,7 @@ class PodnyaPluginTest {
                                     content = content,
                                     showFallbackText = true,
                                     formatDate = { "" },
-                                    onAction = onAction,
+                                    onAction = { onAction(conversationId, it) },
                                     uis = uis,
                                 )
                             }
@@ -114,7 +126,10 @@ class PodnyaPluginTest {
                         onNodeWithText("1. MP3").assertExists()
                         onNodeWithText("2. Bonus MP3").assertExists()
                         onNodeWithText(open).performClick()
-                        assertEquals(DownloadRoute(), routes.last())
+                        val sheet = onNodeWithText("$conversationId:2")
+                        sheet.performClick()
+                        sheet.assertDoesNotExist()
+                        assertEquals(2, routes.size)
                     } else {
                         onNodeWithText(open).assertDoesNotExist()
                         onNodeWithText("Saved downloads").assertExists()

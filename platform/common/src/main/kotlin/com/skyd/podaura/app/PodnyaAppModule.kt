@@ -27,7 +27,7 @@ internal fun podnyaAppModule(plugins: List<PodnyaPlugin>) = module {
                     onBack = callbacks.onBack,
                     onSettings = callbacks.onSettings,
                     onSearch = callbacks.onSearch,
-                    onAction = plugins.bindNavigation(callbacks.navigate),
+                    onAction = plugins.bindNavigation(scope = this, navigate = callbacks.navigate),
                     formatDate = callbacks.formatDate,
                 )
             },

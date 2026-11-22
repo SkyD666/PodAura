@@ -36,8 +36,17 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.uuid.Uuid
 
-data object OpenDownloads : AssistantAction
+data class OpenDownloads(
+    val originTurnId: Long,
+    val submissionIds: List<String>,
+) : AssistantAction {
+    fun batchId(conversationId: Uuid): String = downloadBatchId(conversationId, originTurnId)
+}
+
+private fun downloadBatchId(conversationId: Uuid, originTurnId: Long): String =
+    "$conversationId:$originTurnId"
 
 internal data class SelectDownloadOption(
     val turnId: Long,
@@ -60,7 +69,10 @@ internal class DownloadConversation(
     ): DownloadRequestEvidence {
         val previous = history.lastOrNull { it.id != currentTurnId }
         val pending = pendingSelections(conversation, currentTurnId)
-        val recent = conversation.recentTurns(limit = HISTORY_PAGE_SIZE, throughTurnId = currentTurnId - 1).asReversed()
+        val recent = conversation.recentTurns(
+            limit = HISTORY_PAGE_SIZE,
+            throughTurnId = currentTurnId - 1
+        ).asReversed()
         return DownloadRequestEvidence(
             pendingSelections = pending,
             latestMessageId = previous?.downloadOriginId(),
@@ -232,7 +244,7 @@ internal class DownloadConversation(
         attempt: DownloadSubmission,
         targets: List<AssistantDownloadTarget>,
     ) {
-        val batch = "${conversation.id}:$originId"
+        val batch = downloadBatchId(conversation.id, originId)
         val key = batch to attempt.id
         val previous = jobs.filterKeys { it.first == batch }.values.toList()
         val job = conversation.scope.launch(start = CoroutineStart.LAZY) {
@@ -285,7 +297,7 @@ internal class DownloadConversation(
             error = null,
             rawError = null,
         )
-        val batch = "${conversation.id}:${content.originTurnId ?: turn.id}"
+        val batch = downloadBatchId(conversation.id, content.originTurnId ?: turn.id)
         val submissions = content.submissions.map { attempt ->
             if (attempt.receipt != null || (batch to attempt.id) in jobs) {
                 attempt
