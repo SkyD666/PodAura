@@ -4,6 +4,7 @@ import co.touchlab.kermit.LogWriter
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import co.touchlab.kermit.StaticConfig
+import com.skyd.fundation.credential.CredentialStore
 import com.skyd.podaura.model.bean.translation.HtmlTranslationRequest
 import com.skyd.podaura.model.bean.translation.TranslationError
 import com.skyd.podaura.model.bean.translation.TranslationProfile

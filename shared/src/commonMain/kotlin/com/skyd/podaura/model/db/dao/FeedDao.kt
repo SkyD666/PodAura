@@ -274,6 +274,9 @@ interface FeedDao {
     )
     suspend fun getFeedUrlsByGroupId(groupId: String?): List<String>
 
+    @RawQuery
+    suspend fun queryFeeds(sql: RoomRawQuery): List<FeedBean>
+
     @Transaction
     @RawQuery(observedEntities = [FeedBean::class, ArticleBean::class])
     fun getFeedPagingSource(sql: RoomRawQuery): PagingSource<Int, FeedViewBean>

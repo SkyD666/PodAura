@@ -8,6 +8,7 @@ enum class DownloadFailureCode {
     Redirect,
     InsecureRedirect,
     InvalidResponse,
+    Webpage,
     Integrity,
     Storage,
     DestinationConflict,

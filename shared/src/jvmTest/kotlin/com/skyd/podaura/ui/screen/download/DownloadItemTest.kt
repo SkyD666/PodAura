@@ -5,9 +5,11 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import com.skyd.downloader.Status
+import com.skyd.downloader.download.DownloadFailureCode
 import com.skyd.podaura.model.download.DownloadInfoBean
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,6 +79,28 @@ class DownloadItemTest {
             }
 
             onNode(hasText("episode.mp3") and hasClickAction()).assertDoesNotExist()
+        }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun webpageDownloadFailureAsksForDirectFileLink() =
+        runDesktopComposeUiTest(width = 600, height = 300) {
+            setContent {
+                MaterialTheme {
+                    DownloadItem(
+                        data = downloadItem(fileName = "episode.mp3", isPlayableMedia = false).copy(
+                            status = Status.Failed,
+                            failureCode = DownloadFailureCode.Webpage,
+                        ),
+                        onPause = {},
+                        onResume = {},
+                        onRetry = {},
+                        onDelete = {},
+                    )
+                }
+            }
+
+            onNodeWithText("Provide a direct file link").assertExists()
         }
 
     private fun downloadItem(

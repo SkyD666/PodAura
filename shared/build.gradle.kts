@@ -1,18 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec
-import com.skyd.podaura.buildlogic.addWindowsMediaFileAssociations
-import com.skyd.podaura.buildlogic.addWindowsNotificationProtocol
-import com.skyd.podaura.buildlogic.configureWindowsMsiOpenWith
-import com.skyd.podaura.buildlogic.macOSMediaDocumentTypes
-import com.skyd.podaura.buildlogic.macOSAppLocalizations
-import com.skyd.podaura.buildlogic.macOSNotificationUrlTypes
-import com.skyd.podaura.buildlogic.windowsMediaFileAssociations
-import de.stefan_oltmann.msix.CreateAppxManifestTask
-import de.stefan_oltmann.msix.CreateMsixIconsTask
-import de.stefan_oltmann.msix.CreateMsixTask
 import org.gradle.nativeplatform.platform.internal.Architectures
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 
 plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -24,11 +12,9 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room3)
     alias(libs.plugins.buildkonfig)
-    alias(libs.plugins.gradle.msix)
     id("podaura.desktop-media-shims")
     id("podaura.apple-mpv") apply (System.getProperty("os.name").startsWith("Mac", true))
     id("podaura.macos-appkit")
-    id("podaura.macos-application")
 }
 
 val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
@@ -36,9 +22,6 @@ val isMicrosoftStoreBuild = providers.gradleProperty("microsoftStore")
     .getOrElse(false)
 val macGestureModuleExport =
     "--add-exports=java.desktop/com.apple.eawt.event=ALL-UNNAMED"
-val desktopMediaShimAppResources = layout.buildDirectory.dir(
-    "generated/desktopMediaPlayer/appResources"
-)
 
 kotlin {
 
@@ -55,21 +38,9 @@ kotlin {
 
     jvm()
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { target ->
-        target.binaries.framework {
-            baseName = "Shared"
-            isStatic = true
-        }
-    }
-
-    macosArm64 {
-        binaries.executable {
-            entryPoint = "com.skyd.podaura.main"
-        }
-    }
+    iosArm64()
+    iosSimulatorArm64()
+    macosArm64()
 
     sourceSets {
         commonMain { kotlin.srcDir("media-types") }
@@ -144,6 +115,7 @@ kotlin {
             implementation(libs.skyd666.compone)
             implementation(libs.skyd666.mvi)
 
+            implementation(projects.sharedApi)
             implementation(projects.fundation)
             implementation(projects.ksp.annotation)
             implementation(projects.downloader)
@@ -198,15 +170,19 @@ kotlin {
                 currentOs.isWindows && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.x64)
                 }
+
                 currentOs.isWindows && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.windows.arm64)
                 }
+
                 currentOs.isMacOsX && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.x64)
                 }
+
                 currentOs.isMacOsX && currentArch.isArm64 -> {
                     runtimeOnly(libs.mediamp.runtime.macos.arm64)
                 }
+
                 currentOs.isLinux && currentArch.isAmd64 -> {
                     runtimeOnly(libs.mediamp.runtime.linux.x64)
                 }
@@ -281,156 +257,6 @@ configurations.matching { it.name == "jvmRuntimeClasspath" }.configureEach {
     exclude(group = "org.jetbrains.compose.ui", module = "ui-test-junit4")
 }
 
-compose.desktop {
-    application {
-        mainClass = "com.skyd.podaura.MainKt"
-        if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
-            jvmArgs += macGestureModuleExport
-        }
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "PodAura"
-            packageVersion = findProperty("versionForDesktop")!!.toString()
-            appResourcesRootDir = desktopMediaShimAppResources
-
-            macOS {
-                bundleID = "com.skyd.podaura"
-                iconFile = project.file("icons/icon_512x512.icns")
-                infoPlist {
-                    extraKeysRawXml = macOSMediaDocumentTypes() + macOSNotificationUrlTypes() + macOSAppLocalizations()
-                }
-            }
-            windows {
-                iconFile = project.file("icons/PodAura.ico")
-                dirChooser = true
-                shortcut = true
-                menu = true
-                menuGroup = "PodAura"
-                windowsMediaFileAssociations().forEach { (extension, mimeType) ->
-                    fileAssociation(
-                        mimeType = mimeType,
-                        extension = extension,
-                        description = "PodAura media file",
-                        iconFile = project.file("icons/PodAura.ico"),
-                    )
-                }
-                // https://wixtoolset.org/documentation/manual/v3/howtos/general/generate_guids.html
-                upgradeUuid = "451A428C-D349-458F-8B96-309CAA2F533C"
-            }
-
-            modules(
-                "jdk.unsupported",
-                "java.sql",
-            )
-        }
-
-        buildTypes.release.proguard {
-            version = "7.9.1"
-            // obfuscate = true
-            configurationFiles.from(project.file("compose-desktop.pro"))
-        }
-    }
-    nativeApplication {
-        targets(kotlin.macosArm64())
-        distributions {
-            targetFormats(TargetFormat.Dmg)
-            packageName = "PodAura"
-            packageVersion = findProperty("versionForDesktop")!!.toString()
-
-            macOS {
-                bundleID = "com.skyd.podaura"
-                // https://github.com/JetBrains/compose-multiplatform/blob/e68123684b732adb34a5fb3704c9de868bdbed0e/gradle-plugins/compose/src/main/kotlin/org/jetbrains/compose/desktop/application/tasks/AbstractNativeMacApplicationPackageAppDirTask.kt#L63-L64
-                // The icon file in Contents/Resources has been hardcoded to "$packageName.icns".
-                iconFile = project.file("icons/PodAura.icns")
-            }
-        }
-    }
-}
-
-// Native executable runs need Compose resources beside the .kexe, outside an app bundle.
-listOf("Debug", "Release").forEach { buildType ->
-    val linkTask = tasks.named("link${buildType}ExecutableMacosArm64")
-    val copyResourcesTask = tasks.register<Sync>(
-        "copyMacosArm64ResourcesTo${buildType}Executable"
-    ) {
-        description = "Copies Compose resources beside the macOS $buildType executable."
-        dependsOn("macosArm64AggregateResources")
-        mustRunAfter(linkTask)
-        from(layout.buildDirectory.dir("kotlin-multiplatform-resources/aggregated-resources/macosArm64"))
-        into(layout.buildDirectory.dir("bin/macosArm64/${buildType.lowercase()}Executable/compose-resources"))
-    }
-    linkTask.configure {
-        finalizedBy(copyResourcesTask)
-    }
-    tasks.named("run${buildType}ExecutableMacosArm64") {
-        dependsOn(copyResourcesTask)
-    }
-}
-
-msix {
-    svgIcon = rootProject.layout.projectDirectory.file("doc/image/PodAura.svg")
-
-    manifest {
-        appId = "PodAura"
-        displayName = "PodAura"
-        description =
-            "An all-in-one Podcast app for RSS subscriptions, updates, media downloads and playback."
-        identityName = "SkyD666.PodAura"
-        publisher = "CN=A899BB3F-B2EE-4733-BFE7-45715FA85273"
-        publisherDisplayName = "SkyD666"
-        version = "${findProperty("versionForDesktop")}.0"
-        processorArchitecture = "x64"
-        appExecutable = "PodAura.exe"
-        targetDeviceFamilyMinVersion = "10.0.17763.0"
-    }
-}
-
-// gradle-msix-plugin 0.2.1 cannot discover the package name from Compose 1.12.
-val msixApplicationDirectory =
-    layout.buildDirectory.dir("compose/binaries/main-release/app/PodAura")
-
-tasks.named<CreateMsixIconsTask>("createMsixIcons").configure {
-    outputDir = msixApplicationDirectory.map { it.dir("resources") }
-}
-tasks.named<CreateAppxManifestTask>("createAppxManifest") {
-    outputFile = msixApplicationDirectory.map { it.file("AppxManifest.xml") }
-    inputs.property("mediaFileAssociations", windowsMediaFileAssociations())
-    inputs.property("notificationProtocol", "podaura")
-    doLast {
-        addWindowsMediaFileAssociations(outputFile.get().asFile)
-        addWindowsNotificationProtocol(outputFile.get().asFile)
-    }
-}
-tasks.named<CreateMsixTask>("createMsix") {
-    appDirectory = msixApplicationDirectory
-    msixOutputFile = layout.buildDirectory.file("PodAura.msix")
-}
-
-if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
-    tasks.withType<JavaExec>().configureEach {
-        jvmArgs(macGestureModuleExport)
-    }
-    tasks.withType<Test>().configureEach {
-        jvmArgs(macGestureModuleExport)
-    }
-}
-
-tasks.withType<AbstractJPackageTask>().configureEach {
-    if (targetFormat == TargetFormat.Dmg) {
-        // Distribution's icon
-        freeArgs.addAll("--icon", "icons/icon_512x512.icns")
-    }
-    if (targetFormat == TargetFormat.Msi) {
-        inputs.property("openWithExtensions", windowsMediaFileAssociations().keys)
-        doLast {
-            configureWindowsMsiOpenWith(
-                destinationDir.get().asFile.resolve("${packageName.get()}-${packageVersion.get()}.msi"),
-                temporaryDir,
-            )
-        }
-    }
-}
 
 dependencies {
     listOf("kspAndroid", "kspJvm", "kspIosArm64", "kspIosSimulatorArm64", "kspMacosArm64").forEach {
@@ -478,4 +304,8 @@ buildkonfig {
 
 room3 {
     schemaDirectory("$projectDir/schemas")
+}
+
+if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {
+    tasks.withType<Test>().configureEach { jvmArgs(macGestureModuleExport) }
 }

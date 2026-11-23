@@ -12,6 +12,9 @@ interface DownloadDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(entity: DownloadEntity)
 
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertAll(entities: List<DownloadEntity>)
+
     @Update
     suspend fun update(entity: DownloadEntity): Int
 
@@ -159,6 +162,37 @@ interface DownloadDao {
 
     @Query(
         "UPDATE ${DownloadEntity.TABLE_NAME} " +
+                "SET ${DownloadEntity.PUBLICATION_DIGEST_COLUMN} = :digest, " +
+                "${DownloadEntity.DOWNLOADED_BYTES_COLUMN} = :totalBytes " +
+                "WHERE ${DownloadEntity.ID_COLUMN} = :id " +
+                "AND ${DownloadEntity.ATTEMPT_ID_COLUMN} = :attemptId " +
+                "AND ${DownloadEntity.STATUS_COLUMN} IN ('Started', 'Downloading')"
+    )
+    suspend fun setPublication(
+        id: String,
+        attemptId: String,
+        digest: String?,
+        totalBytes: Long
+    ): Int
+
+    @Query(
+        "SELECT * FROM ${DownloadEntity.TABLE_NAME} " +
+                "WHERE ${DownloadEntity.STATUS_COLUMN} = 'Success' " +
+                "AND ${DownloadEntity.PUBLICATION_DIGEST_COLUMN} IS NOT NULL"
+    )
+    suspend fun findUncleanedPublications(): List<DownloadEntity>
+
+    @Query(
+        "UPDATE ${DownloadEntity.TABLE_NAME} " +
+                "SET ${DownloadEntity.PUBLICATION_DIGEST_COLUMN} = NULL " +
+                "WHERE ${DownloadEntity.ID_COLUMN} = :id " +
+                "AND ${DownloadEntity.ATTEMPT_ID_COLUMN} = :attemptId " +
+                "AND ${DownloadEntity.STATUS_COLUMN} = 'Success'"
+    )
+    suspend fun clearCompletedPublication(id: String, attemptId: String): Int
+
+    @Query(
+        "UPDATE ${DownloadEntity.TABLE_NAME} " +
                 "SET ${DownloadEntity.STATUS_COLUMN} = 'Success', " +
                 "${DownloadEntity.DOWNLOADED_BYTES_COLUMN} = :totalBytes, " +
                 "${DownloadEntity.TOTAL_BYTES_COLUMN} = :totalBytes, " +
@@ -234,6 +268,28 @@ interface DownloadDao {
         attemptId: String,
         updatedTime: Long,
     ): Int
+
+    @Query(
+        "UPDATE ${DownloadEntity.TABLE_NAME} " +
+                "SET ${DownloadEntity.STATUS_COLUMN} = 'Paused', " +
+                "${DownloadEntity.ATTEMPT_ID_COLUMN} = '', " +
+                "${DownloadEntity.SPEED_IN_BYTE_PER_MS_COLUMN} = 0, " +
+                "${DownloadEntity.UPDATED_TIME_COLUMN} = COALESCE(:updatedTime, ${DownloadEntity.UPDATED_TIME_COLUMN}) " +
+                "WHERE ${DownloadEntity.ID_COLUMN} = :id " +
+                "AND ${DownloadEntity.ATTEMPT_ID_COLUMN} = :attemptId " +
+                "AND ${DownloadEntity.STATUS_COLUMN} IN ('Queued', 'Started', 'Downloading')"
+    )
+    suspend fun pauseActive(id: String, attemptId: String, updatedTime: Long? = null): Int
+
+    @Query(
+        "UPDATE ${DownloadEntity.TABLE_NAME} " +
+                "SET ${DownloadEntity.STATUS_COLUMN} = 'Cancelled', " +
+                "${DownloadEntity.ATTEMPT_ID_COLUMN} = '', " +
+                "${DownloadEntity.SPEED_IN_BYTE_PER_MS_COLUMN} = 0, " +
+                "${DownloadEntity.UPDATED_TIME_COLUMN} = :updatedTime " +
+                "WHERE ${DownloadEntity.ID_COLUMN} = :id"
+    )
+    suspend fun markCancelled(id: String, updatedTime: Long): Int
 
     @Query(
         "UPDATE ${DownloadEntity.TABLE_NAME} " +

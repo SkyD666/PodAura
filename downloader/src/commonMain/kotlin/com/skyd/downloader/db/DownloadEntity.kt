@@ -1,5 +1,6 @@
 package com.skyd.downloader.db
 
+import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.Index
 import androidx.room3.PrimaryKey
@@ -47,6 +48,12 @@ data class DownloadEntity(
     var requireUnmetered: Boolean = false,
     var requiresCharging: Boolean = false,
     var requiresBatteryNotLow: Boolean = false,
+    @ColumnInfo(name = BATCH_ID_COLUMN)
+    val batchId: String? = null,
+    @ColumnInfo(name = REQUIRE_FILE_RESPONSE_COLUMN, defaultValue = "0")
+    val requireFileResponse: Boolean = false,
+    @ColumnInfo(name = PUBLICATION_DIGEST_COLUMN)
+    val publicationDigest: String? = null,
 ) {
     companion object {
         const val TABLE_NAME = "Download"
@@ -71,10 +78,9 @@ data class DownloadEntity(
         const val UPDATED_TIME_COLUMN = "updatedTime"
         const val FAILURE_REASON_COLUMN = "failureReason"
         const val FAILURE_CODE_COLUMN = "failureCode"
-        const val METADATA_COLUMN = "metadata"
         const val COMPLETION_HANDLED_COLUMN = "completionHandled"
-        const val REQUIRE_UNMETERED_COLUMN = "requireUnmetered"
-        const val REQUIRES_CHARGING_COLUMN = "requiresCharging"
-        const val REQUIRES_BATTERY_NOT_LOW_COLUMN = "requiresBatteryNotLow"
+        const val BATCH_ID_COLUMN = "batchId"
+        const val REQUIRE_FILE_RESPONSE_COLUMN = "requireFileResponse"
+        const val PUBLICATION_DIGEST_COLUMN = "publicationDigest"
     }
 }

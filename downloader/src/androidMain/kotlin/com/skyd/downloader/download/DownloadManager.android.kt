@@ -7,7 +7,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.skyd.downloader.Status
+import com.skyd.downloader.ACTIVE_DOWNLOAD_STATUS_NAMES
 import com.skyd.downloader.db.DownloadDao
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.util.NotificationUtil.removeNotification
@@ -34,8 +34,8 @@ internal actual class DownloadManager actual constructor() : KoinComponent {
     }
 
     actual suspend fun reconcile() {
-        downloadDao.findAllInStatuses(listOf(Status.Queued.name)).forEach { entity ->
-            if (entity.attemptId.isNotBlank()) enqueue(entity, ExistingWorkPolicy.KEEP)
+        downloadDao.findAllInStatuses(ACTIVE_DOWNLOAD_STATUS_NAMES).forEach { entity ->
+            if (entity.readyForStartupScheduling) enqueue(entity, ExistingWorkPolicy.KEEP)
         }
     }
 

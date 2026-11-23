@@ -22,7 +22,7 @@ import podaura.shared.generated.resources.app_name
  * The single rendering dispatch point for every normal JVM desktop window.
  */
 @Composable
-internal fun DesktopWindowHost(
+fun DesktopWindowHost(
     entry: DesktopWindowEntry,
     appState: DesktopAppState,
     mainWindowState: WindowState,

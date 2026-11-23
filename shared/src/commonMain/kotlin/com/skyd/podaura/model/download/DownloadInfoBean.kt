@@ -1,6 +1,7 @@
 package com.skyd.podaura.model.download
 
 import com.skyd.downloader.Status
+import com.skyd.downloader.download.DownloadFailureCode
 import com.skyd.podaura.model.bean.feed.FeedBean
 
 
@@ -18,6 +19,7 @@ data class DownloadInfoBean(
     val articleDownloadSource: ArticleDownloadSource? = null,
     val articleDownloadInfo: ArticleDownloadInfoBean? = null,
     val isPlayableMedia: Boolean = false,
+    val failureCode: DownloadFailureCode? = null,
 ) {
     val displayTitle: String
         get() = articleDownloadInfo?.articleTitle?.takeIf { it.isNotBlank() } ?: fileName

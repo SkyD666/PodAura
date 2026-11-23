@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,12 +58,16 @@ import com.skyd.podaura.model.bean.MoreBean
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
+import com.skyd.podaura.ui.screen.nano.NanoIcon
+import com.skyd.podaura.ui.screen.nano.NanoPages
+import com.skyd.podaura.ui.screen.nano.NanoRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.settings.SettingsRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.getKoin
 import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.about_screen_name
 import podaura.shared.generated.resources.history_screen_name
@@ -77,6 +82,8 @@ data object MoreRoute : NavKey
 
 @Composable
 fun MoreScreen() {
+    val koin = getKoin()
+    val nano = remember(koin) { koin.getOrNull<NanoPages>() }
     val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -106,8 +113,8 @@ fun MoreScreen() {
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
         var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
 
-        LaunchedEffect(Unit) {
-            dataList = getMoreBeanList(colorScheme, navBackStack)
+        LaunchedEffect(nano, colorScheme) {
+            dataList = getMoreBeanList(colorScheme, navBackStack, nano)
         }
 
         LazyVerticalGrid(
@@ -147,14 +154,16 @@ fun MoreItem(
             Box(
                 modifier = Modifier
                     .padding(5.dp)
+                    .size(67.dp)
+                    .clip(data.shape.toShape())
                     .background(
                         color = data.shapeColor,
                         shape = data.shape.toShape(),
-                    )
-                    .padding(16.dp)
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    modifier = Modifier.size(35.dp),
+                    modifier = Modifier.size(if (data.icon === NanoIcon) 40.dp else 35.dp),
                     imageVector = data.icon,
                     contentDescription = null,
                     tint = data.iconTint
@@ -176,6 +185,7 @@ fun MoreItem(
 private suspend fun getMoreBeanList(
     colorScheme: ColorScheme,
     navBackStack: MutableList<NavKey>,
+    nano: NanoPages?,
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
@@ -218,5 +228,18 @@ private suspend fun getMoreBeanList(
             shapeColor = colorScheme.secondary,
             action = { navBackStack.add(AboutRoute) }
         ),
-    )
+    ).apply {
+        if (nano?.available == true) {
+            add(
+                0, MoreBean(
+                    title = nano.title(),
+                    icon = NanoIcon,
+                    iconTint = colorScheme.onSecondary,
+                    shape = MaterialShapes.Circle,
+                    shapeColor = colorScheme.secondary,
+                    action = { navBackStack.add(NanoRoute) },
+                )
+            )
+        }
+    }
 }

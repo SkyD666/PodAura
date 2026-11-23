@@ -58,7 +58,7 @@
             "  exit 0",
             "fi",
             "cd \"$SRCROOT/../..\"",
-            "./gradlew :shared:embedAndSignAppleFrameworkForXcode",
+            "./gradlew :platform:embedAndSignAppleFrameworkForXcode",
             "python3 platform/apple/mpvkit/prepare.py --platform ios",
             "",
           ],

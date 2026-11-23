@@ -52,6 +52,7 @@
     <string name="download_screen_name">下载任务</string>
     <string name="download_pause">暂停</string>
     <string name="download_error_paused">下载失败</string>
+    <string name="download_direct_file_link_required">请提供文件直链</string>
     <string name="download_click_to_seeding">做种</string>
     <string name="download_initializing">初始化中…</string>
     <string name="download_completed">已完成</string>

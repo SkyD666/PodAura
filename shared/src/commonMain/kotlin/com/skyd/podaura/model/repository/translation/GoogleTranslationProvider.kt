@@ -2,6 +2,8 @@ package com.skyd.podaura.model.repository.translation
 
 import co.touchlab.kermit.Logger
 import com.fleeksoft.ksoup.Ksoup
+import com.skyd.fundation.credential.CredentialStorageException
+import com.skyd.fundation.credential.CredentialStore
 import com.skyd.podaura.model.bean.translation.HtmlTranslationRequest
 import com.skyd.podaura.model.bean.translation.HtmlTranslationResult
 import com.skyd.podaura.model.bean.translation.TranslationCapabilities

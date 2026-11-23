@@ -33,6 +33,9 @@ dependencyResolutionManagement {
 
 include(
     ":shared",
+    ":nano",
+    ":shared-api",
+    ":platform",
     ":fundation",
     ":htmlrender",
     ":downloader",

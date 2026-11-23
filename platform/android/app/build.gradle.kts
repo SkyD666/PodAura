@@ -232,6 +232,7 @@ dependencies {
 
     implementation(projects.fundation)
     implementation(projects.shared)
+    implementation(projects.platform)
     implementation(projects.downloader)
 
     "benchmarkImplementation"(libs.androidx.compose.runtime.tracing)

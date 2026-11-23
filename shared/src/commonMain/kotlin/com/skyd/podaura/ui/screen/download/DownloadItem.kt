@@ -1,6 +1,7 @@
 package com.skyd.podaura.ui.screen.download
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +41,7 @@ import com.skyd.compone.component.ComponeIconButton
 import com.skyd.compone.component.blockString
 import com.skyd.compone.ext.thenIf
 import com.skyd.downloader.Status
+import com.skyd.downloader.download.DownloadFailureCode
 import com.skyd.podaura.ext.fileSize
 import com.skyd.podaura.model.download.ArticleDownloadInfoBean
 import com.skyd.podaura.model.download.DownloadInfoBean
@@ -53,6 +56,7 @@ import podaura.shared.generated.resources.Res
 import podaura.shared.generated.resources.delete
 import podaura.shared.generated.resources.download
 import podaura.shared.generated.resources.download_completed
+import podaura.shared.generated.resources.download_direct_file_link_required
 import podaura.shared.generated.resources.download_download_payload_rate
 import podaura.shared.generated.resources.download_error_paused
 import podaura.shared.generated.resources.download_initializing
@@ -68,6 +72,7 @@ fun DownloadItem(
     onRetry: (DownloadInfoBean) -> Unit,
     onDelete: (DownloadInfoBean) -> Unit,
     onPlay: ((DownloadInfoBean) -> Unit)? = null,
+    highlighted: Boolean = false,
 ) {
     var description by remember { mutableStateOf(blockString(Res.string.download_initializing)) }
     var pauseButtonIcon by remember { mutableStateOf(Icons.Outlined.Pause) }
@@ -75,7 +80,7 @@ fun DownloadItem(
     var pauseButtonEnabled by rememberSaveable { mutableStateOf(true) }
     var cancelButtonEnabled by rememberSaveable { mutableStateOf(true) }
 
-    LaunchedEffect(data.status) {
+    LaunchedEffect(data.status, data.failureCode) {
         when (data.status) {
             Status.Downloading -> {
                 pauseButtonEnabled = true
@@ -89,7 +94,13 @@ fun DownloadItem(
                 pauseButtonIcon = Icons.Outlined.Refresh
                 pauseButtonContentDescription =
                     getString(podaura.downloader.generated.resources.Res.string.download_retry)
-                description = getString(Res.string.download_error_paused)
+                description = getString(
+                    if (data.failureCode == DownloadFailureCode.Webpage) {
+                        Res.string.download_direct_file_link_required
+                    } else {
+                        Res.string.download_error_paused
+                    },
+                )
             }
 
             Status.Cancelled -> {
@@ -131,6 +142,7 @@ fun DownloadItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(if (highlighted) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
             .thenIf(canPlay) {
                 clickable(onClickLabel = playLabel) { onPlay?.invoke(data) }
             }

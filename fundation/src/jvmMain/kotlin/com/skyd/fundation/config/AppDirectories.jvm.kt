@@ -50,7 +50,14 @@ private object WindowsAppDirectories : AppDirectories {
 
 private object LinuxAppDirectories : AppDirectories {
     override val dataDir: String
-        get() = TODO("Not yet implemented")
+        get() = xdgDirectory(variable = "XDG_DATA_HOME", fallback = ".local/share")
     override val cacheDir: String
-        get() = TODO("Not yet implemented")
+        get() = xdgDirectory(variable = "XDG_CACHE_HOME", fallback = ".cache")
+
+    private fun xdgDirectory(variable: String, fallback: String): String {
+        // XDG ignores unset, empty and relative paths and falls back to the user's home.
+        val base = System.getenv(variable)?.takeIf { File(it).isAbsolute }
+            ?: File(homeDir, fallback).path
+        return File(base, BuildKonfig.packageName).path
+    }
 }

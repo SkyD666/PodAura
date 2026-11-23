@@ -13,7 +13,7 @@ internal expect fun platformPreferredLanguageTags(): List<String>
 internal expect fun setPlatformAppLanguage(language: AppLanguage)
 
 /** Load the saved language before creating windows and persist Cocoa's next-launch preference. */
-internal suspend fun initializePlatformAppLanguage() {
+suspend fun initializePlatformAppLanguage() {
     val value = dataStore.data.first()[AppLanguagePreference.key] ?: AppLanguagePreference.default
     setPlatformAppLanguage(AppLanguage.fromPreferenceValue(value))
 }

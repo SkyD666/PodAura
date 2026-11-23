@@ -1,21 +1,23 @@
 package com.skyd.downloader.download
 
 import com.skyd.downloader.db.DownloadEntity
-import com.skyd.downloader.util.FileUtil
 import com.skyd.fundation.ext.currentTimeMillis
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.exists
 import io.github.vinceglb.filekit.sink
 import io.github.vinceglb.filekit.size
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
 import io.ktor.http.ContentDisposition
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
+import io.ktor.http.Url
 import io.ktor.http.contentLength
 import io.ktor.http.decodeURLPart
 import io.ktor.http.isSuccess
@@ -25,6 +27,7 @@ import io.ktor.utils.io.core.remaining
 import io.ktor.utils.io.exhausted
 import io.ktor.utils.io.readBuffer
 import kotlinx.coroutines.CancellationException
+import kotlinx.io.Buffer
 import kotlinx.io.IOException
 import kotlin.math.max
 import kotlin.time.Clock
@@ -35,6 +38,7 @@ internal data class TransferResponseMetadata(
     val lastModified: String,
     val finalUrl: String,
     val totalBytes: Long,
+    val resuming: Boolean = false,
 )
 
 internal data class TransferProgress(
@@ -57,13 +61,15 @@ internal class DownloadTransferEngine(
         entity: DownloadEntity,
         onResponse: suspend (TransferResponseMetadata) -> String,
         onProgress: suspend (TransferProgress) -> Unit,
+        files: DownloadTaskFiles = DownloadTaskFiles(entity),
+        responsePolicy: DownloadResponsePolicy = DownloadResponsePolicy.of(entity.requireFileResponse),
     ): TransferResult {
         var fileName = entity.fileName
-        var partFile = FileUtil.resolvePartFile(entity.path, fileName)
+        var partFile = files.partial(fileName)
         var rangeStart = partFile.takeIf { it.exists() }?.size()?.coerceAtLeast(0) ?: 0
         val validator = entity.strongValidator()
         if (rangeStart > 0 && validator == null) {
-            FileUtil.deletePartIfExists(entity.path, fileName)
+            files.discardPartial(fileName)
             rangeStart = 0
         }
 
@@ -89,7 +95,12 @@ internal class DownloadTransferEngine(
                                 retryable = false,
                             )
                         return@execute TransferStep.Redirect(
-                            URLBuilder(response.request.url).takeFrom(location).buildString()
+                            URLBuilder(response.request.url).apply {
+                                parameters.clear()
+                                trailingQuery = false
+                                fragment = ""
+                                takeFrom(location)
+                            }.buildString()
                         )
                     }
 
@@ -105,6 +116,7 @@ internal class DownloadTransferEngine(
                                         ?: entity.lastModified,
                                     finalUrl = response.request.url.toString(),
                                     totalBytes = rangeOffset,
+                                    resuming = true,
                                 )
                             )
                             TransferStep.Complete(rangeOffset, response.request.url.toString())
@@ -154,29 +166,38 @@ internal class DownloadTransferEngine(
                         return@execute TransferStep.Restart
                     }
 
-                    val responseFileName = response.suggestedFileName()
+                    val disposition = response.downloadDisposition()
+                    val channel = response.bodyAsChannel()
+                    val prefix = responsePolicy.inspect(
+                        response = response,
+                        channel = channel,
+                        disposition = disposition,
+                        appending = append,
+                    )
                     val resolvedFileName = onResponse(
                         TransferResponseMetadata(
-                            suggestedFileName = responseFileName,
+                            suggestedFileName = disposition?.suggestedFileName(),
                             eTag = responseETag,
                             lastModified = responseLastModified,
                             finalUrl = response.request.url.toString(),
                             totalBytes = totalBytes,
+                            resuming = append,
                         )
                     )
                     if (resolvedFileName != fileName) {
                         check(actualStart == 0L) { "A resumed task cannot change its file name" }
                         fileName = resolvedFileName
-                        partFile = FileUtil.resolvePartFile(entity.path, fileName)
+                        partFile = files.partial(fileName)
                     }
 
                     val downloaded = streamResponse(
-                        channel = response.body(),
+                        channel = channel,
                         append = append,
                         rangeStart = actualStart,
                         totalBytes = totalBytes,
                         partFile = partFile,
                         onProgress = onProgress,
+                        prefix = prefix,
                     )
                     val expectedDownloaded = totalBytes.takeIf { it > 0 }
                         ?: rangeLength?.let { actualStart + it }
@@ -212,7 +233,11 @@ internal class DownloadTransferEngine(
                             retryable = false,
                         )
                     }
-                    validateRedirect(requestUrl, step.url)
+                    validateRedirect(
+                        from = requestUrl,
+                        to = step.url,
+                        responsePolicy = responsePolicy
+                    )
                     requestUrl = step.url
                 }
 
@@ -225,7 +250,7 @@ internal class DownloadTransferEngine(
                         )
                     }
                     restarted = true
-                    FileUtil.deletePartIfExists(entity.path, fileName)
+                    files.discardPartial(fileName)
                     rangeStart = 0
                     requestUrl = entity.url
                     redirects = 0
@@ -233,13 +258,15 @@ internal class DownloadTransferEngine(
 
                 is TransferStep.Complete -> {
                     try {
-                        FileUtil.commitPart(entity.path, fileName)
+                        files.publish(fileName = fileName, totalBytes = step.totalBytes)
                     } catch (error: CancellationException) {
                         throw error
+                    } catch (failure: DownloadFailure) {
+                        throw failure
                     } catch (error: Throwable) {
                         throw DownloadFailure(
-                            DownloadFailureCode.Storage,
-                            "Unable to save the downloaded file",
+                            code = DownloadFailureCode.Storage,
+                            message = "Unable to save the downloaded file",
                             retryable = false,
                             cause = error,
                         )
@@ -255,8 +282,9 @@ internal class DownloadTransferEngine(
         append: Boolean,
         rangeStart: Long,
         totalBytes: Long,
-        partFile: io.github.vinceglb.filekit.PlatformFile,
+        partFile: PlatformFile,
         onProgress: suspend (TransferProgress) -> Unit,
+        prefix: Buffer?,
     ): Long {
         var received = rangeStart
         var lastReportedBytes = rangeStart
@@ -264,6 +292,10 @@ internal class DownloadTransferEngine(
         onProgress(TransferProgress(received, totalBytes, 0f))
         try {
             partFile.sink(append = append).use { sink ->
+                if (prefix != null) {
+                    received += prefix.remaining
+                    prefix.transferTo(sink)
+                }
                 while (!channel.exhausted()) {
                     val chunk = channel.readBuffer(CHUNK_SIZE)
                     val chunkSize = chunk.remaining
@@ -304,17 +336,18 @@ internal class DownloadTransferEngine(
         else -> null
     }
 
-    private fun io.ktor.client.statement.HttpResponse.suggestedFileName(): String? {
-        val raw = headers[HttpHeaders.ContentDisposition] ?: return null
-        val disposition = runCatching { ContentDisposition.parse(raw) }.getOrNull() ?: return null
-        val encoded = disposition.parameter(ContentDisposition.Parameters.FileNameAsterisk)
+    private fun HttpResponse.downloadDisposition(): ContentDisposition? =
+        headers[HttpHeaders.ContentDisposition]?.let { runCatching { ContentDisposition.parse(it) }.getOrNull() }
+
+    private fun ContentDisposition.suggestedFileName(): String? {
+        val encoded = parameter(ContentDisposition.Parameters.FileNameAsterisk)
             ?.substringAfter("''", missingDelimiterValue = "")
             ?.takeIf { it.isNotBlank() }
             ?.let { runCatching { it.decodeURLPart() }.getOrNull() }
-        return encoded ?: disposition.parameter(ContentDisposition.Parameters.FileName)
+        return encoded ?: parameter(ContentDisposition.Parameters.FileName)
     }
 
-    private fun io.ktor.client.statement.HttpResponse.toFailure(): DownloadFailure {
+    private fun HttpResponse.toFailure(): DownloadFailure {
         val retryAfter = headers[HttpHeaders.RetryAfter]?.toLongOrNull()?.times(1_000)
         return when {
             status == HttpStatusCode.TooManyRequests -> DownloadFailure(
@@ -344,9 +377,9 @@ internal class DownloadTransferEngine(
         }
     }
 
-    private fun validateRedirect(from: String, to: String) {
-        val fromUrl = runCatching { io.ktor.http.Url(from) }.getOrNull()
-        val toUrl = runCatching { io.ktor.http.Url(to) }.getOrNull()
+    private fun validateRedirect(from: String, to: String, responsePolicy: DownloadResponsePolicy) {
+        val fromUrl = runCatching { Url(from) }.getOrNull()
+        val toUrl = runCatching { Url(to) }.getOrNull()
             ?: throw DownloadFailure(
                 DownloadFailureCode.Redirect,
                 "Redirect target is invalid",
@@ -366,6 +399,7 @@ internal class DownloadTransferEngine(
                 retryable = false,
             )
         }
+        responsePolicy.validateRedirect(toUrl)
     }
 
     private fun parseContentRange(value: String?): ParsedContentRange? {
@@ -374,7 +408,7 @@ internal class DownloadTransferEngine(
         val end = match.groupValues[2].toLongOrNull() ?: return null
         if (end < start) return null
         val total = match.groupValues[3].takeUnless { it == "*" }?.toLongOrNull() ?: 0
-        if (total in 1 .. end) return null
+        if (total in 1..end) return null
         return ParsedContentRange(start, end, total)
     }
 

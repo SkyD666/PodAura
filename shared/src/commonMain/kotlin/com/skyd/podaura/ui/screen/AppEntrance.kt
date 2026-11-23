@@ -68,6 +68,7 @@ import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute.Companion.MediaSearchLauncher
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute.Companion.SubMediaLauncher
+import com.skyd.podaura.ui.screen.nano.nanoEntries
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistScreen
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
@@ -200,6 +201,7 @@ internal fun MainNavHost() {
     MiniPlayerNavDisplay(
         backStack = navBackStack,
         entryProvider = entryProvider {
+            nanoEntries()
             entry<MainRoute> { MainScreen() }
             miniPlayerEntry<ArticleRoute> { ArticleLauncher(it) }
             entry<LicenseRoute> { LicenseScreen() }

@@ -26,7 +26,7 @@ private const val APP_USER_MODEL_REGISTRY_KEY =
     "Software\\Classes\\AppUserModelId\\$WINDOWS_APP_USER_MODEL_ID"
 
 /** Gives unpackaged JVM launches their own Shell/SMTC identity instead of java.exe's identity. */
-internal fun initWindowsAppIdentity() {
+fun initWindowsAppIdentity() {
     if (platform != Platform.Windows) return
 
     // MSIX already supplies a package AUMID. Windows does not allow packaged apps to replace it

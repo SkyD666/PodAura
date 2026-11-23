@@ -4,6 +4,7 @@ import com.skyd.downloader.ACTIVE_DOWNLOAD_STATUS_NAMES
 import com.skyd.downloader.Status
 import com.skyd.downloader.db.DownloadDao
 import com.skyd.downloader.db.DownloadEntity
+import com.skyd.fundation.ext.currentTimeMillis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 
 internal class ProcessDownloadQueue(
@@ -25,7 +27,7 @@ internal class ProcessDownloadQueue(
     private data class WorkItem(val id: String, val attemptId: String)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val channel = Channel<WorkItem>(Channel.BUFFERED)
+    private val channel = Channel<WorkItem>(Channel.UNLIMITED)
     private val mutex = Mutex()
     private val scheduled = mutableSetOf<WorkItem>()
     private val activeJobs = mutableMapOf<String, Job>()
@@ -40,7 +42,9 @@ internal class ProcessDownloadQueue(
 
     suspend fun schedule(entity: DownloadEntity) {
         val item = WorkItem(entity.id, entity.attemptId)
-        if (mutex.withLock { scheduled.add(item) }) channel.send(item)
+        mutex.withLock {
+            if (scheduled.add(item)) channel.trySend(item).getOrThrow()
+        }
     }
 
     suspend fun cancel(id: String) {
@@ -55,14 +59,22 @@ internal class ProcessDownloadQueue(
         val interrupted = downloadDao.findAllInStatuses(
             ACTIVE_DOWNLOAD_STATUS_NAMES
         )
-        interrupted.forEach { entity ->
-            downloadDao.update(
-                entity.copy(
-                    status = Status.Paused.name,
-                    attemptId = "",
-                    speedInBytePerMs = 0f,
-                )
-            )
+        for (entity in interrupted) {
+            val item = WorkItem(entity.id, entity.attemptId)
+            if (mutex.withLock { item in scheduled }) continue
+            if (entity.resumeInterruptedAtStartup) {
+                if (entity.status != Status.Queued.name && downloadDao.markInterruptedQueued(
+                        id = entity.id,
+                        attemptId = entity.attemptId,
+                        updatedTime = Clock.currentTimeMillis(),
+                    ) == 0
+                ) {
+                    continue
+                }
+                schedule(entity)
+            } else {
+                downloadDao.pauseActive(id = entity.id, attemptId = entity.attemptId)
+            }
         }
     }
 

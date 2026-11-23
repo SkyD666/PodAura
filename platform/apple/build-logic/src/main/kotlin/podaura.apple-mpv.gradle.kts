@@ -1,18 +1,19 @@
-import groovy.json.JsonSlurper
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.resources.ResourcesExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 import org.jetbrains.kotlin.konan.target.Family
 
-// MPVKit download, C interop and native test linking. Targets/frameworks remain owned by the module.
+// MPVKit download, C interop and resources. Application and test links share one convention.
+pluginManager.apply("podaura.apple-mpv-link")
 val interopFrameworks = listOf("Libmpv", "Libavformat", "Libavcodec", "Libavutil")
 val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
-    inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
+    inputs.files(
+        script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
-        rootProject.file("platform/apple/mpvkit/podaura.h"))
+        rootProject.file("platform/apple/mpvkit/podaura.h")
+    )
     // Gradle removes stale outputs on a fresh checkout; it must never own the native binaries here.
     for (sdk in listOf("iphoneos", "iphonesimulator")) {
         outputs.dir(layout.buildDirectory.dir("mpvkit/$sdk/include"))
@@ -25,14 +26,18 @@ val prepareIosMpv = tasks.register<Exec>("prepareIosMpv") {
 
 val prepareIosMpvRuntime = tasks.register<Exec>("prepareIosMpvRuntime") {
     dependsOn(prepareIosMpv)
-    commandLine("python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
-        "--platform", "ios")
+    commandLine(
+        "python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
+        "--platform", "ios"
+    )
 }
 
 val downloadAppleMpvCertificates = tasks.register<Exec>("downloadAppleMpvCertificates") {
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
-    inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
-        rootProject.file("platform/apple/mpvkit/artifacts.json"))
+    inputs.files(
+        script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
+        rootProject.file("platform/apple/mpvkit/artifacts.json")
+    )
     outputs.file(layout.buildDirectory.file("mpvkit/downloads/cacert.pem"))
     commandLine("python3", script.absolutePath, "--cert-only")
 }
@@ -48,15 +53,6 @@ extensions.configure<ComposeExtension> {
         customDirectory("iosMain", layout.dir(prepareIosMpvResources.map { it.destinationDir }))
     }
 }
-
-val artifacts = JsonSlurper().parse(rootProject.file("platform/apple/mpvkit/artifacts.json")) as Map<*, *>
-val mpvFrameworks = (artifacts["artifacts"] as List<*>).map {
-    (it as Map<*, *>)["name"].toString()
-}
-val systemFrameworks = listOf(
-    "AVFoundation", "AVKit", "AudioToolbox", "CoreAudio", "CoreVideo", "CoreMedia",
-    "Metal", "IOSurface", "VideoToolbox", "QuartzCore",
-)
 
 extensions.configure<KotlinMultiplatformExtension> {
     targets.withType<KotlinNativeTarget>().configureEach {
@@ -79,21 +75,17 @@ extensions.configure<KotlinMultiplatformExtension> {
             dependsOn(prepareIosMpv)
             mustRunAfter(prepareIosMpvRuntime)
         }
-        binaries.withType<TestExecutable>().configureEach {
-            linkerOpts("-F${layout.buildDirectory.dir("mpvkit/$sdk").get().asFile}")
-            (mpvFrameworks + systemFrameworks).forEach { linkerOpts("-framework", it) }
-            linkerOpts("-lbz2", "-liconv", "-lexpat", "-lresolv", "-lxml2", "-lz", "-lc++")
-            linkTaskProvider.configure { dependsOn(prepareIosMpvRuntime) }
-        }
     }
 }
 
 // Native macOS consumes the same pinned dependencies, using their macOS slices.
 val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
     val script = rootProject.file("platform/apple/mpvkit/prepare.py")
-    inputs.files(script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
+    inputs.files(
+        script, rootProject.file("platform/apple/mpvkit/artifacts.py"),
         rootProject.file("platform/apple/mpvkit/artifacts.json"),
-        rootProject.file("platform/apple/mpvkit/podaura.h"))
+        rootProject.file("platform/apple/mpvkit/podaura.h")
+    )
     outputs.dir(layout.buildDirectory.dir("mpvkit/macos/include"))
     interopFrameworks.forEach {
         outputs.dir(layout.buildDirectory.dir("mpvkit/macos/$it.framework/Headers"))
@@ -102,8 +94,10 @@ val prepareMacosMpv = tasks.register<Exec>("prepareMacosMpv") {
 }
 val prepareMacosMpvRuntime = tasks.register<Exec>("prepareMacosMpvRuntime") {
     dependsOn(prepareMacosMpv)
-    commandLine("python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
-        "--platform", "macos")
+    commandLine(
+        "python3", rootProject.file("platform/apple/mpvkit/prepare.py").absolutePath,
+        "--platform", "macos"
+    )
 }
 val prepareMacosMpvResources = tasks.register<Sync>("prepareMacosMpvResources") {
     from(downloadAppleMpvCertificates) { into("files") }
@@ -133,18 +127,6 @@ extensions.configure<KotlinMultiplatformExtension> {
         tasks.named(ffmpegInterop.interopProcessingTaskName).configure {
             dependsOn(prepareMacosMpv)
             mustRunAfter(prepareMacosMpvRuntime)
-        }
-        binaries.configureEach {
-            linkerOpts("-F${layout.buildDirectory.dir("mpvkit/macos").get().asFile}")
-            (mpvFrameworks + systemFrameworks + listOf("AppKit", "OpenGL", "IOKit", "CoreFoundation", "Security"))
-                .forEach { linkerOpts("-framework", it) }
-            linkerOpts("-lbz2", "-liconv", "-lexpat", "-lresolv", "-lxml2", "-lz", "-lc++")
-            linkTaskProvider.configure {
-                dependsOn(prepareMacosMpvRuntime)
-                inputs.files(mpvFrameworks.map {
-                    layout.buildDirectory.file("mpvkit/macos/$it.framework/$it")
-                })
-            }
         }
     }
 }

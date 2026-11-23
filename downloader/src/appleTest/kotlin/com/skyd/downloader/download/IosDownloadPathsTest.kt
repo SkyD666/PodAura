@@ -7,6 +7,8 @@ import com.skyd.downloader.db.DownloadDatabase
 import com.skyd.downloader.db.DownloadEntity
 import com.skyd.downloader.db.instance
 import com.skyd.downloader.util.FileUtil
+import com.skyd.downloader.util.publishPartWithoutReplacement
+import com.skyd.downloader.util.shareFileIdentity
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.delete
@@ -23,6 +25,25 @@ import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 
 class IosDownloadPathsTest {
+    @Test
+    fun atomicPublicationKeepsAStagingLinkAndRejectsAnIdenticalCopy() = runTest {
+        val directory = PlatformFile(NSTemporaryDirectory() + "apple-download-publication-${Uuid.random()}")
+            .apply { createDirectories() }
+        try {
+            val staged = PlatformFile(directory, "task.part").apply { writeString("download") }
+            val final = PlatformFile(directory, "episode.mp3").apply { writeString("download") }
+            assertFalse(publishPartWithoutReplacement(part = staged, target = final))
+            assertFalse(shareFileIdentity(part = staged, target = final))
+            final.delete()
+            assertTrue(publishPartWithoutReplacement(part = staged, target = final))
+            assertTrue(shareFileIdentity(part = staged, target = final))
+            staged.delete()
+            assertTrue(final.exists())
+        } finally {
+            directory.delete(recursively = true)
+        }
+    }
+
     @Test
     fun relocatedDownloadsFindTheSameFilesAsTheMediaLibrary() = runTest {
         val directory = PlatformFile(NSTemporaryDirectory() + "ios-download-relocation-${Uuid.random()}")
