@@ -33,7 +33,7 @@ dependencyResolutionManagement {
 
 include(
     ":shared",
-    ":podnya",
+    ":nano",
     ":shared-api",
     ":platform",
     ":fundation",

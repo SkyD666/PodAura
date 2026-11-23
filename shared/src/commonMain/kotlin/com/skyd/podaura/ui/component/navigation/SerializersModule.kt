@@ -24,10 +24,10 @@ import com.skyd.podaura.ui.screen.media.MediaRoute
 import com.skyd.podaura.ui.screen.media.search.MediaSearchRoute
 import com.skyd.podaura.ui.screen.media.sub.SubMediaRoute
 import com.skyd.podaura.ui.screen.more.MoreRoute
+import com.skyd.podaura.ui.screen.nano.AssistantSettingsRoute
+import com.skyd.podaura.ui.screen.nano.NanoRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
 import com.skyd.podaura.ui.screen.playlist.medialist.PlaylistMediaListRoute
-import com.skyd.podaura.ui.screen.podnya.AssistantSettingsRoute
-import com.skyd.podaura.ui.screen.podnya.PodnyaRoute
 import com.skyd.podaura.ui.screen.read.ReadRoute
 import com.skyd.podaura.ui.screen.search.SearchRoute
 import com.skyd.podaura.ui.screen.settings.SettingsListRoute
@@ -57,7 +57,7 @@ import kotlinx.serialization.modules.polymorphic
 
 val PodAuraSerializersModule = SerializersModule {
     polymorphic(baseClass = NavKey::class) {
-        subclass(PodnyaRoute::class, PodnyaRoute.serializer())
+        subclass(NanoRoute::class, NanoRoute.serializer())
         subclass(AssistantSettingsRoute::class, AssistantSettingsRoute.serializer())
         subclass(MainRoute::class, MainRoute.serializer())
         subclass(FeedRoute::class, FeedRoute.serializer())

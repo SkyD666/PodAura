@@ -9,7 +9,7 @@ import kotlin.test.assertSame
 
 class CredentialStoreModuleTest {
     @Test
-    fun sharedProvidesCredentialsWithoutPodnya() {
+    fun sharedProvidesCredentialsWithoutNano() {
         val app = initKoin()
         try {
             val store = app.koin.get<CredentialStore>()

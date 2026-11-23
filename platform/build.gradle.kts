@@ -53,7 +53,7 @@ kotlin {
             dependencies {
                 implementation(projects.shared)
                 implementation(projects.sharedApi)
-                implementation(projects.podnya)
+                implementation(projects.nano)
                 implementation(projects.fundation)
                 implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.jetbrains.compose.ui)
@@ -159,7 +159,7 @@ compose.desktop {
             // obfuscate = true
             configurationFiles.from(
                 rootProject.file("shared/compose-desktop.pro"),
-                rootProject.file("podnya/compose-desktop.pro"),
+                rootProject.file("nano/compose-desktop.pro"),
             )
         }
     }

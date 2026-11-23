@@ -58,10 +58,10 @@ import com.skyd.podaura.model.bean.MoreBean
 import com.skyd.podaura.ui.local.LocalWindowSizeClass
 import com.skyd.podaura.ui.screen.about.AboutRoute
 import com.skyd.podaura.ui.screen.history.HistoryRoute
+import com.skyd.podaura.ui.screen.nano.NanoIcon
+import com.skyd.podaura.ui.screen.nano.NanoPages
+import com.skyd.podaura.ui.screen.nano.NanoRoute
 import com.skyd.podaura.ui.screen.playlist.PlaylistRoute
-import com.skyd.podaura.ui.screen.podnya.PodnyaPages
-import com.skyd.podaura.ui.screen.podnya.PodnyaIcon
-import com.skyd.podaura.ui.screen.podnya.PodnyaRoute
 import com.skyd.podaura.ui.screen.settings.SettingsRoute
 import com.skyd.podaura.ui.screen.settings.data.importexport.ImportExportRoute
 import kotlinx.serialization.Serializable
@@ -83,7 +83,7 @@ data object MoreRoute : NavKey
 @Composable
 fun MoreScreen() {
     val koin = getKoin()
-    val podnya = remember(koin) { koin.getOrNull<PodnyaPages>() }
+    val nano = remember(koin) { koin.getOrNull<NanoPages>() }
     val navBackStack = LocalNavBackStack.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -113,8 +113,8 @@ fun MoreScreen() {
         val colorScheme: ColorScheme = MaterialTheme.colorScheme
         var dataList by remember { mutableStateOf(emptyList<MoreBean>()) }
 
-        LaunchedEffect(podnya, colorScheme) {
-            dataList = getMoreBeanList(colorScheme, navBackStack, podnya)
+        LaunchedEffect(nano, colorScheme) {
+            dataList = getMoreBeanList(colorScheme, navBackStack, nano)
         }
 
         LazyVerticalGrid(
@@ -163,7 +163,7 @@ fun MoreItem(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    modifier = Modifier.size(if (data.icon === PodnyaIcon) 40.dp else 35.dp),
+                    modifier = Modifier.size(if (data.icon === NanoIcon) 40.dp else 35.dp),
                     imageVector = data.icon,
                     contentDescription = null,
                     tint = data.iconTint
@@ -185,7 +185,7 @@ fun MoreItem(
 private suspend fun getMoreBeanList(
     colorScheme: ColorScheme,
     navBackStack: MutableList<NavKey>,
-    podnya: PodnyaPages?,
+    nano: NanoPages?,
 ): MutableList<MoreBean> {
     return mutableListOf(
         MoreBean(
@@ -229,15 +229,15 @@ private suspend fun getMoreBeanList(
             action = { navBackStack.add(AboutRoute) }
         ),
     ).apply {
-        if (podnya?.available == true) {
+        if (nano?.available == true) {
             add(
                 0, MoreBean(
-                    title = podnya.title(),
-                    icon = PodnyaIcon,
+                    title = nano.title(),
+                    icon = NanoIcon,
                     iconTint = colorScheme.onSecondary,
                     shape = MaterialShapes.Circle,
                     shapeColor = colorScheme.secondary,
-                    action = { navBackStack.add(PodnyaRoute) },
+                    action = { navBackStack.add(NanoRoute) },
                 )
             )
         }

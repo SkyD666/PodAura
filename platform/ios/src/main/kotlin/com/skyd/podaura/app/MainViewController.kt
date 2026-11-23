@@ -1,13 +1,12 @@
 package com.skyd.podaura.app
 
 import com.skyd.podaura.createIosViewController
-import com.skyd.podaura.initializeIosApp as initializeHost
-import com.skyd.podaura.app.podnyaAppModule
-import com.skyd.podaura.ui.component.navigation.openIosDocument as openDocument
 import platform.Foundation.NSURL
 import platform.UIKit.UIViewController
+import com.skyd.podaura.initializeIosApp as initializeHost
+import com.skyd.podaura.ui.component.navigation.openIosDocument as openDocument
 
-fun initializeIosApp() = initializeHost { modules(podnyaAppModule) }
+fun initializeIosApp() = initializeHost { modules(nanoAppModule) }
 
 @Suppress("FunctionName")
 fun MainViewController(): UIViewController {
